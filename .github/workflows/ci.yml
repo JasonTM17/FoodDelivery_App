@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: '10' }
 
       - name: Install dependencies
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: '10' }
 
       - name: Install dependencies
