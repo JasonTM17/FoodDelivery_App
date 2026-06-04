@@ -1,7 +1,43 @@
+# Dependencies
 node_modules
+.pnpm-store
+
+# Build outputs (will be regenerated)
 .next
 dist
+*.tsbuildinfo
+
+# Git
 .git
+.gitignore
+.gitattributes
+
+# Environment / secrets
 .env
-.env.local
+.env.*
+!.env.example
+
+# Docs / notes (not needed at runtime)
 *.md
+!README.md
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Turbo
+.turbo
