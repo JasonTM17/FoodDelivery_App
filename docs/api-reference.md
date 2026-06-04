@@ -1,0 +1,211 @@
+# FoodFlow API Reference
+
+Base URL: `http://localhost:3001/api`
+
+## Authentication
+
+All protected endpoints require `Authorization: Bearer <jwt_access_token>` header.
+
+### POST /auth/register
+Register a new user account.
+```
+Body: { email, password, fullName, phone?, role? }
+Response: { accessToken, refreshToken, user }
+```
+
+### POST /auth/login
+Login with email and password.
+```
+Body: { email, password }
+Response: { accessToken, refreshToken, user }
+```
+
+### POST /auth/refresh
+Refresh expired access token.
+```
+Body: { refreshToken }
+Response: { accessToken, refreshToken, user }
+```
+
+### POST /auth/logout
+Invalidate refresh token.
+```
+Headers: Authorization: Bearer <token>
+Body: { refreshToken? }
+```
+
+## Restaurants
+
+### GET /restaurants/nearby
+Find restaurants near a location using PostGIS.
+```
+Query: lat, lng, radius (km, default 5), cuisine?, page?, limit?
+Response: { items: Restaurant[], meta: { page, limit, total } }
+```
+
+### GET /restaurants/:id
+Get restaurant detail with opening hours.
+
+### GET /restaurants/:id/menu
+Get full menu with categories, items, and options.
+
+### GET /restaurants/search
+Search restaurants by name or cuisine.
+```
+Query: q, page?, limit?
+```
+
+## Cart
+
+### GET /cart
+Get current user's cart. Requires customer role.
+
+### POST /cart/items
+Add item to cart.
+```
+Body: { restaurantId, menuItemId, quantity, selectedOptions?, notes? }
+```
+
+### PATCH /cart/items/:id
+Update item quantity or notes.
+
+### DELETE /cart/items/:id
+Remove item from cart.
+
+### POST /cart/apply-promotion
+Apply promotion code.
+```
+Body: { code }
+```
+
+## Orders
+
+### POST /orders
+Place order from cart. Requires customer role.
+```
+Body: { addressId, paymentMethod (cash|mock_wallet), promotionCode?, notes? }
+```
+
+### GET /orders
+Get customer's order history.
+```
+Query: page?, limit?, status?
+```
+
+### GET /orders/:id
+Get order detail with items, status history, payment.
+
+### GET /orders/:id/tracking
+Get real-time driver location and ETA.
+
+### POST /orders/:id/cancel
+Cancel order if allowed by current status.
+
+### POST /orders/:id/review
+Submit review after delivery.
+```
+Body: { foodRating (1-5), deliveryRating (1-5), comment? }
+```
+
+## Restaurant Orders
+
+### GET /restaurant/orders
+Get restaurant's order queue. Requires restaurant role.
+
+### PATCH /restaurant/orders/:id/status
+Update order status (restaurant_accepted, preparing, ready_for_pickup).
+
+## Driver
+
+### POST /driver/online
+Go online with current GPS coordinates.
+```
+Body: { lat, lng }
+```
+
+### POST /driver/offline
+Go offline.
+
+### GET /driver/orders/available
+Get pending orders near driver.
+
+### POST /driver/orders/:id/accept
+Accept dispatch offer.
+```
+Body: { offerToken }
+```
+
+### PATCH /driver/orders/:id/status
+Update delivery status.
+
+### GET /driver/earnings
+Get earnings summary.
+```
+Query: period (today|week|month)
+```
+
+## Admin
+
+All admin endpoints require admin role.
+
+### GET /admin/dashboard
+Dashboard KPI overview.
+
+### GET /admin/orders
+All orders with filters and pagination.
+
+### GET /admin/users
+User management list.
+
+### PATCH /admin/users/:id/status
+Ban or unban user.
+
+### GET /admin/restaurants
+Restaurant management list.
+
+### GET /admin/support-tickets
+Support ticket list with kanban status.
+
+### GET /admin/online-drivers
+Real-time online driver positions from Redis.
+
+### GET /admin/audit-logs
+Admin activity audit trail.
+
+## WebSocket Events
+
+Connect to `ws://localhost:3001` with namespace:
+- `/tracking` — Driver GPS and order tracking
+- `/events` — Order status and restaurant notifications
+- `/dispatch` — Driver dispatch offers
+
+### Client → Server
+| Event | Payload |
+|-------|---------|
+| `driver:location` | `{ lat, lng, bearing, speed, accuracy, timestamp }` |
+| `order:subscribe` | `{ orderId }` |
+| `driver:go_online` | `{ lat, lng }` |
+| `driver:go_offline` | `{}` |
+
+### Server → Client
+| Event | Payload |
+|-------|---------|
+| `order:status_changed` | `{ orderId, status, timestamp }` |
+| `driver:location_changed` | `{ driverId, lat, lng, bearing, timestamp }` |
+| `driver:assigned` | `{ driverId, driverName, eta_minutes }` |
+| `delivery:eta_updated` | `{ orderId, etaMinutes }` |
+
+## Error Format
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ORDER_NOT_FOUND",
+    "message": "Không tìm thấy đơn hàng",
+    "details": {}
+  },
+  "timestamp": "2026-06-04T18:15:00+07:00",
+  "path": "/api/orders/xxx"
+}
+```
