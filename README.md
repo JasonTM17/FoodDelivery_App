@@ -76,12 +76,23 @@ docker pull nguyenson1710/foodflow-postgres:latest
 | Tài xế | driver1@foodflow.vn | Driver@123 |
 | Nhà hàng | restaurant1@foodflow.vn | Partner@123 |
 
+## Screenshots
+
+| N8N AI Automation | Health Check |
+|-------------------|-------------|
+| ![N8N](docs/screenshots/n8n-setup-screen.png) | ![Health](docs/screenshots/n8n-health-check.png) |
+
 ## Tài liệu
 
 - [Kiến trúc hệ thống](docs/system-architecture.md)
+- [API Reference](docs/api-reference.md)
+- [Deployment Guide](docs/deployment-guide.md)
 - [Code Standards](docs/code-standards.md)
+- [Design Guidelines](docs/design-guidelines.md)
+- [Testing Guide](docs/testing-guide.md)
+- [N8N Setup Guide](docs/n8n-setup-guide.md)
+- [Roadmap](docs/project-roadmap.md)
 - [Kế hoạch phát triển](plans/260604-foodflow-system-design/plan.md)
-- [API Reference](http://localhost:3001/api/docs)
 
 ## License
 
