@@ -1,120 +1,80 @@
 version: '3.8'
 
-x-logging: &logging
-  driver: json-file
-  options:
-    max-size: "10m"
-    max-file: "3"
-    compress: "true"
-
-x-restart: &restart
-  restart: unless-stopped
-
-x-healthcheck-defaults: &healthcheck-defaults
-  interval: 15s
-  timeout: 5s
-  retries: 3
-  start_period: 15s
-
 services:
-  # ── PostgreSQL + PostGIS ──
   postgres:
-    <<: [*logging, *restart]
     image: postgis/postgis:16-3.4-alpine
     container_name: foodflow-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-foodflow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-foodflow_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-foodflow}
+      POSTGRES_USER: foodflow
+      POSTGRES_PASSWORD: foodflow_dev
+      POSTGRES_DB: foodflow
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-foodflow} -d ${POSTGRES_DB:-foodflow} && psql -U ${POSTGRES_USER:-foodflow} -d ${POSTGRES_DB:-foodflow} -c 'SELECT PostGIS_FullVersion();' > /dev/null 2>&1"]
-      <<: *healthcheck-defaults
-    deploy:
-      resources:
-        limits: { cpus: '2', memory: 2G }
-        reservations: { cpus: '0.5', memory: 512M }
-    networks:
-      - internal
+      test: ["CMD-SHELL", "pg_isready -U foodflow -d foodflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ── Redis with persistence for realtime GPS ──
   redis:
-    <<: [*logging, *restart]
     image: redis:7-alpine
     container_name: foodflow-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
-    command: >
-      redis-server
-      --appendonly yes
-      --appendfsync everysec
-      --aof-use-rdb-preamble yes
-      --save 900 1
-      --save 300 10
-      --save 60 10000
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --appendfsync everysec --aof-use-rdb-preamble yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      <<: *healthcheck-defaults
-    deploy:
-      resources:
-        limits: { cpus: '1', memory: 1G }
-        reservations: { cpus: '0.25', memory: 256M }
-    networks:
-      - internal
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ── MinIO Object Storage ──
   minio:
-    <<: [*logging, *restart]
     image: minio/minio:latest
     container_name: foodflow-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
-    command: server --console-address ":9001" /data
     volumes:
       - minio_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      <<: *healthcheck-defaults
-    networks:
-      - internal
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
-  # ── NestJS Backend API ──
   backend:
-    <<: [*logging, *restart]
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: runner
     container_name: foodflow-backend
+    restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-foodflow}:${POSTGRES_PASSWORD:-foodflow_dev}@postgres:5432/${POSTGRES_DB:-foodflow}
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
-      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
-      - N8N_API_KEY=${N8N_API_KEY}
-      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:3002,http://localhost:3003
+      NODE_ENV: production
+      DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-minimum-32-chars-xxxxxxxxxxxxxx
+      JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: foodflow
+      MINIO_PUBLIC_URL: http://localhost:9000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3002,http://localhost:3003
     depends_on:
       postgres:
         condition: service_healthy
@@ -123,154 +83,41 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/healthz"]
-      <<: *healthcheck-defaults
-    deploy:
-      resources:
-        limits: { cpus: '2', memory: 1G }
-        reservations: { cpus: '0.5', memory: 512M }
-    networks:
-      - internal
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/healthz',r=>{process.exit(r.statusCode===200?0:1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # ── BullMQ Worker (separate process) ──
-  worker:
-    <<: [*logging, *restart]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: runner
-    container_name: foodflow-worker
-    command: node dist/workers/main.js
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-foodflow}:${POSTGRES_PASSWORD:-foodflow_dev}@postgres:5432/${POSTGRES_DB:-foodflow}
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    deploy:
-      replicas: 2
-      resources:
-        limits: { cpus: '1', memory: 512M }
-        reservations: { cpus: '0.25', memory: 256M }
-    networks:
-      - internal
-
-  # ── N8N Automation ──
   n8n:
-    <<: [*logging, *restart]
     image: docker.n8n.io/n8nio/n8n:latest
     container_name: foodflow-n8n
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:5678:5678"
+      - "5678:5678"
     environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-foodflow}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER:-foodflow}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-foodflow_dev}
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-      - N8N_HOST=localhost
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
-      - N8N_RUNNERS_ENABLED=true
-      - EXECUTIONS_DATA_PRUNE=true
-      - EXECUTIONS_DATA_MAX_AGE=168
-      - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
-      - N8N_METRICS=true
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: "5432"
+      DB_POSTGRESDB_DATABASE: foodflow
+      DB_POSTGRESDB_USER: foodflow
+      DB_POSTGRESDB_PASSWORD: foodflow_dev
+      N8N_ENCRYPTION_KEY: dev-n8n-encryption-key-minimum-32-chars
+      N8N_HOST: localhost
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_RUNNERS_ENABLED: "true"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+      GENERIC_TIMEZONE: Asia/Ho_Chi_Minh
     volumes:
       - n8n_data:/home/node/.n8n
       - ./infra/n8n/workflows:/home/node/.n8n/workflows:ro
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - internal
-
-  # ── Bull Board (Queue Monitoring) ──
-  bullboard:
-    <<: [*logging, *restart]
-    image: node:20-alpine
-    container_name: foodflow-bullboard
-    command: sh -c "npx bull-board@latest --port 3080 --redis redis://redis:6379"
-    ports:
-      - "3080:3080"
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # ── Prometheus ──
-  prometheus:
-    <<: [*logging, *restart]
-    image: prom/prometheus:v2.53
-    container_name: foodflow-prometheus
-    ports:
-      - "9090:9090"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-    volumes:
-      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    networks:
-      - internal
-
-  # ── Redis Exporter ──
-  redis-exporter:
-    <<: [*logging, *restart]
-    image: oliver006/redis_exporter:latest
-    container_name: foodflow-redis-exporter
-    ports:
-      - "9121:9121"
-    environment:
-      REDIS_ADDR: redis://redis:6379
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # ── Grafana ──
-  grafana:
-    <<: [*logging, *restart]
-    image: grafana/grafana:11.1
-    container_name: foodflow-grafana
-    ports:
-      - "3100:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-foodflow_admin}
-      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./infra/monitoring/grafana-datasources:/etc/grafana/provisioning/datasources:ro
-      - ./infra/monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
-    networks:
-      - internal
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
   minio_data:
-    driver: local
   n8n_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-
-networks:
-  internal:
-    driver: bridge
-    internal: false
