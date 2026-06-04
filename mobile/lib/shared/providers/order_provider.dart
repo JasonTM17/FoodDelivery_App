@@ -1,0 +1,238 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import '../api/api_client.dart';
+import '../models/order.dart';
+
+final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
+  return OrderNotifier();
+});
+
+class OrderState {
+  final bool isLoading;
+  final String? error;
+  final List<OrderModel> activeOrders;
+  final List<OrderModel> completedOrders;
+  final List<OrderModel> cancelledOrders;
+  final OrderModel? currentTrackingOrder;
+  final bool isPlacingOrder;
+
+  const OrderState({
+    this.isLoading = false,
+    this.error,
+    this.activeOrders = const [],
+    this.completedOrders = const [],
+    this.cancelledOrders = const [],
+    this.currentTrackingOrder,
+    this.isPlacingOrder = false,
+  });
+
+  OrderState copyWith({
+    bool? isLoading,
+    String? error,
+    List<OrderModel>? activeOrders,
+    List<OrderModel>? completedOrders,
+    List<OrderModel>? cancelledOrders,
+    OrderModel? currentTrackingOrder,
+    bool? isPlacingOrder,
+  }) {
+    return OrderState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      activeOrders: activeOrders ?? this.activeOrders,
+      completedOrders: completedOrders ?? this.completedOrders,
+      cancelledOrders: cancelledOrders ?? this.cancelledOrders,
+      currentTrackingOrder: currentTrackingOrder ?? this.currentTrackingOrder,
+      isPlacingOrder: isPlacingOrder ?? this.isPlacingOrder,
+    );
+  }
+}
+
+class OrderNotifier extends StateNotifier<OrderState> {
+  final ApiClient _api = ApiClient.instance;
+
+  OrderNotifier() : super(const OrderState());
+
+  Future<String?> placeOrder({
+    required String restaurantId,
+    required List<Map<String, dynamic>> items,
+    required Map<String, dynamic> deliveryAddress,
+    String paymentMethod = 'cash',
+    String? note,
+    String? promoCode,
+  }) async {
+    state = state.copyWith(isPlacingOrder: true, error: null);
+    try {
+      final response = await _api.post('/orders', data: {
+        'restaurantId': restaurantId,
+        'items': items,
+        'deliveryAddress': deliveryAddress,
+        'paymentMethod': paymentMethod,
+        'note': note,
+        'promoCode': promoCode,
+      });
+
+      final orderData = response.data as Map<String, dynamic>;
+      final order = OrderModel.fromJson(orderData);
+
+      state = state.copyWith(
+        isPlacingOrder: false,
+        activeOrders: [order, ...state.activeOrders],
+        currentTrackingOrder: order,
+      );
+
+      return order.id;
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ??
+          e.response?.data?['error'] as String? ??
+          'Đặt hàng thất bại. Vui lòng thử lại.';
+      state = state.copyWith(isPlacingOrder: false, error: message);
+      return null;
+    } catch (e) {
+      state = state.copyWith(isPlacingOrder: false, error: 'Có lỗi xảy ra khi đặt hàng.');
+      return null;
+    }
+  }
+
+  Future<void> fetchOrders() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await _api.get('/orders');
+      final dataList = response.data as List<dynamic>;
+      final allOrders = dataList
+          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      final active = <OrderModel>[];
+      final completed = <OrderModel>[];
+      final cancelled = <OrderModel>[];
+
+      for (final order in allOrders) {
+        if (order.status == 'cancelled') {
+          cancelled.add(order);
+        } else if (order.status == 'delivered') {
+          completed.add(order);
+        } else {
+          active.add(order);
+        }
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        activeOrders: active,
+        completedOrders: completed,
+        cancelledOrders: cancelled,
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ?? 'Không thể tải danh sách đơn hàng.';
+      state = state.copyWith(isLoading: false, error: message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải đơn hàng.');
+    }
+  }
+
+  Future<bool> cancelOrder(String orderId) async {
+    try {
+      await _api.post('/orders/$orderId/cancel');
+      await fetchOrders();
+      return true;
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ?? 'Không thể hủy đơn hàng.';
+      state = state.copyWith(error: message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(error: 'Có lỗi xảy ra khi hủy đơn hàng.');
+      return false;
+    }
+  }
+
+  Future<void> fetchTracking(String orderId) async {
+    try {
+      final response = await _api.get('/orders/$orderId/tracking');
+      final orderData = response.data as Map<String, dynamic>;
+      final order = OrderModel.fromJson(orderData);
+      state = state.copyWith(currentTrackingOrder: order);
+    } catch (e) {
+      // Silent fail for tracking refresh
+    }
+  }
+
+  Future<void> fetchOrderDetail(String orderId) async {
+    try {
+      final response = await _api.get('/orders/$orderId');
+      final order = OrderModel.fromJson(response.data as Map<String, dynamic>);
+      state = state.copyWith(currentTrackingOrder: order);
+    } catch (e) {
+      state = state.copyWith(error: 'Không thể tải chi tiết đơn hàng.');
+    }
+  }
+
+  void setTrackingOrder(OrderModel order) {
+    state = state.copyWith(currentTrackingOrder: order);
+  }
+
+  void updateOrderStatus(String orderId, String newStatus) {
+    final currentTracking = state.currentTrackingOrder;
+    if (currentTracking?.id == orderId) {
+      state = state.copyWith(
+        currentTrackingOrder: OrderModel(
+          id: currentTracking!.id,
+          userId: currentTracking.userId,
+          restaurantId: currentTracking.restaurantId,
+          restaurantName: currentTracking.restaurantName,
+          items: currentTracking.items,
+          subtotal: currentTracking.subtotal,
+          deliveryFee: currentTracking.deliveryFee,
+          discount: currentTracking.discount,
+          total: currentTracking.total,
+          status: newStatus,
+          deliveryAddress: currentTracking.deliveryAddress,
+          paymentMethod: currentTracking.paymentMethod,
+          createdAt: currentTracking.createdAt,
+          updatedAt: DateTime.now(),
+          driverId: currentTracking.driverId,
+          driverName: currentTracking.driverName,
+          driverPhone: currentTracking.driverPhone,
+          driverLatitude: currentTracking.driverLatitude,
+          driverLongitude: currentTracking.driverLongitude,
+          restaurantLatitude: currentTracking.restaurantLatitude,
+          restaurantLongitude: currentTracking.restaurantLongitude,
+        ),
+      );
+    }
+  }
+
+  void updateDriverLocation(String orderId, double lat, double lng) {
+    final currentTracking = state.currentTrackingOrder;
+    if (currentTracking?.id == orderId) {
+      state = state.copyWith(
+        currentTrackingOrder: OrderModel(
+          id: currentTracking!.id,
+          userId: currentTracking.userId,
+          restaurantId: currentTracking.restaurantId,
+          restaurantName: currentTracking.restaurantName,
+          items: currentTracking.items,
+          subtotal: currentTracking.subtotal,
+          deliveryFee: currentTracking.deliveryFee,
+          discount: currentTracking.discount,
+          total: currentTracking.total,
+          status: currentTracking.status,
+          deliveryAddress: currentTracking.deliveryAddress,
+          paymentMethod: currentTracking.paymentMethod,
+          createdAt: currentTracking.createdAt,
+          updatedAt: currentTracking.updatedAt,
+          driverId: currentTracking.driverId,
+          driverName: currentTracking.driverName,
+          driverPhone: currentTracking.driverPhone,
+          driverLatitude: lat,
+          driverLongitude: lng,
+          restaurantLatitude: currentTracking.restaurantLatitude,
+          restaurantLongitude: currentTracking.restaurantLongitude,
+        ),
+      );
+    }
+  }
+
+  void clearError() {
+    state = state.copyWith(error: null);
+  }
+}

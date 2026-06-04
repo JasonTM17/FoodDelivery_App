@@ -1,0 +1,390 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../shared/providers/cart_provider.dart';
+import '../../shared/providers/order_provider.dart';
+import '../../shared/models/user.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_text_styles.dart';
+
+class CheckoutScreen extends ConsumerStatefulWidget {
+  const CheckoutScreen({super.key});
+
+  @override
+  ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+  AddressModel? _selectedAddress;
+  String _paymentMethod = 'cash';
+  final _noteController = TextEditingController();
+  bool _isPlacing = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _placeOrder() async {
+    if (_selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn địa chỉ giao hàng')),
+      );
+      return;
+    }
+
+    setState(() => _isPlacing = true);
+
+    final cartState = ref.read(cartProvider);
+    final cart = cartState.currentCart;
+    if (cart == null) return;
+
+    final orderId = await ref.read(orderProvider.notifier).placeOrder(
+      restaurantId: cart.restaurantId,
+      items: cart.items.map((item) => item.toJson()).toList(),
+      deliveryAddress: _selectedAddress!.toJson(),
+      paymentMethod: _paymentMethod,
+      note: _noteController.text.isNotEmpty ? _noteController.text : null,
+      promoCode: cartState.promoCode,
+    );
+
+    if (!mounted) return;
+    setState(() => _isPlacing = false);
+
+    if (orderId != null) {
+      ref.read(cartProvider.notifier).clearCart();
+      Navigator.of(context).pushReplacementNamed('/order-tracking', arguments: orderId);
+    } else {
+      final error = ref.read(orderProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Đặt hàng thất bại')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartState = ref.watch(cartProvider);
+    final orderState = ref.watch(orderProvider);
+    final cart = cartState.currentCart;
+
+    if (cart == null || cart.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Thanh toán')),
+        body: const Center(child: Text('Giỏ hàng trống')),
+      );
+    }
+
+    // Sample addresses - in real app, fetch from user profile
+    final addresses = [
+      AddressModel(
+        id: '1',
+        label: 'Nhà',
+        address: '123 Nguyễn Huệ, Quận 1, TP. HCM',
+        latitude: 10.7769,
+        longitude: 106.7009,
+        isDefault: true,
+      ),
+      AddressModel(
+        id: '2',
+        label: 'Công ty',
+        address: '456 Lê Lợi, Quận 1, TP. HCM',
+        latitude: 10.7789,
+        longitude: 106.7009,
+        apartmentNumber: 'Tầng 5',
+      ),
+    ];
+
+    if (_selectedAddress == null && addresses.isNotEmpty) {
+      _selectedAddress = addresses.firstWhere(
+        (a) => a.isDefault,
+        orElse: () => addresses.first,
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('Thanh toán')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Delivery address
+            const Text('Địa chỉ giao hàng', style: AppTextStyles.headline4),
+            const SizedBox(height: 8),
+            ...addresses.map((address) => GestureDetector(
+              onTap: () => setState(() => _selectedAddress = address),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedAddress?.id == address.id ? AppColors.primary : AppColors.border,
+                    width: _selectedAddress?.id == address.id ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _selectedAddress?.id == address.id
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        address.label == 'Nhà' ? Icons.home : Icons.work,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(address.label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                              if (address.isDefault) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'Mặc định',
+                                    style: TextStyle(fontSize: 10, color: AppColors.primaryDark),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            address.address,
+                            style: AppTextStyles.bodySmall,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      _selectedAddress?.id == address.id
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: _selectedAddress?.id == address.id ? AppColors.primary : AppColors.textHint,
+                    ),
+                  ],
+                ),
+              ),
+            )),
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).pushNamed('/addresses'),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Thêm địa chỉ mới'),
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 20),
+
+            // Payment method
+            const Text('Phương thức thanh toán', style: AppTextStyles.headline4),
+            const SizedBox(height: 8),
+            _buildPaymentOption(
+              icon: Icons.money,
+              title: 'Tiền mặt',
+              subtitle: 'Thanh toán khi nhận hàng',
+              value: 'cash',
+            ),
+            const SizedBox(height: 8),
+            _buildPaymentOption(
+              icon: Icons.wallet,
+              title: 'Ví điện tử',
+              subtitle: 'FoodFlow Wallet',
+              value: 'wallet',
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 20),
+
+            // Note for driver
+            const Text('Ghi chú cho tài xế', style: AppTextStyles.headline4),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _noteController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: 'Thêm ghi chú...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 20),
+
+            // Order summary
+            const Text('Tóm tắt đơn hàng', style: AppTextStyles.headline4),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  ...cart.items.map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Text('${item.quantity}x ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Expanded(child: Text(item.menuItem.name, style: AppTextStyles.bodyMedium)),
+                        Text(
+                          _formatPrice(item.totalPrice),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  )),
+                  const Divider(),
+                  _buildSummaryRow('Tạm tính', _formatPrice(cartState.subtotal)),
+                  const SizedBox(height: 6),
+                  _buildSummaryRow('Phí giao hàng', cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : 'Miễn phí'),
+                  if (cartState.discount > 0) ...[
+                    const SizedBox(height: 6),
+                    _buildSummaryRow('Giảm giá', '-${_formatPrice(cartState.discount)}', valueColor: AppColors.success),
+                  ],
+                  const SizedBox(height: 6),
+                  _buildSummaryRow('Tổng cộng', _formatPrice(cartState.total), isTotal: true),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowMedium,
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: (_isPlacing || orderState.isPlacingOrder) ? null : _placeOrder,
+              child: (_isPlacing || orderState.isPlacingOrder)
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : Text(
+                      'Xác nhận đặt hàng · ${_formatPrice(cartState.total)}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String value,
+  }) {
+    final isSelected = _paymentMethod == value;
+    return GestureDetector(
+      onTap: () => setState(() => _paymentMethod = value),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(subtitle, style: AppTextStyles.bodySmall),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? AppColors.primary : AppColors.textHint,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false, Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isTotal ? 16 : 14,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isTotal ? 16 : 14,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+            color: valueColor ?? AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatPrice(double price) {
+    return '${price.round().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    )}đ';
+  }
+}
