@@ -1,0 +1,17 @@
+{
+  "name": "foodflow-web",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "start": "turbo start",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "ui:add": "cd packages/ui && npx shadcn@latest add"
+  },
+  "devDependencies": {
+    "turbo": "^2.6.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
