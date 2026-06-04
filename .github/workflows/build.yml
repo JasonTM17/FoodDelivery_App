@@ -1,0 +1,23 @@
+name: Build Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: pnpm/action-setup@v4
+        with: { version: '10' }
+      - run: pnpm install --frozen-lockfile
+        working-directory: backend
+      - run: pnpm prisma generate
+        working-directory: backend
+      - run: pnpm build
+        working-directory: backend
