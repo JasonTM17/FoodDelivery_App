@@ -145,6 +145,25 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
+  Future<bool> submitReview(String orderId, double foodRating, double deliveryRating, String comment) async {
+    try {
+      await _api.post('/orders/$orderId/reviews', data: {
+        'foodRating': foodRating,
+        'deliveryRating': deliveryRating,
+        'comment': comment,
+      });
+      await fetchOrders();
+      return true;
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ?? 'Không thể gửi đánh giá.';
+      state = state.copyWith(error: message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(error: 'Có lỗi xảy ra khi gửi đánh giá.');
+      return false;
+    }
+  }
+
   Future<void> fetchTracking(String orderId) async {
     try {
       final response = await _api.get('/orders/$orderId/tracking');

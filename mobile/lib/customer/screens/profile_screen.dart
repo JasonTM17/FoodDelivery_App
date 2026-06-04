@@ -129,21 +129,33 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.payment_outlined,
                     title: 'Phương thức thanh toán',
                     subtitle: 'Thêm hoặc thay đổi phương thức',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.notifications_outlined,
                     title: 'Thông báo',
                     subtitle: 'Quản lý thông báo đẩy',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.favorite_outline,
                     title: 'Yêu thích',
                     subtitle: 'Danh sách món ăn yêu thích',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -165,14 +177,25 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.headset_mic_outlined,
                     title: 'Hỗ trợ',
                     subtitle: 'Trung tâm trợ giúp',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Vui lòng liên hệ hotline: 1900-1234')),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.info_outline,
                     title: 'Về FoodFlow',
                     subtitle: 'Phiên bản 1.0.0',
-                    onTap: () {},
+                    onTap: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationName: 'FoodFlow',
+                        applicationVersion: '1.0.0',
+                        applicationLegalese: '© 2026 FoodFlow. Đặt đồ ăn nhanh chóng, giao hàng tận nơi.',
+                      );
+                    },
                   ),
                 ],
               ),

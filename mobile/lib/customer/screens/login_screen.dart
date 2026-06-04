@@ -168,7 +168,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      // Navigate to forgot password
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Quên mật khẩu'),
+                          content: const Text(
+                            'Vui lòng liên hệ hỗ trợ qua email để được cấp lại mật khẩu.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text('Đóng'),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                     child: const Text(
                       'Quên mật khẩu?',

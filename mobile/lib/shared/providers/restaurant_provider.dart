@@ -60,12 +60,14 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
   Future<void> fetchNearbyRestaurants({
     double? latitude,
     double? longitude,
+    String? cuisine,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final queryParams = <String, dynamic>{};
       if (latitude != null) queryParams['latitude'] = latitude;
       if (longitude != null) queryParams['longitude'] = longitude;
+      if (cuisine != null) queryParams['cuisine'] = cuisine;
 
       final response = await _api.get('/restaurants/nearby', queryParameters: queryParams);
       final dataList = response.data as List<dynamic>;
