@@ -1,5 +1,5 @@
 # backend/Dockerfile — Multi-stage
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 COPY package.json ./
 RUN corepack enable && corepack prepare pnpm@10 --activate && pnpm install --frozen-lockfile
@@ -8,7 +8,7 @@ COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 COPY src/ ./src/
 RUN pnpm prisma generate && pnpm build && pnpm prune --prod
 
-FROM node:20-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 COPY --from=builder /app/node_modules ./node_modules
