@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4-alpine
+        env: { POSTGRES_USER: test, POSTGRES_PASSWORD: test, POSTGRES_DB: test }
+        ports: [5432:5432]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: [6379:6379]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: pnpm/action-setup@v4
+        with: { version: '10' }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: backend
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+        working-directory: backend
+
+      - name: Type check
+        run: pnpm typecheck
+        working-directory: backend
+
+      - name: Run migrations
+        run: pnpm prisma migrate deploy
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+      - name: Run tests
+        run: pnpm test -- --coverage
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-64-chars-minimum-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          JWT_REFRESH_SECRET: test-refresh-secret-64-chars-minimum-xxxxxxxxxxxxxxxx
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: pnpm/action-setup@v4
+        with: { version: '10' }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: web
+
+      - name: Lint
+        run: pnpm lint
+        working-directory: web
+
+      - name: Build
+        run: pnpm build
+        working-directory: web
