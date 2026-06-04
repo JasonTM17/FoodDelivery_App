@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   transpilePackages: ['@vis.gl/react-google-maps'],
   images: {
     remotePatterns: [

@@ -10,6 +10,12 @@ RUN pnpm prisma generate && pnpm build && pnpm prune --prod
 
 FROM node:26-alpine AS runner
 WORKDIR /app
+
+ARG BUILD_SHA
+LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.revision=$BUILD_SHA
+
 RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist

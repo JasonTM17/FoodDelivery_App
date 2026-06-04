@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/order_provider.dart';
+import '../../shared/providers/tracking_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 
@@ -17,19 +17,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-
-  final List<_ChatMessage> _messages = [
-    _ChatMessage(
-      text: 'Xin chào! Tôi có thể giúp gì cho bạn?',
-      isFromDriver: false,
-      time: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    _ChatMessage(
-      text: 'Bạn muốn hỏi gì về đơn hàng?',
-      isFromDriver: false,
-      time: DateTime.now().subtract(const Duration(minutes: 4)),
-    ),
-  ];
+  bool _isSending = false;
 
   final List<String> _quickReplies = [
     'Đơn hàng của tôi đâu rồi?',
@@ -40,6 +28,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Start tracking for chat messages on this order
+    Future.microtask(() {
+      ref.read(trackingProvider.notifier).startTracking(widget.orderId);
+    });
+  }
+
+  @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
@@ -47,32 +44,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty || _isSending) return;
 
-    setState(() {
-      _messages.add(_ChatMessage(
-        text: text.trim(),
-        isFromDriver: true,
-        time: DateTime.now(),
-      ));
-    });
+    final trimmed = text.trim();
+    setState(() => _isSending = true);
+
+    try {
+      ref.read(trackingProvider.notifier).sendChatMessage(trimmed);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể gửi tin nhắn. Vui lòng thử lại.')),
+      );
+    }
+
     _messageController.clear();
-
-    // Simulate auto-reply
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      final orderState = ref.read(orderProvider);
-      final driverName = orderState.currentTrackingOrder?.driverName ?? 'Tài xế';
-      setState(() {
-        _messages.add(_ChatMessage(
-          text: '$driverName đang trên đường giao hàng cho bạn. Vui lòng chờ thêm chút nữa nhé!',
-          isFromDriver: false,
-          time: DateTime.now(),
-        ));
-      });
-      _scrollToBottom();
-    });
-
+    setState(() => _isSending = false);
     _scrollToBottom();
   }
 
@@ -88,10 +74,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  List<_ChatMessage> _buildMessages(List<Map<String, dynamic>> rawMessages) {
+    return rawMessages.map((raw) {
+      final from = raw['from'] as String? ?? 'driver';
+      final text = raw['message'] as String? ?? '';
+      final timestamp = raw['timestamp'] as String?;
+      final time = timestamp != null ? DateTime.tryParse(timestamp) : null;
+
+      // isFromDriver = true means message is from the driver (shown on left)
+      return _ChatMessage(
+        text: text,
+        isFromDriver: from == 'driver',
+        time: time ?? DateTime.now(),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final trackingState = ref.watch(trackingProvider);
     final orderState = ref.watch(orderProvider);
     final driverName = orderState.currentTrackingOrder?.driverName ?? 'Tài xế';
+
+    final messages = _buildMessages(trackingState.chatMessages);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -108,9 +113,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(driverName, style: const TextStyle(fontSize: 15)),
-                const Text(
-                  'Đang hoạt động',
-                  style: TextStyle(fontSize: 11, color: AppColors.success),
+                Text(
+                  trackingState.isConnected ? 'Đang hoạt động' : 'Đang kết nối...',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: trackingState.isConnected ? AppColors.success : AppColors.textHint,
+                  ),
                 ),
               ],
             ),
@@ -150,21 +158,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
 
-          // Messages
+          // Messages area
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
-              },
-            ),
+            child: _buildMessagesArea(messages, trackingState),
           ),
 
           // Quick replies
-          Container(
+          SizedBox(
             height: 44,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -187,7 +187,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
 
-          // Input
+          // Input area
           Container(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             decoration: BoxDecoration(
@@ -218,19 +218,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: _sendMessage,
+                      enabled: !_isSending,
                     ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => _sendMessage(_messageController.text),
+                    onTap: _isSending ? null : () => _sendMessage(_messageController.text),
                     child: Container(
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: _isSending ? AppColors.textHint : AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                      child: _isSending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
                     ),
                   ),
                 ],
@@ -242,15 +249,73 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  Widget _buildMessagesArea(List<_ChatMessage> messages, TrackingState trackingState) {
+    // Loading state when no connection yet and no messages
+    if (!trackingState.isConnected && messages.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 12),
+            Text('Đang kết nối...', style: AppTextStyles.bodySmall),
+          ],
+        ),
+      );
+    }
+
+    // Empty state when connected but no messages yet
+    if (messages.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.chat_bubble_outline, size: 36, color: AppColors.textHint),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Chưa có tin nhắn nào',
+              style: AppTextStyles.headline4.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Gửi tin nhắn đầu tiên để bắt đầu trò chuyện',
+              style: AppTextStyles.bodySmall,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      itemCount: messages.length,
+      itemBuilder: (context, index) {
+        return _buildMessageBubble(messages[index]);
+      },
+    );
+  }
+
   Widget _buildMessageBubble(_ChatMessage message) {
-    final isCustomer = message.isFromDriver;
+    // isFromDriver = true: driver message, shown on left
+    // isFromDriver = false: customer message, shown on right
+    final isFromDriver = message.isFromDriver;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isCustomer ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isFromDriver ? MainAxisAlignment.start : MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isCustomer) ...[
+          if (isFromDriver) ...[
             Container(
               width: 28,
               height: 28,
@@ -266,12 +331,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isCustomer ? AppColors.primary : Colors.white,
+                color: isFromDriver ? Colors.white : AppColors.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isCustomer ? 16 : 4),
-                  bottomRight: Radius.circular(isCustomer ? 4 : 16),
+                  bottomLeft: Radius.circular(isFromDriver ? 4 : 16),
+                  bottomRight: Radius.circular(isFromDriver ? 16 : 4),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -287,7 +352,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Text(
                     message.text,
                     style: TextStyle(
-                      color: isCustomer ? Colors.white : AppColors.textPrimary,
+                      color: isFromDriver ? AppColors.textPrimary : Colors.white,
                       fontSize: 14,
                     ),
                   ),
@@ -296,14 +361,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     _formatTime(message.time),
                     style: TextStyle(
                       fontSize: 10,
-                      color: isCustomer ? Colors.white70 : AppColors.textHint,
+                      color: isFromDriver ? AppColors.textHint : Colors.white70,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          if (isCustomer) const SizedBox(width: 4),
+          if (!isFromDriver) const SizedBox(width: 4),
         ],
       ),
     );
@@ -321,7 +386,7 @@ class _ChatMessage {
   final bool isFromDriver;
   final DateTime time;
 
-  _ChatMessage({
+  const _ChatMessage({
     required this.text,
     required this.isFromDriver,
     required this.time,

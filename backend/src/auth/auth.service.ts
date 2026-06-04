@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto'
 import { PrismaService } from '../database/prisma.service'
 import { RegisterDto, LoginDto, RefreshDto } from './auth.dto'
 import { UsersService } from '../users/users.service'
+import { RefreshTokenStore } from './refresh-token.store'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,24 +50,15 @@ export interface AuthResult {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name)
 
-  /**
-   * In-memory refresh-token blocklist keyed by JWT ID (jti).
-   * Values are expiry timestamps (ms). Entries are pruned lazily on each operation.
-   *
-   * PRODUCTION NOTE: Replace with Redis or a database table for horizontal scale.
-   */
-  private readonly blocklist = new Map<string, number>()
-
   private static readonly BCRYPT_ROUNDS = 12
   private static readonly ACCESS_TOKEN_TTL = '15m'
   private static readonly REFRESH_TOKEN_TTL = '7d'
-  private static readonly BLOCKLIST_PRUNING_INTERVAL_MS = 60_000
-  private lastPrunedAt = 0
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly refreshTokenStore: RefreshTokenStore,
   ) {}
 
   // ─── Public API ───────────────────────────────────────────────────────────
@@ -119,8 +111,6 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto): Promise<AuthResult> {
-    this.pruneBlocklist()
-
     let payload: JwtPayload & { type?: string; jti?: string }
     try {
       payload = this.jwtService.verify(dto.refreshToken)
@@ -132,7 +122,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token')
     }
 
-    if (this.blocklist.has(payload.jti)) {
+    if (await this.refreshTokenStore.isBlocklisted(payload.jti)) {
       throw new UnauthorizedException('Refresh token has been revoked')
     }
 
@@ -142,7 +132,7 @@ export class AuthService {
     }
 
     // Blocklist old refresh token (rotation)
-    this.blocklist.set(payload.jti, this.getRefreshTokenExpiry())
+    await this.refreshTokenStore.blocklist(payload.jti)
 
     return this.buildAuthResult(user)
   }
@@ -153,7 +143,7 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify<JwtPayload & { type?: string; jti?: string }>(refreshToken)
       if (payload.type === 'refresh' && payload.jti) {
-        this.blocklist.set(payload.jti, this.getRefreshTokenExpiry())
+        await this.refreshTokenStore.blocklist(payload.jti)
       }
     } catch {
       // Silently ignore invalid tokens during logout
@@ -207,28 +197,5 @@ export class AuthService {
     )
 
     return { accessToken, refreshToken }
-  }
-
-  // ─── Blocklist Helpers ────────────────────────────────────────────────────
-
-  private getRefreshTokenExpiry(): number {
-    return Date.now() + 7 * 24 * 60 * 60 * 1000
-  }
-
-  private pruneBlocklist(): void {
-    const now = Date.now()
-    if (now - this.lastPrunedAt < AuthService.BLOCKLIST_PRUNING_INTERVAL_MS) return
-
-    this.lastPrunedAt = now
-    let pruned = 0
-    for (const [jti, exp] of this.blocklist) {
-      if (exp <= now) {
-        this.blocklist.delete(jti)
-        pruned++
-      }
-    }
-    if (pruned > 0) {
-      this.logger.debug(`Pruned ${pruned} expired refresh tokens from blocklist`)
-    }
   }
 }

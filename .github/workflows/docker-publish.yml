@@ -7,11 +7,31 @@ on:
 
 env:
   DOCKERHUB_USERNAME: nguyenson1710
-  IMAGE_NAME: nguyenson1710/foodflow-backend
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: nguyenson1710/foodflow-backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            build-args: |
+              BUILD_SHA=${{ github.sha }}
+          - image: nguyenson1710/foodflow-admin
+            context: ./web
+            dockerfile: ./web/Dockerfile
+            build-args: |
+              APP_NAME=admin
+              BUILD_SHA=${{ github.sha }}
+          - image: nguyenson1710/foodflow-restaurant
+            context: ./web
+            dockerfile: ./web/Dockerfile
+            build-args: |
+              APP_NAME=restaurant
+              BUILD_SHA=${{ github.sha }}
+
     steps:
       - uses: actions/checkout@v6
 
@@ -28,32 +48,41 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ matrix.image }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
             type=sha,prefix=,format=short
             type=raw,value=latest
 
-      - name: Build and push backend
+      - name: Build and push ${{ matrix.image }}
         uses: docker/build-push-action@v7
         with:
-          context: ./backend
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          build-args: ${{ matrix.build-args }}
+          cache-from: type=registry,ref=${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
 
   scan:
     needs: build-and-push
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - nguyenson1710/foodflow-backend
+          - nguyenson1710/foodflow-admin
+          - nguyenson1710/foodflow-restaurant
+
     steps:
-      - name: Trivy vulnerability scan
+      - name: Trivy vulnerability scan (${{ matrix.image }})
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_NAME }}:latest
+          image-ref: ${{ matrix.image }}:latest
           format: 'table'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'

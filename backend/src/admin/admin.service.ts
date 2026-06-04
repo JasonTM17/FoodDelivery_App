@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, UserRole, OrderStatus, TicketStatus } from '@prisma/client'
+import { CreatePromotionDto, UpdatePromotionDto } from './dto/promotion.dto'
 
 @Injectable()
 export class AdminService {
@@ -141,5 +142,122 @@ export class AdminService {
        WHERE o.created_at >= $1 GROUP BY DATE(o.created_at) ORDER BY "date"`,
       since,
     )
+  }
+
+  // ─── Promotions CRUD ───
+
+  async getPromotions(params: { isActive?: boolean; page?: number; limit?: number }) {
+    const page = params.page ?? 1
+    const limit = params.limit ?? 20
+    const where: Prisma.PromotionWhereInput = {}
+    if (params.isActive !== undefined) where.isActive = params.isActive
+
+    const [promotions, total] = await Promise.all([
+      this.prisma.promotion.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.promotion.count({ where }),
+    ])
+
+    return {
+      promotions: promotions.map(p => ({
+        ...p,
+        value: Number(p.value),
+        minOrderAmount: Number(p.minOrderAmount),
+        maxDiscount: p.maxDiscount !== null ? Number(p.maxDiscount) : null,
+      })),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
+  }
+
+  async createPromotion(dto: CreatePromotionDto) {
+    const existing = await this.prisma.promotion.findUnique({ where: { code: dto.code } })
+    if (existing) {
+      throw new ConflictException(`Promotion code "${dto.code}" already exists`)
+    }
+
+    const promo = await this.prisma.promotion.create({
+      data: {
+        code: dto.code,
+        type: dto.type,
+        value: dto.value,
+        minOrderAmount: dto.minOrderAmount ?? 0,
+        maxDiscount: dto.maxDiscount ?? null,
+        usageLimit: dto.usageLimit,
+        startsAt: new Date(dto.startsAt),
+        expiresAt: new Date(dto.expiresAt),
+        isActive: dto.isActive ?? true,
+      },
+    })
+
+    return {
+      ...promo,
+      value: Number(promo.value),
+      minOrderAmount: Number(promo.minOrderAmount),
+      maxDiscount: promo.maxDiscount !== null ? Number(promo.maxDiscount) : null,
+    }
+  }
+
+  async updatePromotion(id: string, dto: UpdatePromotionDto) {
+    const existing = await this.prisma.promotion.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundException(`Promotion ${id} not found`)
+    }
+
+    if (dto.code && dto.code !== existing.code) {
+      const duplicate = await this.prisma.promotion.findUnique({ where: { code: dto.code } })
+      if (duplicate) {
+        throw new ConflictException(`Promotion code "${dto.code}" already exists`)
+      }
+    }
+
+    const data: Prisma.PromotionUpdateInput = {}
+    if (dto.code !== undefined) data.code = dto.code
+    if (dto.type !== undefined) data.type = dto.type
+    if (dto.value !== undefined) data.value = dto.value
+    if (dto.minOrderAmount !== undefined) data.minOrderAmount = dto.minOrderAmount
+    if (dto.maxDiscount !== undefined) data.maxDiscount = dto.maxDiscount
+    if (dto.usageLimit !== undefined) data.usageLimit = dto.usageLimit
+    if (dto.startsAt !== undefined) data.startsAt = new Date(dto.startsAt)
+    if (dto.expiresAt !== undefined) data.expiresAt = new Date(dto.expiresAt)
+    if (dto.isActive !== undefined) data.isActive = dto.isActive
+
+    const promo = await this.prisma.promotion.update({ where: { id }, data })
+
+    return {
+      ...promo,
+      value: Number(promo.value),
+      minOrderAmount: Number(promo.minOrderAmount),
+      maxDiscount: promo.maxDiscount !== null ? Number(promo.maxDiscount) : null,
+    }
+  }
+
+  async deletePromotion(id: string) {
+    const existing = await this.prisma.promotion.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundException(`Promotion ${id} not found`)
+    }
+    await this.prisma.promotion.delete({ where: { id } })
+    return { deleted: true }
+  }
+
+  async togglePromotionActive(id: string) {
+    const existing = await this.prisma.promotion.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundException(`Promotion ${id} not found`)
+    }
+    const promo = await this.prisma.promotion.update({
+      where: { id },
+      data: { isActive: !existing.isActive },
+    })
+    return {
+      ...promo,
+      value: Number(promo.value),
+      minOrderAmount: Number(promo.minOrderAmount),
+      maxDiscount: promo.maxDiscount !== null ? Number(promo.maxDiscount) : null,
+    }
   }
 }

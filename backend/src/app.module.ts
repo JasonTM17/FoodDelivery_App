@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { BullModule } from '@nestjs/bullmq'
@@ -19,6 +19,8 @@ import { NotificationsModule } from './notifications/notifications.module'
 import { HealthModule } from './health/health.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 
 @Module({
   imports: [
@@ -46,4 +48,10 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestIdMiddleware, RequestLoggerMiddleware)
+      .forRoutes('*')
+  }
+}

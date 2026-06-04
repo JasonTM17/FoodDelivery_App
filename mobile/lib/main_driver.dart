@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/theme/app_colors.dart';
 import 'driver/screens/home_screen.dart';
 import 'driver/screens/login_screen.dart';
 import 'driver/screens/earnings_screen.dart';
@@ -31,33 +32,19 @@ class DriverApp extends StatelessWidget {
 final _router = GoRouter(
   initialLocation: '/login',
   routes: [
-    GoRoute(path: '/login', builder: (_, __) => const DriverLoginScreen()),
+    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     ShellRoute(
       builder: (_, __, child) => DriverShell(child: child),
       routes: [
-        GoRoute(path: '/home', builder: (_, __) => const DriverHomeScreen()),
-        GoRoute(path: '/earnings', builder: (_, __) => const DriverEarningsScreen()),
-        GoRoute(path: '/profile', builder: (_, __) => const DriverProfileScreen()),
-        GoRoute(path: '/history', builder: (_, __) => const DriverDeliveryHistoryScreen()),
+        GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+        GoRoute(path: '/earnings', builder: (_, __) => const EarningsScreen()),
+        GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+        GoRoute(path: '/history', builder: (_, __) => const DeliveryHistoryScreen()),
       ],
     ),
     GoRoute(
       path: '/delivery-flow',
-      builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>;
-        return DeliveryFlowScreen(
-          orderId: extra['orderId'] as String,
-          restaurantName: extra['restaurantName'] as String,
-          restaurantAddress: extra['restaurantAddress'] as String,
-          restaurantLat: extra['restaurantLat'] as double,
-          restaurantLng: extra['restaurantLng'] as double,
-          customerName: extra['customerName'] as String,
-          customerAddress: extra['customerAddress'] as String,
-          customerLat: extra['customerLat'] as double,
-          customerLng: extra['customerLng'] as double,
-          items: List<Map<String, dynamic>>.from(extra['items'] as List),
-        );
-      },
+      builder: (_, __) => const DeliveryFlowScreen(),
     ),
   ],
 );
@@ -80,7 +67,7 @@ class DriverShell extends StatelessWidget {
             case 2: context.go('/profile');
           }
         },
-        selectedItemColor: AppTheme.driverGreen,
+        selectedItemColor: AppColors.primary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Trang chủ'),
           BottomNavigationBarItem(icon: Icon(Icons.payments_rounded), label: 'Thu nhập'),

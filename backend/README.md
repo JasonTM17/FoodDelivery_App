@@ -1,71 +1,149 @@
-# FoodFlow — Hướng dẫn chạy local
+# FoodFlow Backend
 
-## Yêu cầu
+## 1. Purpose
 
-- Docker Desktop
-- Node.js 20+ + pnpm 10
-- Flutter 3.x (cho mobile)
+NestJS API server for the FoodFlow food delivery platform. Provides REST API, WebSocket realtime tracking, BullMQ job processing, and JWT authentication with RBAC (customer, driver, restaurant, admin). Called by the Flutter mobile apps, Next.js web dashboards, and N8N AI workflows. Calls PostgreSQL+PostGIS for spatial queries, Redis for caching/sessions/job queues, and MinIO for object storage.
 
-## 1. Khởi động Backend + Database
+## 2. API Surface
+
+| Resource | Endpoints |
+|----------|-----------|
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` |
+| Users | `GET/PATCH /api/users/profile`, `GET /api/users` (admin) |
+| Restaurants | `GET /api/restaurants`, `GET /api/restaurants/nearby`, `GET/POST/PATCH /api/restaurants/:id` |
+| Menu | `GET/POST /api/restaurants/:id/categories`, `GET/POST/PATCH/DELETE /api/restaurants/:id/items`, `GET /api/items` |
+| Orders | `POST /api/orders`, `GET /api/orders`, `GET/PATCH /api/orders/:id`, `GET /api/orders/:id/timeline` |
+| Drivers | `GET /api/drivers/nearby`, `PATCH /api/drivers/location`, `GET /api/drivers/earnings` |
+| Dispatch | `POST /api/dispatch/assign`, `POST /api/dispatch/accept/:orderId`, `POST /api/dispatch/broadcast` |
+| Tracking | WebSocket `tracking:subscribe`, `tracking:location-update`, `tracking:unsubscribe` |
+| Admin | `GET /api/admin/kpi`, `GET /api/admin/audit-log`, `GET /api/admin/support`, `PATCH /api/admin/support/:id` |
+| Health | `GET /api/health`, `GET /api/readyz`, `GET /api/metrics` |
+
+Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or see `docs/api-reference.md`.
+
+## 3. Env Vars
+
+| Name | Required | Default | Description |
+|------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `REDIS_URL` | Yes | — | Redis connection string |
+| `JWT_SECRET` | Yes | — | HMAC-SHA256 signing key (min 32 chars) |
+| `JWT_REFRESH_SECRET` | Yes | — | Refresh token signing key |
+| `MINIO_ENDPOINT` | Yes | `localhost` | MinIO host |
+| `MINIO_PORT` | Yes | `9000` | MinIO API port |
+| `MINIO_ACCESS_KEY` | Yes | `minioadmin` | MinIO access key |
+| `MINIO_SECRET_KEY` | Yes | `minioadmin` | MinIO secret key |
+| `MINIO_BUCKET` | Yes | `foodflow` | Bucket name |
+| `MINIO_PUBLIC_URL` | Yes | `http://localhost:9000` | Public-facing MinIO URL |
+| `N8N_WEBHOOK_URL` | Yes | — | N8N webhook base URL |
+| `N8N_API_KEY` | Yes | — | API key for N8N webhook auth |
+| `GOOGLE_MAPS_API_KEY` | No | — | Google Maps Geocoding API key |
+| `GEMINI_API_KEY` | No | — | Gemini API key (for AI chat) |
+| `PORT` | No | `3001` | Server port |
+| `NODE_ENV` | No | `development` | Environment (`development`, `production`, `test`) |
+| `CORS_ORIGINS` | No | `http://localhost:3000,...` | Comma-separated allowed origins |
+
+Copy `.env.example` to `.env` and fill in the required values.
+
+## 4. Run Locally
 
 ```bash
-# Copy env
-cp .env.example .env
+# Prerequisites: Docker Desktop, Node.js 20+, pnpm 10+
 
-# Khởi động tất cả services
+# 1. Start infrastructure
 docker compose up -d
 
-# Chạy migration + seed
-cd backend
+# 2. Install dependencies
 pnpm install
 pnpm prisma generate
+
+# 3. Run migrations and seed
+pnpm prisma migrate dev --name init
+pnpm db:seed        # Small sample data
+# pnpm db:big-seed  # Large dataset
+
+# 4. Start dev server (hot reload)
+pnpm start:dev       # http://localhost:3001/api
+
+# 5. Swagger docs
+# Open http://localhost:3001/api/docs
+```
+
+## 5. Test
+
+```bash
+# Unit tests
+pnpm test
+
+# Unit tests with coverage (threshold: lines >= 80%, branches >= 75%)
+pnpm test:cov
+
+# E2E tests
+pnpm test:e2e
+
+# Type check
+pnpm typecheck
+
+# Lint
+pnpm lint
+```
+
+Test framework: Jest + Supertest (e2e). Mock Redis via `ioredis-mock` in unit tests.
+
+## 6. Runbook
+
+### Rotate JWT Secrets
+
+```bash
+# 1. Generate new secrets
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+# 2. Update .env and docker-compose.yml
+# 3. Phase 1: set JWT_SECRET_OLD = old value, JWT_SECRET = new value
+# 4. Deploy — server verifies both for token TTL window (15 min)
+# 5. After 15 min: remove JWT_SECRET_OLD, deploy again
+```
+
+### Reset Database
+
+```bash
+docker compose down -v    # Destroys volumes
+docker compose up -d      # Recreates fresh DB
+cd backend
 pnpm prisma migrate dev --name init
 pnpm db:seed
-
-# Start dev server
-pnpm start:dev
 ```
 
-Backend chạy tại http://localhost:3001/api
-
-## 2. N8N AI Assistant
-
-N8N chạy tại http://localhost:5678
-
-1. Mở N8N UI → Settings → Import
-2. Import từng file trong `infra/n8n/workflows/`
-3. Cấu hình credential (Gemini API key, Backend API key)
-4. Activate workflows
-
-## 3. Web Dashboard
+### Drain and Restart Workers
 
 ```bash
-cd web
-pnpm install
-pnpm dev
+# Graceful shutdown (finish active jobs, stop picking new ones)
+docker compose stop worker
+# Wait for active jobs to complete (check Bull Board: http://localhost:3004)
+docker compose start worker
 ```
 
-- Admin Dashboard: http://localhost:3002
-- Restaurant Dashboard: http://localhost:3003
-
-## 4. Mobile App
+### View Logs
 
 ```bash
-cd mobile
-flutter pub get
-flutter run -t lib/main_customer.dart  # Customer App
-flutter run -t lib/main_driver.dart     # Driver App
+docker compose logs -f backend
+docker compose logs -f worker
 ```
 
-## Tài khoản test (sau khi seed)
+### Database Migrations (Production)
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@foodflow.vn | Admin@123 |
-| Customer | customer1@foodflow.vn | Customer@123 |
-| Driver | driver1@foodflow.vn | Driver@123 |
-| Restaurant | restaurant1@foodflow.vn | Partner@123 |
+```bash
+# Never use prisma migrate dev in production
+pnpm prisma migrate deploy
+```
 
-## API Docs
+### Health Check
 
-Swagger UI: http://localhost:3001/api/docs
+```bash
+curl http://localhost:3001/api/health
+# {"status":"ok","timestamp":"2026-06-04T...","uptime":12345}
+```
+
+### Queue Monitoring
+
+Open Bull Board at `http://localhost:3004` to inspect dispatch, notification, and cleanup queues. Use to drain stuck jobs, view failed jobs, or retry.

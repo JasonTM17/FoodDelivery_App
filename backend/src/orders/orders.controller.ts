@@ -35,12 +35,6 @@ export class OrdersController {
     return this.ordersService.getOrderDetail(id, user.sub, user.role)
   }
 
-  @Get('orders/:id/tracking')
-  @Roles('customer')
-  getTracking(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.ordersService.getTracking(id, user.sub)
-  }
-
   @Post('orders/:id/cancel')
   @Roles('customer')
   cancelOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto?: CancelOrderDto) {

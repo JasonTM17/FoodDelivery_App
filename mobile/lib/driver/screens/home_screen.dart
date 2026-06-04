@@ -152,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ref.read(driverProvider.notifier).goOffline();
                 }
               },
-              activeColor: AppColors.primary,
+              activeTrackColor: AppColors.primary,
               inactiveThumbColor: AppColors.textHint,
               inactiveTrackColor: const Color(0xFF374151),
             ),
@@ -203,7 +203,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildActiveOrderCard(OrderModel order) {
     return InkWell(
       onTap: () {
-        context.push('/delivery-flow');
+        context.push('/delivery-flow', extra: {
+          'orderId': order.id,
+          'restaurantName': order.restaurantName,
+          'restaurantAddress': order.restaurantLatitude?.toString() ?? '',
+          'restaurantLat': order.restaurantLatitude,
+          'restaurantLng': order.restaurantLongitude,
+          'customerAddress': order.deliveryAddress.address,
+          'customerLat': order.deliveryAddress.latitude,
+          'customerLng': order.deliveryAddress.longitude,
+          'items': order.items.map((i) => {
+            'name': i.name,
+            'quantity': i.quantity,
+          }).toList(),
+        });
       },
       borderRadius: BorderRadius.circular(18),
       child: Container(

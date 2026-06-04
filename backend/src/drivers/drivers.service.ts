@@ -26,6 +26,8 @@ export class DriversService {
   }
 
   async goOffline(driverId: string): Promise<void> {
+    // ZREM is correct for geo keys — GEOADD stores members in a sorted set internally.
+    // Redis does not have a separate GEO-removal command.
     await this.redis.zrem('drivers:active', `driver:${driverId}`)
     await this.redis.del(`driver:${driverId}:status`)
     await this.redis.del(`driver:${driverId}:alive`)

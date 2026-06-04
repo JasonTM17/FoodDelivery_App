@@ -68,7 +68,7 @@ export class TrackingService {
        WHERE d.is_online = true
          AND ST_DWithin(dl.location, ST_SetSRID(ST_MakePoint($1::float8, $2::float8), 4326)::geography, $3::float8)
          AND dl.recorded_at > NOW() - INTERVAL '30 seconds'
-         AND NOT EXISTS (SELECT 1 FROM driver_profiles dp2 WHERE dp2.user_id = d.user_id AND dp2.current_order_id IS NOT NULL)
+         AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.driver_id = d.user_id AND o.status IN ('driver_assigned', 'driver_arriving_restaurant', 'picked_up', 'delivering'))
        ORDER BY "distKm", rating DESC
        LIMIT 10`,
       lng, lat, radiusKm * 1000,

@@ -5,6 +5,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { UsersService } from '../users/users.service'
 import { PrismaService } from '../database/prisma.service'
+import { RefreshTokenStore } from './refresh-token.store'
 
 describe('AuthService', () => {
   let service: AuthService
@@ -30,6 +31,11 @@ describe('AuthService', () => {
     get: jest.fn().mockReturnValue('test-secret'),
   }
 
+  const mockRefreshTokenStore = {
+    blocklist: jest.fn(),
+    isBlocklisted: jest.fn(),
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -38,6 +44,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: RefreshTokenStore, useValue: mockRefreshTokenStore },
       ],
     }).compile()
     service = module.get(AuthService)
