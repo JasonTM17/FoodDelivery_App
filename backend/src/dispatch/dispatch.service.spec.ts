@@ -66,14 +66,24 @@ describe('DispatchService', () => {
     })
 
     it('should filter busy drivers', async () => {
-      mockRedis.call.mockResolvedValueOnce([['driver:1', '0.5'], ['driver:2', '1.2']])
-      mockRedis.pipeline.mockReturnValueOnce({
-        get: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([
-          [null, 'online'], [null, ''], [null, '4.5'], [null, '1'], // driver 1: free
-          [null, 'online'], [null, 'order:123'], [null, '4.0'], [null, '1'], // driver 2: busy
-        ]),
-      })
+      // GEOSEARCH WITHDIST returns flat array: [member1, dist1, member2, dist2, ...]
+      mockRedis.call.mockResolvedValueOnce(['driver:1', '0.5', 'driver:2', '1.2'])
+      // Chained mockReturnValueOnce: one pipeline per driver, different results per call
+      mockRedis.pipeline
+        .mockReturnValueOnce({ // driver 1: free
+          set: jest.fn().mockReturnThis(),
+          get: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue([
+            [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
+          ]),
+        })
+        .mockReturnValueOnce({ // driver 2: busy (has current_order)
+          set: jest.fn().mockReturnThis(),
+          get: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue([
+            [null, 'online'], [null, 'order:123'], [null, '4.0'], [null, '1'],
+          ]),
+        })
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result).toHaveLength(1)
       expect(result[0].driverId).toBe('1')
@@ -81,15 +91,24 @@ describe('DispatchService', () => {
 
     it('should sort by distance ASC then rating DESC', async () => {
       mockRedis.call.mockResolvedValueOnce([
-        ['driver:1', '2.0'], ['driver:2', '2.0'], // same distance
+        'driver:1', '2.0', 'driver:2', '2.0', // same distance
       ])
-      mockRedis.pipeline.mockReturnValueOnce({
-        get: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([
-          [null, 'online'], [null, ''], [null, '4.2'], [null, '1'],
-          [null, 'online'], [null, ''], [null, '4.8'], [null, '1'],
-        ]),
-      })
+      // Chained mockReturnValueOnce: one pipeline per driver, different ratings
+      mockRedis.pipeline
+        .mockReturnValueOnce({ // driver 1: rating 4.2
+          set: jest.fn().mockReturnThis(),
+          get: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue([
+            [null, 'online'], [null, ''], [null, '4.2'], [null, '1'],
+          ]),
+        })
+        .mockReturnValueOnce({ // driver 2: rating 4.8
+          set: jest.fn().mockReturnThis(),
+          get: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue([
+            [null, 'online'], [null, ''], [null, '4.8'], [null, '1'],
+          ]),
+        })
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result[0].rating).toBe(4.8)
       expect(result[1].rating).toBe(4.2)
