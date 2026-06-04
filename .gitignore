@@ -1,0 +1,74 @@
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Claude / AI assistants — private state
+.claude/worktrees/
+.claude-private/
+.omc/
+.codex/
+
+# Private plans & notes
+plans/
+PLAN*.md
+plan*.md
+NOTES*.md
+notes*.md
+TODO*.md
+todo*.md
+ROADMAP*.md
+roadmap*.md
+DRAFT*.md
+draft*.md
+*.private.md
+*.local.md
+.claude/plans/
+
+# Release artifacts
+release-manifest.json
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Node
+node_modules/
+.npm/
+*.tsbuildinfo
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Misc
+*.pem
+*.key
