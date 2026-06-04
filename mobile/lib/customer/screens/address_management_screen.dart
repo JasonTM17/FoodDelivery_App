@@ -1,71 +1,151 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../shared/models/user.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../providers/address_provider.dart';
 
-class AddressManagementScreen extends StatefulWidget {
+class AddressManagementScreen extends ConsumerStatefulWidget {
   const AddressManagementScreen({super.key});
 
   @override
-  State<AddressManagementScreen> createState() => _AddressManagementScreenState();
+  ConsumerState<AddressManagementScreen> createState() => _AddressManagementScreenState();
 }
 
-class _AddressManagementScreenState extends State<AddressManagementScreen> {
-  List<_AddressItem> _addresses = [
-    _AddressItem(
-      id: '1',
-      label: 'Nhà',
-      address: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM',
+class _AddressManagementScreenState extends ConsumerState<AddressManagementScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(addressProvider.notifier).fetchAddresses();
+    });
+  }
+
+  IconData _iconForLabel(String label) {
+    switch (label) {
+      case 'Nhà':
+        return Icons.home;
+      case 'Công ty':
+        return Icons.work;
+      default:
+        return Icons.location_on;
+    }
+  }
+
+  void _showAddAddressDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _AddressFormDialog(
+        title: 'Thêm địa chỉ mới',
+        onSave: (label, address) async {
+          final notifier = ref.read(addressProvider.notifier);
+          final success = await notifier.addAddress(
+            label: label,
+            address: address,
+            latitude: 0.0,
+            longitude: 0.0,
+            isDefault: ref.read(addressProvider).addresses.isEmpty,
+          );
+          if (context.mounted) {
+            if (success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã thêm địa chỉ mới')),
+              );
+            } else {
+              final error = ref.read(addressProvider).error;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error ?? 'Không thể thêm địa chỉ')),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  void _showEditAddressDialog(AddressModel address) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddressFormDialog(
+        title: 'Sửa địa chỉ',
+        initialLabel: address.label,
+        initialAddress: address.address,
+        onSave: (label, newAddress) async {
+          final notifier = ref.read(addressProvider.notifier);
+          final success = await notifier.updateAddress(
+            id: address.id,
+            label: label,
+            address: newAddress,
+          );
+          if (context.mounted) {
+            if (success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã cập nhật địa chỉ')),
+              );
+            } else {
+              final error = ref.read(addressProvider).error;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error ?? 'Không thể cập nhật địa chỉ')),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  void _showDeleteConfirm(AddressModel address) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa địa chỉ?'),
+        content: Text('Xóa "${address.label}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final success = await ref.read(addressProvider.notifier).deleteAddress(address.id);
+              if (context.mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã xóa địa chỉ')),
+                  );
+                } else {
+                  final error = ref.read(addressProvider).error;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error ?? 'Không thể xóa địa chỉ')),
+                  );
+                }
+              }
+            },
+            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _setAsDefault(AddressModel address) async {
+    await ref.read(addressProvider.notifier).updateAddress(
+      id: address.id,
       isDefault: true,
-      icon: Icons.home,
-    ),
-    _AddressItem(
-      id: '2',
-      label: 'Công ty',
-      address: '456 Lê Lợi, Phường Bến Thành, Quận 1, TP. HCM',
-      isDefault: false,
-      icon: Icons.work,
-    ),
-  ];
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final addressState = ref.watch(addressProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Địa chỉ của tôi'),
       ),
-      body: _addresses.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.location_off, size: 40, color: AppColors.textHint),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Chưa có địa chỉ nào',
-                    style: AppTextStyles.headline4,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Thêm địa chỉ để bắt đầu đặt hàng',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _addresses.length,
-              itemBuilder: (context, index) => _buildAddressCard(index),
-            ),
+      body: _buildBody(addressState),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddAddressDialog,
         icon: const Icon(Icons.add),
@@ -74,8 +154,91 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
     );
   }
 
-  Widget _buildAddressCard(int index) {
-    final address = _addresses[index];
+  Widget _buildBody(AddressState state) {
+    if (state.isLoading && state.addresses.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 12),
+            Text('Đang tải địa chỉ...', style: AppTextStyles.bodySmall),
+          ],
+        ),
+      );
+    }
+
+    if (state.error != null && state.addresses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 40, color: AppColors.error),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              state.error!,
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => ref.read(addressProvider.notifier).fetchAddresses(),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.addresses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.location_off, size: 40, color: AppColors.textHint),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Chưa có địa chỉ nào',
+              style: AppTextStyles.headline4,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Thêm địa chỉ để bắt đầu đặt hàng',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(addressProvider.notifier).fetchAddresses(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: state.addresses.length,
+        itemBuilder: (context, index) => _buildAddressCard(state.addresses[index]),
+      ),
+    );
+  }
+
+  Widget _buildAddressCard(AddressModel address) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -101,7 +264,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  address.icon,
+                  _iconForLabel(address.label),
                   color: address.isDefault ? AppColors.primary : AppColors.textHint,
                   size: 22,
                 ),
@@ -148,10 +311,10 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 onSelected: (value) {
                   switch (value) {
                     case 'edit':
-                      _showEditAddressDialog(index);
+                      _showEditAddressDialog(address);
                       break;
                     case 'delete':
-                      _showDeleteConfirm(index);
+                      _showDeleteConfirm(address);
                       break;
                   }
                 },
@@ -167,19 +330,13 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
             children: [
               if (!address.isDefault)
                 TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      for (final a in _addresses) {
-                        a.isDefault = a.id == address.id;
-                      }
-                    });
-                  },
+                  onPressed: () => _setAsDefault(address),
                   icon: const Icon(Icons.check_circle_outline, size: 16),
                   label: const Text('Đặt làm mặc định', style: TextStyle(fontSize: 12)),
                 ),
               const Spacer(),
               TextButton.icon(
-                onPressed: () => _showEditAddressDialog(index),
+                onPressed: () => _showEditAddressDialog(address),
                 icon: const Icon(Icons.edit, size: 16),
                 label: const Text('Sửa', style: TextStyle(fontSize: 12)),
               ),
@@ -189,84 +346,6 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
       ),
     );
   }
-
-  void _showAddAddressDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _AddressFormDialog(
-        title: 'Thêm địa chỉ mới',
-        onSave: (label, address) {
-          setState(() {
-            _addresses.add(_AddressItem(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              label: label,
-              address: address,
-              isDefault: _addresses.isEmpty,
-              icon: label == 'Nhà' ? Icons.home : Icons.work,
-            ));
-          });
-        },
-      ),
-    );
-  }
-
-  void _showEditAddressDialog(int index) {
-    final address = _addresses[index];
-    showDialog(
-      context: context,
-      builder: (context) => _AddressFormDialog(
-        title: 'Sửa địa chỉ',
-        initialLabel: address.label,
-        initialAddress: address.address,
-        onSave: (label, newAddress) {
-          setState(() {
-            _addresses[index].label = label;
-            _addresses[index].address = newAddress;
-            _addresses[index].icon = label == 'Nhà' ? Icons.home : Icons.work;
-          });
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirm(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xóa địa chỉ?'),
-        content: Text('Xóa "${_addresses[index].label}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() => _addresses.removeAt(index));
-              Navigator.of(context).pop();
-            },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddressItem {
-  final String id;
-  String label;
-  String address;
-  bool isDefault;
-  IconData icon;
-
-  _AddressItem({
-    required this.id,
-    required this.label,
-    required this.address,
-    required this.isDefault,
-    required this.icon,
-  });
 }
 
 class _AddressFormDialog extends StatefulWidget {

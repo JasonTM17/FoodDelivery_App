@@ -126,6 +126,8 @@ class DriverState {
   final OrderModel? activeOrder;
   final DriverEarnings? earnings;
   final String? successMessage;
+  final double? currentLat;
+  final double? currentLng;
 
   const DriverState({
     this.isLoading = false,
@@ -145,6 +147,8 @@ class DriverState {
     this.activeOrder,
     this.earnings,
     this.successMessage,
+    this.currentLat,
+    this.currentLng,
   });
 
   DriverState copyWith({
@@ -165,6 +169,8 @@ class DriverState {
     OrderModel? activeOrder,
     DriverEarnings? earnings,
     String? successMessage,
+    double? currentLat,
+    double? currentLng,
   }) {
     return DriverState(
       isLoading: isLoading ?? this.isLoading,
@@ -184,6 +190,8 @@ class DriverState {
       activeOrder: activeOrder ?? this.activeOrder,
       earnings: earnings ?? this.earnings,
       successMessage: successMessage,
+      currentLat: currentLat ?? this.currentLat,
+      currentLng: currentLng ?? this.currentLng,
     );
   }
 }
@@ -313,6 +321,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   }
 
   void updateLocation(double lat, double lng) {
+    state = state.copyWith(currentLat: lat, currentLng: lng);
     if (state.isOnline) {
       _socket.emit('driver:location', {'latitude': lat, 'longitude': lng});
     }

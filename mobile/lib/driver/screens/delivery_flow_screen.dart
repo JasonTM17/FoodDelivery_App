@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
-import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_provider.dart';
 import '../widgets/delivery_step_indicator.dart';
 
@@ -16,23 +15,13 @@ class DeliveryFlowScreen extends ConsumerStatefulWidget {
 }
 
 class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
-  Timer? _locationTimer;
-
   @override
   void initState() {
     super.initState();
-    _startLocationUpdates();
-  }
-
-  void _startLocationUpdates() {
-    _locationTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      ref.read(driverProvider.notifier).updateLocation(10.762622, 106.660172);
-    });
   }
 
   @override
   void dispose() {
-    _locationTimer?.cancel();
     super.dispose();
   }
 
@@ -622,22 +611,40 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     );
   }
 
-  void _callCustomer(OrderModel order) {
-    // In production: launch URL with phone number
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đang gọi khách hàng...'),
-        backgroundColor: Color(0xFF1E1E1E),
-      ),
-    );
+  Future<void> _callCustomer(OrderModel order) async {
+    try {
+      final uri = Uri.parse('tel:');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        _showPhoneError();
+      }
+    } catch (_) {
+      _showPhoneError();
+    }
   }
 
-  void _callRestaurant(OrderModel order) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đang gọi nhà hàng...'),
-        backgroundColor: Color(0xFF1E1E1E),
-      ),
-    );
+  Future<void> _callRestaurant(OrderModel order) async {
+    try {
+      final uri = Uri.parse('tel:');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        _showPhoneError();
+      }
+    } catch (_) {
+      _showPhoneError();
+    }
+  }
+
+  void _showPhoneError() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể mở trình quay số'),
+          backgroundColor: Color(0xFF1E1E1E),
+        ),
+      );
+    }
   }
 }

@@ -5,6 +5,7 @@ import '../../shared/providers/order_provider.dart';
 import '../../shared/models/user.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../providers/address_provider.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -18,6 +19,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String _paymentMethod = 'cash';
   final _noteController = TextEditingController();
   bool _isPlacing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final addrState = ref.read(addressProvider);
+      if (addrState.addresses.isEmpty && !addrState.isLoading) {
+        ref.read(addressProvider.notifier).fetchAddresses();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -75,26 +87,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       );
     }
 
-    // Sample addresses - in real app, fetch from user profile
-    final addresses = [
-      AddressModel(
-        id: '1',
-        label: 'Nhà',
-        address: '123 Nguyễn Huệ, Quận 1, TP. HCM',
-        latitude: 10.7769,
-        longitude: 106.7009,
-        isDefault: true,
-      ),
-      AddressModel(
-        id: '2',
-        label: 'Công ty',
-        address: '456 Lê Lợi, Quận 1, TP. HCM',
-        latitude: 10.7789,
-        longitude: 106.7009,
-        apartmentNumber: 'Tầng 5',
-      ),
-    ];
+    final addressState = ref.watch(addressProvider);
+    final addresses = addressState.addresses;
 
+    // Auto-select default address on first load
     if (_selectedAddress == null && addresses.isNotEmpty) {
       _selectedAddress = addresses.firstWhere(
         (a) => a.isDefault,
@@ -113,7 +109,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             // Delivery address
             const Text('Địa chỉ giao hàng', style: AppTextStyles.headline4),
             const SizedBox(height: 8),
-            ...addresses.map((address) => GestureDetector(
+            if (addressState.isLoading && addresses.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              )
+            else if (addresses.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.location_off, color: AppColors.textHint, size: 32),
+                    const SizedBox(height: 8),
+                    const Text('Chưa có địa chỉ nào', style: AppTextStyles.bodyMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Thêm địa chỉ để tiếp tục đặt hàng',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...addresses.map((address) => GestureDetector(
               onTap: () => setState(() => _selectedAddress = address),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 8),
