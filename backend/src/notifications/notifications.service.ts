@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Optional } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma } from '@prisma/client'
+import { NotificationsGateway } from './notifications.gateway'
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly gateway?: NotificationsGateway,
+  ) {}
 
   async getUserNotifications(userId: string, page = 1, limit = 20) {
     const [notifications, total, unreadCount] = await Promise.all([
@@ -35,8 +39,21 @@ export class NotificationsService {
   }
 
   async create(data: { userId: string; title: string; body: string; type: string; payload?: Record<string, unknown> }) {
-    return this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: { userId: data.userId, title: data.title, body: data.body, type: data.type, data: (data.payload ?? {}) as Prisma.InputJsonValue },
     })
+
+    // Push real-time notification via WebSocket
+    this.gateway?.sendToUser(data.userId, {
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      type: notification.type,
+      data: notification.data,
+      isRead: notification.isRead,
+      createdAt: notification.createdAt,
+    })
+
+    return notification
   }
 }

@@ -1,7 +1,8 @@
-import { Controller, Get, Patch, Param, Query, Body, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
 import { AdminService } from './admin.service'
+import { CreatePromotionDto, UpdatePromotionDto, PromotionQueryDto } from './dto/promotion.dto'
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
@@ -63,12 +64,27 @@ export class AdminController {
   }
 
   @Get('promotions')
-  async getPromotions() {
-    // Return seed data for now — full CRUD via Prisma later
-    return [
-      { id: "1", code: "WELCOME20", type: "percentage", value: 20, minOrderAmount: 50000, maxDiscount: 50000, usageCount: 145, usageLimit: 1000, isActive: true, expiresAt: "2026-12-31" },
-      { id: "2", code: "FREESHIP", type: "fixed", value: 15000, minOrderAmount: 100000, maxDiscount: 15000, usageCount: 89, usageLimit: 500, isActive: true, expiresAt: "2026-12-31" },
-      { id: "3", code: "SUMMER50", type: "percentage", value: 50, minOrderAmount: 200000, maxDiscount: 100000, usageCount: 12, usageLimit: 200, isActive: true, expiresAt: "2026-12-31" },
-    ]
+  async getPromotions(@Query() query: PromotionQueryDto) {
+    return this.adminService.getPromotions(query)
+  }
+
+  @Post('promotions')
+  async createPromotion(@Body() dto: CreatePromotionDto) {
+    return this.adminService.createPromotion(dto)
+  }
+
+  @Patch('promotions/:id')
+  async updatePromotion(@Param('id') id: string, @Body() dto: UpdatePromotionDto) {
+    return this.adminService.updatePromotion(id, dto)
+  }
+
+  @Delete('promotions/:id')
+  async deletePromotion(@Param('id') id: string) {
+    return this.adminService.deletePromotion(id)
+  }
+
+  @Patch('promotions/:id/toggle')
+  async togglePromotionActive(@Param('id') id: string) {
+    return this.adminService.togglePromotionActive(id)
   }
 }
