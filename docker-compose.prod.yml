@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    restart: always
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      interval: 15s
+      retries: 3
+
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+
+  redis:
+    restart: always
+    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 1gb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:?required}
