@@ -38,8 +38,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // TODO: Call API to submit review with _foodRating, _deliveryRating, _commentController.text
-      await Future.delayed(const Duration(seconds: 1));
+      await ref.read(orderProvider.notifier).submitReview(
+        widget.orderId,
+        _foodRating,
+        _deliveryRating,
+        _commentController.text.trim(),
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

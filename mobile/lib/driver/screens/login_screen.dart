@@ -186,7 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Register link
                   TextButton(
                     onPressed: () {
-                      // Navigate to driver registration
+                      Navigator.of(context).pushNamed('/register');
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,

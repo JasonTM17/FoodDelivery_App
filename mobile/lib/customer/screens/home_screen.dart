@@ -20,6 +20,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   String _selectedCuisine = 'Tất cả';
   int _currentBannerIndex = 0;
 
@@ -63,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -106,7 +108,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: AppTextStyles.headline3,
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          _searchController.clear();
+                          ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
+                            latitude: _currentLocation?.latitude,
+                            longitude: _currentLocation?.longitude,
+                            cuisine: null,
+                          );
+                        },
                         child: const Text('Xem tất cả'),
                       ),
                     ],
@@ -272,6 +281,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: TextField(
         controller: _searchController,
+        focusNode: _searchFocusNode,
         decoration: InputDecoration(
           hintText: 'Tìm kiếm món ăn, nhà hàng...',
           prefixIcon: const Icon(Icons.search),
@@ -315,7 +325,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => setState(() => _selectedCuisine = cuisine),
+              onTap: () {
+                setState(() => _selectedCuisine = cuisine);
+                final cuisineParam = cuisine == 'Tất cả' ? null : cuisine;
+                ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
+                  latitude: _currentLocation?.latitude,
+                  longitude: _currentLocation?.longitude,
+                  cuisine: cuisineParam,
+                );
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -489,8 +507,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home_rounded, 'Trang chủ', true, () {  }),
-              _buildNavItem(Icons.search_rounded, 'Tìm kiếm', false, () {}),
+              _buildNavItem(Icons.home_rounded, 'Trang chủ', true, () {}),
+              _buildNavItem(Icons.search_rounded, 'Tìm kiếm', false, () {
+                FocusScope.of(context).requestFocus(_searchFocusNode);
+              }),
               _buildNavItem(Icons.shopping_cart_outlined, 'Giỏ hàng', false, () {
                 Navigator.of(context).pushNamed('/cart');
               }, badgeCount: cartItemCount),

@@ -103,7 +103,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                         actions: [
                           IconButton(
                             icon: const Icon(Icons.share_outlined, color: Colors.white),
-                            onPressed: () {},
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Đã sao chép liên kết: ${restaurant.name}')),
+                              );
+                            },
                           ),
                         ],
                         bottom: PreferredSize(
