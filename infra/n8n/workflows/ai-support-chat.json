@@ -1,0 +1,248 @@
+{
+  "name": "AI Support Chat",
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "path": "ai-support-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "switch-intent",
+      "name": "Classify Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "dataType": "string",
+        "value2": "{{ $json.body.intent || $json.queryResult.intent.displayName || 'general' }}",
+        "rules": {
+          "string": [
+            { "value2": "order_status", "output": 0 },
+            { "value2": "cancel", "output": 1 },
+            { "value2": "complaint", "output": 2 },
+            { "value2": "recommend", "output": 3 }
+          ]
+        },
+        "fallbackOutput": 4
+      }
+    },
+    {
+      "id": "http-order-status",
+      "name": "GET Order Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 150],
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:3001/api/admin/orders/{{ $json.body.orderId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "http-create-ticket",
+      "name": "POST Create Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/ai/create-ticket",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "customerId", "value": "{{ $json.body.customerId }}" },
+            { "name": "issue", "value": "{{ $json.body.message }}" },
+            { "name": "intent", "value": "{{ $json.body.intent }}" },
+            { "name": "orderId", "value": "{{ $json.body.orderId }}" }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "http-nearby",
+      "name": "GET Nearby Restaurants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 450],
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:3001/api/restaurants/nearby?lat={{ $json.body.lat }}&lng={{ $json.body.lng }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "gemini-ai",
+      "name": "Gemini AI Response",
+      "type": "n8n-nodes-base.googleAi",
+      "typeVersion": 1,
+      "position": [850, 600],
+      "parameters": {
+        "options": {
+          "model": "gemini-pro",
+          "temperature": 0.7,
+          "maxOutputTokens": 500
+        },
+        "messages": {
+          "values": [
+            {
+              "message": "Bạn là trợ lý hỗ trợ khách hàng thân thiện cho ứng dụng giao đồ ăn. Hãy trả lời bằng tiếng Việt.\n\nNgữ cảnh:\n- Ý định: {{ $node['Classify Intent'].json.value }}\n- Thông tin đơn hàng: {{ $node['GET Order Status'].json | toJSON }}\n- Ticket đã tạo: {{ $node['POST Create Ticket'].json | toJSON }}\n- Nhà hàng gần đây: {{ $node['GET Nearby Restaurants'].json | toJSON }}\n- Tin nhắn gốc: {{ $node['Webhook'].json.body.message }}\n\nHãy tạo phản hồi thân thiện, hữu ích dựa trên ngữ cảnh trên.",
+              "role": "user"
+            }
+          ]
+        },
+        "subParameters": {
+          "parameters": [
+            { "name": "fallbackToLatestModel", "value": true }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 600],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{{ $json.candidates[0].content.parts[0].text || 'Xin lỗi, tôi không thể xử lý yêu cầu này ngay lúc này.' }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "merge-status",
+      "name": "Merge Status Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [850, 150],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      }
+    },
+    {
+      "id": "merge-general",
+      "name": "Merge General",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [850, 450],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Classify Intent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Classify Intent": {
+      "main": [
+        [{ "node": "GET Order Status", "type": "main", "index": 0 }],
+        [{ "node": "POST Create Ticket", "type": "main", "index": 0 }],
+        [{ "node": "GET Nearby Restaurants", "type": "main", "index": 0 }],
+        [{ "node": "Merge General", "type": "main", "index": 0 }],
+        [{ "node": "Merge General", "type": "main", "index": 0 }]
+      ]
+    },
+    "GET Order Status": {
+      "main": [
+        [{ "node": "Merge Status Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST Create Ticket": {
+      "main": [
+        [{ "node": "Merge Status Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "GET Nearby Restaurants": {
+      "main": [
+        [{ "node": "Merge General", "type": "main", "index": 0 }]
+      ]
+    },
+    "Merge Status Data": {
+      "main": [
+        [{ "node": "Gemini AI Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Merge General": {
+      "main": [
+        [{ "node": "Gemini AI Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini AI Response": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "AI" },
+    { "name": "Support" },
+    { "name": "Chat" }
+  ],
+  "triggerCount": 0,
+  "versionId": "1.0.0"
+}

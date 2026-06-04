@@ -1,0 +1,243 @@
+{
+  "name": "Promotion Suggester",
+  "nodes": [
+    {
+      "id": "schedule-monday",
+      "name": "Weekly Monday 9:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "hour": [
+            {
+              "field": "hour",
+              "hoursInterval": 168
+            }
+          ]
+        },
+        "activationHours": {
+          "hour": 9,
+          "minute": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "id": "http-lapsed",
+      "name": "GET Lapsed Customers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:3001/api/webhooks/lapsed-customers?days=14",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "if-has-lapsed",
+      "name": "Has Lapsed Customers?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gemini-analyze",
+      "name": "Gemini Analyze & Suggest",
+      "type": "n8n-nodes-base.googleAi",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "parameters": {
+        "options": {
+          "model": "gemini-pro",
+          "temperature": 0.6,
+          "maxOutputTokens": 800
+        },
+        "messages": {
+          "values": [
+            {
+              "message": "Bạn là chuyên gia marketing cho ứng dụng giao đồ ăn. Hãy phân tích dữ liệu khách hàng đã rời đi và đề xuất chương trình khuyến mãi.\n\nDữ liệu khách hàng đã rời đi (không đặt hàng 14+ ngày):\n{{ $json | toJSON }}\n\nHãy phân tích:\n1. Số lượng khách hàng rời đi: {{ $json.length }}\n2. Các loại khách hàng (dựa trên lịch sử chi tiêu)\n3. Đề xuất 2-3 chương trình khuyến mãi để thu hút họ quay lại\n4. Ngân sách ước tính và ROI dự kiến\n\nTrả lời bằng tiếng Việt, định dạng JSON với các field: analysis, promotions (mảng), estimatedBudget, expectedROI.",
+              "role": "user"
+            }
+          ]
+        },
+        "subParameters": {
+          "parameters": [
+            { "name": "fallbackToLatestModel", "value": true }
+          ]
+        }
+      }
+    },
+    {
+      "id": "create-draft-promotion",
+      "name": "Create Draft Promotion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/admin/promotions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_ADMIN_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "{{ JSON.parse($node['Gemini Analyze & Suggest'].json.candidates[0].content.parts[0].text).promotions[0].title || 'Khuyến mãi thu hút khách hàng quay lại' }}"
+            },
+            {
+              "name": "description",
+              "value": "{{ $node['Gemini Analyze & Suggest'].json.candidates[0].content.parts[0].text }}"
+            },
+            {
+              "name": "type",
+              "value": "reactivation"
+            },
+            {
+              "name": "status",
+              "value": "draft"
+            },
+            {
+              "name": "targetAudience",
+              "value": "lapsed_customers"
+            },
+            {
+              "name": "budget",
+              "value": "{{ JSON.parse($node['Gemini Analyze & Suggest'].json.candidates[0].content.parts[0].text).estimatedBudget || 0 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "notify-admin-promo",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/notifications/admin",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_ADMIN_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "promotion_suggestion" },
+            { "name": "title", "value": "Đề xuất khuyến mãi mới" },
+            { "name": "message", "value": "Phát hiện {{ $node['GET Lapsed Customers'].json.length }} khách hàng không đặt hàng 14+ ngày. Đã tạo bản nháp khuyến mãi. Vào Promotions để xem và duyệt." },
+            { "name": "channel", "value": "admin_marketing" },
+            { "name": "actionUrl", "value": "/admin/promotions" }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "noop-end-promo",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Weekly Monday 9:00": {
+      "main": [
+        [{ "node": "GET Lapsed Customers", "type": "main", "index": 0 }]
+      ]
+    },
+    "GET Lapsed Customers": {
+      "main": [
+        [{ "node": "Has Lapsed Customers?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Lapsed Customers?": {
+      "main": [
+        [{ "node": "Gemini Analyze & Suggest", "type": "main", "index": 0 }],
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini Analyze & Suggest": {
+      "main": [
+        [{ "node": "Create Draft Promotion", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Draft Promotion": {
+      "main": [
+        [{ "node": "Notify Admin", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Admin": {
+      "main": [
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "Promotion" },
+    { "name": "Marketing" },
+    { "name": "AI" },
+    { "name": "Weekly" }
+  ],
+  "triggerCount": 0,
+  "versionId": "1.0.0"
+}

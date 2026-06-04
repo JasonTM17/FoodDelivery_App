@@ -1,0 +1,312 @@
+{
+  "name": "Driver Stopped Detector",
+  "nodes": [
+    {
+      "id": "schedule-2min",
+      "name": "Every 2 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-stopped-drivers",
+      "name": "GET Stopped Drivers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:3001/api/webhooks/stopped-drivers?minutes=10",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "if-stopped-results",
+      "name": "Has Stopped Drivers?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "loop-drivers",
+      "name": "Loop Drivers",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "notify-stopped-driver",
+      "name": "Notify Stopped Driver",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/notifications/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "userId", "value": "{{ $json.driverId }}" },
+            { "name": "type", "value": "stopped_warning" },
+            { "name": "title", "value": "Bạn đã dừng quá lâu" },
+            { "name": "message", "value": "Hệ thống ghi nhận bạn đã dừng {{ $json.stoppedMinutes }} phút. Vui lòng tiếp tục di chuyển hoặc cập nhật trạng thái." }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "wait-2min",
+      "name": "Wait 2 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 250],
+      "parameters": {
+        "resume": "timer",
+        "waitTime": 120,
+        "options": {}
+      }
+    },
+    {
+      "id": "http-check-still-stopped",
+      "name": "Check Still Stopped",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:3001/api/webhooks/check-driver-stopped?driverId={{ $json.driverId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "if-still-stopped",
+      "name": "Still Stopped?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.stillStopped }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "notify-customer",
+      "name": "Notify Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1450, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/notifications/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_API_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "userId", "value": "{{ $json.customerId }}" },
+            { "name": "type", "value": "driver_delayed" },
+            { "name": "title", "value": "Tài xế đang gặp sự cố" },
+            { "name": "message", "value": "Tài xế giao đơn hàng {{ $json.orderCode }} đang tạm dừng. Chúng tôi đang liên hệ để đảm bảo đơn hàng được giao sớm nhất." }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "create-stopped-ticket",
+      "name": "Create Stopped Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1450, 450],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3001/api/admin/tickets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_ADMIN_KEY }}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "driver_stopped" },
+            { "name": "priority", "value": "medium" },
+            { "name": "driverId", "value": "{{ $json.driverId }}" },
+            { "name": "orderId", "value": "{{ $json.orderId }}" },
+            { "name": "description", "value": "Tài xế {{ $json.driverName }} đã dừng {{ $json.stoppedMinutes }} phút và không phản hồi sau khi được nhắc." }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "noop-end-stopped",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1650, 300],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 2 Minutes": {
+      "main": [
+        [{ "node": "GET Stopped Drivers", "type": "main", "index": 0 }]
+      ]
+    },
+    "GET Stopped Drivers": {
+      "main": [
+        [{ "node": "Has Stopped Drivers?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Stopped Drivers?": {
+      "main": [
+        [{ "node": "Loop Drivers", "type": "main", "index": 0 }],
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    },
+    "Loop Drivers": {
+      "main": [
+        [{ "node": "Notify Stopped Driver", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Stopped Driver": {
+      "main": [
+        [{ "node": "Wait 2 Minutes", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait 2 Minutes": {
+      "main": [
+        [{ "node": "Check Still Stopped", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Still Stopped": {
+      "main": [
+        [{ "node": "Still Stopped?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Still Stopped?": {
+      "main": [
+        [{ "node": "Notify Customer", "type": "main", "index": 0 }],
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Customer": {
+      "main": [
+        [{ "node": "Create Stopped Ticket", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Stopped Ticket": {
+      "main": [
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "Driver" },
+    { "name": "Monitoring" },
+    { "name": "Stopped" }
+  ],
+  "triggerCount": 0,
+  "versionId": "1.0.0"
+}
