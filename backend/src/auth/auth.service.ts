@@ -102,9 +102,38 @@ export class AuthService {
       throw new UnauthorizedException('Your account has been deactivated. Contact support.')
     }
 
+    // Check account lockout
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const retryAfter = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 1000)
+      throw new UnauthorizedException(
+        `Account is temporarily locked. Please try again in ${retryAfter} seconds.`,
+      )
+    }
+
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash)
     if (!passwordValid) {
+      const newCount = (user.failedLoginCount ?? 0) + 1
+      if (newCount >= 5) {
+        const lockedUntil = new Date(Date.now() + 15 * 60 * 1000)
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginCount: newCount, lockedUntil },
+        })
+      } else {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginCount: newCount },
+        })
+      }
       throw new UnauthorizedException('Invalid email or password')
+    }
+
+    // Reset lockout counters on successful login
+    if (user.failedLoginCount > 0 || user.lockedUntil) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginCount: 0, lockedUntil: null },
+      })
     }
 
     return this.buildAuthResult(user)
