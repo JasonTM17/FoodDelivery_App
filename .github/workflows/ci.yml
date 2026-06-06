@@ -21,10 +21,10 @@ jobs:
         ports: [6379:6379]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - uses: pnpm/action-setup@v6
+        with: { node-version: '22' }
+      - uses: pnpm/action-setup@v4
         with: { version: '10' }
 
       - name: Install dependencies
@@ -45,8 +45,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
 
-      - name: Run tests
-        run: pnpm test -- --coverage
+      - name: Run tests with coverage
+        run: pnpm test -- --coverage --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
         working-directory: backend
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
@@ -57,10 +57,10 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - uses: pnpm/action-setup@v6
+        with: { node-version: '22' }
+      - uses: pnpm/action-setup@v4
         with: { version: '10' }
 
       - name: Install dependencies
@@ -69,6 +69,10 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+        working-directory: web
+
+      - name: Type check
+        run: pnpm typecheck
         working-directory: web
 
       - name: Build

@@ -1,6 +1,6 @@
 # web/Dockerfile — Multi-stage Next.js for FoodFlow monorepo
-# Build: docker build --build-arg APP_NAME=admin -t foodflow-web .
-# Build: docker build --build-arg APP_NAME=restaurant -t foodflow-web .
+# Build: docker build --build-arg APP_NAME=admin -t foodflow-web-admin .
+# Build: docker build --build-arg APP_NAME=restaurant -t foodflow-web-restaurant .
 
 # Global build args (declared before first FROM for global scope)
 ARG APP_NAME=admin
@@ -40,9 +40,9 @@ COPY packages/ ./packages/
 RUN pnpm turbo build --filter=${APP_NAME}...
 
 # =============================================================================
-# Stage 3: Runner
+# Stage 3: Runner (distroless)
 # =============================================================================
-FROM node:22-alpine AS runner
+FROM gcr.io/distroless/nodejs22-debian12 AS runner
 
 ARG APP_NAME
 ARG BUILD_SHA
@@ -52,8 +52,6 @@ LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 WORKDIR /app
 
 # Copy standalone output produced by Next.js
@@ -65,10 +63,10 @@ COPY --from=builder /app/apps/${APP_NAME}/.next/static ./apps/${APP_NAME}/.next/
 # Copy public assets if they exist
 COPY --from=builder /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
 
-USER nextjs
+USER 65534:65534
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/healthz',r=>{process.exit(r.statusCode===200?0:1)})" || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 --start-period=5s \
+  CMD ["node", "-e", "require('http').get('http://localhost:3000/',r=>{process.exit(r.statusCode===200?0:1)})"]
 
 CMD ["node", "server.js"]
