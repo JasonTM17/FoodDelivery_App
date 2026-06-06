@@ -17,19 +17,31 @@ import { DriversModule } from './drivers/drivers.module'
 import { AdminModule } from './admin/admin.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { HealthModule } from './health/health.module'
+import { MetricsModule } from './metrics/metrics.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
+import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
+import { ThrottlerStorageRedis } from './common/storage/throttler-storage-redis'
+import Redis from 'ioredis'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: ['REDIS_CLIENT'],
+      useFactory: (redis: Redis) => ({
+        throttlers: [{ ttl: 60000, limit: 100 }],
+        storage: new ThrottlerStorageRedis(redis),
+      }),
+    }),
     BullModule.forRoot({ connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' } }),
     PrismaModule,
     RedisModule,
     HealthModule,
+    MetricsModule,
     AuthModule,
     UsersModule,
     RestaurantsModule,
@@ -51,7 +63,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestIdMiddleware, RequestLoggerMiddleware)
+      .apply(RequestIdMiddleware, RequestLoggerMiddleware, PrometheusMiddleware)
       .forRoutes('*')
   }
 }

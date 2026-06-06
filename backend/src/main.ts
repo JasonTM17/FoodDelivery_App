@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { AppModule } from './app.module'
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter'
 import helmet from 'helmet'
@@ -24,6 +25,25 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true,
   }))
+
+  // Swagger / OpenAPI
+  const config = new DocumentBuilder()
+    .setTitle('FoodFlow API')
+    .setDescription('Food delivery platform API — orders, restaurants, dispatch, tracking')
+    .setVersion('0.1.0')
+    .addBearerAuth()
+    .addTag('auth')
+    .addTag('orders')
+    .addTag('restaurants')
+    .addTag('menu')
+    .addTag('drivers')
+    .addTag('tracking')
+    .addTag('notifications')
+    .addTag('admin')
+    .build()
+
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api/docs', app, document)
 
   app.setGlobalPrefix('api')
 
