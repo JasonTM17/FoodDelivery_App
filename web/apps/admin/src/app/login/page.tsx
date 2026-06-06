@@ -22,14 +22,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await apiPost<{ token: string; user: { name: string; email: string; role: string } }>(
-        '/auth/admin/login',
-        { email, password }
-      );
+      const res = await apiPost<{
+        accessToken: string
+        refreshToken: string
+        user: { name: string; email: string; role: string }
+      }>('/auth/admin/login', { email, password })
 
-      localStorage.setItem('admin_token', res.token);
-      localStorage.setItem('admin_user', JSON.stringify(res.user));
-      router.replace('/overview');
+      localStorage.setItem('admin_token', res.accessToken)
+      localStorage.setItem('admin_refresh_token', res.refreshToken)
+      localStorage.setItem('admin_user', JSON.stringify(res.user))
+      router.replace('/overview')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
     } finally {

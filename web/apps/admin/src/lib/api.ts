@@ -21,7 +21,72 @@ function getToken(): string | null {
   return localStorage.getItem('admin_token');
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+function setToken(token: string): void {
+  localStorage.setItem('admin_token', token);
+}
+
+function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('admin_refresh_token');
+}
+
+function setRefreshToken(refreshToken: string): void {
+  localStorage.setItem('admin_refresh_token', refreshToken);
+}
+
+function clearTokens(): void {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_refresh_token');
+  localStorage.removeItem('admin_user');
+}
+
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    setToken(data.token);
+    if (data.refreshToken) setRefreshToken(data.refreshToken);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function handle401AndRetry(originalRequest: () => Promise<Response>): Promise<Response> {
+  if (!isRefreshing) {
+    isRefreshing = true;
+    refreshPromise = tryRefreshToken().finally(() => {
+      isRefreshing = false;
+      refreshPromise = null;
+    });
+  }
+
+  const refreshed = await refreshPromise;
+  if (!refreshed) {
+    clearTokens();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new Error('Phiên đăng nhập hết hạn');
+  }
+
+  return originalRequest();
+}
+
+async function handleResponse<T>(response: Response, retryFn: () => Promise<Response>): Promise<T> {
   if (!response.ok) {
     const errorBody = await response.text();
     let errorMessage: string;
@@ -33,10 +98,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
 
     if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('admin_token');
-        window.location.href = '/login';
-      }
+      const retryResponse = await handle401AndRetry(retryFn);
+      return handleResponse<T>(retryResponse, retryFn);
     }
 
     throw new Error(errorMessage);
@@ -45,105 +108,90 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function apiGet<T>(path: string, options?: ApiOptions): Promise<T> {
+function getAuthHeaders(): Record<string, string> {
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
   };
-
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  return headers;
+}
 
-  const response = await fetch(buildUrl(path, options?.params), {
-    method: 'GET',
-    headers,
-    ...options,
-  });
+export async function apiGet<T>(path: string, options?: ApiOptions): Promise<T> {
+  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
 
-  return handleResponse<T>(response);
+  const retryFn = () =>
+    fetch(buildUrl(path, options?.params), {
+      method: 'GET',
+      headers,
+      ...options,
+    });
+
+  const response = await retryFn();
+  return handleResponse<T>(response, retryFn);
 }
 
 export async function apiPost<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  };
+  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const retryFn = () =>
+    fetch(buildUrl(path, options?.params), {
+      method: 'POST',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+    });
 
-  const response = await fetch(buildUrl(path, options?.params), {
-    method: 'POST',
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    ...options,
-  });
-
-  return handleResponse<T>(response);
+  const response = await retryFn();
+  return handleResponse<T>(response, retryFn);
 }
 
 export async function apiPut<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  };
+  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const retryFn = () =>
+    fetch(buildUrl(path, options?.params), {
+      method: 'PUT',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+    });
 
-  const response = await fetch(buildUrl(path, options?.params), {
-    method: 'PUT',
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    ...options,
-  });
-
-  return handleResponse<T>(response);
+  const response = await retryFn();
+  return handleResponse<T>(response, retryFn);
 }
 
 export async function apiPatch<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  };
+  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const retryFn = () =>
+    fetch(buildUrl(path, options?.params), {
+      method: 'PATCH',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+    });
 
-  const response = await fetch(buildUrl(path, options?.params), {
-    method: 'PATCH',
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    ...options,
-  });
+  const response = await retryFn();
+  return handleResponse<T>(response, retryFn);
+}
 
-  return handleResponse<T>(response);
+export async function getAuditLogs(): Promise<{ logs: Array<Record<string, unknown>> }> {
+  return apiGet('/admin/audit-logs')
 }
 
 export async function apiDelete<T>(path: string, options?: ApiOptions): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  };
+  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const retryFn = () =>
+    fetch(buildUrl(path, options?.params), {
+      method: 'DELETE',
+      headers,
+      ...options,
+    });
 
-  const response = await fetch(buildUrl(path, options?.params), {
-    method: 'DELETE',
-    headers,
-    ...options,
-  });
-
-  return handleResponse<T>(response);
+  const response = await retryFn();
+  return handleResponse<T>(response, retryFn);
 }
