@@ -1,9 +1,13 @@
-﻿import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards, UsePipes } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 import { RestaurantsService } from './restaurants.service'
 import { NearbyQueryDto, SearchQueryDto } from './restaurants.dto'
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
+import { nearbyQuerySchema, searchQuerySchema } from './restaurants.zod'
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard'
 import { Public } from '@/auth/public.decorator'
 
+@ApiTags('restaurants')
 @Controller('restaurants')
 @UseGuards(JwtAuthGuard)
 export class RestaurantsController {
@@ -11,12 +15,14 @@ export class RestaurantsController {
 
   @Get('nearby')
   @Public()
+  @UsePipes(new ZodValidationPipe(nearbyQuerySchema))
   findNearby(@Query() query: NearbyQueryDto) {
     return this.restaurantsService.findNearby(query)
   }
 
   @Get('search')
   @Public()
+  @UsePipes(new ZodValidationPipe(searchQuerySchema))
   search(@Query() query: SearchQueryDto) {
     return this.restaurantsService.search(query)
   }

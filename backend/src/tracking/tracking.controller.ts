@@ -1,9 +1,11 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { TrackingService } from './tracking.service'
 
+@ApiTags('tracking')
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class TrackingController {

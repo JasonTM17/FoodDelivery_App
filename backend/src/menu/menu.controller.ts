@@ -1,13 +1,17 @@
-﻿import {
-  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards,
+import {
+  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, UsePipes,
 } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 import { MenuService } from './menu.service'
 import { CreateCategoryDto, UpdateCategoryDto, CreateMenuItemDto, UpdateMenuItemDto } from './menu.dto'
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
+import { createCategorySchema, updateCategorySchema, createMenuItemSchema, updateMenuItemSchema } from './menu.zod'
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard'
 import { RolesGuard } from '@/auth/roles.guard'
 import { Roles } from '@/auth/roles.decorator'
 import { CurrentUser } from '@/auth/current-user.decorator'
 
+@ApiTags('menu')
 @Controller('restaurant/menu')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('restaurant')
@@ -20,6 +24,7 @@ export class MenuController {
   }
 
   @Post('categories')
+  @UsePipes(new ZodValidationPipe(createCategorySchema))
   createCategory(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateCategoryDto,
@@ -28,6 +33,7 @@ export class MenuController {
   }
 
   @Patch('categories/:id')
+  @UsePipes(new ZodValidationPipe(updateCategorySchema))
   updateCategory(
     @CurrentUser() user: { id: string },
     @Param('id') id: string,
@@ -45,6 +51,7 @@ export class MenuController {
   }
 
   @Post('items')
+  @UsePipes(new ZodValidationPipe(createMenuItemSchema))
   createMenuItem(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateMenuItemDto,
@@ -53,6 +60,7 @@ export class MenuController {
   }
 
   @Patch('items/:id')
+  @UsePipes(new ZodValidationPipe(updateMenuItemSchema))
   updateMenuItem(
     @CurrentUser() user: { id: string },
     @Param('id') id: string,

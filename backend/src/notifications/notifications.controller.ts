@@ -1,9 +1,11 @@
 import { Controller, Get, Patch, Param, Query, UseGuards } from '@nestjs/common'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { NotificationsService } from './notifications.service'
 
+@ApiTags('notifications')
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {

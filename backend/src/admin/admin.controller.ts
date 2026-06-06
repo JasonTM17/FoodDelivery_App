@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
 import { AdminService } from './admin.service'
 import { CreatePromotionDto, UpdatePromotionDto, PromotionQueryDto } from './dto/promotion.dto'
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
+import {
+  createPromotionSchema, updatePromotionSchema,
+  toggleUserStatusSchema, toggleRestaurantStatusSchema,
+  updateSupportTicketSchema,
+} from './admin.zod'
 
+@ApiTags('admin')
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 @Roles('admin')
@@ -34,6 +42,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/status')
+  @UsePipes(new ZodValidationPipe(toggleUserStatusSchema))
   toggleUserStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
     return this.adminService.toggleUserStatus(id, body.isActive)
   }
@@ -44,6 +53,7 @@ export class AdminController {
   }
 
   @Patch('restaurants/:id/status')
+  @UsePipes(new ZodValidationPipe(toggleRestaurantStatusSchema))
   toggleRestaurantStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
     return this.adminService.toggleRestaurantStatus(id, body.isActive)
   }
@@ -54,6 +64,7 @@ export class AdminController {
   }
 
   @Patch('support-tickets/:id')
+  @UsePipes(new ZodValidationPipe(updateSupportTicketSchema))
   updateSupportTicket(@Param('id') id: string, @Body() body: { status?: string; assignedAdminId?: string; resolutionNotes?: string }) {
     return this.adminService.updateSupportTicket(id, body)
   }
@@ -69,11 +80,13 @@ export class AdminController {
   }
 
   @Post('promotions')
+  @UsePipes(new ZodValidationPipe(createPromotionSchema))
   async createPromotion(@Body() dto: CreatePromotionDto) {
     return this.adminService.createPromotion(dto)
   }
 
   @Patch('promotions/:id')
+  @UsePipes(new ZodValidationPipe(updatePromotionSchema))
   async updatePromotion(@Param('id') id: string, @Body() dto: UpdatePromotionDto) {
     return this.adminService.updatePromotion(id, dto)
   }
