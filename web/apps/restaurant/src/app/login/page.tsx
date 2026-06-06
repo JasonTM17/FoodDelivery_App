@@ -20,14 +20,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const data = await api.post<AuthResponse>('/auth/login', {
-        email,
-        password,
-      }, { requireAuth: false });
+      const data = await api.post<{
+        accessToken: string
+        refreshToken: string
+        user: { name: string; email: string; role: string }
+        restaurant?: unknown
+      }>('/auth/login', { email, password }, { requireAuth: false })
 
-      setToken(data.token);
-      setStoredRestaurant(data.restaurant);
-      router.push('/orders');
+      setToken(data.accessToken)
+      localStorage.setItem('restaurant_refresh_token', data.refreshToken)
+      if (data.restaurant) setStoredRestaurant(data.restaurant)
+      router.push('/orders')
     } catch (err: unknown) {
       const apiError = err as { message?: string };
       setError(apiError.message || 'Đăng nhập thất bại. Vui lòng thử lại.');

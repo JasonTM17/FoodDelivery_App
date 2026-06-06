@@ -29,7 +29,7 @@ export default function MenuPage() {
     fetchMenu();
   }, []);
 
-  const categories = ['all', ...new Set(menuItems.map((item) => item.category))];
+  const categories = ['all', ...Array.from(new Set(menuItems.map((item) => item.category)))];
 
   const filteredItems = menuItems.filter((item) => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
