@@ -96,7 +96,7 @@ const MENU_DATA: Record<string, any> = {
       { name: 'Bún bò đặc biệt', price: 55000 }, { name: 'Bún bò thập cẩm', price: 45000 },
       { name: 'Bún bò chay', price: 35000 }, { name: 'Bún bò giò heo', price: 60000 },
     ]
-  },
+  }],
   com_tam: {
     cat: 'Cơm Tấm', items: [
       { name: 'Cơm tấm sườn', price: 40000 }, { name: 'Cơm tấm sườn bì chả', price: 50000 },

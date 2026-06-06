@@ -118,6 +118,8 @@ model User {
   role          UserRole  @default(customer)
   avatarUrl     String?   @map("avatar_url") @db.VarChar(500)
   isActive      Boolean   @default(true) @map("is_active")
+  failedLoginCount Int    @default(0) @map("failed_login_count")
+  lockedUntil   DateTime? @map("locked_until") @db.Timestamptz()
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
