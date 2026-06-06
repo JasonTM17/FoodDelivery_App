@@ -4,7 +4,7 @@ import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import OrderStatusBadge from '@/components/order-status-badge';
+import OrderStatusBadge from '@/components/badges/order-status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { ArrowLeft, Star, Store, MapPin, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
-import OrderStatusBadge from '@/components/order-status-badge';
+import OrderStatusBadge from '@/components/badges/order-status-badge';
 
 interface Restaurant {
   id: string;
