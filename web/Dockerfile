@@ -9,7 +9,7 @@ ARG BUILD_SHA=dev
 # =============================================================================
 # Stage 1: Dependencies
 # =============================================================================
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
