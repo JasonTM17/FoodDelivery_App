@@ -22,8 +22,8 @@ describe('RestaurantsService', () => {
 
   describe('findNearby', () => {
     it('returns empty when no restaurants nearby', async () => {
-      const result = await service.findNearby(10.8, 106.7, 5)
-      expect(result).toEqual([])
+      const result = await service.findNearby({ lat: 10.8, lng: 106.7, radius: 5, page: 1, limit: 10 })
+      expect(result).toEqual({ items: [], limit: 10, page: 1, total: 0 })
     })
   })
 })

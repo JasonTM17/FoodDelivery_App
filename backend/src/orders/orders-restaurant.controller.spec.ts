@@ -16,10 +16,18 @@ describe('OrdersController — Restaurant', () => {
     submitReview: jest.fn(),
   }
 
+  const mockRedis = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue('OK'),
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OrdersController],
-      providers: [{ provide: OrdersService, useValue: mockOrdersService }],
+      providers: [
+        { provide: OrdersService, useValue: mockOrdersService },
+        { provide: 'REDIS_CLIENT', useValue: mockRedis },
+      ],
     }).compile()
     controller = module.get(OrdersController)
   })

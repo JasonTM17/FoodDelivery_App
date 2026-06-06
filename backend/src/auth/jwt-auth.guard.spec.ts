@@ -18,7 +18,7 @@ describe('JwtAuthGuard', () => {
       getClass: () => ({}),
       switchToHttp: () => ({ getRequest: () => ({}) }),
     }
-    expect(guard.canActivate(context as any)).toBe(true)
+    expect(guard.canActivate(context as ExecutionContext)).toBe(true)
   })
 
   it('throws for missing token on protected route', () => {
@@ -28,6 +28,6 @@ describe('JwtAuthGuard', () => {
       getClass: () => ({}),
       switchToHttp: () => ({ getRequest: () => ({ headers: {} }) }),
     }
-    expect(() => guard['handleRequest'](null, null, null, context)).toThrow()
+    expect(() => guard['handleRequest'](null, null)).toThrow()
   })
 })
