@@ -1,11 +1,14 @@
-import { Controller, Get, Inject, HttpStatus, Res } from '@nestjs/common'
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
 import { PrismaService } from '../database/prisma.service'
+import { Inject } from '@nestjs/common'
 import { Redis } from 'ioredis'
+import { Client } from 'minio'
 
 interface ComponentStatus {
   status: 'up' | 'down'
-  latencyMs?: number
+  latencyMs: number
 }
 
 interface HealthResponse {
@@ -15,6 +18,7 @@ interface HealthResponse {
   components: {
     db: ComponentStatus
     redis: ComponentStatus
+    minio: ComponentStatus
   }
 }
 
@@ -22,21 +26,24 @@ interface HealthResponse {
 export class HealthController {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
   @Get()
   async check(@Res() res: Response) {
-    const [dbStatus, redisStatus] = await Promise.all([
+    const [dbStatus, redisStatus, minioStatus] = await Promise.all([
       this.checkDatabase(),
       this.checkRedis(),
+      this.checkMinio(),
     ])
 
-    const overall = dbStatus.status === 'up' && redisStatus.status === 'up'
-      ? 'ok'
-      : 'degraded'
+    const allUp = dbStatus.status === 'up'
+      && redisStatus.status === 'up'
+      && minioStatus.status === 'up'
 
-    const httpStatus = overall === 'ok' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE
+    const overall = allUp ? 'ok' : 'degraded'
+    const httpStatus = allUp ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE
 
     return res.status(httpStatus).json({
       status: overall,
@@ -45,6 +52,7 @@ export class HealthController {
       components: {
         db: dbStatus,
         redis: redisStatus,
+        minio: minioStatus,
       },
     } as HealthResponse)
   }
@@ -55,7 +63,7 @@ export class HealthController {
       await this.prisma.$queryRaw`SELECT 1`
       return { status: 'up', latencyMs: Date.now() - start }
     } catch {
-      return { status: 'down' }
+      return { status: 'down', latencyMs: Date.now() - start }
     }
   }
 
@@ -65,7 +73,25 @@ export class HealthController {
       await this.redis.ping()
       return { status: 'up', latencyMs: Date.now() - start }
     } catch {
-      return { status: 'down' }
+      return { status: 'down', latencyMs: Date.now() - start }
+    }
+  }
+
+  private async checkMinio(): Promise<ComponentStatus> {
+    const start = Date.now()
+    try {
+      const client = new Client({
+        endPoint: this.config.get<string>('MINIO_ENDPOINT') ?? 'localhost',
+        port: this.config.get<number>('MINIO_PORT') ?? 9000,
+        useSSL: false,
+        accessKey: this.config.get<string>('MINIO_ACCESS_KEY') ?? '',
+        secretKey: this.config.get<string>('MINIO_SECRET_KEY') ?? '',
+      })
+      const bucket = this.config.get<string>('MINIO_BUCKET') ?? 'foodflow'
+      await client.bucketExists(bucket)
+      return { status: 'up', latencyMs: Date.now() - start }
+    } catch {
+      return { status: 'down', latencyMs: Date.now() - start }
     }
   }
 }
