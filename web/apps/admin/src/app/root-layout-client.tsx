@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useRef } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/lib/auth-provider'
-import { AdminLayoutClient } from '@/components/admin-layout-client'
+import { AdminLayoutClient } from '@/components/layout/admin-layout-client'
 
 const publicPaths = ['/login']
 

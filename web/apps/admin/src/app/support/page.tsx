@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { timeSince } from '@/lib/utils';
-import TicketPriorityBadge from '@/components/ticket-priority-badge';
+import TicketPriorityBadge from '@/components/badges/ticket-priority-badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 import { MessageSquare, UserCheck, CheckCircle, Archive, AlertCircle, Clock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -148,10 +149,11 @@ export default function SupportPage() {
                       </p>
                     ) : (
                       columnTickets.map((ticket) => (
-                        <button
+                        <Button
                           key={ticket.id}
+                          variant="ghost"
+                          className="w-full h-auto rounded-lg border bg-card p-3 text-left justify-start font-normal transition-colors hover:bg-accent"
                           onClick={() => openDetail(ticket)}
-                          className="w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
@@ -184,7 +186,7 @@ export default function SupportPage() {
                               Đã nhận
                             </Badge>
                           )}
-                        </button>
+                        </Button>
                       ))
                     )}
                   </div>
@@ -290,13 +292,5 @@ export default function SupportPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) {
-  return (
-    <label htmlFor={htmlFor} className="text-sm font-medium">
-      {children}
-    </label>
   );
 }
