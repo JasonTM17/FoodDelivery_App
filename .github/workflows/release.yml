@@ -43,7 +43,7 @@ jobs:
           output-file: sbom-image.spdx.json
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: CHANGELOG.md
           generate_release_notes: true
