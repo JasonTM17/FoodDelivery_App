@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, UtensilsCrossed } from 'lucide-react';
-import MenuItemForm from '@/components/MenuItemForm';
+import { MenuItemForm } from '@/components/menu/menu-item-form';
 import { api } from '@/lib/api';
-import type { MenuItemFormData } from '@/components/MenuItemForm';
+import type { MenuItemFormData } from '@/components/menu/menu-item-form';
 import type { MenuItem } from '@/lib/types';
 
 export default function NewMenuItemPage() {
