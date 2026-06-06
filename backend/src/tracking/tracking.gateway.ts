@@ -23,6 +23,19 @@ export class TrackingGateway {
     const driverId = client.data?.user?.sub
     if (!driverId) return
 
+    if (!this.isInVietnamBbox(data.lat, data.lng)) {
+      client.emit('driver:location_rejected', { reason: 'out_of_bbox' })
+      return
+    }
+    if (data.speed > 150) {
+      client.emit('driver:location_rejected', { reason: 'speed_exceeded' })
+      return
+    }
+    if (await this.isTeleportation(driverId, data.lat, data.lng)) {
+      client.emit('driver:location_rejected', { reason: 'teleportation' })
+      return
+    }
+
     const orderId = await this.trackingService.handleLocationUpdate(driverId, data)
     if (!orderId) return
 
@@ -65,5 +78,28 @@ export class TrackingGateway {
   @SubscribeMessage('order:unsubscribe')
   handleOrderUnsubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }): void {
     client.leave(`order:${data.orderId}`)
+  }
+
+  private isInVietnamBbox(lat: number, lng: number): boolean {
+    return lat >= 4.5 && lat <= 23.5 && lng >= 102.0 && lng <= 117.5
+  }
+
+  private async isTeleportation(driverId: string, lat: number, lng: number): Promise<boolean> {
+    const last = await this.trackingService.getDriverLocation(driverId)
+    if (!last) return false
+    const elapsedMs = Date.now() - new Date(last.timestamp).getTime()
+    if (elapsedMs <= 0 || elapsedMs > 60_000) return false
+    const distKm = this.haversineKm(last.lat, last.lng, lat, lng)
+    const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
+    return distKm > maxKm
+  }
+
+  private haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371
+    const toRad = (x: number) => (x * Math.PI) / 180
+    const dLat = toRad(lat2 - lat1)
+    const dLng = toRad(lng2 - lng1)
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+    return 2 * R * Math.asin(Math.sqrt(a))
   }
 }
