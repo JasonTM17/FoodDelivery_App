@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_provider.dart';
+import '../widgets/active_order_card.dart';
+import '../widgets/delivery_order_item.dart';
 import '../widgets/driver_stat_card.dart';
+import '../widgets/online_toggle.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -61,7 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Online toggle card
-              _buildOnlineToggle(state),
+              const OnlineToggle(),
               const SizedBox(height: 20),
 
               // Today stats
@@ -75,7 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Active order
               if (state.activeOrder != null) ...[
-                _buildActiveOrderCard(state.activeOrder!),
+                ActiveOrderCard(order: state.activeOrder!),
                 const SizedBox(height: 20),
               ],
 
@@ -308,7 +310,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       children: [
         if (state.pendingOrders.isNotEmpty) ...[
-          ...state.pendingOrders.take(5).map((order) => _buildDeliveryItem(order)),
+          ...state.pendingOrders.take(5).map((order) => DeliveryOrderItem(order: order)),
         ] else ...[
           Container(
             width: double.infinity,
