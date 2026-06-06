@@ -1,5 +1,5 @@
 # backend/Dockerfile — Multi-stage (distroless runtime)
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY package.json pnpm-lock.yaml ./
