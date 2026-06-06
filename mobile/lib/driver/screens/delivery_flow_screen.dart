@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/vietnam_map_constants.dart';
+import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../providers/driver_provider.dart';
 import '../widgets/delivery_step_indicator.dart';
 
@@ -15,9 +19,33 @@ class DeliveryFlowScreen extends ConsumerStatefulWidget {
 }
 
 class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
+  final Completer<GoogleMapController> _mapController = Completer();
+  Set<Polygon> _boundaryPolygons = {};
+
   @override
   void initState() {
     super.initState();
+    _loadBoundary();
+  }
+
+  Future<void> _loadBoundary() async {
+    final polygons = await VietnamBoundaryOverlay.polygons;
+    if (mounted) setState(() => _boundaryPolygons = polygons);
+  }
+
+  void _fitMapToOrder(OrderModel order) async {
+    final controller = await _mapController.future;
+    final bounds = LatLngBounds(
+      southwest: LatLng(
+        (order.restaurantLatitude ?? order.deliveryAddress.latitude) - 0.01,
+        (order.restaurantLongitude ?? order.deliveryAddress.longitude) - 0.01,
+      ),
+      northeast: LatLng(
+        order.deliveryAddress.latitude + 0.01,
+        order.deliveryAddress.longitude + 0.01,
+      ),
+    );
+    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
   }
 
   @override
@@ -99,8 +127,8 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                   DeliveryStepIndicator(currentStep: currentStep),
                   const SizedBox(height: 20),
 
-                  // Map area placeholder
-                  _buildMapPlaceholder(),
+                  // Map area
+                  _buildMapPlaceholder(order),
 
                   const SizedBox(height: 20),
 
@@ -118,40 +146,28 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     );
   }
 
-  Widget _buildMapPlaceholder() {
-    return Container(
+  Widget _buildMapPlaceholder(OrderModel order) {
+    return SizedBox(
       width: double.infinity,
       height: 200,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF374151)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.map_outlined,
-            size: 48,
-            color: AppColors.textSecondary.withValues(alpha: 0.5),
+        child: GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: VietnamMapConstants.defaultCamera,
+          onMapCreated: (controller) {
+            _mapController.complete(controller);
+            _fitMapToOrder(order);
+          },
+          polygons: _boundaryPolygons,
+          minMaxZoomPreference: const MinMaxZoomPreference(
+            VietnamMapConstants.minZoom,
+            VietnamMapConstants.maxZoom,
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Bản đồ',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Google Maps sẽ hiển thị ở đây',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF4B5563),
-            ),
-          ),
-        ],
+          zoomControlsEnabled: false,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+        ),
       ),
     );
   }

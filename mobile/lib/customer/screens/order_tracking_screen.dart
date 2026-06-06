@@ -7,6 +7,8 @@ import '../../shared/providers/tracking_provider.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/theme/vietnam_map_constants.dart';
+import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../../shared/widgets/order_status_badge.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
   bool _showBottomSheet = true;
   int _etaMinutes = 25;
+  Set<Polygon> _boundaryPolygons = {};
 
   static const CameraPosition _defaultCamera = CameraPosition(
     target: LatLng(10.7769, 106.7009),
@@ -31,10 +34,16 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   @override
   void initState() {
     super.initState();
+    _loadBoundary();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(orderProvider.notifier).fetchOrderDetail(widget.orderId);
       ref.read(trackingProvider.notifier).startTracking(widget.orderId);
     });
+  }
+
+  Future<void> _loadBoundary() async {
+    final polygons = await VietnamBoundaryOverlay.polygons;
+    if (mounted) setState(() => _boundaryPolygons = polygons);
   }
 
   @override
@@ -62,6 +71,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             },
             markers: _buildMarkers(order, trackingState),
             polylines: _buildPolylines(order),
+            polygons: _boundaryPolygons,
+            minMaxZoomPreference: const MinMaxZoomPreference(
+              VietnamMapConstants.minZoom,
+              VietnamMapConstants.maxZoom,
+            ),
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             zoomControlsEnabled: false,
