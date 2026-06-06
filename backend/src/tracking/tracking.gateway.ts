@@ -2,6 +2,7 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, Conne
 import { Server, Socket } from 'socket.io'
 import { TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
+import { haversineDistance } from '../common/utils/geo.utils'
 
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
 export class TrackingGateway {
@@ -89,17 +90,8 @@ export class TrackingGateway {
     if (!last) return false
     const elapsedMs = Date.now() - new Date(last.timestamp).getTime()
     if (elapsedMs <= 0 || elapsedMs > 60_000) return false
-    const distKm = this.haversineKm(last.lat, last.lng, lat, lng)
+    const distKm = haversineDistance(last.lat, last.lng, lat, lng)
     const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
     return distKm > maxKm
-  }
-
-  private haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371
-    const toRad = (x: number) => (x * Math.PI) / 180
-    const dLat = toRad(lat2 - lat1)
-    const dLng = toRad(lng2 - lng1)
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
-    return 2 * R * Math.asin(Math.sqrt(a))
   }
 }
