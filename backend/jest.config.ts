@@ -8,7 +8,11 @@ const config: Config = {
   collectCoverageFrom: ['src/**/*.(t|j)s', '!src/**/*.spec.ts', '!src/workers/**'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    // nanoid v5 ships pure ESM; redirect to a CJS-compatible test stub
+    '^nanoid$': '<rootDir>/test/__mocks__/nanoid.ts',
+  },
 }
 
 export default config
