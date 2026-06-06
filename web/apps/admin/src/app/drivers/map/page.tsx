@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,17 @@ import { getSocket } from '@/lib/socket';
 import { Star, Car, MapPin, Navigation } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+
+/** Vietnam bounds including Hoàng Sa & Trường Sa archipelagos */
+const VIETNAM_BOUNDS = {
+  north: 23.5,
+  south: 3.8,
+  west: 102.0,
+  east: 117.5,
+};
+
+const VIETNAM_CENTER = { lat: 14.0, lng: 108.0 };
+const VIETNAM_DEFAULT_ZOOM = 6;
 
 interface DriverLocation {
   id: string;
@@ -87,6 +98,28 @@ function DriverMarkers({ drivers }: { drivers: DriverLocation[] }) {
   const map = useMap();
   const markersRef = useRef<google.maps.Marker[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const boundaryRef = useRef<google.maps.Data | null>(null);
+
+  // Load Vietnam boundary GeoJSON with Hoàng Sa & Trường Sa
+  useEffect(() => {
+    if (!map) return;
+
+    const dataLayer = new google.maps.Data();
+    dataLayer.loadGeoJson('/data/vietnam-boundary.geojson');
+    dataLayer.setStyle({
+      fillColor: '#2ECC71',
+      fillOpacity: 0.06,
+      strokeColor: '#2ECC71',
+      strokeWeight: 2,
+      strokeOpacity: 0.5,
+    });
+    dataLayer.setMap(map);
+    boundaryRef.current = dataLayer;
+
+    return () => {
+      dataLayer.setMap(null);
+    };
+  }, [map]);
 
   useEffect(() => {
     if (!map) return;
@@ -241,9 +274,13 @@ export default function DriverMapPage() {
           <APIProvider apiKey={GOOGLE_MAPS_KEY}>
             <Map
               mapId="foodflow-driver-map"
-              defaultZoom={13}
-              defaultCenter={{ lat: 10.8231, lng: 106.6297 }}
+              defaultZoom={VIETNAM_DEFAULT_ZOOM}
+              defaultCenter={VIETNAM_CENTER}
               style={{ width: '100%', height: '100%' }}
+              restriction={{
+                latLngBounds: VIETNAM_BOUNDS,
+                strictBounds: false,
+              }}
             >
               <DriverMarkers drivers={drivers} />
             </Map>
