@@ -1,11 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UsePipes, UseInterceptors } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { OrdersService } from './orders.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto, UpdateOrderStatusDto } from './orders.dto'
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
+import { placeOrderSchema, cancelOrderSchema, createReviewSchema, updateOrderStatusSchema } from './orders.zod'
+import { IdempotencyInterceptor } from './idempotency.interceptor'
 
+@ApiTags('orders')
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
@@ -13,6 +18,8 @@ export class OrdersController {
 
   @Post('orders')
   @Roles('customer')
+  @UseInterceptors(IdempotencyInterceptor)
+  @UsePipes(new ZodValidationPipe(placeOrderSchema))
   placeOrder(@CurrentUser() user: JwtPayload, @Body() dto: PlaceOrderDto) {
     return this.ordersService.placeOrder(user.sub, dto)
   }
@@ -37,12 +44,14 @@ export class OrdersController {
 
   @Post('orders/:id/cancel')
   @Roles('customer')
+  @UsePipes(new ZodValidationPipe(cancelOrderSchema))
   cancelOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto?: CancelOrderDto) {
     return this.ordersService.cancelOrder(id, user.sub, user.role, dto)
   }
 
   @Post('orders/:id/review')
   @Roles('customer')
+  @UsePipes(new ZodValidationPipe(createReviewSchema))
   submitReview(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateReviewDto) {
     return this.ordersService.submitReview(id, user.sub, dto)
   }
@@ -57,6 +66,7 @@ export class OrdersController {
 
   @Patch('restaurant/orders/:id/status')
   @Roles('restaurant')
+  @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))
   updateRestaurantOrderStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -69,6 +79,7 @@ export class OrdersController {
 
   @Patch('driver/orders/:id/status')
   @Roles('driver')
+  @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))
   updateDriverOrderStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,

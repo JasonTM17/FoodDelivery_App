@@ -4,6 +4,7 @@ import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
 import { OrdersGateway } from './orders.gateway'
 import { PaymentsService } from './payments.service'
+import { IdempotencyInterceptor } from './idempotency.interceptor'
 import { CartModule } from '../cart/cart.module'
 
 @Module({
@@ -12,7 +13,7 @@ import { CartModule } from '../cart/cart.module'
     BullModule.registerQueue({ name: 'dispatch' }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, PaymentsService, OrdersGateway],
+  providers: [OrdersService, PaymentsService, OrdersGateway, IdempotencyInterceptor],
   exports: [OrdersService, OrdersGateway],
 })
 export class OrdersModule {}

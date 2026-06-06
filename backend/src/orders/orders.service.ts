@@ -38,31 +38,31 @@ export class OrdersService {
 
     const subtotal = cart.items.reduce((sum, i) => sum + Number(i.unitPrice) * i.quantity, 0)
     const deliveryFee = 15000 // flat fee for MVP
-    let promotionDiscount = 0
-
-    if (dto.promotionCode || cart.promotionCode) {
-      const code = dto.promotionCode ?? cart.promotionCode
-      const promo = await this.prisma.promotion.findUnique({ where: { code: code! } })
-      if (promo && promo.isActive && promo.usageCount < promo.usageLimit) {
-        if (Number(subtotal) >= Number(promo.minOrderAmount)) {
-          promotionDiscount = promo.type === 'percentage'
-            ? Math.min(Number(subtotal) * Number(promo.value) / 100, Number(promo.maxDiscount ?? Infinity))
-            : Number(promo.value)
-          await this.prisma.promotion.update({
-            where: { id: promo.id },
-            data: { usageCount: { increment: 1 } },
-          })
-        }
-      }
-    }
-
-    const total = subtotal + deliveryFee - promotionDiscount
 
     if (Number(subtotal) < Number(restaurant.minOrderAmount)) {
       throw new UnprocessableEntityException('MIN_ORDER_NOT_MET')
     }
 
     const orderCode = `FD-${dayjs().format('YYMMDD')}-${nanoid(4).toUpperCase()}`
+
+    // Pre-fetch promotion outside txn (read-only, idempotent)
+    const code = dto.promotionCode ?? cart.promotionCode
+    let resolvedPromotion: { id: string; type: string; value: unknown; maxDiscount: unknown; minOrderAmount: unknown } | null = null
+    let promotionDiscount = 0
+
+    if (code) {
+      const promo = await this.prisma.promotion.findUnique({ where: { code } })
+      if (promo && promo.isActive && promo.usageCount < promo.usageLimit) {
+        if (Number(subtotal) >= Number(promo.minOrderAmount)) {
+          resolvedPromotion = promo
+          promotionDiscount = promo.type === 'percentage'
+            ? Math.min(Number(subtotal) * Number(promo.value) / 100, Number(promo.maxDiscount ?? Infinity))
+            : Number(promo.value)
+        }
+      }
+    }
+
+    const total = subtotal + deliveryFee - promotionDiscount
 
     const order = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -96,22 +96,25 @@ export class OrdersService {
         data: { orderId: order.id, status: 'created', changedBy: userId },
       })
 
-      if (dto.promotionCode || cart.promotionCode) {
-        const promo = await tx.promotion.findUnique({ where: { code: (dto.promotionCode ?? cart.promotionCode)! } })
-        if (promo) {
-          await tx.promotionUsage.create({
-            data: { promotionId: promo.id, userId, orderId: order.id, discountAmount: promotionDiscount },
-          })
-        }
+      // Record promotion usage + increment counter atomically
+      if (resolvedPromotion) {
+        await tx.promotion.update({
+          where: { id: resolvedPromotion.id },
+          data: { usageCount: { increment: 1 } },
+        })
+        await tx.promotionUsage.create({
+          data: { promotionId: resolvedPromotion.id, userId, orderId: order.id, discountAmount: promotionDiscount },
+        })
       }
 
+      // Clean up cart atomically
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
       await tx.cart.delete({ where: { id: cart.id } })
 
       return order
     })
 
-    // Process payment async
+    // Process payment async — fire-and-forget outside txn
     this.paymentsService.processPayment(order.id, Number(total), dto.paymentMethod).catch(console.error)
 
     // Notify restaurant
