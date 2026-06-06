@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/cart_provider.dart';
+import '../widgets/cart_item_tile.dart';
 import '../../shared/models/cart.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -136,7 +136,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ...cart.items.asMap().entries.map((entry) {
                   final index = entry.key;
                   final item = entry.value;
-                  return _buildCartItem(item, index);
+                  return CartItemTile(
+                    item: item,
+                    index: index,
+                    onRemove: () => ref.read(cartProvider.notifier).removeItem(index),
+                    onQuantityChanged: (qty) => ref.read(cartProvider.notifier).updateItemQuantity(index, qty),
+                  );
                 }),
 
                 const SizedBox(height: 16),
@@ -294,119 +299,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCartItem(CartItemModel item, int index) {
-    return Dismissible(
-      key: Key('cart_${item.menuItem.id}_$index'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: AppColors.error,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      onDismissed: (_) => ref.read(cartProvider.notifier).removeItem(index),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(color: AppColors.shadow, blurRadius: 2, offset: const Offset(0, 1)),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 60,
-                height: 60,
-                child: item.menuItem.imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: item.menuItem.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.surface,
-                          child: const Icon(Icons.fastfood, size: 28, color: AppColors.textHint),
-                        ),
-                      )
-                    : Container(
-                        color: AppColors.surface,
-                        child: const Icon(Icons.fastfood, size: 28, color: AppColors.textHint),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.menuItem.name,
-                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (item.selectedOptions.isNotEmpty)
-                    Text(
-                      item.selectedOptions.map((o) => o.optionName).join(', '),
-                      style: AppTextStyles.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatPrice(item.totalPrice),
-                    style: AppTextStyles.priceSmall,
-                  ),
-                ],
-              ),
-            ),
-            // Quantity controls
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => ref.read(cartProvider.notifier).updateItemQuantity(index, item.quantity - 1),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.remove, size: 16, color: AppColors.textPrimary),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      '${item.quantity}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => ref.read(cartProvider.notifier).updateItemQuantity(index, item.quantity + 1),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.add, size: 16, color: AppColors.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

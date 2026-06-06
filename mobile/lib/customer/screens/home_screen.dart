@@ -10,6 +10,9 @@ import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/restaurant_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
+import '../../shared/widgets/empty_state.dart';
+import '../widgets/category_chip.dart';
+import '../widgets/promo_banner.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchFocusNode = FocusNode();
   String _selectedCuisine = 'Tất cả';
   int _currentBannerIndex = 0;
+  Position? _currentLocation;
 
   final List<String> _cuisines = [
     'Tất cả', 'Đồ ăn nhanh', 'Việt Nam', 'Nhật Bản',
@@ -49,6 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
       if (mounted) {
+        _currentLocation = position;
         ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
           latitude: position.latitude,
           longitude: position.longitude,
@@ -321,10 +326,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         itemCount: _cuisines.length,
         itemBuilder: (context, index) {
           final cuisine = _cuisines[index];
-          final isSelected = _selectedCuisine == cuisine;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
+            child: CategoryChip(
+              label: cuisine,
+              isSelected: _selectedCuisine == cuisine,
               onTap: () {
                 setState(() => _selectedCuisine = cuisine);
                 final cuisineParam = cuisine == 'Tất cả' ? null : cuisine;
@@ -334,24 +340,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   cuisine: cuisineParam,
                 );
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                  ),
-                ),
-                child: Text(
-                  cuisine,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                  ),
-                ),
-              ),
             ),
           );
         },
@@ -365,60 +353,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         children: [
           CarouselSlider(
-            items: _banners.map((banner) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: banner.color,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            banner.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            banner.subtitle,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'Nhận ngay',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.discount, size: 64, color: Colors.white30),
-                  ],
-                ),
-              );
-            }).toList(),
+            items: _banners
+                .map((b) => PromoBanner(title: b.title, subtitle: b.subtitle, color: b.color))
+                .toList(),
             options: CarouselOptions(
               height: 140,
               autoPlay: true,
@@ -451,41 +388,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmptyRestaurants() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.store_mall_directory_outlined,
-              size: 40,
-              color: AppColors.textHint,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Không tìm thấy nhà hàng nào',
-            style: AppTextStyles.headline4,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Hãy thử mở rộng khu vực tìm kiếm',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Tải lại'),
-          ),
-        ],
-      ),
+    return EmptyState(
+      icon: Icons.store_mall_directory_outlined,
+      title: 'Không tìm thấy nhà hàng nào',
+      subtitle: 'Hãy thử mở rộng khu vực tìm kiếm',
+      actionLabel: 'Tải lại',
+      onAction: _loadData,
     );
   }
 
