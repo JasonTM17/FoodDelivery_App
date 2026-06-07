@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@foodflow/ui/page-header'
 import AiMonitorWorkflowsClient from './ai-monitor-workflows-client'
 import AiMonitorStatsClient from './ai-monitor-stats-client'
 
@@ -23,12 +24,11 @@ function WorkflowsSkeleton() {
 export default function AiMonitorPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">AI & N8N Monitor</h1>
-        <p className="text-sm text-muted-foreground">
-          Giám sát workflow tự động và trợ lý AI của nền tảng FoodFlow
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'AI & N8N' }]}
+        title="AI & N8N Monitor"
+        description="Giám sát workflow tự động và trợ lý AI của nền tảng FoodFlow"
+      />
       <Suspense fallback={<WorkflowsSkeleton />}>
         <AiMonitorWorkflowsClient />
       </Suspense>

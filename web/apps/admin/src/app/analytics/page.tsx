@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@foodflow/ui/page-header'
 import AnalyticsKpiClient from './analytics-kpi-client'
 import AnalyticsChartsClient from './analytics-charts-client'
 
@@ -19,12 +20,11 @@ function KpiSkeleton() {
 export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Phân tích</h1>
-        <p className="text-sm text-muted-foreground">
-          Hiệu quả kinh doanh và hành vi khách hàng
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Phân tích' }]}
+        title="Phân tích"
+        description="Hiệu quả kinh doanh và hành vi khách hàng"
+      />
       <Suspense fallback={<KpiSkeleton />}>
         <AnalyticsKpiClient />
       </Suspense>
