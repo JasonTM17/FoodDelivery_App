@@ -79,5 +79,48 @@
   "settingsHours": {
     "title": "Giờ mở cửa",
     "description": "Cấu hình giờ hoạt động của nhà hàng"
+  },
+  "menuEdit": {
+    "title": "Chỉnh sửa món",
+    "description": "Cập nhật thông tin món ăn",
+    "backToMenu": "Quay lại thực đơn",
+    "saveChanges": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "cancel": "Huỷ",
+    "imageUpload": "Tải ảnh lên",
+    "uploading": "Đang tải...",
+    "removeImage": "Xoá ảnh",
+    "allergens": "Chất gây dị ứng",
+    "available": "Món đang có sẵn"
+  },
+  "promotions": {
+    "title": "Tạo khuyến mãi",
+    "description": "Thiết lập ưu đãi cho khách hàng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "create": "Tạo khuyến mãi",
+    "creating": "Đang tạo...",
+    "stepInfo": "Thông tin",
+    "stepDates": "Thời gian",
+    "stepConditions": "Điều kiện",
+    "stepReview": "Xem lại",
+    "promoName": "Tên chương trình",
+    "promoCode": "Mã khuyến mãi",
+    "autoGenCode": "Tự tạo mã",
+    "noData": "Chưa có khuyến mãi"
+  },
+  "analytics": {
+    "title": "Phân tích",
+    "description": "Hiệu suất hoạt động nhà hàng",
+    "today": "Hôm nay",
+    "week": "Tuần này",
+    "month": "Tháng này",
+    "totalOrders": "Tổng đơn hàng",
+    "totalRevenue": "Tổng doanh thu",
+    "avgOrderValue": "Giá trị TB / đơn",
+    "completionRate": "Tỷ lệ hoàn thành",
+    "hourlyOrders": "Đơn hàng theo giờ",
+    "byCategory": "Theo danh mục",
+    "noData": "Chưa có dữ liệu"
   }
 }

@@ -79,5 +79,48 @@
   "settingsHours": {
     "title": "Opening Hours",
     "description": "Configure your restaurant operating hours"
+  },
+  "menuEdit": {
+    "title": "Edit Menu Item",
+    "description": "Update menu item information",
+    "backToMenu": "Back to menu",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "imageUpload": "Upload image",
+    "uploading": "Uploading...",
+    "removeImage": "Remove image",
+    "allergens": "Allergens",
+    "available": "Item is available"
+  },
+  "promotions": {
+    "title": "Create Promotion",
+    "description": "Set up discounts for customers",
+    "back": "Back",
+    "next": "Next",
+    "create": "Create promotion",
+    "creating": "Creating...",
+    "stepInfo": "Information",
+    "stepDates": "Dates",
+    "stepConditions": "Conditions",
+    "stepReview": "Review",
+    "promoName": "Campaign name",
+    "promoCode": "Promo code",
+    "autoGenCode": "Auto-generate",
+    "noData": "No promotions yet"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "description": "Restaurant performance overview",
+    "today": "Today",
+    "week": "This week",
+    "month": "This month",
+    "totalOrders": "Total orders",
+    "totalRevenue": "Total revenue",
+    "avgOrderValue": "Avg order value",
+    "completionRate": "Completion rate",
+    "hourlyOrders": "Orders by hour",
+    "byCategory": "By category",
+    "noData": "No data yet"
   }
 }

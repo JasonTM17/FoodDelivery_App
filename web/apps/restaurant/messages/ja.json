@@ -79,5 +79,48 @@
   "settingsHours": {
     "title": "営業時間",
     "description": "レストランの営業時間を設定"
+  },
+  "menuEdit": {
+    "title": "メニューアイテムを編集",
+    "description": "メニューアイテム情報を更新",
+    "backToMenu": "メニューに戻る",
+    "saveChanges": "変更を保存",
+    "saving": "保存中...",
+    "cancel": "キャンセル",
+    "imageUpload": "画像をアップロード",
+    "uploading": "アップロード中...",
+    "removeImage": "画像を削除",
+    "allergens": "アレルゲン",
+    "available": "アイテムは利用可能"
+  },
+  "promotions": {
+    "title": "プロモーションを作成",
+    "description": "顧客向け割引を設定する",
+    "back": "戻る",
+    "next": "次へ",
+    "create": "プロモーションを作成",
+    "creating": "作成中...",
+    "stepInfo": "情報",
+    "stepDates": "日程",
+    "stepConditions": "条件",
+    "stepReview": "確認",
+    "promoName": "キャンペーン名",
+    "promoCode": "プロモコード",
+    "autoGenCode": "自動生成",
+    "noData": "プロモーションなし"
+  },
+  "analytics": {
+    "title": "アナリティクス",
+    "description": "レストランのパフォーマンス概要",
+    "today": "今日",
+    "week": "今週",
+    "month": "今月",
+    "totalOrders": "総注文数",
+    "totalRevenue": "総売上",
+    "avgOrderValue": "平均注文額",
+    "completionRate": "完了率",
+    "hourlyOrders": "時間別注文数",
+    "byCategory": "カテゴリー別",
+    "noData": "データなし"
   }
 }
