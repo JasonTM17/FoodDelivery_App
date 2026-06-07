@@ -1,3 +1,5 @@
+import type { I18nService } from 'nestjs-i18n'
+
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   created: 'Mới tạo',
   pending_payment: 'Chờ thanh toán',
@@ -14,6 +16,23 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   refunded: 'Đã hoàn tiền',
+}
+
+export type Locale = 'vi' | 'en' | 'ja'
+
+export function getOrderStatusLabel(
+  status: string,
+  lang: Locale = 'vi',
+  i18n?: I18nService,
+): string {
+  if (i18n) {
+    try {
+      return i18n.t(`constants.order_status.${status}`, { lang }) as string
+    } catch {
+      // fall through to static map
+    }
+  }
+  return ORDER_STATUS_LABELS[status] ?? status
 }
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {

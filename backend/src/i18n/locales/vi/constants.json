@@ -1,18 +1,25 @@
 {
   "order_status": {
-    "pending": "Chờ xác nhận",
-    "confirmed": "Đã xác nhận",
+    "created": "Mới tạo",
+    "pending_payment": "Chờ thanh toán",
+    "paid": "Đã thanh toán",
+    "restaurant_pending": "Chờ nhà hàng",
+    "restaurant_accepted": "Nhà hàng đã nhận",
     "preparing": "Đang chuẩn bị",
-    "ready": "Sẵn sàng",
-    "on_the_way": "Đang giao",
+    "ready_for_pickup": "Sẵn sàng giao",
+    "driver_assigned": "Đã có tài xế",
+    "driver_arriving_restaurant": "Tài xế đến nhà hàng",
+    "picked_up": "Đã lấy hàng",
+    "delivering": "Đang giao",
     "delivered": "Đã giao",
+    "completed": "Hoàn thành",
     "cancelled": "Đã hủy",
     "refunded": "Đã hoàn tiền"
   },
   "role": {
     "customer": "Khách hàng",
     "driver": "Tài xế",
-    "restaurant_owner": "Chủ nhà hàng",
+    "restaurant": "Nhà hàng",
     "admin": "Quản trị viên"
   }
 }

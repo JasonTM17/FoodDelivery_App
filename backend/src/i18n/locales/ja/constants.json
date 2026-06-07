@@ -1,18 +1,25 @@
 {
   "order_status": {
-    "pending": "確認待ち",
-    "confirmed": "確認済み",
+    "created": "作成済み",
+    "pending_payment": "支払い待ち",
+    "paid": "支払い完了",
+    "restaurant_pending": "レストラン承認待ち",
+    "restaurant_accepted": "レストラン承認済み",
     "preparing": "準備中",
-    "ready": "準備完了",
-    "on_the_way": "配達中",
+    "ready_for_pickup": "受取準備完了",
+    "driver_assigned": "配達員割当済み",
+    "driver_arriving_restaurant": "配達員レストラン到着中",
+    "picked_up": "受取完了",
+    "delivering": "配達中",
     "delivered": "配達完了",
+    "completed": "完了",
     "cancelled": "キャンセル済み",
     "refunded": "返金済み"
   },
   "role": {
     "customer": "顧客",
     "driver": "配達員",
-    "restaurant_owner": "レストランオーナー",
+    "restaurant": "レストラン",
     "admin": "管理者"
   }
 }

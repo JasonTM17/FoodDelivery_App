@@ -1,18 +1,25 @@
 {
   "order_status": {
-    "pending": "Pending confirmation",
-    "confirmed": "Confirmed",
+    "created": "Created",
+    "pending_payment": "Pending payment",
+    "paid": "Paid",
+    "restaurant_pending": "Awaiting restaurant",
+    "restaurant_accepted": "Restaurant accepted",
     "preparing": "Preparing",
-    "ready": "Ready",
-    "on_the_way": "On the way",
+    "ready_for_pickup": "Ready for pickup",
+    "driver_assigned": "Driver assigned",
+    "driver_arriving_restaurant": "Driver arriving at restaurant",
+    "picked_up": "Picked up",
+    "delivering": "Delivering",
     "delivered": "Delivered",
+    "completed": "Completed",
     "cancelled": "Cancelled",
     "refunded": "Refunded"
   },
   "role": {
     "customer": "Customer",
     "driver": "Driver",
-    "restaurant_owner": "Restaurant owner",
+    "restaurant": "Restaurant",
     "admin": "Administrator"
   }
 }
