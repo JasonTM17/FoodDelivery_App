@@ -2,6 +2,7 @@ import {
   Controller, Post, Body, Res, UseGuards, HttpException, HttpStatus, Logger,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { I18nService } from 'nestjs-i18n'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
@@ -34,6 +35,7 @@ export class AiChatController {
     private readonly outputFilter: OutputFilterService,
     private readonly toolJustification: ToolJustificationService,
     private readonly config: ConfigService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post('stream')
@@ -107,7 +109,7 @@ export class AiChatController {
       }
 
       const data = (await resp.json()) as { reply?: string; escalated?: boolean; severity?: string }
-      const rawReply = data.reply ?? 'Xin lỗi, tôi chưa thể xử lý yêu cầu này ngay lúc này.'
+      const rawReply = data.reply ?? (this.i18n.t('ai_templates.fallback') as string)
       const reply = this.outputFilter.filter(rawReply)
 
       await this.memory.append(sessionId, {
@@ -119,7 +121,7 @@ export class AiChatController {
       if (data.escalated) emit('escalated', data.severity ?? 'HIGH')
     } catch (err) {
       this.logger.error(`AI stream error: ${(err as Error).message}`)
-      const fallback = 'Xin lỗi, dịch vụ đang bận. Vui lòng thử lại sau ít phút 🙏'
+      const fallback = this.i18n.t('ai_templates.service_unavailable') as string
       this.emitWords(fallback, emit)
     }
 
