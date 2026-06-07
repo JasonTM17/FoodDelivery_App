@@ -6,6 +6,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Breadcrumb } from '@foodflow/ui/breadcrumb';
 import { EmptyState } from '@foodflow/ui/empty-state';
+import { PageHeader } from '@foodflow/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -170,22 +171,17 @@ export default function PromotionsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Khuyến mãi' }]} />
-
-      <div className="flex items-center justify-between animate-fade-in-up">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
-            Khuyến mãi
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Quản lý mã khuyến mãi và ưu đãi
-          </p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 h-4 w-4" />
-          Tạo khuyến mãi
-        </Button>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Khuyến mãi' }]}
+        title="Khuyến mãi"
+        description="Quản lý mã khuyến mãi và ưu đãi"
+        actions={
+          <Button onClick={openCreateDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo khuyến mãi
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>

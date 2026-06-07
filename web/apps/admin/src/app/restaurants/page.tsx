@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Breadcrumb } from '@foodflow/ui/breadcrumb';
+import { PageHeader } from '@foodflow/ui/page-header';
 import RestaurantsTableClient from './restaurants-table-client';
 
 function RestaurantsTableSkeleton() {
@@ -19,13 +19,11 @@ function RestaurantsTableSkeleton() {
 export default function RestaurantsPage() {
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Nhà hàng' }]} />
-      <div className="animate-fade-in-up">
-        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
-          Quản lý nhà hàng
-        </h1>
-        <p className="text-sm text-muted-foreground">Danh sách nhà hàng đối tác</p>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Nhà hàng' }]}
+        title="Quản lý nhà hàng"
+        description="Danh sách nhà hàng đối tác"
+      />
       <Suspense fallback={<RestaurantsTableSkeleton />}>
         <RestaurantsTableClient />
       </Suspense>

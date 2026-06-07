@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Breadcrumb } from '@foodflow/ui/breadcrumb';
+import { PageHeader } from '@foodflow/ui/page-header';
 import OrdersTableClient from './orders-table-client';
 
 function OrdersTableSkeleton() {
@@ -19,15 +19,11 @@ function OrdersTableSkeleton() {
 export default function OrdersPage() {
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Đơn hàng' }]} />
-      <div className="animate-fade-in-up">
-        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
-          Quản lý đơn hàng
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Xem và quản lý tất cả đơn hàng trong hệ thống
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Đơn hàng' }]}
+        title="Quản lý đơn hàng"
+        description="Xem và quản lý tất cả đơn hàng trong hệ thống"
+      />
       <Suspense fallback={<OrdersTableSkeleton />}>
         <OrdersTableClient />
       </Suspense>
