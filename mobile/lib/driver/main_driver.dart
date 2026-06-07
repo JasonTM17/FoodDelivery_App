@@ -15,6 +15,14 @@ import 'screens/kyc_verification_screen.dart';
 import 'screens/pickup_confirmation_screen.dart';
 import 'screens/delivery_complete_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/onboarding_vehicle_screen.dart';
+import 'screens/onboarding_documents_screen.dart';
+import 'screens/onboarding_agreement_screen.dart';
+import 'screens/incentives_screen.dart';
+import 'screens/heatmap_screen.dart';
+import 'screens/bank_account_screen.dart';
+import 'screens/support_driver_screen.dart';
+import 'screens/settings_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -62,6 +70,38 @@ final _router = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (_, __) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding-vehicle',
+      builder: (_, __) => const OnboardingVehicleScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding-documents',
+      builder: (_, __) => const OnboardingDocumentsScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding-agreement',
+      builder: (_, __) => const OnboardingAgreementScreen(),
+    ),
+    GoRoute(
+      path: '/incentives',
+      builder: (_, __) => const IncentivesScreen(),
+    ),
+    GoRoute(
+      path: '/heatmap',
+      builder: (_, __) => const HeatmapScreen(),
+    ),
+    GoRoute(
+      path: '/bank-account',
+      builder: (_, __) => const BankAccountScreen(),
+    ),
+    GoRoute(
+      path: '/support',
+      builder: (_, __) => const SupportDriverScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (_, __) => const SettingsScreen(),
     ),
   ],
 );
