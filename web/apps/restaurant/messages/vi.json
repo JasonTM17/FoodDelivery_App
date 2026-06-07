@@ -1,0 +1,55 @@
+{
+  "login": {
+    "title": "Quản lý nhà hàng",
+    "description": "Đăng nhập để quản lý đơn hàng và thực đơn",
+    "emailPlaceholder": "nhahang@email.com",
+    "loginButton": "Đăng nhập",
+    "loggingIn": "Đang đăng nhập..."
+  },
+  "sidebar": {
+    "defaultName": "Nhà hàng",
+    "manage": "Quản lý",
+    "collapse": "Thu gọn",
+    "settingsGroup": "Cài đặt",
+    "settingsGeneral": "Chung",
+    "settingsProfile": "Hồ sơ",
+    "settingsHours": "Giờ mở cửa",
+    "logout": "Đăng xuất"
+  },
+  "orders": {
+    "title": "Đơn hàng",
+    "newOrder": "Đơn mới",
+    "accept": "Nhận đơn",
+    "reject": "Từ chối",
+    "markReady": "Đã xong",
+    "confirmReject": "Bạn có chắc muốn từ chối đơn này?",
+    "noOrders": "Không có đơn hàng",
+    "queueEmpty": "Hàng chờ trống"
+  },
+  "menu": {
+    "title": "Thực đơn",
+    "addItem": "Thêm món",
+    "editItem": "Sửa món",
+    "deleteItem": "Xóa món",
+    "noItems": "Chưa có món nào",
+    "category": "Danh mục",
+    "price": "Giá",
+    "available": "Có sẵn",
+    "unavailable": "Hết hàng"
+  },
+  "revenue": {
+    "title": "Doanh thu",
+    "today": "Hôm nay",
+    "week": "Tuần này",
+    "month": "Tháng này",
+    "totalOrders": "Tổng đơn",
+    "totalRevenue": "Tổng doanh thu",
+    "avgOrderValue": "Giá trị đơn TB"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "profile": "Hồ sơ nhà hàng",
+    "hours": "Giờ mở cửa",
+    "general": "Cài đặt chung"
+  }
+}

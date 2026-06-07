@@ -1,0 +1,55 @@
+{
+  "login": {
+    "title": "レストラン管理",
+    "description": "注文とメニューを管理するためにログインしてください",
+    "emailPlaceholder": "restaurant@email.com",
+    "loginButton": "ログイン",
+    "loggingIn": "ログイン中..."
+  },
+  "sidebar": {
+    "defaultName": "レストラン",
+    "manage": "管理",
+    "collapse": "折りたたむ",
+    "settingsGroup": "設定",
+    "settingsGeneral": "一般",
+    "settingsProfile": "プロフィール",
+    "settingsHours": "営業時間",
+    "logout": "ログアウト"
+  },
+  "orders": {
+    "title": "注文",
+    "newOrder": "新規注文",
+    "accept": "承認",
+    "reject": "拒否",
+    "markReady": "準備完了",
+    "confirmReject": "この注文を拒否してもよろしいですか？",
+    "noOrders": "注文なし",
+    "queueEmpty": "キューが空です"
+  },
+  "menu": {
+    "title": "メニュー",
+    "addItem": "アイテムを追加",
+    "editItem": "アイテムを編集",
+    "deleteItem": "アイテムを削除",
+    "noItems": "アイテムがありません",
+    "category": "カテゴリー",
+    "price": "価格",
+    "available": "在庫あり",
+    "unavailable": "品切れ"
+  },
+  "revenue": {
+    "title": "売上",
+    "today": "今日",
+    "week": "今週",
+    "month": "今月",
+    "totalOrders": "総注文数",
+    "totalRevenue": "総売上",
+    "avgOrderValue": "平均注文額"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "レストランプロフィール",
+    "hours": "営業時間",
+    "general": "一般設定"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "login": {
+    "title": "FoodFlow Admin",
+    "description": "Đăng nhập để quản lý hệ thống",
+    "emailPlaceholder": "admin@foodflow.com",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "loginButton": "Đăng nhập",
+    "loggingIn": "Đang đăng nhập...",
+    "accountLocked": "Tài khoản tạm khóa",
+    "lockMessage": "Tài khoản tạm khóa sau {count} lần đăng nhập sai. Vui lòng thử lại sau 15 phút hoặc liên hệ quản trị viên."
+  },
+  "topbar": {
+    "searchPlaceholder": "Tìm kiếm...",
+    "adminRole": "Quản trị viên",
+    "notifications": "Thông báo"
+  },
+  "sidebar": {
+    "brand": "FoodFlow",
+    "logout": "Đăng xuất"
+  },
+  "breadcrumb": {
+    "overview": "Tổng quan",
+    "orders": "Đơn hàng",
+    "restaurants": "Nhà hàng",
+    "users": "Người dùng",
+    "drivers": "Tài xế",
+    "map": "Bản đồ",
+    "promotions": "Khuyến mãi",
+    "support": "Hỗ trợ",
+    "analytics": "Phân tích",
+    "settings": "Cài đặt",
+    "logs": "Nhật ký",
+    "aiMonitor": "AI Monitor"
+  },
+  "overview": {
+    "title": "Tổng quan",
+    "todayOrders": "Đơn hàng hôm nay",
+    "todayRevenue": "Doanh thu hôm nay",
+    "totalOrders": "Tổng đơn hàng",
+    "avgRating": "Đánh giá TB tài xế",
+    "recentOrders": "Đơn hàng gần đây"
+  },
+  "orders": {
+    "title": "Quản lý đơn hàng",
+    "orderCode": "Mã đơn",
+    "customer": "Khách hàng",
+    "restaurant": "Nhà hàng",
+    "driver": "Tài xế",
+    "noDriver": "Chưa gán",
+    "filterAll": "Tất cả trạng thái",
+    "searchPlaceholder": "Tìm theo mã, khách hàng, nhà hàng..."
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "login": {
+    "title": "FoodFlow Admin",
+    "description": "Sign in to manage the system",
+    "emailPlaceholder": "admin@foodflow.com",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Sign In",
+    "loggingIn": "Signing in...",
+    "accountLocked": "Account locked",
+    "lockMessage": "Account locked after {count} failed login attempts. Please try again in 15 minutes or contact an administrator."
+  },
+  "topbar": {
+    "searchPlaceholder": "Search...",
+    "adminRole": "Administrator",
+    "notifications": "Notifications"
+  },
+  "sidebar": {
+    "brand": "FoodFlow",
+    "logout": "Sign Out"
+  },
+  "breadcrumb": {
+    "overview": "Overview",
+    "orders": "Orders",
+    "restaurants": "Restaurants",
+    "users": "Users",
+    "drivers": "Drivers",
+    "map": "Map",
+    "promotions": "Promotions",
+    "support": "Support",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "logs": "Logs",
+    "aiMonitor": "AI Monitor"
+  },
+  "overview": {
+    "title": "Overview",
+    "todayOrders": "Today's Orders",
+    "todayRevenue": "Today's Revenue",
+    "totalOrders": "Total Orders",
+    "avgRating": "Avg Driver Rating",
+    "recentOrders": "Recent Orders"
+  },
+  "orders": {
+    "title": "Order Management",
+    "orderCode": "Order Code",
+    "customer": "Customer",
+    "restaurant": "Restaurant",
+    "driver": "Driver",
+    "noDriver": "Unassigned",
+    "filterAll": "All statuses",
+    "searchPlaceholder": "Search by code, customer, restaurant..."
+  }
+}

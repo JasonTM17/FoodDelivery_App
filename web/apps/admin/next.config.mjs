@@ -1,7 +1,11 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  transpilePackages: ['@vis.gl/react-google-maps'],
+  transpilePackages: ['@vis.gl/react-google-maps', '@foodflow/i18n'],
   images: {
     remotePatterns: [
       {
@@ -12,4 +16,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

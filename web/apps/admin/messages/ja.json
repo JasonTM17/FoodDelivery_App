@@ -1,0 +1,54 @@
+{
+  "login": {
+    "title": "FoodFlow Admin",
+    "description": "システムを管理するためにログインしてください",
+    "emailPlaceholder": "admin@foodflow.com",
+    "rememberMe": "ログイン状態を保持する",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "loginButton": "ログイン",
+    "loggingIn": "ログイン中...",
+    "accountLocked": "アカウントがロックされています",
+    "lockMessage": "{count}回のログイン失敗後、アカウントがロックされました。15分後に再試行するか、管理者に連絡してください。"
+  },
+  "topbar": {
+    "searchPlaceholder": "検索...",
+    "adminRole": "管理者",
+    "notifications": "通知"
+  },
+  "sidebar": {
+    "brand": "FoodFlow",
+    "logout": "ログアウト"
+  },
+  "breadcrumb": {
+    "overview": "概要",
+    "orders": "注文",
+    "restaurants": "レストラン",
+    "users": "ユーザー",
+    "drivers": "ドライバー",
+    "map": "地図",
+    "promotions": "プロモーション",
+    "support": "サポート",
+    "analytics": "分析",
+    "settings": "設定",
+    "logs": "ログ",
+    "aiMonitor": "AIモニター"
+  },
+  "overview": {
+    "title": "概要",
+    "todayOrders": "本日の注文",
+    "todayRevenue": "本日の売上",
+    "totalOrders": "総注文数",
+    "avgRating": "ドライバー平均評価",
+    "recentOrders": "最近の注文"
+  },
+  "orders": {
+    "title": "注文管理",
+    "orderCode": "注文コード",
+    "customer": "顧客",
+    "restaurant": "レストラン",
+    "driver": "ドライバー",
+    "noDriver": "未割当",
+    "filterAll": "すべてのステータス",
+    "searchPlaceholder": "コード、顧客、レストランで検索..."
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "login": {
+    "title": "Restaurant Manager",
+    "description": "Sign in to manage your orders and menu",
+    "emailPlaceholder": "restaurant@email.com",
+    "loginButton": "Sign In",
+    "loggingIn": "Signing in..."
+  },
+  "sidebar": {
+    "defaultName": "Restaurant",
+    "manage": "Manage",
+    "collapse": "Collapse",
+    "settingsGroup": "Settings",
+    "settingsGeneral": "General",
+    "settingsProfile": "Profile",
+    "settingsHours": "Opening Hours",
+    "logout": "Sign Out"
+  },
+  "orders": {
+    "title": "Orders",
+    "newOrder": "New Order",
+    "accept": "Accept",
+    "reject": "Reject",
+    "markReady": "Mark Ready",
+    "confirmReject": "Are you sure you want to reject this order?",
+    "noOrders": "No orders",
+    "queueEmpty": "Queue is empty"
+  },
+  "menu": {
+    "title": "Menu",
+    "addItem": "Add Item",
+    "editItem": "Edit Item",
+    "deleteItem": "Delete Item",
+    "noItems": "No items yet",
+    "category": "Category",
+    "price": "Price",
+    "available": "Available",
+    "unavailable": "Out of stock"
+  },
+  "revenue": {
+    "title": "Revenue",
+    "today": "Today",
+    "week": "This week",
+    "month": "This month",
+    "totalOrders": "Total orders",
+    "totalRevenue": "Total revenue",
+    "avgOrderValue": "Avg order value"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Restaurant profile",
+    "hours": "Opening hours",
+    "general": "General settings"
+  }
+}
