@@ -30,6 +30,9 @@ export function ProfileForm() {
   const [bankName, setBankName] = useState('');
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const coverRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -44,8 +47,8 @@ export function ProfileForm() {
         setAddress(data.address);
         setPhone(data.phone);
         setIsActive(data.isActive);
-        if (data.coverImage) setCoverPreview(data.coverImage);
-        if (data.logo) setLogoPreview(data.logo);
+        if (data.coverImage) { setCoverPreview(data.coverImage); setCoverUrl(data.coverImage); }
+        if (data.logo) { setLogoPreview(data.logo); setLogoUrl(data.logo); }
       } catch (err: unknown) {
         const e = err as { message?: string };
         setError(e.message || 'Không thể tải thông tin nhà hàng');
@@ -55,12 +58,44 @@ export function ProfileForm() {
     })();
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'logo') => {
+  const uploadImage = async (file: File, type: 'cover' | 'logo'): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('prefix', `restaurant-${type}`);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('restaurant_token') : null;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api'}/storage/upload`,
+        {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        }
+      );
+      if (!res.ok) return null;
+      const json = await res.json() as { url: string };
+      return json.url;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'logo') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    if (type === 'cover') setCoverPreview(url);
-    else setLogoPreview(url);
+    const previewUrl = URL.createObjectURL(file);
+    if (type === 'cover') setCoverPreview(previewUrl);
+    else setLogoPreview(previewUrl);
+    setUploading(true);
+    setError('');
+    const uploaded = await uploadImage(file, type);
+    setUploading(false);
+    if (uploaded) {
+      if (type === 'cover') setCoverUrl(uploaded);
+      else setLogoUrl(uploaded);
+    } else {
+      setError('Không thể tải ảnh lên. Vui lòng thử lại.');
+    }
   };
 
   const toggleCuisine = (c: string) => {
@@ -76,6 +111,8 @@ export function ProfileForm() {
         name, description, address, phone, isActive,
         cuisines, minOrderAmount: Number(minOrder), deliveryFee: Number(deliveryFee),
         bankAccount, bankName,
+        ...(coverUrl ? { coverImage: coverUrl } : {}),
+        ...(logoUrl ? { logo: logoUrl } : {}),
       });
       setRestaurant(updated);
       setStoredRestaurant(updated);
@@ -219,8 +256,9 @@ export function ProfileForm() {
       {/* Fixed save bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-end gap-3 z-30">
         {restaurant && <p className="text-xs text-gray-400 mr-auto">Cập nhật lần cuối: {new Date(restaurant.updatedAt).toLocaleDateString('vi-VN')}</p>}
-        <button type="submit" disabled={isSaving} className="btn-primary">
-          <Save className="h-4 w-4 mr-1.5" />{isSaving ? 'Đang lưu...' : 'Lưu hồ sơ'}
+        <button type="submit" disabled={isSaving || uploading} className="btn-primary">
+          <Save className="h-4 w-4 mr-1.5" />
+          {uploading ? 'Đang tải ảnh...' : isSaving ? 'Đang lưu...' : 'Lưu hồ sơ'}
         </button>
       </div>
     </form>

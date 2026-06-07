@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, MessageSquare, Filter, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
@@ -32,20 +32,24 @@ function StarDisplay({ rating }: { rating: number }) {
   );
 }
 
-const MOCK_REVIEWS: Review[] = [
-  { id: '1', customerName: 'Nguyễn Văn A', customerInitial: 'A', rating: 5, comment: 'Món ăn rất ngon, giao hàng nhanh!', reply: null, createdAt: '2024-01-15T10:30:00Z', orderId: 'ORD-001' },
-  { id: '2', customerName: 'Trần Thị B', customerInitial: 'B', rating: 4, comment: 'Đồ ăn ngon, tuy nhiên cần cải thiện đóng gói.', reply: 'Cảm ơn bạn đã góp ý! Chúng tôi sẽ cải thiện ngay.', createdAt: '2024-01-14T14:20:00Z', orderId: 'ORD-002' },
-  { id: '3', customerName: 'Lê Văn C', customerInitial: 'C', rating: 3, comment: 'Bình thường, không có gì đặc biệt.', reply: null, createdAt: '2024-01-13T09:15:00Z', orderId: 'ORD-003' },
-  { id: '4', customerName: 'Phạm Thị D', customerInitial: 'D', rating: 5, comment: 'Xuất sắc! Sẽ tiếp tục ủng hộ.', reply: null, createdAt: '2024-01-12T18:45:00Z', orderId: 'ORD-004' },
-  { id: '5', customerName: 'Hoàng Văn E', customerInitial: 'E', rating: 2, comment: 'Giao hàng chậm, đồ ăn nguội.', reply: null, createdAt: '2024-01-11T12:00:00Z', orderId: 'ORD-005' },
-];
-
 export function ReviewsDashboard() {
-  const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [commentOnly, setCommentOnly] = useState(false);
+
+  useEffect(() => {
+    api.get<{ reviews: Review[] }>('/restaurant/reviews')
+      .then((data) => setReviews(data.reviews))
+      .catch((err: unknown) => {
+        const e = err as { message?: string };
+        setFetchError(e.message || 'Không thể tải đánh giá');
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const totalReviews = reviews.length;
   const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / totalReviews;
@@ -63,7 +67,7 @@ export function ReviewsDashboard() {
     if (!text?.trim()) return;
     setSubmitting(reviewId);
     try {
-      await api.post(`/restaurants/reviews/${reviewId}/reply`, { reply: text });
+      await api.post(`/restaurant/reviews/${reviewId}/reply`, { reply: text });
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, reply: text } : r)));
       setReplyTexts((prev) => { const n = { ...prev }; delete n[reviewId]; return n; });
     } catch {
@@ -72,6 +76,31 @@ export function ReviewsDashboard() {
       setSubmitting(null);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-10 w-48 animate-pulse rounded-lg bg-gray-100" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="kpi-card h-20 animate-pulse bg-gray-100" />
+          ))}
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="card h-28 animate-pulse bg-gray-50" />
+        ))}
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="card flex flex-col items-center py-12 text-center">
+        <MessageSquare className="h-10 w-10 text-red-300 mx-auto mb-3" />
+        <p className="text-sm font-medium text-red-600">{fetchError}</p>
+      </div>
+    );
+  }
 
   return (
     <div>

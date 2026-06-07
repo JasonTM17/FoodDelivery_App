@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, ShoppingBag, MessageSquare, AlertTriangle, Package, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 type NotifType = 'order' | 'message' | 'system' | 'stock';
 
@@ -22,15 +23,6 @@ const TYPE_CONFIG: Record<NotifType, { icon: React.ElementType; color: string; l
   stock:   { icon: Package,       color: 'text-red-600 bg-red-100',      label: 'Tồn kho' },
 };
 
-const MOCK_NOTIFS: Notification[] = [
-  { id: '1', type: 'order',   title: 'Đơn hàng mới #ORD-042', body: 'Khách hàng Nguyễn Văn A vừa đặt đơn 185.000đ', read: false, createdAt: '2024-01-15T10:30:00Z' },
-  { id: '2', type: 'order',   title: 'Đơn hàng #ORD-041 đã thanh toán', body: 'Đơn hàng đã được xác nhận thanh toán thành công', read: false, createdAt: '2024-01-15T09:15:00Z' },
-  { id: '3', type: 'message', title: 'Tin nhắn từ khách hàng', body: 'Trần Thị B: "Cho tôi thêm tương ớt nhé"', read: false, createdAt: '2024-01-15T08:45:00Z' },
-  { id: '4', type: 'stock',   title: 'Cảnh báo tồn kho thấp', body: 'Phở bò đặc biệt chỉ còn 3 phần — cần nhập thêm nguyên liệu', read: true, createdAt: '2024-01-14T16:00:00Z' },
-  { id: '5', type: 'system',  title: 'Cập nhật hệ thống', body: 'FoodFlow đã cập nhật tính năng quản lý bàn mới', read: true, createdAt: '2024-01-14T10:00:00Z' },
-  { id: '6', type: 'order',   title: 'Đánh giá mới từ khách', body: 'Lê Văn C đã để lại đánh giá 5 sao cho đơn #ORD-039', read: true, createdAt: '2024-01-13T20:30:00Z' },
-];
-
 const TABS: { key: NotifType | 'all'; label: string }[] = [
   { key: 'all',     label: 'Tất cả' },
   { key: 'order',   label: 'Đơn hàng' },
@@ -40,17 +32,35 @@ const TABS: { key: NotifType | 'all'; label: string }[] = [
 ];
 
 export function NotificationsList() {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<NotifType | 'all'>('all');
+
+  useEffect(() => {
+    api.get<{ notifications: Notification[] }>('/restaurant/notifications')
+      .then((data) => setNotifications(data.notifications))
+      .catch(() => {/* silently show empty list on error */})
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await api.patch('/restaurant/notifications/read-all');
+    } catch {
+      // optimistic update already applied; revert not needed
+    }
   };
 
-  const markRead = (id: string) => {
+  const markRead = async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      await api.patch(`/restaurant/notifications/${id}/read`);
+    } catch {
+      // optimistic update already applied
+    }
   };
 
   const filtered = activeTab === 'all' ? notifications : notifications.filter((n) => n.type === activeTab);
@@ -64,6 +74,17 @@ export function NotificationsList() {
     if (diffH < 24) return `${diffH} giờ trước`;
     return date.toLocaleDateString('vi-VN');
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <div className="h-10 w-40 animate-pulse rounded-lg bg-gray-100 mb-6" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-50 border border-gray-200" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
