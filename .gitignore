@@ -47,9 +47,12 @@ node_modules/
 # Docker
 .docker/
 
-# Logs
+# Logs (runtime log dirs only — not source-code page routes)
 *.log
-logs/
+/logs/
+/backend/logs/
+/web/logs/
+/mobile/logs/
 
 # Coverage
 coverage/
