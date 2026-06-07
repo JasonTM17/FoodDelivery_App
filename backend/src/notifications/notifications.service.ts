@@ -1,14 +1,143 @@
-import { Injectable, Optional } from '@nestjs/common'
+import { Injectable, Logger, Optional, Inject } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma } from '@prisma/client'
+import Redis from 'ioredis'
 import { NotificationsGateway } from './notifications.gateway'
+import { InAppChannel } from './channels/in-app.channel'
+import { FcmChannel } from './channels/fcm.channel'
+import { SmtpChannel } from './channels/smtp.channel'
+import { TwilioChannel } from './channels/twilio.channel'
+import { TemplateLoader } from './templates/template.loader'
+import {
+  CRITICAL_EVENTS,
+  DEFAULT_CHANNELS,
+  DEDUP_TTL_SECONDS,
+  QUIET_HOUR_START,
+  QUIET_HOUR_END,
+} from './notifications.constants'
+import type { ChannelPayload } from './channels/notification-channel.interface'
+
+export interface FanoutPayload {
+  sourceId: string
+  templateVars?: Record<string, string>
+  data?: Record<string, unknown>
+}
+
+interface NotificationSettingRow {
+  channels: string[]
+  enabled: boolean
+}
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name)
+
   constructor(
     private readonly prisma: PrismaService,
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly templateLoader: TemplateLoader,
+    private readonly inApp: InAppChannel,
+    private readonly fcm: FcmChannel,
+    private readonly smtp: SmtpChannel,
+    private readonly twilio: TwilioChannel,
     @Optional() private readonly gateway?: NotificationsGateway,
   ) {}
+
+  async fanout(
+    userId: string,
+    eventType: string,
+    payload: FanoutPayload,
+  ): Promise<{ sent: boolean; skipped?: boolean }> {
+    const dedupKey = `dedup:${userId}:${eventType}:${payload.sourceId}`
+    const acquired = await this.redis.set(dedupKey, '1', 'EX', DEDUP_TTL_SECONDS, 'NX')
+    if (acquired === null) {
+      this.logger.log(`Dedup skip: ${eventType} userId=${userId} sourceId=${payload.sourceId}`)
+      return { sent: false, skipped: true }
+    }
+
+    const channels = await this.resolveChannels(userId, eventType)
+    if (channels.length === 0) return { sent: false, skipped: true }
+
+    const rendered = this.templateLoader.render(eventType, payload.templateVars ?? {})
+    const isCritical = CRITICAL_EVENTS.has(eventType)
+
+    const effectiveChannels =
+      !isCritical && this.isQuietHours()
+        ? channels.filter(c => c !== 'push')
+        : channels
+
+    const channelPayload: ChannelPayload = {
+      title: rendered.title,
+      body: rendered.body,
+      data: { ...(payload.data ?? {}), eventType },
+      critical: isCritical,
+    }
+
+    const results = await Promise.allSettled(
+      effectiveChannels.map(ch => this.dispatchChannel(ch, userId, channelPayload)),
+    )
+
+    const failCount = results.filter(r => r.status === 'rejected').length
+    if (failCount > 0) {
+      this.logger.warn(`${failCount}/${results.length} channels failed for userId=${userId} event=${eventType}`)
+    }
+
+    await this.insertAuditRecord({
+      userId,
+      title: rendered.title,
+      body: rendered.body,
+      type: eventType,
+      payload: payload.data,
+    })
+
+    return { sent: true }
+  }
+
+  private async dispatchChannel(channel: string, userId: string, payload: ChannelPayload): Promise<void> {
+    switch (channel) {
+      case 'in_app': await this.inApp.send(userId, payload); break
+      case 'push':   await this.fcm.send(userId, payload); break
+      case 'email':  await this.smtp.send(userId, payload); break
+      case 'sms':    await this.twilio.send(userId, payload); break
+      default:
+        this.logger.warn(`Unknown channel: ${channel}`)
+    }
+  }
+
+  private async resolveChannels(userId: string, eventType: string): Promise<string[]> {
+    try {
+      const rows = await this.prisma.$queryRaw<NotificationSettingRow[]>`
+        SELECT channels, enabled FROM notification_settings
+        WHERE user_id = ${userId}::uuid AND event_type = ${eventType}
+        LIMIT 1
+      `
+      if (rows.length > 0) {
+        return rows[0].enabled ? (rows[0].channels as string[]) : []
+      }
+    } catch {
+      // Table may not exist before migration runs
+    }
+    return DEFAULT_CHANNELS[eventType] ?? ['in_app']
+  }
+
+  private isQuietHours(): boolean {
+    const h = new Date().getHours()
+    return h >= QUIET_HOUR_START || h < QUIET_HOUR_END
+  }
+
+  private async insertAuditRecord(data: {
+    userId: string; title: string; body: string; type: string; payload?: Record<string, unknown>
+  }) {
+    return this.prisma.notification.create({
+      data: {
+        userId: data.userId,
+        title: data.title,
+        body: data.body,
+        type: data.type,
+        data: (data.payload ?? {}) as Prisma.InputJsonValue,
+      },
+    })
+  }
 
   async getUserNotifications(userId: string, page = 1, limit = 20) {
     const [notifications, total, unreadCount] = await Promise.all([
@@ -38,12 +167,10 @@ export class NotificationsService {
     })
   }
 
-  async create(data: { userId: string; title: string; body: string; type: string; payload?: Record<string, unknown> }) {
-    const notification = await this.prisma.notification.create({
-      data: { userId: data.userId, title: data.title, body: data.body, type: data.type, data: (data.payload ?? {}) as Prisma.InputJsonValue },
-    })
-
-    // Push real-time notification via WebSocket
+  async create(data: {
+    userId: string; title: string; body: string; type: string; payload?: Record<string, unknown>
+  }) {
+    const notification = await this.insertAuditRecord(data)
     this.gateway?.sendToUser(data.userId, {
       id: notification.id,
       title: notification.title,
@@ -53,7 +180,6 @@ export class NotificationsService {
       isRead: notification.isRead,
       createdAt: notification.createdAt,
     })
-
     return notification
   }
 }
