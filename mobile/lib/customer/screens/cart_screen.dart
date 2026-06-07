@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/cart_provider.dart';
 import '../widgets/cart_item_tile.dart';
 import '../../shared/models/cart.dart';

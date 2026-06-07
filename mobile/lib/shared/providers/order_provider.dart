@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../api/api_client.dart';
 import '../models/order.dart';
+// ignore_for_file: avoid_print
 
 final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
   return OrderNotifier();
@@ -62,14 +63,19 @@ class OrderNotifier extends StateNotifier<OrderState> {
   }) async {
     state = state.copyWith(isPlacingOrder: true, error: null);
     try {
-      final response = await _api.post('/orders', data: {
-        'restaurantId': restaurantId,
-        'items': items,
-        'deliveryAddress': deliveryAddress,
-        'paymentMethod': paymentMethod,
-        'note': note,
-        'promoCode': promoCode,
-      });
+      final idempotencyKey = ApiClient.generateIdempotencyKey();
+      final response = await _api.post(
+        '/orders',
+        data: {
+          'restaurantId': restaurantId,
+          'items': items,
+          'deliveryAddress': deliveryAddress,
+          'paymentMethod': paymentMethod,
+          'note': note,
+          'promoCode': promoCode,
+        },
+        options: Options(headers: {'X-Idempotency-Key': idempotencyKey}),
+      );
 
       final orderData = response.data as Map<String, dynamic>;
       final order = OrderModel.fromJson(orderData);

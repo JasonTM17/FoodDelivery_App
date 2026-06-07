@@ -22,10 +22,22 @@ class SocketClient {
   final _orderStatusController = StreamController<Map<String, dynamic>>.broadcast();
   final _chatMessageController = StreamController<Map<String, dynamic>>.broadcast();
   final _authRefreshController = StreamController<void>.broadcast();
+  final _notificationController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _driverOfferController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<Map<String, dynamic>> get onDriverLocation => _driverLocationController.stream;
-  Stream<Map<String, dynamic>> get onOrderStatus => _orderStatusController.stream;
-  Stream<Map<String, dynamic>> get onChatMessage => _chatMessageController.stream;
+  Stream<Map<String, dynamic>> get onDriverLocation =>
+      _driverLocationController.stream;
+  Stream<Map<String, dynamic>> get onOrderStatus =>
+      _orderStatusController.stream;
+  Stream<Map<String, dynamic>> get onChatMessage =>
+      _chatMessageController.stream;
+  Stream<Map<String, dynamic>> get onNotification =>
+      _notificationController.stream;
+
+  /// Fires when the server dispatches a new delivery offer to this driver.
+  Stream<Map<String, dynamic>> get onDriverOffer => _driverOfferController.stream;
 
   // Fires when server emits 'auth:refresh_required' — caller should refresh token
   // then call reconnectWithToken(newToken).
@@ -96,6 +108,14 @@ class SocketClient {
       if (data is Map<String, dynamic>) _chatMessageController.add(data);
     });
 
+    _socket!.on('notification:new', (data) {
+      if (data is Map<String, dynamic>) _notificationController.add(data);
+    });
+
+    _socket!.on('driver:offer', (data) {
+      if (data is Map<String, dynamic>) _driverOfferController.add(data);
+    });
+
     _socket!.on('auth:refresh_required', (_) => _authRefreshController.add(null));
 
     _socket!.connect();
@@ -161,6 +181,8 @@ class SocketClient {
     _orderStatusController.close();
     _chatMessageController.close();
     _authRefreshController.close();
+    _notificationController.close();
+    _driverOfferController.close();
     disconnect();
     _instance = null;
   }

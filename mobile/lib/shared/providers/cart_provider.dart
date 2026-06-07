@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import '../api/api_client.dart';
 import '../models/cart.dart';
 import '../models/menu_item.dart';
 
@@ -207,30 +209,25 @@ class CartNotifier extends StateNotifier<CartState> {
   Future<void> applyPromoCode(String code) async {
     state = state.copyWith(isApplyingPromo: true, error: null);
     try {
-      // Simulate promo validation — in real app, call API
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      if (code.toUpperCase() == 'FOOD10') {
-        final discount = state.subtotal * 0.1;
-        state = state.copyWith(
-          isApplyingPromo: false,
-          promoCode: code,
-          discount: discount > 30000 ? 30000 : discount,
-        );
-      } else if (code.toUpperCase() == 'FREESHIP') {
-        state = state.copyWith(
-          isApplyingPromo: false,
-          promoCode: code,
-          discount: state.deliveryFee,
-        );
-      } else {
-        state = state.copyWith(
-          isApplyingPromo: false,
-          error: 'Mã khuyến mãi không hợp lệ.',
-        );
-      }
+      final response = await ApiClient.instance.post('/promotions/validate', data: {
+        'code': code,
+        'restaurantId': state.currentCart?.restaurantId,
+        'subtotal': state.subtotal,
+      });
+      final data = response.data as Map<String, dynamic>;
+      final discountAmount = (data['discountAmount'] as num?)?.toDouble() ?? 0.0;
+      state = state.copyWith(
+        isApplyingPromo: false,
+        promoCode: code,
+        discount: discountAmount,
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ??
+          e.response?.data?['error'] as String? ??
+          'Mã khuyến mãi không hợp lệ.';
+      state = state.copyWith(isApplyingPromo: false, error: message);
     } catch (e) {
-      state = state.copyWith(isApplyingPromo: false, error: 'Có lỗi xảy ra.');
+      state = state.copyWith(isApplyingPromo: false, error: 'Có lỗi xảy ra khi kiểm tra mã.');
     }
   }
 
@@ -268,16 +265,11 @@ class CartNotifier extends StateNotifier<CartState> {
     return true;
   }
 
+  // Discount was validated by API; keep flat amount on quantity changes.
+  // User must re-apply promo if a different discount is desired.
   double _recalculateDiscount(String? promoCode, List<CartItemModel> items) {
     if (promoCode == null) return 0.0;
-    final subtotal = items.fold<double>(0.0, (sum, item) => sum + item.totalPrice);
-    if (promoCode.toUpperCase() == 'FOOD10') {
-      final discount = subtotal * 0.1;
-      return discount > 30000 ? 30000 : discount;
-    }
-    if (promoCode.toUpperCase() == 'FREESHIP') {
-      return subtotal >= 100000 ? 0.0 : 15000.0;
-    }
-    return 0.0;
+    // Preserve the existing API-validated discount amount unchanged.
+    return state.discount;
   }
 }
