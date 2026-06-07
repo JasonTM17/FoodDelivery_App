@@ -19,55 +19,48 @@ export class ReferralService {
   }
 
   private async getOrCreateCode(userId: string): Promise<string> {
-    const rows = await this.prisma.$queryRaw<Array<{ code: string }>>`
-      SELECT code FROM referral_codes WHERE user_id = ${userId}::uuid LIMIT 1
-    `
-    if (rows.length > 0) return rows[0].code
+    const existing = await this.prisma.referralCode.findUnique({
+      where: { userId },
+      select: { code: true },
+    })
+    if (existing) return existing.code
 
-    // Auto-generate an 8-char uppercase code; retry once on collision
-    const newCode = this.generateCode()
-    try {
-      await this.prisma.$executeRaw`
-        INSERT INTO referral_codes (user_id, code)
-        VALUES (${userId}::uuid, ${newCode})
-        ON CONFLICT (user_id) DO NOTHING
-      `
-      // Re-read in case another request won the race
-      const inserted = await this.prisma.$queryRaw<Array<{ code: string }>>`
-        SELECT code FROM referral_codes WHERE user_id = ${userId}::uuid LIMIT 1
-      `
-      return inserted[0]?.code ?? newCode
-    } catch {
-      // Conflict on unique code — retry with fresh value
-      const fallback = this.generateCode()
-      await this.prisma.$executeRaw`
-        INSERT INTO referral_codes (user_id, code)
-        VALUES (${userId}::uuid, ${fallback})
-        ON CONFLICT (user_id) DO NOTHING
-      `
-      const final = await this.prisma.$queryRaw<Array<{ code: string }>>`
-        SELECT code FROM referral_codes WHERE user_id = ${userId}::uuid LIMIT 1
-      `
-      return final[0]?.code ?? fallback
+    // Auto-generate 8-char hex code; retry once on unique-code collision
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const newCode = this.generateCode()
+      try {
+        const created = await this.prisma.referralCode.upsert({
+          where: { userId },
+          create: { userId, code: newCode },
+          update: {},
+          select: { code: true },
+        })
+        return created.code
+      } catch {
+        // continue to retry
+      }
     }
+
+    // Final fallback — read whatever landed in DB (race winner)
+    const final = await this.prisma.referralCode.findUnique({
+      where: { userId },
+      select: { code: true },
+    })
+    return final?.code ?? this.generateCode()
   }
 
   private async fetchStats(
     userId: string,
   ): Promise<{ inviteesCount: number; rewardsEarned: number }> {
     try {
-      const rows = await this.prisma.$queryRaw<
-        Array<{ invitees_count: bigint; rewards_earned: bigint }>
-      >`
-        SELECT
-          COUNT(*) AS invitees_count,
-          COALESCE(SUM(reward_amount), 0) AS rewards_earned
-        FROM referral_redemptions
-        WHERE referrer_user_id = ${userId}::uuid
-      `
+      const result = await this.prisma.referralRedemption.aggregate({
+        where: { referrerUserId: userId },
+        _count: { _all: true },
+        _sum: { rewardAmount: true },
+      })
       return {
-        inviteesCount: Number(rows[0]?.invitees_count ?? 0),
-        rewardsEarned: Number(rows[0]?.rewards_earned ?? 0),
+        inviteesCount: result._count._all,
+        rewardsEarned: result._sum.rewardAmount ?? 0,
       }
     } catch {
       return { inviteesCount: 0, rewardsEarned: 0 }

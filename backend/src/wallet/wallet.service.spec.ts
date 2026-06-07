@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { WalletService } from './wallet.service'
 import { PrismaService } from '../database/prisma.service'
 
-const mockPrisma = { $queryRaw: jest.fn() }
+const mockPrisma = {
+  walletTransaction: {
+    aggregate: jest.fn(),
+    findMany: jest.fn(),
+  },
+}
 
 describe('WalletService', () => {
   let service: WalletService
@@ -22,18 +27,20 @@ describe('WalletService', () => {
 
   describe('getSnapshot', () => {
     it('returns balance and transactions', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ sum: BigInt(1500) }])
-        .mockResolvedValueOnce([
-          {
-            id: 'txn-1',
-            amount_delta: 1500,
-            type: 'credit',
-            reason: 'order_refund',
-            ref_id: null,
-            created_at: new Date('2026-06-01T00:00:00Z'),
-          },
-        ])
+      mockPrisma.walletTransaction.aggregate.mockResolvedValue({
+        _sum: { amountDelta: 1500 },
+      })
+      mockPrisma.walletTransaction.findMany.mockResolvedValue([
+        {
+          id: 'txn-1',
+          userId,
+          amountDelta: 1500,
+          type: 'credit',
+          reason: 'order_refund',
+          refId: null,
+          createdAt: new Date('2026-06-01T00:00:00Z'),
+        },
+      ])
 
       const snap = await service.getSnapshot(userId)
 
@@ -49,9 +56,10 @@ describe('WalletService', () => {
     })
 
     it('returns zero balance when table empty', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ sum: BigInt(0) }])
-        .mockResolvedValueOnce([])
+      mockPrisma.walletTransaction.aggregate.mockResolvedValue({
+        _sum: { amountDelta: null },
+      })
+      mockPrisma.walletTransaction.findMany.mockResolvedValue([])
 
       const snap = await service.getSnapshot(userId)
 
@@ -60,7 +68,8 @@ describe('WalletService', () => {
     })
 
     it('handles db error gracefully', async () => {
-      mockPrisma.$queryRaw.mockRejectedValue(new Error('db down'))
+      mockPrisma.walletTransaction.aggregate.mockRejectedValue(new Error('db down'))
+      mockPrisma.walletTransaction.findMany.mockRejectedValue(new Error('db down'))
 
       const snap = await service.getSnapshot(userId)
 
@@ -69,18 +78,20 @@ describe('WalletService', () => {
     })
 
     it('includes refId when present', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ sum: BigInt(200) }])
-        .mockResolvedValueOnce([
-          {
-            id: 'txn-2',
-            amount_delta: -200,
-            type: 'debit',
-            reason: 'withdrawal',
-            ref_id: 'ref-uuid-123',
-            created_at: new Date('2026-06-02T00:00:00Z'),
-          },
-        ])
+      mockPrisma.walletTransaction.aggregate.mockResolvedValue({
+        _sum: { amountDelta: 200 },
+      })
+      mockPrisma.walletTransaction.findMany.mockResolvedValue([
+        {
+          id: 'txn-2',
+          userId,
+          amountDelta: -200,
+          type: 'debit',
+          reason: 'withdrawal',
+          refId: 'ref-uuid-123',
+          createdAt: new Date('2026-06-02T00:00:00Z'),
+        },
+      ])
 
       const snap = await service.getSnapshot(userId)
 

@@ -3,8 +3,13 @@ import { ReferralService } from './referral.service'
 import { PrismaService } from '../database/prisma.service'
 
 const mockPrisma = {
-  $queryRaw: jest.fn(),
-  $executeRaw: jest.fn(),
+  referralCode: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+  },
+  referralRedemption: {
+    aggregate: jest.fn(),
+  },
 }
 
 describe('ReferralService', () => {
@@ -23,9 +28,11 @@ describe('ReferralService', () => {
 
   describe('getOrCreateSnapshot', () => {
     it('returns existing code with stats', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ code: 'ABCD1234' }]) // getOrCreateCode
-        .mockResolvedValueOnce([{ invitees_count: BigInt(3), rewards_earned: BigInt(150) }]) // fetchStats
+      mockPrisma.referralCode.findUnique.mockResolvedValue({ code: 'ABCD1234' })
+      mockPrisma.referralRedemption.aggregate.mockResolvedValue({
+        _count: { _all: 3 },
+        _sum: { rewardAmount: 150 },
+      })
 
       const result = await service.getOrCreateSnapshot('user-uuid')
 
@@ -33,25 +40,24 @@ describe('ReferralService', () => {
     })
 
     it('auto-generates code when user has none', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([]) // no existing code
-        .mockResolvedValueOnce([{ code: 'NEWCODE1' }]) // re-read after insert
-        .mockResolvedValueOnce([{ invitees_count: BigInt(0), rewards_earned: BigInt(0) }])
-
-      mockPrisma.$executeRaw.mockResolvedValueOnce(1)
+      mockPrisma.referralCode.findUnique.mockResolvedValue(null)
+      mockPrisma.referralCode.upsert.mockResolvedValue({ code: 'NEWCODE1' })
+      mockPrisma.referralRedemption.aggregate.mockResolvedValue({
+        _count: { _all: 0 },
+        _sum: { rewardAmount: null },
+      })
 
       const result = await service.getOrCreateSnapshot('user-uuid')
 
-      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.referralCode.upsert).toHaveBeenCalledTimes(1)
       expect(result.code).toBe('NEWCODE1')
       expect(result.inviteesCount).toBe(0)
       expect(result.rewardsEarned).toBe(0)
     })
 
     it('returns zeros when fetchStats throws', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ code: 'ABCD1234' }])
-        .mockRejectedValueOnce(new Error('db error'))
+      mockPrisma.referralCode.findUnique.mockResolvedValue({ code: 'ABCD1234' })
+      mockPrisma.referralRedemption.aggregate.mockRejectedValue(new Error('db error'))
 
       const result = await service.getOrCreateSnapshot('user-uuid')
 

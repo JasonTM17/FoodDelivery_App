@@ -36,12 +36,19 @@ export class LoyaltyService {
 
   private async computeTotalPoints(userId: string): Promise<number> {
     try {
-      const rows = await this.prisma.$queryRaw<{ sum: bigint | null }[]>`
-        SELECT COALESCE(SUM(CASE WHEN type = 'credit' THEN points ELSE -points END), 0) AS sum
-        FROM loyalty_transactions
-        WHERE user_id = ${userId}::uuid
-      `
-      return Number(rows[0]?.sum ?? 0)
+      const [credits, debits] = await Promise.all([
+        this.prisma.loyaltyTransaction.aggregate({
+          where: { userId, type: 'credit' },
+          _sum: { points: true },
+        }),
+        this.prisma.loyaltyTransaction.aggregate({
+          where: { userId, type: 'debit' },
+          _sum: { points: true },
+        }),
+      ])
+      const creditTotal = credits._sum.points ?? 0
+      const debitTotal = debits._sum.points ?? 0
+      return creditTotal - debitTotal
     } catch {
       return 0
     }
@@ -51,27 +58,17 @@ export class LoyaltyService {
     userId: string,
   ): Promise<LoyaltyTransaction[]> {
     try {
-      const rows = await this.prisma.$queryRaw<
-        Array<{
-          id: string
-          points: number
-          type: string
-          description: string
-          created_at: Date
-        }>
-      >`
-        SELECT id, points, type, description, created_at
-        FROM loyalty_transactions
-        WHERE user_id = ${userId}::uuid
-        ORDER BY created_at DESC
-        LIMIT 50
-      `
+      const rows = await this.prisma.loyaltyTransaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
       return rows.map((r) => ({
         id: r.id,
         points: r.points,
-        type: r.type === 'debit' ? 'debit' : 'credit',
+        type: r.type,
         description: r.description,
-        createdAt: r.created_at.toISOString(),
+        createdAt: r.createdAt.toISOString(),
       }))
     } catch {
       return []

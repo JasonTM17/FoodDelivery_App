@@ -27,12 +27,11 @@ export class WalletService {
 
   private async computeBalance(userId: string): Promise<number> {
     try {
-      const rows = await this.prisma.$queryRaw<{ sum: bigint | null }[]>`
-        SELECT COALESCE(SUM(amount_delta), 0) AS sum
-        FROM wallet_transactions
-        WHERE user_id = ${userId}::uuid
-      `
-      return Number(rows[0]?.sum ?? 0)
+      const result = await this.prisma.walletTransaction.aggregate({
+        where: { userId },
+        _sum: { amountDelta: true },
+      })
+      return result._sum.amountDelta ?? 0
     } catch {
       return 0
     }
@@ -40,29 +39,18 @@ export class WalletService {
 
   private async fetchRecentTransactions(userId: string): Promise<WalletTransaction[]> {
     try {
-      const rows = await this.prisma.$queryRaw<
-        Array<{
-          id: string
-          amount_delta: number
-          type: string
-          reason: string
-          ref_id: string | null
-          created_at: Date
-        }>
-      >`
-        SELECT id, amount_delta, type, reason, ref_id, created_at
-        FROM wallet_transactions
-        WHERE user_id = ${userId}::uuid
-        ORDER BY created_at DESC
-        LIMIT 50
-      `
+      const rows = await this.prisma.walletTransaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
       return rows.map((r) => ({
         id: r.id,
-        amountDelta: r.amount_delta,
-        type: r.type === 'debit' ? 'debit' : 'credit',
+        amountDelta: r.amountDelta,
+        type: r.type,
         reason: r.reason,
-        ...(r.ref_id ? { refId: r.ref_id } : {}),
-        createdAt: r.created_at.toISOString(),
+        ...(r.refId ? { refId: r.refId } : {}),
+        createdAt: r.createdAt.toISOString(),
       }))
     } catch {
       return []
