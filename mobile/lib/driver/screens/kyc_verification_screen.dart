@@ -326,24 +326,24 @@ class _NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: AppColors.warning.withValues(alpha: 0.25)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, color: AppColors.warning, size: 18),
-          SizedBox(width: 8),
+          const Icon(Icons.info_outline, color: AppColors.warning, size: 18),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.',
-              style: TextStyle(fontSize: 13, color: AppColors.warning),
+              l10n.driverKycNote,
+              style: const TextStyle(fontSize: 13, color: AppColors.warning),
             ),
           ),
         ],

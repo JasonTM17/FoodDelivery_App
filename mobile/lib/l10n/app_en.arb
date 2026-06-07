@@ -296,5 +296,8 @@
   "driverNavOrderTotal": "Order total",
   "driverNavYouEarned": "You earned",
   "driverNavGoHome": "GO TO HOME",
-  "driverNavPhoneError": "Cannot open phone dialer"
+  "driverNavPhoneError": "Cannot open phone dialer",
+
+  "cartPlaceOrder": "Place order",
+  "checkoutConfirmOrder": "Confirm order"
 }

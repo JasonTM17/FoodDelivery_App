@@ -332,7 +332,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                     )
                   : Text(
-                      'Xác nhận đặt hàng · ${_formatPrice(cartState.total)}',
+                      '${l10n.checkoutConfirmOrder} · ${_formatPrice(cartState.total)}',
                       style: const TextStyle(fontSize: 16),
                     ),
             ),

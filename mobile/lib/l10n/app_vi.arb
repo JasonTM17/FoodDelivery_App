@@ -302,5 +302,8 @@
   "driverNavOrderTotal": "Tổng đơn",
   "driverNavYouEarned": "Bạn nhận được",
   "driverNavGoHome": "VỀ TRANG CHỦ",
-  "driverNavPhoneError": "Không thể mở trình quay số"
+  "driverNavPhoneError": "Không thể mở trình quay số",
+
+  "cartPlaceOrder": "Đặt hàng",
+  "checkoutConfirmOrder": "Xác nhận đặt hàng"
 }

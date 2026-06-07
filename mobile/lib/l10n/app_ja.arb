@@ -296,5 +296,8 @@
   "driverNavOrderTotal": "注文合計",
   "driverNavYouEarned": "あなたの収益",
   "driverNavGoHome": "ホームへ戻る",
-  "driverNavPhoneError": "電話アプリを開けません"
+  "driverNavPhoneError": "電話アプリを開けません",
+
+  "cartPlaceOrder": "注文する",
+  "checkoutConfirmOrder": "注文を確定"
 }

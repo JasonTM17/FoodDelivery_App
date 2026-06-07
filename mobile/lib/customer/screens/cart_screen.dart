@@ -294,7 +294,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pushNamed('/checkout'),
                   child: Text(
-                    'Đặt hàng · ${_formatPrice(cartState.total)}',
+                    '${l10n.cartPlaceOrder} · ${_formatPrice(cartState.total)}',
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
