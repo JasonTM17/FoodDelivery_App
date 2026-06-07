@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Breadcrumb } from '@foodflow/ui/breadcrumb';
+import { apiPatch } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +17,23 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSaving(false);
+    try {
+      await apiPatch('/admin/settings', {});
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Cài đặt hệ thống</h1>
+      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Cài đặt' }]} />
+
+      <div className="animate-fade-in-up">
+        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
+          Cài đặt hệ thống
+        </h1>
         <p className="text-sm text-muted-foreground">
           Cấu hình nền tảng FoodFlow
         </p>

@@ -178,8 +178,21 @@ export async function apiPatch<T>(path: string, body?: unknown, options?: ApiOpt
   return handleResponse<T>(response, retryFn);
 }
 
-export async function getAuditLogs(): Promise<{ logs: Array<Record<string, unknown>> }> {
-  return apiGet('/admin/audit-logs')
+export interface AuditLogFilter {
+  actor?: string;
+  action?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getAuditLogs(
+  filter?: AuditLogFilter,
+): Promise<{ logs: Array<Record<string, unknown>>; total?: number }> {
+  return apiGet('/admin/audit-logs', {
+    params: filter as Record<string, string | number | undefined>,
+  });
 }
 
 export async function apiDelete<T>(path: string, options?: ApiOptions): Promise<T> {

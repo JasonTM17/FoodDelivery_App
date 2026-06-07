@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { Breadcrumb } from '@foodflow/ui/breadcrumb';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -168,9 +170,13 @@ export default function PromotionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Khuyến mãi' }]} />
+
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Khuyến mãi</h1>
+          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
+            Khuyến mãi
+          </h1>
           <p className="text-sm text-muted-foreground">
             Quản lý mã khuyến mãi và ưu đãi
           </p>
@@ -266,9 +272,13 @@ export default function PromotionsPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-              Chưa có mã khuyến mãi nào
-            </div>
+            <EmptyState
+              icon={Percent}
+              title="Chưa có mã khuyến mãi nào"
+              description="Tạo mã khuyến mãi để thu hút khách hàng"
+              actionLabel="Tạo khuyến mãi"
+              onAction={openCreateDialog}
+            />
           )}
         </CardContent>
       </Card>
