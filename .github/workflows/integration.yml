@@ -1,0 +1,293 @@
+name: Integration Smoke Gate
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      skip_k6:
+        description: 'Skip k6 load test'
+        type: boolean
+        default: false
+      skip_lighthouse:
+        description: 'Skip Lighthouse CI'
+        type: boolean
+        default: false
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Gate 1+2: Stack health + Playwright E2E
+  # ──────────────────────────────────────────────────────────────────────────
+  playwright:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Start Docker Compose stack
+        run: docker compose up -d postgres redis minio backend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3001/api/healthz; then echo "Backend ready"; exit 0; fi
+            echo "Waiting ($i/40)..."; sleep 5
+          done; echo "Backend unhealthy"; exit 1
+
+      - name: Seed database
+        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Start admin app
+        run: cd web/apps/admin && npx next dev --port 3000 &
+
+      - name: Start restaurant app
+        run: cd web/apps/restaurant && npx next dev --port 3002 &
+
+      - name: Wait for web apps
+        run: npx wait-on http://localhost:3000 http://localhost:3002 --timeout 90000
+
+      - name: Install Playwright browsers
+        run: cd web && pnpm test:e2e:install
+
+      - name: Run Playwright E2E
+        run: cd web && pnpm test:e2e --project=chromium
+        env:
+          CI: 'true'
+          ADMIN_URL: http://localhost:3000
+          RESTAURANT_URL: http://localhost:3002
+          API_URL: http://localhost:3001/api
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: web/e2e/playwright-report/
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Gate 3: k6 load test (100 RPS × 5 min)
+  # ──────────────────────────────────────────────────────────────────────────
+  k6-load:
+    name: k6 Load Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ !inputs.skip_k6 }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Start Docker Compose stack
+        run: docker compose up -d postgres redis minio backend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3001/api/healthz; then echo "Ready"; exit 0; fi
+            sleep 5
+          done; exit 1
+
+      - name: Seed database
+        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo 'deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main' \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run k6 load test
+        run: |
+          k6 run \
+            --env API_URL=http://localhost:3001/api \
+            --out json=k6-results.json \
+            infra/loadtest/k6-mixed.js
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-results-${{ github.run_id }}
+          path: k6-results.json
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Gate 4: Lighthouse CI (mobile + desktop)
+  # ──────────────────────────────────────────────────────────────────────────
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ !inputs.skip_lighthouse }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Start Docker Compose stack
+        run: docker compose up -d postgres redis minio backend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi; sleep 5
+          done; exit 1
+
+      - name: Seed database
+        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+
+      - name: Install web + LHCI
+        run: cd web && pnpm install --frozen-lockfile && pnpm add -D @lhci/cli
+
+      - name: Build web apps
+        run: cd web && pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
+
+      - name: Start built apps
+        run: |
+          (cd web/apps/admin && npx next start --port 3000) &
+          (cd web/apps/restaurant && npx next start --port 3002) &
+          npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
+
+      - name: Lighthouse — mobile
+        run: cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+        env:
+          ADMIN_URL: http://localhost:3000
+          RESTAURANT_URL: http://localhost:3002
+
+      - name: Lighthouse — desktop
+        run: cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+        env:
+          ADMIN_URL: http://localhost:3000
+          RESTAURANT_URL: http://localhost:3002
+          LHCI_FORM_FACTOR: desktop
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lhci-report-${{ github.run_id }}
+          path: web/.lighthouseci/
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Gate 5: AI scenarios
+  # ──────────────────────────────────────────────────────────────────────────
+  ai-scenarios:
+    name: AI Scenario Assertions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Start Docker Compose stack
+        run: docker compose up -d postgres redis minio backend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi; sleep 5
+          done; exit 1
+
+      - name: Seed database
+        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+
+      - name: Install tsx
+        run: npm install -g tsx
+
+      - name: Run AI scenarios
+        run: |
+          npx tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+            --endpoint http://localhost:3001/api/ai/chat \
+            --fixtures e2e/ai-scenarios/canonical-conversations.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-scenarios-log-${{ github.run_id }}
+          path: e2e/reports/ai-scenarios.log
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Summary gate — all must pass
+  # ──────────────────────────────────────────────────────────────────────────
+  integration-gate:
+    name: Integration Gate
+    runs-on: ubuntu-latest
+    needs: [playwright, k6-load, lighthouse, ai-scenarios]
+    if: always()
+
+    steps:
+      - name: Check all gates
+        run: |
+          FAILED=""
+          [ "${{ needs.playwright.result }}" != "success" ] && FAILED="$FAILED playwright"
+          [ "${{ needs.k6-load.result }}" != "success" ] && [ "${{ needs.k6-load.result }}" != "skipped" ] && FAILED="$FAILED k6-load"
+          [ "${{ needs.lighthouse.result }}" != "success" ] && [ "${{ needs.lighthouse.result }}" != "skipped" ] && FAILED="$FAILED lighthouse"
+          [ "${{ needs.ai-scenarios.result }}" != "success" ] && FAILED="$FAILED ai-scenarios"
+          if [ -n "$FAILED" ]; then
+            echo "FAILED gates:$FAILED"
+            exit 1
+          fi
+          echo "All integration gates passed"
