@@ -3,6 +3,17 @@ export interface GeoPoint {
   lng: number
 }
 
+export interface RouteResult {
+  /** Google encoded polyline string */
+  polyline: string
+  distanceMeters: number
+  /** Wall-clock travel time in seconds (traffic-aware when available) */
+  durationSeconds: number
+  waypoints: GeoPoint[]
+  /** Which provider returned this result */
+  provider: 'google' | 'osrm' | 'haversine'
+}
+
 export interface DriverLocation {
   driverId: string
   lat: number
