@@ -22,6 +22,7 @@ import { WebhooksModule } from './webhooks/webhooks.module'
 import { PromotionsModule } from './promotions/promotions.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
+import { I18nSetupModule } from './i18n/i18n.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
@@ -46,6 +47,7 @@ import Redis from 'ioredis'
     RedisModule,
     HealthModule,
     MetricsModule,
+    I18nSetupModule,
     AuthModule,
     UsersModule,
     RestaurantsModule,

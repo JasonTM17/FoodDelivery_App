@@ -1,0 +1,19 @@
+{
+  "promotion_not_found": "Promotion code not found",
+  "promotion_invalid": "Promotion code is invalid",
+  "promotion_expired": "Promotion code has expired or is not yet active",
+  "promotion_exhausted": "Promotion code usage limit reached",
+  "promotion_min_order": "Minimum order amount must be {amount}",
+  "promotion_wrong_restaurant": "Promotion code does not apply to this restaurant",
+  "promotion_first_order_only": "Promotion code is for first orders only",
+  "promotion_max_per_user": "You have already used this promotion code {max} times",
+  "promotion_device_blocked": "Device has used more than {max} promotion codes in the last hour",
+  "promotion_fixed_cannot_stack": "Fixed discount codes cannot be combined with other codes",
+  "promotion_one_per_type": "Only one code per promotion type is allowed",
+  "order_cannot_cancel": "Cannot cancel order in current status",
+  "order_already_completed": "Order is already completed, cannot cancel",
+  "order_processing_cannot_cancel": "Order is being processed by the restaurant and cannot be cancelled. Please contact support.",
+  "order_driver_picked_up": "Order has been picked up by the driver, cannot be cancelled by the restaurant",
+  "order_cancel_reason_required": "Restaurant must provide a reason for cancellation",
+  "order_invalid_role": "Invalid role"
+}

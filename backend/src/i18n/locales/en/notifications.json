@@ -1,0 +1,6 @@
+{
+  "order_update_title": "Order update",
+  "order_update_body": "Order {orderId}: {event}",
+  "driver_delay_title": "Delivery delay alert",
+  "driver_delay_body": "Order {orderId} is delayed by {delayMinutes} minutes"
+}

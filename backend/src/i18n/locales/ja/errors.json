@@ -1,0 +1,19 @@
+{
+  "promotion_not_found": "プロモーションコードが見つかりません",
+  "promotion_invalid": "プロモーションコードが無効です",
+  "promotion_expired": "プロモーションコードの有効期限が切れているか、まだ有効ではありません",
+  "promotion_exhausted": "プロモーションコードの使用上限に達しました",
+  "promotion_min_order": "最低注文金額は{amount}以上である必要があります",
+  "promotion_wrong_restaurant": "このレストランにはプロモーションコードが適用されません",
+  "promotion_first_order_only": "初回注文限定のプロモーションコードです",
+  "promotion_max_per_user": "このプロモーションコードはすでに{max}回使用しています",
+  "promotion_device_blocked": "過去1時間に{max}件以上のプロモーションコードを使用しています",
+  "promotion_fixed_cannot_stack": "固定割引コードは他のコードと組み合わせることができません",
+  "promotion_one_per_type": "プロモーションタイプごとに1コードのみ使用できます",
+  "order_cannot_cancel": "現在の状態では注文をキャンセルできません",
+  "order_already_completed": "注文は既に完了しているため、キャンセルできません",
+  "order_processing_cannot_cancel": "注文はレストランで処理中のためキャンセルできません。サポートにお問い合わせください。",
+  "order_driver_picked_up": "ドライバーが注文を受け取ったため、レストランからはキャンセルできません",
+  "order_cancel_reason_required": "レストランはキャンセル理由を提供する必要があります",
+  "order_invalid_role": "無効なロール"
+}

@@ -1,0 +1,6 @@
+{
+  "order_update_title": "Cập nhật đơn hàng",
+  "order_update_body": "Đơn {orderId}: {event}",
+  "driver_delay_title": "Cảnh báo trễ giao hàng",
+  "driver_delay_body": "Đơn {orderId} đang trễ {delayMinutes} phút"
+}

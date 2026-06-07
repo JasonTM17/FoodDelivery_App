@@ -1,0 +1,19 @@
+{
+  "promotion_not_found": "Mã khuyến mãi không tồn tại",
+  "promotion_invalid": "Mã khuyến mãi không hợp lệ",
+  "promotion_expired": "Mã khuyến mãi đã hết hạn hoặc chưa có hiệu lực",
+  "promotion_exhausted": "Mã đã hết lượt dùng",
+  "promotion_min_order": "Đơn tối thiểu phải đạt {amount}đ",
+  "promotion_wrong_restaurant": "Mã không áp dụng cho nhà hàng này",
+  "promotion_first_order_only": "Mã chỉ áp dụng cho đơn đầu tiên",
+  "promotion_max_per_user": "Bạn đã dùng mã này tối đa {max} lần",
+  "promotion_device_blocked": "Thiết bị đã sử dụng quá {max} mã khuyến mãi trong 1 giờ",
+  "promotion_fixed_cannot_stack": "Mã giảm giá cố định không thể kết hợp với mã khác",
+  "promotion_one_per_type": "Mỗi loại khuyến mãi chỉ được áp dụng 1 mã",
+  "order_cannot_cancel": "Không thể huỷ đơn hàng ở trạng thái này",
+  "order_already_completed": "Đơn hàng đã hoàn tất, không thể huỷ",
+  "order_processing_cannot_cancel": "Đơn hàng đang được xử lý bởi nhà hàng và không thể huỷ. Vui lòng liên hệ hỗ trợ.",
+  "order_driver_picked_up": "Đơn hàng đã được tài xế nhận, không thể huỷ từ phía nhà hàng",
+  "order_cancel_reason_required": "Nhà hàng phải cung cấp lý do huỷ đơn",
+  "order_invalid_role": "Vai trò không hợp lệ"
+}

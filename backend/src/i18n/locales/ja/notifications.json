@@ -1,0 +1,6 @@
+{
+  "order_update_title": "注文の更新",
+  "order_update_body": "注文 {orderId}: {event}",
+  "driver_delay_title": "配達遅延アラート",
+  "driver_delay_body": "注文 {orderId} が {delayMinutes} 分遅れています"
+}
