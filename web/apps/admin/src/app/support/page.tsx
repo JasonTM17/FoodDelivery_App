@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { timeSince } from '@/lib/utils';
+import { PageHeader } from '@foodflow/ui/page-header';
 import TicketPriorityBadge from '@/components/badges/ticket-priority-badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -116,12 +117,11 @@ export default function SupportPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Hỗ trợ</h1>
-        <p className="text-sm text-muted-foreground">
-          Quản lý yêu cầu hỗ trợ từ khách hàng
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Hỗ trợ' }]}
+        title="Hỗ trợ"
+        description="Quản lý yêu cầu hỗ trợ từ khách hàng"
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statusColumns.map((col) => {
