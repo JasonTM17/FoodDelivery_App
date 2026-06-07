@@ -7,6 +7,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added (Batch 3 — Stitch Finalize + Production Hardening)
+- Customer profile menu wired to loyalty/wallet/referral/help screens
+- Driver support contact buttons wired to `url_launcher` (tel/mailto/https)
+- Restaurant sidebar navigation extended with Promotions + Analytics links
+- `/[locale]/promotions` list page on restaurant app with i18n keys × 3 locales
+
+### Changed
+- `@foodflow/ui` package: added `next` as peer + dev dependency for breadcrumb component (fixes admin typecheck)
+
+### Deferred to v0.3
+- JWT Ed25519 cutover phase 1 (dual verify) — security-critical, requires red-team review
+- Backend stub APIs (loyalty/wallet/referral/incentives + admin heatmap/KPI)
+- Admin web gaps (overview heatmap widget, restaurant detail KPIs)
+- Promotion edit page + detail page
+- Test init fixes (dayjs ESM/CJS interop, BullMQ DI mock)
+- 8 dependabot major bumps (TypeScript 6, Prisma 7, zod 4, node 26, tailwind 4, day-picker 10, lucide-react 1, @hookform/resolvers 5) tracked in issues #35-42
+
 ## [0.2.0] — 2026-06-07
 
 ### Added
