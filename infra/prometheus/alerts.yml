@@ -1,0 +1,58 @@
+groups:
+  - name: foodflow.backend
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{job="backend",status=~"5.."}[5m])
+          / rate(http_requests_total{job="backend"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx error rate above 5% ({{ $value | humanizePercentage }})"
+          description: "Backend error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      - alert: DispatchFailureRate
+        expr: |
+          rate(dispatch_no_driver_total[5m])
+          / rate(dispatch_attempts_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dispatch no-driver rate above 10% ({{ $value | humanizePercentage }})"
+          description: "More than 10% of dispatch attempts are failing to find a driver."
+
+      - alert: WSLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            rate(ws_location_e2e_ms_bucket[5m])
+          ) > 5000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "WebSocket location e2e latency p95 above 5s ({{ $value }}ms)"
+          description: "WS location push latency p95 exceeded 5000ms threshold."
+
+  - name: foodflow.infrastructure
+    interval: 30s
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL exporter is down"
+          description: "Cannot reach PostgreSQL metrics endpoint."
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Cannot reach Redis metrics endpoint."
