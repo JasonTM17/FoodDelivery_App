@@ -150,14 +150,13 @@ export class TrackingService implements OnModuleDestroy {
 
   private async persistRouteToOrder(orderId: string, route: RouteResult): Promise<void> {
     try {
-      // Raw SQL used intentionally: routePolyline/routeWaypoints are added via migration
-      // and Prisma client is not regenerated yet at compile time.
-      await this.prisma.$executeRawUnsafe(
-        `UPDATE orders SET route_polyline = $1, route_waypoints = $2::jsonb WHERE id = $3::uuid`,
-        route.polyline,
-        JSON.stringify(route.waypoints),
-        orderId,
-      )
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: {
+          routePolyline: route.polyline,
+          routeWaypoints: route.waypoints as unknown as Prisma.InputJsonValue,
+        },
+      })
     } catch (err) {
       this.logger.warn(`Failed to persist route for order ${orderId}: ${(err as Error).message}`)
     }
