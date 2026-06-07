@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Inject, Logger, OnModuleDestroy } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import type { Prisma } from '@prisma/client'
@@ -31,7 +31,7 @@ export interface RecomputeJobData {
 }
 
 @Injectable()
-export class TrackingService {
+export class TrackingService implements OnModuleDestroy {
   private readonly logger = new Logger(TrackingService.name)
   private batchBuffer: LocationRecord[] = []
   private flushInterval: ReturnType<typeof setInterval> | null = null
@@ -44,6 +44,13 @@ export class TrackingService {
     @InjectQueue('tracking-eta') private readonly etaQueue: Queue,
   ) {
     this.flushInterval = setInterval(() => this.flush(), 15000)
+  }
+
+  onModuleDestroy(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval)
+      this.flushInterval = null
+    }
   }
 
   async handleLocationUpdate(driverId: string, data: LocationData): Promise<string | null> {

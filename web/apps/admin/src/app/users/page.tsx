@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumb } from '@foodflow/ui/breadcrumb';
 import UsersTableClient from './users-table-client';
 
 function UsersTableSkeleton() {
@@ -18,8 +19,11 @@ function UsersTableSkeleton() {
 export default function UsersPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý người dùng</h1>
+      <Breadcrumb items={[{ label: 'Admin' }, { label: 'Người dùng' }]} />
+      <div className="animate-fade-in-up">
+        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
+          Quản lý người dùng
+        </h1>
         <p className="text-sm text-muted-foreground">Danh sách người dùng trong hệ thống</p>
       </div>
       <Suspense fallback={<UsersTableSkeleton />}>
