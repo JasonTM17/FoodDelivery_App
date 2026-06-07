@@ -65,8 +65,21 @@ export class TrackingGateway {
          FROM addresses WHERE id = $1::uuid LIMIT 1`, order.deliveryAddressId,
       )
       if (addr.length > 0) {
-        const eta = this.trackingService.calculateETA(data.lat, data.lng, addr[0].lat, addr[0].lng)
-        this.server.to(room).emit('delivery:eta_updated', { orderId, etaMinutes: eta })
+        const destLat = addr[0].lat
+        const destLng = addr[0].lng
+
+        // Try route cache first; fetches + caches on miss. Falls back to haversine on API error.
+        const route = await this.trackingService.getOrFetchRoute(
+          orderId, data.lat, data.lng, destLat, destLng,
+        )
+        const etaMinutes = route
+          ? Math.round(route.durationSeconds / 60)
+          : this.trackingService.calculateETA(data.lat, data.lng, destLat, destLng)
+
+        this.server.to(room).emit('delivery:eta_updated', { orderId, etaMinutes })
+
+        // Non-blocking: enqueue recompute when driver deviates >100m from cached polyline
+        void this.trackingService.maybeEnqueueRecompute(orderId, data.lat, data.lng)
       }
     }
   }
