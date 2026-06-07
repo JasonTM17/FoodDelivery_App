@@ -10,7 +10,10 @@ export function RootLayoutClient({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
+  // Handle both /login and locale-prefixed /vi/login, /en/login, /ja/login
+  const isLoginPage =
+    pathname === '/login' ||
+    ['vi', 'en', 'ja'].some((l) => pathname === `/${l}/login`)
 
   if (isLoginPage) {
     return (

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   ShoppingBag,
   UtensilsCrossed,
@@ -15,29 +16,44 @@ import {
   Bell,
   UserCircle,
   Clock,
+  type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { clearToken, getStoredRestaurant } from '@/lib/api';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 
-const NAV_ITEMS = [
-  { href: '/orders', label: 'Đơn hàng', icon: ShoppingBag },
-  { href: '/menu', label: 'Thực đơn', icon: UtensilsCrossed },
-  { href: '/revenue', label: 'Doanh thu', icon: BarChart3 },
-  { href: '/reviews', label: 'Đánh giá', icon: Star },
-  { href: '/notifications', label: 'Thông báo', icon: Bell },
+interface NavItem {
+  href: string;
+  tKey: string;
+  icon: LucideIcon;
+}
+
+interface SettingsItem extends NavItem {
+  exact: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { href: '/orders', tKey: 'nav.orders', icon: ShoppingBag },
+  { href: '/menu', tKey: 'nav.menu', icon: UtensilsCrossed },
+  { href: '/revenue', tKey: 'nav.revenue', icon: BarChart3 },
+  { href: '/reviews', tKey: 'nav.reviews', icon: Star },
+  { href: '/notifications', tKey: 'nav.notifications', icon: Bell },
 ];
 
-const SETTINGS_ITEMS = [
-  { href: '/settings', label: 'Chung', icon: Settings, exact: true },
-  { href: '/settings/profile', label: 'Hồ sơ', icon: UserCircle, exact: false },
-  { href: '/settings/hours', label: 'Giờ mở cửa', icon: Clock, exact: false },
+const SETTINGS_ITEMS: SettingsItem[] = [
+  { href: '/settings', tKey: 'sidebar.settingsGeneral', icon: Settings, exact: true },
+  { href: '/settings/profile', tKey: 'sidebar.settingsProfile', icon: UserCircle, exact: false },
+  { href: '/settings/hours', tKey: 'sidebar.settingsHours', icon: Clock, exact: false },
 ];
 
 export function RestaurantSidebar() {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  // Strip locale prefix so active checks work for both /orders and /vi/orders
+  const pathname = rawPathname.replace(/^\/(vi|en|ja)/, '') || '/';
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const t = useTranslations();
   const restaurant = getStoredRestaurant();
 
   const isSettingsActive = pathname.startsWith('/settings');
@@ -54,6 +70,7 @@ export function RestaurantSidebar() {
         collapsed ? 'w-16' : 'w-[260px]'
       )}
     >
+      {/* Restaurant info */}
       <div
         className={cn(
           'flex items-center gap-3 px-4 h-16 border-b border-sidebar-hover shrink-0',
@@ -66,13 +83,14 @@ export function RestaurantSidebar() {
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">
-              {restaurant?.name || 'Nhà hàng'}
+              {restaurant?.name || t('sidebar.defaultName')}
             </p>
-            <p className="truncate text-xs text-sidebar-muted">Quản lý</p>
+            <p className="truncate text-xs text-sidebar-muted">{t('sidebar.manage')}</p>
           </div>
         )}
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-1">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname.startsWith(item.href);
@@ -89,7 +107,7 @@ export function RestaurantSidebar() {
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span>{t(item.tKey)}</span>}
             </Link>
           );
         })}
@@ -111,10 +129,12 @@ export function RestaurantSidebar() {
           ) : (
             <>
               <p className="px-3 pb-1 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
-                Cài đặt
+                {t('sidebar.settingsGroup')}
               </p>
               {SETTINGS_ITEMS.map((item) => {
-                const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
                 return (
                   <Link
                     key={item.href}
@@ -127,7 +147,7 @@ export function RestaurantSidebar() {
                     )}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
+                    <span>{t(item.tKey)}</span>
                   </Link>
                 );
               })}
@@ -136,6 +156,7 @@ export function RestaurantSidebar() {
         </div>
       </nav>
 
+      {/* Collapse toggle */}
       <div className="border-t border-sidebar-hover p-3">
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -146,12 +167,18 @@ export function RestaurantSidebar() {
           ) : (
             <>
               <ChevronLeft className="h-5 w-5 shrink-0" />
-              <span>Thu gọn</span>
+              <span>{t('sidebar.collapse')}</span>
             </>
           )}
         </button>
       </div>
 
+      {/* Locale switcher */}
+      <div className="border-t border-sidebar-hover px-3 py-2">
+        <LocaleSwitcher collapsed={collapsed} />
+      </div>
+
+      {/* Logout */}
       <div className="border-t border-sidebar-hover p-3">
         <button
           onClick={handleLogout}
@@ -161,7 +188,7 @@ export function RestaurantSidebar() {
           )}
         >
           <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Đăng xuất</span>}
+          {!collapsed && <span>{t('common.logout')}</span>}
         </button>
       </div>
     </aside>

@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEffect, useState } from 'react';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 
 const breadcrumbMap: Record<string, string> = {
   overview: 'Tổng quan',
@@ -68,6 +69,8 @@ export default function AdminTopbar() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Tìm kiếm..." className="w-64 pl-8" />
         </div>
+
+        <LocaleSwitcher />
 
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />

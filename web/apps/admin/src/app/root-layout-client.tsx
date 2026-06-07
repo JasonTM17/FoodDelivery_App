@@ -18,7 +18,10 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const isPublic = publicPaths.includes(pathname)
+  // Handle both bare paths (/login) and locale-prefixed paths (/vi/login, /en/login)
+  const isPublic = publicPaths.some(
+    (p) => pathname === p || ['vi', 'en', 'ja'].some((l) => pathname === `/${l}${p}`)
+  )
 
   return (
     <AuthProvider>
