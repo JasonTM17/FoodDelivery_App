@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Star, Car, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { PageHeader } from '@foodflow/ui/page-header';
 
 interface Driver {
   id: string;
@@ -48,20 +49,19 @@ export default function DriversPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý tài xế</h1>
-          <p className="text-sm text-muted-foreground">
-            Danh sách tài xế trong hệ thống
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/drivers/map">
-            <MapPin className="mr-2 h-4 w-4" />
-            Xem bản đồ
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: 'Admin' }, { label: 'Tài xế' }]}
+        title="Quản lý tài xế"
+        description="Danh sách tài xế trong hệ thống"
+        actions={
+          <Button asChild>
+            <Link href="/drivers/map">
+              <MapPin className="mr-2 h-4 w-4" />
+              Xem bản đồ
+            </Link>
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>
