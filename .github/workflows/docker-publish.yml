@@ -21,15 +21,13 @@ jobs:
               BUILD_SHA=${{ github.sha }}
           - image: nguyenson1710/foodflow-admin
             context: ./web
-            dockerfile: ./web/Dockerfile
+            dockerfile: ./web/apps/admin/Dockerfile
             build-args: |
-              APP_NAME=admin
               BUILD_SHA=${{ github.sha }}
           - image: nguyenson1710/foodflow-restaurant
             context: ./web
-            dockerfile: ./web/Dockerfile
+            dockerfile: ./web/apps/restaurant/Dockerfile
             build-args: |
-              APP_NAME=restaurant
               BUILD_SHA=${{ github.sha }}
 
     steps:
