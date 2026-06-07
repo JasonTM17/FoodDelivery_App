@@ -1,0 +1,18 @@
+{
+  "order_status": {
+    "pending": "Pending confirmation",
+    "confirmed": "Confirmed",
+    "preparing": "Preparing",
+    "ready": "Ready",
+    "on_the_way": "On the way",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "role": {
+    "customer": "Customer",
+    "driver": "Driver",
+    "restaurant_owner": "Restaurant owner",
+    "admin": "Administrator"
+  }
+}

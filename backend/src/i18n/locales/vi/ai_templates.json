@@ -1,0 +1,16 @@
+{
+  "greeting": "Xin chào! Tôi là FoodFlow AI Assistant 🍜. Tôi có thể giúp gì cho bạn hôm nay?",
+  "thank_you": "Cảm ơn bạn đã sử dụng FoodFlow! Chúc bạn ngon miệng 😊",
+  "fallback": "Xin lỗi, tôi chưa thể xử lý yêu cầu này ngay lúc này.",
+  "service_unavailable": "Xin lỗi, dịch vụ đang bận. Vui lòng thử lại sau ít phút 🙏",
+  "refund_eligible": "Đơn hàng {orderId} đủ điều kiện hoàn tiền {amount}đ. Bạn có muốn tiến hành không?",
+  "refund_ineligible": "Đơn hàng {orderId} không đủ điều kiện hoàn tiền vì trạng thái hiện tại là {status}.",
+  "escalation_acknowledge": "Tôi đã chuyển vấn đề của bạn đến đội hỗ trợ. Mã phiếu: {ticketId}. Chúng tôi sẽ liên hệ sớm nhất.",
+  "no_data": "Không tìm thấy thông tin liên quan. Vui lòng cung cấp thêm chi tiết.",
+  "anti_injection_response": "Yêu cầu không hợp lệ. Vui lòng nhập câu hỏi bình thường.",
+  "tracking_in_transit": "Đơn hàng của bạn đang trên đường giao. Bạn có thể theo dõi vị trí tài xế trong ứng dụng.",
+  "order_status_prompt": "Để kiểm tra trạng thái đơn hàng, vui lòng cung cấp mã đơn hàng của bạn.",
+  "cancel_refund_prompt": "Bạn muốn hủy đơn hoặc yêu cầu hoàn tiền? Vui lòng cung cấp mã đơn hàng.",
+  "app_error_hint": "Bạn thử khởi động lại ứng dụng hoặc kiểm tra kết nối mạng nhé. Nếu vẫn lỗi hãy nhắn lại tôi.",
+  "faq_hint": "Bạn có thể tìm câu trả lời trong mục Trợ giúp trong ứng dụng, hoặc cho tôi biết vấn đề cụ thể nhé."
+}

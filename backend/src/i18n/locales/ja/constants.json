@@ -1,0 +1,18 @@
+{
+  "order_status": {
+    "pending": "確認待ち",
+    "confirmed": "確認済み",
+    "preparing": "準備中",
+    "ready": "準備完了",
+    "on_the_way": "配達中",
+    "delivered": "配達完了",
+    "cancelled": "キャンセル済み",
+    "refunded": "返金済み"
+  },
+  "role": {
+    "customer": "顧客",
+    "driver": "配達員",
+    "restaurant_owner": "レストランオーナー",
+    "admin": "管理者"
+  }
+}

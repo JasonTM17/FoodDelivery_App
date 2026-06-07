@@ -1,0 +1,16 @@
+{
+  "greeting": "Hello! I'm FoodFlow AI Assistant 🍜. How can I help you today?",
+  "thank_you": "Thank you for using FoodFlow! Enjoy your meal 😊",
+  "fallback": "Sorry, I'm unable to process your request right now.",
+  "service_unavailable": "Sorry, the service is busy. Please try again in a few minutes 🙏",
+  "refund_eligible": "Order {orderId} is eligible for a refund of {amount}. Would you like to proceed?",
+  "refund_ineligible": "Order {orderId} is not eligible for a refund because its current status is {status}.",
+  "escalation_acknowledge": "Your issue has been escalated to our support team. Ticket ID: {ticketId}. We will contact you shortly.",
+  "no_data": "No relevant information found. Please provide more details.",
+  "anti_injection_response": "Invalid request. Please enter a normal question.",
+  "tracking_in_transit": "Your order is on its way. You can track the driver's location in the app.",
+  "order_status_prompt": "To check your order status, please provide your order ID.",
+  "cancel_refund_prompt": "You want to cancel your order or request a refund? Please provide your order ID.",
+  "app_error_hint": "Try restarting the app or checking your internet connection. If the issue persists, let me know.",
+  "faq_hint": "You can find answers in the Help section of the app, or describe your specific issue to me."
+}
