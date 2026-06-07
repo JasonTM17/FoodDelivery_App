@@ -1,0 +1,107 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'web/**'
+      - 'backend/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'web/**'
+      - 'backend/**'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      # ── Backend stack ────────────────────────────────────────────────────
+      - name: Start Docker Compose stack
+        run: docker compose up -d postgres redis minio backend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/api/healthz; then
+              echo "Backend ready"; exit 0
+            fi
+            echo "Waiting for backend ($i/30)..."; sleep 5
+          done
+          echo "Backend did not start in time"; exit 1
+
+      - name: Seed database
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile
+          pnpm db:big-seed
+
+      # ── Web apps ─────────────────────────────────────────────────────────
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Start admin app (background)
+        run: |
+          cd web/apps/admin
+          npx next dev --port 3000 &
+          echo "ADMIN_PID=$!" >> $GITHUB_ENV
+
+      - name: Start restaurant app (background)
+        run: |
+          cd web/apps/restaurant
+          npx next dev --port 3002 &
+          echo "RESTAURANT_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for web apps
+        run: |
+          npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
+
+      # ── Playwright ───────────────────────────────────────────────────────
+      - name: Install Playwright (Chromium only)
+        run: cd web && pnpm test:e2e:install
+
+      - name: Run E2E tests
+        run: cd web && pnpm test:e2e --project=chromium
+        env:
+          CI: 'true'
+          ADMIN_URL: http://localhost:3000
+          RESTAURANT_URL: http://localhost:3002
+          API_URL: http://localhost:3001/api
+
+      # ── Artifacts ────────────────────────────────────────────────────────
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: web/e2e/playwright-report/
+          retention-days: 14
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ github.run_id }}
+          path: web/e2e/test-results/
+          retention-days: 14
+
+      - name: Stop background apps
+        if: always()
+        run: |
+          kill $ADMIN_PID $RESTAURANT_PID 2>/dev/null || true
+          docker compose down
