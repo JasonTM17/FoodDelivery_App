@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/order_provider.dart';
@@ -156,6 +157,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title: l10n.myAddresses,
                     subtitle: l10n.myAddressesSubtitle,
                     onTap: () => Navigator.of(context).pushNamed('/addresses'),
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    icon: Icons.card_giftcard_outlined,
+                    title: l10n.profileLoyalty,
+                    subtitle: l10n.profileLoyaltySubtitle,
+                    onTap: () => context.push('/loyalty'),
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: l10n.profileWallet,
+                    subtitle: l10n.profileWalletSubtitle,
+                    onTap: () => context.push('/wallet'),
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    icon: Icons.group_outlined,
+                    title: l10n.profileReferral,
+                    subtitle: l10n.profileReferralSubtitle,
+                    onTap: () => context.push('/referral'),
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    icon: Icons.help_outline,
+                    title: l10n.profileHelp,
+                    subtitle: l10n.profileHelpSubtitle,
+                    onTap: () => context.push('/help'),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
