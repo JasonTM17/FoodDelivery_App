@@ -37,6 +37,10 @@ export class DispatchGateway {
     this.server.to(`order:${orderId}`).emit(event, data)
   }
 
+  emitToAdmins(event: string, data: Record<string, unknown>): void {
+    this.server.emit(event, data)
+  }
+
   @SubscribeMessage('dispatch:accept')
   async handleAccept(@MessageBody() data: { orderId: string; driverId: string; offerToken: string }): Promise<{ event: string; data: Record<string, unknown> }> {
     const offerKey = `offer:${data.orderId}:${data.driverId}`
