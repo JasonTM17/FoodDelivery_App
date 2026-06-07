@@ -20,6 +20,7 @@ export class OrdersService {
     private readonly cancellationService: CancellationService,
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
     @InjectQueue('refund') private readonly refundQueue: Queue,
+    @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
   ) {}
 
   async transition(
@@ -189,6 +190,13 @@ export class OrdersService {
 
     // Process payment async — fire-and-forget outside txn
     this.paymentsService.processPayment(order.id, Number(total), dto.paymentMethod).catch(console.error)
+
+    // Schedule auto-timeout: cancel if restaurant doesn't accept in 5 min
+    await this.orderTimeoutQueue.add(
+      'restaurant-accept-timeout',
+      { orderId: order.id, expectedStatus: 'paid' },
+      { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
+    )
 
     // Notify restaurant
     this.ordersGateway.notifyRestaurant(restaurant.id, {

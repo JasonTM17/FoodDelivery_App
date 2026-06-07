@@ -390,7 +390,7 @@ model OrderStatusHistory {
   id        String   @id @default(uuid()) @db.Uuid
   orderId   String   @map("order_id") @db.Uuid
   status    String   @db.VarChar(30)
-  changedBy String   @map("changed_by") @db.Uuid
+  changedBy String   @map("changed_by") @db.VarChar(50)
   note      String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
