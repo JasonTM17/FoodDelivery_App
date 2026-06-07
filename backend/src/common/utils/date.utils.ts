@@ -17,13 +17,37 @@ export function formatDate(date: Date, format = 'DD/MM/YYYY'): string { return d
 
 export function formatDateTime(date: Date): string { return dayjs(date).tz(VN_TZ).format('DD/MM/YYYY HH:mm') }
 
-export function timeSince(date: Date): string {
+type Lang = 'vi' | 'en' | 'ja'
+
+const REL_TIME: Record<Lang, { now: string; min: (n: number) => string; hr: (n: number) => string; day: (n: number) => string }> = {
+  vi: {
+    now: 'vừa xong',
+    min: (n) => `${n} phút trước`,
+    hr: (n) => `${n} giờ trước`,
+    day: (n) => `${n} ngày trước`,
+  },
+  en: {
+    now: 'just now',
+    min: (n) => `${n} minute${n === 1 ? '' : 's'} ago`,
+    hr: (n) => `${n} hour${n === 1 ? '' : 's'} ago`,
+    day: (n) => `${n} day${n === 1 ? '' : 's'} ago`,
+  },
+  ja: {
+    now: 'たった今',
+    min: (n) => `${n}分前`,
+    hr: (n) => `${n}時間前`,
+    day: (n) => `${n}日前`,
+  },
+}
+
+export function timeSince(date: Date, lang: Lang = 'vi'): string {
+  const t = REL_TIME[lang] ?? REL_TIME.vi
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (seconds < 60) return 'vừa xong'
+  if (seconds < 60) return t.now
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} phút trước`
+  if (minutes < 60) return t.min(minutes)
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} giờ trước`
+  if (hours < 24) return t.hr(hours)
   const days = Math.floor(hours / 24)
-  return `${days} ngày trước`
+  return t.day(days)
 }
