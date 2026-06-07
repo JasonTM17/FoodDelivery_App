@@ -7,7 +7,7 @@ import { InAppChannel } from './channels/in-app.channel'
 import { FcmChannel } from './channels/fcm.channel'
 import { SmtpChannel } from './channels/smtp.channel'
 import { TwilioChannel } from './channels/twilio.channel'
-import { TemplateLoader } from './templates/template.loader'
+import { TemplateLoader, type Locale } from './templates/template.loader'
 import {
   CRITICAL_EVENTS,
   DEFAULT_CHANNELS,
@@ -21,6 +21,7 @@ export interface FanoutPayload {
   sourceId: string
   templateVars?: Record<string, string>
   data?: Record<string, unknown>
+  locale?: Locale
 }
 
 interface NotificationSettingRow {
@@ -58,7 +59,8 @@ export class NotificationsService {
     const channels = await this.resolveChannels(userId, eventType)
     if (channels.length === 0) return { sent: false, skipped: true }
 
-    const rendered = this.templateLoader.render(eventType, payload.templateVars ?? {})
+    const lang = payload.locale ?? (await this.resolveUserLocale(userId))
+    const rendered = this.templateLoader.render(eventType, payload.templateVars ?? {}, lang)
     const isCritical = CRITICAL_EVENTS.has(eventType)
 
     const effectiveChannels =
@@ -118,6 +120,19 @@ export class NotificationsService {
       // Table may not exist before migration runs
     }
     return DEFAULT_CHANNELS[eventType] ?? ['in_app']
+  }
+
+  private async resolveUserLocale(userId: string): Promise<Locale> {
+    try {
+      const rows = await this.prisma.$queryRaw<{ preferred_locale: string }[]>`
+        SELECT preferred_locale FROM users WHERE id = ${userId}::uuid LIMIT 1
+      `
+      const value = rows[0]?.preferred_locale
+      if (value === 'en' || value === 'ja') return value
+    } catch {
+      // Column may not exist before migration runs
+    }
+    return 'vi'
   }
 
   private isQuietHours(): boolean {
