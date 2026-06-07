@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import * as fs from 'fs'
 import * as path from 'path'
+import type { Locale } from '../../common/types/locale.types'
 
-export type Locale = 'vi' | 'en' | 'ja'
+export type { Locale }
 
 const LOCALE_DIR_MAP: Record<Locale, string> = {
   vi: 'vi-VN',

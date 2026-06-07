@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
+import type { Locale } from '../types/locale.types'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -17,9 +18,7 @@ export function formatDate(date: Date, format = 'DD/MM/YYYY'): string { return d
 
 export function formatDateTime(date: Date): string { return dayjs(date).tz(VN_TZ).format('DD/MM/YYYY HH:mm') }
 
-type Lang = 'vi' | 'en' | 'ja'
-
-const REL_TIME: Record<Lang, { now: string; min: (n: number) => string; hr: (n: number) => string; day: (n: number) => string }> = {
+const REL_TIME: Record<Locale, { now: string; min: (n: number) => string; hr: (n: number) => string; day: (n: number) => string }> = {
   vi: {
     now: 'vừa xong',
     min: (n) => `${n} phút trước`,
@@ -40,7 +39,7 @@ const REL_TIME: Record<Lang, { now: string; min: (n: number) => string; hr: (n: 
   },
 }
 
-export function timeSince(date: Date, lang: Lang = 'vi'): string {
+export function timeSince(date: Date, lang: Locale = 'vi'): string {
   const t = REL_TIME[lang] ?? REL_TIME.vi
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
   if (seconds < 60) return t.now

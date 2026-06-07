@@ -1,4 +1,7 @@
 import type { I18nService } from 'nestjs-i18n'
+import type { Locale } from '../types/locale.types'
+
+export type { Locale }
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   created: 'Mới tạo',
@@ -17,8 +20,6 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Đã hủy',
   refunded: 'Đã hoàn tiền',
 }
-
-export type Locale = 'vi' | 'en' | 'ja'
 
 export function getOrderStatusLabel(
   status: string,
