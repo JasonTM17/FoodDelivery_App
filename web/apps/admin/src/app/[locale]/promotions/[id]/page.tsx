@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Percent, DollarSign, Calendar, Users } from 'lucide-react';
 import { Link } from '@/navigation';
+import PromotionFunnelClient from './promotion-funnel-client';
 
 interface PromotionDetail {
   id: string;
@@ -212,6 +213,8 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
           </Card>
         </div>
       </div>
+
+      <PromotionFunnelClient promotionId={id} />
     </div>
   );
 }
