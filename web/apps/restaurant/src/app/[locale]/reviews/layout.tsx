@@ -6,10 +6,10 @@ export async function generateMetadata({
 }: {
   params: { locale: string };
 }): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'orders' });
+  const t = await getTranslations({ locale, namespace: 'reviews' });
   return { title: t('title'), robots: { index: false, follow: false } };
 }
 
-export default function OrdersLayout({ children }: { children: React.ReactNode }) {
+export default function ReviewsLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

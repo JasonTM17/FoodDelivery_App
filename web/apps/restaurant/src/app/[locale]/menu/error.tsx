@@ -1,6 +1,6 @@
 'use client';
 
-export default function OrdersError({
+export default function MenuError({
   error,
   reset,
 }: {
@@ -12,9 +12,9 @@ export default function OrdersError({
       <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
         <span className="text-red-600 text-2xl font-bold">!</span>
       </div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải đơn hàng</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải thực đơn</h2>
       <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-        {error.message || 'Đã có lỗi xảy ra khi tải danh sách đơn hàng. Vui lòng thử lại.'}
+        {error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.'}
       </p>
       <button onClick={reset} className="btn-primary">
         Thử lại
