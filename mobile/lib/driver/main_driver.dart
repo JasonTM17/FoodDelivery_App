@@ -10,6 +10,11 @@ import 'screens/earnings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/delivery_history_screen.dart';
 import 'screens/delivery_flow_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/kyc_verification_screen.dart';
+import 'screens/pickup_confirmation_screen.dart';
+import 'screens/delivery_complete_screen.dart';
+import 'screens/notifications_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -37,6 +42,26 @@ final _router = GoRouter(
     GoRoute(
       path: '/delivery-flow',
       builder: (_, __) => const DeliveryFlowScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (_, __) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/kyc',
+      builder: (_, __) => const KycVerificationScreen(),
+    ),
+    GoRoute(
+      path: '/pickup-confirmation',
+      builder: (_, __) => const PickupConfirmationScreen(),
+    ),
+    GoRoute(
+      path: '/delivery-complete',
+      builder: (_, __) => const DeliveryCompleteScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (_, __) => const NotificationsScreen(),
     ),
   ],
 );
