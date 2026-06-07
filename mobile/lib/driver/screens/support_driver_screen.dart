@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -22,6 +23,17 @@ class _SupportDriverScreenState extends ConsumerState<SupportDriverScreen> {
         _expanded.add(index);
       }
     });
+  }
+
+  Future<void> _launch(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.driverNavPhoneError)),
+      );
+    }
   }
 
   @override
@@ -82,19 +94,19 @@ class _SupportDriverScreenState extends ConsumerState<SupportDriverScreen> {
             _ContactButton(
               icon: Icons.chat_outlined,
               label: l10n.driver_support_chat,
-              onTap: () {},
+              onTap: () => _launch('https://foodflow.vn/driver-help'),
             ),
             const SizedBox(height: 10),
             _ContactButton(
               icon: Icons.email_outlined,
               label: l10n.driver_support_email,
-              onTap: () {},
+              onTap: () => _launch('mailto:driver-support@foodflow.vn'),
             ),
             const SizedBox(height: 10),
             _ContactButton(
               icon: Icons.phone_outlined,
               label: l10n.driver_support_phone,
-              onTap: () {},
+              onTap: () => _launch('tel:+84-1900-1234'),
             ),
           ],
         ),
