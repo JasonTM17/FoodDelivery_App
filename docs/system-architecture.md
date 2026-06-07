@@ -61,6 +61,45 @@ Driver GPS (3s interval)
 6. Expand radius if all exhausted (max 10km)
 7. BullMQ delayed retry for durability
 
+## i18n Architecture
+
+Three independent layers, each using its ecosystem's canonical tool:
+
+```
+User request
+  ├─ HTTP: Accept-Language header → cookie 'lang' → User.preferredLocale
+  │         ↓ nestjs-i18n sets req.i18nLang
+  │         ↓ services call i18n.t('namespace.key', { lang })
+  │
+  ├─ BullMQ job: caller serialises locale: LocaleCode into job.data
+  │              processor reads job.data.locale — never from request context
+  │
+  ├─ Flutter mobile: device locale → User.preferredLocale
+  │                  AppLocalizations.of(context).keyName
+  │
+  └─ Next.js web: /[locale]/ URL segment → next-intl middleware
+                  useTranslations('namespace')('key')
+```
+
+Locale resolution chain (backend):
+
+```mermaid
+flowchart LR
+    A[?lang= query] -->|found| Z[req.i18nLang]
+    A -->|missing| B[Accept-Language header]
+    B -->|found| Z
+    B -->|missing| C[lang cookie]
+    C -->|found| Z
+    C -->|missing| D[vi fallback]
+    D --> Z
+```
+
+Supported locales: **vi** (default), **en**, **ja**.
+
+`User.preferredLocale` (PostgreSQL `LocaleCode` enum) is the persisted anchor for async jobs and cross-device consistency.
+
+See `docs/i18n-guide.md` for add-locale procedure and translation key conventions.
+
 ## Scaling Path
 
 - Current: Monolithic NestJS on Docker Compose
