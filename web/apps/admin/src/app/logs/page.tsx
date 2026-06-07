@@ -17,6 +17,7 @@ import {
 } from "@foodflow/ui/table"
 import { Breadcrumb } from "@foodflow/ui/breadcrumb"
 import { EmptyState } from "@foodflow/ui/empty-state"
+import { PageHeader } from "@foodflow/ui/page-header"
 import { getAuditLogs, type AuditLogFilter } from "@/lib/api"
 
 const PAGE_SIZE = 20
@@ -93,19 +94,16 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: "Admin" }, { label: "Audit Logs" }]} />
-
-      <div className="flex items-center justify-between animate-fade-in-up">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">
-            Audit Logs
-          </h2>
-          <p className="text-sm text-muted-foreground">Lịch sử hoạt động của admin</p>
-        </div>
-        <Button variant="outline" onClick={handleExport} disabled={logs.length === 0}>
-          <Download className="h-4 w-4 mr-2" />Xuất CSV
-        </Button>
-      </div>
+      <PageHeader
+        breadcrumbs={[{ label: "Admin" }, { label: "Audit Logs" }]}
+        title="Audit Logs"
+        description="Lịch sử hoạt động của admin"
+        actions={
+          <Button variant="outline" onClick={handleExport} disabled={logs.length === 0}>
+            <Download className="h-4 w-4 mr-2" />Xuất CSV
+          </Button>
+        }
+      />
 
       <Card>
         <CardContent className="pt-4 pb-3">
