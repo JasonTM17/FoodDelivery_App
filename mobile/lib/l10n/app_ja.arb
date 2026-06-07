@@ -277,5 +277,24 @@
   "locationPermissionTitle": "位置情報へのアクセスを許可",
   "locationPermissionSubtitle": "FoodFlowは近くのレストランを探し、正確に配達するためにあなたの位置情報が必要です。",
   "locationPermissionAllow": "許可する",
-  "locationPermissionManual": "住所を手動で入力"
+  "locationPermissionManual": "住所を手動で入力",
+
+  "driverNavTitle": "配達",
+  "driverNavNoOrder": "現在進行中の注文はありません",
+  "driverNavRestaurant": "レストラン",
+  "driverNavCallRestaurant": "レストランに電話",
+  "driverNavDeliveryAddress": "配達先住所",
+  "driverNavArrivedAtRestaurant": "レストランに到着",
+  "driverNavPreparingFood": "料理準備中",
+  "driverNavItemsToPickup": "受け取る商品",
+  "driverNavConfirmPickup": "受け取り確認",
+  "driverNavEta": "ETA - 到着予定時刻",
+  "driverNavCustomerAddress": "お客様の住所",
+  "driverNavCallCustomer": "お客様に電話",
+  "driverNavConfirmDelivery": "配達完了",
+  "driverNavDeliverySuccess": "配達成功！",
+  "driverNavOrderTotal": "注文合計",
+  "driverNavYouEarned": "あなたの収益",
+  "driverNavGoHome": "ホームへ戻る",
+  "driverNavPhoneError": "電話アプリを開けません"
 }

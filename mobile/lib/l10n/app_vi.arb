@@ -283,5 +283,24 @@
   "locationPermissionTitle": "Cho phép truy cập vị trí",
   "locationPermissionSubtitle": "FoodFlow cần vị trí của bạn để tìm nhà hàng gần nhất và giao hàng chính xác hơn.",
   "locationPermissionAllow": "Cho phép",
-  "locationPermissionManual": "Nhập địa chỉ thủ công"
+  "locationPermissionManual": "Nhập địa chỉ thủ công",
+
+  "driverNavTitle": "Giao hàng",
+  "driverNavNoOrder": "Không có đơn hàng đang thực hiện",
+  "driverNavRestaurant": "Nhà hàng",
+  "driverNavCallRestaurant": "Gọi nhà hàng",
+  "driverNavDeliveryAddress": "Địa chỉ giao hàng",
+  "driverNavArrivedAtRestaurant": "ĐÃ ĐẾN NHÀ HÀNG",
+  "driverNavPreparingFood": "Đang chuẩn bị món",
+  "driverNavItemsToPickup": "Món cần lấy",
+  "driverNavConfirmPickup": "XÁC NHẬN LẤY HÀNG",
+  "driverNavEta": "ETA - Thời gian dự kiến",
+  "driverNavCustomerAddress": "Địa chỉ khách hàng",
+  "driverNavCallCustomer": "Gọi khách",
+  "driverNavConfirmDelivery": "ĐÃ GIAO HÀNG",
+  "driverNavDeliverySuccess": "Giao hàng thành công!",
+  "driverNavOrderTotal": "Tổng đơn",
+  "driverNavYouEarned": "Bạn nhận được",
+  "driverNavGoHome": "VỀ TRANG CHỦ",
+  "driverNavPhoneError": "Không thể mở trình quay số"
 }

@@ -10,6 +10,7 @@ import '../../shared/theme/vietnam_map_constants.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../providers/driver_provider.dart';
 import '../widgets/delivery_step_indicator.dart';
+import '../../l10n/app_localizations.dart';
 
 class DeliveryFlowScreen extends ConsumerStatefulWidget {
   const DeliveryFlowScreen({super.key});
@@ -71,6 +72,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(driverProvider);
     final order = state.activeOrder;
 
@@ -84,15 +86,15 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Giao hàng',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          title: Text(
+            l10n.driverNavTitle,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
-            'Không có đơn hàng đang thực hiện',
-            style: TextStyle(color: Color(0xFF6B7280), fontSize: 15),
+            l10n.driverNavNoOrder,
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 15),
           ),
         ),
       );
@@ -109,9 +111,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Giao hàng',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverNavTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: state.isLoading
@@ -181,13 +183,13 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.restaurant,
           title: order.restaurantName,
-          subtitle: 'Nhà hàng',
+          subtitle: AppLocalizations.of(context)!.driverNavRestaurant,
           trailing: order.restaurantLatitude != null
               ? TextButton(
                   onPressed: () => _callRestaurant(order),
-                  child: const Text(
-                    'Gọi nhà hàng',
-                    style: TextStyle(color: AppColors.primary),
+                  child: Text(
+                    AppLocalizations.of(context)!.driverNavCallRestaurant,
+                    style: const TextStyle(color: AppColors.primary),
                   ),
                 )
               : null,
@@ -196,7 +198,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.location_on_outlined,
           title: order.deliveryAddress.address,
-          subtitle: 'Địa chỉ giao hàng',
+          subtitle: AppLocalizations.of(context)!.driverNavDeliveryAddress,
         ),
         const SizedBox(height: 24),
         SizedBox(
@@ -209,12 +211,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                   .updateOrderStatus(order.id, 'preparing');
             },
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text(
-              'ĐÃ ĐẾN NHÀ HÀNG',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+            label: Text(
+              AppLocalizations.of(context)!.driverNavArrivedAtRestaurant,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -238,13 +237,13 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.restaurant,
           title: order.restaurantName,
-          subtitle: 'Đang chuẩn bị món',
+          subtitle: AppLocalizations.of(context)!.driverNavPreparingFood,
         ),
         const SizedBox(height: 16),
 
         // Order items
-        const Text(
-          'Món cần lấy',
+        Text(
+          AppLocalizations.of(context)!.driverNavItemsToPickup,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -335,12 +334,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                   .updateOrderStatus(order.id, 'delivering');
             },
             icon: const Icon(Icons.shopping_bag_outlined),
-            label: const Text(
-              'XÁC NHẬN LẤY HÀNG',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+            label: Text(
+              AppLocalizations.of(context)!.driverNavConfirmPickup,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -388,12 +384,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'ETA - Thời gian dự kiến',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF6B7280),
-                    ),
+                  Text(
+                    AppLocalizations.of(context)!.driverNavEta,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -415,14 +408,12 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.location_on,
           title: order.deliveryAddress.address,
-          subtitle: 'Địa chỉ khách hàng',
+          subtitle: AppLocalizations.of(context)!.driverNavCustomerAddress,
           trailing: TextButton.icon(
             onPressed: () => _callCustomer(order),
             icon: const Icon(Icons.phone, size: 18),
-            label: const Text('Gọi khách'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-            ),
+            label: Text(AppLocalizations.of(context)!.driverNavCallCustomer),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
           ),
         ),
 
@@ -437,12 +428,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                   .updateOrderStatus(order.id, 'delivered');
             },
             icon: const Icon(Icons.check_circle),
-            label: const Text(
-              'ĐÃ GIAO HÀNG',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+            label: Text(
+              AppLocalizations.of(context)!.driverNavConfirmDelivery,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -495,24 +483,23 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Giao hàng thành công!',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.driverNavDeliverySuccess,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 24),
-              // Earnings summary
-              _buildEarningRow('Phí giao hàng', order.deliveryFee),
+              _buildEarningRow(AppLocalizations.of(context)!.driverHistoryDeliveryFee, order.deliveryFee),
               const SizedBox(height: 8),
-              _buildEarningRow('Tổng đơn', order.total),
+              _buildEarningRow(AppLocalizations.of(context)!.driverNavOrderTotal, order.total),
               const SizedBox(height: 8),
               const Divider(color: Color(0xFF374151)),
               const SizedBox(height: 8),
               _buildEarningRow(
-                'Bạn nhận được',
+                AppLocalizations.of(context)!.driverNavYouEarned,
                 order.deliveryFee,
                 isHighlight: true,
               ),
@@ -533,9 +520,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text(
-              'VỀ TRANG CHỦ',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context)!.driverNavGoHome,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
@@ -656,9 +643,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
   void _showPhoneError() {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể mở trình quay số'),
-          backgroundColor: Color(0xFF1E1E1E),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.driverNavPhoneError),
+          backgroundColor: const Color(0xFF1E1E1E),
         ),
       );
     }

@@ -277,5 +277,24 @@
   "locationPermissionTitle": "Allow location access",
   "locationPermissionSubtitle": "FoodFlow needs your location to find nearby restaurants and deliver accurately.",
   "locationPermissionAllow": "Allow",
-  "locationPermissionManual": "Enter address manually"
+  "locationPermissionManual": "Enter address manually",
+
+  "driverNavTitle": "Delivery",
+  "driverNavNoOrder": "No active order",
+  "driverNavRestaurant": "Restaurant",
+  "driverNavCallRestaurant": "Call restaurant",
+  "driverNavDeliveryAddress": "Delivery address",
+  "driverNavArrivedAtRestaurant": "ARRIVED AT RESTAURANT",
+  "driverNavPreparingFood": "Preparing food",
+  "driverNavItemsToPickup": "Items to pick up",
+  "driverNavConfirmPickup": "CONFIRM PICKUP",
+  "driverNavEta": "ETA - Estimated arrival",
+  "driverNavCustomerAddress": "Customer address",
+  "driverNavCallCustomer": "Call customer",
+  "driverNavConfirmDelivery": "CONFIRM DELIVERY",
+  "driverNavDeliverySuccess": "Delivery successful!",
+  "driverNavOrderTotal": "Order total",
+  "driverNavYouEarned": "You earned",
+  "driverNavGoHome": "GO TO HOME",
+  "driverNavPhoneError": "Cannot open phone dialer"
 }
