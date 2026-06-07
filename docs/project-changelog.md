@@ -12,6 +12,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Driver support contact buttons wired to `url_launcher` (tel/mailto/https)
 - Restaurant sidebar navigation extended with Promotions + Analytics links
 - `/[locale]/promotions` list page on restaurant app with i18n keys × 3 locales
+- `/[locale]/promotions/[id]` read-only detail page (clickable rows from list)
+- `/[locale]/promotions/[id]/edit` edit page (active/description/endDate fields)
 
 ### Changed
 - `@foodflow/ui` package: added `next` as peer + dev dependency for breadcrumb component (fixes admin typecheck)
