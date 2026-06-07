@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'l10n/app_localizations.dart';
+import 'shared/providers/locale_provider.dart';
 import 'customer/screens/splash_screen.dart';
 import 'customer/screens/login_screen.dart';
 import 'customer/screens/register_screen.dart';
@@ -124,16 +128,20 @@ final _router = GoRouter(
   ],
 );
 
-class CustomerApp extends StatelessWidget {
+class CustomerApp extends ConsumerWidget {
   const CustomerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       title: 'FoodFlow',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: _router,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }

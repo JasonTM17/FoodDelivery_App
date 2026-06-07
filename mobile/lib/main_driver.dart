@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'l10n/app_localizations.dart';
+import 'shared/providers/locale_provider.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/theme/app_colors.dart';
 import 'driver/screens/home_screen.dart';
@@ -15,16 +18,20 @@ void main() {
   runApp(const ProviderScope(child: DriverApp()));
 }
 
-class DriverApp extends StatelessWidget {
+class DriverApp extends ConsumerWidget {
   const DriverApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       title: 'FoodFlow Driver',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.driverTheme,
       routerConfig: _router,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }
@@ -56,6 +63,7 @@ class DriverShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
@@ -68,10 +76,10 @@ class DriverShell extends StatelessWidget {
           }
         },
         selectedItemColor: AppColors.primary,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Trang chủ'),
-          BottomNavigationBarItem(icon: Icon(Icons.payments_rounded), label: 'Thu nhập'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Hồ sơ'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.home_rounded), label: l10n.navHome),
+          BottomNavigationBarItem(icon: const Icon(Icons.payments_rounded), label: l10n.navEarnings),
+          BottomNavigationBarItem(icon: const Icon(Icons.person_rounded), label: l10n.driverProfileTitle),
         ],
       ),
     );
