@@ -17,6 +17,7 @@ import { DriversModule } from './drivers/drivers.module'
 import { AdminModule } from './admin/admin.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { ReviewsModule } from './reviews/reviews.module'
+import { LoyaltyModule } from './loyalty/loyalty.module'
 import { PaymentsModule } from './payments/payments.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { PromotionsModule } from './promotions/promotions.module'
@@ -60,6 +61,7 @@ import Redis from 'ioredis'
     AdminModule,
     NotificationsModule,
     ReviewsModule,
+    LoyaltyModule,
     PaymentsModule,
     WebhooksModule,
     PromotionsModule,
