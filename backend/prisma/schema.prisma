@@ -350,6 +350,8 @@ model Order {
   actualDeliveryTimeMinutes Int?        @map("actual_delivery_time_minutes")
   cancelledReason           String?     @map("cancelled_reason") @db.Text
   commissionRateAtOrderTime Decimal     @default(15.0) @map("commission_rate_at_order_time") @db.Decimal(4, 2)
+  routePolyline             String?     @map("route_polyline") @db.Text
+  routeWaypoints            Json?       @map("route_waypoints") @db.JsonB
   createdAt                 DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                 DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -433,6 +435,8 @@ model DeliveryTask {
   assignedAt          DateTime           @default(now()) @map("assigned_at") @db.Timestamptz()
   pickedUpAt          DateTime?          @map("picked_up_at") @db.Timestamptz()
   deliveredAt         DateTime?          @map("delivered_at") @db.Timestamptz()
+  routeGeojson        Json?              @map("route_geojson") @db.JsonB
+  durationInTraffic   Int?               @map("duration_in_traffic")
 
   order               Order              @relation(fields: [orderId], references: [id])
   driver              User               @relation(fields: [driverId], references: [id])
