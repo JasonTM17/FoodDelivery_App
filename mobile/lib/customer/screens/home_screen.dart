@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/providers/restaurant_provider.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/cart_provider.dart';
@@ -108,8 +109,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Nhà hàng gần bạn',
+                      Text(
+                        AppLocalizations.of(context)!.nearbyRestaurants,
                         style: AppTextStyles.headline3,
                       ),
                       TextButton(
@@ -121,7 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             cuisine: null,
                           );
                         },
-                        child: const Text('Xem tất cả'),
+                        child: Text(AppLocalizations.of(context)!.viewAll),
                       ),
                     ],
                   ),
@@ -144,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Đang tìm nhà hàng gần bạn...',
+                              AppLocalizations.of(context)!.loadingRestaurants,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -204,6 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader(String userName) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
@@ -213,12 +215,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Xin chào${userName.isNotEmpty ? ', $userName' : ''}!',
+                userName.isNotEmpty
+                    ? l10n.greetingNamed(userName)
+                    : l10n.greetingAnonymous,
                 style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 2),
-              const Text(
-                'Bạn muốn ăn gì hôm nay?',
+              Text(
+                l10n.homeQuestion,
                 style: AppTextStyles.headline2,
               ),
             ],
@@ -265,8 +269,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Đang xác định vị trí...',
-                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        AppLocalizations.of(context)!.locating,
+                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -288,7 +292,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _searchController,
         focusNode: _searchFocusNode,
         decoration: InputDecoration(
-          hintText: 'Tìm kiếm món ăn, nhà hàng...',
+          hintText: AppLocalizations.of(context)!.searchHint,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -388,16 +392,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmptyRestaurants() {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.store_mall_directory_outlined,
-      title: 'Không tìm thấy nhà hàng nào',
-      subtitle: 'Hãy thử mở rộng khu vực tìm kiếm',
-      actionLabel: 'Tải lại',
+      title: l10n.noRestaurantsTitle,
+      subtitle: l10n.noRestaurantsSubtitle,
+      actionLabel: l10n.reload,
       onAction: _loadData,
     );
   }
 
   Widget _buildBottomNav(int cartItemCount) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -415,17 +421,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home_rounded, 'Trang chủ', true, () {}),
-              _buildNavItem(Icons.search_rounded, 'Tìm kiếm', false, () {
+              _buildNavItem(Icons.home_rounded, l10n.navHome, true, () {}),
+              _buildNavItem(Icons.search_rounded, l10n.navSearch, false, () {
                 FocusScope.of(context).requestFocus(_searchFocusNode);
               }),
-              _buildNavItem(Icons.shopping_cart_outlined, 'Giỏ hàng', false, () {
+              _buildNavItem(Icons.shopping_cart_outlined, l10n.navCart, false, () {
                 Navigator.of(context).pushNamed('/cart');
               }, badgeCount: cartItemCount),
-              _buildNavItem(Icons.receipt_long_outlined, 'Đơn hàng', false, () {
+              _buildNavItem(Icons.receipt_long_outlined, l10n.navOrders, false, () {
                 Navigator.of(context).pushNamed('/orders');
               }),
-              _buildNavItem(Icons.person_outline, 'Cá nhân', false, () {
+              _buildNavItem(Icons.person_outline, l10n.navProfile, false, () {
                 Navigator.of(context).pushNamed('/profile');
               }),
             ],

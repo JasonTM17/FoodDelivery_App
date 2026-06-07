@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/widgets/locale_switcher.dart';
 import '../providers/address_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -25,6 +27,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final orderState = ref.watch(orderProvider);
     final addressState = ref.watch(addressProvider);
@@ -33,7 +36,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Cá nhân'),
+        title: Text(l10n.profileTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -82,7 +85,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user?.fullName ?? 'Người dùng',
+                    user?.fullName ?? l10n.defaultUser,
                     style: AppTextStyles.headline3,
                   ),
                   const SizedBox(height: 4),
@@ -117,20 +120,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _buildStatItem(
                     '${orderState.activeOrders.length + orderState.completedOrders.length}',
-                    'Đơn hàng',
+                    l10n.statsOrders,
                     Icons.receipt_long,
                   ),
                   _buildStatItem(
                     '${orderState.completedOrders.length}',
-                    'Đánh giá',
+                    l10n.statsReviews,
                     Icons.star,
                   ),
                   _buildStatItem(
                     '${addressState.addresses.length}',
-                    'Địa chỉ',
+                    l10n.statsAddresses,
                     Icons.location_on,
                   ),
-                  _buildStatItem('0', 'Điểm', Icons.monetization_on),
+                  _buildStatItem('0', l10n.statsPoints, Icons.monetization_on),
                 ],
               ),
             ),
@@ -150,40 +153,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _buildMenuItem(
                     icon: Icons.location_on_outlined,
-                    title: 'Địa chỉ của tôi',
-                    subtitle: 'Quản lý địa chỉ giao hàng',
+                    title: l10n.myAddresses,
+                    subtitle: l10n.myAddressesSubtitle,
                     onTap: () => Navigator.of(context).pushNamed('/addresses'),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.payment_outlined,
-                    title: 'Phương thức thanh toán',
-                    subtitle: 'Thêm hoặc thay đổi phương thức',
+                    title: l10n.paymentMethods,
+                    subtitle: l10n.paymentMethodsSubtitle,
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                        SnackBar(content: Text(l10n.featureInDevelopment)),
                       );
                     },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.notifications_outlined,
-                    title: 'Thông báo',
-                    subtitle: 'Quản lý thông báo đẩy',
+                    title: l10n.notificationsTitle,
+                    subtitle: l10n.notificationsSubtitle,
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                        SnackBar(content: Text(l10n.featureInDevelopment)),
                       );
                     },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.favorite_outline,
-                    title: 'Yêu thích',
-                    subtitle: 'Danh sách món ăn yêu thích',
+                    title: l10n.favorites,
+                    subtitle: l10n.favoritesSubtitle,
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                        SnackBar(content: Text(l10n.featureInDevelopment)),
                       );
                     },
                   ),
@@ -205,9 +208,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _buildMenuItem(
                     icon: Icons.headset_mic_outlined,
-                    title: 'Hỗ trợ',
-                    subtitle: 'Trung tâm trợ giúp',
+                    title: l10n.support,
+                    subtitle: l10n.supportSubtitle,
                     onTap: () {
+                      // TODO: localize hotline number per locale
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Vui lòng liên hệ hotline: 1900-1234')),
                       );
@@ -216,8 +220,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.info_outline,
-                    title: 'Về FoodFlow',
-                    subtitle: 'Phiên bản 1.0.0',
+                    title: l10n.aboutApp,
+                    subtitle: l10n.aboutSubtitle,
                     onTap: () {
                       showAboutDialog(
                         context: context,
@@ -232,6 +236,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Language settings
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.languageTitle,
+                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const LocaleSwitcher(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Logout button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -241,23 +269,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Đăng xuất'),
-                        content: const Text('Bạn có chắc muốn đăng xuất?'),
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.logout),
+                        content: Text(l10n.logoutConfirm),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Hủy'),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: Text(l10n.cancel),
                           ),
                           TextButton(
                             onPressed: () {
                               ref.read(authProvider.notifier).logout();
-                              Navigator.of(context).pop();
+                              Navigator.of(ctx).pop();
                               Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                             },
-                            child: const Text(
-                              'Đăng xuất',
-                              style: TextStyle(color: AppColors.error),
+                            child: Text(
+                              l10n.logout,
+                              style: const TextStyle(color: AppColors.error),
                             ),
                           ),
                         ],
@@ -265,9 +293,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                   },
                   icon: const Icon(Icons.logout, color: AppColors.error),
-                  label: const Text(
-                    'Đăng xuất',
-                    style: TextStyle(color: AppColors.error),
+                  label: Text(
+                    l10n.logout,
+                    style: const TextStyle(color: AppColors.error),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.error),

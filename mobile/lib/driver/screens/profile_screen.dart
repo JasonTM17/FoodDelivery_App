@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/widgets/locale_switcher.dart';
 import '../providers/driver_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -9,6 +11,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(driverProvider);
 
     return Scaffold(
@@ -16,9 +19,9 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
-        title: const Text(
-          'Hồ sơ',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverProfileTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: SingleChildScrollView(
@@ -88,7 +91,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   const SizedBox(height: 16),
                   Text(
-                    state.driverName ?? 'Tài xế',
+                    state.driverName ?? l10n.defaultDriver,
                     style: AppTextStyles.headline3.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 4),
@@ -140,13 +143,13 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.directions_bike, color: AppColors.primary, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.directions_bike, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Thông tin phương tiện',
-                        style: TextStyle(
+                        l10n.vehicleInfo,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -155,9 +158,9 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  _buildInfoRow('Loại xe', state.vehicleType ?? '--'),
+                  _buildInfoRow(l10n.vehicleType, state.vehicleType ?? '--'),
                   const Divider(color: Color(0xFF374151), height: 20),
-                  _buildInfoRow('Biển số', state.vehiclePlate ?? '--'),
+                  _buildInfoRow(l10n.vehiclePlate, state.vehiclePlate ?? '--'),
                 ],
               ),
             ),
@@ -174,13 +177,13 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.analytics_outlined, color: AppColors.primary, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.analytics_outlined, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Thống kê',
-                        style: TextStyle(
+                        l10n.statistics,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -189,12 +192,37 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  _buildInfoRow('Tổng số đơn', '${state.totalDeliveries}'),
+                  _buildInfoRow(l10n.totalDeliveries, '${state.totalDeliveries}'),
                   const Divider(color: Color(0xFF374151), height: 20),
                   _buildInfoRow(
-                    'Tổng thu nhập',
+                    l10n.totalEarnings,
                     '${state.totalEarnings.toStringAsFixed(0)}đ',
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Language settings
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.languageTitle,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const LocaleSwitcher(),
                 ],
               ),
             ),
@@ -207,9 +235,9 @@ class ProfileScreen extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _showLogoutConfirm(context, ref),
                 icon: const Icon(Icons.logout, size: 20),
-                label: const Text(
-                  'ĐĂNG XUẤT',
-                  style: TextStyle(
+                label: Text(
+                  l10n.logout.toUpperCase(),
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -254,25 +282,26 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showLogoutConfirm(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Đăng xuất',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.logout,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
-        content: const Text(
-          'Bạn có chắc muốn đăng xuất?',
-          style: TextStyle(color: Color(0xFFD1D5DB)),
+        content: Text(
+          l10n.logoutConfirm,
+          style: const TextStyle(color: Color(0xFFD1D5DB)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Hủy',
-              style: TextStyle(color: Color(0xFF6B7280)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Color(0xFF6B7280)),
             ),
           ),
           TextButton(
@@ -280,9 +309,9 @@ class ProfileScreen extends ConsumerWidget {
               Navigator.pop(ctx);
               ref.read(driverProvider.notifier).logout();
             },
-            child: const Text(
-              'Đăng xuất',
-              style: TextStyle(color: AppColors.error),
+            child: Text(
+              l10n.logout,
+              style: const TextStyle(color: AppColors.error),
             ),
           ),
         ],

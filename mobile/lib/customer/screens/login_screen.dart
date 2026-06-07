@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -46,6 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -75,14 +77,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Đăng nhập',
+                Text(
+                  l10n.loginTitle,
                   style: AppTextStyles.headline1,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Chào mừng bạn quay trở lại',
+                  l10n.loginWelcomeBack,
                   style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
@@ -121,17 +123,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    hintText: 'Nhập email của bạn',
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    hintText: l10n.emailHint,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập email';
+                      return l10n.emailRequired;
                     }
                     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                      return 'Email không hợp lệ';
+                      return l10n.emailInvalid;
                     }
                     return null;
                   },
@@ -142,9 +144,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    labelText: 'Mật khẩu',
+                    labelText: l10n.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outlined),
-                    hintText: 'Nhập mật khẩu',
+                    hintText: l10n.passwordHint,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -154,10 +156,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập mật khẩu';
+                      return l10n.passwordRequired;
                     }
                     if (value.length < 6) {
-                      return 'Mật khẩu phải có ít nhất 6 ký tự';
+                      return l10n.passwordMinLength;
                     }
                     return null;
                   },
@@ -171,22 +173,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('Quên mật khẩu'),
-                          content: const Text(
-                            'Vui lòng liên hệ hỗ trợ qua email để được cấp lại mật khẩu.',
-                          ),
+                          title: Text(l10n.forgotPasswordTitle),
+                          content: Text(l10n.forgotPasswordContent),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(ctx).pop(),
-                              child: const Text('Đóng'),
+                              child: Text(l10n.close),
                             ),
                           ],
                         ),
                       );
                     },
-                    child: const Text(
-                      'Quên mật khẩu?',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    child: Text(
+                      l10n.forgotPassword,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ),
                 ),
@@ -205,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Đăng nhập'),
+                        : Text(l10n.loginButton),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -214,14 +214,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Chưa có tài khoản? ',
+                      l10n.noAccount,
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).pushNamed('/register'),
-                      child: const Text(
-                        'Đăng ký',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.registerLink,
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,
                         ),
@@ -235,9 +235,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: () {
                     Navigator.of(context).pushNamed('/register-driver');
                   },
-                  child: const Text(
-                    'Đăng ký làm tài xế',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.registerAsDriver,
+                    style: const TextStyle(
                       color: AppColors.accent,
                       fontWeight: FontWeight.w500,
                     ),
