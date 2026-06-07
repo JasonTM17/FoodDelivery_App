@@ -118,39 +118,43 @@ enum LocaleCode {
 // ─── Models ───
 
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  email         String    @unique @db.VarChar(255)
-  phone         String?   @unique @db.VarChar(20)
-  passwordHash  String    @map("password_hash") @db.VarChar(255)
-  fullName      String    @map("full_name") @db.VarChar(100)
-  role          UserRole  @default(customer)
-  avatarUrl     String?   @map("avatar_url") @db.VarChar(500)
-  isActive      Boolean   @default(true) @map("is_active")
-  failedLoginCount Int    @default(0) @map("failed_login_count")
-  lockedUntil   DateTime? @map("locked_until") @db.Timestamptz()
-  preferredLocale LocaleCode @default(vi) @map("preferred_locale")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  id               String     @id @default(uuid()) @db.Uuid
+  email            String     @unique @db.VarChar(255)
+  phone            String?    @unique @db.VarChar(20)
+  passwordHash     String     @map("password_hash") @db.VarChar(255)
+  fullName         String     @map("full_name") @db.VarChar(100)
+  role             UserRole   @default(customer)
+  avatarUrl        String?    @map("avatar_url") @db.VarChar(500)
+  isActive         Boolean    @default(true) @map("is_active")
+  failedLoginCount Int        @default(0) @map("failed_login_count")
+  lockedUntil      DateTime?  @map("locked_until") @db.Timestamptz()
+  preferredLocale  LocaleCode @default(vi) @map("preferred_locale")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
 
-  customerProfile    CustomerProfile?
-  driverProfile      DriverProfile?
-  restaurantProfile  RestaurantProfile?
-  addresses          Address[]
-  reviews            Review[]          @relation("ReviewCustomer")
-  driverReviews      Review[]          @relation("ReviewDriver")
-  notifications      Notification[]
-  loyaltyTransactions LoyaltyTransaction[]
-  chatSessions       ChatSession[]
-  ordersAsCustomer   Order[]           @relation("CustomerOrders")
-  ordersAsDriver     Order[]           @relation("DriverOrders")
-  deliveryTasks      DeliveryTask[]
+  customerProfile       CustomerProfile?
+  driverProfile         DriverProfile?
+  restaurantProfile     RestaurantProfile?
+  addresses             Address[]
+  reviews               Review[]                @relation("ReviewCustomer")
+  driverReviews         Review[]                @relation("ReviewDriver")
+  notifications         Notification[]
+  loyaltyTransactions   LoyaltyTransaction[]
+  walletTransactions    WalletTransaction[]
+  referralCode          ReferralCode?
+  referralAsReferrer    ReferralRedemption[]    @relation("Referrer")
+  referralAsInvitee     ReferralRedemption[]    @relation("Invitee")
+  chatSessions          ChatSession[]
+  ordersAsCustomer      Order[]                 @relation("CustomerOrders")
+  ordersAsDriver        Order[]                 @relation("DriverOrders")
+  deliveryTasks         DeliveryTask[]
   driverLocationHistory DriverLocationHistory[]
-  supportTickets     AiSupportTicket[]
-  auditLogs          AdminAuditLog[]
-  promotionUsages      PromotionUsage[]
-  cart                 Cart?
-  notificationSettings NotificationSetting[]
-  fcmTokens            UserFcmToken[]
+  supportTickets        AiSupportTicket[]
+  auditLogs             AdminAuditLog[]
+  promotionUsages       PromotionUsage[]
+  cart                  Cart?
+  notificationSettings  NotificationSetting[]
+  fcmTokens             UserFcmToken[]
 
   @@index([email])
   @@index([phone])
@@ -159,15 +163,15 @@ model User {
 }
 
 model CustomerProfile {
-  id                String   @id @default(uuid()) @db.Uuid
-  userId            String   @unique @map("user_id") @db.Uuid
-  defaultAddressId  String?  @map("default_address_id") @db.Uuid
-  savedPaymentMethods Json? @map("saved_payment_methods") @db.JsonB
-  preferences       Json?    @db.JsonB
-  totalOrders       Int      @default(0) @map("total_orders")
+  id                  String  @id @default(uuid()) @db.Uuid
+  userId              String  @unique @map("user_id") @db.Uuid
+  defaultAddressId    String? @map("default_address_id") @db.Uuid
+  savedPaymentMethods Json?   @map("saved_payment_methods") @db.JsonB
+  preferences         Json?   @db.JsonB
+  totalOrders         Int     @default(0) @map("total_orders")
 
-  user              User     @relation(fields: [userId], references: [id])
-  defaultAddress    Address? @relation("DefaultAddress", fields: [defaultAddressId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
+  defaultAddress Address? @relation("DefaultAddress", fields: [defaultAddressId], references: [id])
 
   @@map("customer_profiles")
 }
@@ -187,7 +191,7 @@ model DriverProfile {
   totalEarnings       Decimal     @default(0) @map("total_earnings") @db.Decimal(12, 0)
   maxDeliveryRadiusKm Int         @default(5) @map("max_delivery_radius_km")
 
-  user                User        @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("driver_profiles")
 }
@@ -197,40 +201,40 @@ model RestaurantProfile {
   userId       String @unique @map("user_id") @db.Uuid
   restaurantId String @map("restaurant_id") @db.Uuid
 
-  user         User       @relation(fields: [userId], references: [id])
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
 
   @@map("restaurant_profiles")
 }
 
 model Restaurant {
-  id                 String     @id @default(uuid()) @db.Uuid
-  name               String     @db.VarChar(200)
-  slug               String     @unique @db.VarChar(200)
-  description        String?    @db.Text
-  logoUrl            String?    @map("logo_url") @db.VarChar(500)
-  coverUrl           String?    @map("cover_url") @db.VarChar(500)
+  id                 String                                @id @default(uuid()) @db.Uuid
+  name               String                                @db.VarChar(200)
+  slug               String                                @unique @db.VarChar(200)
+  description        String?                               @db.Text
+  logoUrl            String?                               @map("logo_url") @db.VarChar(500)
+  coverUrl           String?                               @map("cover_url") @db.VarChar(500)
   location           Unsupported("geography(Point, 4326)")
-  addressLine        String     @map("address_line") @db.VarChar(300)
-  city               String     @db.VarChar(100)
-  district           String?    @db.VarChar(100)
-  phone              String?    @db.VarChar(20)
-  cuisineTypes       String[]   @map("cuisine_types")
-  priceRange         PriceRange @default(medium) @map("price_range")
-  rating             Decimal    @default(5.0) @db.Decimal(2, 1)
-  totalReviews       Int        @default(0) @map("total_reviews")
-  isOpen             Boolean    @default(true) @map("is_open")
-  isActive           Boolean    @default(true) @map("is_active")
-  prepTimeAvgMinutes Int        @default(15) @map("prep_time_avg_minutes")
-  minOrderAmount     Decimal    @default(0) @map("min_order_amount") @db.Decimal(10, 0)
-  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  addressLine        String                                @map("address_line") @db.VarChar(300)
+  city               String                                @db.VarChar(100)
+  district           String?                               @db.VarChar(100)
+  phone              String?                               @db.VarChar(20)
+  cuisineTypes       String[]                              @map("cuisine_types")
+  priceRange         PriceRange                            @default(medium) @map("price_range")
+  rating             Decimal                               @default(5.0) @db.Decimal(2, 1)
+  totalReviews       Int                                   @default(0) @map("total_reviews")
+  isOpen             Boolean                               @default(true) @map("is_open")
+  isActive           Boolean                               @default(true) @map("is_active")
+  prepTimeAvgMinutes Int                                   @default(15) @map("prep_time_avg_minutes")
+  minOrderAmount     Decimal                               @default(0) @map("min_order_amount") @db.Decimal(10, 0)
+  createdAt          DateTime                              @default(now()) @map("created_at") @db.Timestamptz()
 
-  profiles           RestaurantProfile[]
-  openingHours       RestaurantOpeningHour[]
-  categories         Category[]
-  menuItems          MenuItem[]
-  orders             Order[]
-  reviews            Review[]
+  profiles     RestaurantProfile[]
+  openingHours RestaurantOpeningHour[]
+  categories   Category[]
+  menuItems    MenuItem[]
+  orders       Order[]
+  reviews      Review[]
 
   @@index([city])
   @@map("restaurants")
@@ -244,41 +248,41 @@ model RestaurantOpeningHour {
   closeTime    String  @map("close_time") @db.VarChar(5)
   isClosed     Boolean @default(false) @map("is_closed")
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
 
   @@index([restaurantId])
   @@map("restaurant_opening_hours")
 }
 
 model Category {
-  id           String     @id @default(uuid()) @db.Uuid
-  restaurantId String     @map("restaurant_id") @db.Uuid
-  name         String     @db.VarChar(100)
-  sortOrder    Int        @default(0) @map("sort_order")
+  id           String @id @default(uuid()) @db.Uuid
+  restaurantId String @map("restaurant_id") @db.Uuid
+  name         String @db.VarChar(100)
+  sortOrder    Int    @default(0) @map("sort_order")
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  menuItems    MenuItem[]
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  menuItems  MenuItem[]
 
   @@map("categories")
 }
 
 model MenuItem {
-  id           String            @id @default(uuid()) @db.Uuid
-  restaurantId String            @map("restaurant_id") @db.Uuid
-  categoryId   String            @map("category_id") @db.Uuid
-  name         String            @db.VarChar(200)
-  description  String?           @db.Text
-  imageUrl     String?           @map("image_url") @db.VarChar(500)
-  basePrice    Decimal           @map("base_price") @db.Decimal(10, 0)
-  isAvailable  Boolean           @default(true) @map("is_available")
-  isPopular    Boolean           @default(false) @map("is_popular")
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  id           String   @id @default(uuid()) @db.Uuid
+  restaurantId String   @map("restaurant_id") @db.Uuid
+  categoryId   String   @map("category_id") @db.Uuid
+  name         String   @db.VarChar(200)
+  description  String?  @db.Text
+  imageUrl     String?  @map("image_url") @db.VarChar(500)
+  basePrice    Decimal  @map("base_price") @db.Decimal(10, 0)
+  isAvailable  Boolean  @default(true) @map("is_available")
+  isPopular    Boolean  @default(false) @map("is_popular")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id])
-  category     Category          @relation(fields: [categoryId], references: [id])
-  options      MenuItemOption[]
-  orderItems   OrderItem[]
-  cartItems    CartItem[]
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id])
+  category   Category         @relation(fields: [categoryId], references: [id])
+  options    MenuItemOption[]
+  orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@index([restaurantId])
   @@index([categoryId])
@@ -286,97 +290,97 @@ model MenuItem {
 }
 
 model MenuItemOption {
-  id         String               @id @default(uuid()) @db.Uuid
-  menuItemId String               @map("menu_item_id") @db.Uuid
-  name       String               @db.VarChar(100)
-  isRequired Boolean              @default(false) @map("is_required")
-  isMultiple Boolean              @default(false) @map("is_multiple")
-  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz()
+  id         String   @id @default(uuid()) @db.Uuid
+  menuItemId String   @map("menu_item_id") @db.Uuid
+  name       String   @db.VarChar(100)
+  isRequired Boolean  @default(false) @map("is_required")
+  isMultiple Boolean  @default(false) @map("is_multiple")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  menuItem   MenuItem             @relation(fields: [menuItemId], references: [id])
-  values     MenuItemOptionValue[]
+  menuItem MenuItem              @relation(fields: [menuItemId], references: [id])
+  values   MenuItemOptionValue[]
 
   @@map("menu_item_options")
 }
 
 model MenuItemOptionValue {
-  id            String         @id @default(uuid()) @db.Uuid
-  optionId      String         @map("option_id") @db.Uuid
-  value         String         @db.VarChar(100)
-  priceModifier Decimal        @default(0) @map("price_modifier") @db.Decimal(10, 0)
+  id            String  @id @default(uuid()) @db.Uuid
+  optionId      String  @map("option_id") @db.Uuid
+  value         String  @db.VarChar(100)
+  priceModifier Decimal @default(0) @map("price_modifier") @db.Decimal(10, 0)
 
-  option        MenuItemOption @relation(fields: [optionId], references: [id])
+  option MenuItemOption @relation(fields: [optionId], references: [id])
 
   @@map("menu_item_option_values")
 }
 
 model Cart {
-  id             String     @id @default(uuid()) @db.Uuid
-  userId         String     @unique @map("user_id") @db.Uuid
-  restaurantId   String?    @map("restaurant_id") @db.Uuid
-  promotionCode  String?    @map("promotion_code") @db.VarChar(50)
-  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @map("user_id") @db.Uuid
+  restaurantId  String?  @map("restaurant_id") @db.Uuid
+  promotionCode String?  @map("promotion_code") @db.VarChar(50)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  user           User       @relation(fields: [userId], references: [id])
-  items          CartItem[]
+  user  User       @relation(fields: [userId], references: [id])
+  items CartItem[]
 
   @@map("carts")
 }
 
 model CartItem {
-  id               String   @id @default(uuid()) @db.Uuid
-  cartId           String   @map("cart_id") @db.Uuid
-  menuItemId       String   @map("menu_item_id") @db.Uuid
-  quantity         Int      @default(1)
-  selectedOptions  Json     @default("[]") @map("selected_options") @db.JsonB
-  unitPrice        Decimal  @map("unit_price") @db.Decimal(10, 0)
-  notes            String?  @db.VarChar(300)
+  id              String  @id @default(uuid()) @db.Uuid
+  cartId          String  @map("cart_id") @db.Uuid
+  menuItemId      String  @map("menu_item_id") @db.Uuid
+  quantity        Int     @default(1)
+  selectedOptions Json    @default("[]") @map("selected_options") @db.JsonB
+  unitPrice       Decimal @map("unit_price") @db.Decimal(10, 0)
+  notes           String? @db.VarChar(300)
 
-  cart             Cart     @relation(fields: [cartId], references: [id])
-  menuItem         MenuItem @relation(fields: [menuItemId], references: [id])
+  cart     Cart     @relation(fields: [cartId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
 
   @@map("cart_items")
 }
 
 model Order {
-  id                        String      @id @default(uuid()) @db.Uuid
-  orderCode                 String      @unique @map("order_code") @db.VarChar(12)
-  customerId                String      @map("customer_id") @db.Uuid
-  restaurantId              String      @map("restaurant_id") @db.Uuid
-  driverId                  String?     @map("driver_id") @db.Uuid
-  deliveryAddressId         String      @map("delivery_address_id") @db.Uuid
-  status                    OrderStatus @default(created)
-  subtotal                  Decimal     @db.Decimal(10, 0)
-  deliveryFee               Decimal     @map("delivery_fee") @db.Decimal(10, 0)
-  promotionDiscount         Decimal     @default(0) @map("promotion_discount") @db.Decimal(10, 0)
-  total                     Decimal     @db.Decimal(10, 0)
-  paymentMethod             PaymentMethod @map("payment_method")
-  notes                     String?     @db.Text
-  estimatedPrepTimeMinutes  Int?        @map("estimated_prep_time_minutes")
-  estimatedDeliveryTimeMinutes Int?     @map("estimated_delivery_time_minutes")
-  actualDeliveryTimeMinutes Int?        @map("actual_delivery_time_minutes")
-  cancelledReason           String?     @map("cancelled_reason") @db.Text
-  commissionRateAtOrderTime Decimal     @default(15.0) @map("commission_rate_at_order_time") @db.Decimal(4, 2)
-  routePolyline             String?     @map("route_polyline") @db.Text
-  routeWaypoints            Json?       @map("route_waypoints") @db.JsonB
-  createdAt                 DateTime    @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                 DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+  id                           String        @id @default(uuid()) @db.Uuid
+  orderCode                    String        @unique @map("order_code") @db.VarChar(12)
+  customerId                   String        @map("customer_id") @db.Uuid
+  restaurantId                 String        @map("restaurant_id") @db.Uuid
+  driverId                     String?       @map("driver_id") @db.Uuid
+  deliveryAddressId            String        @map("delivery_address_id") @db.Uuid
+  status                       OrderStatus   @default(created)
+  subtotal                     Decimal       @db.Decimal(10, 0)
+  deliveryFee                  Decimal       @map("delivery_fee") @db.Decimal(10, 0)
+  promotionDiscount            Decimal       @default(0) @map("promotion_discount") @db.Decimal(10, 0)
+  total                        Decimal       @db.Decimal(10, 0)
+  paymentMethod                PaymentMethod @map("payment_method")
+  notes                        String?       @db.Text
+  estimatedPrepTimeMinutes     Int?          @map("estimated_prep_time_minutes")
+  estimatedDeliveryTimeMinutes Int?          @map("estimated_delivery_time_minutes")
+  actualDeliveryTimeMinutes    Int?          @map("actual_delivery_time_minutes")
+  cancelledReason              String?       @map("cancelled_reason") @db.Text
+  commissionRateAtOrderTime    Decimal       @default(15.0) @map("commission_rate_at_order_time") @db.Decimal(4, 2)
+  routePolyline                String?       @map("route_polyline") @db.Text
+  routeWaypoints               Json?         @map("route_waypoints") @db.JsonB
+  createdAt                    DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                    DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
 
-  customer                  User        @relation("CustomerOrders", fields: [customerId], references: [id])
-  restaurant                Restaurant  @relation(fields: [restaurantId], references: [id])
-  driver                    User?       @relation("DriverOrders", fields: [driverId], references: [id])
-  deliveryAddress           Address     @relation(fields: [deliveryAddressId], references: [id])
-  orderItems                OrderItem[]
-  statusHistory             OrderStatusHistory[]
-  payment                   Payment?
-  paymentIntent             PaymentIntent?
-  payoutLedgers             PayoutLedger[]
-  deliveryTask              DeliveryTask?
-  reviews                   Review[]
-  supportTickets            AiSupportTicket[]
-  promotionUsages           PromotionUsage[]
-  chatSessions              ChatSession[]
+  customer        User                 @relation("CustomerOrders", fields: [customerId], references: [id])
+  restaurant      Restaurant           @relation(fields: [restaurantId], references: [id])
+  driver          User?                @relation("DriverOrders", fields: [driverId], references: [id])
+  deliveryAddress Address              @relation(fields: [deliveryAddressId], references: [id])
+  orderItems      OrderItem[]
+  statusHistory   OrderStatusHistory[]
+  payment         Payment?
+  paymentIntent   PaymentIntent?
+  payoutLedgers   PayoutLedger[]
+  deliveryTask    DeliveryTask?
+  reviews         Review[]
+  supportTickets  AiSupportTicket[]
+  promotionUsages PromotionUsage[]
+  chatSessions    ChatSession[]
 
   @@index([customerId, createdAt(sort: Desc)])
   @@index([restaurantId, status])
@@ -386,17 +390,17 @@ model Order {
 }
 
 model OrderItem {
-  id               String   @id @default(uuid()) @db.Uuid
-  orderId          String   @map("order_id") @db.Uuid
-  menuItemId       String   @map("menu_item_id") @db.Uuid
-  nameSnapshot     String   @map("name_snapshot") @db.VarChar(200)
-  quantity         Int
-  unitPrice        Decimal  @map("unit_price") @db.Decimal(10, 0)
-  selectedOptions  Json     @default("[]") @map("selected_options") @db.JsonB
-  notes            String?  @db.VarChar(300)
+  id              String  @id @default(uuid()) @db.Uuid
+  orderId         String  @map("order_id") @db.Uuid
+  menuItemId      String  @map("menu_item_id") @db.Uuid
+  nameSnapshot    String  @map("name_snapshot") @db.VarChar(200)
+  quantity        Int
+  unitPrice       Decimal @map("unit_price") @db.Decimal(10, 0)
+  selectedOptions Json    @default("[]") @map("selected_options") @db.JsonB
+  notes           String? @db.VarChar(300)
 
-  order            Order    @relation(fields: [orderId], references: [id])
-  menuItem         MenuItem @relation(fields: [menuItemId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
 
   @@map("order_items")
 }
@@ -409,7 +413,7 @@ model OrderStatusHistory {
   note      String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order     Order    @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId, createdAt])
   @@map("order_status_history")
@@ -425,105 +429,105 @@ model Payment {
   paidAt        DateTime?     @map("paid_at") @db.Timestamptz()
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz()
 
-  order         Order         @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@map("payments")
 }
 
 model DeliveryTask {
-  id                  String             @id @default(uuid()) @db.Uuid
-  orderId             String             @unique @map("order_id") @db.Uuid
-  driverId            String             @map("driver_id") @db.Uuid
-  pickupLocation      Unsupported("geography(Point, 4326)")
-  dropoffLocation     Unsupported("geography(Point, 4326)")
-  status              DeliveryTaskStatus @default(assigned)
-  pickupDistanceKm    Decimal?           @map("pickup_distance_km") @db.Decimal(5, 2)
-  deliveryDistanceKm  Decimal?           @map("delivery_distance_km") @db.Decimal(5, 2)
-  driverRating        Decimal?           @map("driver_rating") @db.Decimal(2, 1)
-  assignedAt          DateTime           @default(now()) @map("assigned_at") @db.Timestamptz()
-  pickedUpAt          DateTime?          @map("picked_up_at") @db.Timestamptz()
-  deliveredAt         DateTime?          @map("delivered_at") @db.Timestamptz()
-  routeGeojson        Json?              @map("route_geojson") @db.JsonB
-  durationInTraffic   Int?               @map("duration_in_traffic")
+  id                 String                                @id @default(uuid()) @db.Uuid
+  orderId            String                                @unique @map("order_id") @db.Uuid
+  driverId           String                                @map("driver_id") @db.Uuid
+  pickupLocation     Unsupported("geography(Point, 4326)")
+  dropoffLocation    Unsupported("geography(Point, 4326)")
+  status             DeliveryTaskStatus                    @default(assigned)
+  pickupDistanceKm   Decimal?                              @map("pickup_distance_km") @db.Decimal(5, 2)
+  deliveryDistanceKm Decimal?                              @map("delivery_distance_km") @db.Decimal(5, 2)
+  driverRating       Decimal?                              @map("driver_rating") @db.Decimal(2, 1)
+  assignedAt         DateTime                              @default(now()) @map("assigned_at") @db.Timestamptz()
+  pickedUpAt         DateTime?                             @map("picked_up_at") @db.Timestamptz()
+  deliveredAt        DateTime?                             @map("delivered_at") @db.Timestamptz()
+  routeGeojson       Json?                                 @map("route_geojson") @db.JsonB
+  durationInTraffic  Int?                                  @map("duration_in_traffic")
 
-  order               Order              @relation(fields: [orderId], references: [id])
-  driver              User               @relation(fields: [driverId], references: [id])
+  order  Order @relation(fields: [orderId], references: [id])
+  driver User  @relation(fields: [driverId], references: [id])
 
   @@map("delivery_tasks")
 }
 
 model DriverLocationHistory {
-  id         BigInt    @id @default(autoincrement()) @db.BigInt
-  driverId   String    @map("driver_id") @db.Uuid
+  id         BigInt                                @id @default(autoincrement()) @db.BigInt
+  driverId   String                                @map("driver_id") @db.Uuid
   location   Unsupported("geography(Point, 4326)")
-  orderId    String?   @map("order_id") @db.Uuid
-  recordedAt DateTime  @default(now()) @map("recorded_at") @db.Timestamptz()
+  orderId    String?                               @map("order_id") @db.Uuid
+  recordedAt DateTime                              @default(now()) @map("recorded_at") @db.Timestamptz()
 
-  driver     User      @relation(fields: [driverId], references: [id])
+  driver User @relation(fields: [driverId], references: [id])
 
   @@index([driverId, recordedAt(sort: Desc)])
   @@map("driver_location_history")
 }
 
 model Address {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  label       String   @db.VarChar(50)
-  addressLine String   @map("address_line") @db.VarChar(300)
+  id          String                                @id @default(uuid()) @db.Uuid
+  userId      String                                @map("user_id") @db.Uuid
+  label       String                                @db.VarChar(50)
+  addressLine String                                @map("address_line") @db.VarChar(300)
   location    Unsupported("geography(Point, 4326)")
-  isDefault   Boolean  @default(false) @map("is_default")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  isDefault   Boolean                               @default(false) @map("is_default")
+  createdAt   DateTime                              @default(now()) @map("created_at") @db.Timestamptz()
 
-  user        User     @relation(fields: [userId], references: [id])
-  orders      Order[]
-  defaultFor  CustomerProfile[] @relation("DefaultAddress")
+  user       User              @relation(fields: [userId], references: [id])
+  orders     Order[]
+  defaultFor CustomerProfile[] @relation("DefaultAddress")
 
   @@map("addresses")
 }
 
 model Review {
-  id             String   @id @default(uuid()) @db.Uuid
-  orderId        String   @unique @map("order_id") @db.Uuid
-  customerId     String   @map("customer_id") @db.Uuid
-  restaurantId   String?  @map("restaurant_id") @db.Uuid
-  driverId       String?  @map("driver_id") @db.Uuid
-  foodRating     Int      @map("food_rating") @db.SmallInt
-  deliveryRating Int?     @map("delivery_rating") @db.SmallInt
-  comment        String?  @db.Text
-  photos         String[] @default([]) @map("photos")
-  reply          String?  @db.Text
+  id             String    @id @default(uuid()) @db.Uuid
+  orderId        String    @unique @map("order_id") @db.Uuid
+  customerId     String    @map("customer_id") @db.Uuid
+  restaurantId   String?   @map("restaurant_id") @db.Uuid
+  driverId       String?   @map("driver_id") @db.Uuid
+  foodRating     Int       @map("food_rating") @db.SmallInt
+  deliveryRating Int?      @map("delivery_rating") @db.SmallInt
+  comment        String?   @db.Text
+  photos         String[]  @default([]) @map("photos")
+  reply          String?   @db.Text
   replyAt        DateTime? @map("reply_at") @db.Timestamptz()
-  isHidden       Boolean  @default(false) @map("is_hidden")
-  hiddenReason   String?  @map("hidden_reason") @db.Text
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  isHidden       Boolean   @default(false) @map("is_hidden")
+  hiddenReason   String?   @map("hidden_reason") @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
-  order          Order    @relation(fields: [orderId], references: [id])
-  customer       User     @relation("ReviewCustomer", fields: [customerId], references: [id])
-  restaurant     Restaurant? @relation(fields: [restaurantId], references: [id])
-  driver         User?    @relation("ReviewDriver", fields: [driverId], references: [id])
+  order      Order       @relation(fields: [orderId], references: [id])
+  customer   User        @relation("ReviewCustomer", fields: [customerId], references: [id])
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id])
+  driver     User?       @relation("ReviewDriver", fields: [driverId], references: [id])
 
   @@map("reviews")
 }
 
 model Promotion {
-  id             String           @id @default(uuid()) @db.Uuid
-  code           String           @unique @db.VarChar(50)
-  type           PromotionType
-  value          Decimal          @db.Decimal(10, 0)
-  minOrderAmount Decimal          @default(0) @map("min_order_amount") @db.Decimal(10, 0)
-  maxDiscount    Decimal?         @map("max_discount") @db.Decimal(10, 0)
-  usageLimit         Int              @map("usage_limit")
-  usageCount         Int              @default(0) @map("usage_count")
-  currentUsageCount  Int              @default(0) @map("current_usage_count")
-  maxPerUser         Int?             @map("max_per_user")
-  firstOrderOnly     Boolean          @default(false) @map("first_order_only")
-  restaurantId       String?          @map("restaurant_id") @db.Uuid
-  startsAt           DateTime         @map("starts_at") @db.Timestamptz()
-  expiresAt          DateTime         @map("expires_at") @db.Timestamptz()
-  isActive           Boolean          @default(true) @map("is_active")
-  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  id                String        @id @default(uuid()) @db.Uuid
+  code              String        @unique @db.VarChar(50)
+  type              PromotionType
+  value             Decimal       @db.Decimal(10, 0)
+  minOrderAmount    Decimal       @default(0) @map("min_order_amount") @db.Decimal(10, 0)
+  maxDiscount       Decimal?      @map("max_discount") @db.Decimal(10, 0)
+  usageLimit        Int           @map("usage_limit")
+  usageCount        Int           @default(0) @map("usage_count")
+  currentUsageCount Int           @default(0) @map("current_usage_count")
+  maxPerUser        Int?          @map("max_per_user")
+  firstOrderOnly    Boolean       @default(false) @map("first_order_only")
+  restaurantId      String?       @map("restaurant_id") @db.Uuid
+  startsAt          DateTime      @map("starts_at") @db.Timestamptz()
+  expiresAt         DateTime      @map("expires_at") @db.Timestamptz()
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz()
 
-  usages         PromotionUsage[]
+  usages PromotionUsage[]
 
   @@map("promotions")
 }
@@ -536,9 +540,9 @@ model PromotionUsage {
   discountAmount Decimal  @map("discount_amount") @db.Decimal(10, 0)
   usedAt         DateTime @default(now()) @map("used_at") @db.Timestamptz()
 
-  promotion      Promotion @relation(fields: [promotionId], references: [id])
-  user           User      @relation(fields: [userId], references: [id])
-  order          Order     @relation(fields: [orderId], references: [id])
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  order     Order     @relation(fields: [orderId], references: [id])
 
   @@unique([promotionId, userId])
   @@unique([promotionId, orderId])
@@ -555,7 +559,7 @@ model Notification {
   isRead    Boolean  @default(false) @map("is_read")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, isRead, createdAt(sort: Desc)])
   @@map("notifications")
@@ -570,9 +574,9 @@ model ChatSession {
   createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   closedAt  DateTime?       @map("closed_at") @db.Timestamptz()
 
-  user      User            @relation(fields: [userId], references: [id])
-  order     Order?          @relation(fields: [orderId], references: [id])
-  messages  ChatMessage[]
+  user     User          @relation(fields: [userId], references: [id])
+  order    Order?        @relation(fields: [orderId], references: [id])
+  messages ChatMessage[]
 
   @@map("chat_sessions")
 }
@@ -585,27 +589,27 @@ model ChatMessage {
   content    String         @db.Text
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz()
 
-  session    ChatSession    @relation(fields: [sessionId], references: [id])
+  session ChatSession @relation(fields: [sessionId], references: [id])
 
   @@index([sessionId, createdAt])
   @@map("chat_messages")
 }
 
 model AiSupportTicket {
-  id               String          @id @default(uuid()) @db.Uuid
-  userId           String          @map("user_id") @db.Uuid
-  orderId          String?         @map("order_id") @db.Uuid
-  issueType        TicketIssueType @map("issue_type")
-  summary          String          @db.Text
-  priority         TicketPriority  @default(medium)
-  status           TicketStatus    @default(open)
-  assignedAdminId  String?         @map("assigned_admin_id") @db.Uuid
-  resolutionNotes  String?         @map("resolution_notes") @db.Text
-  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz()
-  resolvedAt       DateTime?       @map("resolved_at") @db.Timestamptz()
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  orderId         String?         @map("order_id") @db.Uuid
+  issueType       TicketIssueType @map("issue_type")
+  summary         String          @db.Text
+  priority        TicketPriority  @default(medium)
+  status          TicketStatus    @default(open)
+  assignedAdminId String?         @map("assigned_admin_id") @db.Uuid
+  resolutionNotes String?         @map("resolution_notes") @db.Text
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  resolvedAt      DateTime?       @map("resolved_at") @db.Timestamptz()
 
-  user             User            @relation(fields: [userId], references: [id])
-  order            Order?          @relation(fields: [orderId], references: [id])
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
 
   @@map("ai_support_tickets")
 }
@@ -621,7 +625,7 @@ model AdminAuditLog {
   ipAddress  String   @map("ip_address") @db.Inet
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  admin      User     @relation(fields: [adminId], references: [id])
+  admin User @relation(fields: [adminId], references: [id])
 
   @@index([adminId, createdAt(sort: Desc)])
   @@index([targetType, targetId])
@@ -629,16 +633,16 @@ model AdminAuditLog {
 }
 
 model UserFcmToken {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  token       String   @unique @db.VarChar(500)
-  platform    String   @db.VarChar(20)
-  deviceId    String?  @map("device_id") @db.VarChar(200)
-  isStale     Boolean  @default(false) @map("is_stale")
-  lastSeenAt  DateTime @default(now()) @map("last_seen_at") @db.Timestamptz()
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  token      String   @unique @db.VarChar(500)
+  platform   String   @db.VarChar(20)
+  deviceId   String?  @map("device_id") @db.VarChar(200)
+  isStale    Boolean  @default(false) @map("is_stale")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isStale])
   @@map("user_fcm_tokens")
@@ -653,7 +657,7 @@ model NotificationSetting {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventType], name: "userId_eventType")
   @@index([userId])
@@ -671,24 +675,24 @@ model PaymentIntent {
   expiresAt      DateTime @map("expires_at") @db.Timestamptz()
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order          Order    @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@map("payment_intents")
 }
 
 model PayoutLedger {
-  id                 String    @id @default(uuid()) @db.Uuid
-  orderId            String    @map("order_id") @db.Uuid
-  recipientType      String    @map("recipient_type") @db.VarChar(20)
-  recipientId        String?   @map("recipient_id") @db.Uuid
-  amount             Int
-  currency           String    @default("VND") @db.VarChar(3)
-  status             String    @default("pending") @db.VarChar(20)
-  settlementBatchId  String?   @map("settlement_batch_id") @db.Uuid
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  settledAt          DateTime? @map("settled_at") @db.Timestamptz()
+  id                String    @id @default(uuid()) @db.Uuid
+  orderId           String    @map("order_id") @db.Uuid
+  recipientType     String    @map("recipient_type") @db.VarChar(20)
+  recipientId       String?   @map("recipient_id") @db.Uuid
+  amount            Int
+  currency          String    @default("VND") @db.VarChar(3)
+  status            String    @default("pending") @db.VarChar(20)
+  settlementBatchId String?   @map("settlement_batch_id") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  settledAt         DateTime? @map("settled_at") @db.Timestamptz()
 
-  order              Order     @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
   @@index([recipientType, recipientId, status])
@@ -713,4 +717,51 @@ model LoyaltyTransaction {
   @@index([userId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("loyalty_transactions")
+}
+
+enum WalletTxnType {
+  credit
+  debit
+}
+
+model WalletTransaction {
+  id          String        @id @default(uuid()) @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountDelta Int           @map("amount_delta")
+  type        WalletTxnType
+  reason      String
+  refId       String?       @map("ref_id") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("wallet_transactions")
+}
+
+model ReferralCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   @unique @db.VarChar(16)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([code])
+  @@map("referral_codes")
+}
+
+model ReferralRedemption {
+  id             String   @id @default(uuid()) @db.Uuid
+  referrerUserId String   @map("referrer_user_id") @db.Uuid
+  inviteeUserId  String   @map("invitee_user_id") @db.Uuid
+  referrer       User     @relation("Referrer", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  invitee        User     @relation("Invitee", fields: [inviteeUserId], references: [id], onDelete: Cascade)
+  rewardAmount   Int      @default(0) @map("reward_amount")
+  redeemedAt     DateTime @default(now()) @map("redeemed_at") @db.Timestamptz(6)
+
+  @@unique([referrerUserId, inviteeUserId])
+  @@index([referrerUserId])
+  @@index([inviteeUserId])
+  @@map("referral_redemptions")
 }
