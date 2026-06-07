@@ -137,8 +137,10 @@ model User {
   driverLocationHistory DriverLocationHistory[]
   supportTickets     AiSupportTicket[]
   auditLogs          AdminAuditLog[]
-  promotionUsages    PromotionUsage[]
-  cart               Cart?
+  promotionUsages      PromotionUsage[]
+  cart                 Cart?
+  notificationSettings NotificationSetting[]
+  fcmTokens            UserFcmToken[]
 
   @@index([email])
   @@index([phone])
@@ -598,4 +600,34 @@ model AdminAuditLog {
   @@index([adminId, createdAt(sort: Desc)])
   @@index([targetType, targetId])
   @@map("admin_audit_logs")
+}
+
+model UserFcmToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(500)
+  deviceId  String?  @map("device_id") @db.VarChar(200)
+  isStale   Boolean  @default(false) @map("is_stale")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isStale])
+  @@map("user_fcm_tokens")
+}
+
+model NotificationSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  eventType String   @map("event_type") @db.VarChar(50)
+  channels  String[]
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventType], name: "userId_eventType")
+  @@index([userId])
+  @@map("notification_settings")
 }
