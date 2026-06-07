@@ -12,6 +12,7 @@ import {
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import type Redis from 'ioredis'
+import { I18nService, I18nContext } from 'nestjs-i18n'
 import { ApiKeyGuard } from '../auth/api-key.guard'
 import { NotificationsService } from '../notifications/notifications.service'
 import { SepayProvider } from '../payments/providers/sepay.provider'
@@ -23,17 +24,22 @@ export class WebhooksController {
     private readonly notifications: NotificationsService,
     private readonly sepay: SepayProvider,
     private readonly prisma: PrismaService,
+    private readonly i18n: I18nService,
     @InjectQueue('commission-split') private readonly commissionQueue: Queue,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
+
+  private t(key: string, args?: Record<string, unknown>): string {
+    return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi', args })
+  }
 
   @Post('n8n/order-event')
   @UseGuards(ApiKeyGuard)
   async orderEvent(@Body() body: { orderId: string; event: string; userId: string }) {
     await this.notifications.create({
       userId: body.userId,
-      title: 'Cập nhật đơn hàng',
-      body: `Đơn ${body.orderId}: ${body.event}`,
+      title: this.t('notifications.order_update_title'),
+      body: this.t('notifications.order_update_body', { orderId: body.orderId, event: body.event }),
       type: 'order_update',
       payload: { orderId: body.orderId, event: body.event },
     })
@@ -45,8 +51,11 @@ export class WebhooksController {
   async driverDelay(@Body() body: { orderId: string; driverId: string; delayMinutes: number }) {
     await this.notifications.create({
       userId: body.driverId,
-      title: 'Cảnh báo trễ giao hàng',
-      body: `Đơn ${body.orderId} đang trễ ${body.delayMinutes} phút`,
+      title: this.t('notifications.driver_delay_title'),
+      body: this.t('notifications.driver_delay_body', {
+        orderId: body.orderId,
+        delayMinutes: body.delayMinutes,
+      }),
       type: 'driver_alert',
     })
     return { received: true }

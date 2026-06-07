@@ -1,5 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable, Optional } from '@nestjs/common'
+import { I18nService, I18nContext } from 'nestjs-i18n'
 import { OrderStatus } from './order-state-machine'
+import { fallbackT } from '../i18n/fallback-translations'
 
 interface CancellationPolicy {
   allowed: boolean
@@ -19,16 +21,24 @@ const TERMINAL_STATES: OrderStatus[] = ['completed', 'refunded']
 
 @Injectable()
 export class CancellationService {
+  constructor(@Optional() private readonly i18n?: I18nService) {}
+
+  // Translates key; falls back to vi strings when I18nService is absent (unit tests).
+  private t(key: string): string {
+    if (!this.i18n) return fallbackT(key)
+    return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi' })
+  }
+
   assertCanCancel(role: string, currentStatus: OrderStatus, reason?: string): void {
     const policy = this.evaluate(role, currentStatus, reason)
     if (!policy.allowed) {
-      throw new ForbiddenException(policy.reason ?? 'Không thể huỷ đơn hàng ở trạng thái này')
+      throw new ForbiddenException(policy.reason ?? this.t('errors.order_cannot_cancel'))
     }
   }
 
   evaluate(role: string, currentStatus: OrderStatus, reason?: string): CancellationPolicy {
     if (TERMINAL_STATES.includes(currentStatus)) {
-      return { allowed: false, reason: 'Đơn hàng đã hoàn tất, không thể huỷ' }
+      return { allowed: false, reason: this.t('errors.order_already_completed') }
     }
 
     if (role === 'admin') {
@@ -37,28 +47,21 @@ export class CancellationService {
 
     if (role === 'customer') {
       if (!CUSTOMER_CANCEL_STATES.includes(currentStatus)) {
-        return {
-          allowed: false,
-          reason:
-            'Đơn hàng đang được xử lý bởi nhà hàng và không thể huỷ. Vui lòng liên hệ hỗ trợ.',
-        }
+        return { allowed: false, reason: this.t('errors.order_processing_cannot_cancel') }
       }
       return { allowed: true }
     }
 
     if (role === 'restaurant') {
       if (!RESTAURANT_CANCEL_STATES.includes(currentStatus)) {
-        return {
-          allowed: false,
-          reason: 'Đơn hàng đã được tài xế nhận, không thể huỷ từ phía nhà hàng',
-        }
+        return { allowed: false, reason: this.t('errors.order_driver_picked_up') }
       }
       if (!reason || reason.trim().length === 0) {
-        return { allowed: false, reason: 'Nhà hàng phải cung cấp lý do huỷ đơn' }
+        return { allowed: false, reason: this.t('errors.order_cancel_reason_required') }
       }
       return { allowed: true }
     }
 
-    return { allowed: false, reason: 'Vai trò không hợp lệ' }
+    return { allowed: false, reason: this.t('errors.order_invalid_role') }
   }
 }

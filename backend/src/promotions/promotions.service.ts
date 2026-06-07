@@ -1,8 +1,10 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
+import { Injectable, BadRequestException, NotFoundException, Optional } from '@nestjs/common'
+import { I18nService, I18nContext } from 'nestjs-i18n'
 import { PrismaService } from '../database/prisma.service'
 import { EligibilityService } from './eligibility.service'
 import { FraudDetectionService } from './fraud-detection.service'
 import { CartContext } from './promotions.types'
+import { fallbackT } from '../i18n/fallback-translations'
 
 @Injectable()
 export class PromotionsService {
@@ -10,7 +12,13 @@ export class PromotionsService {
     private readonly prisma: PrismaService,
     private readonly eligibility: EligibilityService,
     private readonly fraud: FraudDetectionService,
+    @Optional() private readonly i18n?: I18nService,
   ) {}
+
+  private t(key: string): string {
+    if (!this.i18n) return fallbackT(key)
+    return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi' })
+  }
 
   /**
    * Atomically validates and claims a promotion code.
@@ -34,7 +42,7 @@ export class PromotionsService {
       await tx.$executeRaw`SELECT 1 FROM promotions WHERE code = ${code} FOR UPDATE`
 
       const promotion = await tx.promotion.findUnique({ where: { code } })
-      if (!promotion) throw new NotFoundException('Mã khuyến mãi không tồn tại')
+      if (!promotion) throw new NotFoundException(this.t('errors.promotion_not_found'))
 
       const result = await this.eligibility.validate(promotion, cart, userId)
       if (!result.valid) throw new BadRequestException(result.error)
@@ -66,7 +74,7 @@ export class PromotionsService {
 
   async findByCode(code: string) {
     const promotion = await this.prisma.promotion.findUnique({ where: { code } })
-    if (!promotion) throw new NotFoundException('Mã khuyến mãi không tồn tại')
+    if (!promotion) throw new NotFoundException(this.t('errors.promotion_not_found'))
     return promotion
   }
 }
