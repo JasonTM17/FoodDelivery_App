@@ -1,0 +1,6 @@
+{
+  "title": "Khuyến mãi mới dành cho bạn",
+  "body": "Nhận ngay ưu đãi {{discount}} với mã {{promoCode}}. Áp dụng đến {{expiresAt}}. Đặt ngay!",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Đơn hàng đã bị hủy",
+  "body": "Đơn hàng #{{orderCode}} đã bị hủy. Lý do: {{reason}}. Nếu bạn đã thanh toán, hoàn tiền sẽ được xử lý trong 3-5 ngày làm việc.",
+  "channels": ["in_app", "push", "email", "sms"],
+  "critical": true
+}

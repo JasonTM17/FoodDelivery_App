@@ -1,0 +1,6 @@
+{
+  "title": "Đặt hàng thành công",
+  "body": "Đơn hàng #{{orderCode}} của bạn đã được tạo. Tổng cộng: {{total}}đ. Đang chờ nhà hàng xác nhận.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

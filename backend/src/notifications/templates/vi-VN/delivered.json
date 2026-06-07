@@ -1,0 +1,6 @@
+{
+  "title": "Đơn hàng đã giao thành công",
+  "body": "Đơn hàng #{{orderCode}} đã được giao. Cảm ơn bạn đã sử dụng FoodFlow! Hãy để lại đánh giá nhé.",
+  "channels": ["in_app", "push", "email"],
+  "critical": false
+}

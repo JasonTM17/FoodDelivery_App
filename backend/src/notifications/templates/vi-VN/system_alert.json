@@ -1,0 +1,6 @@
+{
+  "title": "Thông báo hệ thống",
+  "body": "{{message}}",
+  "channels": ["in_app"],
+  "critical": false
+}

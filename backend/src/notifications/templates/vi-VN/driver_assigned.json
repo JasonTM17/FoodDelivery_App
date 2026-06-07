@@ -1,0 +1,6 @@
+{
+  "title": "Tài xế đang trên đường",
+  "body": "Tài xế {{driverName}} đã nhận đơn #{{orderCode}} và đang trên đường đến lấy hàng.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Tài khoản đã được xác minh",
+  "body": "Tài khoản tài xế của bạn đã được xác minh thành công. Bạn có thể bắt đầu nhận đơn hàng ngay bây giờ.",
+  "channels": ["in_app", "push", "sms"],
+  "critical": true
+}

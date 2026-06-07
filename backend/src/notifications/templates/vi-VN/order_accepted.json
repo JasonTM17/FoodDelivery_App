@@ -1,0 +1,6 @@
+{
+  "title": "Đơn hàng được xác nhận",
+  "body": "Nhà hàng {{restaurantName}} đã xác nhận đơn #{{orderCode}}. Thời gian chuẩn bị khoảng {{prepTime}} phút.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}
