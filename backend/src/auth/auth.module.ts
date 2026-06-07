@@ -8,6 +8,8 @@ import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
 import { JwtAuthGuard } from './jwt-auth.guard'
 import { RefreshTokenStore } from './refresh-token.store'
+import { Ed25519Service } from './keys/ed25519.service'
+import { JwksController } from './keys/jwks.controller'
 
 @Module({
   imports: [
@@ -21,8 +23,8 @@ import { RefreshTokenStore } from './refresh-token.store'
     }),
     forwardRef(() => UsersModule),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshTokenStore],
-  exports: [AuthService, JwtAuthGuard, JwtModule],
+  controllers: [AuthController, JwksController],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshTokenStore, Ed25519Service],
+  exports: [AuthService, JwtAuthGuard, JwtModule, Ed25519Service],
 })
 export class AuthModule {}

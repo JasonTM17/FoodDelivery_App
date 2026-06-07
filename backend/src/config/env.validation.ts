@@ -18,6 +18,10 @@ export const envSchema = z.object({
   N8N_API_KEY: z.string().optional(),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  // Ed25519 dual-verify (Phase 1 cutover — Phase 2 will flip signing)
+  JWT_ED25519_PRIVATE_KEY: z.string().optional(),
+  JWT_ED25519_PUBLIC_KEY: z.string().optional(),
+  LEGACY_HS256_FALLBACK: z.enum(['true', 'false']).default('true'),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { PrismaService } from '@/database/prisma.service'
+import { Ed25519Service } from './keys/ed25519.service'
 
 interface JwtPayload {
   sub: string
@@ -10,23 +11,51 @@ interface JwtPayload {
   type?: string
 }
 
+/** Decode the JWT header without full verification to read the alg field. */
+function extractJwtAlg(rawJwt: string): string {
+  try {
+    const headerJson = Buffer.from(rawJwt.split('.')[0], 'base64url').toString('utf8')
+    return (JSON.parse(headerJson) as { alg?: string }).alg ?? 'HS256'
+  } catch {
+    return 'HS256'
+  }
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly ed25519: Ed25519Service,
   ) {
-    const secret = config.get<string>('JWT_SECRET')
-    if (!secret) {
-      throw new Error('JWT_SECRET environment variable is not set')
-    }
+    const jwtSecret = config.get<string>('JWT_SECRET')
+    if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set')
+    const legacyFallback = config.get<string>('LEGACY_HS256_FALLBACK') !== 'false'
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secret,
-      algorithms: ['HS256'],
-    })
+      // secretOrKeyProvider enables per-token algorithm routing; requires passport-jwt ≥4
+      // done callback typed as any: crypto.KeyObject is valid at runtime but not in @types/passport-jwt
+      secretOrKeyProvider: (
+        _req: unknown,
+        rawJwt: string,
+        done: (err: Error | null, key?: unknown) => void,
+      ) => {
+        try {
+          const alg = extractJwtAlg(rawJwt)
+          const key = ed25519.resolveKeyForAlg(alg, jwtSecret, legacyFallback)
+          done(null, key)
+        } catch (err) {
+          done(
+            new UnauthorizedException(
+              err instanceof Error ? err.message : 'Token algorithm rejected',
+            ),
+          )
+        }
+      },
+      algorithms: ['HS256', 'EdDSA'],
+    } as never)
   }
 
   async validate(payload: JwtPayload) {
