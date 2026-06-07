@@ -21,6 +21,15 @@ import 'customer/screens/review_screen.dart';
 import 'customer/screens/location_permission_screen.dart';
 import 'customer/screens/restaurant_list_screen.dart';
 import 'customer/screens/notifications_screen.dart';
+import 'customer/screens/onboarding_welcome_screen.dart';
+import 'customer/screens/onboarding_location_screen.dart';
+import 'customer/screens/onboarding_notification_screen.dart';
+import 'customer/screens/loyalty_screen.dart';
+import 'customer/screens/wallet_screen.dart';
+import 'customer/screens/referral_screen.dart';
+import 'customer/screens/help_center_screen.dart';
+import 'customer/screens/restaurant_filters_screen.dart';
+import 'customer/screens/address_picker_screen.dart';
 import 'shared/models/menu_item.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -124,6 +133,45 @@ final _router = GoRouter(
         // Search results screen — for now redirects to home
         return const HomeScreen();
       },
+    ),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingWelcomeScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding-location',
+      builder: (context, state) => const OnboardingLocationScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding-notifications',
+      builder: (context, state) => const OnboardingNotificationScreen(),
+    ),
+    GoRoute(
+      path: '/loyalty',
+      builder: (context, state) => const LoyaltyScreen(),
+    ),
+    GoRoute(
+      path: '/wallet',
+      builder: (context, state) => const WalletScreen(),
+    ),
+    GoRoute(
+      path: '/referral',
+      builder: (context, state) => const ReferralScreen(),
+    ),
+    GoRoute(
+      path: '/help',
+      builder: (context, state) => const HelpCenterScreen(),
+    ),
+    GoRoute(
+      path: '/restaurant-filters',
+      builder: (context, state) {
+        final initial = state.extra as RestaurantFilters? ?? const RestaurantFilters();
+        return RestaurantFiltersScreen(initial: initial);
+      },
+    ),
+    GoRoute(
+      path: '/address-picker',
+      builder: (context, state) => const AddressPickerScreen(),
     ),
   ],
 );
