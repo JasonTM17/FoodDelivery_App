@@ -109,6 +109,12 @@ enum PromotionType {
   free_delivery
 }
 
+enum LocaleCode {
+  vi
+  en
+  ja
+}
+
 // ─── Models ───
 
 model User {
@@ -122,6 +128,7 @@ model User {
   isActive      Boolean   @default(true) @map("is_active")
   failedLoginCount Int    @default(0) @map("failed_login_count")
   lockedUntil   DateTime? @map("locked_until") @db.Timestamptz()
+  preferredLocale LocaleCode @default(vi) @map("preferred_locale")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
