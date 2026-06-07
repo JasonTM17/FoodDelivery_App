@@ -38,5 +38,5 @@ COPY --from=builder /app/apps/restaurant/public ./apps/restaurant/public
 USER 65532:65532
 EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s \
-  CMD ["node", "-e", "require('http').get('http://localhost:3002/',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
+  CMD ["node", "-e", "require('http').get('http://localhost:3002/api/health',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
 CMD ["apps/restaurant/server.js"]
