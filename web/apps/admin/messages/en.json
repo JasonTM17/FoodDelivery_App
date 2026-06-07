@@ -63,7 +63,13 @@
   },
   "restaurants": {
     "title": "Restaurant Management",
-    "description": "List of partner restaurants"
+    "description": "List of partner restaurants",
+    "kpiTitle": "7-day performance",
+    "kpiPrepTime": "Avg prep time",
+    "kpiFulfillment": "Fulfillment rate",
+    "kpiAvgRating": "Avg rating",
+    "kpiRevenue7d": "Revenue (7d)",
+    "kpiError": "Failed to load KPI"
   },
   "restaurantDetail": {
     "title": "Restaurant Detail",

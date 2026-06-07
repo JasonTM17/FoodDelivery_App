@@ -63,7 +63,13 @@
   },
   "restaurants": {
     "title": "Quản lý nhà hàng",
-    "description": "Danh sách nhà hàng đối tác"
+    "description": "Danh sách nhà hàng đối tác",
+    "kpiTitle": "Hiệu suất 7 ngày",
+    "kpiPrepTime": "Thời gian chuẩn bị TB",
+    "kpiFulfillment": "Tỷ lệ hoàn thành",
+    "kpiAvgRating": "Đánh giá TB",
+    "kpiRevenue7d": "Doanh thu 7 ngày",
+    "kpiError": "Không tải được KPI"
   },
   "restaurantDetail": {
     "title": "Chi tiết nhà hàng",

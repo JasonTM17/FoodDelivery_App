@@ -26,6 +26,7 @@ import {
 import { ArrowLeft, Star, Store, MapPin, Phone, Mail } from 'lucide-react';
 import { Link } from '@/navigation';
 import OrderStatusBadge from '@/components/badges/order-status-badge';
+import { RestaurantKpiCard } from './restaurant-kpi-card';
 
 interface Restaurant {
   id: string;
@@ -233,6 +234,7 @@ export default function RestaurantDetailPage({
               </div>
             </CardContent>
           </Card>
+          <RestaurantKpiCard restaurantId={restaurant.id} />
         </div>
       </div>
     </div>

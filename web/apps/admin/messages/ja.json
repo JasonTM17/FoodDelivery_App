@@ -63,7 +63,13 @@
   },
   "restaurants": {
     "title": "レストラン管理",
-    "description": "パートナーレストランの一覧"
+    "description": "パートナーレストランの一覧",
+    "kpiTitle": "7日間のパフォーマンス",
+    "kpiPrepTime": "平均準備時間",
+    "kpiFulfillment": "完了率",
+    "kpiAvgRating": "平均評価",
+    "kpiRevenue7d": "7日間売上",
+    "kpiError": "KPIの読み込みに失敗"
   },
   "restaurantDetail": {
     "title": "レストラン詳細",
