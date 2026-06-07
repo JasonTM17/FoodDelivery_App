@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import OverviewStats from './overview-stats';
 import OverviewCharts from './overview-charts';
 import OverviewRecentOrders from './overview-recent-orders';
+import OverviewHeatmap from './overview-heatmap';
 
 function StatsSkeleton() {
   return (
@@ -31,6 +32,7 @@ export default async function OverviewPage() {
       <Suspense fallback={<Skeleton className="h-80 rounded-lg" />}>
         <OverviewCharts />
       </Suspense>
+      <OverviewHeatmap />
       <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
         <OverviewRecentOrders />
       </Suspense>

@@ -40,7 +40,11 @@
     "todayRevenue": "本日の売上",
     "totalOrders": "総注文数",
     "avgRating": "ドライバー平均評価",
-    "recentOrders": "最近の注文"
+    "recentOrders": "最近の注文",
+    "heatmapTitle": "地区別注文密度",
+    "heatmapPeriod": "過去1時間",
+    "heatmapEmpty": "データなし",
+    "heatmapError": "ヒートマップの読み込みに失敗"
   },
   "orders": {
     "title": "注文管理",

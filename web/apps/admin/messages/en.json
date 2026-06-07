@@ -40,7 +40,11 @@
     "todayRevenue": "Today's Revenue",
     "totalOrders": "Total Orders",
     "avgRating": "Avg Driver Rating",
-    "recentOrders": "Recent Orders"
+    "recentOrders": "Recent Orders",
+    "heatmapTitle": "Order density by district",
+    "heatmapPeriod": "Last 1 hour",
+    "heatmapEmpty": "No data yet",
+    "heatmapError": "Failed to load heatmap"
   },
   "orders": {
     "title": "Order Management",

@@ -40,7 +40,11 @@
     "todayRevenue": "Doanh thu hôm nay",
     "totalOrders": "Tổng đơn hàng",
     "avgRating": "Đánh giá TB tài xế",
-    "recentOrders": "Đơn hàng gần đây"
+    "recentOrders": "Đơn hàng gần đây",
+    "heatmapTitle": "Mật độ đơn theo khu vực",
+    "heatmapPeriod": "1 giờ gần nhất",
+    "heatmapEmpty": "Chưa có dữ liệu",
+    "heatmapError": "Không tải được mật độ đơn"
   },
   "orders": {
     "title": "Quản lý đơn hàng",
