@@ -85,24 +85,26 @@ export default function PromotionsListPage() {
       ) : (
         <ul className="space-y-2">
           {promos.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
-            >
-              <div>
-                <p className="font-mono text-sm font-semibold">{p.code}</p>
-                <p className="text-xs text-muted-foreground">
-                  {p.type === 'percentage' ? `${p.value}%` : `${p.value.toLocaleString()}đ`} ·{' '}
-                  {p.usageCount}/{p.usageLimit > 0 ? p.usageLimit : '∞'}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs ${
-                  p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                }`}
+            <li key={p.id}>
+              <Link
+                href={`/promotions/${p.id}`}
+                className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
               >
-                {p.active ? t('active') : t('inactive')}
-              </span>
+                <div>
+                  <p className="font-mono text-sm font-semibold">{p.code}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.type === 'percentage' ? `${p.value}%` : `${p.value.toLocaleString()}đ`} ·{' '}
+                    {p.usageCount}/{p.usageLimit > 0 ? p.usageLimit : '∞'}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {p.active ? t('active') : t('inactive')}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
