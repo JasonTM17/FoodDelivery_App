@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional, Inject } from '@nestjs/common'
+import { Injectable, Logger, Optional, Inject, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma } from '@prisma/client'
 import Redis from 'ioredis'
@@ -165,6 +165,21 @@ export class NotificationsService {
       where: { userId, isRead: false },
       data: { isRead: true },
     })
+  }
+
+  async registerFcmToken(userId: string, token: string, platform: 'ios' | 'android' | 'web', deviceId?: string) {
+    if (!token || token.length < 20) throw new BadRequestException('INVALID_FCM_TOKEN')
+    await this.prisma.userFcmToken.upsert({
+      where: { token },
+      create: { userId, token, platform, deviceId, lastSeenAt: new Date() },
+      update: { userId, platform, deviceId, lastSeenAt: new Date(), isStale: false },
+    })
+    return { success: true }
+  }
+
+  async unregisterFcmToken(userId: string, token: string) {
+    await this.prisma.userFcmToken.deleteMany({ where: { userId, token } })
+    return { success: true }
   }
 
   async create(data: {

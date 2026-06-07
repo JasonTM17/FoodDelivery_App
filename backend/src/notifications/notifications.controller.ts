@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
@@ -24,5 +24,18 @@ export class NotificationsController {
   @Patch('read-all')
   markAllAsRead(@CurrentUser() user: JwtPayload) {
     return this.notificationsService.markAllAsRead(user.sub)
+  }
+
+  @Post('fcm-token')
+  registerFcmToken(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { token: string; platform: 'ios' | 'android' | 'web'; deviceId?: string },
+  ) {
+    return this.notificationsService.registerFcmToken(user.sub, body.token, body.platform, body.deviceId)
+  }
+
+  @Delete('fcm-token/:token')
+  unregisterFcmToken(@CurrentUser() user: JwtPayload, @Param('token') token: string) {
+    return this.notificationsService.unregisterFcmToken(user.sub, token)
   }
 }
