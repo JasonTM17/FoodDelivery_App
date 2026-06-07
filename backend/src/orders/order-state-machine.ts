@@ -26,9 +26,10 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 
 const ROLE_TRANSITION_MAP: Record<string, Record<string, OrderStatus[]>> = {
   customer: {
-    created: ['pending_payment'],
+    created: ['pending_payment', 'cancelled'],
     pending_payment: ['cancelled'],
     paid: ['cancelled'],
+    restaurant_pending: ['cancelled'],
     delivered: ['completed'],
   },
   restaurant: {

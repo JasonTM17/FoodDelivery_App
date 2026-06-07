@@ -1,8 +1,11 @@
 import { Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { InjectQueue } from '@nestjs/bullmq'
+import { Queue } from 'bullmq'
 import { PrismaService } from '../database/prisma.service'
 import { OrderStateMachine, OrderStatus } from './order-state-machine'
 import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
+import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto, PaymentMethodDto } from './orders.dto'
 import { OrderStatus as PrismaOrderStatus, PaymentMethod as PrismaPaymentMethod, Prisma } from '@prisma/client'
 import { nanoid } from 'nanoid'
@@ -14,7 +17,77 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly paymentsService: PaymentsService,
     private readonly ordersGateway: OrdersGateway,
+    private readonly cancellationService: CancellationService,
+    @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
+    @InjectQueue('refund') private readonly refundQueue: Queue,
   ) {}
+
+  async transition(
+    orderId: string,
+    toStatus: OrderStatus,
+    actorId: string,
+    role: string,
+    reason?: string,
+    ip?: string,
+  ) {
+    type SideEffects = { needsRefundJob: boolean; needsDispatch: boolean }
+
+    const { order: result, fx } = await this.prisma.$transaction(async (tx) => {
+      // Serialise concurrent transitions for the same order
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orderId}))`
+
+      const order = await tx.order.findUniqueOrThrow({ where: { id: orderId } })
+      OrderStateMachine.validate(order.status as OrderStatus, toStatus, role)
+
+      const updated = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: toStatus as PrismaOrderStatus,
+          ...(toStatus === 'cancelled' ? { cancelledReason: reason ?? 'Cancelled' } : {}),
+        },
+      })
+
+      const noteText = [reason, ip ? `ip=${ip}` : null].filter(Boolean).join(' | ') || null
+      await tx.orderStatusHistory.create({
+        data: { orderId, status: toStatus, changedBy: actorId, note: noteText },
+      })
+
+      // Cancelled + payment completed → mark refunded inside txn
+      let needsRefundJob = false
+      if (toStatus === 'cancelled') {
+        const payment = await tx.payment.findUnique({ where: { orderId } })
+        if (payment?.status === 'completed') {
+          await tx.payment.update({ where: { id: payment.id }, data: { status: 'refunded' } })
+          needsRefundJob = true
+        }
+      }
+
+      return {
+        order: updated,
+        fx: { needsRefundJob, needsDispatch: toStatus === 'restaurant_accepted' } as SideEffects,
+      }
+    })
+
+    // Post-commit side effects
+    this.ordersGateway.broadcastToOrder(orderId, 'order:status:changed', {
+      orderId, status: toStatus, timestamp: new Date().toISOString(),
+    })
+
+    if (fx.needsRefundJob) {
+      const jobId = `refund-${orderId}`
+      await this.refundQueue.add(
+        'refund.order',
+        { orderId, idempotencyKey: jobId },
+        { attempts: 3, backoff: { type: 'exponential', delay: 1000 }, jobId },
+      )
+    }
+
+    if (fx.needsDispatch) {
+      await this.dispatchQueue.add('dispatch.driver', { orderId }, { delay: 0, jobId: `dispatch-${orderId}` })
+    }
+
+    return result
+  }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
     const cart = await this.prisma.cart.findUnique({
@@ -192,58 +265,12 @@ export class OrdersService {
   async cancelOrder(orderId: string, userId: string, role: string, dto?: CancelOrderDto) {
     const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } })
     if (role !== 'admin' && order.customerId !== userId) throw new NotFoundException('ORDER_NOT_FOUND')
-
-    const currentStatus = order.status as OrderStatus
-    OrderStateMachine.validate(currentStatus, 'cancelled', role)
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const o = await tx.order.update({
-        where: { id: orderId },
-        data: { status: 'cancelled', cancelledReason: dto?.reason ?? 'Cancelled by user' },
-      })
-      await tx.orderStatusHistory.create({
-        data: { orderId, status: 'cancelled', changedBy: userId, note: dto?.reason },
-      })
-
-      // If payment completed, mark for refund
-      const payment = await tx.payment.findUnique({ where: { orderId } })
-      if (payment && payment.status === 'completed') {
-        await tx.payment.update({ where: { id: payment.id }, data: { status: 'refunded' } })
-        await tx.orderStatusHistory.create({
-          data: { orderId, status: 'refunded', changedBy: 'system', note: 'Auto-refund on cancellation' },
-        })
-        await tx.order.update({ where: { id: orderId }, data: { status: 'refunded' } })
-      }
-
-      return o
-    })
-
-    this.ordersGateway.broadcastToOrder(orderId, 'order:status_changed', {
-      orderId, status: updated.status, timestamp: new Date().toISOString(),
-    })
-
-    return updated
+    this.cancellationService.assertCanCancel(role, order.status as OrderStatus, dto?.reason)
+    return this.transition(orderId, 'cancelled', userId, role, dto?.reason ?? 'Cancelled by user')
   }
 
   async updateOrderStatus(orderId: string, newStatus: string, userId: string, role: string, note?: string) {
-    const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } })
-    const currentStatus = order.status as OrderStatus
-
-    OrderStateMachine.validate(currentStatus, newStatus as OrderStatus, role)
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const o = await tx.order.update({ where: { id: orderId }, data: { status: newStatus as PrismaOrderStatus } })
-      await tx.orderStatusHistory.create({
-        data: { orderId, status: newStatus, changedBy: userId, note },
-      })
-      return o
-    })
-
-    this.ordersGateway.broadcastToOrder(orderId, 'order:status_changed', {
-      orderId, status: newStatus, timestamp: new Date().toISOString(),
-    })
-
-    return updated
+    return this.transition(orderId, newStatus as OrderStatus, userId, role, note)
   }
 
   async getTracking(orderId: string, userId: string) {
