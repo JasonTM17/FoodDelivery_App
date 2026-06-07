@@ -11,6 +11,8 @@ import {
   Car,
   Percent,
   HeadphonesIcon,
+  Bot,
+  BarChart3,
   LogOut,
   LucideIcon,
 } from 'lucide-react';
@@ -29,6 +31,8 @@ const navItems: NavItem[] = [
   { label: 'Tài xế', href: '/drivers', icon: Car },
   { label: 'Khuyến mãi', href: '/promotions', icon: Percent },
   { label: 'Hỗ trợ', href: '/support', icon: HeadphonesIcon },
+  { label: 'Phân tích', href: '/analytics', icon: BarChart3 },
+  { label: 'AI Monitor', href: '/ai-monitor', icon: Bot },
 ];
 
 export default function AdminSidebar() {
