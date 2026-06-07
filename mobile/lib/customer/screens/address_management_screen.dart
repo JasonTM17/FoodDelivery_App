@@ -331,13 +331,13 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 TextButton.icon(
                   onPressed: () => _setAsDefault(address),
                   icon: const Icon(Icons.check_circle_outline, size: 16),
-                  label: const Text('Đặt làm mặc định', style: TextStyle(fontSize: 12)),
+                  label: Text(AppLocalizations.of(context)!.addressSetDefault, style: const TextStyle(fontSize: 12)),
                 ),
               const Spacer(),
               TextButton.icon(
                 onPressed: () => _showEditAddressDialog(address),
                 icon: const Icon(Icons.edit, size: 16),
-                label: const Text('Sửa', style: TextStyle(fontSize: 12)),
+                label: Text(AppLocalizations.of(context)!.addressEdit, style: const TextStyle(fontSize: 12)),
               ),
             ],
           ),

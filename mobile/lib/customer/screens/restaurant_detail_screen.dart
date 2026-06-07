@@ -129,10 +129,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
-                            tabs: const [
-                              Tab(text: 'Thực đơn'),
-                              Tab(text: 'Đánh giá'),
-                              Tab(text: 'Thông tin'),
+                            tabs: [
+                              Tab(text: AppLocalizations.of(context)!.restaurantMenuTab),
+                              Tab(text: AppLocalizations.of(context)!.restaurantReviewsTab),
+                              Tab(text: AppLocalizations.of(context)!.restaurantInfoTab),
                             ],
                           ),
                         ),
@@ -236,10 +236,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
     }
 
     if (menuItems.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.restaurant_menu,
-        title: 'Thực đơn đang cập nhật',
-        subtitle: 'Nhà hàng chưa có món nào trong thực đơn',
+        title: AppLocalizations.of(context)!.restaurantMenuEmpty,
+        subtitle: AppLocalizations.of(context)!.restaurantMenuEmptySubtitle,
       );
     }
 
@@ -286,7 +286,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                     content: Text('Đã thêm ${item.name} vào giỏ hàng'),
                     duration: const Duration(seconds: 2),
                     action: SnackBarAction(
-                      label: 'Xem giỏ',
+                      label: AppLocalizations.of(context)!.cartViewCart,
                       textColor: Colors.white,
                       onPressed: () => Navigator.of(context).pushNamed('/cart'),
                     ),
@@ -302,14 +302,14 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
 
   Widget _buildReviewsTab(List<ReviewModel>? reviews) {
     if (reviews == null || reviews.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.rate_review_outlined, size: 48, color: AppColors.textHint),
-            SizedBox(height: 16),
+            const Icon(Icons.rate_review_outlined, size: 48, color: AppColors.textHint),
+            const SizedBox(height: 16),
             Text(
-              'Chưa có đánh giá nào',
+              AppLocalizations.of(context)!.restaurantNoReviews,
               style: AppTextStyles.headline4,
             ),
           ],
@@ -469,7 +469,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Thông tin nhà hàng', style: AppTextStyles.headline4),
+                Text(AppLocalizations.of(context)!.restaurantInfoTitle, style: AppTextStyles.headline4),
                 const SizedBox(height: 16),
                 if (restaurant.description != null) ...[
                   _buildInfoRow(Icons.info_outline, 'Mô tả', restaurant.description!),

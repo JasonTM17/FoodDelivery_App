@@ -182,9 +182,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: AppColors.textSecondary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Chưa có đơn hàng nào',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.driverDashboardNoOrders,
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
                   ),

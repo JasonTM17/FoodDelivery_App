@@ -91,15 +91,15 @@ class _KycVerificationScreenState
             ListTile(
               leading:
                   const Icon(Icons.camera_alt, color: AppColors.primary),
-              title: const Text('Chụp ảnh',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(AppLocalizations.of(context)!.driverKycTakePhoto,
+                  style: const TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
               leading:
                   const Icon(Icons.photo_library, color: AppColors.primary),
-              title: const Text('Chọn từ thư viện',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(AppLocalizations.of(context)!.driverKycGallery,
+                  style: const TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             const SizedBox(height: 16),
@@ -128,7 +128,7 @@ class _KycVerificationScreenState
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Đơn đăng ký đã được gửi thành công!')),
+            content: Text(AppLocalizations.of(context)!.driverKycNote)),
       );
       context.go('/login');
     } else {
@@ -145,6 +145,7 @@ class _KycVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -154,10 +155,9 @@ class _KycVerificationScreenState
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Xác minh KYC',
-          style:
-              TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverKycTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: SafeArea(
@@ -166,18 +166,14 @@ class _KycVerificationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Tải lên giấy tờ',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white),
+              Text(
+                l10n.driverKycUploadTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Vui lòng tải lên đầy đủ các giấy tờ yêu cầu',
-                style:
-                    TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+              Text(
+                l10n.driverKycUploadSubtitle,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
               ),
               const SizedBox(height: 24),
               ...List.generate(
@@ -205,8 +201,7 @@ class _KycVerificationScreenState
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed:
-                      _allUploaded && !_submitting ? _submit : null,
+                  onPressed: _allUploaded && !_submitting ? _submit : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
@@ -219,9 +214,9 @@ class _KycVerificationScreenState
                           child: CircularProgressIndicator(
                               strokeWidth: 2.5, color: Colors.white),
                         )
-                      : const Text(
-                          'GỬI ĐĂNG KÝ',
-                          style: TextStyle(
+                      : Text(
+                          l10n.driverKycSubmit,
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: Colors.white),

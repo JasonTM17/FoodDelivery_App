@@ -95,14 +95,15 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
-        title: const Text(
-          'Lịch sử giao hàng',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverHistoryTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: Column(
@@ -119,7 +120,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                     onTap: _pickDate,
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Lọc theo ngày',
+                    hintText: AppLocalizations.of(context)!.driverHistoryFilterDate,
                       hintStyle: const TextStyle(color: Color(0xFF6B7280)),
                       prefixIcon: const Icon(
                         Icons.calendar_today,
@@ -280,12 +281,9 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               color: AppColors.textSecondary.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Chưa có lịch sử giao hàng',
-              style: TextStyle(
-                fontSize: 15,
-                color: Color(0xFF6B7280),
-              ),
+            Text(
+              AppLocalizations.of(context)!.driverHistoryEmpty,
+              style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
             ),
           ],
         ),
