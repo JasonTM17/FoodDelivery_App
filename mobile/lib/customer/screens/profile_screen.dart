@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/auth_provider.dart';
+import '../../shared/providers/order_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../providers/address_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(orderProvider.notifier).fetchOrders();
+      ref.read(addressProvider.notifier).fetchAddresses();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final orderState = ref.watch(orderProvider);
+    final addressState = ref.watch(addressProvider);
     final user = authState.user;
 
     return Scaffold(
@@ -97,10 +115,22 @@ class ProfileScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildStatItem('12', 'Đơn hàng', Icons.receipt_long),
-                  _buildStatItem('4', 'Đánh giá', Icons.star),
-                  _buildStatItem('2', 'Địa chỉ', Icons.location_on),
-                  _buildStatItem('100', 'Điểm', Icons.monetization_on),
+                  _buildStatItem(
+                    '${orderState.activeOrders.length + orderState.completedOrders.length}',
+                    'Đơn hàng',
+                    Icons.receipt_long,
+                  ),
+                  _buildStatItem(
+                    '${orderState.completedOrders.length}',
+                    'Đánh giá',
+                    Icons.star,
+                  ),
+                  _buildStatItem(
+                    '${addressState.addresses.length}',
+                    'Địa chỉ',
+                    Icons.location_on,
+                  ),
+                  _buildStatItem('0', 'Điểm', Icons.monetization_on),
                 ],
               ),
             ),

@@ -1,53 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
-
-class _NotifItem {
-  final String id;
-  final String type; // order | promo | system
-  final String title;
-  final String body;
-  final String time;
-  final bool isRead;
-  final String? deepLink;
-
-  const _NotifItem({
-    required this.id,
-    required this.type,
-    required this.title,
-    required this.body,
-    required this.time,
-    this.isRead = false,
-    this.deepLink,
-  });
-
-  _NotifItem markRead() => _NotifItem(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        time: time,
-        isRead: true,
-        deepLink: deepLink,
-      );
-}
+import '../../shared/widgets/error_state.dart';
+import '../../shared/widgets/loading_shimmer.dart';
+import '../providers/notification_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() =>
-      _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<_NotifItem> _items = const [];
-  bool _loading = false;
 
   static const _tabs = ['Tất cả', 'Đơn hàng', 'Khuyến mãi', 'Hệ thống'];
   static const _typeMap = ['', 'order', 'promo', 'system'];
@@ -56,7 +27,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).fetchNotifications();
+    });
   }
 
   @override
@@ -65,21 +38,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     super.dispose();
   }
 
-  Future<void> _refresh() async {
-    setState(() => _loading = true);
-    // Replace with real API call when notification endpoint is available
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) setState(() => _loading = false);
-  }
-
-  void _markAllRead() {
-    setState(() => _items = _items.map((e) => e.markRead()).toList());
-  }
-
-  List<_NotifItem> _filtered(int tab) {
-    if (tab == 0) return _items;
+  List<NotificationModel> _filtered(
+      List<NotificationModel> all, int tab) {
+    if (tab == 0) return all;
     final type = _typeMap[tab];
-    return _items.where((e) => e.type == type).toList();
+    return all.where((e) => e.type == type).toList();
   }
 
   IconData _icon(String type) {
@@ -104,8 +67,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     }
   }
 
+  String _formatTime(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+    return DateFormat('dd/MM/yyyy').format(dt);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(notificationProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -116,12 +91,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _markAllRead,
-            child: const Text(
+            onPressed: state.unreadCount > 0
+                ? () => ref.read(notificationProvider.notifier).markAllRead()
+                : null,
+            child: Text(
               'Đọc tất cả',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.primary,
+                color: state.unreadCount > 0
+                    ? AppColors.primary
+                    : AppColors.textHint,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -129,8 +108,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelStyle:
-              const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           unselectedLabelStyle:
               const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
           indicatorColor: AppColors.primary,
@@ -140,19 +118,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           tabs: _tabs.map((t) => Tab(text: t)).toList(),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: List.generate(4, _buildTab),
-      ),
+      body: _buildBody(state),
     );
   }
 
-  Widget _buildTab(int index) {
-    if (_loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
+  Widget _buildBody(NotificationState state) {
+    if (state.isLoading && state.notifications.isEmpty) {
+      return const LoadingShimmer(type: ShimmerType.order, itemCount: 5);
     }
-    final items = _filtered(index);
+    if (state.error != null && state.notifications.isEmpty) {
+      return ErrorState(
+        message: state.error!,
+        onRetry: () => ref.read(notificationProvider.notifier).fetchNotifications(),
+      );
+    }
+    return TabBarView(
+      controller: _tabController,
+      children: List.generate(4, (i) => _buildTab(state.notifications, i)),
+    );
+  }
+
+  Widget _buildTab(List<NotificationModel> all, int index) {
+    final items = _filtered(all, index);
     if (items.isEmpty) {
       return const EmptyState(
         icon: Icons.notifications_none_outlined,
@@ -161,35 +148,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       );
     }
     return RefreshIndicator(
-      onRefresh: _refresh,
+      onRefresh: () => ref.read(notificationProvider.notifier).fetchNotifications(),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: items.length,
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, color: AppColors.divider),
+        separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.divider),
         itemBuilder: (_, i) => _buildCard(items[i]),
       ),
     );
   }
 
-  Widget _buildCard(_NotifItem item) {
+  Widget _buildCard(NotificationModel item) {
     return InkWell(
       onTap: () {
         if (!item.isRead) {
-          setState(() {
-            final idx = _items.indexWhere((e) => e.id == item.id);
-            if (idx != -1) {
-              _items = List.of(_items)..[idx] = item.markRead();
-            }
-          });
+          ref.read(notificationProvider.notifier).markRead(item.id);
         }
         if (item.deepLink != null) context.push(item.deepLink!);
       },
       child: Container(
-        color:
-            item.isRead ? null : AppColors.primary.withValues(alpha: 0.04),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: item.isRead ? null : AppColors.primary.withValues(alpha: 0.04),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -200,8 +179,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 color: _iconColor(item.type).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(_icon(item.type),
-                  size: 20, color: _iconColor(item.type)),
+              child: Icon(_icon(item.type), size: 20, color: _iconColor(item.type)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -210,16 +188,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 children: [
                   Text(
                     item.title,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
-                  Text(item.body,
-                      style: AppTextStyles.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    item.body,
+                    style: AppTextStyles.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 4),
-                  Text(item.time, style: AppTextStyles.caption),
+                  Text(_formatTime(item.createdAt), style: AppTextStyles.caption),
                 ],
               ),
             ),
