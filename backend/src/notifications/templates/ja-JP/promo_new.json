@@ -1,0 +1,6 @@
+{
+  "title": "新しいプロモーション",
+  "body": "コード {{promoCode}} で {{discount}} OFF。{{expiresAt}} まで有効。今すぐご注文ください！",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

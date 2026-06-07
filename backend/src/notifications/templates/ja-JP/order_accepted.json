@@ -1,0 +1,6 @@
+{
+  "title": "注文が承認されました",
+  "body": "{{restaurantName}} が注文 #{{orderCode}} を承認しました。準備時間: 約{{prepTime}}分。",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

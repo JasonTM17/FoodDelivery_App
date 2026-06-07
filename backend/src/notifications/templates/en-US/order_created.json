@@ -1,0 +1,6 @@
+{
+  "title": "Order placed successfully",
+  "body": "Your order #{{orderCode}} has been created. Total: {{total}}đ. Awaiting restaurant confirmation.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

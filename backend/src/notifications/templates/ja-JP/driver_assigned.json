@@ -1,0 +1,6 @@
+{
+  "title": "配達員が向かっています",
+  "body": "配達員 {{driverName}} が注文 #{{orderCode}} を受け付け、受取に向かっています。",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

@@ -1,0 +1,6 @@
+{
+  "title": "注文がキャンセルされました",
+  "body": "注文 #{{orderCode}} がキャンセルされました。理由: {{reason}}。お支払い済みの場合、返金は3〜5営業日以内に処理されます。",
+  "channels": ["in_app", "push", "email", "sms"],
+  "critical": true
+}

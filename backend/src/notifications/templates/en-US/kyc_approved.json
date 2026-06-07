@@ -1,0 +1,6 @@
+{
+  "title": "Account verified",
+  "body": "Your driver account has been successfully verified. You can start accepting orders now.",
+  "channels": ["in_app", "push", "sms"],
+  "critical": true
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Refund processed",
+  "body": "{{amount}}đ has been refunded to your account for order #{{orderCode}}. Processed within 3-5 business days.",
+  "channels": ["in_app", "push", "email", "sms"],
+  "critical": true
+}

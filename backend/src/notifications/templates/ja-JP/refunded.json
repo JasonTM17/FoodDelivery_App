@@ -1,0 +1,6 @@
+{
+  "title": "返金完了",
+  "body": "注文 #{{orderCode}} の {{amount}}đ がアカウントに返金されました。3〜5営業日以内に処理されます。",
+  "channels": ["in_app", "push", "email", "sms"],
+  "critical": true
+}

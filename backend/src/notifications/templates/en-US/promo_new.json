@@ -1,0 +1,6 @@
+{
+  "title": "New promotion for you",
+  "body": "Get {{discount}} off with code {{promoCode}}. Valid until {{expiresAt}}. Order now!",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

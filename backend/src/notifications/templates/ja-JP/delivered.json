@@ -1,0 +1,6 @@
+{
+  "title": "配達完了",
+  "body": "注文 #{{orderCode}} を配達しました。FoodFlow をご利用いただきありがとうございます！レビューをお願いします。",
+  "channels": ["in_app", "push", "email"],
+  "critical": false
+}

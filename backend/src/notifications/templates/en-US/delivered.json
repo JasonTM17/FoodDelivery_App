@@ -1,0 +1,6 @@
+{
+  "title": "Order delivered",
+  "body": "Order #{{orderCode}} has been delivered. Thanks for using FoodFlow! Please leave a review.",
+  "channels": ["in_app", "push", "email"],
+  "critical": false
+}

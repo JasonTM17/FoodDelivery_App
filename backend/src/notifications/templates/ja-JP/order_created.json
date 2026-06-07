@@ -1,0 +1,6 @@
+{
+  "title": "ご注文を受け付けました",
+  "body": "注文 #{{orderCode}} を作成しました。合計: {{total}}đ。レストランの確認をお待ちください。",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

@@ -1,0 +1,6 @@
+{
+  "title": "System notification",
+  "body": "{{message}}",
+  "channels": ["in_app"],
+  "critical": false
+}

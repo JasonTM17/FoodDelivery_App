@@ -1,0 +1,6 @@
+{
+  "title": "システム通知",
+  "body": "{{message}}",
+  "channels": ["in_app"],
+  "critical": false
+}

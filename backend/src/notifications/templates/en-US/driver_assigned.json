@@ -1,0 +1,6 @@
+{
+  "title": "Driver on the way",
+  "body": "Driver {{driverName}} accepted order #{{orderCode}} and is heading to pick up.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

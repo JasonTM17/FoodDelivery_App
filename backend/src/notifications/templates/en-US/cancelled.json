@@ -1,0 +1,6 @@
+{
+  "title": "Order cancelled",
+  "body": "Order #{{orderCode}} has been cancelled. Reason: {{reason}}. If you have paid, refund will be processed in 3-5 business days.",
+  "channels": ["in_app", "push", "email", "sms"],
+  "critical": true
+}
