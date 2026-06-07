@@ -37,6 +37,7 @@ enum OrderStatus {
 enum PaymentMethod {
   cash
   mock_wallet
+  sepay
 }
 
 enum PaymentStatus {
@@ -105,6 +106,7 @@ enum ChatSessionType {
 enum PromotionType {
   percentage
   fixed
+  free_delivery
 }
 
 // ─── Models ───
@@ -347,6 +349,7 @@ model Order {
   estimatedDeliveryTimeMinutes Int?     @map("estimated_delivery_time_minutes")
   actualDeliveryTimeMinutes Int?        @map("actual_delivery_time_minutes")
   cancelledReason           String?     @map("cancelled_reason") @db.Text
+  commissionRateAtOrderTime Decimal     @default(15.0) @map("commission_rate_at_order_time") @db.Decimal(4, 2)
   createdAt                 DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                 DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -357,6 +360,8 @@ model Order {
   orderItems                OrderItem[]
   statusHistory             OrderStatusHistory[]
   payment                   Payment?
+  paymentIntent             PaymentIntent?
+  payoutLedgers             PayoutLedger[]
   deliveryTask              DeliveryTask?
   reviews                   Review[]
   supportTickets            AiSupportTicket[]
@@ -471,8 +476,13 @@ model Review {
   restaurantId   String?  @map("restaurant_id") @db.Uuid
   driverId       String?  @map("driver_id") @db.Uuid
   foodRating     Int      @map("food_rating") @db.SmallInt
-  deliveryRating Int      @map("delivery_rating") @db.SmallInt
+  deliveryRating Int?     @map("delivery_rating") @db.SmallInt
   comment        String?  @db.Text
+  photos         String[] @default([]) @map("photos")
+  reply          String?  @db.Text
+  replyAt        DateTime? @map("reply_at") @db.Timestamptz()
+  isHidden       Boolean  @default(false) @map("is_hidden")
+  hiddenReason   String?  @map("hidden_reason") @db.Text
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   order          Order    @relation(fields: [orderId], references: [id])
@@ -490,12 +500,16 @@ model Promotion {
   value          Decimal          @db.Decimal(10, 0)
   minOrderAmount Decimal          @default(0) @map("min_order_amount") @db.Decimal(10, 0)
   maxDiscount    Decimal?         @map("max_discount") @db.Decimal(10, 0)
-  usageLimit     Int              @map("usage_limit")
-  usageCount     Int              @default(0) @map("usage_count")
-  startsAt       DateTime         @map("starts_at") @db.Timestamptz()
-  expiresAt      DateTime         @map("expires_at") @db.Timestamptz()
-  isActive       Boolean          @default(true) @map("is_active")
-  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  usageLimit         Int              @map("usage_limit")
+  usageCount         Int              @default(0) @map("usage_count")
+  currentUsageCount  Int              @default(0) @map("current_usage_count")
+  maxPerUser         Int?             @map("max_per_user")
+  firstOrderOnly     Boolean          @default(false) @map("first_order_only")
+  restaurantId       String?          @map("restaurant_id") @db.Uuid
+  startsAt           DateTime         @map("starts_at") @db.Timestamptz()
+  expiresAt          DateTime         @map("expires_at") @db.Timestamptz()
+  isActive           Boolean          @default(true) @map("is_active")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
 
   usages         PromotionUsage[]
 
@@ -630,4 +644,39 @@ model NotificationSetting {
   @@unique([userId, eventType], name: "userId_eventType")
   @@index([userId])
   @@map("notification_settings")
+}
+
+model PaymentIntent {
+  id             String   @id @default(uuid()) @db.Uuid
+  orderId        String   @unique @map("order_id") @db.Uuid
+  provider       String   @db.VarChar(20)
+  transactionRef String   @unique @map("transaction_ref") @db.VarChar(100)
+  qrCodeUrl      String?  @map("qr_code_url") @db.Text
+  amount         Int
+  status         String   @default("pending") @db.VarChar(20)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz()
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  order          Order    @relation(fields: [orderId], references: [id])
+
+  @@map("payment_intents")
+}
+
+model PayoutLedger {
+  id                 String    @id @default(uuid()) @db.Uuid
+  orderId            String    @map("order_id") @db.Uuid
+  recipientType      String    @map("recipient_type") @db.VarChar(20)
+  recipientId        String?   @map("recipient_id") @db.Uuid
+  amount             Int
+  currency           String    @default("VND") @db.VarChar(3)
+  status             String    @default("pending") @db.VarChar(20)
+  settlementBatchId  String?   @map("settlement_batch_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  settledAt          DateTime? @map("settled_at") @db.Timestamptz()
+
+  order              Order     @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([recipientType, recipientId, status])
+  @@map("payout_ledger")
 }
