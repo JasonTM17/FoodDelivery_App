@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_provider.dart';
@@ -8,6 +7,7 @@ import '../widgets/active_order_card.dart';
 import '../widgets/delivery_order_item.dart';
 import '../widgets/driver_stat_card.dart';
 import '../widgets/online_toggle.dart';
+import '../widgets/dispatch_offer_dialog.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +30,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(driverProvider);
+
+    // Show the dispatch offer dialog whenever a new offer arrives via WebSocket.
+    ref.listen<DispatchOffer?>(
+      driverProvider.select((s) => s.pendingOffer),
+      (prev, offer) {
+        if (offer == null) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => DispatchOfferDialog(
+            offer: offer,
+            onAccept: () {
+              ref.read(driverProvider.notifier).acceptOrder(offer.orderId);
+            },
+            onReject: () {
+              ref.read(driverProvider.notifier).dismissOffer();
+            },
+          ),
+        );
+      },
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -95,79 +116,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildOnlineToggle(DriverState state) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: state.isOnline
-              ? AppColors.primary.withValues(alpha: 0.3)
-              : const Color(0xFF374151),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: state.isOnline ? AppColors.primary : AppColors.textHint,
-              boxShadow: state.isOnline
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                      ),
-                    ]
-                  : [],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                state.isOnline ? 'Đang trực tuyến' : 'Đang ngoại tuyến',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: state.isOnline ? AppColors.primary : AppColors.textSecondary,
-                ),
-              ),
-              Text(
-                state.isOnline ? 'Sẵn sàng nhận đơn' : 'Bật để nhận đơn hàng',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          SizedBox(
-            height: 36,
-            child: Switch(
-              value: state.isOnline,
-              onChanged: (value) {
-                if (value) {
-                  ref.read(driverProvider.notifier).goOnline(10.762622, 106.660172);
-                } else {
-                  ref.read(driverProvider.notifier).goOffline();
-                }
-              },
-              activeTrackColor: AppColors.primary,
-              inactiveThumbColor: AppColors.textHint,
-              inactiveTrackColor: const Color(0xFF374151),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTodayStats(DriverState state) {
     final stats = state.todayStats;
     return GridView.count(
@@ -203,97 +151,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: AppColors.warning,
         ),
       ],
-    );
-  }
-
-  Widget _buildActiveOrderCard(OrderModel order) {
-    return InkWell(
-      onTap: () {
-        context.push('/delivery-flow', extra: {
-          'orderId': order.id,
-          'restaurantName': order.restaurantName,
-          'restaurantAddress': order.restaurantLatitude?.toString() ?? '',
-          'restaurantLat': order.restaurantLatitude,
-          'restaurantLng': order.restaurantLongitude,
-          'customerAddress': order.deliveryAddress.address,
-          'customerLat': order.deliveryAddress.latitude,
-          'customerLng': order.deliveryAddress.longitude,
-          'items': order.items.map((i) => {
-            'name': i.name,
-            'quantity': i.quantity,
-          }).toList(),
-        });
-      },
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.primary.withValues(alpha: 0.15),
-              const Color(0xFF1E1E1E),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.delivery_dining,
-                color: AppColors.primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Đơn đang thực hiện',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF6B7280),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    order.restaurantName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    order.statusText,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: Color(0xFF6B7280),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -338,63 +195,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDeliveryItem(OrderModel order) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.restaurant_outlined,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  order.restaurantName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Mã: ${order.id.substring(0, 8).toUpperCase()}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${order.total.toStringAsFixed(0)}đ',
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/api/socket_client.dart';
 import '../../shared/models/order.dart';
+import '../services/background_location_service.dart';
 
 // ---------------------------------------------------------------------------
 // Models
@@ -105,6 +107,43 @@ class DriverTodayStats {
 }
 
 // ---------------------------------------------------------------------------
+// Model — Dispatch offer received via WebSocket driver:offer event
+// ---------------------------------------------------------------------------
+
+class DispatchOffer {
+  final String orderId;
+  final String restaurantName;
+  final String deliveryAddress;
+  final double orderTotal;
+  final double deliveryFee;
+  final double distanceKm;
+
+  const DispatchOffer({
+    required this.orderId,
+    required this.restaurantName,
+    required this.deliveryAddress,
+    required this.orderTotal,
+    required this.deliveryFee,
+    required this.distanceKm,
+  });
+
+  factory DispatchOffer.fromJson(Map<String, dynamic> json) {
+    return DispatchOffer(
+      orderId: json['orderId'] as String? ?? json['order_id'] as String? ?? '',
+      restaurantName: json['restaurantName'] as String? ??
+          json['restaurant_name'] as String? ??
+          '',
+      deliveryAddress: json['deliveryAddress'] as String? ??
+          json['delivery_address'] as String? ??
+          '',
+      orderTotal: (json['orderTotal'] as num?)?.toDouble() ?? 0.0,
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
+      distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
@@ -128,6 +167,7 @@ class DriverState {
   final String? successMessage;
   final double? currentLat;
   final double? currentLng;
+  final DispatchOffer? pendingOffer;
 
   const DriverState({
     this.isLoading = false,
@@ -149,6 +189,7 @@ class DriverState {
     this.successMessage,
     this.currentLat,
     this.currentLng,
+    this.pendingOffer,
   });
 
   DriverState copyWith({
@@ -171,6 +212,7 @@ class DriverState {
     String? successMessage,
     double? currentLat,
     double? currentLng,
+    DispatchOffer? pendingOffer,
   }) {
     return DriverState(
       isLoading: isLoading ?? this.isLoading,
@@ -192,8 +234,35 @@ class DriverState {
       successMessage: successMessage,
       currentLat: currentLat ?? this.currentLat,
       currentLng: currentLng ?? this.currentLng,
+      pendingOffer: pendingOffer ?? this.pendingOffer,
     );
   }
+
+  /// Creates a copy with [pendingOffer] explicitly cleared to null.
+  /// Use this instead of copyWith when dismissing an offer, because
+  /// copyWith cannot distinguish "not passed" from "null" for nullable fields.
+  DriverState withOfferCleared() => DriverState(
+        isLoading: isLoading,
+        isAuthenticated: isAuthenticated,
+        error: error,
+        isOnline: isOnline,
+        driverName: driverName,
+        driverPhone: driverPhone,
+        driverAvatarUrl: driverAvatarUrl,
+        rating: rating,
+        totalDeliveries: totalDeliveries,
+        totalEarnings: totalEarnings,
+        vehicleType: vehicleType,
+        vehiclePlate: vehiclePlate,
+        todayStats: todayStats,
+        pendingOrders: pendingOrders,
+        activeOrder: activeOrder,
+        earnings: earnings,
+        successMessage: successMessage,
+        currentLat: currentLat,
+        currentLng: currentLng,
+        pendingOffer: null,
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -207,8 +276,8 @@ final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((ref) 
 class DriverNotifier extends StateNotifier<DriverState> {
   final ApiClient _api = ApiClient.instance;
   final SocketClient _socket = SocketClient.instance;
-  Timer? _locationTimer;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
+  StreamSubscription<Map<String, dynamic>>? _offerSub;
 
   DriverNotifier() : super(const DriverState());
 
@@ -295,10 +364,42 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> goOffline() async {
     _stopLocationUpdates();
+    _offerSub?.cancel();
     try {
       await _api.patch('/driver/status', data: {'isOnline': false});
     } catch (_) {}
     state = state.copyWith(isOnline: false);
+  }
+
+  /// Goes online after acquiring real device GPS.
+  /// Falls back to last known position or HCM City center on timeout/denial.
+  Future<void> goOnlineWithGps() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      double lat = state.currentLat ?? 10.762622;
+      double lng = state.currentLng ?? 106.660172;
+      final permitted =
+          await BackgroundLocationService.instance.requestPermissions();
+      if (permitted) {
+        try {
+          final pos = await Geolocator.getCurrentPosition(
+            locationSettings:
+                const LocationSettings(accuracy: LocationAccuracy.high),
+          ).timeout(const Duration(seconds: 8));
+          lat = pos.latitude;
+          lng = pos.longitude;
+        } catch (_) {
+          // GPS timed out — fall through to last-known / default coords
+        }
+      }
+      state = state.copyWith(
+          isLoading: false, currentLat: lat, currentLng: lng);
+      await goOnline(lat, lng);
+      startDispatchOfferListener();
+    } catch (e) {
+      state = state.copyWith(
+          isLoading: false, error: 'Không lấy được vị trí GPS');
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -306,18 +407,15 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // -----------------------------------------------------------------------
 
   void _startLocationUpdates(double lat, double lng) {
-    _locationTimer?.cancel();
-    _locationTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _socket.emit('driver:location', {
-        'latitude': lat,
-        'longitude': lng,
-      });
-    });
+    // Emit initial known position immediately before the stream kicks in.
+    _socket.emitLocationPing(lat, lng);
+    BackgroundLocationService.instance.start(
+      hasActiveOrder: state.activeOrder != null,
+    );
   }
 
   void _stopLocationUpdates() {
-    _locationTimer?.cancel();
-    _locationTimer = null;
+    BackgroundLocationService.instance.stop();
   }
 
   void updateLocation(double lat, double lng) {
@@ -342,6 +440,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         pendingOrders: state.pendingOrders.where((o) => o.id != orderId).toList(),
       );
       _listenOrderStatus(orderId);
+      BackgroundLocationService.instance.setActiveOrderMode(true);
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? 'Không thể nhận đơn';
       state = state.copyWith(isLoading: false, error: msg);
@@ -372,6 +471,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         // Refresh stats & clear active order after a moment
         await fetchTodayStats();
         state = state.copyWith(activeOrder: null, successMessage: 'Giao hàng thành công!');
+        BackgroundLocationService.instance.setActiveOrderMode(false);
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? 'Cập nhật trạng thái thất bại';
@@ -482,6 +582,28 @@ class DriverNotifier extends StateNotifier<DriverState> {
   }
 
   // -----------------------------------------------------------------------
+  // Dispatch Offers
+  // -----------------------------------------------------------------------
+
+  /// Subscribe to incoming delivery offers via WebSocket.
+  /// Call after going online so the driver receives real-time offer events.
+  void startDispatchOfferListener() {
+    _offerSub?.cancel();
+    _socket.connect();
+    _offerSub = _socket.onDriverOffer.listen((data) {
+      try {
+        final offer = DispatchOffer.fromJson(data);
+        state = state.copyWith(pendingOffer: offer);
+      } catch (_) {}
+    });
+  }
+
+  /// Clear the pending offer (dialog dismissed or countdown expired).
+  void dismissOffer() {
+    state = state.withOfferCleared();
+  }
+
+  // -----------------------------------------------------------------------
   // Misc
   // -----------------------------------------------------------------------
 
@@ -495,8 +617,9 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   @override
   void dispose() {
-    _locationTimer?.cancel();
     _orderStatusSub?.cancel();
+    _offerSub?.cancel();
+    BackgroundLocationService.instance.stop();
     super.dispose();
   }
 }

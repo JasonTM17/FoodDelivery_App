@@ -33,7 +33,7 @@ class OnlineToggle extends ConsumerWidget {
               value: state.isOnline,
               onChanged: (value) {
                 if (value) {
-                  ref.read(driverProvider.notifier).goOnline(10.762622, 106.660172);
+                  ref.read(driverProvider.notifier).goOnlineWithGps();
                 } else {
                   ref.read(driverProvider.notifier).goOffline();
                 }
