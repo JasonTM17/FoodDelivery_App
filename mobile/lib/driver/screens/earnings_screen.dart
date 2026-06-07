@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class EarningsScreen extends ConsumerStatefulWidget {
   const EarningsScreen({super.key});
@@ -42,6 +43,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(driverProvider);
     final earnings = state.earnings;
 
@@ -50,9 +52,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
-        title: const Text(
-          'Thu nhập',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverEarningsTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -61,7 +63,11 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
           labelColor: AppColors.primary,
           unselectedLabelColor: const Color(0xFF6B7280),
           labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          tabs: _periodLabels.map((l) => Tab(text: l)).toList(),
+          tabs: [
+            Tab(text: l10n.driverEarningsPeriodToday),
+            Tab(text: l10n.driverEarningsPeriodWeek),
+            Tab(text: l10n.driverEarningsPeriodMonth),
+          ],
         ),
       ),
       body: state.isLoading
@@ -73,22 +79,17 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // KPI cards
                   if (earnings != null) ...[
-                    _buildKpiCards(earnings),
+                    _buildKpiCards(earnings, l10n),
                     const SizedBox(height: 24),
                   ],
-
-                  // Delivery history header
                   Text(
-                    'Lịch sử giao hàng',
+                    l10n.driverEarningsHistory,
                     style: AppTextStyles.headline4.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 12),
-
-                  // History entries
                   if (earnings == null || earnings.entries.isEmpty)
-                    _buildEmptyState()
+                    _buildEmptyState(l10n)
                   else
                     ...earnings.entries.map((entry) => _buildEarningEntry(entry)),
                 ],
@@ -97,10 +98,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
     );
   }
 
-  Widget _buildKpiCards(DriverEarnings earnings) {
+  Widget _buildKpiCards(DriverEarnings earnings, AppLocalizations l10n) {
     return Column(
       children: [
-        // Total earnings - large card
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -120,12 +120,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
           ),
           child: Column(
             children: [
-              const Text(
-                'Tổng thu nhập',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF6B7280),
-                ),
+              Text(
+                l10n.driverEarningsTotal,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
               ),
               const SizedBox(height: 8),
               Text(
@@ -140,13 +137,11 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
           ),
         ),
         const SizedBox(height: 12),
-
-        // Secondary KPIs
         Row(
           children: [
             Expanded(
               child: _buildMiniKpi(
-                'Số đơn',
+                l10n.totalDeliveries,
                 '${earnings.orderCount}',
                 AppColors.info,
                 Icons.receipt_long_outlined,
@@ -155,7 +150,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
             const SizedBox(width: 12),
             Expanded(
               child: _buildMiniKpi(
-                'Trung bình/đơn',
+                l10n.driverEarningsAverage,
                 '${earnings.averagePerOrder.toStringAsFixed(0)}đ',
                 AppColors.accent,
                 Icons.trending_up,
@@ -274,7 +269,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(40),
@@ -286,20 +281,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
             color: AppColors.textSecondary.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Chưa có dữ liệu thu nhập',
-            style: TextStyle(
-              fontSize: 15,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Các đơn hàng đã giao sẽ xuất hiện ở đây',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF4B5563),
-            ),
+          Text(
+            l10n.driverEarningsEmpty,
+            style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
           ),
         ],
       ),

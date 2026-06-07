@@ -10,6 +10,7 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../providers/restaurant_filter_provider.dart';
 import '../widgets/category_chip.dart';
+import '../../l10n/app_localizations.dart';
 
 const _filterLabels = [
   'Tất cả', 'Gần nhất', 'Phở', 'Cơm', 'Đồ uống', 'Pizza', 'Đang mở',
@@ -47,6 +48,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final filter = ref.watch(restaurantFilterProvider);
     final restaurants = ref.watch(restaurantProvider);
 
@@ -56,7 +58,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: BackButton(color: AppColors.textPrimary),
-        title: const Text('Quanh đây', style: AppTextStyles.headline3),
+        title: Text(l10n.restaurantListTitle, style: AppTextStyles.headline3),
         centerTitle: true,
         actions: [
           IconButton(
@@ -67,11 +69,11 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
       ),
       body: Column(
         children: [
-          _buildViewToggle(filter.viewMode),
+          _buildViewToggle(filter.viewMode, l10n),
           _buildFilterChips(filter.selectedFilter),
           Expanded(
             child: filter.viewMode == RestaurantViewMode.list
-                ? _buildListView(restaurants)
+                ? _buildListView(restaurants, l10n)
                 : _buildMapView(restaurants),
           ),
         ],
@@ -79,7 +81,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     );
   }
 
-  Widget _buildViewToggle(RestaurantViewMode current) {
+  Widget _buildViewToggle(RestaurantViewMode current, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
@@ -89,8 +91,8 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
         ),
         child: Row(
           children: [
-            _pill('Danh sách', RestaurantViewMode.list, current),
-            _pill('Bản đồ', RestaurantViewMode.map, current),
+            _pill(l10n.restaurantViewList, RestaurantViewMode.list, current),
+            _pill(l10n.restaurantViewMap, RestaurantViewMode.map, current),
           ],
         ),
       ),
@@ -144,17 +146,17 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     );
   }
 
-  Widget _buildListView(RestaurantState state) {
+  Widget _buildListView(RestaurantState state, AppLocalizations l10n) {
     if (state.isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
     if (state.nearbyRestaurants.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.store_mall_directory_outlined,
-        title: 'Không có nhà hàng nào',
-        subtitle: 'Thử chọn bộ lọc khác',
+        title: l10n.restaurantNoResults,
+        subtitle: l10n.restaurantNoResultsSubtitle,
       );
     }
     return RefreshIndicator(

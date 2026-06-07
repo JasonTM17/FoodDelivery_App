@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
+import '../../l10n/app_localizations.dart';
 
 class LocationPermissionScreen extends StatefulWidget {
   const LocationPermissionScreen({super.key});
@@ -52,6 +53,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -81,14 +83,14 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Cho phép truy cập vị trí',
+                    Text(
+                      l10n.locationPermissionTitle,
                       style: AppTextStyles.headline2,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'FoodFlow cần vị trí của bạn để tìm nhà hàng gần nhất và giao hàng chính xác hơn.',
+                      l10n.locationPermissionSubtitle,
                       style: AppTextStyles.bodyMedium
                           .copyWith(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
@@ -113,8 +115,8 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text(
-                              'Cho phép',
+                          : Text(
+                              l10n.locationPermissionAllow,
                               style: AppTextStyles.buttonLarge,
                             ),
                     ),
@@ -129,9 +131,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Nhập địa chỉ thủ công',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.locationPermissionManual,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,

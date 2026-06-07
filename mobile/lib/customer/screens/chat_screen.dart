@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/providers/tracking_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 
@@ -92,6 +93,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final trackingState = ref.watch(trackingProvider);
     final orderState = ref.watch(orderProvider);
     final driverName = orderState.currentTrackingOrder?.driverName ?? 'Tài xế';
@@ -114,7 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               children: [
                 Text(driverName, style: const TextStyle(fontSize: 15)),
                 Text(
-                  trackingState.isConnected ? 'Đang hoạt động' : 'Đang kết nối...',
+                  trackingState.isConnected ? l10n.supportDriverOnline : l10n.supportConnecting,
                   style: TextStyle(
                     fontSize: 11,
                     color: trackingState.isConnected ? AppColors.success : AppColors.textHint,
@@ -150,7 +152,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Hỗ trợ bởi AI - Trả lời nhanh các câu hỏi thường gặp',
+                    l10n.supportAiHeader,
                     style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryDark),
                   ),
                 ),
@@ -207,7 +209,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Nhập tin nhắn...',
+                        hintText: l10n.supportMessageHint,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         filled: true,
                         fillColor: AppColors.surface,
@@ -252,13 +254,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildMessagesArea(List<_ChatMessage> messages, TrackingState trackingState) {
     // Loading state when no connection yet and no messages
     if (!trackingState.isConnected && messages.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 12),
-            Text('Đang kết nối...', style: AppTextStyles.bodySmall),
+            const CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 12),
+            Text(AppLocalizations.of(context)!.supportConnecting, style: AppTextStyles.bodySmall),
           ],
         ),
       );
@@ -281,12 +283,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Chưa có tin nhắn nào',
+              AppLocalizations.of(context)!.supportNoMessages,
               style: AppTextStyles.headline4.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 8),
             Text(
-              'Gửi tin nhắn đầu tiên để bắt đầu trò chuyện',
+              AppLocalizations.of(context)!.supportNoMessagesSubtitle,
               style: AppTextStyles.bodySmall,
             ),
           ],

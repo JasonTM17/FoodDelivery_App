@@ -11,6 +11,7 @@ import '../../shared/widgets/food_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../../l10n/app_localizations.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final String restaurantId;

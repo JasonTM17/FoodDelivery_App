@@ -5,6 +5,7 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../providers/driver_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class DeliveryHistoryScreen extends ConsumerStatefulWidget {
   const DeliveryHistoryScreen({super.key});

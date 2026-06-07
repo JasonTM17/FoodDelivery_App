@@ -4,6 +4,7 @@ import '../../shared/models/user.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/address_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class AddressManagementScreen extends ConsumerStatefulWidget {
   const AddressManagementScreen({super.key});
@@ -138,31 +139,32 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final addressState = ref.watch(addressProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Địa chỉ của tôi'),
+        title: Text(l10n.addressManagementTitle),
       ),
-      body: _buildBody(addressState),
+      body: _buildBody(addressState, l10n),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddAddressDialog,
         icon: const Icon(Icons.add),
-        label: const Text('Thêm địa chỉ'),
+        label: Text(l10n.addressAdd),
       ),
     );
   }
 
-  Widget _buildBody(AddressState state) {
+  Widget _buildBody(AddressState state, AppLocalizations l10n) {
     if (state.isLoading && state.addresses.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 12),
-            Text('Đang tải địa chỉ...', style: AppTextStyles.bodySmall),
+            const CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 12),
+            Text(l10n.addressLoading, style: AppTextStyles.bodySmall),
           ],
         ),
       );
@@ -214,13 +216,10 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
               child: const Icon(Icons.location_off, size: 40, color: AppColors.textHint),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Chưa có địa chỉ nào',
-              style: AppTextStyles.headline4,
-            ),
+            Text(l10n.addressEmpty, style: AppTextStyles.headline4),
             const SizedBox(height: 8),
             Text(
-              'Thêm địa chỉ để bắt đầu đặt hàng',
+              l10n.addressEmptySubtitle,
               style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
             ),
           ],
@@ -288,9 +287,9 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                               color: AppColors.primaryLight,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
-                              'Mặc định',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
+                            child: Text(
+                              AppLocalizations.of(context)!.addressDefault,
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
                             ),
                           ),
                         ],

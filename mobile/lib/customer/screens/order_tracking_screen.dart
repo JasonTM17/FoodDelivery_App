@@ -10,6 +10,7 @@ import '../../shared/theme/app_text_styles.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../../shared/widgets/order_status_badge.dart';
+import '../../l10n/app_localizations.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -226,7 +227,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                         ),
                                         Row(
                                           children: [
-                                            _buildActionButton(Icons.phone, 'Gọi', AppColors.primary, () {
+                                            _buildActionButton(Icons.phone, AppLocalizations.of(context)!.trackingCallDriver, AppColors.primary, () {
                                               if (order.driverPhone != null) {
                                                 // launch phone
                                               }
@@ -234,7 +235,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                             const SizedBox(width: 8),
                                             _buildActionButton(
                                               Icons.chat_outlined,
-                                              'Nhắn tin',
+                                              AppLocalizations.of(context)!.trackingMessageDriver,
                                               AppColors.accent,
                                               () => Navigator.of(context).pushNamed(
                                                 '/chat',
@@ -259,7 +260,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                               OrderStatusBadge(status: order.status),
                               const SizedBox(width: 12),
                               Text(
-                                'Đơn hàng đang được giao',
+                                AppLocalizations.of(context)!.trackingOrderInProgress,
                                 style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                               ),
                               const Spacer(),
@@ -279,11 +280,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   Widget _buildStatusTimeline(OrderModel order) {
+    final l10n = AppLocalizations.of(context)!;
     final steps = [
-      {'label': 'Chờ xác nhận', 'status': 'pending', 'icon': Icons.receipt},
-      {'label': 'Đang chuẩn bị', 'status': 'preparing', 'icon': Icons.restaurant},
-      {'label': 'Đang giao', 'status': 'delivering', 'icon': Icons.delivery_dining},
-      {'label': 'Đã giao', 'status': 'delivered', 'icon': Icons.check_circle},
+      {'label': l10n.trackingStepPending, 'status': 'pending', 'icon': Icons.receipt},
+      {'label': l10n.trackingStepPreparing, 'status': 'preparing', 'icon': Icons.restaurant},
+      {'label': l10n.trackingStepDelivering, 'status': 'delivering', 'icon': Icons.delivery_dining},
+      {'label': l10n.trackingStepDelivered, 'status': 'delivered', 'icon': Icons.check_circle},
     ];
 
     final statusOrder = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'];
@@ -294,7 +296,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       children: [
         Row(
           children: [
-            const Text('Trạng thái đơn hàng', style: AppTextStyles.headline4),
+            Text(l10n.trackingOrderStatus, style: AppTextStyles.headline4),
             const Spacer(),
             OrderStatusBadge(status: order.status),
           ],

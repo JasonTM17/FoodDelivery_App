@@ -8,6 +8,7 @@ import '../widgets/delivery_order_item.dart';
 import '../widgets/driver_stat_card.dart';
 import '../widgets/online_toggle.dart';
 import '../widgets/dispatch_offer_dialog.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -89,7 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Today stats
               Text(
-                'Hôm nay',
+                AppLocalizations.of(context)!.driverDashboardToday,
                 style: AppTextStyles.headline4.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 12),
@@ -104,7 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Recent deliveries
               Text(
-                'Đơn gần đây',
+                AppLocalizations.of(context)!.driverDashboardOrders,
                 style: AppTextStyles.headline4.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 12),
@@ -117,6 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildTodayStats(DriverState state) {
+    final l10n = AppLocalizations.of(context)!;
     final stats = state.todayStats;
     return GridView.count(
       crossAxisCount: 2,
@@ -128,25 +130,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: [
         DriverStatCard(
           icon: Icons.monetization_on_outlined,
-          label: 'Thu nhập',
+          label: l10n.driverStatEarnings,
           value: '${stats.earnings.toStringAsFixed(0)}đ',
           color: AppColors.primary,
         ),
         DriverStatCard(
           icon: Icons.receipt_long_outlined,
-          label: 'Số đơn',
+          label: l10n.totalDeliveries,
           value: '${stats.orderCount}',
           color: AppColors.info,
         ),
         DriverStatCard(
           icon: Icons.timer_outlined,
-          label: 'Online',
+          label: l10n.driverStatOnline,
           value: stats.onlineTimeText,
           color: AppColors.accent,
         ),
         DriverStatCard(
           icon: Icons.star_outline,
-          label: 'Đánh giá',
+          label: l10n.statsReviews,
           value: stats.rating.toStringAsFixed(1),
           color: AppColors.warning,
         ),

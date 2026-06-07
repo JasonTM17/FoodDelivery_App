@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../shared/theme/app_colors.dart';
 import '../services/kyc_upload_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class KycVerificationScreen extends ConsumerStatefulWidget {
   const KycVerificationScreen({super.key});

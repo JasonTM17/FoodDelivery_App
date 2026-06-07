@@ -4,6 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../l10n/app_localizations.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -35,6 +36,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Future<void> _submitReview() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSubmitting = true);
 
     try {
@@ -47,8 +49,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đánh giá thành công!'),
+        SnackBar(
+          content: Text(l10n.reviewSuccess),
           backgroundColor: AppColors.success,
         ),
       );
@@ -56,8 +58,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Có lỗi xảy ra. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(l10n.reviewError),
           backgroundColor: AppColors.error,
         ),
       );
@@ -68,13 +70,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final orderState = ref.watch(orderProvider);
     final order = orderState.currentTrackingOrder;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Đánh giá đơn hàng'),
+        title: Text(l10n.reviewTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -135,7 +138,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             const SizedBox(height: 32),
 
             // Food rating
-            const Text('Chất lượng món ăn', style: AppTextStyles.headline4),
+            Text(l10n.reviewFoodQuality, style: AppTextStyles.headline4),
             const SizedBox(height: 12),
             Center(
               child: Column(
@@ -156,7 +159,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _getRatingText(_foodRating),
+                    _getRatingText(_foodRating, l10n),
                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
@@ -166,7 +169,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             const SizedBox(height: 32),
 
             // Delivery rating
-            const Text('Chất lượng giao hàng', style: AppTextStyles.headline4),
+            Text(l10n.reviewDeliveryQuality, style: AppTextStyles.headline4),
             const SizedBox(height: 12),
             Center(
               child: Column(
@@ -187,7 +190,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _getRatingText(_deliveryRating),
+                    _getRatingText(_deliveryRating, l10n),
                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
@@ -197,13 +200,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             const SizedBox(height: 32),
 
             // Comment
-            const Text('Nhận xét của bạn', style: AppTextStyles.headline4),
+            Text(l10n.reviewComment, style: AppTextStyles.headline4),
             const SizedBox(height: 12),
             TextField(
               controller: _commentController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Chia sẻ trải nghiệm của bạn về món ăn và dịch vụ giao hàng...',
+                hintText: l10n.reviewCommentHint,
                 hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -225,7 +228,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         height: 24,
                         child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                       )
-                    : const Text('Gửi đánh giá'),
+                    : Text(l10n.reviewSubmit),
               ),
             ),
 
@@ -236,12 +239,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  String _getRatingText(double rating) {
-    if (rating >= 4.5) return 'Tuyệt vời!';
-    if (rating >= 3.5) return 'Tốt';
-    if (rating >= 2.5) return 'Trung bình';
-    if (rating >= 1.5) return 'Kém';
-    return 'Rất tệ';
+  String _getRatingText(double rating, AppLocalizations l10n) {
+    if (rating >= 4.5) return l10n.reviewRatingExcellent;
+    if (rating >= 3.5) return l10n.reviewRatingGood;
+    if (rating >= 2.5) return l10n.reviewRatingAverage;
+    if (rating >= 1.5) return l10n.reviewRatingPoor;
+    return l10n.reviewRatingBad;
   }
 
   String _formatPrice(double price) {

@@ -9,6 +9,7 @@ import '../../shared/widgets/order_status_badge.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
+import '../../l10n/app_localizations.dart';
 
 class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -38,12 +39,13 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final orderState = ref.watch(orderProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Đơn hàng của tôi'),
+        title: Text(l10n.orderHistoryTitle),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
@@ -52,9 +54,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           tabs: [
-            Tab(text: 'Đang hoạt động (${orderState.activeOrders.length})'),
-            Tab(text: 'Hoàn thành (${orderState.completedOrders.length})'),
-            Tab(text: 'Đã hủy (${orderState.cancelledOrders.length})'),
+            Tab(text: l10n.orderHistoryTabActive(orderState.activeOrders.length)),
+            Tab(text: l10n.orderHistoryTabCompleted(orderState.completedOrders.length)),
+            Tab(text: l10n.orderHistoryTabCancelled(orderState.cancelledOrders.length)),
           ],
         ),
       ),
@@ -65,35 +67,35 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
               : TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildOrderList(orderState.activeOrders, 'active'),
-                    _buildOrderList(orderState.completedOrders, 'completed'),
-                    _buildOrderList(orderState.cancelledOrders, 'cancelled'),
+                    _buildOrderList(orderState.activeOrders, 'active', l10n),
+                    _buildOrderList(orderState.completedOrders, 'completed', l10n),
+                    _buildOrderList(orderState.cancelledOrders, 'cancelled', l10n),
                   ],
                 ),
     );
   }
 
-  Widget _buildOrderList(List<OrderModel> orders, String type) {
+  Widget _buildOrderList(List<OrderModel> orders, String type, AppLocalizations l10n) {
     if (orders.isEmpty) {
       String message;
       IconData icon;
       switch (type) {
         case 'active':
-          message = 'Không có đơn hàng đang hoạt động';
+          message = l10n.orderHistoryNoActive;
           icon = Icons.receipt_long_outlined;
           break;
         case 'completed':
-          message = 'Chưa có đơn hàng hoàn thành';
+          message = l10n.orderHistoryNoCompleted;
           icon = Icons.check_circle_outline;
           break;
         default:
-          message = 'Không có đơn hàng đã hủy';
+          message = l10n.orderHistoryNoCancelled;
           icon = Icons.cancel_outlined;
       }
       return EmptyState(
         icon: icon,
         title: message,
-        subtitle: 'Các đơn hàng sẽ xuất hiện ở đây',
+        subtitle: l10n.orderHistoryEmptySubtitle,
       );
     }
 
@@ -183,7 +185,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                       '/order-tracking',
                       arguments: order.id,
                     ),
-                    child: const Text('Theo dõi', style: TextStyle(fontSize: 12)),
+                    child: Text(AppLocalizations.of(context)!.orderHistoryTrack, style: const TextStyle(fontSize: 12)),
                   )
                 else if (order.status == 'delivered')
                   TextButton(
