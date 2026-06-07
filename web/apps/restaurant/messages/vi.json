@@ -18,6 +18,7 @@
   },
   "orders": {
     "title": "Đơn hàng",
+    "description": "Quản lý và xử lý đơn hàng đến",
     "newOrder": "Đơn mới",
     "accept": "Nhận đơn",
     "reject": "Từ chối",
@@ -26,8 +27,13 @@
     "noOrders": "Không có đơn hàng",
     "queueEmpty": "Hàng chờ trống"
   },
+  "orderDetail": {
+    "title": "Chi tiết đơn hàng",
+    "description": "Thông tin chi tiết đơn hàng"
+  },
   "menu": {
     "title": "Thực đơn",
+    "description": "Quản lý món ăn và danh mục",
     "addItem": "Thêm món",
     "editItem": "Sửa món",
     "deleteItem": "Xóa món",
@@ -37,8 +43,13 @@
     "available": "Có sẵn",
     "unavailable": "Hết hàng"
   },
+  "menuNew": {
+    "title": "Thêm món mới",
+    "description": "Thêm món ăn mới vào thực đơn"
+  },
   "revenue": {
     "title": "Doanh thu",
+    "description": "Thống kê doanh thu nhà hàng",
     "today": "Hôm nay",
     "week": "Tuần này",
     "month": "Tháng này",
@@ -46,10 +57,27 @@
     "totalRevenue": "Tổng doanh thu",
     "avgOrderValue": "Giá trị đơn TB"
   },
+  "reviews": {
+    "title": "Đánh giá khách hàng",
+    "description": "Xem và phản hồi đánh giá từ khách hàng"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "description": "Xem thông báo từ hệ thống"
+  },
   "settings": {
     "title": "Cài đặt",
+    "description": "Cấu hình nhà hàng của bạn",
     "profile": "Hồ sơ nhà hàng",
     "hours": "Giờ mở cửa",
     "general": "Cài đặt chung"
+  },
+  "settingsProfile": {
+    "title": "Hồ sơ nhà hàng",
+    "description": "Cập nhật thông tin hồ sơ nhà hàng"
+  },
+  "settingsHours": {
+    "title": "Giờ mở cửa",
+    "description": "Cấu hình giờ hoạt động của nhà hàng"
   }
 }

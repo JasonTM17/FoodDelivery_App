@@ -18,6 +18,7 @@
   },
   "orders": {
     "title": "Orders",
+    "description": "Manage and process incoming orders",
     "newOrder": "New Order",
     "accept": "Accept",
     "reject": "Reject",
@@ -26,8 +27,13 @@
     "noOrders": "No orders",
     "queueEmpty": "Queue is empty"
   },
+  "orderDetail": {
+    "title": "Order Detail",
+    "description": "Detailed order information"
+  },
   "menu": {
     "title": "Menu",
+    "description": "Manage menu items and categories",
     "addItem": "Add Item",
     "editItem": "Edit Item",
     "deleteItem": "Delete Item",
@@ -37,8 +43,13 @@
     "available": "Available",
     "unavailable": "Out of stock"
   },
+  "menuNew": {
+    "title": "Add New Item",
+    "description": "Add a new item to your menu"
+  },
   "revenue": {
     "title": "Revenue",
+    "description": "Restaurant revenue statistics",
     "today": "Today",
     "week": "This week",
     "month": "This month",
@@ -46,10 +57,27 @@
     "totalRevenue": "Total revenue",
     "avgOrderValue": "Avg order value"
   },
+  "reviews": {
+    "title": "Customer Reviews",
+    "description": "View and respond to customer reviews"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "View system notifications"
+  },
   "settings": {
     "title": "Settings",
+    "description": "Configure your restaurant",
     "profile": "Restaurant profile",
     "hours": "Opening hours",
     "general": "General settings"
+  },
+  "settingsProfile": {
+    "title": "Restaurant Profile",
+    "description": "Update your restaurant profile information"
+  },
+  "settingsHours": {
+    "title": "Opening Hours",
+    "description": "Configure your restaurant operating hours"
   }
 }

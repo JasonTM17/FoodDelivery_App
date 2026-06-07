@@ -35,6 +35,7 @@
   },
   "overview": {
     "title": "Tổng quan",
+    "description": "Tổng quan hoạt động của hệ thống FoodFlow",
     "todayOrders": "Đơn hàng hôm nay",
     "todayRevenue": "Doanh thu hôm nay",
     "totalOrders": "Tổng đơn hàng",
@@ -43,6 +44,7 @@
   },
   "orders": {
     "title": "Quản lý đơn hàng",
+    "description": "Xem và quản lý tất cả đơn hàng trong hệ thống",
     "orderCode": "Mã đơn",
     "customer": "Khách hàng",
     "restaurant": "Nhà hàng",
@@ -50,5 +52,58 @@
     "noDriver": "Chưa gán",
     "filterAll": "Tất cả trạng thái",
     "searchPlaceholder": "Tìm theo mã, khách hàng, nhà hàng..."
+  },
+  "orderDetail": {
+    "title": "Chi tiết đơn hàng",
+    "description": "Thông tin chi tiết đơn hàng"
+  },
+  "restaurants": {
+    "title": "Quản lý nhà hàng",
+    "description": "Danh sách nhà hàng đối tác"
+  },
+  "restaurantDetail": {
+    "title": "Chi tiết nhà hàng",
+    "description": "Thông tin chi tiết nhà hàng"
+  },
+  "users": {
+    "title": "Quản lý người dùng",
+    "description": "Danh sách người dùng trong hệ thống"
+  },
+  "drivers": {
+    "title": "Quản lý tài xế",
+    "description": "Danh sách tài xế trong hệ thống",
+    "viewMap": "Xem bản đồ"
+  },
+  "driversMap": {
+    "title": "Bản đồ tài xế",
+    "description": "Theo dõi vị trí tài xế theo thời gian thực"
+  },
+  "promotions": {
+    "title": "Khuyến mãi",
+    "description": "Quản lý mã khuyến mãi và ưu đãi",
+    "create": "Tạo khuyến mãi"
+  },
+  "logs": {
+    "title": "Audit Logs",
+    "description": "Lịch sử hoạt động của admin",
+    "exportCsv": "Xuất CSV"
+  },
+  "settings": {
+    "title": "Cài đặt hệ thống",
+    "description": "Cấu hình nền tảng FoodFlow",
+    "save": "Lưu cài đặt",
+    "saving": "Đang lưu..."
+  },
+  "support": {
+    "title": "Hỗ trợ",
+    "description": "Quản lý yêu cầu hỗ trợ từ khách hàng"
+  },
+  "aiMonitor": {
+    "title": "AI & N8N Monitor",
+    "description": "Giám sát workflow tự động và trợ lý AI của nền tảng FoodFlow"
+  },
+  "analytics": {
+    "title": "Phân tích",
+    "description": "Hiệu quả kinh doanh và hành vi khách hàng"
   }
 }

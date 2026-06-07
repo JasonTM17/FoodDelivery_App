@@ -35,6 +35,7 @@
   },
   "overview": {
     "title": "概要",
+    "description": "FoodFlowシステムの活動概要",
     "todayOrders": "本日の注文",
     "todayRevenue": "本日の売上",
     "totalOrders": "総注文数",
@@ -43,6 +44,7 @@
   },
   "orders": {
     "title": "注文管理",
+    "description": "システム内のすべての注文を表示・管理",
     "orderCode": "注文コード",
     "customer": "顧客",
     "restaurant": "レストラン",
@@ -50,5 +52,58 @@
     "noDriver": "未割当",
     "filterAll": "すべてのステータス",
     "searchPlaceholder": "コード、顧客、レストランで検索..."
+  },
+  "orderDetail": {
+    "title": "注文詳細",
+    "description": "注文の詳細情報"
+  },
+  "restaurants": {
+    "title": "レストラン管理",
+    "description": "パートナーレストランの一覧"
+  },
+  "restaurantDetail": {
+    "title": "レストラン詳細",
+    "description": "レストランの詳細情報"
+  },
+  "users": {
+    "title": "ユーザー管理",
+    "description": "システム内のユーザー一覧"
+  },
+  "drivers": {
+    "title": "ドライバー管理",
+    "description": "システム内のドライバー一覧",
+    "viewMap": "地図を表示"
+  },
+  "driversMap": {
+    "title": "ドライバーマップ",
+    "description": "ドライバーの位置をリアルタイムで追跡"
+  },
+  "promotions": {
+    "title": "プロモーション",
+    "description": "プロモコードと割引の管理",
+    "create": "プロモーション作成"
+  },
+  "logs": {
+    "title": "監査ログ",
+    "description": "管理者の活動履歴",
+    "exportCsv": "CSVエクスポート"
+  },
+  "settings": {
+    "title": "システム設定",
+    "description": "FoodFlowプラットフォームの設定",
+    "save": "設定を保存",
+    "saving": "保存中..."
+  },
+  "support": {
+    "title": "サポート",
+    "description": "顧客サポートリクエストの管理"
+  },
+  "aiMonitor": {
+    "title": "AI & N8N モニター",
+    "description": "FoodFlowの自動ワークフローとAIアシスタントの監視"
+  },
+  "analytics": {
+    "title": "分析",
+    "description": "ビジネスパフォーマンスと顧客行動"
   }
 }

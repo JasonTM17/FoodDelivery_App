@@ -18,6 +18,7 @@
   },
   "orders": {
     "title": "注文",
+    "description": "入ってきた注文を管理・処理する",
     "newOrder": "新規注文",
     "accept": "承認",
     "reject": "拒否",
@@ -26,8 +27,13 @@
     "noOrders": "注文なし",
     "queueEmpty": "キューが空です"
   },
+  "orderDetail": {
+    "title": "注文詳細",
+    "description": "注文の詳細情報"
+  },
   "menu": {
     "title": "メニュー",
+    "description": "メニューアイテムとカテゴリを管理",
     "addItem": "アイテムを追加",
     "editItem": "アイテムを編集",
     "deleteItem": "アイテムを削除",
@@ -37,8 +43,13 @@
     "available": "在庫あり",
     "unavailable": "品切れ"
   },
+  "menuNew": {
+    "title": "新しいアイテムを追加",
+    "description": "メニューに新しいアイテムを追加する"
+  },
   "revenue": {
     "title": "売上",
+    "description": "レストランの売上統計",
     "today": "今日",
     "week": "今週",
     "month": "今月",
@@ -46,10 +57,27 @@
     "totalRevenue": "総売上",
     "avgOrderValue": "平均注文額"
   },
+  "reviews": {
+    "title": "顧客レビュー",
+    "description": "顧客レビューを表示・返信する"
+  },
+  "notifications": {
+    "title": "通知",
+    "description": "システム通知を表示"
+  },
   "settings": {
     "title": "設定",
+    "description": "レストランを設定する",
     "profile": "レストランプロフィール",
     "hours": "営業時間",
     "general": "一般設定"
+  },
+  "settingsProfile": {
+    "title": "レストランプロフィール",
+    "description": "レストランプロフィール情報を更新"
+  },
+  "settingsHours": {
+    "title": "営業時間",
+    "description": "レストランの営業時間を設定"
   }
 }

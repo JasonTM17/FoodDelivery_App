@@ -1,10 +1,5 @@
 import createMiddleware from 'next-intl/middleware';
 
-/**
- * Locale-routing middleware for the restaurant app.
- * Matcher covers: root, /login, and any explicitly locale-prefixed path.
- * Non-migrated routes are excluded so they work without redirection.
- */
 export default createMiddleware({
   locales: ['vi', 'en', 'ja'],
   defaultLocale: 'vi',
@@ -14,7 +9,16 @@ export default createMiddleware({
 export const config = {
   matcher: [
     '/',
-    '/login',
     '/(vi|en|ja)/:path*',
+    '/login',
+    '/orders',
+    '/orders/:path*',
+    '/menu',
+    '/menu/:path*',
+    '/revenue',
+    '/reviews',
+    '/notifications',
+    '/settings',
+    '/settings/:path*',
   ],
 };

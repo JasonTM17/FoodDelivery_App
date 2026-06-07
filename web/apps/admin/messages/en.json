@@ -35,6 +35,7 @@
   },
   "overview": {
     "title": "Overview",
+    "description": "System activity overview for FoodFlow",
     "todayOrders": "Today's Orders",
     "todayRevenue": "Today's Revenue",
     "totalOrders": "Total Orders",
@@ -43,6 +44,7 @@
   },
   "orders": {
     "title": "Order Management",
+    "description": "View and manage all orders in the system",
     "orderCode": "Order Code",
     "customer": "Customer",
     "restaurant": "Restaurant",
@@ -50,5 +52,58 @@
     "noDriver": "Unassigned",
     "filterAll": "All statuses",
     "searchPlaceholder": "Search by code, customer, restaurant..."
+  },
+  "orderDetail": {
+    "title": "Order Detail",
+    "description": "Detailed order information"
+  },
+  "restaurants": {
+    "title": "Restaurant Management",
+    "description": "List of partner restaurants"
+  },
+  "restaurantDetail": {
+    "title": "Restaurant Detail",
+    "description": "Detailed restaurant information"
+  },
+  "users": {
+    "title": "User Management",
+    "description": "List of users in the system"
+  },
+  "drivers": {
+    "title": "Driver Management",
+    "description": "List of drivers in the system",
+    "viewMap": "View map"
+  },
+  "driversMap": {
+    "title": "Driver Map",
+    "description": "Track driver locations in real time"
+  },
+  "promotions": {
+    "title": "Promotions",
+    "description": "Manage promo codes and discounts",
+    "create": "Create promotion"
+  },
+  "logs": {
+    "title": "Audit Logs",
+    "description": "Admin activity history",
+    "exportCsv": "Export CSV"
+  },
+  "settings": {
+    "title": "System Settings",
+    "description": "Configure the FoodFlow platform",
+    "save": "Save settings",
+    "saving": "Saving..."
+  },
+  "support": {
+    "title": "Support",
+    "description": "Manage customer support requests"
+  },
+  "aiMonitor": {
+    "title": "AI & N8N Monitor",
+    "description": "Monitor automated workflows and AI assistant on FoodFlow"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "description": "Business performance and customer behaviour"
   }
 }
