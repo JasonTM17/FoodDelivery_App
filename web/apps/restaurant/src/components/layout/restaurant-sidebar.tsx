@@ -11,6 +11,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
+  Star,
+  Bell,
+  UserCircle,
+  Clock,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -20,7 +24,14 @@ const NAV_ITEMS = [
   { href: '/orders', label: 'Đơn hàng', icon: ShoppingBag },
   { href: '/menu', label: 'Thực đơn', icon: UtensilsCrossed },
   { href: '/revenue', label: 'Doanh thu', icon: BarChart3 },
-  { href: '/settings', label: 'Cài đặt', icon: Settings },
+  { href: '/reviews', label: 'Đánh giá', icon: Star },
+  { href: '/notifications', label: 'Thông báo', icon: Bell },
+];
+
+const SETTINGS_ITEMS = [
+  { href: '/settings', label: 'Chung', icon: Settings, exact: true },
+  { href: '/settings/profile', label: 'Hồ sơ', icon: UserCircle, exact: false },
+  { href: '/settings/hours', label: 'Giờ mở cửa', icon: Clock, exact: false },
 ];
 
 export function RestaurantSidebar() {
@@ -28,6 +39,8 @@ export function RestaurantSidebar() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const restaurant = getStoredRestaurant();
+
+  const isSettingsActive = pathname.startsWith('/settings');
 
   const handleLogout = () => {
     clearToken();
@@ -80,6 +93,47 @@ export function RestaurantSidebar() {
             </Link>
           );
         })}
+
+        {/* Settings sub-navigation */}
+        <div className="pt-2 mt-1 border-t border-sidebar-hover">
+          {collapsed ? (
+            <Link
+              href="/settings"
+              className={cn(
+                'flex items-center justify-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors',
+                isSettingsActive
+                  ? 'bg-sidebar-active text-white'
+                  : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
+              )}
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+          ) : (
+            <>
+              <p className="px-3 pb-1 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
+                Cài đặt
+              </p>
+              {SETTINGS_ITEMS.map((item) => {
+                const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-sidebar-active text-white'
+                        : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
+        </div>
       </nav>
 
       <div className="border-t border-sidebar-hover p-3">
