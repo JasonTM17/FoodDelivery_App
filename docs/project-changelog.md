@@ -14,6 +14,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `/[locale]/promotions` list page on restaurant app with i18n keys × 3 locales
 - `/[locale]/promotions/[id]` read-only detail page (clickable rows from list)
 - `/[locale]/promotions/[id]/edit` edit page (active/description/endDate fields)
+- Backend `LoyaltyModule` — `GET /users/loyalty` returns points + tier + transactions
+- Backend `WalletModule` — `GET /users/wallet` returns balance + transactions
+- Backend `ReferralModule` — `GET /users/referral` returns code + invitees + rewards
+- Backend `DriverIncentivesController` — `GET /driver/incentives` (stub data)
+- Admin endpoints `GET /admin/dispatch/heatmap` + `GET /admin/restaurants/:id/kpi` (stub data)
+- Prisma `LoyaltyTransaction` model + `LoyaltyTxnType` enum
+- Admin overview heatmap widget consuming `/admin/dispatch/heatmap` (auto-refresh 30s)
+- Admin restaurant detail KPI card consuming `/admin/restaurants/:id/kpi` (7-day stats)
 
 ### Changed
 - `@foodflow/ui` package: added `next` as peer + dev dependency for breadcrumb component (fixes admin typecheck)
