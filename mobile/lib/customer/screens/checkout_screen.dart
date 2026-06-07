@@ -6,6 +6,7 @@ import '../../shared/models/user.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/address_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -38,9 +39,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn địa chỉ giao hàng')),
+        SnackBar(content: Text(l10n.checkoutSelectAddress)),
       );
       return;
     }
@@ -69,21 +71,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     } else {
       final error = ref.read(orderProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Đặt hàng thất bại')),
+        SnackBar(content: Text(error ?? l10n.checkoutOrderFailed)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cartState = ref.watch(cartProvider);
     final orderState = ref.watch(orderProvider);
     final cart = cartState.currentCart;
 
     if (cart == null || cart.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Thanh toán')),
-        body: const Center(child: Text('Giỏ hàng trống')),
+        appBar: AppBar(title: Text(l10n.checkoutTitle)),
+        body: Center(child: Text(l10n.cartEmpty)),
       );
     }
 
@@ -100,14 +103,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Thanh toán')),
+      appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Delivery address
-            const Text('Địa chỉ giao hàng', style: AppTextStyles.headline4),
+            Text(l10n.checkoutDeliveryAddress, style: AppTextStyles.headline4),
             const SizedBox(height: 8),
             if (addressState.isLoading && addresses.isEmpty)
               const Padding(
@@ -126,10 +129,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   children: [
                     const Icon(Icons.location_off, color: AppColors.textHint, size: 32),
                     const SizedBox(height: 8),
-                    const Text('Chưa có địa chỉ nào', style: AppTextStyles.bodyMedium),
+                    Text(l10n.checkoutNoAddress, style: AppTextStyles.bodyMedium),
                     const SizedBox(height: 4),
                     Text(
-                      'Thêm địa chỉ để tiếp tục đặt hàng',
+                      l10n.checkoutNoAddressSubtitle,
                       style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
@@ -182,9 +185,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                     color: AppColors.primaryLight,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: const Text(
-                                    'Mặc định',
-                                    style: TextStyle(fontSize: 10, color: AppColors.primaryDark),
+                                  child: Text(
+                                    l10n.addressDefault,
+                                    style: const TextStyle(fontSize: 10, color: AppColors.primaryDark),
                                   ),
                                 ),
                               ],
@@ -213,7 +216,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             TextButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/addresses'),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Thêm địa chỉ mới'),
+              label: Text(l10n.checkoutAddAddress),
             ),
 
             const SizedBox(height: 20),
@@ -221,18 +224,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 20),
 
             // Payment method
-            const Text('Phương thức thanh toán', style: AppTextStyles.headline4),
+            Text(l10n.checkoutPaymentMethod, style: AppTextStyles.headline4),
             const SizedBox(height: 8),
             _buildPaymentOption(
               icon: Icons.money,
-              title: 'Tiền mặt',
-              subtitle: 'Thanh toán khi nhận hàng',
+              title: l10n.checkoutPaymentCash,
+              subtitle: l10n.checkoutPaymentCashSubtitle,
               value: 'cash',
             ),
             const SizedBox(height: 8),
             _buildPaymentOption(
               icon: Icons.wallet,
-              title: 'Ví điện tử',
+              title: l10n.checkoutPaymentWallet,
               subtitle: 'FoodFlow Wallet',
               value: 'wallet',
             ),
@@ -242,13 +245,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 20),
 
             // Note for driver
-            const Text('Ghi chú cho tài xế', style: AppTextStyles.headline4),
+            Text(l10n.checkoutNoteForDriver, style: AppTextStyles.headline4),
             const SizedBox(height: 8),
             TextField(
               controller: _noteController,
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: 'Thêm ghi chú...',
+                hintText: l10n.checkoutNoteHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -260,7 +263,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 20),
 
             // Order summary
-            const Text('Tóm tắt đơn hàng', style: AppTextStyles.headline4),
+            Text(l10n.checkoutOrderSummary, style: AppTextStyles.headline4),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
@@ -287,15 +290,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     ),
                   )),
                   const Divider(),
-                  _buildSummaryRow('Tạm tính', _formatPrice(cartState.subtotal)),
+                  _buildSummaryRow(l10n.cartSubtotal, _formatPrice(cartState.subtotal)),
                   const SizedBox(height: 6),
-                  _buildSummaryRow('Phí giao hàng', cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : 'Miễn phí'),
+                  _buildSummaryRow(l10n.cartDeliveryFee, cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : l10n.cartFreeDelivery),
                   if (cartState.discount > 0) ...[
                     const SizedBox(height: 6),
-                    _buildSummaryRow('Giảm giá', '-${_formatPrice(cartState.discount)}', valueColor: AppColors.success),
+                    _buildSummaryRow(l10n.cartDiscountLabel, '-${_formatPrice(cartState.discount)}', valueColor: AppColors.success),
                   ],
                   const SizedBox(height: 6),
-                  _buildSummaryRow('Tổng cộng', _formatPrice(cartState.total), isTotal: true),
+                  _buildSummaryRow(l10n.cartGrandTotal, _formatPrice(cartState.total), isTotal: true),
                 ],
               ),
             ),

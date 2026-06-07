@@ -7,6 +7,7 @@ import '../../shared/models/cart.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../../l10n/app_localizations.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -36,15 +37,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cartState = ref.watch(cartProvider);
 
     if (cartState.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Giỏ hàng')),
-        body: const EmptyState(
+        appBar: AppBar(title: Text(l10n.cartTitle)),
+        body: EmptyState(
           icon: Icons.shopping_cart_outlined,
-          title: 'Giỏ hàng trống',
-          subtitle: 'Hãy thêm món ăn vào giỏ hàng',
+          title: l10n.cartEmpty,
+          subtitle: l10n.cartEmptySubtitle,
         ),
       );
     }
@@ -54,32 +56,32 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Giỏ hàng'),
+        title: Text(l10n.cartTitle),
         actions: [
           TextButton(
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Xóa giỏ hàng?'),
-                  content: const Text('Bạn có chắc muốn xóa tất cả món trong giỏ hàng?'),
+                  title: Text(l10n.cartClearTitle),
+                  content: Text(l10n.cartClearContent),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Giữ lại'),
+                      child: Text(l10n.cartKeep),
                     ),
                     TextButton(
                       onPressed: () {
                         ref.read(cartProvider.notifier).clearCart();
                         Navigator.of(context).pop();
                       },
-                      child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+                      child: Text(l10n.cartDelete, style: const TextStyle(color: AppColors.error)),
                     ),
                   ],
                 ),
               );
             },
-            child: const Text('Xóa tất cả', style: TextStyle(color: AppColors.error, fontSize: 13)),
+            child: Text(l10n.cartClearAll, style: const TextStyle(color: AppColors.error, fontSize: 13)),
           ),
         ],
       ),
@@ -160,7 +162,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Mã khuyến mãi', style: AppTextStyles.bodyMedium),
+                      Text(l10n.cartPromoCode, style: AppTextStyles.bodyMedium),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -168,7 +170,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             child: TextField(
                               controller: _promoController,
                               decoration: InputDecoration(
-                                hintText: 'Nhập mã giảm giá',
+                                hintText: l10n.cartPromoHint,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -184,7 +186,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 _promoController.clear();
                                 ref.read(cartProvider.notifier).removePromo();
                               },
-                              child: const Text('Bỏ', style: TextStyle(color: AppColors.error)),
+                              child: Text(l10n.cartPromoRemove, style: const TextStyle(color: AppColors.error)),
                             )
                           else
                             ElevatedButton(
@@ -198,7 +200,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                       height: 16,
                                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                     )
-                                  : const Text('Áp dụng', style: TextStyle(fontSize: 13)),
+                                  : Text(l10n.cartPromoApply, style: const TextStyle(fontSize: 13)),
                             ),
                         ],
                       ),
@@ -211,7 +213,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Đã áp dụng mã ${cartState.promoCode}',
+                            l10n.cartPromoApplied(cartState.promoCode!),
                             style: const TextStyle(
                               color: AppColors.success,
                               fontSize: 12,
@@ -245,13 +247,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildPriceRow('Tạm tính', _formatPrice(cartState.subtotal)),
+                      _buildPriceRow(l10n.cartSubtotal, _formatPrice(cartState.subtotal)),
                       const SizedBox(height: 8),
-                      _buildPriceRow('Phí giao hàng', cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : 'Miễn phí'),
+                      _buildPriceRow(l10n.cartDeliveryFee, cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : l10n.cartFreeDelivery),
                       if (cartState.discount > 0) ...[
                         const SizedBox(height: 8),
                         _buildPriceRow(
-                          'Giảm giá',
+                          l10n.cartDiscountLabel,
                           '-${_formatPrice(cartState.discount)}',
                           valueColor: AppColors.success,
                         ),
@@ -261,7 +263,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         child: Divider(),
                       ),
                       _buildPriceRow(
-                        'Tổng cộng',
+                        l10n.cartGrandTotal,
                         _formatPrice(cartState.total),
                         isTotal: true,
                       ),

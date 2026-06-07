@@ -6,6 +6,7 @@ import '../../shared/models/menu_item.dart';
 import '../../shared/models/cart.dart' show SelectedOption;
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../l10n/app_localizations.dart';
 
 class FoodDetailScreen extends ConsumerStatefulWidget {
   final MenuItemModel item;
@@ -52,13 +53,14 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
   }
 
   void _handleAddToCart() {
+    final l10n = AppLocalizations.of(context)!;
     // Validate required options
     for (final group in widget.item.optionGroups) {
       if (group.required) {
         final selected = _selectedOptions[group.name] ?? [];
         if (selected.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Vui lòng chọn ${group.name}')),
+            SnackBar(content: Text('${l10n.foodRequired} ${group.name}')),
           );
           return;
         }
@@ -95,9 +97,9 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã thêm ${widget.item.name} (x$_quantity) vào giỏ hàng'),
+        content: Text('${widget.item.name} (x$_quantity)'),
         action: SnackBarAction(
-          label: 'Xem giỏ',
+          label: AppLocalizations.of(context)!.cartViewCart,
           textColor: Colors.white,
           onPressed: () => Navigator.of(context).pushNamed('/cart'),
         ),
@@ -108,6 +110,7 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final item = widget.item;
 
     return Scaffold(
@@ -205,9 +208,9 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
                             color: AppColors.accent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Phổ biến',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.accent),
+                          child: Text(
+                            l10n.foodPopular,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.accent),
                           ),
                         ),
                       ],
@@ -230,16 +233,13 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
                   // Special Instructions
                   const SizedBox(height: 20),
-                  const Text(
-                    'Ghi chú đặc biệt',
-                    style: AppTextStyles.bodyMedium,
-                  ),
+                  Text(l10n.foodSpecialNote, style: AppTextStyles.bodyMedium),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _instructionsController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: 'Ví dụ: Không hành, ít cay...',
+                      hintText: l10n.foodNoteHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -300,7 +300,7 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: _handleAddToCart,
-                    child: Text('Thêm vào giỏ · ${_formatPrice(_totalPrice)}'),
+                    child: Text(l10n.foodAddToCart + ' · ${_formatPrice(_totalPrice)}'),
                   ),
                 ),
               ),
@@ -336,11 +336,11 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
                 style: AppTextStyles.headline4,
               ),
               if (group.required)
-                const Padding(
-                  padding: EdgeInsets.only(left: 4),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
                   child: Text(
-                    '(Bắt buộc)',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error),
+                    AppLocalizations.of(context)!.foodRequired,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error),
                   ),
                 ),
             ],
