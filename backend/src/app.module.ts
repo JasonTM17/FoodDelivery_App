@@ -16,6 +16,10 @@ import { TrackingModule } from './tracking/tracking.module'
 import { DriversModule } from './drivers/drivers.module'
 import { AdminModule } from './admin/admin.module'
 import { NotificationsModule } from './notifications/notifications.module'
+import { ReviewsModule } from './reviews/reviews.module'
+import { PaymentsModule } from './payments/payments.module'
+import { WebhooksModule } from './webhooks/webhooks.module'
+import { PromotionsModule } from './promotions/promotions.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
@@ -53,6 +57,10 @@ import Redis from 'ioredis'
     DriversModule,
     AdminModule,
     NotificationsModule,
+    ReviewsModule,
+    PaymentsModule,
+    WebhooksModule,
+    PromotionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
