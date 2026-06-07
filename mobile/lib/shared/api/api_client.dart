@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -6,6 +7,8 @@ class ApiClient {
   static const String _defaultBaseUrl = 'http://10.0.2.2:3001/api';
 
   static ApiClient? _instance;
+  static final _logoutController = StreamController<void>.broadcast();
+  static Stream<void> get onLogout => _logoutController.stream;
   late final Dio dio;
   final FlutterSecureStorage _storage;
 
@@ -13,9 +16,9 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
         baseUrl: _defaultBaseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -24,7 +27,7 @@ class ApiClient {
     );
 
     dio.interceptors.addAll([
-      _AuthInterceptor(_storage),
+      _AuthInterceptor(_storage, dio),
       _LogInterceptor(),
       _ResponseInterceptor(),
     ]);
@@ -42,6 +45,12 @@ class ApiClient {
   static void setBaseUrl(String url) {
     _instance?.dio.options.baseUrl = url;
     _instance?._storage.write(key: _baseUrlKey, value: url);
+  }
+
+  static String generateIdempotencyKey() {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final rand = Object().hashCode ^ ts;
+    return '${ts.toRadixString(16)}-${rand.abs().toRadixString(16)}';
   }
 
   // Convenience methods
@@ -114,8 +123,10 @@ class ApiClient {
 
 class _AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
+  final Dio _dio;
+  bool _isRefreshing = false;
 
-  _AuthInterceptor(this._storage);
+  _AuthInterceptor(this._storage, this._dio);
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -128,35 +139,46 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
+    final is401 = err.response?.statusCode == 401;
+    final alreadyRetried = err.requestOptions.extra['_retried'] == true;
+
+    if (is401 && !alreadyRetried && !_isRefreshing) {
       final refreshToken = await _storage.read(key: 'refresh_token');
       if (refreshToken != null && refreshToken.isNotEmpty) {
+        _isRefreshing = true;
         try {
-          final dio = Dio(BaseOptions(
+          final refreshDio = Dio(BaseOptions(
             baseUrl: err.requestOptions.baseUrl,
             headers: {'Content-Type': 'application/json'},
           ));
-          final response = await dio.post('/auth/refresh', data: {
+          final res = await refreshDio.post('/auth/refresh', data: {
             'refreshToken': refreshToken,
           });
-          if (response.statusCode == 200) {
-            final newToken = response.data['accessToken'] as String?;
-            final newRefreshToken = response.data['refreshToken'] as String?;
+          if (res.statusCode == 200) {
+            final body = res.data;
+            final payload = (body is Map<String, dynamic> && body.containsKey('data'))
+                ? (body['data'] as Map<String, dynamic>? ?? body)
+                : body as Map<String, dynamic>;
+            final newToken = payload['accessToken'] as String?;
+            final newRefresh = payload['refreshToken'] as String?;
             if (newToken != null) {
               await _storage.write(key: 'auth_token', value: newToken);
-              if (newRefreshToken != null) {
-                await _storage.write(key: 'refresh_token', value: newRefreshToken);
+              if (newRefresh != null) {
+                await _storage.write(key: 'refresh_token', value: newRefresh);
               }
               err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-              final retryResponse = await Dio().fetch(err.requestOptions);
+              err.requestOptions.extra['_retried'] = true;
+              final retryResponse = await _dio.fetch(err.requestOptions);
               handler.resolve(retryResponse);
               return;
             }
           }
         } catch (_) {
-          // Refresh failed — clear tokens
           await _storage.delete(key: 'auth_token');
           await _storage.delete(key: 'refresh_token');
+          ApiClient._logoutController.add(null);
+        } finally {
+          _isRefreshing = false;
         }
       }
     }
@@ -178,8 +200,9 @@ class _LogInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    final requestId = response.headers.value('x-request-id') ?? '-';
     // ignore: avoid_print
-    print('[HTTP] <-- ${response.statusCode} ${response.requestOptions.path}');
+    print('[HTTP] <-- ${response.statusCode} ${response.requestOptions.path} [rid=$requestId]');
     handler.next(response);
   }
 
