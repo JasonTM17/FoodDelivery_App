@@ -260,4 +260,33 @@ export class AdminService {
       maxDiscount: promo.maxDiscount !== null ? Number(promo.maxDiscount) : null,
     }
   }
+
+  // ─── Stub: Dispatch heatmap ───
+
+  getDispatchHeatmap(_since: string) {
+    return [
+      { districtCode: 'Q1',  lat: 10.7769, lng: 106.7009, orderCount: 42 },
+      { districtCode: 'Q3',  lat: 10.7797, lng: 106.6882, orderCount: 35 },
+      { districtCode: 'Q5',  lat: 10.7540, lng: 106.6625, orderCount: 28 },
+      { districtCode: 'Q7',  lat: 10.7334, lng: 106.7215, orderCount: 19 },
+      { districtCode: 'Q10', lat: 10.7739, lng: 106.6681, orderCount: 53 },
+      { districtCode: 'BThanh', lat: 10.8015, lng: 106.7091, orderCount: 31 },
+      { districtCode: 'PNhuan', lat: 10.7989, lng: 106.6789, orderCount: 22 },
+    ]
+  }
+
+  // ─── Stub: Restaurant KPI ───
+
+  getRestaurantKpi(_restaurantId: string, period: string) {
+    const days = period === '30d' ? 30 : period === '14d' ? 14 : 7
+    const ratingTrend = Array.from({ length: days }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i))
+      return { date: d.toISOString().slice(0, 10), rating: +(4.0 + Math.random() * 1).toFixed(1) }
+    })
+    const revenueByDay = Array.from({ length: days }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i))
+      return { date: d.toISOString().slice(0, 10), revenue: Math.round(500000 + Math.random() * 2000000) }
+    })
+    return { avgPrepTimeMin: 18, fulfillmentRate: 0.94, ratingTrend, revenueByDay }
+  }
 }

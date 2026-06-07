@@ -18,9 +18,11 @@ import { AdminModule } from './admin/admin.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { ReviewsModule } from './reviews/reviews.module'
 import { LoyaltyModule } from './loyalty/loyalty.module'
+import { WalletModule } from './wallet/wallet.module'
 import { PaymentsModule } from './payments/payments.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { PromotionsModule } from './promotions/promotions.module'
+import { ReferralModule } from './referral/referral.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { I18nSetupModule } from './i18n/i18n.module'
@@ -62,9 +64,11 @@ import Redis from 'ioredis'
     NotificationsModule,
     ReviewsModule,
     LoyaltyModule,
+    WalletModule,
     PaymentsModule,
     WebhooksModule,
     PromotionsModule,
+    ReferralModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

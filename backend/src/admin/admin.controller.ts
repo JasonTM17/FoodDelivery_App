@@ -100,4 +100,14 @@ export class AdminController {
   async togglePromotionActive(@Param('id') id: string) {
     return this.adminService.togglePromotionActive(id)
   }
+
+  @Get('dispatch/heatmap')
+  getDispatchHeatmap(@Query('since') since: string = '') {
+    return this.adminService.getDispatchHeatmap(since)
+  }
+
+  @Get('restaurants/:id/kpi')
+  getRestaurantKpi(@Param('id') id: string, @Query('period') period: string = '7d') {
+    return this.adminService.getRestaurantKpi(id, period)
+  }
 }
