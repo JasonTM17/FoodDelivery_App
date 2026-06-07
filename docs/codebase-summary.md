@@ -35,13 +35,16 @@ Modular monolith. One process, one Docker image, logically separated by feature 
 | `tracking` | WebSocket gateway for real-time GPS |
 | `payments` | SePay provider, commission split, PayoutLedger |
 | `webhooks` | Inbound SePay payment-success webhook |
+| `loyalty` | Loyalty transaction ledger, points snapshot (GET /users/loyalty) |
+| `wallet` | Wallet transaction ledger, balance snapshot (GET /users/wallet) |
+| `referral` | Referral code generation + redemption tracking (GET /users/referral) |
 | `reviews` | Aggregation, moderation, photo upload, reply thread |
 | `notifications` | FCM/WebSocket fan-out, locale-aware templates |
 | `chat` | WebSocket chat between customer and support |
 | `ai` | n8n webhook bridge, chat classify, AI templates |
 | `i18n` | nestjs-i18n module, vi/en/ja locale files |
-| `admin` | Admin REST endpoints, audit logs, promotions |
-| `drivers` | Driver profiles, location history, KYC |
+| `admin` | Admin REST endpoints, audit logs, promotions, dispatch heatmap, restaurant KPI |
+| `drivers` | Driver profiles, location history, KYC, IncentivesController (GET /driver/incentives) |
 | `storage` | MinIO presigned URL service |
 | `metrics` | Prometheus `/metrics` endpoint |
 | `health` | `/healthz` + `/readyz` endpoints |

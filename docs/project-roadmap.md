@@ -37,17 +37,38 @@
 
 ## v0.3 — Production
 
-- [ ] JWT upgrade: HS256 → Ed25519 + JWKS (ADR pending)
+### Auth + Security
+- [ ] JWT upgrade: HS256 → Ed25519 + JWKS — phase 1 dual-verify IN PROGRESS
+- [ ] Web Dockerfiles for admin + restaurant portals (P1-1 from audit)
+- [ ] ADR documentation sweep: ADR-0001 through ADR-0005+ (P1-2 from audit)
+- [ ] Per-service README completion — auth/orders/dispatch/payments/tracking/notifications/reviews/ai/chat (P1-3 from audit)
+
+### Features (stubs shipped in batch-3, full impl pending)
+- [ ] Loyalty points system — full earn/redeem logic, expiry, tier rules
+- [ ] Wallet balance — top-up, withdrawal, transaction history pagination
+- [ ] Referral codes — reward crediting on redemption, conversion tracking
+- [ ] Driver incentives — real DB-backed streaks + bonus calculation
+- [ ] Admin dispatch heatmap + restaurant KPI — real query from order/dispatch tables
+
+### Mobile + Integrations
 - [ ] Push notifications — FCM (Android) + APNs (iOS) via n8n
 - [ ] Google Maps Directions API routing for driver ETA
+- [ ] Background GPS tracking (flutter_background_service, replaces geolocator foreground stream)
+- [ ] n8n system-prompt wire + /ai/chat/eval endpoint (P2-4, P2-5 from audit)
+- [ ] NSFW filter for review photos (TensorFlow Lite or Cloud Vision API)
+
+### Customer UX
 - [ ] Customer favorite restaurants
 - [ ] Order re-ordering from history
+
+### Infrastructure
 - [ ] Redis Cluster for real-time at scale
 - [ ] Database read replicas
 - [ ] CDN for food images (CloudFront or BunnyCDN)
 - [ ] Kubernetes deployment (Helm charts)
 - [ ] Automated database backups (pg_dump → S3 daily)
 - [ ] Human-reviewed ja locale translations
+- [ ] dayjs ESM Jest config fix (`transformIgnorePatterns`) (P2-3 from audit)
 
 ## v1.0 — Scale
 
