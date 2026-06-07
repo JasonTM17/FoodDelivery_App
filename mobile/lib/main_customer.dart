@@ -14,6 +14,9 @@ import 'customer/screens/order_history_screen.dart';
 import 'customer/screens/profile_screen.dart';
 import 'customer/screens/address_management_screen.dart';
 import 'customer/screens/review_screen.dart';
+import 'customer/screens/location_permission_screen.dart';
+import 'customer/screens/restaurant_list_screen.dart';
+import 'customer/screens/notifications_screen.dart';
 import 'shared/models/menu_item.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -97,6 +100,18 @@ final _router = GoRouter(
         final orderId = state.extra as String;
         return ReviewScreen(orderId: orderId);
       },
+    ),
+    GoRoute(
+      path: '/location-permission',
+      builder: (context, state) => const LocationPermissionScreen(),
+    ),
+    GoRoute(
+      path: '/restaurants',
+      builder: (context, state) => const RestaurantListScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
     ),
     GoRoute(
       path: '/search',
