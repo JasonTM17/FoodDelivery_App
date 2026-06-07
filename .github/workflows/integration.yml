@@ -78,7 +78,7 @@ jobs:
           RESTAURANT_URL: http://localhost:3002
           API_URL: http://localhost:3001/api
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-${{ github.run_id }}
@@ -135,7 +135,7 @@ jobs:
             --out json=k6-results.json \
             infra/loadtest/k6-mixed.js
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: k6-results-${{ github.run_id }}
@@ -207,7 +207,7 @@ jobs:
           RESTAURANT_URL: http://localhost:3002
           LHCI_FORM_FACTOR: desktop
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lhci-report-${{ github.run_id }}
@@ -258,7 +258,7 @@ jobs:
             --endpoint http://localhost:3001/api/ai/chat \
             --fixtures e2e/ai-scenarios/canonical-conversations.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ai-scenarios-log-${{ github.run_id }}
