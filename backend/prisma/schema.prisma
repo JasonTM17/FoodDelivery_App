@@ -139,6 +139,7 @@ model User {
   reviews            Review[]          @relation("ReviewCustomer")
   driverReviews      Review[]          @relation("ReviewDriver")
   notifications      Notification[]
+  loyaltyTransactions LoyaltyTransaction[]
   chatSessions       ChatSession[]
   ordersAsCustomer   Order[]           @relation("CustomerOrders")
   ordersAsDriver     Order[]           @relation("DriverOrders")
@@ -692,4 +693,24 @@ model PayoutLedger {
   @@index([orderId])
   @@index([recipientType, recipientId, status])
   @@map("payout_ledger")
+}
+
+enum LoyaltyTxnType {
+  credit
+  debit
+}
+
+model LoyaltyTransaction {
+  id          String         @id @default(uuid()) @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points      Int
+  type        LoyaltyTxnType @default(credit)
+  description String         @default("")
+  orderId     String?        @map("order_id") @db.Uuid
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("loyalty_transactions")
 }
