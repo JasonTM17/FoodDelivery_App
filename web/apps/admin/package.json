@@ -41,7 +41,7 @@
     "socket.io-client": "^4.7.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/google.maps": "^3.65.0",
