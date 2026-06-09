@@ -6,12 +6,14 @@ class HelpSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final String query;
   final Function(String) onChanged;
+  final String hintText;
 
   const HelpSearchBar({
     super.key,
     required this.controller,
     required this.query,
     required this.onChanged,
+    this.hintText = 'Search questions...',
   });
 
   @override
@@ -22,7 +24,7 @@ class HelpSearchBar extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         decoration: InputDecoration(
-          hintText: 'Tìm câu hỏi...',
+          hintText: hintText,
           hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
           prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondary),
           suffixIcon: query.isNotEmpty

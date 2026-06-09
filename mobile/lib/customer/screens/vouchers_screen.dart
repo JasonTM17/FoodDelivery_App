@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -20,8 +22,6 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  static const _tabs = ['Của tôi', 'Khả dụng', 'Hết hạn'];
-
   @override
   void initState() {
     super.initState();
@@ -36,10 +36,11 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
   }
 
   void _copyCode(String code) {
+    final l10n = AppLocalizations.of(context)!;
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã sao chép mã'),
+      SnackBar(
+        content: Text(l10n.vouchersCodeCopied),
         backgroundColor: AppColors.success,
       ),
     );
@@ -47,7 +48,14 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(vouchersProvider);
+
+    final tabs = [
+      l10n.vouchersTabMine,
+      l10n.vouchersTabAvailable,
+      l10n.vouchersTabExpired,
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,7 +63,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: const BackButton(color: AppColors.textPrimary),
-        title: const Text('Ưu đãi & Voucher', style: AppTextStyles.headline3),
+        title: Text(l10n.vouchersTitle, style: AppTextStyles.headline3),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -64,7 +72,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
-          tabs: _tabs.map((t) => Tab(text: t)).toList(),
+          tabs: tabs.map((t) => Tab(text: t)).toList(),
         ),
       ),
       body: _buildBody(state),
@@ -95,13 +103,14 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
   }
 
   Widget _buildTab(List<Voucher> vouchers, {bool showCopy = false, bool showUse = false, bool isExpired = false}) {
+    final l10n = AppLocalizations.of(context)!;
     if (vouchers.isEmpty) {
       return EmptyState(
         icon: isExpired ? Icons.event_busy : Icons.local_offer_outlined,
-        title: isExpired ? 'Không có voucher hết hạn' : 'Chưa có voucher',
+        title: isExpired ? l10n.vouchersEmptyExpired : l10n.vouchersEmptyMine,
         subtitle: isExpired
-            ? 'Voucher hết hạn sẽ xuất hiện ở đây'
-            : 'Khám phá các voucher đang có sẵn',
+            ? l10n.vouchersEmptyExpiredSubtitle
+            : l10n.vouchersEmptyAvailableSubtitle,
       );
     }
     return ListView.builder(
@@ -109,6 +118,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
       itemCount: vouchers.length,
       itemBuilder: (context, index) {
         final voucher = vouchers[index];
+        final l10nCard = AppLocalizations.of(context)!;
         return VoucherCard(
           voucher: voucher,
           onUse: showUse
@@ -116,8 +126,17 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
               : showCopy
                   ? () => _copyCode(voucher.code)
                   : null,
+          percentOffLabel: voucher.percentOff != null ? l10nCard.vouchersPercentOff(voucher.percentOff!) : null,
+          minOrderLabel: voucher.minOrderAmount != null ? l10nCard.vouchersMinOrder(_formatVnd(voucher.minOrderAmount!)) : null,
+          expiresAtLabel: voucher.expiresAt != null ? l10nCard.vouchersExpiresAt(DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)) : null,
+          useNowLabel: l10nCard.vouchersUseNow,
         );
       },
     );
+  }
+
+  String _formatVnd(int vnd) {
+    final fmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+    return fmt.format(vnd);
   }
 }

@@ -19,29 +19,30 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   String _query = '';
   String? _selectedCategory;
 
-  static const _categories = ['orders', 'payment', 'delivery', 'account'];
-
-  static const _faqs = [
-    {'q': 'Làm thế nào để hủy đơn hàng?', 'a': 'Bạn có thể hủy đơn hàng trong vòng 2 phút sau khi đặt. Vào "Đơn hàng" → chọn đơn → nhấn "Hủy đơn".', 'cat': 'orders'},
-    {'q': 'Đơn hàng bị trễ phải làm gì?', 'a': 'Vui lòng liên hệ chat hỗ trợ để chúng tôi kiểm tra trực tiếp với tài xế.', 'cat': 'delivery'},
-    {'q': 'Phương thức thanh toán nào được chấp nhận?', 'a': 'Hiện tại chúng tôi chấp nhận tiền mặt khi nhận hàng và ví điện tử FoodFlow.', 'cat': 'payment'},
-    {'q': 'Làm thế nào để nạp tiền vào ví?', 'a': 'Vào "Cá nhân" → "Ví điện tử" → nhấn "Nạp tiền" và chọn mệnh giá mong muốn.', 'cat': 'payment'},
-    {'q': 'Làm sao để thêm địa chỉ giao hàng?', 'a': 'Vào "Cá nhân" → "Địa chỉ của tôi" → nhấn "Thêm địa chỉ" và nhập thông tin.', 'cat': 'account'},
-    {'q': 'Tôi không nhận được đơn hàng, phải làm gì?', 'a': 'Nếu tài xế đã đánh dấu giao thành công nhưng bạn chưa nhận được, hãy liên hệ hỗ trợ ngay.', 'cat': 'delivery'},
-    {'q': 'Điểm thưởng được tích như thế nào?', 'a': 'Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.', 'cat': 'account'},
-    {'q': 'Làm sao để theo dõi đơn hàng real-time?', 'a': 'Sau khi đặt hàng thành công, vào "Đơn hàng" → chọn đơn đang hoạt động → nhấn "Theo dõi".', 'cat': 'orders'},
-  ];
-
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
 
-  List<Map<String, String>> get _filtered {
-    return _faqs.where((faq) {
-      final matchQuery = _query.isEmpty || faq['q']!.toLowerCase().contains(_query.toLowerCase());
-      final matchCat = _selectedCategory == null || faq['cat'] == _selectedCategory;
+  List<_FaqEntry> _faqs(AppLocalizations l10n) {
+    return [
+      _FaqEntry(l10n.helpFaqCancelOrderQ, l10n.helpFaqCancelOrderA, 'orders'),
+      _FaqEntry(l10n.helpFaqLateDeliveryQ, l10n.helpFaqLateDeliveryA, 'delivery'),
+      _FaqEntry(l10n.helpFaqPaymentMethodsQ, l10n.helpFaqPaymentMethodsA, 'payment'),
+      _FaqEntry(l10n.helpFaqTopUpWalletQ, l10n.helpFaqTopUpWalletA, 'payment'),
+      _FaqEntry(l10n.helpFaqAddAddressQ, l10n.helpFaqAddAddressA, 'account'),
+      _FaqEntry(l10n.helpFaqMissingOrderQ, l10n.helpFaqMissingOrderA, 'delivery'),
+      _FaqEntry(l10n.helpFaqRewardPointsQ, l10n.helpFaqRewardPointsA, 'account'),
+      _FaqEntry(l10n.helpFaqTrackOrderQ, l10n.helpFaqTrackOrderA, 'orders'),
+    ];
+  }
+
+  List<_FaqEntry> _filtered(AppLocalizations l10n) {
+    final faqs = _faqs(l10n);
+    return faqs.where((faq) {
+      final matchQuery = _query.isEmpty || faq.question.toLowerCase().contains(_query.toLowerCase());
+      final matchCat = _selectedCategory == null || faq.category == _selectedCategory;
       return matchQuery && matchCat;
     }).toList();
   }
@@ -59,6 +60,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final filtered = _filtered(l10n);
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(title: Text(l10n.helpTitle)),
@@ -69,6 +72,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             controller: _searchCtrl,
             query: _query,
             onChanged: (v) => setState(() => _query = v),
+            hintText: l10n.helpCenterSearchHint,
           ),
 
           // Category chips
@@ -92,7 +96,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildContactBtn(Icons.chat_bubble_outline, l10n.helpChatSupport, () => context.push('${Routes.chat}', extra: 'support')),
+                _buildContactBtn(Icons.chat_bubble_outline, l10n.helpCenterChatCta, () => context.push('${Routes.chat}', extra: 'support')),
                 const SizedBox(width: 8),
                 _buildContactBtn(Icons.phone_outlined, l10n.helpCallSupport, _launchPhone),
                 const SizedBox(width: 8),
@@ -104,13 +108,13 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
           // FAQ list
           Expanded(
-            child: _filtered.isEmpty
-                ? Center(child: Text(l10n.helpFaqEmpty, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)))
+            child: filtered.isEmpty
+                ? Center(child: Text(l10n.helpCenterNoResults, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)))
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    itemCount: _filtered.length,
+                    itemCount: filtered.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) => _buildFaqTile(_filtered[i]),
+                    itemBuilder: (ctx, i) => _buildFaqTile(filtered[i]),
                   ),
           ),
         ],
@@ -161,7 +165,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     );
   }
 
-  Widget _buildFaqTile(Map<String, String> faq) {
+  Widget _buildFaqTile(_FaqEntry faq) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -171,9 +175,16 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        title: Text(faq['q']!, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
-        children: [Text(faq['a']!, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.6))],
+        title: Text(faq.question, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
+        children: [Text(faq.answer, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.6))],
       ),
     );
   }
+}
+
+class _FaqEntry {
+  final String question;
+  final String answer;
+  final String category;
+  const _FaqEntry(this.question, this.answer, this.category);
 }

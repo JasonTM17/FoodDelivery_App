@@ -480,5 +480,122 @@
   "driver_settings_version": "バージョン {version}",
   "@driver_settings_version": {
     "placeholders": { "version": { "type": "String" } }
-  }
+  },
+
+  "favoritesTitle": "お気に入り",
+  "favoritesEmpty": "お気に入りのレストランはまだありません",
+  "favoritesEmptySubtitle": "レストランを探してお気に入りに追加しましょう",
+  "favoritesEmptyCta": "レストランを探す",
+
+  "searchInputHint": "料理、レストランを検索...",
+  "searchButtonLabel": "検索",
+  "searchRecentLabel": "最近の検索",
+  "searchClearAll": "すべて削除",
+  "searchEmptyTitle": "料理・レストランを検索",
+  "searchEmptySubtitle": "探したい料理名やレストラン名を入力してください",
+  "searchNoResults": "「{query}」の検索結果はありません",
+  "@searchNoResults": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "searchNoResultsSubtitle": "別のキーワードを試すかフィルターを変更してください",
+  "searchClosedBadge": "閉店中",
+  "searchFilterNearest": "最も近い",
+  "searchFilterTopRated": "評価が高い",
+  "searchFilterPriceLowHigh": "価格が安い順",
+  "searchFilterOpenNow": "営業中",
+
+  "vouchersTitle": "オファー＆バウチャー",
+  "vouchersTabMine": "マイバウチャー",
+  "vouchersTabAvailable": "利用可能",
+  "vouchersTabExpired": "期限切れ",
+  "vouchersCodeCopied": "コードをコピーしました",
+  "vouchersEmptyMine": "バウチャーはまだありません",
+  "vouchersEmptyAvailable": "利用可能なバウチャーはありません",
+  "vouchersEmptyAvailableSubtitle": "利用可能なバウチャーを探す",
+  "vouchersEmptyExpired": "期限切れのバウチャーはありません",
+  "vouchersEmptyExpiredSubtitle": "期限切れのバウチャーはここに表示されます",
+  "vouchersUseNow": "今すぐ使う",
+  "vouchersPercentOff": "{percent}%オフ",
+  "@vouchersPercentOff": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "vouchersMinOrder": "最低注文額 {amount}",
+  "@vouchersMinOrder": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "vouchersExpiresAt": "有効期限: {date}",
+  "@vouchersExpiresAt": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "membershipTitle": "FoodFlow Pro",
+  "membershipFreeLabel": "無料",
+  "membershipProTier": "Pro",
+  "membershipProPlusTier": "Pro+",
+  "membershipProPrice": "{price}/月",
+  "@membershipProPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "membershipCurrentBadge": "現在のプラン",
+  "membershipUpgradeCta": "今すぐアップグレード",
+  "membershipChoosePlan": "あなたに合ったプランを選びましょう",
+  "membershipUpgradeBenefit": "アップグレードして特典をもっと受ける",
+  "membershipUpgradedMessage": "{tier}にアップグレードしました！",
+  "@membershipUpgradedMessage": {
+    "placeholders": { "tier": { "type": "String" } }
+  },
+  "membershipUpgradeFailed": "アップグレードできません",
+  "membershipValidUntil": "{date}まで有効",
+  "@membershipValidUntil": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "membershipPerMonth": "/月",
+  "membershipBenefitBasicDelivery": "基本配送",
+  "membershipBenefitBasicPoints": "1%ポイント還元",
+  "membershipBenefitFreeDelivery": "配送料無制限無料",
+  "membershipBenefitPriorityDriver": "優先プレミアムドライバー",
+  "membershipBenefitBonusPoints3": "3%ポイント還元",
+  "membershipBenefitVipDriver": "最優先トップドライバー",
+  "membershipBenefitBonusPoints5": "5%ポイント還元",
+  "membershipBenefitVoucher100k": "誕生日バウチャー100K₫",
+  "membershipBenefitVoucher200k": "誕生日バウチャー200K₫",
+  "membershipBenefitVipSupport": "24時間365日VIPサポート",
+
+  "cancelOrderTitle": "注文をキャンセル",
+  "cancelOrderSuccess": "注文をキャンセルしました",
+  "cancelOrderFailed": "注文をキャンセルできません",
+  "cancelOrderInfoHeader": "注文情報",
+  "cancelOrderReasonHeader": "キャンセル理由を選択",
+  "cancelOrderReasonSubtitle": "ご不便をおかけして申し訳ございません",
+  "cancelOrderReasonSlow": "レストランの対応が遅い",
+  "cancelOrderReasonChanged": "気が変わった",
+  "cancelOrderReasonWrong": "間違えて注文した",
+  "cancelOrderReasonOther": "その他",
+  "cancelOrderNoteHint": "追加メモ（任意）",
+  "cancelOrderRefundNote": "3〜5営業日以内に返金されます",
+  "cancelOrderConfirmCta": "キャンセルを確認",
+
+  "helpCenterSearchHint": "質問を検索...",
+  "helpCenterChatCta": "サポートとチャット",
+  "helpCenterNoResults": "一致する質問が見つかりません",
+  "helpCategoryOrders": "注文",
+  "helpCategoryPayment": "支払い",
+  "helpCategoryDelivery": "配送",
+  "helpCategoryAccount": "アカウント",
+  "helpFaqCancelOrderQ": "注文をキャンセルするには？",
+  "helpFaqCancelOrderA": "注文後2分以内であればキャンセルできます。「注文」→注文を選択→「キャンセル」をタップしてください。",
+  "helpFaqLateDeliveryQ": "注文が遅れている場合はどうすれば？",
+  "helpFaqLateDeliveryA": "チャットサポートにご連絡いただければ、ドライバーに直接確認いたします。",
+  "helpFaqPaymentMethodsQ": "利用可能な支払い方法は？",
+  "helpFaqPaymentMethodsA": "現在、代金引換とFoodFlow電子ウォレットに対応しています。",
+  "helpFaqTopUpWalletQ": "ウォレットにチャージするには？",
+  "helpFaqTopUpWalletA": "「プロフィール」→「ウォレット」→「チャージ」をタップし、希望金額を選択してください。",
+  "helpFaqAddAddressQ": "配送先住所を追加するには？",
+  "helpFaqAddAddressA": "「プロフィール」→「住所」→「住所を追加」をタップし、情報を入力してください。",
+  "helpFaqMissingOrderQ": "注文を受け取っていない場合は？",
+  "helpFaqMissingOrderA": "ドライバーが配達完了とマークしたのに受け取っていない場合は、すぐにサポートにご連絡ください。",
+  "helpFaqRewardPointsQ": "ポイントはどのように貯まりますか？",
+  "helpFaqRewardPointsA": "注文完了ごとに10ポイント、友達紹介成功で50ポイントが付与されます。",
+  "helpFaqTrackOrderQ": "注文をリアルタイムで追跡するには？",
+  "helpFaqTrackOrderA": "注文後、「注文」→アクティブな注文を選択→「追跡」をタップしてください。"
 }

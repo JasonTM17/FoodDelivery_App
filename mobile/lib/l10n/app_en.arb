@@ -480,5 +480,122 @@
   "driver_settings_version": "Version {version}",
   "@driver_settings_version": {
     "placeholders": { "version": { "type": "String" } }
-  }
+  },
+
+  "favoritesTitle": "Favorites",
+  "favoritesEmpty": "No favorite restaurants yet",
+  "favoritesEmptySubtitle": "Explore and add restaurants to your favorites",
+  "favoritesEmptyCta": "Explore restaurants",
+
+  "searchInputHint": "Search food, restaurants...",
+  "searchButtonLabel": "Search",
+  "searchRecentLabel": "Recent searches",
+  "searchClearAll": "Clear all",
+  "searchEmptyTitle": "Search food, restaurants",
+  "searchEmptySubtitle": "Enter a dish name or restaurant you're looking for",
+  "searchNoResults": "No results found for \"{query}\"",
+  "@searchNoResults": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "searchNoResultsSubtitle": "Try other keywords or change filters",
+  "searchClosedBadge": "Closed",
+  "searchFilterNearest": "Nearest",
+  "searchFilterTopRated": "Top rated",
+  "searchFilterPriceLowHigh": "Price low → high",
+  "searchFilterOpenNow": "Open now",
+
+  "vouchersTitle": "Offers & Vouchers",
+  "vouchersTabMine": "My vouchers",
+  "vouchersTabAvailable": "Available",
+  "vouchersTabExpired": "Expired",
+  "vouchersCodeCopied": "Code copied",
+  "vouchersEmptyMine": "No vouchers yet",
+  "vouchersEmptyAvailable": "No vouchers available",
+  "vouchersEmptyAvailableSubtitle": "Explore available vouchers",
+  "vouchersEmptyExpired": "No expired vouchers",
+  "vouchersEmptyExpiredSubtitle": "Expired vouchers will appear here",
+  "vouchersUseNow": "Use now",
+  "vouchersPercentOff": "{percent}% off",
+  "@vouchersPercentOff": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "vouchersMinOrder": "Min order {amount}",
+  "@vouchersMinOrder": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "vouchersExpiresAt": "Expires: {date}",
+  "@vouchersExpiresAt": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "membershipTitle": "FoodFlow Pro",
+  "membershipFreeLabel": "Free",
+  "membershipProTier": "Pro",
+  "membershipProPlusTier": "Pro+",
+  "membershipProPrice": "{price}/month",
+  "@membershipProPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "membershipCurrentBadge": "Current plan",
+  "membershipUpgradeCta": "Upgrade now",
+  "membershipChoosePlan": "Choose a plan that fits you",
+  "membershipUpgradeBenefit": "Upgrade to unlock more benefits",
+  "membershipUpgradedMessage": "Upgraded to {tier}!",
+  "@membershipUpgradedMessage": {
+    "placeholders": { "tier": { "type": "String" } }
+  },
+  "membershipUpgradeFailed": "Unable to upgrade",
+  "membershipValidUntil": "Valid until {date}",
+  "@membershipValidUntil": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "membershipPerMonth": "/month",
+  "membershipBenefitBasicDelivery": "Basic delivery",
+  "membershipBenefitBasicPoints": "Earn 1% reward points",
+  "membershipBenefitFreeDelivery": "Unlimited free delivery",
+  "membershipBenefitPriorityDriver": "Priority premium drivers",
+  "membershipBenefitBonusPoints3": "Earn 3% reward points",
+  "membershipBenefitVipDriver": "Top-tier priority drivers",
+  "membershipBenefitBonusPoints5": "Earn 5% reward points",
+  "membershipBenefitVoucher100k": "Birthday voucher 100K₫",
+  "membershipBenefitVoucher200k": "Birthday voucher 200K₫",
+  "membershipBenefitVipSupport": "24/7 VIP support",
+
+  "cancelOrderTitle": "Cancel Order",
+  "cancelOrderSuccess": "Order cancelled successfully",
+  "cancelOrderFailed": "Unable to cancel order",
+  "cancelOrderInfoHeader": "Order information",
+  "cancelOrderReasonHeader": "Select cancellation reason",
+  "cancelOrderReasonSubtitle": "We're sorry if something wasn't right",
+  "cancelOrderReasonSlow": "Restaurant too slow",
+  "cancelOrderReasonChanged": "Changed my mind",
+  "cancelOrderReasonWrong": "Ordered by mistake",
+  "cancelOrderReasonOther": "Other",
+  "cancelOrderNoteHint": "Additional note (optional)",
+  "cancelOrderRefundNote": "Refund within 3-5 business days",
+  "cancelOrderConfirmCta": "Confirm cancellation",
+
+  "helpCenterSearchHint": "Search questions...",
+  "helpCenterChatCta": "Chat with support",
+  "helpCenterNoResults": "No matching questions found",
+  "helpCategoryOrders": "Orders",
+  "helpCategoryPayment": "Payment",
+  "helpCategoryDelivery": "Delivery",
+  "helpCategoryAccount": "Account",
+  "helpFaqCancelOrderQ": "How do I cancel an order?",
+  "helpFaqCancelOrderA": "You can cancel an order within 2 minutes of placing it. Go to \"Orders\" → select order → tap \"Cancel\".",
+  "helpFaqLateDeliveryQ": "What should I do if my order is late?",
+  "helpFaqLateDeliveryA": "Please contact chat support so we can check directly with the driver.",
+  "helpFaqPaymentMethodsQ": "Which payment methods are accepted?",
+  "helpFaqPaymentMethodsA": "We currently accept cash on delivery and FoodFlow e-wallet.",
+  "helpFaqTopUpWalletQ": "How do I top up my wallet?",
+  "helpFaqTopUpWalletA": "Go to \"Profile\" → \"Wallet\" → tap \"Top Up\" and select the desired amount.",
+  "helpFaqAddAddressQ": "How do I add a delivery address?",
+  "helpFaqAddAddressA": "Go to \"Profile\" → \"My Addresses\" → tap \"Add Address\" and enter the details.",
+  "helpFaqMissingOrderQ": "I didn't receive my order, what should I do?",
+  "helpFaqMissingOrderA": "If the driver marked the order as delivered but you haven't received it, contact support immediately.",
+  "helpFaqRewardPointsQ": "How are reward points earned?",
+  "helpFaqRewardPointsA": "You earn 10 points for every completed order. Successfully referring a friend gives you an extra 50 points.",
+  "helpFaqTrackOrderQ": "How do I track my order in real-time?",
+  "helpFaqTrackOrderA": "After placing an order, go to \"Orders\" → select the active order → tap \"Track\"."
 }

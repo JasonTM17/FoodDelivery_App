@@ -6,11 +6,13 @@ import '../providers/search_provider.dart';
 class SearchFilterChips extends StatelessWidget {
   final SearchSort selectedSort;
   final Function(SearchSort) onChanged;
+  final Map<SearchSort, String> labels;
 
   const SearchFilterChips({
     super.key,
     required this.selectedSort,
     required this.onChanged,
+    required this.labels,
   });
 
   @override
@@ -52,7 +54,7 @@ class SearchFilterChips extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              sort.labelVi(),
+              labels[sort] ?? sort.labelVi(),
               style: AppTextStyles.bodySmall.copyWith(
                 color: isSelected ? Colors.white : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -49,6 +50,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(searchProvider);
 
     return Scaffold(
@@ -65,7 +67,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             onSubmitted: (_) => _performSearch(),
             onChanged: (v) => ref.read(searchProvider.notifier).updateQuery(v),
             decoration: InputDecoration(
-              hintText: 'Tìm món ăn, nhà hàng...',
+              hintText: l10n.searchInputHint,
               hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
               prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondary),
               suffixIcon: _searchController.text.isNotEmpty
@@ -94,7 +96,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           TextButton(
             onPressed: _searchController.text.trim().isNotEmpty ? _performSearch : null,
             child: Text(
-              'Tìm',
+              l10n.searchButtonLabel,
               style: TextStyle(
                 color: _searchController.text.trim().isNotEmpty
                     ? AppColors.primary
@@ -128,6 +130,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         SearchFilterChips(
           selectedSort: state.sort,
           onChanged: (sort) => ref.read(searchProvider.notifier).updateSort(sort),
+          labels: {
+            SearchSort.nearest: l10n.searchFilterNearest,
+            SearchSort.topRated: l10n.searchFilterTopRated,
+            SearchSort.priceLowHigh: l10n.searchFilterPriceLowHigh,
+            SearchSort.openNow: l10n.searchFilterOpenNow,
+          },
         ),
         // Results
         Expanded(child: _buildResults(state)),
@@ -136,6 +144,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   Widget _buildRecentSearches(SearchState state) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -146,13 +155,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Tìm kiếm gần đây',
+                  l10n.searchRecentLabel,
                   style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
                 ),
                 GestureDetector(
                   onTap: () => ref.read(searchProvider.notifier).clearRecentSearches(),
                   child: Text(
-                    'Xóa tất cả',
+                    l10n.searchClearAll,
                     style: AppTextStyles.caption.copyWith(color: AppColors.error),
                   ),
                 ),
@@ -171,11 +180,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ),
           ),
         ],
-        const Expanded(
+        Expanded(
           child: EmptyState(
             icon: Icons.search_outlined,
-            title: 'Tìm kiếm món ăn, nhà hàng',
-            subtitle: 'Nhập tên món hoặc nhà hàng bạn muốn tìm',
+            title: l10n.searchEmptyTitle,
+            subtitle: l10n.searchEmptySubtitle,
           ),
         ),
       ],
@@ -183,11 +192,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   Widget _buildResults(SearchState state) {
+    final l10n = AppLocalizations.of(context)!;
     if (state.results.isEmpty) {
       return EmptyState(
         icon: Icons.search_off,
-        title: 'Không tìm thấy kết quả cho "${state.query}"',
-        subtitle: 'Thử từ khóa khác hoặc thay đổi bộ lọc',
+        title: l10n.searchNoResults(state.query),
+        subtitle: l10n.searchNoResultsSubtitle,
       );
     }
     return RefreshIndicator(
@@ -303,7 +313,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  'Đóng cửa',
+                  AppLocalizations.of(context)!.searchClosedBadge,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.error,
                     fontWeight: FontWeight.w600,

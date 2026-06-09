@@ -6,11 +6,13 @@ import '../providers/cancel_order_provider.dart';
 class CancelReasonPicker extends StatelessWidget {
   final CancelReason? selectedReason;
   final Function(CancelReason) onSelected;
+  final Map<CancelReason, String> labels;
 
   const CancelReasonPicker({
     super.key,
     required this.selectedReason,
     required this.onSelected,
+    required this.labels,
   });
 
   @override
@@ -41,7 +43,7 @@ class CancelReasonPicker extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  reason.labelVi(),
+                  labels[reason] ?? '',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

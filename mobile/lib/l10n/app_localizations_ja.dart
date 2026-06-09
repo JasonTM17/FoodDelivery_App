@@ -1000,7 +1000,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get helpCategoryPayment => '支払い';
 
   @override
-  String get helpCategoryDelivery => '配達';
+  String get helpCategoryDelivery => '配送';
 
   @override
   String get helpCategoryAccount => 'アカウント';
@@ -1252,4 +1252,279 @@ class AppLocalizationsJa extends AppLocalizations {
   String driver_settings_version(String version) {
     return 'バージョン $version';
   }
+
+  @override
+  String get favoritesTitle => 'お気に入り';
+
+  @override
+  String get favoritesEmpty => 'お気に入りのレストランはまだありません';
+
+  @override
+  String get favoritesEmptySubtitle => 'レストランを探してお気に入りに追加しましょう';
+
+  @override
+  String get favoritesEmptyCta => 'レストランを探す';
+
+  @override
+  String get searchInputHint => '料理、レストランを検索...';
+
+  @override
+  String get searchButtonLabel => '検索';
+
+  @override
+  String get searchRecentLabel => '最近の検索';
+
+  @override
+  String get searchClearAll => 'すべて削除';
+
+  @override
+  String get searchEmptyTitle => '料理・レストランを検索';
+
+  @override
+  String get searchEmptySubtitle => '探したい料理名やレストラン名を入力してください';
+
+  @override
+  String searchNoResults(String query) {
+    return '「$query」の検索結果はありません';
+  }
+
+  @override
+  String get searchNoResultsSubtitle => '別のキーワードを試すかフィルターを変更してください';
+
+  @override
+  String get searchClosedBadge => '閉店中';
+
+  @override
+  String get searchFilterNearest => '最も近い';
+
+  @override
+  String get searchFilterTopRated => '評価が高い';
+
+  @override
+  String get searchFilterPriceLowHigh => '価格が安い順';
+
+  @override
+  String get searchFilterOpenNow => '営業中';
+
+  @override
+  String get vouchersTitle => 'オファー＆バウチャー';
+
+  @override
+  String get vouchersTabMine => 'マイバウチャー';
+
+  @override
+  String get vouchersTabAvailable => '利用可能';
+
+  @override
+  String get vouchersTabExpired => '期限切れ';
+
+  @override
+  String get vouchersCodeCopied => 'コードをコピーしました';
+
+  @override
+  String get vouchersEmptyMine => 'バウチャーはまだありません';
+
+  @override
+  String get vouchersEmptyAvailable => '利用可能なバウチャーはありません';
+
+  @override
+  String get vouchersEmptyAvailableSubtitle => '利用可能なバウチャーを探す';
+
+  @override
+  String get vouchersEmptyExpired => '期限切れのバウチャーはありません';
+
+  @override
+  String get vouchersEmptyExpiredSubtitle => '期限切れのバウチャーはここに表示されます';
+
+  @override
+  String get vouchersUseNow => '今すぐ使う';
+
+  @override
+  String vouchersPercentOff(int percent) {
+    return '$percent%オフ';
+  }
+
+  @override
+  String vouchersMinOrder(String amount) {
+    return '最低注文額 $amount';
+  }
+
+  @override
+  String vouchersExpiresAt(String date) {
+    return '有効期限: $date';
+  }
+
+  @override
+  String get membershipTitle => 'FoodFlow Pro';
+
+  @override
+  String get membershipFreeLabel => '無料';
+
+  @override
+  String get membershipProTier => 'Pro';
+
+  @override
+  String get membershipProPlusTier => 'Pro+';
+
+  @override
+  String membershipProPrice(String price) {
+    return '$price/月';
+  }
+
+  @override
+  String get membershipCurrentBadge => '現在のプラン';
+
+  @override
+  String get membershipUpgradeCta => '今すぐアップグレード';
+
+  @override
+  String get membershipChoosePlan => 'あなたに合ったプランを選びましょう';
+
+  @override
+  String get membershipUpgradeBenefit => 'アップグレードして特典をもっと受ける';
+
+  @override
+  String membershipUpgradedMessage(String tier) {
+    return '$tierにアップグレードしました！';
+  }
+
+  @override
+  String get membershipUpgradeFailed => 'アップグレードできません';
+
+  @override
+  String membershipValidUntil(String date) {
+    return '$dateまで有効';
+  }
+
+  @override
+  String get membershipPerMonth => '/月';
+
+  @override
+  String get membershipBenefitBasicDelivery => '基本配送';
+
+  @override
+  String get membershipBenefitBasicPoints => '1%ポイント還元';
+
+  @override
+  String get membershipBenefitFreeDelivery => '配送料無制限無料';
+
+  @override
+  String get membershipBenefitPriorityDriver => '優先プレミアムドライバー';
+
+  @override
+  String get membershipBenefitBonusPoints3 => '3%ポイント還元';
+
+  @override
+  String get membershipBenefitVipDriver => '最優先トップドライバー';
+
+  @override
+  String get membershipBenefitBonusPoints5 => '5%ポイント還元';
+
+  @override
+  String get membershipBenefitVoucher100k => '誕生日バウチャー100K₫';
+
+  @override
+  String get membershipBenefitVoucher200k => '誕生日バウチャー200K₫';
+
+  @override
+  String get membershipBenefitVipSupport => '24時間365日VIPサポート';
+
+  @override
+  String get cancelOrderTitle => '注文をキャンセル';
+
+  @override
+  String get cancelOrderSuccess => '注文をキャンセルしました';
+
+  @override
+  String get cancelOrderFailed => '注文をキャンセルできません';
+
+  @override
+  String get cancelOrderInfoHeader => '注文情報';
+
+  @override
+  String get cancelOrderReasonHeader => 'キャンセル理由を選択';
+
+  @override
+  String get cancelOrderReasonSubtitle => 'ご不便をおかけして申し訳ございません';
+
+  @override
+  String get cancelOrderReasonSlow => 'レストランの対応が遅い';
+
+  @override
+  String get cancelOrderReasonChanged => '気が変わった';
+
+  @override
+  String get cancelOrderReasonWrong => '間違えて注文した';
+
+  @override
+  String get cancelOrderReasonOther => 'その他';
+
+  @override
+  String get cancelOrderNoteHint => '追加メモ（任意）';
+
+  @override
+  String get cancelOrderRefundNote => '3〜5営業日以内に返金されます';
+
+  @override
+  String get cancelOrderConfirmCta => 'キャンセルを確認';
+
+  @override
+  String get helpCenterSearchHint => '質問を検索...';
+
+  @override
+  String get helpCenterChatCta => 'サポートとチャット';
+
+  @override
+  String get helpCenterNoResults => '一致する質問が見つかりません';
+
+  @override
+  String get helpFaqCancelOrderQ => '注文をキャンセルするには？';
+
+  @override
+  String get helpFaqCancelOrderA =>
+      '注文後2分以内であればキャンセルできます。「注文」→注文を選択→「キャンセル」をタップしてください。';
+
+  @override
+  String get helpFaqLateDeliveryQ => '注文が遅れている場合はどうすれば？';
+
+  @override
+  String get helpFaqLateDeliveryA => 'チャットサポートにご連絡いただければ、ドライバーに直接確認いたします。';
+
+  @override
+  String get helpFaqPaymentMethodsQ => '利用可能な支払い方法は？';
+
+  @override
+  String get helpFaqPaymentMethodsA => '現在、代金引換とFoodFlow電子ウォレットに対応しています。';
+
+  @override
+  String get helpFaqTopUpWalletQ => 'ウォレットにチャージするには？';
+
+  @override
+  String get helpFaqTopUpWalletA =>
+      '「プロフィール」→「ウォレット」→「チャージ」をタップし、希望金額を選択してください。';
+
+  @override
+  String get helpFaqAddAddressQ => '配送先住所を追加するには？';
+
+  @override
+  String get helpFaqAddAddressA => '「プロフィール」→「住所」→「住所を追加」をタップし、情報を入力してください。';
+
+  @override
+  String get helpFaqMissingOrderQ => '注文を受け取っていない場合は？';
+
+  @override
+  String get helpFaqMissingOrderA =>
+      'ドライバーが配達完了とマークしたのに受け取っていない場合は、すぐにサポートにご連絡ください。';
+
+  @override
+  String get helpFaqRewardPointsQ => 'ポイントはどのように貯まりますか？';
+
+  @override
+  String get helpFaqRewardPointsA => '注文完了ごとに10ポイント、友達紹介成功で50ポイントが付与されます。';
+
+  @override
+  String get helpFaqTrackOrderQ => '注文をリアルタイムで追跡するには？';
+
+  @override
+  String get helpFaqTrackOrderA => '注文後、「注文」→アクティブな注文を選択→「追跡」をタップしてください。';
 }

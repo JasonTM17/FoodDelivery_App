@@ -7,11 +7,19 @@ import '../providers/vouchers_provider.dart';
 class VoucherCard extends StatelessWidget {
   final Voucher voucher;
   final VoidCallback? onUse;
+  final String? percentOffLabel;
+  final String? minOrderLabel;
+  final String? expiresAtLabel;
+  final String? useNowLabel;
 
   const VoucherCard({
     super.key,
     required this.voucher,
     this.onUse,
+    this.percentOffLabel,
+    this.minOrderLabel,
+    this.expiresAtLabel,
+    this.useNowLabel,
   });
 
   @override
@@ -73,7 +81,7 @@ class VoucherCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             if (voucher.percentOff != null)
                               Text(
-                                'Giảm ${voucher.percentOff}%',
+                                percentOffLabel ?? 'Giảm ${voucher.percentOff}%',
                                 style: AppTextStyles.priceMedium.copyWith(
                                   color: isExpired ? AppColors.textHint : AppColors.error,
                                 ),
@@ -103,12 +111,12 @@ class VoucherCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   if (voucher.minOrderAmount != null)
                     Text(
-                      'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
+                      minOrderLabel ?? 'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
                       style: AppTextStyles.caption,
                     ),
                   if (voucher.expiresAt != null)
                     Text(
-                      'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)}',
+                      expiresAtLabel ?? 'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)}',
                       style: AppTextStyles.caption.copyWith(
                         color: voucher.expiresAt!.isBefore(DateTime.now())
                             ? AppColors.error
@@ -122,7 +130,7 @@ class VoucherCard extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: onUse,
                         icon: const Icon(Icons.local_offer, size: 16),
-                        label: const Text('Dùng ngay'),
+                        label: Text(useNowLabel ?? 'Dùng ngay'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,

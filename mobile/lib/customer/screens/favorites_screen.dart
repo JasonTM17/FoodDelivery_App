@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -24,6 +25,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(favoritesProvider);
 
     return Scaffold(
@@ -32,10 +34,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: const BackButton(color: AppColors.textPrimary),
-        title: const Text(
-          'Yêu thích',
-          style: AppTextStyles.headline3,
-        ),
+        title: Text(l10n.favoritesTitle, style: AppTextStyles.headline3),
         centerTitle: true,
       ),
       body: _buildBody(state),
@@ -43,6 +42,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildBody(FavoritesState state) {
+    final l10n = AppLocalizations.of(context)!;
     if (state.isLoading && state.items.isEmpty) {
       return const LoadingShimmer(type: ShimmerType.restaurant, itemCount: 4);
     }
@@ -55,9 +55,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     if (state.items.isEmpty) {
       return EmptyState(
         icon: Icons.favorite_border,
-        title: 'Chưa có nhà hàng yêu thích',
-        subtitle: 'Hãy khám phá và thêm vào danh sách yêu thích của bạn',
-        actionLabel: 'Khám phá nhà hàng',
+        title: l10n.favoritesEmpty,
+        subtitle: l10n.favoritesEmptySubtitle,
+        actionLabel: l10n.favoritesEmptyCta,
         onAction: () => Navigator.of(context).pushReplacementNamed('/home'),
       );
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/membership_provider.dart';
@@ -8,19 +7,29 @@ class MembershipTierCard extends StatelessWidget {
   final MembershipTier tier;
   final bool isCurrentTier;
   final VoidCallback? onUpgrade;
+  final String tierLabel;
+  final String currentBadgeLabel;
+  final String freeLabel;
+  final String pricePerMonthSuffix;
+  final String upgradeCtaLabel;
+  final List<String> benefits;
 
   const MembershipTierCard({
     super.key,
     required this.tier,
     this.isCurrentTier = false,
     this.onUpgrade,
+    required this.tierLabel,
+    required this.currentBadgeLabel,
+    required this.freeLabel,
+    required this.pricePerMonthSuffix,
+    required this.upgradeCtaLabel,
+    required this.benefits,
   });
 
   @override
   Widget build(BuildContext context) {
-    final currencyFmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
     final price = tier.monthlyPriceVnd();
-    final benefits = tier.benefitsVi();
     final isFree = tier == MembershipTier.free;
 
     return Container(
@@ -56,7 +65,7 @@ class MembershipTierCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                tier.labelVi(),
+                tierLabel,
                 style: AppTextStyles.headline4.copyWith(
                   color: isCurrentTier ? Colors.white : AppColors.textPrimary,
                 ),
@@ -69,7 +78,7 @@ class MembershipTierCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Gói hiện tại',
+                    currentBadgeLabel,
                     style: AppTextStyles.caption.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -80,7 +89,7 @@ class MembershipTierCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            isFree ? 'Miễn phí' : '${currencyFmt.format(price)}/tháng',
+            isFree ? freeLabel : '${tier.monthlyPriceVnd().toString()}${pricePerMonthSuffix}',
             style: AppTextStyles.headline3.copyWith(
               color: isCurrentTier ? Colors.white : AppColors.primary,
             ),
@@ -119,7 +128,7 @@ class MembershipTierCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Nâng cấp ngay'),
+                child: Text(upgradeCtaLabel),
               ),
             ),
           ],

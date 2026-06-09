@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
-import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/cancel_order_provider.dart';
 import '../widgets/cancel_reason_picker.dart';
 
@@ -36,13 +35,14 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
   }
 
   Future<void> _handleCancel() async {
+    final l10n = AppLocalizations.of(context)!;
     final provider = ref.read(cancelOrderProvider.notifier);
     final ok = await provider.cancelOrder(widget.orderId);
     if (!mounted) return;
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã hủy đơn hàng thành công'),
+        SnackBar(
+          content: Text(l10n.cancelOrderSuccess),
           backgroundColor: AppColors.success,
         ),
       );
@@ -51,7 +51,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
       final state = ref.read(cancelOrderProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(state.error ?? 'Không thể hủy đơn hàng'),
+          content: Text(state.error ?? l10n.cancelOrderFailed),
           backgroundColor: AppColors.error,
         ),
       );
@@ -60,6 +60,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(cancelOrderProvider);
 
     return Scaffold(
@@ -68,7 +69,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: const BackButton(color: AppColors.textPrimary),
-        title: const Text('Hủy đơn hàng', style: AppTextStyles.headline3),
+        title: Text(l10n.cancelOrderTitle, style: AppTextStyles.headline3),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -95,7 +96,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Thông tin đơn hàng',
+                    l10n.cancelOrderInfoHeader,
                     style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
@@ -127,18 +128,19 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
 
             // Reason picker
             Text(
-              'Chọn lý do hủy',
+              l10n.cancelOrderReasonHeader,
               style: AppTextStyles.headline4,
             ),
             const SizedBox(height: 4),
             Text(
-              'Chúng tôi rất tiếc nếu có điều gì không như ý',
+              l10n.cancelOrderReasonSubtitle,
               style: AppTextStyles.bodySmall,
             ),
             const SizedBox(height: 16),
             CancelReasonPicker(
               selectedReason: state.selectedReason,
               onSelected: (reason) => ref.read(cancelOrderProvider.notifier).selectReason(reason),
+              labels: _reasonLabels(l10n),
             ),
             const SizedBox(height: 20),
 
@@ -148,7 +150,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
               maxLines: 3,
               onChanged: (v) => ref.read(cancelOrderProvider.notifier).updateNote(v),
               decoration: InputDecoration(
-                hintText: 'Ghi chú thêm (tùy chọn)',
+                hintText: l10n.cancelOrderNoteHint,
                 hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
                 filled: true,
                 fillColor: AppColors.cardBackground,
@@ -174,7 +176,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Hoàn tiền trong 3-5 ngày làm việc',
+                      l10n.cancelOrderRefundNote,
                       style: AppTextStyles.bodySmall.copyWith(color: AppColors.info),
                     ),
                   ),
@@ -201,9 +203,9 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text(
-                        'Xác nhận hủy',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    : Text(
+                        l10n.cancelOrderConfirmCta,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
               ),
             ),
@@ -212,6 +214,15 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
         ),
       ),
     );
+  }
+
+  Map<CancelReason, String> _reasonLabels(AppLocalizations l10n) {
+    return {
+      CancelReason.slow: l10n.cancelOrderReasonSlow,
+      CancelReason.changedMind: l10n.cancelOrderReasonChanged,
+      CancelReason.wrongOrder: l10n.cancelOrderReasonWrong,
+      CancelReason.other: l10n.cancelOrderReasonOther,
+    };
   }
 
   String _formatCurrency(int vnd) {
