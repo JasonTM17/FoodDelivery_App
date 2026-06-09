@@ -16,6 +16,10 @@ dependencies:
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
 
+  # API contract (from OpenAPI)
+  api_client:
+    path: ./packages/api_client
+
   # Networking
   dio: ^5.7.0
   socket_io_client: ^3.0.2
