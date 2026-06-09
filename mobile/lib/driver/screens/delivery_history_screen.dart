@@ -2,23 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
-import '../../shared/theme/app_text_styles.dart';
+
 import '../../shared/widgets/order_status_badge.dart';
 import '../providers/driver_provider.dart';
+import '../providers/trip_history_filter_provider.dart';
+import '../widgets/date_range_filter.dart';
 import '../../l10n/app_localizations.dart';
 
 class DeliveryHistoryScreen extends ConsumerStatefulWidget {
   const DeliveryHistoryScreen({super.key});
 
   @override
-  ConsumerState<DeliveryHistoryScreen> createState() => _DeliveryHistoryScreenState();
+  ConsumerState<DeliveryHistoryScreen> createState() =>
+      _DeliveryHistoryScreenState();
 }
 
-class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
+class _DeliveryHistoryScreenState
+    extends ConsumerState<DeliveryHistoryScreen> {
   List<OrderModel> _orders = [];
   bool _isLoading = true;
-  DateTime? _selectedDate;
-  final _dateController = TextEditingController();
 
   @override
   void initState() {
@@ -26,28 +28,15 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHistory());
   }
 
-  @override
-  void dispose() {
-    _dateController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
-    String? fromDate;
-    String? toDate;
-
-    if (_selectedDate != null) {
-      final start = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
-      final end = start.add(const Duration(days: 1));
-      fromDate = start.toIso8601String();
-      toDate = end.toIso8601String();
-    }
-
-    final orders = await ref.read(driverProvider.notifier).fetchDeliveryHistory(
-          fromDate: fromDate,
-          toDate: toDate,
-        );
+    final filter = ref.read(tripHistoryFilterProvider);
+    final params = filter.toQueryParams();
+    final orders =
+        await ref.read(driverProvider.notifier).fetchDeliveryHistory(
+              fromDate: params['from'] as String?,
+              toDate: params['to'] as String?,
+            );
     if (mounted) {
       setState(() {
         _orders = orders;
@@ -56,46 +45,11 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E1E1E),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _dateController.text =
-            '${picked.day}/${picked.month}/${picked.year}';
-      });
-      _loadHistory();
-    }
-  }
-
-  void _clearFilter() {
-    setState(() {
-      _selectedDate = null;
-      _dateController.clear();
-    });
-    _loadHistory();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    final filter = ref.watch(tripHistoryFilterProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -108,53 +62,37 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
       ),
       body: Column(
         children: [
-          // Date filter
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _dateController,
-                    readOnly: true,
-                    onTap: _pickDate,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.driverHistoryFilterDate,
-                      hintStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      prefixIcon: const Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFF6B7280),
-                        size: 20,
-                      ),
-                      suffixIcon: _selectedDate != null
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, color: Color(0xFF6B7280), size: 20),
-                              onPressed: _clearFilter,
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 8),
+          DateRangeFilter(
+            fromDate: filter.fromDate,
+            toDate: filter.toDate,
+            onFromDateChanged: (date) {
+              ref
+                  .read(tripHistoryFilterProvider.notifier)
+                  .setDateRange(date, filter.toDate);
+              _loadHistory();
+            },
+            onToDateChanged: (date) {
+              ref
+                  .read(tripHistoryFilterProvider.notifier)
+                  .setDateRange(filter.fromDate, date);
+              _loadHistory();
+            },
+            onClear: () {
+              ref
+                  .read(tripHistoryFilterProvider.notifier)
+                  .clearFilters();
+              _loadHistory();
+            },
           ),
-
-          // Content
+          const SizedBox(height: 8),
+          _buildStatusChips(),
+          const SizedBox(height: 8),
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary),
                   )
                 : _orders.isEmpty
                     ? _buildEmptyState()
@@ -173,6 +111,52 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
     );
   }
 
+  Widget _buildStatusChips() {
+    final filter = ref.watch(tripHistoryFilterProvider);
+    final options = [
+      (TripStatusFilter.all, 'Tất cả'),
+      (TripStatusFilter.completed, 'Hoàn thành'),
+      (TripStatusFilter.cancelled, 'Đã huỷ'),
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: options.map((opt) {
+          final isActive = filter.statusFilter == opt.$1;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(opt.$2),
+              selected: isActive,
+              onSelected: (_) {
+                ref
+                    .read(tripHistoryFilterProvider.notifier)
+                    .setStatusFilter(opt.$1);
+                _loadHistory();
+              },
+              selectedColor: AppColors.primary.withValues(alpha: 0.15),
+              backgroundColor: const Color(0xFF1E1E1E),
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isActive ? AppColors.primary : const Color(0xFF9CA3AF),
+              ),
+              side: BorderSide(
+                color: isActive
+                    ? AppColors.primary
+                    : const Color(0xFF374151),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildOrderCard(OrderModel order) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -182,9 +166,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
         borderRadius: BorderRadius.circular(14),
       ),
       child: InkWell(
-        onTap: () {
-          _showOrderDetail(order);
-        },
+        onTap: () => _showOrderDetail(order),
         borderRadius: BorderRadius.circular(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,18 +219,13 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 13,
-                      color: Color(0xFF6B7280),
-                    ),
+                    const Icon(Icons.calendar_today,
+                        size: 13, color: Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     Text(
                       _formatDateTime(order.createdAt),
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
+                          fontSize: 12, color: Color(0xFF6B7280)),
                     ),
                   ],
                 ),
@@ -275,14 +252,11 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.history,
-              size: 56,
-              color: AppColors.textSecondary.withValues(alpha: 0.4),
-            ),
+            Icon(Icons.history, size: 56,
+                color: const Color(0xFF6B7280).withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.driverHistoryEmpty,
+              AppLocalizations.of(context).driverHistoryEmpty,
               style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
             ),
           ],
@@ -307,8 +281,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
             children: [
               Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 40, height: 4,
                   decoration: BoxDecoration(
                     color: const Color(0xFF374151),
                     borderRadius: BorderRadius.circular(2),
@@ -334,33 +307,33 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               const SizedBox(height: 4),
               Text(
                 'ĐH: ${order.id.substring(0, 8).toUpperCase()}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                style:
+                    const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
               ),
               const Divider(color: Color(0xFF374151), height: 24),
               Text(
                 'Địa chỉ giao: ${order.deliveryAddress.address}',
-                style: const TextStyle(fontSize: 14, color: Color(0xFFD1D5DB)),
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFFD1D5DB)),
               ),
               const SizedBox(height: 8),
               if (order.note != null)
                 Text(
                   'Ghi chú: ${order.note}',
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFF6B7280)),
                 ),
               const Divider(color: Color(0xFF374151), height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Phí giao hàng',
-                    style: TextStyle(fontSize: 14, color: Color(0xFFD1D5DB)),
-                  ),
+                  const Text('Phí giao hàng',
+                      style: TextStyle(
+                          fontSize: 14, color: Color(0xFFD1D5DB))),
                   Text(
                     '${order.deliveryFee.toStringAsFixed(0)}đ',
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                        fontSize: 14, color: Colors.white),
                   ),
                 ],
               ),
@@ -368,21 +341,17 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Tổng',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  const Text('Tổng',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
                   Text(
                     '${order.total.toStringAsFixed(0)}đ',
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary),
                   ),
                 ],
               ),
