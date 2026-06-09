@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../l10n/app_localizations.dart';
@@ -14,6 +15,7 @@ import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/promo_banner.dart';
+import '../router/route_names.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -182,12 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final restaurant = restaurantState.nearbyRestaurants[index];
                       return RestaurantCard(
                         restaurant: restaurant,
-                        onTap: () {
-                          Navigator.of(context).pushNamed(
-                            '/restaurant-detail',
-                            arguments: restaurant.id,
-                          );
-                        },
+                        onTap: () => context.push(Routes.restaurantDetail, extra: restaurant.id),
                       );
                     },
                     childCount: restaurantState.nearbyRestaurants.length,
@@ -228,7 +225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           GestureDetector(
-            onTap: () => Navigator.of(context).pushNamed('/profile'),
+            onTap: () => context.push(Routes.profile),
             child: Container(
               width: 44,
               height: 44,
@@ -257,7 +254,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: GestureDetector(
-              onTap: () => Navigator.of(context).pushNamed('/addresses'),
+              onTap: () => context.push(Routes.addresses),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
@@ -265,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Expanded(
                       child: Text(
@@ -274,7 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textHint, size: 20),
+                    const Icon(Icons.arrow_drop_down, color: AppColors.textHint, size: 20),
                   ],
                 ),
               ),
@@ -314,7 +311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onChanged: (value) => setState(() {}),
         onSubmitted: (value) {
           if (value.isNotEmpty) {
-            Navigator.of(context).pushNamed('/search', arguments: value);
+            context.push(Routes.search, extra: value);
           }
         },
       ),
@@ -426,13 +423,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 FocusScope.of(context).requestFocus(_searchFocusNode);
               }),
               _buildNavItem(Icons.shopping_cart_outlined, l10n.navCart, false, () {
-                Navigator.of(context).pushNamed('/cart');
+                context.push(Routes.cart);
               }, badgeCount: cartItemCount),
               _buildNavItem(Icons.receipt_long_outlined, l10n.navOrders, false, () {
-                Navigator.of(context).pushNamed('/orders');
+                context.push(Routes.orders);
               }),
               _buildNavItem(Icons.person_outline, l10n.navProfile, false, () {
-                Navigator.of(context).pushNamed('/profile');
+                context.push(Routes.profile);
               }),
             ],
           ),

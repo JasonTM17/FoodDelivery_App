@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../router/route_names.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   final String initialRole;
@@ -60,7 +62,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      context.go(Routes.home);
     }
   }
 

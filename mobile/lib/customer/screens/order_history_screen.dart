@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/models/order.dart';
@@ -10,6 +11,7 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -115,7 +117,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
     return GestureDetector(
       onTap: () {
         if (order.isActive) {
-          Navigator.of(context).pushNamed('/order-tracking', arguments: order.id);
+          context.push(Routes.orderTracking, extra: order.id);
         }
       },
       child: Container(
@@ -181,18 +183,12 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                 const Spacer(),
                 if (order.isActive)
                   TextButton(
-                    onPressed: () => Navigator.of(context).pushNamed(
-                      '/order-tracking',
-                      arguments: order.id,
-                    ),
+                    onPressed: () => context.push(Routes.orderTracking, extra: order.id),
                     child: Text(AppLocalizations.of(context)!.orderHistoryTrack, style: const TextStyle(fontSize: 12)),
                   )
                 else if (order.status == 'delivered')
                   TextButton(
-                    onPressed: () => Navigator.of(context).pushNamed(
-                      '/review',
-                      arguments: order.id,
-                    ),
+                    onPressed: () => context.push(Routes.review, extra: order.id),
                     child: const Text('Đánh giá', style: TextStyle(fontSize: 12)),
                   ),
               ],

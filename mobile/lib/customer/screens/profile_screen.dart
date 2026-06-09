@@ -8,6 +8,7 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/locale_switcher.dart';
 import '../providers/address_provider.dart';
+import '../router/route_names.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -156,35 +157,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: Icons.location_on_outlined,
                     title: l10n.myAddresses,
                     subtitle: l10n.myAddressesSubtitle,
-                    onTap: () => Navigator.of(context).pushNamed('/addresses'),
+                    onTap: () => context.push(Routes.addresses),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.card_giftcard_outlined,
                     title: l10n.profileLoyalty,
                     subtitle: l10n.profileLoyaltySubtitle,
-                    onTap: () => context.push('/loyalty'),
+                    onTap: () => context.push(Routes.loyalty),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.account_balance_wallet_outlined,
                     title: l10n.profileWallet,
                     subtitle: l10n.profileWalletSubtitle,
-                    onTap: () => context.push('/wallet'),
+                    onTap: () => context.push(Routes.wallet),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.group_outlined,
                     title: l10n.profileReferral,
                     subtitle: l10n.profileReferralSubtitle,
-                    onTap: () => context.push('/referral'),
+                    onTap: () => context.push(Routes.referral),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.help_outline,
                     title: l10n.profileHelp,
                     subtitle: l10n.profileHelpSubtitle,
-                    onTap: () => context.push('/help'),
+                    onTap: () => context.push(Routes.help),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
@@ -310,7 +311,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             onPressed: () {
                               ref.read(authProvider.notifier).logout();
                               Navigator.of(ctx).pop();
-                              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                              context.go(Routes.login);
                             },
                             child: Text(
                               l10n.logout,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/cart_provider.dart';
 import '../../shared/models/menu_item.dart';
@@ -7,6 +8,7 @@ import '../../shared/models/cart.dart' show SelectedOption;
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class FoodDetailScreen extends ConsumerStatefulWidget {
   final MenuItemModel item;
@@ -101,7 +103,7 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
         action: SnackBarAction(
           label: AppLocalizations.of(context)!.cartViewCart,
           textColor: Colors.white,
-          onPressed: () => Navigator.of(context).pushNamed('/cart'),
+          onPressed: () => context.push(Routes.cart),
         ),
       ),
     );

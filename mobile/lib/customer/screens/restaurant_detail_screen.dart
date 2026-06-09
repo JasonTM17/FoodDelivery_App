@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/restaurant_provider.dart';
 import '../../shared/providers/cart_provider.dart';
@@ -12,6 +13,7 @@ import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final String restaurantId;
@@ -270,9 +272,9 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             ...items.map((item) => FoodCard(
               item: item,
               onTap: () {
-                Navigator.of(context).pushNamed(
-                  '/food-detail',
-                  arguments: {'item': item, 'restaurantName': ref.read(restaurantProvider).selectedRestaurant?.name ?? ''},
+                context.push(
+                  Routes.foodDetail,
+                  extra: {'item': item, 'restaurantName': ref.read(restaurantProvider).selectedRestaurant?.name ?? ''},
                 );
               },
               onAddToCart: () {
@@ -288,7 +290,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                     action: SnackBarAction(
                       label: AppLocalizations.of(context)!.cartViewCart,
                       textColor: Colors.white,
-                      onPressed: () => Navigator.of(context).pushNamed('/cart'),
+                      onPressed: () => context.push(Routes.cart),
                     ),
                   ),
                 );
@@ -533,7 +535,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
       ),
       child: SafeArea(
         child: ElevatedButton(
-          onPressed: () => Navigator.of(context).pushNamed('/cart'),
+          onPressed: () => context.push(Routes.cart),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
           ),
