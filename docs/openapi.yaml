@@ -1,0 +1,2977 @@
+openapi: "3.1.0"
+info:
+  title: FoodFlow API
+  version: "1.0.0"
+  description: |
+    FoodFlow — Vietnamese food delivery platform. 12 modules: auth, users,
+    restaurants, menu, orders, drivers, payments, promotions, notifications,
+    support, audit, analytics. All monetary amounts in VND (integer).
+  contact:
+    name: FoodFlow Team
+    email: jasonbmt06@gmail.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.foodflow.io/v1
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+    description: Authentication — register, login, refresh, logout
+  - name: users
+    description: User profile & addresses
+  - name: restaurants
+    description: Public restaurant listing & detail
+  - name: menu
+    description: Restaurant menu CRUD (restaurant owner)
+  - name: cart
+    description: Customer shopping cart
+  - name: orders
+    description: Order lifecycle — customer, restaurant, driver
+  - name: drivers
+    description: Driver online/offline, earnings, incentives
+  - name: payments
+    description: Payment intents, SePay webhooks
+  - name: wallet
+    description: User wallet balance & transactions
+  - name: loyalty
+    description: Loyalty points
+  - name: referral
+    description: Referral code & redemptions
+  - name: promotions
+    description: Promotion codes
+  - name: reviews
+    description: Order reviews & restaurant replies
+  - name: notifications
+    description: Push notifications & FCM tokens
+  - name: tracking
+    description: Real-time order tracking
+  - name: admin
+    description: Admin dashboard, user/restaurant management, promotions, audit
+  - name: support
+    description: AI support chat & tickets
+  - name: webhooks
+    description: N8N webhooks & SePay payment callbacks
+  - name: health
+    description: Health check & metrics
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+  schemas:
+    # ── Problem Detail (RFC 7807) ──
+    ProblemDetail:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          description: URI reference identifying the problem type
+          example: "https://api.foodflow.io/errors/validation-error"
+        title:
+          type: string
+          description: Short human-readable summary
+          example: "Validation Error"
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation
+          example: "Email is already registered"
+        instance:
+          type: string
+          description: URI of the specific occurrence
+        errors:
+          type: array
+          description: Field-level validation errors
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+              code: { type: string }
+
+    # ── Pagination Envelope ──
+    PaginationMeta:
+      type: object
+      required: [total, page, limit, hasMore]
+      properties:
+        total:
+          type: integer
+          description: Total number of records
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        hasMore:
+          type: boolean
+          description: Whether more pages exist
+
+    # ── Auth ──
+    RegisterRequest:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email: { type: string, format: email, maxLength: 255 }
+        password: { type: string, minLength: 8, maxLength: 128 }
+        fullName: { type: string, maxLength: 100 }
+        phone: { type: string, maxLength: 20 }
+        role:
+          type: string
+          enum: [customer, driver, restaurant]
+          default: customer
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: Opaque rotating refresh token
+
+    AuthResult:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (Ed25519-signed)
+        refreshToken:
+          type: string
+          description: Opaque rotating refresh token
+        expiresIn:
+          type: integer
+          description: Access token TTL in seconds
+          example: 900
+        user:
+          $ref: "#/components/schemas/SanitizedUser"
+
+    SanitizedUser:
+      type: object
+      required: [id, email, fullName, role, isActive]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [customer, driver, restaurant, admin] }
+        avatarUrl: { type: string, format: uri }
+        isActive: { type: boolean }
+        preferredLocale: { type: string, enum: [vi, en, ja] }
+
+    LogoutRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          description: Token to invalidate
+
+    JwksResponse:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              kty: { type: string, example: "OKP" }
+              crv: { type: string, example: "Ed25519" }
+              kid: { type: string }
+              x: { type: string }
+              use: { type: string, example: "sig" }
+
+    JwksVersionResponse:
+      type: object
+      required: [version, rotatedAt]
+      properties:
+        version: { type: integer }
+        rotatedAt: { type: string, format: date-time }
+
+    # ── Users ──
+    UserProfile:
+      type: object
+      required: [id, email, fullName, role, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [customer, driver, restaurant, admin] }
+        avatarUrl: { type: string, format: uri }
+        preferredLocale: { type: string, enum: [vi, en, ja] }
+        createdAt: { type: string, format: date-time }
+        customerProfile: { $ref: "#/components/schemas/CustomerProfile" }
+        driverProfile: { $ref: "#/components/schemas/DriverProfile" }
+        restaurantProfile: { $ref: "#/components/schemas/RestaurantProfileBrief" }
+
+    CustomerProfile:
+      type: object
+      properties:
+        totalOrders: { type: integer }
+        defaultAddress: { $ref: "#/components/schemas/Address" }
+
+    DriverProfile:
+      type: object
+      properties:
+        licenseNumber: { type: string }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: string }
+        isOnline: { type: boolean }
+        isVerified: { type: boolean }
+        rating: { type: number, minimum: 1, maximum: 5 }
+        totalDeliveries: { type: integer }
+        totalEarnings: { type: integer, description: "VND" }
+
+    RestaurantProfileBrief:
+      type: object
+      properties:
+        restaurantId: { type: string, format: uuid }
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullName: { type: string, maxLength: 100 }
+        phone: { type: string, maxLength: 20 }
+        preferredLocale: { type: string, enum: [vi, en, ja] }
+
+    AvatarUploadResponse:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+
+    # ── Addresses ──
+    Address:
+      type: object
+      required: [id, label, addressLine, lat, lng]
+      properties:
+        id: { type: string, format: uuid }
+        label: { type: string, example: "Nha" }
+        addressLine: { type: string, example: "123 Nguyễn Huệ, Quận 1" }
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+        isDefault: { type: boolean }
+
+    CreateAddressRequest:
+      type: object
+      required: [label, addressLine, lat, lng]
+      properties:
+        label: { type: string }
+        addressLine: { type: string }
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+        isDefault: { type: boolean }
+
+    UpdateAddressRequest:
+      type: object
+      properties:
+        label: { type: string }
+        addressLine: { type: string }
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+        isDefault: { type: boolean }
+
+    # ── Restaurants ──
+    RestaurantSummary:
+      type: object
+      required: [id, name, slug, addressLine, city, cuisineTypes, priceRange, rating, prepTimeAvgMinutes, isOpen]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        logoUrl: { type: string, format: uri }
+        coverUrl: { type: string, format: uri }
+        addressLine: { type: string }
+        city: { type: string }
+        district: { type: string }
+        cuisineTypes: { type: array, items: { type: string } }
+        priceRange: { type: string, enum: ["$", "$$", "$$$"] }
+        rating: { type: number, minimum: 1, maximum: 5 }
+        totalReviews: { type: integer }
+        prepTimeAvgMinutes: { type: integer }
+        isOpen: { type: boolean }
+        minOrderAmount: { type: integer, description: "VND" }
+        distanceKm: { type: number, description: "Distance from query point" }
+
+    RestaurantDetail:
+      allOf:
+        - $ref: "#/components/schemas/RestaurantSummary"
+      type: object
+      required: [phone, openingHours, description]
+      properties:
+        phone: { type: string }
+        description: { type: string }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        openingHours:
+          type: array
+          items:
+            type: object
+            properties:
+              dayOfWeek: { type: integer, minimum: 0, maximum: 6 }
+              openTime: { type: string, example: "07:00" }
+              closeTime: { type: string, example: "22:00" }
+              isClosed: { type: boolean }
+
+    RestaurantListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantSummary" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    # ── Menu ──
+    MenuCategory:
+      type: object
+      required: [id, name, sortOrder]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        sortOrder: { type: integer }
+
+    MenuItem:
+      type: object
+      required: [id, name, basePrice, isAvailable]
+      properties:
+        id: { type: string, format: uuid }
+        categoryId: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        basePrice: { type: integer, description: "VND" }
+        isAvailable: { type: boolean }
+        isPopular: { type: boolean }
+        options:
+          type: array
+          items: { $ref: "#/components/schemas/MenuItemOption" }
+
+    MenuResponse:
+      type: object
+      required: [categories, items]
+      properties:
+        categories:
+          type: array
+          items: { $ref: "#/components/schemas/MenuCategory" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/MenuItem" }
+
+    MenuItemOption:
+      type: object
+      required: [id, name, isRequired, isMultiple, values]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        isRequired: { type: boolean }
+        isMultiple: { type: boolean }
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              value: { type: string }
+              priceModifier: { type: integer, description: "VND" }
+
+    CreateCategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 100 }
+        sortOrder: { type: integer }
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name: { type: string }
+        sortOrder: { type: integer }
+
+    CreateMenuItemRequest:
+      type: object
+      required: [categoryId, name, basePrice]
+      properties:
+        name: { type: string, maxLength: 200 }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        categoryId: { type: string, format: uuid }
+        basePrice: { type: integer, minimum: 0, description: "VND" }
+        isAvailable: { type: boolean }
+        isPopular: { type: boolean }
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              isRequired: { type: boolean }
+              isMultiple: { type: boolean }
+              values:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value: { type: string }
+                    priceModifier: { type: integer, description: "VND" }
+
+    UpdateMenuItemRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        categoryId: { type: string, format: uuid }
+        basePrice: { type: integer, minimum: 0, description: "VND" }
+        isAvailable: { type: boolean }
+        isPopular: { type: boolean }
+
+    # ── Cart ──
+    CartItem:
+      type: object
+      required: [id, menuItemId, name, quantity, unitPrice]
+      properties:
+        id: { type: string, format: uuid }
+        menuItemId: { type: string, format: uuid }
+        name: { type: string }
+        imageUrl: { type: string, format: uri }
+        quantity: { type: integer, minimum: 1 }
+        unitPrice: { type: integer, description: "VND" }
+        selectedOptions: { type: array, items: { type: object } }
+        notes: { type: string, maxLength: 300 }
+
+    CartResponse:
+      type: object
+      required: [items, subtotal, itemCount]
+      properties:
+        id: { type: string, format: uuid }
+        restaurantId: { type: string, format: uuid }
+        restaurantName: { type: string }
+        promotionCode: { type: string }
+        promotionDiscount: { type: integer, description: "VND discount" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CartItem" }
+        subtotal: { type: integer, description: "VND" }
+        itemCount: { type: integer }
+
+    AddCartItemRequest:
+      type: object
+      required: [menuItemId, quantity, unitPrice]
+      properties:
+        menuItemId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
+        unitPrice: { type: integer, description: "VND" }
+        selectedOptions: { type: array, items: { type: object } }
+        notes: { type: string }
+
+    UpdateCartItemRequest:
+      type: object
+      properties:
+        quantity: { type: integer, minimum: 0 }
+        selectedOptions: { type: array, items: { type: object } }
+        notes: { type: string }
+
+    ApplyPromotionRequest:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+
+    # ── Orders ──
+    PlaceOrderRequest:
+      type: object
+      required: [restaurantId, deliveryAddressId, paymentMethod, items]
+      properties:
+        restaurantId: { type: string, format: uuid }
+        deliveryAddressId: { type: string, format: uuid }
+        paymentMethod: { type: string, enum: [cash, mock_wallet, sepay] }
+        promotionCode: { type: string }
+        notes: { type: string, maxLength: 500 }
+        items:
+          type: array
+          items:
+            type: object
+            required: [menuItemId, quantity, unitPrice]
+            properties:
+              menuItemId: { type: string, format: uuid }
+              quantity: { type: integer, minimum: 1 }
+              unitPrice: { type: integer, description: "VND (at time of order)" }
+              selectedOptions: { type: array, items: { type: object } }
+              notes: { type: string }
+
+    OrderResponse:
+      type: object
+      required: [id, orderCode, status, subtotal, deliveryFee, total, paymentMethod, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        orderCode: { type: string, example: "FF2806A1B2C3" }
+        customerId: { type: string, format: uuid }
+        restaurantId: { type: string, format: uuid }
+        restaurantName: { type: string }
+        driverId: { type: string, format: uuid }
+        driverName: { type: string }
+        deliveryAddress: { $ref: "#/components/schemas/Address" }
+        status: { type: string, enum: ["created","pending_payment","paid","restaurant_pending","restaurant_accepted","preparing","ready_for_pickup","driver_assigned","driver_arriving_restaurant","picked_up","delivering","delivered","completed","cancelled","refunded"] }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              nameSnapshot: { type: string }
+              quantity: { type: integer }
+              unitPrice: { type: integer, description: "VND" }
+              selectedOptions: { type: array, items: { type: object } }
+        subtotal: { type: integer, description: "VND" }
+        deliveryFee: { type: integer, description: "VND" }
+        promotionDiscount: { type: integer, description: "VND" }
+        total: { type: integer, description: "VND" }
+        paymentMethod: { type: string, enum: [cash, mock_wallet, sepay] }
+        paymentStatus: { type: string, enum: [pending, completed, failed, refunded] }
+        notes: { type: string }
+        estimatedPrepTimeMinutes: { type: integer }
+        estimatedDeliveryTimeMinutes: { type: integer }
+        statusHistory:
+          type: array
+          items: { $ref: "#/components/schemas/StatusHistoryEntry" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    StatusHistoryEntry:
+      type: object
+      properties:
+        status: { type: string }
+        changedBy: { type: string }
+        note: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    OrderListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/OrderResponse" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        reason: { type: string }
+
+    UpdateOrderStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [restaurant_accepted, preparing, ready_for_pickup, picked_up, delivering, delivered]
+        note: { type: string }
+
+    CreateReviewRequest:
+      type: object
+      required: [foodRating]
+      properties:
+        foodRating: { type: integer, minimum: 1, maximum: 5 }
+        deliveryRating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        photos: { type: array, items: { type: string, format: uri } }
+
+    # ── Settlement Batch ──
+    SettlementBatch:
+      type: object
+      required: [id, periodStart, periodEnd, totalAmount, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+        totalAmount: { type: integer, description: "VND" }
+        status: { type: string, enum: [pending, processing, completed, failed] }
+        restaurantCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    SettleRequest:
+      type: object
+      required: [batchId, action]
+      properties:
+        batchId: { type: string, format: uuid }
+        action: { type: string, enum: [settle, retry, force] }
+
+    # ── Reviews ──
+    ReviewResponse:
+      type: object
+      required: [id, orderId, foodRating, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        customerId: { type: string, format: uuid }
+        customerName: { type: string }
+        foodRating: { type: integer, minimum: 1, maximum: 5 }
+        deliveryRating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        photos: { type: array, items: { type: string, format: uri } }
+        reply: { type: string }
+        replyAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    ReviewListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/ReviewResponse" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    ReviewPhotoUploadUrlResponse:
+      type: object
+      required: [uploadUrl, key]
+      properties:
+        uploadUrl: { type: string, format: uri }
+        key: { type: string }
+
+    RestaurantReplyRequest:
+      type: object
+      required: [reply]
+      properties:
+        reply: { type: string, maxLength: 500 }
+
+    AdminHideRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, maxLength: 200 }
+
+    # ── Drivers ──
+    GoOnlineRequest:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+
+    DriverEarningsResponse:
+      type: object
+      required: [period, totalEarnings, deliveryCount, tips]
+      properties:
+        period: { type: string, enum: [today, week, month] }
+        totalEarnings: { type: integer, description: "VND" }
+        deliveryCount: { type: integer }
+        tips: { type: integer, description: "VND" }
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              earnings: { type: integer, description: "VND" }
+              deliveries: { type: integer }
+
+    DriverIncentivesResponse:
+      type: object
+      properties:
+        activeIncentives:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+              description: { type: string }
+              targetDeliveries: { type: integer }
+              bonusAmount: { type: integer, description: "VND" }
+              progress: { type: integer }
+              expiresAt: { type: string, format: date-time }
+
+    # ── Wallet ──
+    WalletSnapshot:
+      type: object
+      required: [balance, pendingTopups]
+      properties:
+        balance:
+          type: integer
+          description: "Available balance in VND (excludes pending topups per F8)"
+        pendingTopups:
+          type: integer
+          description: "Pending topup amount in VND (not yet confirmed)"
+        recentTransactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              amountDelta: { type: integer, description: "VND (positive=credit, negative=debit)" }
+              type: { type: string, enum: [credit, debit] }
+              reason: { type: string }
+              refId: { type: string, format: uuid }
+              createdAt: { type: string, format: date-time }
+
+    # ── Loyalty ──
+    LoyaltySnapshot:
+      type: object
+      required: [points, tier]
+      properties:
+        points: { type: integer }
+        tier: { type: string, enum: [bronze, silver, gold, platinum] }
+        nextTierPoints: { type: integer }
+        recentTransactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              points: { type: integer }
+              type: { type: string, enum: [credit, debit] }
+              description: { type: string }
+              createdAt: { type: string, format: date-time }
+
+    # ── Referral ──
+    ReferralSnapshot:
+      type: object
+      required: [code, totalRewards, successfulReferrals]
+      properties:
+        code: { type: string, example: "FF28A1B2" }
+        totalRewards: { type: integer, description: "VND" }
+        successfulReferrals: { type: integer }
+        recentRedemptions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              rewardAmount: { type: integer, description: "VND" }
+              redeemedAt: { type: string, format: date-time }
+
+    # ── Promotions ──
+    PromotionResponse:
+      type: object
+      required: [id, code, type, value, isActive, startsAt, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, example: "WELCOME50" }
+        type: { type: string, enum: [percentage, fixed, free_delivery] }
+        value: { type: integer, description: "VND (fixed) or percentage points" }
+        minOrderAmount: { type: integer, description: "VND" }
+        maxDiscount: { type: integer, description: "VND" }
+        usageLimit: { type: integer }
+        usageCount: { type: integer }
+        maxPerUser: { type: integer }
+        firstOrderOnly: { type: boolean }
+        isActive: { type: boolean }
+        startsAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        discountAmount:
+          type: integer
+          description: "Calculated discount for current user/cart (if applicable)"
+
+    CreatePromotionRequest:
+      type: object
+      required: [code, type, value, usageLimit, startsAt, expiresAt]
+      properties:
+        code: { type: string, maxLength: 50 }
+        type: { type: string, enum: [percentage, fixed, free_delivery] }
+        value: { type: integer }
+        minOrderAmount: { type: integer, description: "VND" }
+        maxDiscount: { type: integer, description: "VND" }
+        usageLimit: { type: integer, minimum: 1 }
+        maxPerUser: { type: integer, minimum: 1 }
+        firstOrderOnly: { type: boolean }
+        restaurantId: { type: string, format: uuid }
+        startsAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        isActive: { type: boolean }
+
+    UpdatePromotionRequest:
+      type: object
+      properties:
+        value: { type: integer }
+        minOrderAmount: { type: integer, description: "VND" }
+        maxDiscount: { type: integer, description: "VND" }
+        usageLimit: { type: integer }
+        maxPerUser: { type: integer }
+        firstOrderOnly: { type: boolean }
+        startsAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+
+    PromotionListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/PromotionResponse" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    # ── Notifications ──
+    NotificationResponse:
+      type: object
+      required: [id, title, body, type, isRead, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        body: { type: string }
+        type: { type: string }
+        data: { type: object }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    NotificationListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/NotificationResponse" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    RegisterFcmTokenRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token: { type: string }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceId: { type: string }
+
+    # ── Tracking ──
+    TrackingResponse:
+      type: object
+      required: [orderId, driverLocation]
+      properties:
+        orderId: { type: string, format: uuid }
+        driverLocation:
+          type: object
+          properties:
+            lat: { type: number, format: double }
+            lng: { type: number, format: double }
+            heading: { type: number }
+            lastUpdated: { type: string, format: date-time }
+        etaMinutes: { type: integer }
+        status: { type: string }
+        routePolyline: { type: string }
+
+    # ── Admin Dashboard ──
+    DashboardResponse:
+      type: object
+      required: [totalOrders, totalRevenue, activeDrivers, activeCustomers, pendingTickets]
+      properties:
+        totalOrders: { type: integer }
+        totalRevenue: { type: integer, description: "VND" }
+        activeDrivers: { type: integer }
+        activeCustomers: { type: integer }
+        pendingTickets: { type: integer }
+        todayOrders: { type: integer }
+        todayRevenue: { type: integer, description: "VND" }
+
+    TopRestaurantEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        orderCount: { type: integer }
+        revenue: { type: integer, description: "VND" }
+
+    RevenueChartEntry:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        revenue: { type: integer, description: "VND" }
+        orders: { type: integer }
+
+    # ── Admin User Management ──
+    AdminUserEntry:
+      type: object
+      required: [id, email, fullName, role, isActive, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [customer, driver, restaurant, admin] }
+        isActive: { type: boolean }
+        failedLoginCount: { type: integer }
+        lockedUntil: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    AdminUserListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/AdminUserEntry" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    ToggleUserStatusRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive: { type: boolean }
+
+    # ── Admin Restaurant Management ──
+    AdminRestaurantEntry:
+      type: object
+      required: [id, name, slug, city, cuisineTypes, isActive, isOpen, rating, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        city: { type: string }
+        district: { type: string }
+        cuisineTypes: { type: array, items: { type: string } }
+        isActive: { type: boolean }
+        isOpen: { type: boolean }
+        rating: { type: number }
+        totalOrders: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    AdminRestaurantListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/AdminRestaurantEntry" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    ToggleRestaurantStatusRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive: { type: boolean }
+
+    # ── Admin Support Tickets ──
+    SupportTicketEntry:
+      type: object
+      required: [id, userId, issueType, summary, priority, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        userEmail: { type: string, format: email }
+        orderId: { type: string, format: uuid }
+        issueType: { type: string, enum: [late_delivery, wrong_item, missing_item, driver_issue, refund_request, other] }
+        summary: { type: string }
+        priority: { type: string, enum: [low, medium, high, critical] }
+        status: { type: string, enum: [open, in_progress, resolved, closed] }
+        assignedAdminId: { type: string, format: uuid }
+        resolutionNotes: { type: string }
+        createdAt: { type: string, format: date-time }
+        resolvedAt: { type: string, format: date-time }
+
+    SupportTicketListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/SupportTicketEntry" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    UpdateSupportTicketRequest:
+      type: object
+      properties:
+        status: { type: string, enum: [open, in_progress, resolved, closed] }
+        assignedAdminId: { type: string, format: uuid }
+        resolutionNotes: { type: string }
+
+    # ── Admin Audit Logs ──
+    AuditLogEntry:
+      type: object
+      required: [id, adminId, action, targetType, ipAddress, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        adminId: { type: string, format: uuid }
+        adminEmail: { type: string, format: email }
+        action: { type: string }
+        targetType: { type: string }
+        targetId: { type: string, format: uuid }
+        oldValue: { type: object }
+        newValue: { type: object }
+        ipAddress: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    AuditLogListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/AuditLogEntry" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+
+    # ── Admin Dispatch Heatmap ──
+    DispatchHeatmapPoint:
+      type: object
+      properties:
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+        weight: { type: integer }
+        area: { type: string }
+
+    DispatchHeatmapResponse:
+      type: object
+      required: [points, generatedAt]
+      properties:
+        points:
+          type: array
+          items: { $ref: "#/components/schemas/DispatchHeatmapPoint" }
+        generatedAt: { type: string, format: date-time }
+
+    # ── Admin Restaurant KPI ──
+    RestaurantKpiResponse:
+      type: object
+      required: [restaurantId, restaurantName, period]
+      properties:
+        restaurantId: { type: string, format: uuid }
+        restaurantName: { type: string }
+        period: { type: string }
+        totalOrders: { type: integer }
+        totalRevenue: { type: integer, description: "VND" }
+        avgPrepTimeMinutes: { type: number }
+        avgRating: { type: number }
+        cancellationRate: { type: number }
+        topSellingItems:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              quantity: { type: integer }
+
+    # ── AI / Support Chat ──
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        sessionId: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+
+    ChatResponse:
+      type: object
+      properties:
+        reply: { type: string }
+        action: { type: string }
+        sessionId: { type: string, format: uuid }
+
+    # ── N8N Webhooks ──
+    WebhookOrderEvent:
+      type: object
+      required: [orderId, event, userId]
+      properties:
+        orderId: { type: string, format: uuid }
+        event: { type: string }
+        userId: { type: string, format: uuid }
+
+    WebhookDriverDelay:
+      type: object
+      required: [orderId, driverId, delayMinutes]
+      properties:
+        orderId: { type: string, format: uuid }
+        driverId: { type: string, format: uuid }
+        delayMinutes: { type: integer }
+
+    DelayedOrdersQuery:
+      type: object
+      properties:
+        threshold: { type: string, description: "Minutes threshold" }
+
+    StoppedDriversQuery:
+      type: object
+      properties:
+        minutes: { type: string, description: "Inactive minutes" }
+
+    LapsedCustomersQuery:
+      type: object
+      properties:
+        days: { type: string, description: "Days since last order" }
+
+    # ── SePay Webhook ──
+    SepayWebhookResponse:
+      type: object
+      required: [received]
+      properties:
+        received: { type: boolean }
+        duplicate: { type: boolean, description: "True if already processed" }
+
+    # ── Health ──
+    HealthResponse:
+      type: object
+      required: [status, uptime, timestamp, components]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        uptime: { type: number }
+        timestamp: { type: string, format: date-time }
+        components:
+          type: object
+          properties:
+            db:
+              type: object
+              properties:
+                status: { type: string, enum: [up, down] }
+                latencyMs: { type: number }
+            redis:
+              type: object
+              properties:
+                status: { type: string, enum: [up, down] }
+                latencyMs: { type: number }
+            minio:
+              type: object
+              properties:
+                status: { type: string, enum: [up, down] }
+                latencyMs: { type: number }
+
+    # ── Analytics ──
+    AnalyticsSummary:
+      type: object
+      required: [periodStart, periodEnd, totalOrders, totalRevenue, totalCustomers, totalDrivers, cancellationRate]
+      properties:
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+        totalOrders: { type: integer }
+        totalRevenue: { type: integer, description: "VND" }
+        totalCustomers: { type: integer }
+        totalDrivers: { type: integer }
+        cancellationRate: { type: number, description: "Fraction (0-1)" }
+        avgOrderValue: { type: integer, description: "VND" }
+
+    # ── Payout Ledger ──
+    PayoutLedgerEntry:
+      type: object
+      required: [id, orderId, recipientType, amount, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        recipientType: { type: string, enum: [restaurant, driver] }
+        recipientId: { type: string, format: uuid }
+        amount: { type: integer, description: "VND" }
+        currency: { type: string, example: "VND" }
+        status: { type: string, enum: [pending, processing, completed, failed] }
+        settlementBatchId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        settledAt: { type: string, format: date-time }
+
+    # ── Dispatch ──
+    DispatchOffer:
+      type: object
+      properties:
+        orderId: { type: string, format: uuid }
+        orderCode: { type: string }
+        restaurantName: { type: string }
+        pickupAddress: { type: string }
+        dropoffAddress: { type: string }
+        deliveryFee: { type: integer, description: "VND" }
+        distanceKm: { type: number }
+        expiresInSeconds: { type: integer }
+
+    AcceptOfferRequest:
+      type: object
+      required: [orderId]
+      properties:
+        orderId: { type: string, format: uuid }
+
+    DeclineOfferRequest:
+      type: object
+      required: [orderId]
+      properties:
+        orderId: { type: string, format: uuid }
+        reason: { type: string }
+
+paths:
+  # ═══════════════════════════════════════════════════════════════════
+  # AUTH — 6 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: register
+      x-foodflow-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+            example:
+              email: "nguyenvana@example.com"
+              password: "MatKhau123!"
+              fullName: "Nguyễn Văn A"
+              phone: "0912345678"
+              role: "customer"
+      responses:
+        "201": { description: "User registered", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "400": { $ref: "#/components/schemas/ProblemDetail" }
+        "409": { description: "Email already exists", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "429": { description: "Rate limited (3/min for register)" }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login with email and password
+      operationId: login
+      x-foodflow-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+            example:
+              email: "nguyenvana@example.com"
+              password: "MatKhau123!"
+      responses:
+        "200": { description: "Login successful", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "401": { description: "Invalid credentials", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "423": { description: "Account locked due to too many failed attempts", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "429": { description: "Rate limited (5/min per IP)" }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token (rotating opaque refresh token)
+      operationId: refreshToken
+      x-foodflow-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshRequest" }
+      responses:
+        "200": { description: "Token refreshed", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "401": { description: "Invalid or reused refresh token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout (invalidate refresh token)
+      operationId: logout
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LogoutRequest" }
+      responses:
+        "200": { description: "Logged out", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+        "401": { description: "Not authenticated" }
+
+  /auth/jwks:
+    get:
+      tags: [auth]
+      summary: JWKS endpoint for Ed25519 key discovery
+      operationId: getJwks
+      x-foodflow-actor: public
+      security: []
+      responses:
+        "200": { description: "JWKS keys", content: { application/json: { schema: { $ref: "#/components/schemas/JwksResponse" } } } }
+      x-cache: "public, max-age=1800"
+
+  /auth/jwks-version:
+    get:
+      tags: [auth]
+      summary: JWKS rotation version check (for consumers to detect key rotation per F3)
+      operationId: getJwksVersion
+      x-foodflow-actor: service
+      security: []
+      responses:
+        "200": { description: "JWKS version info", content: { application/json: { schema: { $ref: "#/components/schemas/JwksVersionResponse" } } } }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # USERS — 7 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /users/me:
+    get:
+      tags: [users]
+      summary: Get current user profile
+      operationId: getProfile
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "User profile", content: { application/json: { schema: { $ref: "#/components/schemas/UserProfile" } } } }
+        "401": { description: "Not authenticated" }
+    patch:
+      tags: [users]
+      summary: Update current user profile
+      operationId: updateProfile
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+      responses:
+        "200": { description: "Profile updated", content: { application/json: { schema: { $ref: "#/components/schemas/UserProfile" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+
+  /users/me/avatar:
+    post:
+      tags: [users]
+      summary: Upload avatar
+      operationId: uploadAvatar
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200": { description: "Avatar uploaded", content: { application/json: { schema: { $ref: "#/components/schemas/AvatarUploadResponse" } } } }
+        "400": { description: "No file or invalid format" }
+        "401": { description: "Not authenticated" }
+
+  /users/me/addresses:
+    get:
+      tags: [users]
+      summary: List user addresses
+      operationId: listAddresses
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "Address list", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Address" } } } } }
+        "401": { description: "Not authenticated" }
+    post:
+      tags: [users]
+      summary: Create new address
+      operationId: createAddress
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAddressRequest" }
+      responses:
+        "201": { description: "Address created", content: { application/json: { schema: { $ref: "#/components/schemas/Address" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+
+  /users/me/addresses/{id}:
+    patch:
+      tags: [users]
+      summary: Update address
+      operationId: updateAddress
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAddressRequest" }
+      responses:
+        "200": { description: "Address updated", content: { application/json: { schema: { $ref: "#/components/schemas/Address" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Address not found" }
+    delete:
+      tags: [users]
+      summary: Delete address
+      operationId: deleteAddress
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: "Address deleted" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Address not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # RESTAURANTS — 5 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /restaurants/nearby:
+    get:
+      tags: [restaurants]
+      summary: Find nearby restaurants
+      operationId: findNearbyRestaurants
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number, format: double }
+          example: 10.8231
+        - name: lng
+          in: query
+          required: true
+          schema: { type: number, format: double }
+          example: 106.6297
+        - name: radiusKm
+          in: query
+          schema: { type: number, default: 5 }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Nearby restaurants", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantListResponse" } } } }
+
+  /restaurants/search:
+    get:
+      tags: [restaurants]
+      summary: Search restaurants by name or cuisine
+      operationId: searchRestaurants
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          schema: { type: string }
+        - name: cuisine
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Search results", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantListResponse" } } } }
+
+  /restaurants/{id}:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant detail
+      operationId: getRestaurantDetail
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant detail", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantDetail" } } } }
+        "404": { description: "Restaurant not found" }
+
+  /restaurants/{id}/menu:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant menu (public)
+      operationId: getRestaurantMenu
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant menu", content: { application/json: { schema: { $ref: "#/components/schemas/MenuResponse" } } } }
+        "404": { description: "Restaurant not found" }
+
+  /restaurants/{id}/reviews:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant reviews
+      operationId: getRestaurantReviews
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 50 }
+      responses:
+        "200": { description: "Restaurant reviews", content: { application/json: { schema: { $ref: "#/components/schemas/ReviewListResponse" } } } }
+        "404": { description: "Restaurant not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # MENU (restaurant owner) — 8 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /restaurant/menu:
+    get:
+      tags: [menu]
+      summary: Get own restaurant menu (for editing)
+      operationId: getOwnMenu
+      x-foodflow-actor: restaurant
+      responses:
+        "200": { description: "Full menu with categories and items", content: { application/json: { schema: { $ref: "#/components/schemas/MenuResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+
+  /restaurant/menu/categories:
+    post:
+      tags: [menu]
+      summary: Create a menu category
+      operationId: createCategory
+      x-foodflow-actor: restaurant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCategoryRequest" }
+      responses:
+        "201": { description: "Category created", content: { application/json: { schema: { $ref: "#/components/schemas/MenuCategory" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+
+  /restaurant/menu/categories/{id}:
+    patch:
+      tags: [menu]
+      summary: Update menu category
+      operationId: updateCategory
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCategoryRequest" }
+      responses:
+        "200": { description: "Category updated" }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+        "404": { description: "Category not found" }
+    delete:
+      tags: [menu]
+      summary: Delete menu category
+      operationId: deleteCategory
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: "Category deleted" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+        "404": { description: "Category not found" }
+
+  /restaurant/menu/items:
+    post:
+      tags: [menu]
+      summary: Create a menu item
+      operationId: createMenuItem
+      x-foodflow-actor: restaurant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMenuItemRequest" }
+      responses:
+        "201": { description: "Menu item created", content: { application/json: { schema: { $ref: "#/components/schemas/MenuItem" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+
+  /restaurant/menu/items/{id}:
+    patch:
+      tags: [menu]
+      summary: Update menu item
+      operationId: updateMenuItem
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateMenuItemRequest" }
+      responses:
+        "200": { description: "Menu item updated", content: { application/json: { schema: { $ref: "#/components/schemas/MenuItem" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+        "404": { description: "Menu item not found" }
+    delete:
+      tags: [menu]
+      summary: Delete menu item
+      operationId: deleteMenuItem
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: "Menu item deleted" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+        "404": { description: "Menu item not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # CART — 6 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /cart:
+    get:
+      tags: [cart]
+      summary: Get current cart
+      operationId: getCart
+      x-foodflow-actor: customer
+      responses:
+        "200": { description: "Current cart", content: { application/json: { schema: { $ref: "#/components/schemas/CartResponse" } } } }
+        "401": { description: "Not authenticated" }
+    delete:
+      tags: [cart]
+      summary: Clear entire cart
+      operationId: clearCart
+      x-foodflow-actor: customer
+      responses:
+        "204": { description: "Cart cleared" }
+        "401": { description: "Not authenticated" }
+
+  /cart/items:
+    post:
+      tags: [cart]
+      summary: Add item to cart
+      operationId: addCartItem
+      x-foodflow-actor: customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddCartItemRequest" }
+      responses:
+        "201": { description: "Item added", content: { application/json: { schema: { $ref: "#/components/schemas/CartResponse" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+
+  /cart/items/{id}:
+    patch:
+      tags: [cart]
+      summary: Update cart item quantity
+      operationId: updateCartItem
+      x-foodflow-actor: customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCartItemRequest" }
+      responses:
+        "200": { description: "Item updated", content: { application/json: { schema: { $ref: "#/components/schemas/CartResponse" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Cart item not found" }
+    delete:
+      tags: [cart]
+      summary: Remove item from cart
+      operationId: removeCartItem
+      x-foodflow-actor: customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: "Item removed" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Cart item not found" }
+
+  /cart/apply-promotion:
+    post:
+      tags: [cart]
+      summary: Apply promotion code to cart
+      operationId: applyPromotion
+      x-foodflow-actor: customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApplyPromotionRequest" }
+      responses:
+        "200": { description: "Promotion applied", content: { application/json: { schema: { $ref: "#/components/schemas/CartResponse" } } } }
+        "400": { description: "Invalid or expired code" }
+        "401": { description: "Not authenticated" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ORDERS — 10 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /orders:
+    post:
+      tags: [orders]
+      summary: Place a new order (idempotent via Idempotency-Key header per F4)
+      operationId: placeOrder
+      x-foodflow-actor: customer
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Client-side UUID for idempotency (required even on signup per F4)
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlaceOrderRequest" }
+      responses:
+        "201": { description: "Order placed", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "400": { description: "Validation error or cart empty" }
+        "401": { description: "Not authenticated" }
+        "402": { description: "Insufficient wallet balance" }
+        "409": { description: "Duplicate idempotency key" }
+        "422": { description: "Restaurant not accepting orders" }
+    get:
+      tags: [orders]
+      summary: List customer orders
+      operationId: getCustomerOrders
+      x-foodflow-actor: customer
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: "Order list", content: { application/json: { schema: { $ref: "#/components/schemas/OrderListResponse" } } } }
+        "401": { description: "Not authenticated" }
+
+  /orders/{id}:
+    get:
+      tags: [orders]
+      summary: Get order detail (customer/restaurant/driver scoped)
+      operationId: getOrderDetail
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Order detail", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not authorized to view this order" }
+        "404": { description: "Order not found" }
+
+  /orders/{id}/tracking:
+    get:
+      tags: [tracking]
+      summary: Get real-time order tracking
+      operationId: getOrderTracking
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Tracking data", content: { application/json: { schema: { $ref: "#/components/schemas/TrackingResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Order not found or no driver assigned" }
+
+  /orders/{id}/cancel:
+    post:
+      tags: [orders]
+      summary: Cancel order (customer)
+      operationId: cancelOrder
+      x-foodflow-actor: customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CancelOrderRequest" }
+      responses:
+        "200": { description: "Order cancelled", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "400": { description: "Order cannot be cancelled at this stage" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Order not found" }
+
+  /orders/{id}/review:
+    post:
+      tags: [reviews]
+      summary: Submit review for order
+      operationId: submitReview
+      x-foodflow-actor: customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateReviewRequest" }
+      responses:
+        "201": { description: "Review submitted", content: { application/json: { schema: { $ref: "#/components/schemas/ReviewResponse" } } } }
+        "400": { description: "Order not eligible for review" }
+        "401": { description: "Not authenticated" }
+        "409": { description: "Review already submitted for this order" }
+
+  /restaurant/orders:
+    get:
+      tags: [orders]
+      summary: List restaurant orders
+      operationId: getRestaurantOrders
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: "Restaurant orders", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/OrderResponse" } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a restaurant owner" }
+
+  /restaurant/orders/{id}/status:
+    patch:
+      tags: [orders]
+      summary: Update order status (restaurant)
+      operationId: updateRestaurantOrderStatus
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrderStatusRequest" }
+      responses:
+        "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "400": { description: "Invalid status transition" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not authorized" }
+        "404": { description: "Order not found" }
+
+  /driver/orders/{id}/status:
+    patch:
+      tags: [orders]
+      summary: Update order status (driver)
+      operationId: updateDriverOrderStatus
+      x-foodflow-actor: driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrderStatusRequest" }
+      responses:
+        "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "400": { description: "Invalid status transition" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not authorized" }
+        "404": { description: "Order not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DISPATCH — 5 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /driver/dispatch/pending:
+    get:
+      tags: [orders]
+      summary: List pending dispatch offers for driver
+      operationId: getPendingOffers
+      x-foodflow-actor: driver
+      responses:
+        "200": { description: "Pending offers", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/DispatchOffer" } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a driver" }
+
+  /driver/dispatch/{orderId}/accept:
+    post:
+      tags: [orders]
+      summary: Accept dispatch offer
+      operationId: acceptOffer
+      x-foodflow-actor: driver
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AcceptOfferRequest" }
+      responses:
+        "200": { description: "Offer accepted", content: { application/json: { schema: { $ref: "#/components/schemas/OrderResponse" } } } }
+        "400": { description: "Offer expired or already claimed" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a driver" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DRIVERS — 5 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /driver/online:
+    post:
+      tags: [drivers]
+      summary: Go online for deliveries
+      operationId: goOnline
+      x-foodflow-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoOnlineRequest" }
+            example: { lat: 10.8231, lng: 106.6297 }
+      responses:
+        "200": { description: "Now online" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a verified driver" }
+
+  /driver/offline:
+    post:
+      tags: [drivers]
+      summary: Go offline
+      operationId: goOffline
+      x-foodflow-actor: driver
+      responses:
+        "200": { description: "Now offline" }
+        "401": { description: "Not authenticated" }
+
+  /driver/earnings:
+    get:
+      tags: [drivers]
+      summary: Get driver earnings
+      operationId: getDriverEarnings
+      x-foodflow-actor: driver
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, enum: [today, week, month], default: today }
+      responses:
+        "200": { description: "Earnings summary", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarningsResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a driver" }
+
+  /driver/incentives:
+    get:
+      tags: [drivers]
+      summary: Get active driver incentives
+      operationId: getDriverIncentives
+      x-foodflow-actor: driver
+      responses:
+        "200": { description: "Active incentives", content: { application/json: { schema: { $ref: "#/components/schemas/DriverIncentivesResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a driver" }
+
+  /driver/orders/history:
+    get:
+      tags: [orders]
+      summary: Get driver order history
+      operationId: getDriverOrderHistory
+      x-foodflow-actor: driver
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: "Driver orders", content: { application/json: { schema: { $ref: "#/components/schemas/OrderListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not a driver" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # WALLET — 3 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /users/wallet:
+    get:
+      tags: [wallet]
+      summary: Get wallet balance (excludes pending topups per F8)
+      operationId: getWallet
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "Wallet snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/WalletSnapshot" } } } }
+        "401": { description: "Not authenticated" }
+
+  /users/wallet/topup:
+    post:
+      tags: [wallet]
+      summary: Initiate wallet topup via SePay
+      operationId: topupWallet
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: integer
+                  minimum: 10000
+                  description: "VND, minimum 10,000"
+                returnUrl:
+                  type: string
+                  format: uri
+      responses:
+        "200": { description: "Topup initiated", content: { application/json: { schema: { type: object, properties: { transactionRef: { type: string }, qrCodeUrl: { type: string, format: uri }, amount: { type: integer }, expiresAt: { type: string, format: date-time } } } } } }
+        "400": { description: "Invalid amount" }
+        "401": { description: "Not authenticated" }
+
+  /users/wallet/topup/{transactionRef}/status:
+    get:
+      tags: [wallet]
+      summary: Check topup status
+      operationId: checkTopupStatus
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: transactionRef
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Topup status", content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [pending, completed, failed] }, amount: { type: integer } } } } } }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Transaction not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # LOYALTY — 1 endpoint
+  # ═══════════════════════════════════════════════════════════════════
+  /users/loyalty:
+    get:
+      tags: [loyalty]
+      summary: Get loyalty points & tier
+      operationId: getLoyalty
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "Loyalty snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/LoyaltySnapshot" } } } }
+        "401": { description: "Not authenticated" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # REFERRAL — 1 endpoint
+  # ═══════════════════════════════════════════════════════════════════
+  /users/referral:
+    get:
+      tags: [referral]
+      summary: Get referral code & stats
+      operationId: getReferral
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "Referral snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/ReferralSnapshot" } } } }
+        "401": { description: "Not authenticated" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PROMOTIONS — 2 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /promotions/{code}:
+    get:
+      tags: [promotions]
+      summary: Validate promotion code
+      operationId: getPromotionByCode
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Promotion detail with calculated discount if applicable", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Promotion not found or expired" }
+
+  /promotions:
+    get:
+      tags: [promotions]
+      summary: List active promotions
+      operationId: listPromotions
+      x-foodflow-actor: public
+      security: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Active promotions", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionListResponse" } } } }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # REVIEWS — 3 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /reviews/photos/upload-url:
+    get:
+      tags: [reviews]
+      summary: Get pre-signed upload URL for review photo
+      operationId: getPhotoUploadUrl
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: contentType
+          in: query
+          schema: { type: string, default: "image/jpeg" }
+      responses:
+        "200": { description: "Upload URL", content: { application/json: { schema: { $ref: "#/components/schemas/ReviewPhotoUploadUrlResponse" } } } }
+        "401": { description: "Not authenticated" }
+
+  /reviews/{id}/hide:
+    patch:
+      tags: [reviews]
+      summary: Admin hide review
+      operationId: adminHideReview
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminHideRequest" }
+      responses:
+        "204": { description: "Review hidden" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Review not found" }
+
+  /restaurant/reviews/{id}/reply:
+    post:
+      tags: [reviews]
+      summary: Restaurant reply to review
+      operationId: restaurantReply
+      x-foodflow-actor: restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantReplyRequest" }
+      responses:
+        "200": { description: "Reply posted", content: { application/json: { schema: { $ref: "#/components/schemas/ReviewResponse" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not the order's restaurant" }
+        "404": { description: "Review not found" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # NOTIFICATIONS — 5 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: List user notifications
+      operationId: getNotifications
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Notification list", content: { application/json: { schema: { $ref: "#/components/schemas/NotificationListResponse" } } } }
+        "401": { description: "Not authenticated" }
+
+  /notifications/{id}/read:
+    patch:
+      tags: [notifications]
+      summary: Mark notification as read
+      operationId: markAsRead
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Marked as read" }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Notification not found" }
+
+  /notifications/read-all:
+    patch:
+      tags: [notifications]
+      summary: Mark all notifications as read
+      operationId: markAllAsRead
+      x-foodflow-actor: any-authenticated
+      responses:
+        "200": { description: "All marked as read" }
+        "401": { description: "Not authenticated" }
+
+  /notifications/fcm-token:
+    post:
+      tags: [notifications]
+      summary: Register FCM token for push notifications
+      operationId: registerFcmToken
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterFcmTokenRequest" }
+      responses:
+        "201": { description: "Token registered" }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PAYMENTS — 6 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /payments/sepay/create:
+    post:
+      tags: [payments]
+      summary: Create SePay QR code payment intent
+      operationId: createSepayPayment
+      x-foodflow-actor: customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, amount]
+              properties:
+                orderId: { type: string, format: uuid }
+                amount: { type: integer, description: "VND" }
+      responses:
+        "200": { description: "Payment intent created", content: { application/json: { schema: { type: object, properties: { transactionRef: { type: string }, qrCodeUrl: { type: string, format: uri }, amount: { type: integer }, expiresAt: { type: string, format: date-time } } } } } }
+        "400": { description: "Invalid order or already paid" }
+        "401": { description: "Not authenticated" }
+
+  /payments/sepay/status/{transactionRef}:
+    get:
+      tags: [payments]
+      summary: Check payment status
+      operationId: checkSepayStatus
+      x-foodflow-actor: customer
+      parameters:
+        - name: transactionRef
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Payment status", content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [pending, completed, failed] }, amount: { type: integer, description: "VND" }, paidAt: { type: string, format: date-time } } } } } }
+        "401": { description: "Not authenticated" }
+        "404": { description: "Transaction not found" }
+
+  /admin/payments/pending:
+    get:
+      tags: [payments]
+      summary: List pending payouts for admin
+      operationId: getPendingPayouts
+      x-foodflow-actor: admin
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Pending payout entries", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/PayoutLedgerEntry" } }, meta: { $ref: "#/components/schemas/PaginationMeta" } } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/payments/settlement-batches:
+    get:
+      tags: [payments]
+      summary: List settlement batches
+      operationId: getSettlementBatches
+      x-foodflow-actor: admin
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Settlement batches", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/SettlementBatch" } }, meta: { $ref: "#/components/schemas/PaginationMeta" } } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/payments/settlement-batches/{id}/settle:
+    post:
+      tags: [payments]
+      summary: Settle/retry settlement batch
+      operationId: settleBatch
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SettleRequest" }
+      responses:
+        "200": { description: "Settlement processed", content: { application/json: { schema: { $ref: "#/components/schemas/SettlementBatch" } } } }
+        "400": { description: "Invalid action or batch state" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Batch not found" }
+
+  /admin/payments/payouts/manual:
+    post:
+      tags: [payments]
+      summary: Force manual payout to restaurant
+      operationId: forceManualPayout
+      x-foodflow-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [restaurantId, amount, reason]
+              properties:
+                restaurantId: { type: string, format: uuid }
+                amount: { type: integer, description: "VND" }
+                reason: { type: string }
+      responses:
+        "200": { description: "Manual payout queued" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ADMIN — 12 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /admin/dashboard:
+    get:
+      tags: [admin]
+      summary: Admin dashboard overview
+      operationId: getAdminDashboard
+      x-foodflow-actor: admin
+      responses:
+        "200": { description: "Dashboard summary", content: { application/json: { schema: { $ref: "#/components/schemas/DashboardResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/dashboard/top-restaurants:
+    get:
+      tags: [admin]
+      summary: Top restaurants by revenue
+      operationId: getTopRestaurants
+      x-foodflow-actor: admin
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        "200": { description: "Top restaurants", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/TopRestaurantEntry" } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/dashboard/revenue-chart:
+    get:
+      tags: [admin]
+      summary: Revenue chart data
+      operationId: getRevenueChart
+      x-foodflow-actor: admin
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        "200": { description: "Revenue chart data", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/RevenueChartEntry" } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/orders:
+    get:
+      tags: [admin]
+      summary: List all orders (admin)
+      operationId: getAdminOrders
+      x-foodflow-actor: admin
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Orders list", content: { application/json: { schema: { $ref: "#/components/schemas/OrderListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: List all users
+      operationId: getAdminUsers
+      x-foodflow-actor: admin
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string, enum: [customer, driver, restaurant, admin] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Users list", content: { application/json: { schema: { $ref: "#/components/schemas/AdminUserListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/users/{id}/status:
+    patch:
+      tags: [admin]
+      summary: Toggle user active status
+      operationId: toggleUserStatus
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ToggleUserStatusRequest" }
+      responses:
+        "200": { description: "User status toggled" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "User not found" }
+
+  /admin/restaurants:
+    get:
+      tags: [admin]
+      summary: List all restaurants
+      operationId: getAdminRestaurants
+      x-foodflow-actor: admin
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Restaurants list", content: { application/json: { schema: { $ref: "#/components/schemas/AdminRestaurantListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/restaurants/{id}/status:
+    patch:
+      tags: [admin]
+      summary: Toggle restaurant active status
+      operationId: toggleRestaurantStatus
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ToggleRestaurantStatusRequest" }
+      responses:
+        "200": { description: "Restaurant status toggled" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Restaurant not found" }
+
+  /admin/support-tickets:
+    get:
+      tags: [admin]
+      summary: List support tickets
+      operationId: getSupportTickets
+      x-foodflow-actor: admin
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, in_progress, resolved, closed] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Tickets list", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicketListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/support-tickets/{id}:
+    patch:
+      tags: [admin]
+      summary: Update support ticket
+      operationId: updateSupportTicket
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateSupportTicketRequest" }
+      responses:
+        "200": { description: "Ticket updated" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Ticket not found" }
+
+  /admin/audit-logs:
+    get:
+      tags: [admin]
+      summary: List admin audit logs
+      operationId: getAuditLogs
+      x-foodflow-actor: admin
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "Audit logs", content: { application/json: { schema: { $ref: "#/components/schemas/AuditLogListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/promotions:
+    get:
+      tags: [admin]
+      summary: List all promotions (admin)
+      operationId: getAdminPromotions
+      x-foodflow-actor: admin
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+        - name: isActive
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200": { description: "Promotions list", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionListResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+    post:
+      tags: [admin]
+      summary: Create promotion
+      operationId: createPromotion
+      x-foodflow-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePromotionRequest" }
+      responses:
+        "201": { description: "Promotion created", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionResponse" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/promotions/{id}:
+    patch:
+      tags: [admin]
+      summary: Update promotion
+      operationId: updatePromotion
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePromotionRequest" }
+      responses:
+        "200": { description: "Promotion updated", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Promotion not found" }
+    delete:
+      tags: [admin]
+      summary: Delete promotion
+      operationId: deletePromotion
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: "Promotion deleted" }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Promotion not found" }
+
+  /admin/promotions/{id}/toggle:
+    patch:
+      tags: [admin]
+      summary: Toggle promotion active/inactive
+      operationId: togglePromotionActive
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Promotion toggled", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Promotion not found" }
+
+  /admin/dispatch/heatmap:
+    get:
+      tags: [admin]
+      summary: Delivery dispatch heatmap
+      operationId: getDispatchHeatmap
+      x-foodflow-actor: admin
+      parameters:
+        - name: since
+          in: query
+          schema: { type: string, description: "ISO datetime; defaults to last 3 hours" }
+      responses:
+        "200": { description: "Heatmap data", content: { application/json: { schema: { $ref: "#/components/schemas/DispatchHeatmapResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/restaurants/{id}/kpi:
+    get:
+      tags: [admin]
+      summary: Restaurant KPI stats
+      operationId: getRestaurantKpi
+      x-foodflow-actor: admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: period
+          in: query
+          schema: { type: string, enum: ["1d", "7d", "30d", "90d"], default: "7d" }
+      responses:
+        "200": { description: "Restaurant KPI", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantKpiResponse" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+        "404": { description: "Restaurant not found" }
+
+  /admin/online-drivers:
+    get:
+      tags: [admin]
+      summary: List online drivers with locations
+      operationId: getOnlineDrivers
+      x-foodflow-actor: admin
+      responses:
+        "200": { description: "Online drivers", content: { application/json: { schema: { type: array, items: { type: object, properties: { driverId: { type: string, format: uuid }, lat: { type: number, format: double }, lng: { type: number, format: double }, status: { type: string }, orderId: { type: string, format: uuid }, rating: { type: number } } } } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  /admin/analytics:
+    get:
+      tags: [admin]
+      summary: Analytics summary
+      operationId: getAnalyticsSummary
+      x-foodflow-actor: admin
+      parameters:
+        - name: periodStart
+          in: query
+          schema: { type: string, format: date }
+        - name: periodEnd
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200": { description: "Analytics summary", content: { application/json: { schema: { $ref: "#/components/schemas/AnalyticsSummary" } } } }
+        "401": { description: "Not authenticated" }
+        "403": { description: "Not an admin" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # AI / SUPPORT CHAT — 3 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /ai/chat:
+    post:
+      tags: [support]
+      summary: Simple AI chat (synchronous)
+      operationId: aiChat
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+            example:
+              message: "Đơn hàng của tôi đang ở đâu?"
+              orderId: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200": { description: "Chat response", content: { application/json: { schema: { $ref: "#/components/schemas/ChatResponse" } } } }
+        "400": { description: "Empty message" }
+        "401": { description: "Not authenticated" }
+
+  /ai/stream:
+    post:
+      tags: [support]
+      summary: AI chat (SSE stream) with n8n orchestration
+      operationId: aiChatStream
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          description: SSE stream of tokens
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: "SSE events: token, done, escalated"
+        "400": { description: "Empty or injection message" }
+        "401": { description: "Not authenticated" }
+
+  /support/tickets:
+    post:
+      tags: [support]
+      summary: Create support ticket
+      operationId: createSupportTicket
+      x-foodflow-actor: any-authenticated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [issueType, summary]
+              properties:
+                issueType: { type: string, enum: [late_delivery, wrong_item, missing_item, driver_issue, refund_request, other] }
+                summary: { type: string }
+                orderId: { type: string, format: uuid }
+                priority: { type: string, enum: [low, medium, high, critical], default: medium }
+      responses:
+        "201": { description: "Ticket created", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicketEntry" } } } }
+        "400": { description: "Validation error" }
+        "401": { description: "Not authenticated" }
+    get:
+      tags: [support]
+      summary: List own support tickets
+      operationId: getMySupportTickets
+      x-foodflow-actor: any-authenticated
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200": { description: "My tickets", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicketListResponse" } } } }
+        "401": { description: "Not authenticated" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # WEBHOOKS — 6 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /webhooks/n8n/order-event:
+    post:
+      tags: [webhooks]
+      summary: N8N webhook for order status events
+      operationId: n8nOrderEvent
+      x-foodflow-actor: service
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookOrderEvent" }
+      responses:
+        "200": { description: "Received" }
+        "401": { description: "Invalid API key" }
+
+  /webhooks/n8n/driver-delay:
+    post:
+      tags: [webhooks]
+      summary: N8N webhook for driver delay alerts
+      operationId: n8nDriverDelay
+      x-foodflow-actor: service
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookDriverDelay" }
+      responses:
+        "200": { description: "Received" }
+        "401": { description: "Invalid API key" }
+
+  /webhooks/delayed-orders:
+    get:
+      tags: [webhooks]
+      summary: N8N query for delayed orders
+      operationId: getDelayedOrders
+      x-foodflow-actor: service
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: threshold
+          in: query
+          schema: { type: integer, default: 15 }
+      responses:
+        "200": { description: "Delayed orders list" }
+        "401": { description: "Invalid API key" }
+
+  /webhooks/stopped-drivers:
+    get:
+      tags: [webhooks]
+      summary: N8N query for stopped drivers
+      operationId: getStoppedDrivers
+      x-foodflow-actor: service
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: minutes
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        "200": { description: "Stopped drivers list" }
+        "401": { description: "Invalid API key" }
+
+  /webhooks/lapsed-customers:
+    get:
+      tags: [webhooks]
+      summary: N8N query for lapsed customers
+      operationId: getLapsedCustomers
+      x-foodflow-actor: service
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 14 }
+      responses:
+        "200": { description: "Lapsed customers list" }
+        "401": { description: "Invalid API key" }
+
+  /webhooks/sepay/payment-success:
+    post:
+      tags: [webhooks]
+      summary: SePay payment success callback (HMAC-signed per F11)
+      operationId: sepayPaymentSuccess
+      x-foodflow-actor: service
+      security: []
+      parameters:
+        - name: x-sepay-signature
+          in: header
+          schema: { type: string }
+          description: HMAC signature of request body (sepay provider sign)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transaction_ref: { type: string }
+                amount: { type: integer }
+                status: { type: string }
+      responses:
+        "200": { description: "Payment processed", content: { application/json: { schema: { $ref: "#/components/schemas/SepayWebhookResponse" } } } }
+        "400": { description: "Invalid signature or missing transaction_ref" }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # HEALTH — 2 endpoints
+  # ═══════════════════════════════════════════════════════════════════
+  /healthz:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: healthCheck
+      x-foodflow-actor: public
+      security: []
+      responses:
+        "200": { description: "All components up", content: { application/json: { schema: { $ref: "#/components/schemas/HealthResponse" } } } }
+        "503": { description: "Degraded", content: { application/json: { schema: { $ref: "#/components/schemas/HealthResponse" } } } }
+
+  /metrics:
+    get:
+      tags: [health]
+      summary: Prometheus metrics endpoint
+      operationId: getMetrics
+      x-foodflow-actor: service
+      security: []
+      responses:
+        "200": { description: "Prometheus text format metrics", content: { text/plain: { schema: { type: string } } } }
+

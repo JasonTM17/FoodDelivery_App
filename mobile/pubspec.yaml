@@ -47,6 +47,10 @@ dependencies:
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
 
+  # Generated API client
+  api_client:
+    path: packages/api_client
+
   # Utils
   intl: ^0.20.2
   url_launcher: ^6.3.1

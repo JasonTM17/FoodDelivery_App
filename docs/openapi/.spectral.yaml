@@ -1,0 +1,23 @@
+extends: ["spectral:oas"]
+rules:
+  info-contact-required:
+    description: "Info must have contact info"
+    severity: error
+    given: "$.info"
+    then:
+      field: contact
+      function: truthy
+  operation-tag-defined:
+    description: "Every operation must have a tag"
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: tags
+      function: truthy
+  operation-operationId-unique:
+    description: "Every operationId must be unique"
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: operationId
+      function: truthy

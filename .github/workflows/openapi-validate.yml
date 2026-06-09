@@ -1,0 +1,51 @@
+name: OpenAPI Validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/openapi.yaml'
+      - 'docs/openapi/.spectral.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/openapi.yaml'
+      - 'docs/openapi/.spectral.yaml'
+      - '.github/workflows/openapi-validate.yml'
+
+jobs:
+  lint-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli
+
+      - name: Lint OpenAPI spec
+        run: spectral lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error
+
+  generate-client-check:
+    needs: lint-openapi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install api-client deps
+        working-directory: packages/api-client
+        run: npm ci
+
+      - name: Generate client
+        working-directory: packages/api-client
+        run: npx openapi-ts -c openapi-ts.config.ts
+
+      - name: Check no uncommitted changes
+        run: git diff --exit-code packages/api-client/src/ || (echo "ERROR: Generated client is out of date. Run 'cd packages/api-client && npx openapi-ts -c openapi-ts.config.ts' and commit changes." && exit 1)
