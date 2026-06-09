@@ -6,10 +6,14 @@ import { RevenueLineChart } from './revenue-line-chart';
 import { RevenueAreaChart } from './revenue-area-chart';
 import { RevenueComparison } from './revenue-comparison';
 import { PaymentMethodBar } from './payment-method-bar';
+import { HourOfDayBar } from './hour-of-day-bar';
+import { RevenueSourcePie } from './revenue-source-pie';
+import { BenchmarkOverlay } from './benchmark-overlay';
 import { RevenueDrillDownTable } from './revenue-drill-down-table';
 import { RevenueExportButton } from './revenue-export-button';
 import { RevenueKpiCard } from './revenue-kpi-card';
 import { api } from '@/lib/api';
+import { exportRevenueCSV } from '@/lib/export-helpers';
 import type { RevenueData } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 
@@ -47,6 +51,8 @@ export function RevenueDashboard() {
   const [data, setData] = useState<RevenueData | null>(null);
   const [comparison, setComparison] = useState<PeriodComparison | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodData[]>([]);
+  const [hourOfDay, setHourOfDay] = useState<{ hour: number; revenue: number; orders: number }[]>([]);
+  const [revenueSources, setRevenueSources] = useState<{ source: string; revenue: number; pct: number }[]>([]);
   const [drillDown, setDrillDown] = useState<DrillDownRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,12 +64,16 @@ export function RevenueDashboard() {
       api.get<RevenueData>(`/dashboard/revenue?period=${period}`),
       api.get<PeriodComparison>(`/dashboard/revenue/comparison?period=${period}`),
       api.get<PaymentMethodData[]>(`/dashboard/revenue/payment-methods?period=${period}`),
+      api.get<{ hour: number; revenue: number; orders: number }[]>(`/dashboard/revenue/hour-of-day?period=${period}`),
+      api.get<{ source: string; revenue: number; pct: number }[]>(`/dashboard/revenue/sources?period=${period}`),
       api.get<DrillDownRow[]>(`/dashboard/revenue/drill-down?period=${period}`),
     ])
-      .then(([revenue, comp, payments, drill]) => {
+      .then(([revenue, comp, payments, hours, sources, drill]) => {
         setData(revenue);
         setComparison(comp);
         setPaymentMethods(payments);
+        setHourOfDay(hours);
+        setRevenueSources(sources);
         setDrillDown(drill);
       })
       .catch((err: unknown) =>
@@ -81,19 +91,12 @@ export function RevenueDashboard() {
   const currentPeriodLabel = PERIODS.find((p) => p.id === period)?.label.toLowerCase() ?? '';
 
   function exportCSV() {
-    if (!drillDown.length) return;
-    const header = 'Tên,Danh mục,Đơn hàng,Doanh thu,Giá trị TB,% Tổng';
-    const rows = drillDown.map((d) =>
-      `"${d.name}","${d.category ?? ''}",${d.orders},${d.revenue},${d.avgOrderValue},${d.percentOfTotal}`
-    );
-    const csv = [header, ...rows].join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `doanh-thu-${period}-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (!drillDown.length || !data) return;
+    exportRevenueCSV(period, {
+      totalRevenue: data.totalRevenue,
+      totalOrders: data.totalOrders,
+      averageOrderValue: data.averageOrderValue,
+    }, drillDown);
   }
 
   const areaData = comparison?.dailyRevenue ?? [];
@@ -255,6 +258,27 @@ export function RevenueDashboard() {
               <PaymentMethodBar data={paymentMethods} />
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="card">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">Doanh thu theo giờ</h2>
+              <HourOfDayBar data={hourOfDay} />
+            </div>
+            <div className="card">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">Nguồn doanh thu</h2>
+              <RevenueSourcePie data={revenueSources} />
+            </div>
+          </div>
+
+          <BenchmarkOverlay
+            title="So sánh với ngành"
+            metrics={[
+              { label: 'Giá trị đơn TB', yourValue: data.averageOrderValue, industryAvg: 145000, format: 'currency', higherIsBetter: true },
+              { label: 'Tỷ lệ khách quay lại', yourValue: 42, industryAvg: 35, format: 'percent', higherIsBetter: true },
+              { label: 'Tỷ lệ huỷ đơn', yourValue: 3.2, industryAvg: 5, format: 'percent', higherIsBetter: false },
+            ]}
+            className="mb-6"
+          />
 
           <RevenueDrillDownTable data={drillDown} title="Chi tiết doanh thu" className="mb-6" />
         </>
