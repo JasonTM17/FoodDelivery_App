@@ -137,5 +137,32 @@
     "hourlyOrders": "Đơn hàng theo giờ",
     "byCategory": "Theo danh mục",
     "noData": "Chưa có dữ liệu"
+  },
+  "nav": {
+    "orders": "Đơn hàng",
+    "menu": "Thực đơn",
+    "categories": "Danh mục",
+    "promotions": "Khuyến mãi",
+    "insights": "Phân tích",
+    "revenue": "Doanh thu",
+    "reviews": "Đánh giá",
+    "staff": "Nhân viên",
+    "notifications": "Thông báo",
+    "analytics": "Phân tích"
+  },
+  "common": {
+    "logout": "Đăng xuất",
+    "save": "Lưu",
+    "cancel": "Huỷ",
+    "delete": "Xoá",
+    "edit": "Sửa",
+    "create": "Tạo mới",
+    "search": "Tìm kiếm",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "retry": "Thử lại",
+    "back": "Quay lại",
+    "noData": "Chưa có dữ liệu",
+    "confirm": "Xác nhận"
   }
 }

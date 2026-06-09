@@ -18,6 +18,9 @@ import {
   Clock,
   Tag,
   TrendingUp,
+  Lightbulb,
+  Users,
+  FolderTree,
   type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -38,10 +41,12 @@ interface SettingsItem extends NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: '/orders', tKey: 'nav.orders', icon: ShoppingBag },
   { href: '/menu', tKey: 'nav.menu', icon: UtensilsCrossed },
+  { href: '/menu/categories', tKey: 'nav.categories', icon: FolderTree },
   { href: '/promotions', tKey: 'nav.promotions', icon: Tag },
-  { href: '/analytics', tKey: 'nav.analytics', icon: TrendingUp },
+  { href: '/insights', tKey: 'nav.insights', icon: Lightbulb },
   { href: '/revenue', tKey: 'nav.revenue', icon: BarChart3 },
   { href: '/reviews', tKey: 'nav.reviews', icon: Star },
+  { href: '/staff', tKey: 'nav.staff', icon: Users },
   { href: '/notifications', tKey: 'nav.notifications', icon: Bell },
 ];
 
