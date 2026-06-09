@@ -8,6 +8,7 @@ import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/referral_provider.dart';
+import '../widgets/referral_share_sheet.dart';
 
 class ReferralScreen extends ConsumerStatefulWidget {
   const ReferralScreen({super.key});
@@ -30,8 +31,15 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
     );
   }
 
-  void _shareCode(String code) {
-    Share.share('Dùng mã $code để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!');
+  void _shareCode(AppLocalizations l10n, String code) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => ReferralShareSheet(referralCode: code),
+    );
   }
 
   @override
@@ -122,7 +130,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _shareCode(code),
+                        onPressed: () => _shareCode(l10n, code),
                         icon: const Icon(Icons.share, size: 18),
                         label: Text(l10n.referralShareCode),
                       ),

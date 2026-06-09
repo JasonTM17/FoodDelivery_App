@@ -7,6 +7,7 @@ import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/wallet_provider.dart';
+import '../widgets/wallet_tx_tile.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
@@ -178,7 +179,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
           const SizedBox(height: 12),
           state.transactions.isEmpty
               ? _buildEmpty(l10n)
-              : Column(children: state.transactions.map(_buildTxTile).toList()),
+              : Column(children: state.transactions.map((tx) => WalletTxTile(tx: tx)).toList()),
         ],
       ),
     );
@@ -198,50 +199,4 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     );
   }
 
-  Widget _buildTxTile(WalletTransaction tx) {
-    final dateFmt = DateFormat('dd/MM/yyyy HH:mm');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: tx.isCredit ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              tx.isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-              color: tx.isCredit ? AppColors.success : AppColors.error,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(tx.description, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
-                Text(dateFmt.format(tx.createdAt.toLocal()), style: AppTextStyles.caption),
-              ],
-            ),
-          ),
-          Text(
-            '${tx.isCredit ? '+' : '-'}${_currencyFmt.format(tx.amount)}',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: tx.isCredit ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

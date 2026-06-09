@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../widgets/help_search_bar.dart';
+import '../router/route_names.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -62,23 +65,10 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       body: Column(
         children: [
           // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: (v) => setState(() => _query = v),
-              decoration: InputDecoration(
-                hintText: l10n.helpSearchHint,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _query.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchCtrl.clear(); setState(() => _query = ''); })
-                    : null,
-                filled: true,
-                fillColor: AppColors.cardBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
+          HelpSearchBar(
+            controller: _searchCtrl,
+            query: _query,
+            onChanged: (v) => setState(() => _query = v),
           ),
 
           // Category chips
@@ -102,7 +92,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildContactBtn(Icons.chat_bubble_outline, l10n.helpChatSupport, () => Navigator.of(context).pushNamed('/chat', arguments: 'support')),
+                _buildContactBtn(Icons.chat_bubble_outline, l10n.helpChatSupport, () => context.push('${Routes.chat}', extra: 'support')),
                 const SizedBox(width: 8),
                 _buildContactBtn(Icons.phone_outlined, l10n.helpCallSupport, _launchPhone),
                 const SizedBox(width: 8),
