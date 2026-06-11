@@ -23,7 +23,7 @@ jobs:
           OUTPUT: CHANGELOG.md
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Docker image for SBOM
         run: docker build -t foodflow-backend:${{ github.ref_name }} ./backend
