@@ -59,7 +59,7 @@
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.10",
     "jsonwebtoken": "9.0.3",
-    "@nestjs/cli": "^11.0.14",
+    "@nestjs/cli": "^11.0.23",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.9",
     "@types/bcrypt": "^6.0.0",
