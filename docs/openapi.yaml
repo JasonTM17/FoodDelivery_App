@@ -1,0 +1,2607 @@
+openapi: "3.1.0"
+
+info:
+  title: FoodFlow API
+  description: |
+    FoodFlow -- Food Delivery Platform REST API.
+
+    **Base URL:** `https://api.foodflow.vn`
+
+    **Conventions:**
+    - All monetary values are in **VND**, represented as integers.
+    - All datetime values use ISO 8601 `date-time` with timezone.
+    - Successful web/admin/restaurant endpoints return `{ success: true, data, meta? }`.
+    - List endpoints put the collection in `data` and pagination in `meta`.
+    - Errors use the shared `ProblemDetail` schema (RFC 7807) and are not success-wrapped.
+    - Idempotency is supported via `Idempotency-Key` header (UUID v4).
+    - Inbound HMAC: SePay webhooks are verified with `x-sepay-signature`.
+    - Outbound HMAC: outbound calls to n8n include `X-Signature-SHA256`.
+
+    **Versioning:** Path-based `/v1/`. Breaking changes bump the version path.
+  version: "1.0.0"
+  contact:
+    name: FoodFlow Team
+    email: support@foodflow.vn
+
+servers:
+  - url: https://api.foodflow.vn/v1
+    description: Production
+  - url: https://api-staging.foodflow.vn/v1
+    description: Staging
+
+tags:
+  - name: auth
+    description: Authentication (register, login, refresh, logout, forgot/reset password, verify email, OTP)
+  - name: users
+    description: User profiles, address book, wallet
+  - name: restaurants
+    description: Restaurant discovery (nearby, search, detail, menu, reviews)
+  - name: menu
+    description: Menu management (categories, items, options, availability) -- restaurant owner only
+  - name: orders
+    description: Order lifecycle (place, status transitions, cancel, refund, assign driver, tracking)
+  - name: drivers
+    description: Driver operations (online/offline, location, earnings, trip history, withdrawals)
+  - name: payments
+    description: Wallet topup, payment methods, SePay webhook, refund, withdrawal
+  - name: promotions
+    description: Promotion CRUD, validation, overlap check, scheduler, audience targeting (admin)
+  - name: notifications
+    description: Push notifications (FCM), email templates (vi/en/ja), SMS
+  - name: support
+    description: Support tickets, replies, SLA, macros, bulk actions, CSAT (admin)
+  - name: audit
+    description: Audit log (search tsvector, export, retention) -- admin only
+  - name: analytics
+    description: KPI aggregations, business dashboards, heat maps -- admin only
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Ed25519 access token. Obtain via `POST /auth/login`.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for service-to-service calls (n8n webhooks)
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+      description: Page number (1-indexed)
+    LimitParam:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      description: Items per page
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+      description: UUID v4 for idempotent request deduplication
+
+  schemas:
+    # ── Shared ──
+
+    SuccessEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { description: "Endpoint-specific payload" }
+        meta: { description: "Optional pagination or aggregation metadata" }
+      required: [success, data]
+
+    CollectionEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: array
+          items: {}
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required: [success, data, meta]
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:    { type: string, description: "URI to problem type documentation" }
+        title:   { type: string, description: "Short human-readable summary" }
+        status:  { type: integer, description: "HTTP status code" }
+        detail:  { type: string, description: "Human-readable explanation" }
+        instance: { type: string, description: "URI to the specific occurrence" }
+        code:    { type: string, description: "Application-specific error code (e.g. AUTH_INVALID_CREDENTIALS)" }
+      required: [type, title, status, detail]
+      example:
+        type: "https://api.foodflow.vn/errors/validation"
+        title: "Validation Error"
+        status: 422
+        detail: "Email không đúng định dạng"
+        code: "VALIDATION_INVALID_EMAIL"
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:    { type: integer, description: "Total items across all pages" }
+        page:     { type: integer, description: "Current page number" }
+        limit:    { type: integer, description: "Items per page" }
+        hasMore:  { type: boolean, description: "Whether more pages exist" }
+      required: [total, page, limit, hasMore]
+
+    # ── Auth ──
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:    { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 72, description: "Must include uppercase, lowercase, digit" }
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        phone:    { type: string, pattern: '^\+?[1-9]\d{6,14}$', description: "e.g. +84123456789" }
+        role:     { type: string, enum: [customer, driver, restaurant], default: customer }
+      required: [email, password, fullName]
+      example:
+        email: "nguyenvana@example.com"
+        password: "MatKhau@123"
+        fullName: "Nguyễn Văn A"
+        phone: "+84987654321"
+        role: "customer"
+
+    LoginRequest:
+      type: object
+      properties:
+        email:    { type: string, format: email }
+        password: { type: string }
+      required: [email, password]
+      example:
+        email: "customer1@foodflow.vn"
+        password: "Customer@123"
+
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken: { type: string }
+      required: [refreshToken]
+      example:
+        refreshToken: "dGhpcyBpcyBhIHJvdGF0aW5nIG9wYXF1ZSByZWZyZXNoIHRva2Vu"
+
+    LogoutRequest:
+      type: object
+      properties:
+        refreshToken: { type: string }
+      example:
+        refreshToken: "dGhpcyBpcyBhIHJvdGF0aW5nIG9wYXF1ZSByZWZyZXNoIHRva2Vu"
+
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+      required: [email]
+      example:
+        email: "nguyenvana@example.com"
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:    { type: string, description: "Reset token from email" }
+        password: { type: string, minLength: 8, maxLength: 72 }
+      required: [token, password]
+      example:
+        token: "eyJhbGciOiJFZERTQSJ9.xxx"
+        password: "MatKhauMoi@456"
+
+    VerifyEmailRequest:
+      type: object
+      properties:
+        token: { type: string }
+      required: [token]
+      example:
+        token: "eyJhbGciOiJFZERTQSJ9.xxx"
+
+    OtpRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+      required: [email]
+      example:
+        email: "nguyenvana@example.com"
+
+    OtpVerifyRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        code:  { type: string, minLength: 6, maxLength: 6 }
+      required: [email, code]
+      example:
+        email: "nguyenvana@example.com"
+        code: "123456"
+
+    AuthResult:
+      type: object
+      properties:
+        accessToken:  { type: string, description: "JWT Ed25519 access token (15 min TTL)" }
+        refreshToken: { type: string, description: "Opaque rotating refresh token" }
+        expiresAt:    { type: string, format: date-time }
+        user:
+          $ref: "#/components/schemas/UserProfile"
+      required: [accessToken, refreshToken, expiresAt, user]
+
+    # ── Users ──
+
+    UserProfile:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        email:     { type: string, format: email }
+        fullName:  { type: string }
+        phone:     { type: string }
+        role:      { type: string, enum: [customer, driver, restaurant, admin] }
+        avatarUrl: { type: string }
+        isActive:  { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, email, fullName, role, isActive, createdAt]
+      example:
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        email: "nguyenvana@example.com"
+        fullName: "Nguyễn Văn A"
+        phone: "+84987654321"
+        role: "customer"
+        avatarUrl: "https://cdn.foodflow.vn/avatars/default.png"
+        isActive: true
+        createdAt: "2026-01-15T08:30:00Z"
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullName:  { type: string, minLength: 1, maxLength: 100 }
+        phone:     { type: string }
+        avatarUrl: { type: string, format: uri }
+      example:
+        fullName: "Nguyễn Văn A (đã sửa)"
+        phone: "+84988888888"
+
+    AvatarUploadResponse:
+      type: object
+      properties:
+        url: { type: string }
+      required: [url]
+      example:
+        url: "https://cdn.foodflow.vn/avatars/550e8400-e29b-41d4-a716-446655440000.jpg"
+
+    Address:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        label:     { type: string, description: "e.g. Nhà riêng, Công ty" }
+        street:    { type: string }
+        ward:      { type: string }
+        district:  { type: string }
+        city:      { type: string }
+        lat:       { type: number }
+        lng:       { type: number }
+        isDefault: { type: boolean }
+      required: [id, label, street, district, city, lat, lng]
+      example:
+        id: "addr-001"
+        label: "Nhà riêng"
+        street: "123 Nguyễn Huệ"
+        ward: "Phường Bến Nghé"
+        district: "Quận 1"
+        city: "TP. Hồ Chí Minh"
+        lat: 10.7769
+        lng: 106.7009
+        isDefault: true
+
+    CreateAddressRequest:
+      type: object
+      properties:
+        label:    { type: string }
+        street:   { type: string }
+        ward:     { type: string }
+        district: { type: string }
+        city:     { type: string }
+        lat:      { type: number }
+        lng:      { type: number }
+      required: [label, street, district, city, lat, lng]
+      example:
+        label: "Công ty"
+        street: "456 Lê Lợi"
+        ward: "Phường Bến Thành"
+        district: "Quận 1"
+        city: "TP. Hồ Chí Minh"
+        lat: 10.7730
+        lng: 106.6984
+
+    UpdateAddressRequest:
+      type: object
+      properties:
+        label:    { type: string }
+        street:   { type: string }
+        ward:     { type: string }
+        district: { type: string }
+        city:     { type: string }
+        lat:      { type: number }
+        lng:      { type: number }
+      example:
+        label: "Nhà mới"
+        street: "789 Võ Văn Kiệt"
+
+    WalletSnapshot:
+      type: object
+      properties:
+        balance:      { type: integer, description: "Available balance in VND" }
+        totalTopup:   { type: integer, description: "Lifetime topup VND" }
+        totalSpent:   { type: integer, description: "Lifetime spent VND" }
+        transactions:
+          type: array
+          items: { $ref: "#/components/schemas/WalletTransaction" }
+      required: [balance, totalTopup, totalSpent]
+      example:
+        balance: 350000
+        totalTopup: 500000
+        totalSpent: 150000
+        transactions: []
+
+    WalletTransaction:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        amount:    { type: integer, description: "VND. Positive = credit, negative = debit" }
+        type:      { type: string, enum: [topup, payment, refund, withdrawal, adjustment] }
+        reference: { type: string, description: "Reference ID (order, topup request)" }
+        balanceAfter: { type: integer, description: "Wallet balance after this tx (VND)" }
+        createdAt: { type: string, format: date-time }
+      required: [id, amount, type, balanceAfter, createdAt]
+      example:
+        id: "txn-001"
+        amount: 200000
+        type: "topup"
+        reference: "sepay-ref-abc123"
+        balanceAfter: 500000
+        createdAt: "2026-06-09T10:30:00Z"
+
+    WalletTopupRequest:
+      type: object
+      properties:
+        amount: { type: integer, minimum: 10000, maximum: 50000000, description: "VND" }
+        method: { type: string, enum: [sepay] }
+      required: [amount, method]
+      example:
+        amount: 200000
+        method: "sepay"
+
+    # ── Restaurants ──
+
+    RestaurantSummary:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        name:         { type: string }
+        slug:         { type: string }
+        logoUrl:      { type: string }
+        coverUrl:     { type: string }
+        cuisineTypes: { type: array, items: { type: string } }
+        priceRange:   { type: string, enum: ["$", "$$", "$$$"] }
+        rating:       { type: number }
+        totalReviews: { type: integer }
+        distanceKm:   { type: number, description: "Distance from query point (nearby only)" }
+        isOpen:       { type: boolean }
+        prepTimeAvg:  { type: integer, description: "Average preparation time in minutes" }
+        minOrderAmount: { type: integer, description: "Minimum order amount in VND" }
+      required: [id, name, slug, cuisineTypes, priceRange, rating, totalReviews, isOpen]
+      example:
+        id: "rest-001"
+        name: "Phở 24"
+        slug: "pho-24"
+        logoUrl: "https://cdn.foodflow.vn/restaurants/pho24-logo.png"
+        coverUrl: "https://cdn.foodflow.vn/restaurants/pho24-cover.png"
+        cuisineTypes: ["Phở", "Món Việt"]
+        priceRange: "$$"
+        rating: 4.5
+        totalReviews: 128
+        distanceKm: 1.2
+        isOpen: true
+        prepTimeAvg: 15
+        minOrderAmount: 50000
+
+    RestaurantDetail:
+      allOf:
+        - $ref: "#/components/schemas/RestaurantSummary"
+        - type: object
+          properties:
+            description: { type: string }
+            addressLine: { type: string }
+            city:        { type: string }
+            district:    { type: string }
+            phone:       { type: string }
+            openingHours:
+              type: array
+              items:
+                type: object
+                properties:
+                  dayOfWeek: { type: integer, description: "0=Sunday, 6=Saturday" }
+                  openTime:  { type: string, description: "HH:mm" }
+                  closeTime: { type: string, description: "HH:mm" }
+                  isClosed:  { type: boolean }
+
+    MenuCategory:
+      type: object
+      properties:
+        id:       { type: string, format: uuid }
+        name:     { type: string }
+        sortOrder: { type: integer }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/MenuItem" }
+      required: [id, name]
+
+    MenuItem:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        name:        { type: string }
+        description: { type: string }
+        imageUrl:    { type: string }
+        basePrice:   { type: integer, description: "VND" }
+        isAvailable: { type: boolean }
+        isPopular:   { type: boolean }
+        options:
+          type: array
+          items: { $ref: "#/components/schemas/MenuItemOption" }
+      required: [id, name, basePrice, isAvailable]
+      example:
+        id: "item-001"
+        name: "Phở bò tái chín"
+        description: "Phở bò với thịt tái và chín, kèm rau thơm"
+        imageUrl: "https://cdn.foodflow.vn/menu/pho-bo-tai-chin.jpg"
+        basePrice: 65000
+        isAvailable: true
+        isPopular: true
+        options: []
+
+    MenuItemOption:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        name:       { type: string }
+        isRequired: { type: boolean }
+        isMultiple: { type: boolean }
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              value:         { type: string }
+              priceModifier: { type: integer, description: "Additional VND" }
+      example:
+        id: "opt-001"
+        name: "Size"
+        isRequired: true
+        isMultiple: false
+        values:
+          - { value: "Nhỏ", priceModifier: 0 }
+          - { value: "Vừa", priceModifier: 15000 }
+          - { value: "Lớn", priceModifier: 25000 }
+
+    Review:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        foodRating:     { type: integer, minimum: 1, maximum: 5 }
+        deliveryRating: { type: integer, minimum: 1, maximum: 5 }
+        comment:        { type: string }
+        customerName:   { type: string }
+        createdAt:      { type: string, format: date-time }
+      required: [id, foodRating, deliveryRating, customerName, createdAt]
+      example:
+        id: "rev-001"
+        foodRating: 5
+        deliveryRating: 4
+        comment: "Phở ngon, nước dùng đậm đà"
+        customerName: "Nguyễn Văn A"
+        createdAt: "2026-06-08T12:00:00Z"
+
+    # ── Orders ──
+
+    PlaceOrderRequest:
+      type: object
+      properties:
+        addressId:     { type: string, format: uuid }
+        paymentMethod: { type: string, enum: [cash, wallet, sepay], default: cash }
+        promotionCode: { type: string }
+        notes:         { type: string, maxLength: 500 }
+      required: [addressId]
+      example:
+        addressId: "addr-001"
+        paymentMethod: "wallet"
+        promotionCode: "WELCOME2026"
+        notes: "Không hành, thêm ớt"
+
+    OrderDetail:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        status:         { type: string, enum: [created, pending_payment, paid, restaurant_pending, restaurant_accepted, preparing, ready_for_pickup, driver_assigned, driver_arriving_restaurant, picked_up, delivering, delivered, completed, cancelled, refunded] }
+        subtotal:       { type: integer, description: "VND" }
+        deliveryFee:    { type: integer, description: "VND" }
+        discount:       { type: integer, description: "VND" }
+        total:          { type: integer, description: "VND" }
+        paymentMethod:  { type: string, enum: [cash, wallet, sepay] }
+        notes:          { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              name:       { type: string }
+              quantity:   { type: integer }
+              unitPrice:  { type: integer, description: "VND" }
+              options:    { type: array, items: { type: string }, description: "Selected option values" }
+              lineTotal:  { type: integer, description: "VND" }
+        restaurant:
+          type: object
+          properties:
+            id:   { type: string, format: uuid }
+            name: { type: string }
+        deliveryAddress:
+          $ref: "#/components/schemas/Address"
+        driver:
+          type: object
+          properties:
+            id:       { type: string, format: uuid }
+            fullName: { type: string }
+            phone:    { type: string }
+            rating:   { type: number }
+            lat:      { type: number }
+            lng:      { type: number }
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              status:    { type: string }
+              timestamp: { type: string, format: date-time }
+              note:      { type: string }
+        createdAt:      { type: string, format: date-time }
+        estimatedDelivery: { type: string, format: date-time }
+      required: [id, status, subtotal, deliveryFee, total, paymentMethod, items, restaurant, createdAt]
+      example:
+        id: "order-001"
+        status: "preparing"
+        subtotal: 130000
+        deliveryFee: 15000
+        discount: 20000
+        total: 125000
+        paymentMethod: "wallet"
+        notes: "Không hành, thêm ớt"
+        items:
+          - { name: "Phở bò tái chín", quantity: 2, unitPrice: 65000, options: ["Size Lớn"], lineTotal: 130000 }
+        restaurant: { id: "rest-001", name: "Phở 24" }
+        deliveryAddress:
+          id: "addr-001"
+          label: "Nhà riêng"
+          street: "123 Nguyễn Huệ"
+          ward: "Phường Bến Nghé"
+          district: "Quận 1"
+          city: "TP. Hồ Chí Minh"
+          lat: 10.7769
+          lng: 106.7009
+          isDefault: true
+        createdAt: "2026-06-09T11:00:00Z"
+        estimatedDelivery: "2026-06-09T11:35:00Z"
+        timeline:
+          - { status: "created", timestamp: "2026-06-09T11:00:00Z" }
+          - { status: "paid", timestamp: "2026-06-09T11:00:05Z" }
+          - { status: "restaurant_accepted", timestamp: "2026-06-09T11:02:00Z" }
+          - { status: "preparing", timestamp: "2026-06-09T11:05:00Z" }
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        reason: { type: string, maxLength: 500 }
+      example:
+        reason: "Đổi ý, muốn đặt món khác"
+
+    UpdateOrderStatusRequest:
+      type: object
+      properties:
+        status: { type: string }
+        note:   { type: string }
+      required: [status]
+      example:
+        status: "preparing"
+        note: "Bắt đầu chế biến món"
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        foodRating:     { type: integer, minimum: 1, maximum: 5 }
+        deliveryRating: { type: integer, minimum: 1, maximum: 5 }
+        comment:        { type: string, maxLength: 500 }
+      required: [foodRating, deliveryRating]
+      example:
+        foodRating: 5
+        deliveryRating: 4
+        comment: "Phở ngon, giao nhanh"
+
+    # ── Drivers ──
+
+    GoOnlineRequest:
+      type: object
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+      required: [lat, lng]
+      example:
+        lat: 10.7769
+        lng: 106.7009
+
+    DriverEarnings:
+      type: object
+      properties:
+        today:         { type: integer, description: "VND earned today" }
+        week:          { type: integer, description: "VND earned this week" }
+        month:         { type: integer, description: "VND earned this month" }
+        totalDeliveries: { type: integer }
+        rating:        { type: number }
+      required: [today, week, month, totalDeliveries, rating]
+      example:
+        today: 350000
+        week: 2450000
+        month: 9800000
+        totalDeliveries: 156
+        rating: 4.8
+
+    DriverTrip:
+      type: object
+      properties:
+        orderId:  { type: string, format: uuid }
+        status:   { type: string }
+        earnings: { type: integer, description: "VND. Driver share of delivery fee" }
+        distanceKm: { type: number }
+        completedAt: { type: string, format: date-time }
+      required: [orderId, status, earnings]
+      example:
+        orderId: "order-001"
+        status: "completed"
+        earnings: 12000
+        distanceKm: 2.3
+        completedAt: "2026-06-09T11:40:00Z"
+
+    DriverWithdrawalRequest:
+      type: object
+      properties:
+        amount:         { type: integer, minimum: 50000, maximum: 50000000, description: "VND" }
+        bankCode:       { type: string }
+        accountNumber:  { type: string }
+        accountName:    { type: string }
+      required: [amount, bankCode, accountNumber, accountName]
+      example:
+        amount: 5000000
+        bankCode: "VCB"
+        accountNumber: "0011001234567"
+        accountName: "NGUYEN VAN B"
+
+    # ── Payments ──
+
+    SepayWebhookPayload:
+      type: object
+      properties:
+        transaction_ref: { type: string }
+        amount:          { type: integer, description: "VND" }
+        account_number:  { type: string }
+        description:     { type: string }
+        transaction_time: { type: string, format: date-time }
+      required: [transaction_ref, amount]
+      example:
+        transaction_ref: "sepay-ref-abc123"
+        amount: 200000
+        account_number: "0011001234567"
+        description: "FoodFlow nap tien"
+        transaction_time: "2026-06-09T10:30:00Z"
+
+    PaymentIntent:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        orderId:        { type: string, format: uuid }
+        amount:         { type: integer, description: "VND" }
+        method:         { type: string, enum: [cash, wallet, sepay] }
+        status:         { type: string, enum: [pending, completed, failed, refunded] }
+        transactionRef: { type: string }
+        paidAt:         { type: string, format: date-time }
+        createdAt:      { type: string, format: date-time }
+      required: [id, orderId, amount, method, status, createdAt]
+      example:
+        id: "pi-001"
+        orderId: "order-001"
+        amount: 125000
+        method: "wallet"
+        status: "completed"
+        transactionRef: "sepay-ref-abc123"
+        paidAt: "2026-06-09T11:00:05Z"
+        createdAt: "2026-06-09T11:00:00Z"
+
+    # ── Promotions ──
+
+    Promotion:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        code:          { type: string }
+        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        value:         { type: integer, description: "Percent (if percentage) or VND (if fixed)" }
+        minOrderAmount: { type: integer, description: "Minimum order amount in VND" }
+        maxDiscount:   { type: integer, description: "Max discount cap in VND" }
+        usageLimit:    { type: integer }
+        usageCount:    { type: integer }
+        startsAt:      { type: string, format: date-time }
+        expiresAt:     { type: string, format: date-time }
+        isActive:      { type: boolean }
+        createdAt:     { type: string, format: date-time }
+      required: [id, code, type, value, usageLimit, startsAt, expiresAt, isActive]
+      example:
+        id: "promo-001"
+        code: "WELCOME2026"
+        type: "percentage"
+        value: 20
+        minOrderAmount: 100000
+        maxDiscount: 50000
+        usageLimit: 500
+        usageCount: 23
+        startsAt: "2026-06-01T00:00:00Z"
+        expiresAt: "2026-07-01T00:00:00Z"
+        isActive: true
+        createdAt: "2026-06-01T00:00:00Z"
+
+    CreatePromotionRequest:
+      type: object
+      properties:
+        code:          { type: string, maxLength: 50 }
+        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        value:         { type: integer, description: "Percent or VND" }
+        minOrderAmount: { type: integer, description: "VND" }
+        maxDiscount:   { type: integer, description: "VND" }
+        usageLimit:    { type: integer, minimum: 1 }
+        startsAt:      { type: string, format: date-time }
+        expiresAt:     { type: string, format: date-time }
+        isActive:      { type: boolean, default: true }
+      required: [code, type, value, usageLimit, startsAt, expiresAt]
+      example:
+        code: "SUMMER2026"
+        type: "fixed"
+        value: 30000
+        minOrderAmount: 150000
+        maxDiscount: 30000
+        usageLimit: 1000
+        startsAt: "2026-07-01T00:00:00Z"
+        expiresAt: "2026-08-31T23:59:59Z"
+        isActive: true
+
+    UpdatePromotionRequest:
+      type: object
+      properties:
+        code:          { type: string, maxLength: 50 }
+        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        value:         { type: integer }
+        minOrderAmount: { type: integer, description: "VND" }
+        maxDiscount:   { type: integer, description: "VND" }
+        usageLimit:    { type: integer, minimum: 1 }
+        startsAt:      { type: string, format: date-time }
+        expiresAt:     { type: string, format: date-time }
+        isActive:      { type: boolean }
+      example:
+        maxDiscount: 50000
+
+    PromotionValidateRequest:
+      type: object
+      properties:
+        code:          { type: string }
+        restaurantId:  { type: string, format: uuid }
+        orderAmount:   { type: integer, description: "VND" }
+      required: [code, restaurantId, orderAmount]
+      example:
+        code: "WELCOME2026"
+        restaurantId: "rest-001"
+        orderAmount: 200000
+
+    PromotionValidateResult:
+      type: object
+      properties:
+        valid:          { type: boolean }
+        discountAmount: { type: integer, description: "VND" }
+        message:        { type: string }
+      required: [valid, discountAmount]
+      example:
+        valid: true
+        discountAmount: 40000
+        message: "Áp dụng mã WELCOME2026: giảm 20%, tối đa 50,000đ"
+
+    # ── Notifications ──
+
+    Notification:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        title:     { type: string }
+        body:      { type: string }
+        type:      { type: string, enum: [order_update, promotion, driver_alert, system] }
+        isRead:    { type: boolean }
+        payload:   { type: object, description: "Arbitrary JSON payload" }
+        createdAt: { type: string, format: date-time }
+      required: [id, title, body, type, isRead, createdAt]
+      example:
+        id: "notif-001"
+        title: "Đơn hàng #order-001 đang được chuẩn bị"
+        body: "Nhà hàng Phở 24 đã nhận đơn và đang chế biến món ăn của bạn"
+        type: "order_update"
+        isRead: false
+        payload: { orderId: "order-001", event: "preparing" }
+        createdAt: "2026-06-09T11:05:00Z"
+
+    RegisterFcmTokenRequest:
+      type: object
+      properties:
+        token:    { type: string }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceId: { type: string }
+      required: [token, platform]
+      example:
+        token: "fcm-device-token-abc123"
+        platform: "android"
+        deviceId: "device-001"
+
+    # ── Support ──
+
+    SupportTicket:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        subject:       { type: string }
+        issueType:     { type: string, enum: [late_delivery, wrong_item, missing_item, driver_issue, refund_request, other] }
+        priority:      { type: string, enum: [low, medium, high, critical] }
+        status:        { type: string, enum: [open, in_progress, resolved, closed] }
+        orderId:       { type: string, format: uuid }
+        userId:        { type: string, format: uuid }
+        assignedAdminId: { type: string, format: uuid }
+        resolutionNotes: { type: string }
+        csatScore:     { type: integer, minimum: 1, maximum: 5, description: "Customer satisfaction after resolution" }
+        createdAt:     { type: string, format: date-time }
+        updatedAt:     { type: string, format: date-time }
+        replies:
+          type: array
+          items: { $ref: "#/components/schemas/TicketReply" }
+      required: [id, subject, issueType, priority, status, userId, createdAt, updatedAt]
+      example:
+        id: "ticket-001"
+        subject: "Đơn hàng giao thiếu món"
+        issueType: "missing_item"
+        priority: "medium"
+        status: "in_progress"
+        orderId: "order-001"
+        userId: "user-001"
+        resolutionNotes: null
+        csatScore: null
+        createdAt: "2026-06-09T12:00:00Z"
+        updatedAt: "2026-06-09T12:30:00Z"
+        replies: []
+
+    TicketReply:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        ticketId:  { type: string, format: uuid }
+        authorId:  { type: string, format: uuid }
+        authorRole: { type: string, enum: [customer, admin] }
+        body:      { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, ticketId, authorId, body, createdAt]
+      example:
+        id: "reply-001"
+        ticketId: "ticket-001"
+        authorId: "admin-001"
+        authorRole: "admin"
+        body: "Chúng tôi đã kiểm tra và sẽ hoàn tiền cho món thiếu. Xin lỗi bạn vì sự bất tiện này."
+        createdAt: "2026-06-09T12:30:00Z"
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        subject:   { type: string, maxLength: 200 }
+        issueType: { type: string, enum: [late_delivery, wrong_item, missing_item, driver_issue, refund_request, other] }
+        priority:  { type: string, enum: [low, medium, high, critical], default: medium }
+        orderId:   { type: string, format: uuid }
+        body:      { type: string }
+      required: [subject, issueType]
+      example:
+        subject: "Đơn hàng giao thiếu món"
+        issueType: "missing_item"
+        priority: "medium"
+        orderId: "order-001"
+        body: "Tôi đặt 2 bát phở nhưng chỉ nhận được 1 bát."
+
+    CreateReplyRequest:
+      type: object
+      properties:
+        body: { type: string }
+      required: [body]
+      example:
+        body: "Cảm ơn bạn đã phản hồi. Tôi sẽ kiểm tra ngay."
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        status:          { type: string, enum: [open, in_progress, resolved, closed] }
+        assignedAdminId: { type: string, format: uuid }
+        resolutionNotes: { type: string }
+      example:
+        status: "resolved"
+        resolutionNotes: "Đã hoàn tiền món thiếu 65,000đ"
+
+    SubmitCsatRequest:
+      type: object
+      properties:
+        score:   { type: integer, minimum: 1, maximum: 5 }
+        feedback: { type: string, maxLength: 500 }
+      required: [score]
+      example:
+        score: 4
+        feedback: "Xử lý nhanh, nhân viên lịch sự"
+
+    # ── Audit ──
+
+    AuditLogEntry:
+      type: object
+      properties:
+        id:        { type: string, format: uuid }
+        userId:    { type: string, format: uuid }
+        action:    { type: string, description: "e.g. user.created, order.cancelled, promotion.deleted" }
+        resource:  { type: string, description: "e.g. users, orders, promotions" }
+        resourceId: { type: string, format: uuid }
+        detail:    { type: object, description: "Arbitrary JSON diff" }
+        ip:        { type: string }
+        userAgent: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, action, resource, createdAt]
+      example:
+        id: "audit-001"
+        userId: "admin-001"
+        action: "promotion.deleted"
+        resource: "promotions"
+        resourceId: "promo-002"
+        detail: { previous: { code: "OLD2025", isActive: true } }
+        ip: "192.168.1.1"
+        userAgent: "Mozilla/5.0 ..."
+        createdAt: "2026-06-09T14:00:00Z"
+
+    AuditSearchRequest:
+      type: object
+      properties:
+        q:          { type: string, description: "Full-text search query" }
+        resource:   { type: string }
+        action:     { type: string }
+        userId:     { type: string, format: uuid }
+        fromDate:   { type: string, format: date-time }
+        toDate:     { type: string, format: date-time }
+      example:
+        q: "promotion"
+        resource: "promotions"
+        fromDate: "2026-06-01T00:00:00Z"
+        toDate: "2026-06-09T23:59:59Z"
+
+    AuditExportRequest:
+      type: object
+      properties:
+        format:    { type: string, enum: [csv, json] }
+        fromDate:  { type: string, format: date-time }
+        toDate:    { type: string, format: date-time }
+        resource:  { type: string }
+      required: [format]
+      example:
+        format: "csv"
+        fromDate: "2026-06-01T00:00:00Z"
+        toDate: "2026-06-09T23:59:59Z"
+
+    # ── Analytics ──
+
+    DashboardKpi:
+      type: object
+      properties:
+        totalOrders:         { type: integer }
+        totalRevenue:        { type: integer, description: "VND" }
+        totalUsers:          { type: integer }
+        activeDrivers:       { type: integer }
+        activeRestaurants:   { type: integer }
+        avgOrderValue:       { type: integer, description: "VND" }
+        cancellationRate:    { type: number }
+        periodStart:         { type: string, format: date-time }
+        periodEnd:           { type: string, format: date-time }
+      required: [totalOrders, totalRevenue, totalUsers, activeDrivers, activeRestaurants]
+      example:
+        totalOrders: 1234
+        totalRevenue: 156780000
+        totalUsers: 8920
+        activeDrivers: 45
+        activeRestaurants: 67
+        avgOrderValue: 127000
+        cancellationRate: 0.035
+        periodStart: "2026-06-01T00:00:00Z"
+        periodEnd: "2026-06-09T23:59:59Z"
+
+    RevenueChartPoint:
+      type: object
+      properties:
+        date:    { type: string, format: date }
+        revenue: { type: integer, description: "VND" }
+        orders:  { type: integer }
+      required: [date, revenue, orders]
+      example:
+        date: "2026-06-09"
+        revenue: 18250000
+        orders: 145
+
+    RestaurantKpi:
+      type: object
+      properties:
+        restaurantId:    { type: string, format: uuid }
+        restaurantName:  { type: string }
+        totalOrders:     { type: integer }
+        totalRevenue:    { type: integer, description: "VND" }
+        avgPrepTimeMin:  { type: number }
+        rating:          { type: number }
+        topItems:
+          type: array
+          items:
+            type: object
+            properties:
+              itemName:   { type: string }
+              orderCount: { type: integer }
+              revenue:    { type: integer, description: "VND" }
+      required: [restaurantId, restaurantName, totalOrders, totalRevenue]
+      example:
+        restaurantId: "rest-001"
+        restaurantName: "Phở 24"
+        totalOrders: 345
+        totalRevenue: 42150000
+        avgPrepTimeMin: 14.5
+        rating: 4.5
+        topItems:
+          - { itemName: "Phở bò tái chín", orderCount: 210, revenue: 13650000 }
+          - { itemName: "Phở gà", orderCount: 89, revenue: 5785000 }
+
+    HeatmapPoint:
+      type: object
+      properties:
+        lat:         { type: number }
+        lng:         { type: number }
+        orderCount:  { type: integer }
+        weight:      { type: number, description: "0.0 - 1.0 intensity" }
+      required: [lat, lng, orderCount]
+      example:
+        lat: 10.7769
+        lng: 106.7009
+        orderCount: 45
+        weight: 0.85
+
+    # ── Paged responses ──
+
+    PaginatedUsers:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/UserProfile" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedRestaurants:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/RestaurantSummary" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedOrders:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/OrderDetail" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedNotifications:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedAuditLogs:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/AuditLogEntry" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedPromotions:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/Promotion" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedSupportTickets:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/SupportTicket" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedDriverTrips:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/DriverTrip" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+    PaginatedReviews:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/Review" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [data, meta]
+
+paths:
+
+  # ═══════════════════════════════════════════════
+  # AUTH
+  # ═══════════════════════════════════════════════
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: auth_register
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201": { description: "User registered", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "409": { description: "Email already exists", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "422": { description: "Validation error", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login with email and password
+      operationId: auth_login
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200": { description: "Login successful", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "401": { description: "Invalid credentials", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "423": { description: "Account locked", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "429": { description: "Rate limited", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token
+      operationId: auth_refresh
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshRequest" }
+      responses:
+        "200": { description: "Tokens refreshed", content: { application/json: { schema: { $ref: "#/components/schemas/AuthResult" } } } }
+        "401": { description: "Invalid or expired refresh token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout (invalidate refresh token)
+      operationId: auth_logout
+      x-foo-actor: user
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LogoutRequest" }
+      responses:
+        "200": { description: "Logged out", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Request password reset email
+      operationId: auth_forgotPassword
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
+      responses:
+        "200": { description: "Reset email sent (always 200 to prevent email enumeration)", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+
+  /auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Reset password with token
+      operationId: auth_resetPassword
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
+      responses:
+        "200": { description: "Password reset successful", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+        "400": { description: "Invalid or expired token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/verify-email:
+    post:
+      tags: [auth]
+      summary: Verify email address
+      operationId: auth_verifyEmail
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerifyEmailRequest" }
+      responses:
+        "200": { description: "Email verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+        "400": { description: "Invalid token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/otp:
+    post:
+      tags: [auth]
+      summary: Request OTP code
+      operationId: auth_requestOtp
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OtpRequest" }
+      responses:
+        "200": { description: "OTP sent", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+
+  /auth/otp/verify:
+    post:
+      tags: [auth]
+      summary: Verify OTP code
+      operationId: auth_verifyOtp
+      x-foo-actor: public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OtpVerifyRequest" }
+      responses:
+        "200": { description: "OTP verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
+        "400": { description: "Invalid OTP", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /auth/jwks.json:
+    get:
+      tags: [auth]
+      summary: JWKS endpoint for Ed25519 public keys
+      operationId: auth_jwks
+      x-foo-actor: public
+      security: []
+      responses:
+        "200":
+          description: JWKS document
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kty: { type: string }
+                        crv: { type: string }
+                        x:   { type: string }
+                        kid: { type: string }
+                        use: { type: string }
+                        alg: { type: string }
+
+  # ═══════════════════════════════════════════════
+  # USERS
+  # ═══════════════════════════════════════════════
+
+  /users/me:
+    get:
+      tags: [users]
+      summary: Get current user profile
+      operationId: users_getProfile
+      x-foo-actor: user
+      responses:
+        "200": { description: "User profile", content: { application/json: { schema: { $ref: "#/components/schemas/UserProfile" } } } }
+        "401": { description: "Unauthenticated", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    patch:
+      tags: [users]
+      summary: Update current user profile
+      operationId: users_updateProfile
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+      responses:
+        "200": { description: "Profile updated", content: { application/json: { schema: { $ref: "#/components/schemas/UserProfile" } } } }
+        "401": { description: "Unauthenticated", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "422": { description: "Validation error", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /users/me/avatar:
+    post:
+      tags: [users]
+      summary: Upload avatar image
+      operationId: users_uploadAvatar
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        "200": { description: "Avatar uploaded", content: { application/json: { schema: { $ref: "#/components/schemas/AvatarUploadResponse" } } } }
+        "400": { description: "Invalid file", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /users/me/addresses:
+    get:
+      tags: [users]
+      summary: List saved addresses
+      operationId: users_listAddresses
+      x-foo-actor: user
+      responses:
+        "200": { description: "Address list", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/Address" } } } } } } }
+    post:
+      tags: [users]
+      summary: Add a new address
+      operationId: users_createAddress
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAddressRequest" }
+      responses:
+        "201": { description: "Address created", content: { application/json: { schema: { $ref: "#/components/schemas/Address" } } } }
+        "422": { description: "Validation error", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /users/me/addresses/{addressId}:
+    patch:
+      tags: [users]
+      summary: Update an address
+      operationId: users_updateAddress
+      x-foo-actor: user
+      parameters:
+        - name: addressId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAddressRequest" }
+      responses:
+        "200": { description: "Address updated", content: { application/json: { schema: { $ref: "#/components/schemas/Address" } } } }
+        "404": { description: "Address not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    delete:
+      tags: [users]
+      summary: Delete an address
+      operationId: users_deleteAddress
+      x-foo-actor: user
+      parameters:
+        - name: addressId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Address deleted" }
+        "404": { description: "Address not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /users/wallet:
+    get:
+      tags: [users]
+      summary: Get wallet balance and transactions
+      operationId: users_getWallet
+      x-foo-actor: user
+      responses:
+        "200": { description: "Wallet snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/WalletSnapshot" } } } }
+
+  /users/wallet/topup:
+    post:
+      tags: [users]
+      summary: Initiate wallet topup via SePay
+      operationId: users_topupWallet
+      x-foo-actor: user
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WalletTopupRequest" }
+      responses:
+        "201": { description: "Topup initiated (returns SePay QR URL)", content: { application/json: { schema: { type: object, properties: { qrUrl: { type: string }, transactionRef: { type: string }, amount: { type: integer } } } } } }
+        "400": { description: "Invalid amount", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  # ═══════════════════════════════════════════════
+  # RESTAURANTS (public discovery)
+  # ═══════════════════════════════════════════════
+
+  /restaurants/nearby:
+    get:
+      tags: [restaurants]
+      summary: Find restaurants near a location (PostGIS)
+      operationId: restaurants_nearby
+      x-foo-actor: public
+      security: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number }
+        - name: lng
+          in: query
+          required: true
+          schema: { type: number }
+        - name: radius
+          in: query
+          schema: { type: integer, default: 5 }
+          description: Radius in km
+        - name: cuisine
+          in: query
+          schema: { type: string }
+          description: Filter by cuisine type
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Nearby restaurants", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedRestaurants" } } } }
+
+  /restaurants/search:
+    get:
+      tags: [restaurants]
+      summary: Search restaurants by keyword
+      operationId: restaurants_search
+      x-foo-actor: public
+      security: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+          description: Search keyword
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Search results", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedRestaurants" } } } }
+
+  /restaurants/{restaurantId}:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant detail
+      operationId: restaurants_getDetail
+      x-foo-actor: public
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant detail", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantDetail" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurants/{restaurantId}/menu:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant menu (categories + items)
+      operationId: restaurants_getMenu
+      x-foo-actor: public
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant menu", content: { application/json: { schema: { type: object, properties: { categories: { type: array, items: { $ref: "#/components/schemas/MenuCategory" } } } } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurants/{restaurantId}/reviews:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant reviews
+      operationId: restaurants_getReviews
+      x-foo-actor: public
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Restaurant reviews", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedReviews" } } } }
+
+  # ═══════════════════════════════════════════════
+  # MENU (restaurant owner)
+  # ═══════════════════════════════════════════════
+
+  /restaurant/menu:
+    get:
+      tags: [menu]
+      summary: Get my restaurant's full menu
+      operationId: menu_getMenu
+      x-foo-actor: restaurant_owner
+      responses:
+        "200": { description: "Full menu", content: { application/json: { schema: { type: object, properties: { categories: { type: array, items: { $ref: "#/components/schemas/MenuCategory" } } } } } } }
+
+  /restaurant/menu/categories:
+    post:
+      tags: [menu]
+      summary: Create a menu category
+      operationId: menu_createCategory
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 100 }
+                sortOrder: { type: integer, default: 0 }
+              required: [name]
+              example:
+                name: "Món chính"
+                sortOrder: 1
+      responses:
+        "201": { description: "Category created", content: { application/json: { schema: { $ref: "#/components/schemas/MenuCategory" } } } }
+
+  /restaurant/menu/categories/{categoryId}:
+    patch:
+      tags: [menu]
+      summary: Update a menu category
+      operationId: menu_updateCategory
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 100 }
+                sortOrder: { type: integer }
+      responses:
+        "200": { description: "Category updated" }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    delete:
+      tags: [menu]
+      summary: Delete a menu category
+      operationId: menu_deleteCategory
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Category deleted" }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/menu/items:
+    post:
+      tags: [menu]
+      summary: Create a menu item
+      operationId: menu_createItem
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId: { type: string, format: uuid }
+                name: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string }
+                imageUrl: { type: string }
+                basePrice: { type: integer, description: "VND" }
+                isAvailable: { type: boolean, default: true }
+                isPopular: { type: boolean, default: false }
+                options:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name: { type: string }
+                      isRequired: { type: boolean, default: false }
+                      isMultiple: { type: boolean, default: false }
+                      values:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            value: { type: string }
+                            priceModifier: { type: integer, description: "VND" }
+                          required: [value]
+                    required: [name]
+              required: [categoryId, name, basePrice]
+              example:
+                categoryId: "cat-001"
+                name: "Bún bò Huế đặc biệt"
+                description: "Bún bò Huế chuẩn vị, cay nồng"
+                basePrice: 55000
+                options:
+                  - name: "Size"
+                    values:
+                      - { value: "Vừa", priceModifier: 0 }
+                      - { value: "Lớn", priceModifier: 20000 }
+      responses:
+        "201": { description: "Menu item created", content: { application/json: { schema: { $ref: "#/components/schemas/MenuItem" } } } }
+        "422": { description: "Validation error", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/menu/items/{itemId}:
+    patch:
+      tags: [menu]
+      summary: Update a menu item
+      operationId: menu_updateItem
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string }
+                imageUrl: { type: string }
+                basePrice: { type: integer, description: "VND" }
+                isAvailable: { type: boolean }
+                isPopular: { type: boolean }
+                categoryId: { type: string, format: uuid }
+      responses:
+        "200": { description: "Menu item updated" }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    delete:
+      tags: [menu]
+      summary: Delete a menu item
+      operationId: menu_deleteItem
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Menu item deleted" }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/menu/items/{itemId}/toggle:
+    patch:
+      tags: [menu]
+      summary: Toggle item availability
+      operationId: menu_toggleItem
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Item toggled" }
+
+  # ═══════════════════════════════════════════════
+  # ORDERS
+  # ═══════════════════════════════════════════════
+
+  /orders:
+    post:
+      tags: [orders]
+      summary: Place a new order
+      operationId: orders_place
+      x-foo-actor: user
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlaceOrderRequest" }
+      responses:
+        "201": { description: "Order placed", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "400": { description: "Cart empty / restaurant closed / below min order", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Duplicate (idempotency key)", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    get:
+      tags: [orders]
+      summary: Get customer's order history
+      operationId: orders_getMyOrders
+      x-foo-actor: user
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "My orders", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedOrders" } } } }
+
+  /orders/{orderId}:
+    get:
+      tags: [orders]
+      summary: Get order detail
+      operationId: orders_getDetail
+      x-foo-actor: user
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Order detail", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /orders/{orderId}/cancel:
+    post:
+      tags: [orders]
+      summary: Cancel an order
+      operationId: orders_cancel
+      x-foo-actor: user
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CancelOrderRequest" }
+      responses:
+        "200": { description: "Order cancelled", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "400": { description: "Order cannot be cancelled at this stage", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /orders/{orderId}/review:
+    post:
+      tags: [orders]
+      summary: Submit a review for a completed order
+      operationId: orders_submitReview
+      x-foo-actor: user
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateReviewRequest" }
+      responses:
+        "200": { description: "Review submitted", content: { application/json: { schema: { $ref: "#/components/schemas/Review" } } } }
+        "400": { description: "Order not completed or already reviewed", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/orders:
+    get:
+      tags: [orders]
+      summary: Get restaurant's incoming orders
+      operationId: orders_getRestaurantOrders
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: "Restaurant orders", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/OrderDetail" } } } } }
+
+  /restaurant/orders/{orderId}/status:
+    patch:
+      tags: [orders]
+      summary: Update order status (restaurant)
+      operationId: orders_updateRestaurantStatus
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrderStatusRequest" }
+      responses:
+        "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "400": { description: "Invalid transition", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/orders/{orderId}/status:
+    patch:
+      tags: [orders]
+      summary: Update order status (driver)
+      operationId: orders_updateDriverStatus
+      x-foo-actor: driver
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrderStatusRequest" }
+      responses:
+        "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "400": { description: "Invalid transition", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  # ═══════════════════════════════════════════════
+  # DRIVERS
+  # ═══════════════════════════════════════════════
+
+  /driver/online:
+    post:
+      tags: [drivers]
+      summary: Go online (start accepting orders)
+      operationId: drivers_goOnline
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoOnlineRequest" }
+      responses:
+        "200": { description: "Now online", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean }, lat: { type: number }, lng: { type: number } } } } } }
+
+  /driver/offline:
+    post:
+      tags: [drivers]
+      summary: Go offline
+      operationId: drivers_goOffline
+      x-foo-actor: driver
+      responses:
+        "200": { description: "Now offline", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean } } } } } }
+
+  /driver/earnings:
+    get:
+      tags: [drivers]
+      summary: Get driver earnings summary
+      operationId: drivers_getEarnings
+      x-foo-actor: driver
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, enum: [today, week, month], default: today }
+      responses:
+        "200": { description: "Earnings", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarnings" } } } }
+
+  /driver/trips:
+    get:
+      tags: [drivers]
+      summary: Get driver trip history
+      operationId: drivers_getTrips
+      x-foo-actor: driver
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date-time }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { description: "Trip history", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedDriverTrips" } } } }
+
+  /driver/kyc:
+    post:
+      tags: [drivers]
+      summary: Submit KYC documents
+      operationId: drivers_submitKyc
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                licenseNumber: { type: string }
+                vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+                vehiclePlate: { type: string }
+                idCardFront: { type: string, format: uri, description: "Uploaded front image URL" }
+                idCardBack: { type: string, format: uri, description: "Uploaded back image URL" }
+              required: [licenseNumber, vehicleType, vehiclePlate]
+              example:
+                licenseNumber: "A1-123456789"
+                vehicleType: "motorbike"
+                vehiclePlate: "59-F1-12345"
+                idCardFront: "https://cdn.foodflow.vn/kyc/id-front-001.jpg"
+                idCardBack: "https://cdn.foodflow.vn/kyc/id-back-001.jpg"
+      responses:
+        "200": { description: "KYC submitted" }
+        "409": { description: "Already submitted", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/kyc/status:
+    get:
+      tags: [drivers]
+      summary: Check KYC verification status
+      operationId: drivers_kycStatus
+      x-foo-actor: driver
+      responses:
+        "200": { description: "KYC status", content: { application/json: { schema: { type: object, properties: { isVerified: { type: boolean }, licenseNumber: { type: string }, vehicleType: { type: string }, vehiclePlate: { type: string } } } } } }
+
+  /driver/withdrawals:
+    post:
+      tags: [drivers]
+      summary: Request earnings withdrawal
+      operationId: drivers_requestWithdrawal
+      x-foo-actor: driver
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverWithdrawalRequest" }
+      responses:
+        "201": { description: "Withdrawal requested", content: { application/json: { schema: { type: object, properties: { withdrawalId: { type: string, format: uuid }, amount: { type: integer }, status: { type: string }, createdAt: { type: string, format: date-time } } } } } }
+        "400": { description: "Insufficient balance", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    get:
+      tags: [drivers]
+      summary: Get withdrawal history
+      operationId: drivers_getWithdrawals
+      x-foo-actor: driver
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Withdrawal history", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { type: object, properties: { id: { type: string, format: uuid }, amount: { type: integer }, bankCode: { type: string }, accountNumber: { type: string }, status: { type: string, enum: [pending, processing, completed, rejected] }, createdAt: { type: string, format: date-time } } } }, meta: { $ref: "#/components/schemas/PaginationMeta" } } } } } }
+
+  # ═══════════════════════════════════════════════
+  # PAYMENTS
+  # ═══════════════════════════════════════════════
+
+  /payments/intents:
+    get:
+      tags: [payments]
+      summary: List payment intents (admin)
+      operationId: payments_listIntents
+      x-foo-actor: admin
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, completed, failed, refunded] }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Payment intents", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/PaymentIntent" } }, meta: { $ref: "#/components/schemas/PaginationMeta" } } } } } }
+
+  /payments/intents/{intentId}/refund:
+    post:
+      tags: [payments]
+      summary: Refund a payment
+      operationId: payments_refund
+      x-foo-actor: admin
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+                amount: { type: integer, description: "VND. Defaults to full amount" }
+      responses:
+        "200": { description: "Refunded", content: { application/json: { schema: { $ref: "#/components/schemas/PaymentIntent" } } } }
+        "400": { description: "Already refunded / invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  # ═══════════════════════════════════════════════
+  # WEBHOOKS
+  # ═══════════════════════════════════════════════
+
+  /webhooks/sepay/payment-success:
+    post:
+      tags: [payments]
+      summary: SePay payment success webhook (inbound HMAC verified)
+      operationId: webhooks_sepayPaymentSuccess
+      x-foo-actor: service
+      security: []
+      parameters:
+        - name: x-sepay-signature
+          in: header
+          required: true
+          schema: { type: string }
+          description: HMAC-SHA256 signature of request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SepayWebhookPayload" }
+      responses:
+        "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean }, duplicate: { type: boolean } } } } } }
+        "400": { description: "Bad request / invalid signature / unknown ref", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /webhooks/n8n/order-event:
+    post:
+      tags: [payments]
+      summary: n8n order event webhook (inbound)
+      operationId: webhooks_n8nOrderEvent
+      x-foo-actor: service
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId: { type: string, format: uuid }
+                event: { type: string }
+                userId: { type: string, format: uuid }
+              required: [orderId, event, userId]
+              example:
+                orderId: "order-001"
+                event: "delayed"
+                userId: "user-001"
+      responses:
+        "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean } } } } } }
+
+  # ═══════════════════════════════════════════════
+  # PROMOTIONS
+  # ═══════════════════════════════════════════════
+
+  /promotions/validate:
+    post:
+      tags: [promotions]
+      summary: Validate a promotion code
+      operationId: promotions_validate
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PromotionValidateRequest" }
+      responses:
+        "200": { description: "Validation result", content: { application/json: { schema: { $ref: "#/components/schemas/PromotionValidateResult" } } } }
+        "404": { description: "Code not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /promotions/{promotionCode}:
+    get:
+      tags: [promotions]
+      summary: Get promotion by code
+      operationId: promotions_getByCode
+      x-foo-actor: user
+      parameters:
+        - name: promotionCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Promotion detail", content: { application/json: { schema: { $ref: "#/components/schemas/Promotion" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  # ═══════════════════════════════════════════════
+  # NOTIFICATIONS
+  # ═══════════════════════════════════════════════
+
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: Get user notifications
+      operationId: notifications_list
+      x-foo-actor: user
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Notifications", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedNotifications" } } } }
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [notifications]
+      summary: Mark a notification as read
+      operationId: notifications_markRead
+      x-foo-actor: user
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Marked as read" }
+
+  /notifications/read-all:
+    patch:
+      tags: [notifications]
+      summary: Mark all notifications as read
+      operationId: notifications_markAllRead
+      x-foo-actor: user
+      responses:
+        "200": { description: "All marked as read" }
+
+  /notifications/fcm-token:
+    post:
+      tags: [notifications]
+      summary: Register FCM push token
+      operationId: notifications_registerFcmToken
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterFcmTokenRequest" }
+      responses:
+        "201": { description: "Token registered" }
+
+  /notifications/fcm-token/{token}:
+    delete:
+      tags: [notifications]
+      summary: Unregister FCM push token
+      operationId: notifications_unregisterFcmToken
+      x-foo-actor: user
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Token unregistered" }
+
+  # ═══════════════════════════════════════════════
+  # SUPPORT (admin)
+  # ═══════════════════════════════════════════════
+
+  /support/tickets:
+    post:
+      tags: [support]
+      summary: Create a support ticket (user)
+      operationId: support_createTicket
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTicketRequest" }
+      responses:
+        "201": { description: "Ticket created", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicket" } } } }
+
+  /support/tickets/{ticketId}:
+    get:
+      tags: [support]
+      summary: Get ticket detail
+      operationId: support_getTicket
+      x-foo-actor: user
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Ticket detail", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicket" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /support/tickets/{ticketId}/replies:
+    post:
+      tags: [support]
+      summary: Add reply to a ticket
+      operationId: support_addReply
+      x-foo-actor: user
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateReplyRequest" }
+      responses:
+        "201": { description: "Reply added", content: { application/json: { schema: { $ref: "#/components/schemas/TicketReply" } } } }
+
+  /support/tickets/{ticketId}/csat:
+    post:
+      tags: [support]
+      summary: Submit CSAT (customer satisfaction) score
+      operationId: support_submitCsat
+      x-foo-actor: user
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitCsatRequest" }
+      responses:
+        "200": { description: "CSAT submitted" }
+        "400": { description: "Ticket not resolved", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/support-tickets:
+    get:
+      tags: [support]
+      summary: List support tickets (admin)
+      operationId: support_adminListTickets
+      x-foo-actor: admin
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, in_progress, resolved, closed] }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Tickets", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedSupportTickets" } } } }
+
+  /admin/support-tickets/{ticketId}:
+    patch:
+      tags: [support]
+      summary: Update ticket (assign, change status, resolve) -- admin
+      operationId: support_adminUpdateTicket
+      x-foo-actor: admin
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateTicketRequest" }
+      responses:
+        "200": { description: "Ticket updated", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicket" } } } }
+
+  /admin/support-tickets/bulk:
+    post:
+      tags: [support]
+      summary: Bulk action on tickets
+      operationId: support_bulkAction
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticketIds: { type: array, items: { type: string, format: uuid } }
+                action: { type: string, enum: [close, assign, update_priority] }
+                value: { type: string }
+              required: [ticketIds, action]
+              example:
+                ticketIds: ["ticket-001", "ticket-002"]
+                action: "close"
+                value: "spam"
+      responses:
+        "200": { description: "Bulk action executed", content: { application/json: { schema: { type: object, properties: { affected: { type: integer } } } } } }
+
+  # ═══════════════════════════════════════════════
+  # AUDIT (admin)
+  # ═══════════════════════════════════════════════
+
+  /admin/audit-logs:
+    get:
+      tags: [audit]
+      summary: List audit logs
+      operationId: audit_list
+      x-foo-actor: admin
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Audit logs", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedAuditLogs" } } } }
+
+  /admin/audit-logs/search:
+    post:
+      tags: [audit]
+      summary: Full-text search audit logs
+      operationId: audit_search
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuditSearchRequest" }
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Search results", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedAuditLogs" } } } }
+
+  /admin/audit-logs/export:
+    post:
+      tags: [audit]
+      summary: Export audit logs
+      operationId: audit_export
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuditExportRequest" }
+      responses:
+        "200": { description: "Export download", content: { application/octet-stream: { schema: { type: string, format: binary } } } }
+
+  # ═══════════════════════════════════════════════
+  # ANALYTICS (admin)
+  # ═══════════════════════════════════════════════
+
+  /admin/dashboard:
+    get:
+      tags: [analytics]
+      summary: Get admin dashboard KPIs
+      operationId: analytics_dashboard
+      x-foo-actor: admin
+      responses:
+        "200": { description: "Dashboard KPIs", content: { application/json: { schema: { $ref: "#/components/schemas/DashboardKpi" } } } }
+
+  /admin/dashboard/top-restaurants:
+    get:
+      tags: [analytics]
+      summary: Top restaurants by revenue
+      operationId: analytics_topRestaurants
+      x-foo-actor: admin
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        "200": { description: "Top restaurants", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/RestaurantKpi" } } } } } } }
+
+  /admin/dashboard/revenue-chart:
+    get:
+      tags: [analytics]
+      summary: Revenue trend chart data
+      operationId: analytics_revenueChart
+      x-foo-actor: admin
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        "200": { description: "Revenue chart points", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/RevenueChartPoint" } } } } } } }
+
+  /admin/dashboard/heatmap:
+    get:
+      tags: [analytics]
+      summary: Dispatch order density heatmap
+      operationId: analytics_heatmap
+      x-foo-actor: admin
+      parameters:
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { description: "Heatmap points", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/HeatmapPoint" } } } } } } }
+
+  /admin/restaurants/{restaurantId}/kpi:
+    get:
+      tags: [analytics]
+      summary: Get per-restaurant KPI
+      operationId: analytics_restaurantKpi
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: period
+          in: query
+          schema: { type: string, default: "7d" }
+      responses:
+        "200": { description: "Restaurant KPI", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantKpi" } } } }
+
+  # ═══════════════════════════════════════════════
+  # ADMIN USER & RESTAURANT MANAGEMENT
+  # ═══════════════════════════════════════════════
+
+  /admin/users:
+    get:
+      tags: [analytics]
+      summary: List all users (admin)
+      operationId: admin_listUsers
+      x-foo-actor: admin
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string, enum: [customer, driver, restaurant, admin] }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "User list", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedUsers" } } } }
+
+  /admin/users/{userId}/status:
+    patch:
+      tags: [analytics]
+      summary: Toggle user active status
+      operationId: admin_toggleUserStatus
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isActive: { type: boolean }
+              required: [isActive]
+      responses:
+        "200": { description: "Status updated" }
+
+  /admin/restaurants:
+    get:
+      tags: [analytics]
+      summary: List all restaurants (admin)
+      operationId: admin_listRestaurants
+      x-foo-actor: admin
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Restaurant list", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedRestaurants" } } } }
+
+  /admin/restaurants/{restaurantId}/status:
+    patch:
+      tags: [analytics]
+      summary: Toggle restaurant active status
+      operationId: admin_toggleRestaurantStatus
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isActive: { type: boolean }
+              required: [isActive]
+      responses:
+        "200": { description: "Status updated" }
+
+  /admin/promotions:
+    get:
+      tags: [promotions]
+      summary: List all promotions (admin)
+      operationId: admin_listPromotions
+      x-foo-actor: admin
+      parameters:
+        - name: isActive
+          in: query
+          schema: { type: boolean }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Promotions", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedPromotions" } } } }
+    post:
+      tags: [promotions]
+      summary: Create a promotion (admin)
+      operationId: admin_createPromotion
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePromotionRequest" }
+      responses:
+        "201": { description: "Promotion created", content: { application/json: { schema: { $ref: "#/components/schemas/Promotion" } } } }
+        "409": { description: "Code already exists", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/promotions/{promotionId}:
+    patch:
+      tags: [promotions]
+      summary: Update a promotion (admin)
+      operationId: admin_updatePromotion
+      x-foo-actor: admin
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePromotionRequest" }
+      responses:
+        "200": { description: "Promotion updated", content: { application/json: { schema: { $ref: "#/components/schemas/Promotion" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    delete:
+      tags: [promotions]
+      summary: Delete a promotion (admin)
+      operationId: admin_deletePromotion
+      x-foo-actor: admin
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Promotion deleted" }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/promotions/{promotionId}/toggle:
+    patch:
+      tags: [promotions]
+      summary: Toggle promotion active state
+      operationId: admin_togglePromotion
+      x-foo-actor: admin
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Promotion toggled" }
+
+  /admin/orders:
+    get:
+      tags: [analytics]
+      summary: List all orders (admin)
+      operationId: admin_listOrders
+      x-foo-actor: admin
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Orders", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedOrders" } } } }
