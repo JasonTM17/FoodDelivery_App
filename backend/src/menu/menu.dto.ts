@@ -14,6 +14,18 @@ export class CreateCategoryDto {
   @Min(0)
   @IsOptional()
   sortOrder?: number
+
+  @IsString()
+  @IsOptional()
+  parentId?: string
+
+  @IsString()
+  @IsOptional()
+  icon?: string
+
+  @IsBoolean()
+  @IsOptional()
+  isVisible?: boolean
 }
 
 export class UpdateCategoryDto {
@@ -27,6 +39,18 @@ export class UpdateCategoryDto {
   @Min(0)
   @IsOptional()
   sortOrder?: number
+
+  @IsString()
+  @IsOptional()
+  parentId?: string
+
+  @IsString()
+  @IsOptional()
+  icon?: string
+
+  @IsBoolean()
+  @IsOptional()
+  isVisible?: boolean
 }
 
 export class CreateOptionValueDto {
@@ -129,4 +153,21 @@ export class UpdateMenuItemDto {
   @IsString()
   @IsOptional()
   categoryId?: string
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  sortOrder?: number
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOptionDto)
+  @IsOptional()
+  options?: CreateOptionDto[]
+}
+
+export class ReorderMenuEntityDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  items: Array<{ id: string; sortOrder: number }>
 }

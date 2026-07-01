@@ -15,6 +15,9 @@ const createOptionSchema = z.object({
 export const createCategorySchema = z.object({
   name: z.string().min(1).max(100),
   sortOrder: z.number().int().min(0).optional(),
+  parentId: z.string().uuid().optional(),
+  icon: z.string().max(50).optional(),
+  isVisible: z.boolean().optional(),
 })
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>
@@ -22,6 +25,9 @@ export type CreateCategoryInput = z.infer<typeof createCategorySchema>
 export const updateCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   sortOrder: z.number().int().min(0).optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  icon: z.string().max(50).nullable().optional(),
+  isVisible: z.boolean().optional(),
 })
 
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>
@@ -47,6 +53,12 @@ export const updateMenuItemSchema = z.object({
   isAvailable: z.boolean().optional(),
   isPopular: z.boolean().optional(),
   categoryId: z.string().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+  options: z.array(createOptionSchema).optional(),
+})
+
+export const reorderMenuEntitySchema = z.object({
+  items: z.array(z.object({ id: z.string().uuid(), sortOrder: z.number().int().min(0) })).min(1),
 })
 
 export type UpdateMenuItemInput = z.infer<typeof updateMenuItemSchema>

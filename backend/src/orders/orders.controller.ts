@@ -64,6 +64,12 @@ export class OrdersController {
     return this.ordersService.getRestaurantOrders(user.sub, status)
   }
 
+  @Get('restaurant/orders/:id')
+  @Roles('restaurant')
+  getRestaurantOrderDetail(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.ordersService.getRestaurantOrderDetail(id, user.sub)
+  }
+
   @Patch('restaurant/orders/:id/status')
   @Roles('restaurant')
   @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))

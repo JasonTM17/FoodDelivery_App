@@ -46,6 +46,34 @@ export class MenuService {
     return restaurant
   }
 
+  async getCategories(userId: string) {
+    const restaurantId = await this.getOwnedRestaurantId(userId)
+    return this.prisma.category.findMany({
+      where: { restaurantId },
+      include: { _count: { select: { menuItems: true } } },
+      orderBy: [{ parentId: 'asc' }, { sortOrder: 'asc' }],
+    })
+  }
+
+  async getItems(userId: string) {
+    const restaurantId = await this.getOwnedRestaurantId(userId)
+    return this.prisma.menuItem.findMany({
+      where: { restaurantId },
+      include: { category: true, options: { include: { values: true } } },
+      orderBy: [{ categoryId: 'asc' }, { sortOrder: 'asc' }],
+    })
+  }
+
+  async getItem(userId: string, itemId: string) {
+    const restaurantId = await this.getOwnedRestaurantId(userId)
+    const item = await this.prisma.menuItem.findFirst({
+      where: { id: itemId, restaurantId },
+      include: { category: true, options: { include: { values: true } } },
+    })
+    if (!item) throw new NotFoundException('Menu item not found')
+    return item
+  }
+
   async createCategory(userId: string, dto: CreateCategoryDto) {
     const restaurantId = await this.getOwnedRestaurantId(userId)
     return this.prisma.category.create({
@@ -53,6 +81,9 @@ export class MenuService {
         restaurantId,
         name: dto.name,
         sortOrder: dto.sortOrder ?? 0,
+        parentId: dto.parentId,
+        icon: dto.icon,
+        isVisible: dto.isVisible ?? true,
       },
     })
   }
@@ -70,6 +101,9 @@ export class MenuService {
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+        ...(dto.parentId !== undefined && { parentId: dto.parentId }),
+        ...(dto.icon !== undefined && { icon: dto.icon }),
+        ...(dto.isVisible !== undefined && { isVisible: dto.isVisible }),
       },
     })
   }
@@ -152,9 +186,14 @@ export class MenuService {
       }
     }
 
-    return this.prisma.menuItem.update({
-      where: { id: itemId },
-      data: {
+    return this.prisma.$transaction(async tx => {
+      if (dto.options !== undefined) {
+        await tx.menuItemOptionValue.deleteMany({ where: { option: { menuItemId: itemId } } })
+        await tx.menuItemOption.deleteMany({ where: { menuItemId: itemId } })
+      }
+      return tx.menuItem.update({
+        where: { id: itemId },
+        data: {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
@@ -162,13 +201,44 @@ export class MenuService {
         ...(dto.isAvailable !== undefined && { isAvailable: dto.isAvailable }),
         ...(dto.isPopular !== undefined && { isPopular: dto.isPopular }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
-      },
-      include: {
-        options: {
-          include: { values: true },
+        ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+        ...(dto.options !== undefined && {
+          options: {
+            create: dto.options.map(option => ({
+              name: option.name,
+              isRequired: option.isRequired ?? false,
+              isMultiple: option.isMultiple ?? false,
+              values: { create: option.values.map(value => ({
+                value: value.value,
+                priceModifier: value.priceModifier ?? 0,
+              })) },
+            })),
+          },
+        }),
         },
-      },
+        include: {
+          options: { include: { values: true } },
+        },
+      })
     })
+  }
+
+  async reorderCategories(userId: string, items: Array<{ id: string; sortOrder: number }>) {
+    const restaurantId = await this.getOwnedRestaurantId(userId)
+    const owned = await this.prisma.category.count({ where: { restaurantId, id: { in: items.map(item => item.id) } } })
+    if (owned !== items.length) throw new BadRequestException('CATEGORY_OWNERSHIP_MISMATCH')
+    await this.prisma.$transaction(items.map(item =>
+      this.prisma.category.update({ where: { id: item.id }, data: { sortOrder: item.sortOrder } })))
+    return { updated: items.length }
+  }
+
+  async reorderItems(userId: string, items: Array<{ id: string; sortOrder: number }>) {
+    const restaurantId = await this.getOwnedRestaurantId(userId)
+    const owned = await this.prisma.menuItem.count({ where: { restaurantId, id: { in: items.map(item => item.id) } } })
+    if (owned !== items.length) throw new BadRequestException('MENU_ITEM_OWNERSHIP_MISMATCH')
+    await this.prisma.$transaction(items.map(item =>
+      this.prisma.menuItem.update({ where: { id: item.id }, data: { sortOrder: item.sortOrder } })))
+    return { updated: items.length }
   }
 
   async deleteMenuItem(userId: string, itemId: string) {

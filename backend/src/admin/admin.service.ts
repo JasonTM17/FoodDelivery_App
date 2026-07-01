@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, UserRole, OrderStatus, TicketStatus } from '@prisma/client'
 import { CreatePromotionDto, UpdatePromotionDto } from './dto/promotion.dto'
+import { calculateSupportSlaDeadline, shiftDeadlineForWaiting } from './support-sla'
 
 @Injectable()
 export class AdminService {
@@ -98,17 +99,39 @@ export class AdminService {
     const [tickets, total] = await Promise.all([
       this.prisma.aiSupportTicket.findMany({
         where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
-        include: { user: { select: { fullName: true } }, order: { select: { orderCode: true } } },
+        include: {
+          user: { select: { id: true, fullName: true, email: true } },
+          assignedAdmin: { select: { id: true, fullName: true, email: true } },
+          order: { select: { id: true, orderCode: true } },
+        },
       }),
       this.prisma.aiSupportTicket.count({ where }),
     ])
-    return { tickets, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    return {
+      tickets: tickets.map(ticket => ({
+        ...ticket,
+        slaDeadlineAt: ticket.slaDeadlineAt ?? calculateSupportSlaDeadline(ticket.createdAt, ticket.priority),
+      })),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
   }
 
   async updateSupportTicket(ticketId: string, updateData: { status?: string; assignedAdminId?: string; resolutionNotes?: string }) {
+    const existing = await this.prisma.aiSupportTicket.findUnique({ where: { id: ticketId } })
+    if (!existing) throw new NotFoundException('SUPPORT_TICKET_NOT_FOUND')
+
     const data: Prisma.AiSupportTicketUpdateInput = {}
-    if (updateData.status) data.status = updateData.status as TicketStatus
-    if (updateData.assignedAdminId) data.assignedAdminId = updateData.assignedAdminId
+    if (updateData.status) {
+      const nextStatus = updateData.status as TicketStatus
+      data.status = nextStatus
+      if (nextStatus === 'waiting_customer') {
+        data.waitingStartedAt = existing.waitingStartedAt ?? new Date()
+      } else if (existing.status === 'waiting_customer') {
+        data.slaDeadlineAt = shiftDeadlineForWaiting(existing.slaDeadlineAt, existing.waitingStartedAt)
+        data.waitingStartedAt = null
+      }
+    }
+    if (updateData.assignedAdminId) data.assignedAdmin = { connect: { id: updateData.assignedAdminId } }
     if (updateData.resolutionNotes) data.resolutionNotes = updateData.resolutionNotes
     if (updateData.status === 'resolved' || updateData.status === 'closed') data.resolvedAt = new Date()
     return this.prisma.aiSupportTicket.update({ where: { id: ticketId }, data })
@@ -263,30 +286,75 @@ export class AdminService {
 
   // ─── Stub: Dispatch heatmap ───
 
-  getDispatchHeatmap(_since: string) {
-    return [
-      { districtCode: 'Q1',  lat: 10.7769, lng: 106.7009, orderCount: 42 },
-      { districtCode: 'Q3',  lat: 10.7797, lng: 106.6882, orderCount: 35 },
-      { districtCode: 'Q5',  lat: 10.7540, lng: 106.6625, orderCount: 28 },
-      { districtCode: 'Q7',  lat: 10.7334, lng: 106.7215, orderCount: 19 },
-      { districtCode: 'Q10', lat: 10.7739, lng: 106.6681, orderCount: 53 },
-      { districtCode: 'BThanh', lat: 10.8015, lng: 106.7091, orderCount: 31 },
-      { districtCode: 'PNhuan', lat: 10.7989, lng: 106.6789, orderCount: 22 },
-    ]
+  getDispatchHeatmap(since: string) {
+    const sinceDate = Number.isNaN(Date.parse(since))
+      ? new Date(Date.now() - 24 * 60 * 60 * 1000)
+      : new Date(since)
+
+    return this.prisma.$queryRaw<Array<{
+      districtCode: string
+      lat: number
+      lng: number
+      orderCount: number
+    }>>(Prisma.sql`
+      SELECT
+        COALESCE(NULLIF(r.district, ''), r.city, 'unknown') AS "districtCode",
+        ST_Y(ST_Centroid(ST_Collect(r.location::geometry)))::float8 AS "lat",
+        ST_X(ST_Centroid(ST_Collect(r.location::geometry)))::float8 AS "lng",
+        COUNT(o.id)::int AS "orderCount"
+      FROM orders o
+      JOIN restaurants r ON r.id = o.restaurant_id
+      WHERE o.created_at >= ${sinceDate}
+      GROUP BY COALESCE(NULLIF(r.district, ''), r.city, 'unknown')
+      ORDER BY "orderCount" DESC
+    `)
   }
 
   // ─── Stub: Restaurant KPI ───
 
-  getRestaurantKpi(_restaurantId: string, period: string) {
+  async getRestaurantKpi(restaurantId: string, period: string) {
     const days = period === '30d' ? 30 : period === '14d' ? 14 : 7
-    const ratingTrend = Array.from({ length: days }, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i))
-      return { date: d.toISOString().slice(0, 10), rating: +(4.0 + Math.random() * 1).toFixed(1) }
-    })
-    const revenueByDay = Array.from({ length: days }, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i))
-      return { date: d.toISOString().slice(0, 10), revenue: Math.round(500000 + Math.random() * 2000000) }
-    })
-    return { avgPrepTimeMin: 18, fulfillmentRate: 0.94, ratingTrend, revenueByDay }
+    const since = new Date()
+    since.setDate(since.getDate() - days)
+
+    const [summary, fulfilled, ratingTrend, revenueByDay] = await Promise.all([
+      this.prisma.order.aggregate({
+        where: { restaurantId, createdAt: { gte: since } },
+        _avg: { estimatedPrepTimeMinutes: true },
+        _count: { _all: true },
+      }),
+      this.prisma.order.count({
+        where: {
+          restaurantId,
+          createdAt: { gte: since },
+          status: { in: ['delivered', 'completed'] },
+        },
+      }),
+      this.prisma.$queryRaw<Array<{ date: string; rating: number }>>(Prisma.sql`
+        SELECT DATE(created_at)::text AS "date", AVG(food_rating)::float8 AS "rating"
+        FROM reviews
+        WHERE restaurant_id = ${restaurantId}::uuid
+          AND is_hidden = false
+          AND created_at >= ${since}
+        GROUP BY DATE(created_at)
+        ORDER BY "date"
+      `),
+      this.prisma.$queryRaw<Array<{ date: string; revenue: number }>>(Prisma.sql`
+        SELECT DATE(created_at)::text AS "date", COALESCE(SUM(total), 0)::float8 AS "revenue"
+        FROM orders
+        WHERE restaurant_id = ${restaurantId}::uuid
+          AND status IN ('delivered', 'completed')
+          AND created_at >= ${since}
+        GROUP BY DATE(created_at)
+        ORDER BY "date"
+      `),
+    ])
+
+    return {
+      avgPrepTimeMin: Math.round(summary._avg.estimatedPrepTimeMinutes ?? 0),
+      fulfillmentRate: summary._count._all === 0 ? null : fulfilled / summary._count._all,
+      ratingTrend,
+      revenueByDay,
+    }
   }
 }

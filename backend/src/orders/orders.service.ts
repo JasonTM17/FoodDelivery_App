@@ -38,6 +38,15 @@ export class OrdersService {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orderId}))`
 
       const order = await tx.order.findUniqueOrThrow({ where: { id: orderId } })
+      if (role === 'restaurant') {
+        const profile = await tx.restaurantProfile.findUnique({ where: { userId: actorId } })
+        if (!profile || profile.restaurantId !== order.restaurantId) {
+          throw new NotFoundException('ORDER_NOT_FOUND')
+        }
+      }
+      if (role === 'driver' && order.driverId !== actorId) {
+        throw new NotFoundException('ORDER_NOT_FOUND')
+      }
       OrderStateMachine.validate(order.status as OrderStatus, toStatus, role)
 
       const updated = await tx.order.update({
@@ -71,6 +80,9 @@ export class OrdersService {
 
     // Post-commit side effects
     this.ordersGateway.broadcastToOrder(orderId, 'order:status:changed', {
+      orderId, status: toStatus, timestamp: new Date().toISOString(),
+    })
+    this.ordersGateway.notifyAdmins('admin:order_status_changed', {
       orderId, status: toStatus, timestamp: new Date().toISOString(),
     })
 
@@ -205,6 +217,10 @@ export class OrdersService {
       total: Number(total),
       items: cart.items.map(i => ({ name: i.menuItem.name, quantity: i.quantity })),
     })
+    this.ordersGateway.notifyAdmins('admin:new_order', {
+      orderId: order.id, orderCode, restaurantId: restaurant.id,
+      total: Number(total), createdAt: new Date().toISOString(),
+    })
 
     return order
   }
@@ -225,6 +241,24 @@ export class OrdersService {
       },
     })
     return { orders, meta: { page: 1, limit: 50, total: orders.length } }
+  }
+
+  async getRestaurantOrderDetail(orderId: string, userId: string) {
+    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    if (!profile) throw new NotFoundException('ORDER_NOT_FOUND')
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, restaurantId: profile.restaurantId },
+      include: {
+        orderItems: true,
+        customer: { select: { id: true, fullName: true, phone: true } },
+        driver: { select: { id: true, fullName: true, phone: true } },
+        deliveryAddress: true,
+        statusHistory: { orderBy: { createdAt: 'asc' } },
+        payment: true,
+      },
+    })
+    if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
+    return order
   }
 
   async getCustomerOrders(userId: string, page = 1, limit = 20, status?: string) {

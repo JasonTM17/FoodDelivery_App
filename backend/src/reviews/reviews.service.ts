@@ -140,6 +140,42 @@ export class ReviewsService {
     return { items, total, page, limit }
   }
 
+  async getRestaurantReviews(userId: string, page: number, limit: number, rating?: number) {
+    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    if (!profile) throw new ForbiddenException('RESTAURANT_PROFILE_NOT_FOUND')
+    const where = {
+      restaurantId: profile.restaurantId,
+      isHidden: false,
+      ...(rating ? { foodRating: rating } : {}),
+    }
+    const [reviews, total, grouped] = await Promise.all([
+      this.prisma.review.findMany({
+        where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
+        include: {
+          customer: { select: { fullName: true, avatarUrl: true } },
+          order: { select: { orderItems: { take: 1, select: { menuItemId: true, nameSnapshot: true } } } },
+        },
+      }),
+      this.prisma.review.count({ where }),
+      this.prisma.review.groupBy({
+        by: ['foodRating'], where: { restaurantId: profile.restaurantId, isHidden: false }, _count: true,
+      }),
+    ])
+    const distribution = Object.fromEntries(grouped.map(row => [row.foodRating, row._count]))
+    return {
+      reviews: reviews.map(review => ({
+        id: review.id, rating: review.foodRating, comment: review.comment ?? '',
+        customerName: review.customer.fullName, customerAvatar: review.customer.avatarUrl,
+        dishName: review.order.orderItems[0]?.nameSnapshot ?? '',
+        dishId: review.order.orderItems[0]?.menuItemId,
+        photos: review.photos, reply: review.reply, repliedAt: review.replyAt,
+        createdAt: review.createdAt,
+      })),
+      distribution,
+      meta: { page, limit, total },
+    }
+  }
+
   private async notifyOnReview(
     restaurantId: string,
     driverId: string | null,

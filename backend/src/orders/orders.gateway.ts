@@ -14,6 +14,10 @@ export class OrdersGateway {
     this.server.to(`order:${orderId}`).emit(event, data)
   }
 
+  notifyAdmins(event: string, data: Record<string, unknown>) {
+    this.server.to('admin:orders').emit(event, data)
+  }
+
   @SubscribeMessage('order:subscribe')
   handleOrderSubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }) {
     client.join(`order:${data.orderId}`)
@@ -32,5 +36,10 @@ export class OrdersGateway {
   @SubscribeMessage('admin:subscribe_drivers')
   handleAdminSubscribe(@ConnectedSocket() client: Socket) {
     client.join('admin:drivers:all')
+  }
+
+  @SubscribeMessage('admin:subscribe_orders')
+  handleAdminOrderSubscribe(@ConnectedSocket() client: Socket) {
+    client.join('admin:orders')
   }
 }

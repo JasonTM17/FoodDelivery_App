@@ -23,11 +23,13 @@ import { PaymentsModule } from './payments/payments.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { PromotionsModule } from './promotions/promotions.module'
 import { ReferralModule } from './referral/referral.module'
+import { RestaurantPortalModule } from './restaurant-portal/restaurant-portal.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { I18nSetupModule } from './i18n/i18n.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor'
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
@@ -69,11 +71,13 @@ import Redis from 'ioredis'
     WebhooksModule,
     PromotionsModule,
     ReferralModule,
+    RestaurantPortalModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: AuditLogInterceptor },
   ],
 })
 export class AppModule implements NestModule {

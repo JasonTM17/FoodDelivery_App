@@ -70,6 +70,16 @@ export class ReviewsController {
 export class RestaurantReviewsController {
   constructor(private readonly service: ReviewsService) {}
 
+  @Get()
+  getRestaurantReviews(
+    @CurrentUser() user: JwtPayload,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+    @Query('rating') rating?: string,
+  ) {
+    return this.service.getRestaurantReviews(user.sub, Number(page), Number(limit), rating ? Number(rating) : undefined)
+  }
+
   @Post(':id/reply')
   restaurantReply(
     @Param('id') id: string,
