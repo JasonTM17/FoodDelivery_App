@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 export default function HoursError({
   error,
   reset,
@@ -9,10 +7,6 @@ export default function HoursError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error('Hours error:', error);
-  }, [error]);
-
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
       <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">

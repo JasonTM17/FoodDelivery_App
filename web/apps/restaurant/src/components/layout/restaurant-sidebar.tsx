@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import {
   ShoppingBag,
@@ -18,6 +17,8 @@ import {
   Clock,
   Tag,
   TrendingUp,
+  LayoutDashboard,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -29,6 +30,7 @@ interface NavItem {
   href: string;
   tKey: string;
   icon: LucideIcon;
+  exact?: boolean;
 }
 
 interface SettingsItem extends NavItem {
@@ -36,10 +38,13 @@ interface SettingsItem extends NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { href: '/', tKey: 'nav.overview', icon: LayoutDashboard, exact: true },
   { href: '/orders', tKey: 'nav.orders', icon: ShoppingBag },
   { href: '/menu', tKey: 'nav.menu', icon: UtensilsCrossed },
   { href: '/promotions', tKey: 'nav.promotions', icon: Tag },
   { href: '/analytics', tKey: 'nav.analytics', icon: TrendingUp },
+  { href: '/insights', tKey: 'nav.insights', icon: TrendingUp },
+  { href: '/staff', tKey: 'nav.staff', icon: Users },
   { href: '/revenue', tKey: 'nav.revenue', icon: BarChart3 },
   { href: '/reviews', tKey: 'nav.reviews', icon: Star },
   { href: '/notifications', tKey: 'nav.notifications', icon: Bell },
@@ -97,7 +102,7 @@ export function RestaurantSidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-1">
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}

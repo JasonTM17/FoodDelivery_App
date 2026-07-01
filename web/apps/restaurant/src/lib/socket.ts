@@ -27,12 +27,7 @@ export function connectToRestaurant(restaurantId: string): Socket {
   s.connect();
 
   s.on('connect', () => {
-    console.log('Socket connected');
     s.emit('join:restaurant', restaurantId);
-  });
-
-  s.on('disconnect', () => {
-    console.log('Socket disconnected');
   });
 
   return s;
@@ -66,7 +61,7 @@ export function playNewOrderSound(): void {
     oscillator.start(audioCtx.currentTime);
     oscillator.stop(audioCtx.currentTime + 0.5);
   } catch {
-    console.log('Audio not available');
+    // Audio playback can be unavailable until the user interacts with the page.
   }
 }
 

@@ -1,29 +1,27 @@
 'use client';
 
-import type { ApiError } from './types';
+import {
+  FoodFlowApiClient,
+  type ApiRequestOptions,
+  type PaginationMeta,
+  type TokenPair,
+} from '@foodflow/api-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-interface FetchOptions extends RequestInit {
-  requireAuth?: boolean;
-}
+interface FetchOptions extends Omit<ApiRequestOptions, 'body'> {}
 
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('restaurant_token');
+function getStorageValue(key: string): string | null {
+  return typeof window === 'undefined' ? null : localStorage.getItem(key);
 }
 
 export function setToken(token: string): void {
   localStorage.setItem('restaurant_token', token);
 }
 
-function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('restaurant_refresh_token');
-}
-
-function setRefreshToken(refreshToken: string): void {
-  localStorage.setItem('restaurant_refresh_token', refreshToken);
+function setTokens(tokens: TokenPair): void {
+  setToken(tokens.accessToken);
+  if (tokens.refreshToken) localStorage.setItem('restaurant_refresh_token', tokens.refreshToken);
 }
 
 export function clearToken(): void {
@@ -32,10 +30,22 @@ export function clearToken(): void {
   localStorage.removeItem('restaurant_data');
 }
 
-export function getStoredRestaurant() {
+export interface StoredRestaurant {
+  id?: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export function getStoredRestaurant(): StoredRestaurant | null {
   if (typeof window === 'undefined') return null;
   const data = localStorage.getItem('restaurant_data');
-  return data ? JSON.parse(data) : null;
+  if (!data) return null;
+  try {
+    return JSON.parse(data) as StoredRestaurant;
+  } catch {
+    localStorage.removeItem('restaurant_data');
+    return null;
+  }
 }
 
 export function setStoredRestaurant(data: unknown): void {
@@ -43,124 +53,66 @@ export function setStoredRestaurant(data: unknown): void {
 }
 
 export function isAuthenticated(): boolean {
-  return !!getToken();
+  return Boolean(getStorageValue('restaurant_token'));
 }
 
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-
-  try {
-    const response = await fetch(`${API_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) return false;
-
-    const data = await response.json();
-    setToken(data.token);
-    if (data.refreshToken) setRefreshToken(data.refreshToken);
-    return true;
-  } catch {
-    return false;
-  }
+function redirectToLocalizedLogin(): void {
+  if (typeof window === 'undefined') return;
+  const locale = window.location.pathname.match(/^\/(vi|en|ja)(?:\/|$)/)?.[1] ?? 'vi';
+  window.location.assign(`/${locale}/login`);
 }
 
-async function handle401AndRetry(originalRequest: () => Promise<Response>): Promise<Response> {
-  if (!isRefreshing) {
-    isRefreshing = true;
-    refreshPromise = tryRefreshToken().finally(() => {
-      isRefreshing = false;
-      refreshPromise = null;
-    });
-  }
+const client = new FoodFlowApiClient({
+  baseUrl: API_URL,
+  getAccessToken: () => getStorageValue('restaurant_token'),
+  getRefreshToken: () => getStorageValue('restaurant_refresh_token'),
+  setTokens,
+  clearTokens: clearToken,
+  onUnauthorized: redirectToLocalizedLogin,
+});
 
-  const refreshed = await refreshPromise;
-  if (!refreshed) {
-    clearToken();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-    throw { message: 'Phiên đăng nhập hết hạn', status: 401 } as ApiError;
-  }
-
-  return originalRequest();
+export function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  return client.request<T>(endpoint, options);
 }
 
-export async function apiFetch<T>(
+export function apiFetchEnvelope<T>(
   endpoint: string,
-  options: FetchOptions = {}
-): Promise<T> {
-  const { requireAuth = true, ...fetchOptions } = options;
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(fetchOptions.headers as Record<string, string>),
-  };
-
-  if (requireAuth) {
-    const token = getToken();
-    if (!token) {
-      throw { message: 'Unauthorized', status: 401 } as ApiError;
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const retryFn = () =>
-    fetch(`${API_URL}${endpoint}`, {
-      ...fetchOptions,
-      headers,
-    });
-
-  const response = await retryFn();
-
-  if (response.status === 401 && requireAuth) {
-    const retryResponse = await handle401AndRetry(retryFn);
-    return handleResponse<T>(retryResponse, retryFn);
-  }
-
-  return handleResponse<T>(response, retryFn);
-}
-
-async function handleResponse<T>(response: Response, retryFn: () => Promise<Response>): Promise<T> {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw { message: error.message || 'Request failed', status: response.status } as ApiError;
-  }
-
-  return response.json();
+  options: FetchOptions = {},
+): Promise<{ data: T; meta?: PaginationMeta }> {
+  return client.requestEnvelope<T>(endpoint, options);
 }
 
 export const api = {
   get: <T>(endpoint: string, options?: FetchOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'GET' }),
 
+  getEnvelope: <T>(endpoint: string, options?: FetchOptions) =>
+    apiFetchEnvelope<T>(endpoint, { ...options, method: 'GET' }),
+
   post: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
-    apiFetch<T>(endpoint, {
+    client.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body as ApiRequestOptions['body'],
     }),
 
   put: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
-    apiFetch<T>(endpoint, {
+    client.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body as ApiRequestOptions['body'],
     }),
 
   patch: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
-    apiFetch<T>(endpoint, {
+    client.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body as ApiRequestOptions['body'],
     }),
 
   delete: <T>(endpoint: string, options?: FetchOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'DELETE' }),
+
+  download: (endpoint: string, options?: FetchOptions) =>
+    client.requestBlob(endpoint, { ...options, method: 'GET' }),
 };

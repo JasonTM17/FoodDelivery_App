@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@foodflow/ui/page-header';
 import OrdersTableClient from './orders-table-client';
 import { getTranslations } from 'next-intl/server';

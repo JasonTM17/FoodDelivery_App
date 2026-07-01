@@ -2,7 +2,6 @@
 
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
 import RevenueChart from '@/components/dashboard/revenue-chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {

@@ -15,7 +15,6 @@ import {
   TableHead,
   TableCell,
 } from "@foodflow/ui/table"
-import { Breadcrumb } from "@foodflow/ui/breadcrumb"
 import { EmptyState } from "@foodflow/ui/empty-state"
 import { PageHeader } from "@foodflow/ui/page-header"
 import { getAuditLogs, type AuditLogFilter } from "@/lib/api"

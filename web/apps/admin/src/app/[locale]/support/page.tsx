@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -34,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, UserCheck, CheckCircle, Archive, AlertCircle, Clock, User } from 'lucide-react';
+import { MessageSquare, UserCheck, CheckCircle, Archive, Clock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Ticket {
@@ -67,10 +66,11 @@ export default function SupportPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [newStatus, setNewStatus] = useState('');
+  const [mutationError, setMutationError] = useState('');
 
   const { data, isLoading } = useQuery<{ tickets: Ticket[] }>({
     queryKey: ['support-tickets'],
-    queryFn: () => apiGet('/admin/support/tickets'),
+    queryFn: () => apiGet('/admin/support-tickets'),
   });
 
   const tickets = data?.tickets || [];
@@ -84,20 +84,22 @@ export default function SupportPage() {
 
   const updateTicket = async () => {
     if (!selectedTicket) return;
+    setMutationError('');
     try {
-      await apiPatch(`/admin/support/tickets/${selectedTicket.id}`, {
+      await apiPatch(`/admin/support-tickets/${selectedTicket.id}`, {
         status: newStatus,
         resolutionNotes: resolutionNotes,
       });
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
       setDetailOpen(false);
     } catch (err) {
-      console.error('Failed to update ticket:', err);
+      setMutationError((err as { message?: string }).message || 'Không thể cập nhật ticket');
     }
   };
 
   const assignToSelf = async (ticketId: string) => {
-    await apiPatch(`/admin/support/tickets/${ticketId}`, {
+    setMutationError('');
+    await apiPatch(`/admin/support-tickets/${ticketId}`, {
       status: 'in_progress',
       assignedTo: 'self',
     });
@@ -210,6 +212,11 @@ export default function SupportPage() {
 
           {selectedTicket && (
             <div className="space-y-4">
+              {mutationError && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {mutationError}
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{selectedTicket.issueType}</span>

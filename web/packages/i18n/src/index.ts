@@ -14,3 +14,18 @@ export function getSharedMessages(locale: string) {
 }
 
 export type SharedMessages = typeof viMessages;
+
+export function getLocaleFromPathname(pathname: string): Locale | null {
+  const locale = pathname.match(/^\/(vi|en|ja)(?:\/|$)/)?.[1];
+  return locale && locales.includes(locale as Locale) ? (locale as Locale) : null;
+}
+
+export function stripLocalePrefix(pathname: string): string {
+  const stripped = pathname.replace(/^\/(vi|en|ja)(?=\/|$)/, '');
+  return stripped || '/';
+}
+
+export function localizePath(pathname: string, locale: Locale): string {
+  const normalized = stripLocalePrefix(pathname);
+  return normalized === '/' ? `/${locale}` : `/${locale}${normalized}`;
+}

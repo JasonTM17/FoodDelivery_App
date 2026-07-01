@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { ArrowLeft, Tag, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';

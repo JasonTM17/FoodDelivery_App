@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Star, Car, MapPin } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { PageHeader } from '@foodflow/ui/page-header';

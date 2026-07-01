@@ -1,37 +1,21 @@
+import {
+  FoodFlowApiClient,
+  type ApiRequestOptions,
+  type PaginationMeta,
+  type TokenPair,
+} from '@foodflow/api-client';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-interface ApiOptions extends RequestInit {
-  params?: Record<string, string | number | undefined>;
+interface ApiOptions extends Omit<ApiRequestOptions, 'body'> {}
+
+function getStorageValue(key: string): string | null {
+  return typeof window === 'undefined' ? null : localStorage.getItem(key);
 }
 
-function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
-  const url = new URL(`${API_BASE}${path}`);
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.set(key, String(value));
-      }
-    });
-  }
-  return url.toString();
-}
-
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('admin_token');
-}
-
-function setToken(token: string): void {
-  localStorage.setItem('admin_token', token);
-}
-
-function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('admin_refresh_token');
-}
-
-function setRefreshToken(refreshToken: string): void {
-  localStorage.setItem('admin_refresh_token', refreshToken);
+function setTokens(tokens: TokenPair): void {
+  localStorage.setItem('admin_token', tokens.accessToken);
+  if (tokens.refreshToken) localStorage.setItem('admin_refresh_token', tokens.refreshToken);
 }
 
 function clearTokens(): void {
@@ -40,142 +24,62 @@ function clearTokens(): void {
   localStorage.removeItem('admin_user');
 }
 
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-
-  try {
-    const response = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) return false;
-
-    const data = await response.json();
-    setToken(data.token);
-    if (data.refreshToken) setRefreshToken(data.refreshToken);
-    return true;
-  } catch {
-    return false;
-  }
+function redirectToLocalizedLogin(): void {
+  if (typeof window === 'undefined') return;
+  const locale = window.location.pathname.match(/^\/(vi|en|ja)(?:\/|$)/)?.[1] ?? 'vi';
+  window.location.assign(`/${locale}/login`);
 }
 
-async function handle401AndRetry(originalRequest: () => Promise<Response>): Promise<Response> {
-  if (!isRefreshing) {
-    isRefreshing = true;
-    refreshPromise = tryRefreshToken().finally(() => {
-      isRefreshing = false;
-      refreshPromise = null;
-    });
-  }
+const client = new FoodFlowApiClient({
+  baseUrl: API_BASE,
+  getAccessToken: () => getStorageValue('admin_token'),
+  getRefreshToken: () => getStorageValue('admin_refresh_token'),
+  setTokens,
+  clearTokens,
+  onUnauthorized: redirectToLocalizedLogin,
+});
 
-  const refreshed = await refreshPromise;
-  if (!refreshed) {
-    clearTokens();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-    throw new Error('Phiên đăng nhập hết hạn');
-  }
-
-  return originalRequest();
+export function apiGet<T>(path: string, options?: ApiOptions): Promise<T> {
+  return client.request<T>(path, { ...options, method: 'GET' });
 }
 
-async function handleResponse<T>(response: Response, retryFn: () => Promise<Response>): Promise<T> {
-  if (!response.ok) {
-    const errorBody = await response.text();
-    let errorMessage: string;
-    try {
-      const parsed = JSON.parse(errorBody);
-      errorMessage = parsed.message || parsed.error || `HTTP ${response.status}`;
-    } catch {
-      errorMessage = errorBody || `HTTP ${response.status}`;
-    }
-
-    if (response.status === 401) {
-      const retryResponse = await handle401AndRetry(retryFn);
-      return handleResponse<T>(retryResponse, retryFn);
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  return response.json() as Promise<T>;
+export function apiGetEnvelope<T>(
+  path: string,
+  options?: ApiOptions,
+): Promise<{ data: T; meta?: PaginationMeta }> {
+  return client.requestEnvelope<T>(path, { ...options, method: 'GET' });
 }
 
-function getAuthHeaders(): Record<string, string> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
+export function apiPost<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
+  return client.request<T>(path, {
+    ...options,
+    method: 'POST',
+    body: body as ApiRequestOptions['body'],
+  });
 }
 
-export async function apiGet<T>(path: string, options?: ApiOptions): Promise<T> {
-  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
-
-  const retryFn = () =>
-    fetch(buildUrl(path, options?.params), {
-      method: 'GET',
-      headers,
-      ...options,
-    });
-
-  const response = await retryFn();
-  return handleResponse<T>(response, retryFn);
+export function apiPut<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
+  return client.request<T>(path, {
+    ...options,
+    method: 'PUT',
+    body: body as ApiRequestOptions['body'],
+  });
 }
 
-export async function apiPost<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
-
-  const retryFn = () =>
-    fetch(buildUrl(path, options?.params), {
-      method: 'POST',
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      ...options,
-    });
-
-  const response = await retryFn();
-  return handleResponse<T>(response, retryFn);
+export function apiPatch<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
+  return client.request<T>(path, {
+    ...options,
+    method: 'PATCH',
+    body: body as ApiRequestOptions['body'],
+  });
 }
 
-export async function apiPut<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
-
-  const retryFn = () =>
-    fetch(buildUrl(path, options?.params), {
-      method: 'PUT',
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      ...options,
-    });
-
-  const response = await retryFn();
-  return handleResponse<T>(response, retryFn);
+export function apiDelete<T>(path: string, options?: ApiOptions): Promise<T> {
+  return client.request<T>(path, { ...options, method: 'DELETE' });
 }
 
-export async function apiPatch<T>(path: string, body?: unknown, options?: ApiOptions): Promise<T> {
-  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
-
-  const retryFn = () =>
-    fetch(buildUrl(path, options?.params), {
-      method: 'PATCH',
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      ...options,
-    });
-
-  const response = await retryFn();
-  return handleResponse<T>(response, retryFn);
+export function apiDownload(path: string, options?: ApiOptions): Promise<Blob> {
+  return client.requestBlob(path, { ...options, method: 'GET' });
 }
 
 export interface AuditLogFilter {
@@ -191,20 +95,6 @@ export async function getAuditLogs(
   filter?: AuditLogFilter,
 ): Promise<{ logs: Array<Record<string, unknown>>; total?: number }> {
   return apiGet('/admin/audit-logs', {
-    params: filter as Record<string, string | number | undefined>,
+    params: filter ? { ...filter } : undefined,
   });
-}
-
-export async function apiDelete<T>(path: string, options?: ApiOptions): Promise<T> {
-  const headers = { ...getAuthHeaders(), ...(options?.headers as Record<string, string>) };
-
-  const retryFn = () =>
-    fetch(buildUrl(path, options?.params), {
-      method: 'DELETE',
-      headers,
-      ...options,
-    });
-
-  const response = await retryFn();
-  return handleResponse<T>(response, retryFn);
 }

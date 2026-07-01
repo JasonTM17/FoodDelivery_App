@@ -1,5 +1,9 @@
 {
   "nav": {
+    "insights": "Chỉ số chuyên sâu",
+    "staff": "Nhân sự",
+    "reports": "Báo cáo",
+    "exportJobs": "Tải dữ liệu",
     "overview": "Tổng quan",
     "orders": "Đơn hàng",
     "menu": "Thực đơn",

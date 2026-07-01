@@ -33,6 +33,7 @@ export default function RestaurantApprovePage({ params }: { params: Promise<{ id
   const queryClient = useQueryClient();
   const [rejectReason, setRejectReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [approvalError, setApprovalError] = useState('');
 
   const { data: restaurant, isLoading } = useQuery<PendingRestaurant>({
     queryKey: ['restaurant-approve', id],
@@ -41,12 +42,13 @@ export default function RestaurantApprovePage({ params }: { params: Promise<{ id
 
   const handleApprove = async () => {
     setLoading(true);
+    setApprovalError('');
     try {
       await apiPost(`/admin/restaurants/${id}/approve`, {});
       queryClient.invalidateQueries({ queryKey: ['restaurant-approve', id] });
       queryClient.invalidateQueries({ queryKey: ['restaurants'] });
     } catch (err) {
-      console.error('Failed to approve restaurant:', err);
+      setApprovalError((err as { message?: string }).message || 'Không thể duyệt nhà hàng');
     } finally {
       setLoading(false);
     }
@@ -55,12 +57,13 @@ export default function RestaurantApprovePage({ params }: { params: Promise<{ id
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     setLoading(true);
+    setApprovalError('');
     try {
       await apiPost(`/admin/restaurants/${id}/reject`, { reason: rejectReason });
       queryClient.invalidateQueries({ queryKey: ['restaurant-approve', id] });
       queryClient.invalidateQueries({ queryKey: ['restaurants'] });
     } catch (err) {
-      console.error('Failed to reject restaurant:', err);
+      setApprovalError((err as { message?: string }).message || 'Không thể từ chối nhà hàng');
     } finally {
       setLoading(false);
     }
@@ -178,6 +181,11 @@ export default function RestaurantApprovePage({ params }: { params: Promise<{ id
             <CardTitle className="text-base">{t('approvalActions')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {approvalError && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {approvalError}
+              </div>
+            )}
             <div className="flex gap-3">
               <Button onClick={handleApprove} disabled={loading} className="gap-2">
                 <CheckCircle2 className="h-4 w-4" />

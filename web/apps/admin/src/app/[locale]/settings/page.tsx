@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Breadcrumb } from '@foodflow/ui/breadcrumb';
 import { PageHeader } from '@foodflow/ui/page-header';
 import { apiPatch } from '@/lib/api';
 import { useTranslations } from 'next-intl';
@@ -11,19 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Settings, Bell, Shield, Database, Globe, Save } from 'lucide-react';
+import { Bell, Shield, Database, Globe, Save } from 'lucide-react';
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiPatch('/admin/settings', {});
     } catch (err) {
-      console.error('Failed to save settings:', err);
+      setSaveError((err as { message?: string }).message || 'Không thể lưu cài đặt');
     } finally {
       setSaving(false);
     }
@@ -187,6 +187,9 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex justify-end">
+        {saveError && (
+          <p className="mr-auto self-center text-sm text-destructive">{saveError}</p>
+        )}
         <Button onClick={handleSave} disabled={saving} size="lg">
           <Save className="mr-2 h-4 w-4" />
           {saving ? 'Đang lưu...' : 'Lưu cài đặt'}

@@ -15,13 +15,15 @@ import { Save, ShieldCheck, FileText, Database, Globe } from 'lucide-react';
 export default function SettingsCompliancePage() {
   const t = useTranslations('settingsCompliance');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiPatch('/admin/settings/compliance', {});
     } catch (err) {
-      console.error('Failed to save compliance settings:', err);
+      setSaveError((err as { message?: string }).message || 'Không thể lưu cài đặt tuân thủ');
     } finally {
       setSaving(false);
     }
@@ -161,6 +163,9 @@ export default function SettingsCompliancePage() {
       </div>
 
       <div className="flex justify-end">
+        {saveError && (
+          <p className="mr-auto self-center text-sm text-destructive">{saveError}</p>
+        )}
         <Button onClick={handleSave} disabled={saving} size="lg">
           <Save className="mr-2 h-4 w-4" />
           {saving ? t('saving') : t('save')}

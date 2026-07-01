@@ -16,13 +16,15 @@ import { Save, Webhook, CreditCard, Bell, Bot } from 'lucide-react';
 export default function SettingsIntegrationsPage() {
   const t = useTranslations('settingsIntegrations');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiPatch('/admin/settings/integrations', {});
     } catch (err) {
-      console.error('Failed to save integrations:', err);
+      setSaveError((err as { message?: string }).message || 'Không thể lưu tích hợp');
     } finally {
       setSaving(false);
     }
@@ -153,6 +155,9 @@ export default function SettingsIntegrationsPage() {
       </div>
 
       <div className="flex justify-end">
+        {saveError && (
+          <p className="mr-auto self-center text-sm text-destructive">{saveError}</p>
+        )}
         <Button onClick={handleSave} disabled={saving} size="lg">
           <Save className="mr-2 h-4 w-4" />
           {saving ? t('saving') : t('save')}

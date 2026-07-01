@@ -2,16 +2,25 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@foodflow/ui/page-header';
 import { getTranslations } from 'next-intl/server';
-import OverviewStats from './overview-stats';
-import OverviewCharts from './overview-charts';
-import OverviewRecentOrders from './overview-recent-orders';
-import OverviewHeatmap from './overview-heatmap';
+import OverviewKpiClient from './overview-kpi-client';
+import OverviewChartsClient from './overview-charts-client';
+import OverviewDashboardClient from './overview-dashboard-client';
 
-function StatsSkeleton() {
+function KpiSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-32 rounded-lg" />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-36 rounded-lg" />
+      ))}
+    </div>
+  );
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <Skeleton key={i} className="h-80 rounded-lg" />
       ))}
     </div>
   );
@@ -26,15 +35,19 @@ export default async function OverviewPage() {
         title={t('title')}
         description={t('description')}
       />
-      <Suspense fallback={<StatsSkeleton />}>
-        <OverviewStats />
+      <Suspense fallback={<KpiSkeleton />}>
+        <OverviewKpiClient />
       </Suspense>
-      <Suspense fallback={<Skeleton className="h-80 rounded-lg" />}>
-        <OverviewCharts />
+      <Suspense fallback={<ChartSkeleton />}>
+        <OverviewChartsClient />
       </Suspense>
-      <OverviewHeatmap />
-      <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
-        <OverviewRecentOrders />
+      <Suspense fallback={
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Skeleton className="h-80 lg:col-span-2 rounded-lg" />
+          <Skeleton className="h-80 rounded-lg" />
+        </div>
+      }>
+        <OverviewDashboardClient />
       </Suspense>
     </div>
   );

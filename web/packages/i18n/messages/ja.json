@@ -1,5 +1,9 @@
 {
   "nav": {
+    "insights": "インサイト",
+    "staff": "スタッフ",
+    "reports": "レポート",
+    "exportJobs": "データエクスポート",
     "overview": "概要",
     "orders": "注文",
     "menu": "メニュー",

@@ -1,166 +1,93 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/navigation';
-import { api } from '@/lib/api';
-import { ArrowLeft, Save } from 'lucide-react';
-
-interface Promotion {
-  id: string;
-  code: string;
-  name: string;
-  description?: string;
-  active: boolean;
-  endDate: string;
-}
+import { useState, useEffect } from 'react';
+import { useRouter } from '@/navigation';
+import { Tag } from 'lucide-react';
+import { PromotionForm } from '@/components/promotions/promotion-form';
+import { fetchPromotion, updatePromotion } from '@/lib/actions/promotion-actions';
+import type { Promotion } from '@/lib/types';
 
 export default function PromotionEditPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
-  const t = useTranslations('promotions');
   const router = useRouter();
+  const [promotion, setPromotion] = useState<Promotion | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState<Promotion | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get<{ promotion: Promotion }>(`/restaurant/promotions/${id}`)
-      .then((data) => {
-        if (!cancelled) setForm(data.promotion);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+    params.then(({ id }) => {
+      fetchPromotion(id)
+        .then((data) => {
+          if (!cancelled) setPromotion(data);
+        })
+        .catch((err: unknown) => {
+          if (!cancelled) setError((err as { message?: string }).message || 'Không thể tải khuyến mãi');
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    });
+    return () => { cancelled = true; };
+  }, [params]);
 
-  const handleSave = async () => {
-    if (!form) return;
-    setSaving(true);
-    setError(null);
+  const handleSubmit = async (data: Partial<Promotion>) => {
+    if (!promotion) return;
+    setIsSubmitting(true);
+    setError('');
     try {
-      await api.patch(`/restaurant/promotions/${id}`, {
-        active: form.active,
-        description: form.description,
-        endDate: form.endDate,
-      });
-      router.push(`/promotions/${id}`);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setSaving(false);
+      const updated = await updatePromotion(promotion.id, data);
+      router.push(`/promotions/${updated.id}`);
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || 'Không thể cập nhật khuyến mãi');
+      setIsSubmitting(false);
     }
   };
 
-  if (loading) return <div className="h-40 rounded-lg bg-muted animate-pulse" />;
-  if (!form) {
+  if (loading) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-        {t('listError')}
+      <div className="space-y-4">
+        <div className="h-8 w-48 skeleton" />
+        <div className="card h-96 skeleton" />
       </div>
     );
   }
 
+  if (error && !promotion) {
+    return (
+      <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
+    );
+  }
+
   return (
-    <div className="space-y-6 max-w-xl">
-      <Link
-        href={`/promotions/${id}`}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('back')}
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('edit')}</h1>
-        <p className="font-mono text-xs text-muted-foreground">{form.code}</p>
-      </div>
-
-      <div className="rounded-xl border bg-card p-6 space-y-5">
-        <Field label={t('promoName')}>
-          <input
-            type="text"
-            value={form.name}
-            disabled
-            className="w-full rounded-lg border bg-muted/50 px-3 py-2 text-sm text-muted-foreground"
-          />
-        </Field>
-
-        <Field label="Description">
-          <textarea
-            value={form.description ?? ''}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={3}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
-          />
-        </Field>
-
-        <Field label={t('endDate')}>
-          <input
-            type="date"
-            value={form.endDate?.split('T')[0] ?? ''}
-            onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
-          />
-        </Field>
-
-        <label className="flex items-center justify-between gap-3 cursor-pointer">
-          <span className="text-sm font-medium">{t('active')}</span>
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm({ ...form, active: e.target.checked })}
-            className="h-4 w-4"
-          />
-        </label>
-
-        {error ? (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
-            {error}
-          </div>
-        ) : null}
-
-        <div className="flex justify-end gap-2 pt-2">
-          <Link
-            href={`/promotions/${id}`}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-accent"
-          >
-            {t('cancel')}
-          </Link>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            {saving ? t('saving') : t('save')}
-          </button>
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+          <Tag className="h-5 w-5 text-brand-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Chỉnh sửa khuyến mãi</h1>
+          <p className="text-sm text-gray-500">{promotion?.name}</p>
         </div>
       </div>
-    </div>
-  );
-}
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </label>
-      {children}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {promotion && (
+        <PromotionForm
+          initialData={promotion}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </div>
   );
 }

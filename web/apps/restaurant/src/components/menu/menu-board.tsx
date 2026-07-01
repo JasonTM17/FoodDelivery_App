@@ -30,7 +30,7 @@ export function MenuBoard() {
       });
       setMenuItems((prev) => prev.map((m) => (m.id === item.id ? updated : m)));
     } catch (err) {
-      console.error('Thay đổi trạng thái thất bại:', err);
+      setError((err as { message?: string }).message || 'Không thể cập nhật trạng thái món');
     }
   };
 

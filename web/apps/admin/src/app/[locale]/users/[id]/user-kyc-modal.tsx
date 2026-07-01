@@ -42,6 +42,7 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
   const queryClient = useQueryClient();
   const [rejectReason, setRejectReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const { data: kyc, isLoading } = useQuery<KycData>({
     queryKey: ['user-kyc', userId],
@@ -51,6 +52,7 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
 
   const handleReview = async (action: 'approve' | 'reject') => {
     setLoading(true);
+    setReviewError('');
     try {
       await apiPost(`/admin/users/${userId}/kyc/review`, {
         action,
@@ -60,7 +62,7 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
       if (action === 'approve') onOpenChange(false);
     } catch (err) {
-      console.error('KYC review failed:', err);
+      setReviewError((err as { message?: string }).message || 'Không thể duyệt KYC');
     } finally {
       setLoading(false);
     }
@@ -95,7 +97,12 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
                   <p className="text-xs text-muted-foreground">{t(`kyc_${doc}`)}</p>
                   <div className="flex h-24 items-center justify-center rounded-lg bg-muted/50">
                     {kyc.documents[doc] ? (
-                      <img src={kyc.documents[doc]!} alt={doc} className="h-full w-full rounded-lg object-cover" />
+                      <div
+                        role="img"
+                        aria-label={doc}
+                        className="h-full w-full rounded-lg bg-cover bg-center"
+                        style={{ backgroundImage: `url(${JSON.stringify(kyc.documents[doc])})` }}
+                      />
                     ) : (
                       <FileText className="h-6 w-6 text-muted-foreground" />
                     )}
@@ -108,6 +115,9 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
                 <Separator />
                 <p className="text-xs text-destructive">{kyc.rejectReason}</p>
               </>
+            )}
+            {reviewError && (
+              <p className="text-sm text-destructive">{reviewError}</p>
             )}
             {kyc.status === 'pending' && (
               <>

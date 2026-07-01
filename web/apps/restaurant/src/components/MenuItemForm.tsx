@@ -219,13 +219,11 @@ export default function MenuItemForm({ initialData, onSubmit, isSubmitting }: Me
       {/* Image preview */}
       {image && (
         <div className="rounded-lg overflow-hidden border w-40 h-40">
-          <img
-            src={image}
-            alt="Preview"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" fill="%23ddd"><rect width="160" height="160"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" fill="%23999">No Image</text></svg>';
-            }}
+          <div
+            role="img"
+            aria-label="Preview"
+            className="h-full w-full bg-gray-100 bg-cover bg-center"
+            style={{ backgroundImage: `url(${JSON.stringify(image)})` }}
           />
         </div>
       )}

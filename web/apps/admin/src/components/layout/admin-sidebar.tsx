@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import {
@@ -14,6 +13,8 @@ import {
   HeadphonesIcon,
   Bot,
   BarChart3,
+  FileBarChart,
+  Download,
   LogOut,
   type LucideIcon,
 } from 'lucide-react';
@@ -33,6 +34,8 @@ const navItems: NavItem[] = [
   { tKey: 'nav.promotions',  href: '/promotions',  icon: Percent },
   { tKey: 'nav.support',     href: '/support',     icon: HeadphonesIcon },
   { tKey: 'nav.analytics',   href: '/analytics',   icon: BarChart3 },
+  { tKey: 'nav.reports',     href: '/reports',     icon: FileBarChart },
+  { tKey: 'nav.exportJobs',  href: '/export-jobs', icon: Download },
   { tKey: 'nav.aiMonitor',   href: '/ai-monitor',  icon: Bot },
 ];
 
@@ -41,11 +44,13 @@ export default function AdminSidebar() {
   // Strip locale prefix so active checks work for both /overview and /vi/overview
   const pathname = rawPathname.replace(/^\/(vi|en|ja)/, '') || '/';
   const t = useTranslations();
+  const router = useRouter();
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_refresh_token');
     localStorage.removeItem('admin_user');
-    window.location.href = '/login';
+    router.replace('/login');
   };
 
   return (

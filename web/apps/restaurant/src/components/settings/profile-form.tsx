@@ -170,7 +170,12 @@ export function ProfileForm() {
             className="relative w-full aspect-video rounded-xl border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer hover:border-brand-400 transition-colors bg-gray-50 flex items-center justify-center"
           >
             {coverPreview ? (
-              <img src={coverPreview} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+              <div
+                role="img"
+                aria-label="Cover"
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${JSON.stringify(coverPreview)})` }}
+              />
             ) : (
               <div className="flex flex-col items-center gap-2 text-gray-400">
                 <Camera className="h-8 w-8" />
@@ -191,7 +196,12 @@ export function ProfileForm() {
               className="h-24 w-24 rounded-full border-2 border-dashed border-gray-300 cursor-pointer hover:border-brand-400 transition-colors bg-gray-50 flex items-center justify-center overflow-hidden shrink-0"
             >
               {logoPreview ? (
-                <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                <div
+                  role="img"
+                  aria-label="Logo"
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${JSON.stringify(logoPreview)})` }}
+                />
               ) : (
                 <Camera className="h-6 w-6 text-gray-400" />
               )}

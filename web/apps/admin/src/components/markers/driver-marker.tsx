@@ -21,6 +21,7 @@ const markerColors: Record<DriverStatus, string> = {
 
 export default function DriverMarker({ map, position, status, title, onClick }: DriverMarkerProps) {
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const { lat, lng } = position;
 
   useEffect(() => {
     if (!map || !google?.maps) return;
@@ -35,7 +36,7 @@ export default function DriverMarker({ map, position, status, title, onClick }: 
     };
     const marker = new google.maps.Marker({
       map,
-      position,
+      position: { lat, lng },
       title,
       icon: svgIcon,
       animation: google.maps.Animation.DROP,
@@ -46,7 +47,7 @@ export default function DriverMarker({ map, position, status, title, onClick }: 
       marker.setMap(null);
       markerRef.current = null;
     };
-  }, [map, position.lat, position.lng]);
+  }, [lat, lng, map, onClick, status, title]);
 
   useEffect(() => {
     if (markerRef.current) {

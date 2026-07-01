@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Store, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api, setToken, setStoredRestaurant } from '@/lib/api';

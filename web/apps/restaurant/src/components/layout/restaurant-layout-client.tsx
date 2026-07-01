@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/navigation';
 import { AuthProvider } from '@/lib/auth-provider';
 import { RestaurantSidebar } from './restaurant-sidebar';
 

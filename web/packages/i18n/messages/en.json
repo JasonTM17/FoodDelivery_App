@@ -1,5 +1,9 @@
 {
   "nav": {
+    "insights": "Insights",
+    "staff": "Staff",
+    "reports": "Reports",
+    "exportJobs": "Data Exports",
     "overview": "Overview",
     "orders": "Orders",
     "menu": "Menu",

@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { setToken as storeToken, clearToken } from '@/lib/api'
+import { useRouter, usePathname } from '@/navigation'
+import { setToken as storeToken, clearToken, setStoredRestaurant } from '@/lib/api'
 
 interface AuthState {
   token: string | null
@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (newToken: string, restaurantData?: unknown) => {
       storeToken(newToken)
       if (restaurantData) {
-        const { setStoredRestaurant } = require('@/lib/api')
         setStoredRestaurant(restaurantData)
       }
       setTokenState(newToken)

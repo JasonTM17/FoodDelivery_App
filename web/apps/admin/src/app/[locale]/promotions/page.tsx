@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
-import { Breadcrumb } from '@foodflow/ui/breadcrumb';
 import { EmptyState } from '@foodflow/ui/empty-state';
 import { PageHeader } from '@foodflow/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Percent, DollarSign } from 'lucide-react';
@@ -85,6 +83,7 @@ export default function PromotionsPage() {
     active: true,
   });
   const [saving, setSaving] = useState(false);
+  const [mutationError, setMutationError] = useState('');
 
   const { data, isLoading } = useQuery<PromotionsResponse>({
     queryKey: ['promotions'],
@@ -127,6 +126,7 @@ export default function PromotionsPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    setMutationError('');
     try {
       const payload = {
         code: formData.code,
@@ -150,7 +150,7 @@ export default function PromotionsPage() {
       queryClient.invalidateQueries({ queryKey: ['promotions'] });
       setDialogOpen(false);
     } catch (err) {
-      console.error('Failed to save promotion:', err);
+      setMutationError((err as { message?: string }).message || 'Không thể lưu khuyến mãi');
     } finally {
       setSaving(false);
     }
@@ -158,11 +158,12 @@ export default function PromotionsPage() {
 
   const handleDelete = async (promotionId: string) => {
     if (!confirm('Xóa khuyến mãi này?')) return;
+    setMutationError('');
     try {
       await apiDelete(`/admin/promotions/${promotionId}`);
       queryClient.invalidateQueries({ queryKey: ['promotions'] });
     } catch (err) {
-      console.error('Failed to delete promotion:', err);
+      setMutationError((err as { message?: string }).message || 'Không thể xóa khuyến mãi');
     }
   };
 
@@ -193,6 +194,11 @@ export default function PromotionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {mutationError && (
+            <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {mutationError}
+            </div>
+          )}
           {isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (

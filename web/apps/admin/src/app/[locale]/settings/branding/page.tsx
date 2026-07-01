@@ -9,18 +9,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Save, Palette, Type, Image } from 'lucide-react';
+import { Save, Palette, Type, Image as ImageIcon } from 'lucide-react';
 
 export default function SettingsBrandingPage() {
   const t = useTranslations('settingsBranding');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiPatch('/admin/settings/branding', {});
     } catch (err) {
-      console.error('Failed to save branding:', err);
+      setSaveError((err as { message?: string }).message || 'Không thể lưu branding');
     } finally {
       setSaving(false);
     }
@@ -104,7 +106,7 @@ export default function SettingsBrandingPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Image className="h-4 w-4 text-primary" />
+              <ImageIcon className="h-4 w-4 text-primary" />
               {t('logoAssets')}
             </CardTitle>
             <CardDescription>{t('logoAssetsDesc')}</CardDescription>
@@ -115,7 +117,7 @@ export default function SettingsBrandingPage() {
                 <Label>{t(asset)}</Label>
                 <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30">
                   <div className="text-center">
-                    <Image className="mx-auto h-6 w-6 text-muted-foreground" />
+                    <ImageIcon className="mx-auto h-6 w-6 text-muted-foreground" />
                     <p className="mt-1 text-xs text-muted-foreground">{t('uploadHint')}</p>
                   </div>
                 </div>
@@ -127,6 +129,9 @@ export default function SettingsBrandingPage() {
       </div>
 
       <div className="flex justify-end">
+        {saveError && (
+          <p className="mr-auto self-center text-sm text-destructive">{saveError}</p>
+        )}
         <Button onClick={handleSave} disabled={saving} size="lg">
           <Save className="mr-2 h-4 w-4" />
           {saving ? t('saving') : t('save')}

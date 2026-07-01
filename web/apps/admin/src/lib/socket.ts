@@ -22,17 +22,6 @@ export function getSocket(): Socket {
       },
     });
 
-    socket.on('connect', () => {
-      console.log('[Socket] Connected to admin namespace');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('[Socket] Connection error:', error.message);
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.log('[Socket] Disconnected:', reason);
-    });
   }
 
   return socket;

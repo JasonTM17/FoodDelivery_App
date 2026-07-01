@@ -48,13 +48,11 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
 
       <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
         {item.image ? (
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+          <div
+            role="img"
+            aria-label={item.name}
+            className="h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${JSON.stringify(item.image)})` }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

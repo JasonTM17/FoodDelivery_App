@@ -8,7 +8,6 @@ import OrderStatusBadge from '@/components/badges/order-status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@/navigation';
 
@@ -36,6 +35,7 @@ export default function OrderDetailPage({
 }) {
   const { id } = use(params);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   const { data: order, isLoading, error, refetch } = useQuery<Order>({
     queryKey: ['order', id],
@@ -44,11 +44,12 @@ export default function OrderDetailPage({
 
   const updateStatus = async (status: string) => {
     setActionLoading(true);
+    setActionError('');
     try {
       await apiPatch(`/admin/orders/${id}/status`, { status });
       refetch();
     } catch (err) {
-      console.error('Failed to update status:', err);
+      setActionError((err as { message?: string }).message || 'Không thể cập nhật trạng thái đơn hàng');
     } finally {
       setActionLoading(false);
     }
@@ -185,6 +186,11 @@ export default function OrderDetailPage({
           <CardTitle>Cập nhật trạng thái</CardTitle>
         </CardHeader>
         <CardContent>
+          {actionError && (
+            <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {actionError}
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             {order.status === 'pending' && (
               <Button onClick={() => updateStatus('confirmed')} disabled={actionLoading}>
