@@ -15,7 +15,8 @@ const appMessages = {
  * next-intl request config for the restaurant app.
  * Merges shared (@foodflow/i18n) messages with restaurant-specific messages.
  */
-export default getRequestConfig(async ({ locale }) => {
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = await requestLocale;
   const safeLocale: Locale = (locales as readonly string[]).includes(locale ?? '')
     ? (locale as Locale)
     : defaultLocale;
