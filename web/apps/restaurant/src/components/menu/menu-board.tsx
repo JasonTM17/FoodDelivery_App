@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { UtensilsCrossed, Plus, Search } from 'lucide-react';
 import { CategoryAccordion } from './category-accordion';
 import { api } from '@/lib/api';
@@ -15,7 +15,7 @@ export function MenuBoard() {
 
   useEffect(() => {
     api
-      .get<MenuItem[]>('/menu')
+      .get<MenuItem[]>('/restaurant/menu/items')
       .then(setMenuItems)
       .catch((err: unknown) =>
         setError((err as { message?: string }).message || 'Không thể tải thực đơn')
@@ -25,8 +25,7 @@ export function MenuBoard() {
 
   const handleToggle = async (item: MenuItem) => {
     try {
-      const updated = await api.put<MenuItem>(`/menu/${item.id}`, {
-        ...item,
+      const updated = await api.patch<MenuItem>(`/restaurant/menu/items/${item.id}`, {
         available: !item.available,
       });
       setMenuItems((prev) => prev.map((m) => (m.id === item.id ? updated : m)));

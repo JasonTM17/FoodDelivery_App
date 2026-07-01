@@ -44,7 +44,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await api.get<Restaurant>('/restaurants/profile');
+        const data = await api.get<Restaurant>('/restaurant/profile');
         setRestaurant(data);
         setName(data.name);
         setDescription(data.description || '');
@@ -75,7 +75,7 @@ export default function SettingsPage() {
     setSuccess('');
 
     try {
-      const updated = await api.put<Restaurant>('/restaurants/profile', {
+      const updated = await api.patch<Restaurant>('/restaurant/profile', {
         name,
         description,
         address,

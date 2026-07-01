@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { ArrowLeft, UtensilsCrossed } from 'lucide-react';
 import { MenuItemForm } from '@/components/menu/menu-item-form';
 import { api } from '@/lib/api';
@@ -18,7 +18,7 @@ export default function NewMenuItemPage() {
     setSubmitError('');
 
     try {
-      await api.post<MenuItem>('/menu', data);
+      await api.post<MenuItem>('/restaurant/menu/items', data);
       router.push('/menu');
     } catch (err: unknown) {
       const apiError = err as { message?: string };

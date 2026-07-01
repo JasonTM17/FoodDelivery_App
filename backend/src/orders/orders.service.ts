@@ -236,11 +236,12 @@ export class OrdersService {
       where, orderBy: { createdAt: 'desc' }, take: 50,
       include: {
         restaurant: { select: { name: true } },
-        orderItems: { select: { nameSnapshot: true, quantity: true } },
-        customer: { select: { fullName: true } },
+        orderItems: { select: { id: true, menuItemId: true, nameSnapshot: true, quantity: true, unitPrice: true, selectedOptions: true } },
+        customer: { select: { fullName: true, phone: true } },
+        deliveryAddress: { select: { addressLine: true } },
       },
     })
-    return { orders, meta: { page: 1, limit: 50, total: orders.length } }
+    return { orders: orders.map(serializeRestaurantOrder), meta: { page: 1, limit: 50, total: orders.length } }
   }
 
   async getRestaurantOrderDetail(orderId: string, userId: string) {
@@ -258,7 +259,7 @@ export class OrdersService {
       },
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
-    return order
+    return serializeRestaurantOrder(order)
   }
 
   async getCustomerOrders(userId: string, page = 1, limit = 20, status?: string) {
@@ -349,4 +350,63 @@ export class OrdersService {
       },
     })
   }
+}
+
+type RestaurantOrderView = {
+  id: string
+  orderCode: string
+  status: string
+  total: Prisma.Decimal | number
+  notes: string | null
+  restaurantId: string
+  createdAt: Date
+  updatedAt: Date
+  customer?: { fullName: string; phone?: string | null } | null
+  deliveryAddress?: { addressLine: string } | null
+  orderItems: Array<{
+    id: string
+    menuItemId: string
+    nameSnapshot: string
+    quantity: number
+    unitPrice: Prisma.Decimal | number
+    selectedOptions: Prisma.JsonValue
+  }>
+}
+
+function serializeRestaurantOrder(order: RestaurantOrderView) {
+  return {
+    id: order.id,
+    code: order.orderCode,
+    status: order.status,
+    items: order.orderItems.map(item => ({
+      id: item.id,
+      menuItemId: item.menuItemId,
+      name: item.nameSnapshot,
+      quantity: item.quantity,
+      price: Number(item.unitPrice),
+      options: serializeSelectedOptions(item.selectedOptions),
+    })),
+    total: Number(order.total),
+    customerName: order.customer?.fullName ?? '',
+    customerPhone: order.customer?.phone ?? '',
+    customerAddress: order.deliveryAddress?.addressLine ?? '',
+    tableNumber: null,
+    note: order.notes ?? '',
+    restaurantId: order.restaurantId,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  }
+}
+
+function serializeSelectedOptions(value: Prisma.JsonValue) {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return []
+    const record = entry as Record<string, Prisma.JsonValue>
+    return [{
+      name: typeof record.name === 'string' ? record.name : '',
+      value: typeof record.value === 'string' ? record.value : '',
+      price: Number(record.price ?? record.priceModifier ?? 0),
+    }]
+  })
 }

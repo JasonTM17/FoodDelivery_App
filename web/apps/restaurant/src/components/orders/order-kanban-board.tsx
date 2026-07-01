@@ -17,10 +17,11 @@ const COLUMNS = [
 ];
 
 const STATUS_MAP: Record<string, ColumnId> = {
-  pending: 'pending',
-  confirmed: 'preparing',
+  paid: 'pending',
+  restaurant_pending: 'pending',
+  restaurant_accepted: 'preparing',
   preparing: 'preparing',
-  ready: 'ready',
+  ready_for_pickup: 'ready',
 };
 
 function initSound(): boolean {
@@ -37,17 +38,16 @@ export function OrderKanbanBoard() {
   const restaurant = getStoredRestaurant();
 
   const fetchOrders = useCallback(async () => {
-    if (!restaurant?.id) return;
     try {
-      const data = await api.get<Order[]>(`/orders/restaurant/${restaurant.id}`);
-      setAllOrders(data);
+      const data = await api.get<{ orders: Order[] }>('/restaurant/orders');
+      setAllOrders(data.orders);
       setError('');
     } catch (err: unknown) {
       setError((err as { message?: string }).message || 'Không thể tải đơn hàng');
     } finally {
       setIsLoading(false);
     }
-  }, [restaurant?.id]);
+  }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 

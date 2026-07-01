@@ -79,16 +79,35 @@ export class CreateOptionDto {
   @IsOptional()
   isMultiple?: boolean
 
+  @IsString()
+  @IsOptional()
+  type?: 'single' | 'multi'
+
+  @IsBoolean()
+  @IsOptional()
+  required?: boolean
+
   @IsArray()
-  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => CreateOptionValueDto)
-  values: CreateOptionValueDto[]
+  @IsOptional()
+  values?: CreateOptionValueDto[]
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOptionValueDto)
+  @IsOptional()
+  choices?: Array<{ name: string; price?: number }>
 }
 
 export class CreateMenuItemDto {
   @IsString()
-  categoryId: string
+  @IsOptional()
+  categoryId?: string
+
+  @IsString()
+  @IsOptional()
+  category?: string
 
   @IsString()
   @MinLength(1)
@@ -103,13 +122,27 @@ export class CreateMenuItemDto {
   @IsOptional()
   imageUrl?: string
 
+  @IsString()
+  @IsOptional()
+  image?: string
+
   @IsNumber()
   @Min(0)
-  basePrice: number
+  @IsOptional()
+  basePrice?: number
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price?: number
 
   @IsBoolean()
   @IsOptional()
   isAvailable?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  available?: boolean
 
   @IsBoolean()
   @IsOptional()
@@ -137,14 +170,27 @@ export class UpdateMenuItemDto {
   @IsOptional()
   imageUrl?: string
 
+  @IsString()
+  @IsOptional()
+  image?: string
+
   @IsNumber()
   @Min(0)
   @IsOptional()
   basePrice?: number
 
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price?: number
+
   @IsBoolean()
   @IsOptional()
   isAvailable?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  available?: boolean
 
   @IsBoolean()
   @IsOptional()
@@ -153,6 +199,10 @@ export class UpdateMenuItemDto {
   @IsString()
   @IsOptional()
   categoryId?: string
+
+  @IsString()
+  @IsOptional()
+  category?: string
 
   @IsInt()
   @Min(0)

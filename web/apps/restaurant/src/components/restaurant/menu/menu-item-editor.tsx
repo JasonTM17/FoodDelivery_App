@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, UtensilsCrossed, Upload, X } from 'lucide-react';
+import { useRouter } from '@/navigation';
+import { ArrowLeft, UtensilsCrossed } from 'lucide-react';
+import { MenuItemOptionsBuilder } from '@/components/menu/menu-item-options-builder';
+import { MenuItemPhotoUpload } from '@/components/menu/menu-item-photo-upload';
+import { MenuItemAvailabilityToggle } from '@/components/menu/menu-item-availability-toggle';
 import { api } from '@/lib/api';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, MenuItemOption } from '@/lib/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -21,7 +24,6 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const [item, setItem] = useState<Partial<MenuItem>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
 
   const [name, setName] = useState('');
@@ -29,12 +31,14 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [image, setImage] = useState('');
-  const [available, setAvailable] = useState(true);
   const [allergens, setAllergens] = useState<string[]>([]);
+  const [options, setOptions] = useState<MenuItemOption[]>([]);
+  const [availabilityMode, setAvailabilityMode] = useState<'always' | 'scheduled' | 'hidden'>('always');
+  const [schedule, setSchedule] = useState<{ open: string; close: string }>({ open: '', close: '' });
 
   useEffect(() => {
     api
-      .get<MenuItem & { allergens?: string[] }>(`/menu/${id}`)
+      .get<MenuItem & { allergens?: string[] }>(`/restaurant/menu/items/${id}`)
       .then((data) => {
         setItem(data);
         setName(data.name);
@@ -42,36 +46,19 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         setPrice(data.price.toString());
         setCategory(data.category);
         setImage(data.image || '');
-        setAvailable(data.available);
         setAllergens(data.allergens ?? []);
+        setOptions(data.options ?? []);
+        if (data.available === false) {
+          setAvailabilityMode('hidden');
+        } else {
+          setAvailabilityMode('always');
+        }
       })
       .catch((err: unknown) =>
         setError((err as { message?: string }).message || 'Không thể tải món')
       )
       .finally(() => setIsLoading(false));
   }, [id]);
-
-  const handleImageUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const token =
-        typeof window !== 'undefined' ? localStorage.getItem('restaurant_token') : null;
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch(`${API_URL}/storage/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Upload thất bại');
-      const { url } = (await res.json()) as { url: string };
-      setImage(url);
-    } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Upload ảnh thất bại');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const toggleAllergen = (allergen: string) =>
     setAllergens((prev) =>
@@ -85,15 +72,17 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
     setIsSubmitting(true);
     setError('');
     try {
-      await api.patch(`/menu/${id}`, {
+      await api.patch(`/restaurant/menu/items/${id}`, {
         name: name.trim(),
         description: description.trim(),
         price: parseFloat(price),
         category,
         image,
-        available,
+        available: availabilityMode !== 'hidden',
+        availabilityMode: availabilityMode,
+        availabilitySchedule: availabilityMode === 'scheduled' ? schedule : undefined,
         allergens,
-        options: item.options ?? [],
+        options,
       });
       router.push('/menu');
     } catch (err: unknown) {
@@ -172,45 +161,19 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
             </div>
           </div>
 
-          {/* Image upload */}
-          <div>
-            <label className="label">Hình ảnh</label>
-            <div className="flex gap-3 items-start flex-wrap">
-              {image && (
-                <div className="relative w-32 h-32 rounded-lg overflow-hidden border shrink-0">
-                  <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setImage('')}
-                    className="absolute top-1 right-1 bg-white rounded-full p-0.5 shadow"
-                    aria-label="Xoá ảnh"
-                  >
-                    <X className="h-3.5 w-3.5 text-gray-600" />
-                  </button>
-                </div>
-              )}
-              <button
-                type="button"
-                disabled={isUploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="btn-secondary"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {isUploading ? 'Đang tải...' : 'Tải ảnh lên'}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleImageUpload(f);
-                  e.target.value = '';
-                }}
-              />
-            </div>
-          </div>
+          {/* Photo upload - new component */}
+          <MenuItemPhotoUpload value={image} onChange={setImage} />
+
+          {/* Options builder - new component */}
+          <MenuItemOptionsBuilder options={options} onChange={setOptions} />
+
+          {/* Availability toggle - new component replaces simple checkbox */}
+          <MenuItemAvailabilityToggle
+            mode={availabilityMode}
+            onModeChange={setAvailabilityMode}
+            schedule={schedule}
+            onScheduleChange={setSchedule}
+          />
 
           {/* Allergens */}
           <div>
@@ -231,20 +194,6 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Availability */}
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="available-toggle"
-              checked={available}
-              onChange={(e) => setAvailable(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            <label htmlFor="available-toggle" className="text-sm text-gray-700">
-              Món đang có sẵn
-            </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

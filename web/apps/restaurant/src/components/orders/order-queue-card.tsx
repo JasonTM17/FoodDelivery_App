@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { Clock, User, ChevronRight, AlertCircle } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { formatCurrency, formatTimeAgo, cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ interface OrderQueueCardProps {
 
 export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
   const router = useRouter();
-  const isPending = order.status === 'pending';
+  const isPending = order.status === 'restaurant_pending';
 
   return (
     <div

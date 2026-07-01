@@ -73,12 +73,13 @@ export class OrdersController {
   @Patch('restaurant/orders/:id/status')
   @Roles('restaurant')
   @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))
-  updateRestaurantOrderStatus(
+  async updateRestaurantOrderStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateOrderStatus(id, dto.status, user.sub, user.role, dto.note)
+    await this.ordersService.updateOrderStatus(id, dto.status, user.sub, user.role, dto.note)
+    return this.ordersService.getRestaurantOrderDetail(id, user.sub)
   }
 
   // ── Driver endpoints ──

@@ -67,7 +67,7 @@ export function HoursEditor() {
     setIsSaving(true);
     setError('');
     try {
-      await api.put('/restaurants/profile', { openingHours: hours, holidays });
+      await api.patch('/restaurant/profile', { openingHours: hours, holidays });
       setSuccess('Đã lưu lịch hoạt động');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: unknown) {

@@ -12,7 +12,7 @@ interface Notification {
   type: NotifType;
   title: string;
   body: string;
-  read: boolean;
+  isRead: boolean;
   createdAt: string;
 }
 
@@ -37,27 +37,27 @@ export function NotificationsList() {
   const [activeTab, setActiveTab] = useState<NotifType | 'all'>('all');
 
   useEffect(() => {
-    api.get<{ notifications: Notification[] }>('/restaurant/notifications')
+    api.get<{ notifications: Notification[] }>('/notifications')
       .then((data) => setNotifications(data.notifications))
       .catch(() => {/* silently show empty list on error */})
       .finally(() => setIsLoading(false));
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
   const markAllRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
     try {
-      await api.patch('/restaurant/notifications/read-all');
+      await api.patch('/notifications/read-all');
     } catch {
       // optimistic update already applied; revert not needed
     }
   };
 
   const markRead = async (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setNotifications((prev) => prev.map((notification) => (notification.id === id ? { ...notification, isRead: true } : notification)));
     try {
-      await api.patch(`/restaurant/notifications/${id}/read`);
+      await api.patch(`/notifications/${id}/read`);
     } catch {
       // optimistic update already applied
     }
@@ -111,8 +111,8 @@ export function NotificationsList() {
       <div className="flex gap-1 mb-4 border-b border-gray-200">
         {TABS.map((tab) => {
           const count = tab.key === 'all'
-            ? notifications.filter((n) => !n.read).length
-            : notifications.filter((n) => n.type === tab.key && !n.read).length;
+            ? notifications.filter((notification) => !notification.isRead).length
+            : notifications.filter((notification) => notification.type === tab.key && !notification.isRead).length;
           return (
             <button
               key={tab.key}
@@ -148,7 +148,7 @@ export function NotificationsList() {
               key={notif.id}
               onClick={() => markRead(notif.id)}
               className={cn('w-full text-left rounded-xl border p-4 transition-all hover:shadow-sm',
-                notif.read ? 'bg-white border-gray-200' : 'bg-brand-50/40 border-brand-100')}
+                notif.isRead ? 'bg-white border-gray-200' : 'bg-brand-50/40 border-brand-100')}
             >
               <div className="flex items-start gap-3">
                 <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg shrink-0', cfg.color)}>
@@ -156,14 +156,14 @@ export function NotificationsList() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={cn('text-sm', notif.read ? 'font-medium text-gray-700' : 'font-semibold text-gray-900')}>
+                    <p className={cn('text-sm', notif.isRead ? 'font-medium text-gray-700' : 'font-semibold text-gray-900')}>
                       {notif.title}
                     </p>
                     <span className="text-xs text-gray-400 shrink-0 mt-0.5">{formatTime(notif.createdAt)}</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-0.5 truncate">{notif.body}</p>
                 </div>
-                {!notif.read && (
+                {!notif.isRead && (
                   <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0 mt-1.5" />
                 )}
               </div>

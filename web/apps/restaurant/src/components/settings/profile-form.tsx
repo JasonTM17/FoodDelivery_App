@@ -40,7 +40,7 @@ export function ProfileForm() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await api.get<Restaurant>('/restaurants/profile');
+        const data = await api.get<Restaurant>('/restaurant/profile');
         setRestaurant(data);
         setName(data.name);
         setDescription(data.description || '');
@@ -107,7 +107,7 @@ export function ProfileForm() {
     setIsSaving(true);
     setError('');
     try {
-      const updated = await api.put<Restaurant>('/restaurants/profile', {
+      const updated = await api.patch<Restaurant>('/restaurant/profile', {
         name, description, address, phone, isActive,
         cuisines, minOrderAmount: Number(minOrder), deliveryFee: Number(deliveryFee),
         bankAccount, bankName,
