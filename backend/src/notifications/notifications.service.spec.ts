@@ -53,6 +53,10 @@ describe('NotificationsService', () => {
     service = module.get(NotificationsService)
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   describe('getUserNotifications', () => {
     it('returns paginated list with unread count', async () => {
       const result = await service.getUserNotifications('u1')
@@ -90,6 +94,7 @@ describe('NotificationsService', () => {
     it('sends to in_app and push channels by default', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
+      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
 
       const result = await service.fanout(userId, eventType, payload)
 
@@ -97,6 +102,7 @@ describe('NotificationsService', () => {
       expect(mockInApp.send).toHaveBeenCalledWith(userId, expect.objectContaining({ title: expect.any(String) }))
       expect(mockFcm.send).toHaveBeenCalledWith(userId, expect.objectContaining({ title: expect.any(String) }))
       expect(mockPrisma.notification.create).toHaveBeenCalled()
+      dateSpy.mockRestore()
     })
 
     it('skips on dedup (redis.set returns null)', async () => {
@@ -159,12 +165,14 @@ describe('NotificationsService', () => {
     it('continues when a channel throws and still creates audit record', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
+      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
       mockFcm.send.mockRejectedValueOnce(new Error('FCM unavailable'))
 
       const result = await service.fanout(userId, eventType, payload)
 
       expect(result).toEqual({ sent: true })
       expect(mockPrisma.notification.create).toHaveBeenCalled()
+      dateSpy.mockRestore()
     })
   })
 })

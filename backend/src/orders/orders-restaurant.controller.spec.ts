@@ -8,6 +8,7 @@ describe('OrdersController — Restaurant', () => {
   const mockOrdersService = {
     getRestaurantOrders: jest.fn().mockResolvedValue({ orders: [], meta: { page: 1, limit: 50, total: 0 } }),
     updateOrderStatus: jest.fn().mockResolvedValue({ id: 'order-1', status: 'restaurant_accepted' }),
+    getRestaurantOrderDetail: jest.fn().mockResolvedValue({ id: 'order-1', status: 'restaurant_accepted' }),
     placeOrder: jest.fn(),
     getCustomerOrders: jest.fn(),
     getOrderDetail: jest.fn(),
@@ -49,6 +50,7 @@ describe('OrdersController — Restaurant', () => {
     const user = { sub: 'restaurant-1', role: 'restaurant' }
     const result = await controller.updateRestaurantOrderStatus(user, 'order-1', { status: 'restaurant_accepted', note: 'OK' })
     expect(result.status).toBe('restaurant_accepted')
+    expect(mockOrdersService.getRestaurantOrderDetail).toHaveBeenCalledWith('order-1', 'restaurant-1')
   })
 
   it('should update delivery status as driver', async () => {

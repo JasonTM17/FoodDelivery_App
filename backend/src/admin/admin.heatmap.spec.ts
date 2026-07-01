@@ -2,8 +2,28 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { AdminService } from './admin.service'
 import { PrismaService } from '../database/prisma.service'
 
+const heatmapRows = [
+  { districtCode: 'district-1', lat: 10.78, lng: 106.69, orderCount: 12 },
+  { districtCode: 'district-2', lat: 10.8, lng: 106.7, orderCount: 8 },
+]
+
+const ratingRows = [
+  { date: '2026-06-01', rating: 4.6 },
+  { date: '2026-06-02', rating: 4.7 },
+]
+
+const revenueRows = [
+  { date: '2026-06-01', revenue: 1_200_000 },
+  { date: '2026-06-02', revenue: 1_500_000 },
+]
+
 const mockPrisma = {
-  order: { count: jest.fn(), findMany: jest.fn(), groupBy: jest.fn() },
+  order: {
+    count: jest.fn(),
+    findMany: jest.fn(),
+    groupBy: jest.fn(),
+    aggregate: jest.fn(),
+  },
   payment: { aggregate: jest.fn() },
   driverProfile: { count: jest.fn() },
   user: { count: jest.fn(), findMany: jest.fn() },
@@ -11,13 +31,15 @@ const mockPrisma = {
   aiSupportTicket: { count: jest.fn(), findMany: jest.fn() },
   adminAuditLog: { count: jest.fn(), findMany: jest.fn() },
   promotion: { count: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+  $queryRaw: jest.fn(),
   $queryRawUnsafe: jest.fn(),
 }
 
-describe('AdminService — Dispatch Heatmap', () => {
+describe('AdminService — analytics resources', () => {
   let service: AdminService
 
   beforeEach(async () => {
+    jest.clearAllMocks()
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -28,86 +50,58 @@ describe('AdminService — Dispatch Heatmap', () => {
   })
 
   describe('getDispatchHeatmap', () => {
-    it('returns exactly 7 district entries', () => {
-      const result = service.getDispatchHeatmap('2026-06-01')
-      expect(result).toHaveLength(7)
+    it('returns district heatmap rows from the aggregate query', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce(heatmapRows)
+
+      const result = await service.getDispatchHeatmap('2026-06-01')
+
+      expect(result).toEqual(heatmapRows)
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
     })
 
-    it('each entry has districtCode, lat, lng, orderCount', () => {
-      const result = service.getDispatchHeatmap('2026-06-01')
-      for (const entry of result) {
-        expect(entry).toMatchObject({
-          districtCode: expect.any(String),
-          lat: expect.any(Number),
-          lng: expect.any(Number),
-          orderCount: expect.any(Number),
-        })
-      }
-    })
+    it('uses a fallback date when the since query is invalid', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce(heatmapRows)
 
-    it('district codes are unique', () => {
-      const result = service.getDispatchHeatmap('2026-06-01')
-      const codes = result.map(e => e.districtCode)
-      expect(new Set(codes).size).toBe(7)
-    })
+      const result = await service.getDispatchHeatmap('not-a-date')
 
-    it('all orderCounts are positive integers', () => {
-      const result = service.getDispatchHeatmap('2026-06-01')
-      for (const entry of result) {
-        expect(entry.orderCount).toBeGreaterThan(0)
-        expect(Number.isInteger(entry.orderCount)).toBe(true)
-      }
+      expect(result).toHaveLength(2)
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('getRestaurantKpi', () => {
-    it('default period returns 7-day ratingTrend and revenueByDay', () => {
-      const result = service.getRestaurantKpi('rest-001', '7d')
-      expect(result.ratingTrend).toHaveLength(7)
-      expect(result.revenueByDay).toHaveLength(7)
+    beforeEach(() => {
+      mockPrisma.order.aggregate.mockResolvedValue({
+        _avg: { estimatedPrepTimeMinutes: 18.4 },
+        _count: { _all: 4 },
+      })
+      mockPrisma.order.count.mockResolvedValue(3)
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce(ratingRows)
+        .mockResolvedValueOnce(revenueRows)
     })
 
-    it('14d period returns 14-day arrays', () => {
-      const result = service.getRestaurantKpi('rest-001', '14d')
-      expect(result.ratingTrend).toHaveLength(14)
-      expect(result.revenueByDay).toHaveLength(14)
-    })
+    it('returns KPI aggregates with rating and revenue trends', async () => {
+      const result = await service.getRestaurantKpi('rest-001', '7d')
 
-    it('30d period returns 30-day arrays', () => {
-      const result = service.getRestaurantKpi('rest-001', '30d')
-      expect(result.ratingTrend).toHaveLength(30)
-      expect(result.revenueByDay).toHaveLength(30)
-    })
-
-    it('has required top-level fields', () => {
-      const result = service.getRestaurantKpi('rest-001', '7d')
-      expect(result).toMatchObject({
-        avgPrepTimeMin: expect.any(Number),
-        fulfillmentRate: expect.any(Number),
+      expect(result).toEqual({
+        avgPrepTimeMin: 18,
+        fulfillmentRate: 0.75,
+        ratingTrend: ratingRows,
+        revenueByDay: revenueRows,
       })
     })
 
-    it('each ratingTrend entry has date and rating', () => {
-      const { ratingTrend } = service.getRestaurantKpi('rest-001', '7d')
-      for (const entry of ratingTrend) {
-        expect(entry).toMatchObject({
-          date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-          rating: expect.any(Number),
-        })
-        expect(entry.rating).toBeGreaterThanOrEqual(4.0)
-        expect(entry.rating).toBeLessThanOrEqual(5.0)
-      }
-    })
+    it('returns null fulfillment rate when there are no orders', async () => {
+      mockPrisma.order.aggregate.mockResolvedValueOnce({
+        _avg: { estimatedPrepTimeMinutes: null },
+        _count: { _all: 0 },
+      })
 
-    it('each revenueByDay entry has date and revenue', () => {
-      const { revenueByDay } = service.getRestaurantKpi('rest-001', '7d')
-      for (const entry of revenueByDay) {
-        expect(entry).toMatchObject({
-          date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-          revenue: expect.any(Number),
-        })
-        expect(entry.revenue).toBeGreaterThan(0)
-      }
+      const result = await service.getRestaurantKpi('rest-001', '30d')
+
+      expect(result.fulfillmentRate).toBeNull()
+      expect(result.avgPrepTimeMin).toBe(0)
     })
   })
 })

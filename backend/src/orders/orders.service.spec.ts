@@ -10,11 +10,13 @@ describe('OrdersService', () => {
   let service: OrdersService
   let mockDispatchQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockRefundQueue: jest.Mocked<Pick<Queue, 'add'>>
-  let mockGateway: { broadcastToOrder: jest.Mock; notifyRestaurant: jest.Mock }
+  let mockOrderTimeoutQueue: jest.Mocked<Pick<Queue, 'add'>>
+  let mockGateway: { broadcastToOrder: jest.Mock; notifyRestaurant: jest.Mock; notifyAdmins: jest.Mock }
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
     order: { findUniqueOrThrow: jest.Mock; update: jest.Mock }
+    restaurantProfile: { findUnique: jest.Mock }
     orderStatusHistory: { create: jest.Mock }
     payment: { findUnique: jest.Mock; update: jest.Mock }
   }
@@ -30,9 +32,10 @@ describe('OrdersService', () => {
     mockTx = {
       $executeRaw: jest.fn().mockResolvedValue(1),
       order: {
-        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: orderId, status: 'paid' }),
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: orderId, status: 'paid', restaurantId: 'restaurant-1', driverId: null }),
         update: jest.fn().mockResolvedValue({ id: orderId, status: 'restaurant_pending' }),
       },
+      restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }) },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
     }
@@ -42,10 +45,11 @@ describe('OrdersService', () => {
         (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       ),
     }
-    mockGateway = { broadcastToOrder: jest.fn(), notifyRestaurant: jest.fn() }
+    mockGateway = { broadcastToOrder: jest.fn(), notifyRestaurant: jest.fn(), notifyAdmins: jest.fn() }
     mockCancellationService = { assertCanCancel: jest.fn() }
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
     mockRefundQueue = { add: jest.fn().mockResolvedValue({}) }
+    mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
 
     service = new OrdersService(
       mockPrisma as unknown as PrismaService,
@@ -54,6 +58,7 @@ describe('OrdersService', () => {
       mockCancellationService as unknown as CancellationService,
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
+      mockOrderTimeoutQueue as unknown as Queue,
     )
   })
 
@@ -133,7 +138,7 @@ describe('OrdersService', () => {
     })
 
     it('enqueues dispatch job when transitioning to restaurant_accepted', async () => {
-      mockTx.order.findUniqueOrThrow.mockResolvedValue({ id: orderId, status: 'restaurant_pending' })
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({ id: orderId, status: 'restaurant_pending', restaurantId: 'restaurant-1' })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'restaurant_accepted' })
 
       await service.transition(orderId, 'restaurant_accepted', userId, 'restaurant')
@@ -222,7 +227,7 @@ describe('OrdersService', () => {
 
   describe('updateOrderStatus()', () => {
     it('delegates to transition() with correct parameters', async () => {
-      mockTx.order.findUniqueOrThrow.mockResolvedValue({ id: orderId, status: 'restaurant_pending' })
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({ id: orderId, status: 'restaurant_pending', restaurantId: 'restaurant-1' })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'restaurant_accepted' })
 
       const result = await service.updateOrderStatus(orderId, 'restaurant_accepted', userId, 'restaurant', 'Accepted')
