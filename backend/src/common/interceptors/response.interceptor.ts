@@ -33,6 +33,11 @@ export class ResponseInterceptor<T>
           return data as unknown as WrappedResponse<T>
         }
 
+        if (this.isDataMetaResponse(data)) {
+          const { data: payload, meta } = data as { data: T; meta: PaginationMeta }
+          return { success: true as const, data: payload, meta }
+        }
+
         if (this.isPaginated(data)) {
           const { items, ...meta } = data as {
             items: unknown
@@ -55,6 +60,12 @@ export class ResponseInterceptor<T>
       'success' in value &&
       (value as Record<string, unknown>).success === true
     )
+  }
+
+  private isDataMetaResponse(value: unknown): boolean {
+    if (typeof value !== 'object' || value === null) return false
+    const obj = value as Record<string, unknown>
+    return 'data' in obj && 'meta' in obj && !('success' in obj)
   }
 
   private isPaginated(value: unknown): boolean {
