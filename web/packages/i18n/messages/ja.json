@@ -72,6 +72,19 @@
     "unauthorized": "セッションが期限切れです。再度ログインしてください。",
     "notFound": "データが見つかりません。"
   },
+  "support": {
+    "assignee": {
+      "assign": "担当者を割り当て",
+      "searchPlaceholder": "サポート担当者を検索...",
+      "clear": "割り当てを解除",
+      "loading": "サポート担当者を読み込み中...",
+      "loadError": "サポート担当者を読み込めません。",
+      "retry": "再試行",
+      "empty": "利用可能なサポート担当者がいません。",
+      "noResults": "サポート担当者が見つかりません。",
+      "assignError": "チケットを割り当てできません"
+    }
+  },
   "locale": {
     "vi": "Tiếng Việt",
     "en": "English",

@@ -72,6 +72,19 @@
     "unauthorized": "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
     "notFound": "Không tìm thấy dữ liệu."
   },
+  "support": {
+    "assignee": {
+      "assign": "Phân công",
+      "searchPlaceholder": "Tìm người hỗ trợ...",
+      "clear": "Bỏ phân công",
+      "loading": "Đang tải người hỗ trợ...",
+      "loadError": "Không thể tải danh sách người hỗ trợ.",
+      "retry": "Thử lại",
+      "empty": "Chưa có người hỗ trợ khả dụng.",
+      "noResults": "Không tìm thấy người hỗ trợ.",
+      "assignError": "Không thể phân công ticket"
+    }
+  },
   "locale": {
     "vi": "Tiếng Việt",
     "en": "English",

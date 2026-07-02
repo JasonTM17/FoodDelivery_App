@@ -72,6 +72,19 @@
     "unauthorized": "Session expired. Please sign in again.",
     "notFound": "Data not found."
   },
+  "support": {
+    "assignee": {
+      "assign": "Assign",
+      "searchPlaceholder": "Search support agents...",
+      "clear": "Clear assignment",
+      "loading": "Loading support agents...",
+      "loadError": "Unable to load support agents.",
+      "retry": "Retry",
+      "empty": "No support agents available.",
+      "noResults": "No support agents found.",
+      "assignError": "Unable to assign ticket"
+    }
+  },
   "locale": {
     "vi": "Tiếng Việt",
     "en": "English",

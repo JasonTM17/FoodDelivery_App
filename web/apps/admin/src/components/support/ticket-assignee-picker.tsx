@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import {
   Popover,
   PopoverContent,
@@ -10,16 +12,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Check, Search, UserCheck, Users } from 'lucide-react';
+import { Check, Loader2, RotateCcw, Search, UserCheck, Users } from 'lucide-react';
+import { apiGet } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+interface SupportAgentResponse {
+  id: string;
+  fullName: string | null;
+  email: string;
+}
 
 interface Agent {
   id: string;
   name: string;
   email: string;
-  role: string;
-  ticketCount: number;
 }
 
 interface TicketAssigneePickerProps {
@@ -29,12 +35,13 @@ interface TicketAssigneePickerProps {
   className?: string;
 }
 
-const MOCK_AGENTS: Agent[] = [
-  { id: 'agent_1', name: 'Nguyễn Văn A', email: 'a@foodflow.vn', role: 'Trưởng nhóm', ticketCount: 5 },
-  { id: 'agent_2', name: 'Trần Thị B', email: 'b@foodflow.vn', role: 'Hỗ trợ viên', ticketCount: 12 },
-  { id: 'agent_3', name: 'Lê Văn C', email: 'c@foodflow.vn', role: 'Hỗ trợ viên', ticketCount: 3 },
-  { id: 'agent_pool', name: 'Tổ hỗ trợ', email: 'support@foodflow.vn', role: 'Nhóm', ticketCount: 0 },
-];
+function toAgent(agent: SupportAgentResponse): Agent {
+  return {
+    id: agent.id,
+    name: agent.fullName?.trim() || agent.email,
+    email: agent.email,
+  };
+}
 
 export default function TicketAssigneePicker({
   currentAssignee,
@@ -42,17 +49,27 @@ export default function TicketAssigneePicker({
   onAssign,
   className,
 }: TicketAssigneePickerProps) {
+  const t = useTranslations('support.assignee');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState('');
 
-  const filtered = MOCK_AGENTS.filter(
-    (a) =>
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.email.toLowerCase().includes(search.toLowerCase()) ||
-      a.role.toLowerCase().includes(search.toLowerCase())
-  );
+  const agentsQuery = useQuery({
+    queryKey: ['support-agents'],
+    queryFn: () => apiGet<SupportAgentResponse[]>('/admin/support-agents'),
+    enabled: open,
+  });
+
+  const agents = useMemo(() => (agentsQuery.data ?? []).map(toAgent), [agentsQuery.data]);
+  const normalizedSearch = search.trim().toLowerCase();
+  const filtered = agents.filter((agent) => {
+    if (!normalizedSearch) return true;
+    return (
+      agent.name.toLowerCase().includes(normalizedSearch) ||
+      agent.email.toLowerCase().includes(normalizedSearch)
+    );
+  });
 
   const handleAssign = async (agentId: string | null) => {
     setAssigning(true);
@@ -61,7 +78,7 @@ export default function TicketAssigneePicker({
       await onAssign(agentId);
       setOpen(false);
     } catch (err) {
-      setAssignError((err as { message?: string }).message || 'Không thể phân công ticket');
+      setAssignError((err as { message?: string }).message || t('assignError'));
     } finally {
       setAssigning(false);
     }
@@ -77,7 +94,7 @@ export default function TicketAssigneePicker({
           data-testid="assignee-picker-trigger"
         >
           <UserCheck className="h-4 w-4" />
-          {currentAssigneeName || 'Phân công'}
+          {currentAssigneeName || t('assign')}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start">
@@ -85,10 +102,10 @@ export default function TicketAssigneePicker({
           <div className="relative">
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Tìm người hỗ trợ..."
+              placeholder={t('searchPlaceholder')}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-sm"
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-8 pl-8 text-sm"
               autoFocus
             />
           </div>
@@ -98,54 +115,68 @@ export default function TicketAssigneePicker({
             {currentAssignee && (
               <button
                 type="button"
-                className="w-full rounded-md p-2 text-left text-sm text-muted-foreground hover:bg-accent transition-colors"
+                className="w-full rounded-md p-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent"
                 onClick={() => handleAssign(null)}
                 disabled={assigning}
               >
                 <Users className="mr-2 inline h-4 w-4" />
-                Bỏ phân công
+                {t('clear')}
               </button>
             )}
-            {filtered.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">Không tìm thấy</p>
-            ) : (
-              filtered.map((agent) => {
-                const isActive = currentAssignee === agent.id;
-                return (
-                  <button
-                    key={agent.id}
-                    type="button"
-                    className={cn(
-                      'w-full flex items-center gap-3 rounded-md p-2 text-left hover:bg-accent transition-colors',
-                      isActive && 'bg-primary/5'
-                    )}
-                    onClick={() => handleAssign(agent.id)}
-                    disabled={assigning}
-                    data-testid={`assignee-${agent.id}`}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="text-xs">
-                        {agent.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium truncate">{agent.name}</span>
-                        {isActive && <Check className="h-3.5 w-3.5 text-primary" />}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{agent.role}</span>
-                        {agent.ticketCount > 0 && (
-                          <Badge variant="outline" className="text-[10px] py-0 h-4">
-                            {agent.ticketCount} ticket
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })
+            {agentsQuery.isLoading && (
+              <p className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t('loading')}
+              </p>
             )}
+            {agentsQuery.isError && (
+              <div className="space-y-2 px-3 py-5 text-center">
+                <p className="text-sm text-destructive">{t('loadError')}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => agentsQuery.refetch()}
+                >
+                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                  {t('retry')}
+                </Button>
+              </div>
+            )}
+            {!agentsQuery.isLoading && !agentsQuery.isError && filtered.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                {agents.length === 0 ? t('empty') : t('noResults')}
+              </p>
+            ) : null}
+            {!agentsQuery.isLoading && !agentsQuery.isError && filtered.map((agent) => {
+              const isActive = currentAssignee === agent.id;
+              return (
+                <button
+                  key={agent.id}
+                  type="button"
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent',
+                    isActive && 'bg-primary/5',
+                  )}
+                  onClick={() => handleAssign(agent.id)}
+                  disabled={assigning}
+                  data-testid={`assignee-${agent.id}`}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {agent.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">{agent.name}</span>
+                      {isActive && <Check className="h-3.5 w-3.5 text-primary" />}
+                    </div>
+                    <p className="truncate text-xs text-muted-foreground">{agent.email}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </ScrollArea>
         {assignError && <p className="border-t px-3 py-2 text-xs text-destructive">{assignError}</p>}
