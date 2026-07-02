@@ -174,6 +174,29 @@
       "back": "Back to menu",
       "submitError": "Could not add the item. Please try again."
     },
+    "editPage": {
+      "title": "Edit item",
+      "description": "Update menu item information",
+      "back": "Back to menu",
+      "loadError": "Could not load the item",
+      "saveError": "Could not save. Please try again.",
+      "categoryPlaceholder": "E.g. Main dishes",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "allergens": {
+        "label": "Allergens",
+        "options": {
+          "gluten": "Gluten",
+          "dairy": "Dairy",
+          "eggs": "Eggs",
+          "nuts": "Nuts",
+          "peanuts": "Peanuts",
+          "soy": "Soy",
+          "fish": "Fish",
+          "shellfish": "Shellfish"
+        }
+      }
+    },
     "form": {
       "name": "Item name *",
       "namePlaceholder": "E.g. rare beef pho",

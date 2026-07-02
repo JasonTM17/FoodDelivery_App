@@ -174,6 +174,29 @@
       "back": "メニューに戻る",
       "submitError": "商品を追加できませんでした。もう一度お試しください。"
     },
+    "editPage": {
+      "title": "商品を編集",
+      "description": "メニュー商品の情報を更新します",
+      "back": "メニューに戻る",
+      "loadError": "商品を読み込めません",
+      "saveError": "保存できませんでした。もう一度お試しください。",
+      "categoryPlaceholder": "例: メイン",
+      "cancel": "キャンセル",
+      "save": "変更を保存",
+      "allergens": {
+        "label": "アレルゲン",
+        "options": {
+          "gluten": "グルテン",
+          "dairy": "乳製品",
+          "eggs": "卵",
+          "nuts": "ナッツ",
+          "peanuts": "ピーナッツ",
+          "soy": "大豆",
+          "fish": "魚",
+          "shellfish": "甲殻類"
+        }
+      }
+    },
     "form": {
       "name": "商品名 *",
       "namePlaceholder": "例: 牛肉フォー",

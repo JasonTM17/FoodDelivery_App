@@ -1,17 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft, UtensilsCrossed } from 'lucide-react';
 import { MenuItemOptionsBuilder } from '@/components/menu/menu-item-options-builder';
 import { MenuItemPhotoUpload } from '@/components/menu/menu-item-photo-upload';
 import { MenuItemAvailabilityToggle } from '@/components/menu/menu-item-availability-toggle';
 import { api } from '@/lib/api';
 import type { MenuItem, MenuItemOption } from '@/lib/types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-const ALLERGEN_LIST = ['Gluten', 'Dairy', 'Eggs', 'Nuts', 'Peanuts', 'Soy', 'Fish', 'Shellfish'];
+import { MenuItemAllergenPicker } from './menu-item-allergen-picker';
 
 interface MenuItemEditorProps {
   id: string;
@@ -19,9 +17,9 @@ interface MenuItemEditorProps {
 
 export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('menu.editPage');
+  const tForm = useTranslations('menu.form');
 
-  const [item, setItem] = useState<Partial<MenuItem>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +38,6 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
     api
       .get<MenuItem & { allergens?: string[] }>(`/restaurant/menu/items/${id}`)
       .then((data) => {
-        setItem(data);
         setName(data.name);
         setDescription(data.description);
         setPrice(data.price.toString());
@@ -55,10 +52,10 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         }
       })
       .catch((err: unknown) =>
-        setError((err as { message?: string }).message || 'Không thể tải món')
+        setError((err as { message?: string }).message || t('loadError'))
       )
       .finally(() => setIsLoading(false));
-  }, [id]);
+  }, [id, t]);
 
   const toggleAllergen = (allergen: string) =>
     setAllergens((prev) =>
@@ -67,8 +64,8 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { setError('Vui lòng nhập tên món'); return; }
-    if (!price || parseFloat(price) <= 0) { setError('Vui lòng nhập giá hợp lệ'); return; }
+    if (!name.trim()) { setError(tForm('errors.nameRequired')); return; }
+    if (!price || parseFloat(price) <= 0) { setError(tForm('errors.priceInvalid')); return; }
     setIsSubmitting(true);
     setError('');
     try {
@@ -86,7 +83,7 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
       });
       router.push('/menu');
     } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Không thể lưu. Vui lòng thử lại.');
+      setError((err as { message?: string }).message || t('saveError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -96,9 +93,9 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
 
   return (
     <div>
-      <button onClick={() => router.push('/menu')} className="btn-ghost mb-4 -ml-2">
+      <button type="button" onClick={() => router.push('/menu')} className="btn-ghost mb-4 -ml-2">
         <ArrowLeft className="h-4 w-4 mr-1.5" />
-        Quay lại thực đơn
+        {t('back')}
       </button>
 
       <div className="flex items-center gap-3 mb-6">
@@ -106,8 +103,8 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
           <UtensilsCrossed className="h-5 w-5 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Chỉnh sửa món</h1>
-          <p className="text-sm text-gray-500">Cập nhật thông tin món ăn</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-sm text-gray-500">{t('description')}</p>
         </div>
       </div>
 
@@ -121,17 +118,17 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="label">Tên món *</label>
+              <label className="label">{tForm('name')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="input-field"
-                placeholder="VD: Phở bò tái chín"
+                placeholder={tForm('namePlaceholder')}
               />
             </div>
             <div className="md:col-span-2">
-              <label className="label">Mô tả</label>
+              <label className="label">{tForm('description')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -140,7 +137,7 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
               />
             </div>
             <div>
-              <label className="label">Giá *</label>
+              <label className="label">{tForm('price')}</label>
               <input
                 type="number"
                 value={price}
@@ -150,24 +147,21 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
               />
             </div>
             <div>
-              <label className="label">Danh mục</label>
+              <label className="label">{tForm('category')}</label>
               <input
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="input-field"
-                placeholder="VD: Món chính"
+                placeholder={t('categoryPlaceholder')}
               />
             </div>
           </div>
 
-          {/* Photo upload - new component */}
           <MenuItemPhotoUpload value={image} onChange={setImage} />
 
-          {/* Options builder - new component */}
           <MenuItemOptionsBuilder options={options} onChange={setOptions} />
 
-          {/* Availability toggle - new component replaces simple checkbox */}
           <MenuItemAvailabilityToggle
             mode={availabilityMode}
             onModeChange={setAvailabilityMode}
@@ -175,33 +169,14 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
             onScheduleChange={setSchedule}
           />
 
-          {/* Allergens */}
-          <div>
-            <label className="label">Chất gây dị ứng</label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {ALLERGEN_LIST.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => toggleAllergen(a)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    allergens.includes(a)
-                      ? 'bg-orange-100 border-orange-300 text-orange-700'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
-          </div>
+          <MenuItemAllergenPicker allergens={allergens} onToggle={toggleAllergen} />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button type="button" onClick={() => router.push('/menu')} className="btn-ghost">
-              Huỷ
+              {t('cancel')}
             </button>
             <button type="submit" disabled={isSubmitting} className="btn-primary">
-              {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+              {isSubmitting ? tForm('saving') : t('save')}
             </button>
           </div>
         </form>
