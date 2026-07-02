@@ -1126,6 +1126,108 @@ components:
             integrations: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
       required: [sections]
 
+    AiMonitorStatus:
+      type: string
+      enum: [online, degraded, not_configured]
+
+    AdminAiMonitorOverview:
+      type: object
+      properties:
+        instance:
+          type: object
+          properties:
+            status: { $ref: "#/components/schemas/AiMonitorStatus" }
+            dashboardUrl: { type: string, nullable: true }
+            degradedReason: { type: string, nullable: true }
+          required: [status, dashboardUrl, degradedReason]
+        workflows:
+          type: array
+          items: { $ref: "#/components/schemas/AdminAiMonitorWorkflow" }
+        executions:
+          type: array
+          items: { $ref: "#/components/schemas/AdminAiMonitorExecution" }
+        stats: { $ref: "#/components/schemas/AdminAiMonitorStats" }
+      required: [instance, workflows, executions, stats]
+
+    AdminAiMonitorWorkflow:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { $ref: "#/components/schemas/AiMonitorStatus" }
+        lastRunAt: { type: string, format: date-time, nullable: true }
+        runs: { type: integer, nullable: true }
+      required: [id, name, status, lastRunAt, runs]
+
+    AdminAiMonitorExecution:
+      type: object
+      properties:
+        id: { type: string }
+        workflowName: { type: string }
+        trigger: { type: string, nullable: true }
+        durationMs: { type: integer, nullable: true }
+        status: { type: string, enum: [success, error, running] }
+        startedAt: { type: string, format: date-time, nullable: true }
+      required: [id, workflowName, trigger, durationMs, status, startedAt]
+
+    AdminAiMonitorRun:
+      type: object
+      properties:
+        id: { type: string }
+        workflowName: { type: string }
+        trigger: { type: string }
+        status: { type: string, enum: [success, error, running] }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time, nullable: true }
+        durationMs: { type: integer, nullable: true }
+        inputData:
+          type: object
+          additionalProperties: true
+          nullable: true
+        outputData:
+          type: object
+          additionalProperties: true
+          nullable: true
+        errorMessage: { type: string, nullable: true }
+        executionId: { type: string }
+      required:
+        - id
+        - workflowName
+        - trigger
+        - status
+        - startedAt
+        - finishedAt
+        - durationMs
+        - inputData
+        - outputData
+        - errorMessage
+        - executionId
+
+    AdminAiMonitorStats:
+      type: object
+      properties:
+        totalConversations: { type: integer, nullable: true }
+        selfResolved: { type: integer, nullable: true }
+        escalated: { type: integer, nullable: true }
+        resolutionRate: { type: number, nullable: true }
+        costTodayUsd: { type: number, nullable: true }
+        budgetTodayUsd: { type: number, nullable: true }
+        inputTokens: { type: integer, nullable: true }
+        outputTokens: { type: integer, nullable: true }
+        requests: { type: integer, nullable: true }
+        averageLatencyMs: { type: integer, nullable: true }
+      required:
+        - totalConversations
+        - selfResolved
+        - escalated
+        - resolutionRate
+        - costTodayUsd
+        - budgetTodayUsd
+        - inputTokens
+        - outputTokens
+        - requests
+        - averageLatencyMs
+
     AiChatRequest:
       type: object
       properties:
@@ -2799,6 +2901,47 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
         "400": { description: "Unsupported section", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/ai-monitor:
+    get:
+      tags: [ai]
+      summary: Get AI/N8N monitor overview
+      description: Returns real monitor state when configured; otherwise returns explicit degraded/not-configured state with no fabricated workflow, cost, token, or execution metrics.
+      operationId: admin_aiMonitor_getOverview
+      x-foo-actor: admin
+      responses:
+        "200":
+          description: "AI monitor overview"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminAiMonitorOverview" }
+
+  /admin/ai-monitor/runs/{runId}:
+    get:
+      tags: [ai]
+      summary: Get AI/N8N workflow run detail
+      description: Returns a workflow run only when real monitor telemetry is available; unknown runs return a problem detail instead of fabricated details.
+      operationId: admin_aiMonitor_getRun
+      x-foo-actor: admin
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: "Workflow run detail when real monitor telemetry is available"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminAiMonitorRun" }
+        "404": { description: "Run not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /ai/chat:
     post:

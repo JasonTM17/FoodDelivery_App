@@ -105,6 +105,63 @@ export interface AdminSettingsPayload {
   sections: Partial<Record<AdminSettingsSection, AdminSettingsSectionResponse>>;
 }
 
+export type AiMonitorStatus = 'online' | 'degraded' | 'not_configured';
+
+export interface AdminAiMonitorOverview {
+  instance: {
+    status: AiMonitorStatus;
+    dashboardUrl: string | null;
+    degradedReason: string | null;
+  };
+  workflows: AdminAiMonitorWorkflow[];
+  executions: AdminAiMonitorExecution[];
+  stats: AdminAiMonitorStats;
+}
+
+export interface AdminAiMonitorWorkflow {
+  id: string;
+  name: string;
+  status: AiMonitorStatus;
+  lastRunAt: string | null;
+  runs: number | null;
+}
+
+export interface AdminAiMonitorExecution {
+  id: string;
+  workflowName: string;
+  trigger: string | null;
+  durationMs: number | null;
+  status: 'success' | 'error' | 'running';
+  startedAt: string | null;
+}
+
+export interface AdminAiMonitorRun {
+  id: string;
+  workflowName: string;
+  trigger: string;
+  status: 'success' | 'error' | 'running';
+  startedAt: string;
+  finishedAt: string | null;
+  durationMs: number | null;
+  inputData: Record<string, unknown> | null;
+  outputData: Record<string, unknown> | null;
+  errorMessage: string | null;
+  executionId: string;
+}
+
+export interface AdminAiMonitorStats {
+  totalConversations: number | null;
+  selfResolved: number | null;
+  escalated: number | null;
+  resolutionRate: number | null;
+  costTodayUsd: number | null;
+  budgetTodayUsd: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  requests: number | null;
+  averageLatencyMs: number | null;
+}
+
 export interface AiChatRequest {
   message: string;
   sessionId?: string;
