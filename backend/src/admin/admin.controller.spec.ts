@@ -18,7 +18,7 @@ describe('AdminController', () => {
       activeDrivers: 5, totalUsers: 50, totalRestaurants: 20,
       orderByStatus: {}, recentOrders: [],
     }),
-    getOrders: jest.fn().mockResolvedValue({ orders: [], meta: { page: 1, limit: 20, total: 0 } }),
+    getOrders: jest.fn().mockResolvedValue({ data: [], meta: { page: 1, limit: 20, total: 0 } }),
     getUsers: jest.fn().mockResolvedValue({ users: [], meta: { page: 1, limit: 20, total: 0 } }),
     toggleUserStatus: jest.fn().mockResolvedValue({ id: 'u1', isActive: false }),
     getRestaurants: jest.fn().mockResolvedValue({ restaurants: [], meta: { page: 1, limit: 20, total: 0 } }),

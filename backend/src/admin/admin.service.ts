@@ -47,15 +47,46 @@ export class AdminService {
       this.prisma.order.findMany({
         where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
         include: {
-          restaurant: { select: { name: true } },
+          restaurant: { select: { id: true, name: true, addressLine: true } },
           customer: { select: { id: true, fullName: true, phone: true } },
-          driver: { select: { id: true, fullName: true } },
-          payment: true,
+          driver: { select: { id: true, fullName: true, phone: true } },
+          deliveryAddress: { select: { addressLine: true } },
+          orderItems: { select: { nameSnapshot: true, quantity: true, unitPrice: true } },
         },
       }),
       this.prisma.order.count({ where }),
     ])
-    return { orders, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    return {
+      data: orders.map(order => ({
+        ...order,
+        total: Number(order.total),
+        deliveryFee: Number(order.deliveryFee),
+        discount: Number(order.promotionDiscount),
+        note: order.notes ?? '',
+        deliveryAddress: order.deliveryAddress.addressLine,
+        customer: {
+          id: order.customer.id,
+          name: order.customer.fullName,
+          phone: order.customer.phone ?? '',
+        },
+        restaurant: {
+          id: order.restaurant.id,
+          name: order.restaurant.name,
+          address: order.restaurant.addressLine,
+        },
+        driver: order.driver ? {
+          id: order.driver.id,
+          name: order.driver.fullName,
+          phone: order.driver.phone ?? '',
+        } : null,
+        items: order.orderItems.map(item => ({
+          name: item.nameSnapshot,
+          quantity: item.quantity,
+          price: Number(item.unitPrice),
+        })),
+      })),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
   }
 
   async getUsers(params: { role?: string; page?: number; limit?: number }) {
