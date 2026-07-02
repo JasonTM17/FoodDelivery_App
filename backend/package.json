@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "FoodFlow API Server",
   "private": true,
+  "packageManager": "pnpm@10.0.0",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -57,6 +58,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@types/jsonwebtoken": "9.0.10",
     "jsonwebtoken": "9.0.3",
     "@nestjs/cli": "^11.0.14",
@@ -67,12 +69,14 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.1",
     "@types/passport-jwt": "^4.0.1",
+    "eslint": "^9.39.4",
     "jest": "^30.2.0",
     "prisma": "^6.6.0",
     "socket.io-client": "^4.8.1",
     "supertest": "^7.1.0",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.62.1",
     "typescript": "^5.9.3"
   }
 }
