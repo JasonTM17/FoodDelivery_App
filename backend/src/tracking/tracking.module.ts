@@ -7,11 +7,13 @@ import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
 import { EtaRecomputeProcessor } from './eta-recompute.processor'
 import { RedisModule } from '../redis/redis.module'
+import { OrdersModule } from '../orders/orders.module'
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: 'tracking-eta' }),
     RedisModule,
+    OrdersModule,
   ],
   providers: [
     TrackingGateway,

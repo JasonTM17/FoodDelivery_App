@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io'
 import { TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
+import { OrdersGateway } from '../orders/orders.gateway'
 
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
 export class TrackingGateway {
@@ -14,6 +15,7 @@ export class TrackingGateway {
   constructor(
     private readonly trackingService: TrackingService,
     private readonly prisma: PrismaService,
+    private readonly ordersGateway: OrdersGateway,
   ) {}
 
   @SubscribeMessage('driver:location')
@@ -51,9 +53,16 @@ export class TrackingGateway {
       bearing: data.bearing, timestamp: new Date().toISOString(),
     })
 
-    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', {
-      driverId, lat: data.lat, lng: data.lng, orderId,
-    })
+    const adminEvent = {
+      driverId,
+      lat: data.lat,
+      lng: data.lng,
+      orderId,
+      status: orderId ? 'delivering' as const : 'online' as const,
+      timestamp: new Date().toISOString(),
+    }
+    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', adminEvent)
+    this.ordersGateway.notifyAdminDriverLocation(adminEvent)
 
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
