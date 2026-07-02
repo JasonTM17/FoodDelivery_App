@@ -48,7 +48,7 @@ export default function SettingsPage() {
         setRestaurant(data);
         setName(data.name);
         setDescription(data.description || '');
-        setAddress(data.address);
+        setAddress(data.address ?? data.addressLine ?? '');
         setPhone(data.phone);
         setOpeningHours(data.openingHours);
       } catch (err: unknown) {
@@ -78,7 +78,7 @@ export default function SettingsPage() {
       const updated = await api.patch<Restaurant>('/restaurant/profile', {
         name,
         description,
-        address,
+        addressLine: address,
         phone,
         openingHours,
       });

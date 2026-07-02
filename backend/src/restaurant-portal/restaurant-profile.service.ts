@@ -42,6 +42,10 @@ export class RestaurantProfileService {
     return this.get(userId)
   }
 
+  getMembership(userId: string) {
+    return this.access.getProfile(userId)
+  }
+
   private serialize(profile: Awaited<ReturnType<RestaurantProfileService['loadForSerialization']>>) {
     const { restaurant, ...membership } = profile
     return {

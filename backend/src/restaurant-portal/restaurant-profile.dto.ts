@@ -45,6 +45,16 @@ export class UpdateRestaurantProfileDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
+  addressLine?: string
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  cuisineTypes?: string[]
+
+  @IsOptional()
+  @IsString()
   @MaxLength(500)
   logoUrl?: string
 

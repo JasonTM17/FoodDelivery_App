@@ -63,7 +63,7 @@ export default function CategoriesPage() {
   const handleUpdate = async (id: string) => {
     if (!editName.trim()) return;
     try {
-      await api.put(`/restaurant/menu/categories/${id}`, { name: editName.trim(), icon: editIcon });
+      await api.patch(`/restaurant/menu/categories/${id}`, { name: editName.trim(), icon: editIcon });
       setCategories((prev) => prev.map((c) => c.id === id ? { ...c, name: editName.trim(), icon: editIcon } : c));
       setEditingId(null);
     } catch (err: unknown) {

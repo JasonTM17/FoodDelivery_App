@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { NotificationsModule } from '../notifications/notifications.module'
+import { StorageModule } from '../storage/storage.module'
 import { RestaurantAccessService } from './restaurant-access.service'
 import { RestaurantAnalyticsController } from './restaurant-analytics.controller'
 import { RestaurantDashboardService } from './restaurant-dashboard.service'
@@ -14,7 +15,7 @@ import { RestaurantStaffController } from './restaurant-staff.controller'
 import { RestaurantStaffService } from './restaurant-staff.service'
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, StorageModule],
   controllers: [
     RestaurantProfileController,
     RestaurantAnalyticsController,

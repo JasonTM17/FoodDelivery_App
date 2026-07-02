@@ -436,6 +436,12 @@ components:
                   closeTime: { type: string, description: "HH:mm" }
                   isClosed:  { type: boolean }
 
+    ImageUploadResult:
+      type: object
+      properties:
+        url: { type: string, format: uri }
+      required: [url]
+
     MenuCategory:
       type: object
       properties:
@@ -1682,6 +1688,35 @@ paths:
   # ═══════════════════════════════════════════════
   # MENU (restaurant owner)
   # ═══════════════════════════════════════════════
+
+  /restaurant/profile/upload:
+    post:
+      tags: [menu]
+      summary: Upload a restaurant profile image
+      description: Uploads a logo or cover image for the authenticated restaurant tenant through the shared storage service.
+      operationId: restaurant_profile_uploadImage
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+              required: [file]
+      responses:
+        "201":
+          description: "Uploaded image URL"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/ImageUploadResult" }
+        "400": { description: "Missing or invalid image", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /restaurant/menu:
     get:
