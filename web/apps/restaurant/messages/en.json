@@ -369,6 +369,60 @@
         "saving": "Saving...",
         "save": "Save profile"
       }
+    },
+    "hoursEditor": {
+      "title": "Opening hours",
+      "description": "Set the weekly opening schedule",
+      "loadError": "Could not load opening hours",
+      "saveSuccess": "Opening hours saved",
+      "saveError": "Could not save opening hours",
+      "save": "Save schedule",
+      "saving": "Saving...",
+      "retry": "Retry",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "weekly": {
+        "title": "Weekly schedule",
+        "open": "Open",
+        "closed": "Closed",
+        "openTime": "{day} opening time",
+        "closeTime": "{day} closing time",
+        "copyAll": "Apply to all"
+      },
+      "holidays": {
+        "title": "Holiday closures",
+        "description": "Special closure dates will unlock when the backend has a persistence schema for them.",
+        "dateLabel": "Closure date",
+        "reasonLabel": "Closure reason",
+        "reasonPlaceholder": "Reason",
+        "add": "Add",
+        "degraded": "The backend does not support restaurant holiday closures yet. This section is locked to avoid fake saves or lost configuration."
+      },
+      "preview": {
+        "title": "This week preview",
+        "closed": "Closed",
+        "shortDays": {
+          "monday": "Mon",
+          "tuesday": "Tue",
+          "wednesday": "Wed",
+          "thursday": "Thu",
+          "friday": "Fri",
+          "saturday": "Sat",
+          "sunday": "Sun"
+        }
+      },
+      "errorBoundary": {
+        "title": "Could not load opening hours",
+        "description": "Something went wrong. Please try again later.",
+        "retry": "Retry"
+      }
     }
   },
   "settingsProfile": {

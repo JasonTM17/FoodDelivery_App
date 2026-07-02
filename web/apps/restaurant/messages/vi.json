@@ -369,6 +369,60 @@
         "saving": "Đang lưu...",
         "save": "Lưu hồ sơ"
       }
+    },
+    "hoursEditor": {
+      "title": "Giờ hoạt động",
+      "description": "Thiết lập lịch mở cửa hàng tuần",
+      "loadError": "Không thể tải lịch hoạt động",
+      "saveSuccess": "Đã lưu lịch hoạt động",
+      "saveError": "Không thể lưu lịch hoạt động",
+      "save": "Lưu lịch",
+      "saving": "Đang lưu...",
+      "retry": "Thử lại",
+      "days": {
+        "monday": "Thứ Hai",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư",
+        "thursday": "Thứ Năm",
+        "friday": "Thứ Sáu",
+        "saturday": "Thứ Bảy",
+        "sunday": "Chủ Nhật"
+      },
+      "weekly": {
+        "title": "Lịch hàng tuần",
+        "open": "Mở cửa",
+        "closed": "Đóng cửa",
+        "openTime": "Giờ mở cửa {day}",
+        "closeTime": "Giờ đóng cửa {day}",
+        "copyAll": "Áp dụng tất cả"
+      },
+      "holidays": {
+        "title": "Lịch nghỉ lễ",
+        "description": "Ngày nghỉ đặc biệt sẽ được bật khi backend có schema lưu trữ tương ứng.",
+        "dateLabel": "Ngày nghỉ",
+        "reasonLabel": "Lý do nghỉ",
+        "reasonPlaceholder": "Lý do",
+        "add": "Thêm",
+        "degraded": "Backend hiện chưa hỗ trợ lưu lịch nghỉ lễ cho nhà hàng. Mục này được khoá để tránh lưu dữ liệu giả hoặc mất cấu hình."
+      },
+      "preview": {
+        "title": "Xem trước tuần này",
+        "closed": "Đóng",
+        "shortDays": {
+          "monday": "T2",
+          "tuesday": "T3",
+          "wednesday": "T4",
+          "thursday": "T5",
+          "friday": "T6",
+          "saturday": "T7",
+          "sunday": "CN"
+        }
+      },
+      "errorBoundary": {
+        "title": "Không thể tải lịch hoạt động",
+        "description": "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+        "retry": "Thử lại"
+      }
     }
   },
   "settingsProfile": {

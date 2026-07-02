@@ -369,6 +369,60 @@
         "saving": "保存中...",
         "save": "プロフィールを保存"
       }
+    },
+    "hoursEditor": {
+      "title": "営業時間",
+      "description": "週間の営業時間を設定します",
+      "loadError": "営業時間を読み込めません",
+      "saveSuccess": "営業時間を保存しました",
+      "saveError": "営業時間を保存できません",
+      "save": "スケジュールを保存",
+      "saving": "保存中...",
+      "retry": "再試行",
+      "days": {
+        "monday": "月曜日",
+        "tuesday": "火曜日",
+        "wednesday": "水曜日",
+        "thursday": "木曜日",
+        "friday": "金曜日",
+        "saturday": "土曜日",
+        "sunday": "日曜日"
+      },
+      "weekly": {
+        "title": "週間スケジュール",
+        "open": "営業",
+        "closed": "休業",
+        "openTime": "{day}の開店時間",
+        "closeTime": "{day}の閉店時間",
+        "copyAll": "すべてに適用"
+      },
+      "holidays": {
+        "title": "祝日・特別休業",
+        "description": "特別休業日は、バックエンドに保存用スキーマが追加された後に有効になります。",
+        "dateLabel": "休業日",
+        "reasonLabel": "休業理由",
+        "reasonPlaceholder": "理由",
+        "add": "追加",
+        "degraded": "バックエンドはまだ店舗別の特別休業日保存に対応していません。偽の保存や設定消失を避けるため、この項目はロックされています。"
+      },
+      "preview": {
+        "title": "今週のプレビュー",
+        "closed": "休業",
+        "shortDays": {
+          "monday": "月",
+          "tuesday": "火",
+          "wednesday": "水",
+          "thursday": "木",
+          "friday": "金",
+          "saturday": "土",
+          "sunday": "日"
+        }
+      },
+      "errorBoundary": {
+        "title": "営業時間を読み込めません",
+        "description": "エラーが発生しました。しばらくしてからもう一度お試しください。",
+        "retry": "再試行"
+      }
     }
   },
   "settingsProfile": {
