@@ -77,8 +77,8 @@ foodflow/
 │   └── prisma/            # Schema, migrations, seeds
 ├── web/                   # Next.js Turborepo
 │   ├── apps/
-│   │   ├── admin/         # Admin dashboard (port 3002)
-│   │   └── restaurant/    # Restaurant dashboard (port 3003)
+│   │   ├── admin/         # Admin dashboard (port 3000)
+│   │   └── restaurant/    # Restaurant dashboard (port 3002)
 │   └── packages/
 │       └── ui/            # Shared UI component library
 ├── mobile/                # Flutter monorepo
@@ -170,8 +170,8 @@ pnpm install
 
 # Start both dashboards in development mode
 pnpm dev
-# Admin:      http://localhost:3002
-# Restaurant: http://localhost:3003
+# Admin:      http://localhost:3000
+# Restaurant: http://localhost:3002
 
 # Run type checking across the monorepo
 pnpm typecheck

@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/web-Next.js-black?logo=next.js" alt="Web">
   <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
   <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
-  <img src="https://img.shields.io/badge/ai-N8N%2BGemini-18e46a" alt="AI">
+  <img src="https://img.shields.io/badge/ai-DeepSeek%2FN8N-18e46a" alt="AI">
   <img src="https://img.shields.io/docker/v/nguyenson1710/foodflow-backend?label=backend&logo=docker" alt="Docker">
   <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
 </p>
@@ -19,7 +19,7 @@ Hệ thống giao đồ ăn thời gian thực gồm 4 ứng dụng: Customer Ap
 - **Tài xế**: Nhận đơn, GPS background, navigation, xem thu nhập
 - **Nhà hàng**: Nhận đơn realtime, quản lý menu, xem doanh thu
 - **Admin**: Dashboard KPI, bản đồ tài xế realtime, quản lý user/nhà hàng/khuyến mãi, audit log
-- **AI Assistant**: Chat hỗ trợ khách (N8N + Gemini), phát hiện đơn trễ, báo cáo hàng ngày
+- **AI Assistant**: Chat hỗ trợ khách (DeepSeek trực tiếp hoặc legacy N8N + Gemini), phát hiện đơn trễ, báo cáo hàng ngày
 - **Realtime**: WebSocket GPS tracking, Socket.IO Redis adapter, throttled broadcast
 
 ## Kiến trúc

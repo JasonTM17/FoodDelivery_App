@@ -25,7 +25,9 @@ All required vars documented in `.env.example`. Production must override:
 - `MINIO_SECRET_KEY` — min 8 chars
 - `POSTGRES_PASSWORD` — strong password
 - `GOOGLE_MAPS_API_KEY` — Google Cloud Console
-- `GEMINI_API_KEY` — Google AI Studio
+- `DEEPSEEK_API_KEY` — DeepSeek chatbot provider key; keep only in the deployment secret store
+- `DEEPSEEK_MODEL` — default `deepseek-v4-flash` unless the provider contract changes
+- `GEMINI_API_KEY` — Google AI Studio for legacy N8N/Gemini workflows
 
 ## Docker Hub
 

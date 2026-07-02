@@ -10,8 +10,8 @@ These dashboards are frontend-only consumers. They call the backend REST API and
 
 | Dashboard | Port | URL | Primary Users |
 |-----------|------|-----|---------------|
-| Admin | 3002 | `http://localhost:3002` | Platform administrators |
-| Restaurant | 3003 | `http://localhost:3003` | Restaurant owners/staff |
+| Admin | 3000 | `http://localhost:3000` | Platform administrators |
+| Restaurant | 3002 | `http://localhost:3002` | Restaurant owners/staff |
 
 ### External API Dependencies
 
@@ -52,8 +52,8 @@ cp apps/restaurant/.env.example apps/restaurant/.env.local
 
 # 3. Start both dashboards (Turborepo parallel dev)
 pnpm dev
-# Admin:      http://localhost:3002
-# Restaurant: http://localhost:3003
+# Admin:      http://localhost:3000
+# Restaurant: http://localhost:3002
 
 # 4. Build for production
 pnpm build
@@ -96,7 +96,7 @@ Components are imported as `import { Button } from '@foodflow/ui'` in both apps.
 
 1. Verify backend is running: `curl http://localhost:3001/api/health`
 2. Check `NEXT_PUBLIC_API_URL` in `.env.local`
-3. Check CORS origins in backend `.env` include `http://localhost:3002` and `http://localhost:3003`
+3. Check CORS origins in backend `.env` include `http://localhost:3000` and `http://localhost:3002`
 
 ### Clearing Next.js Cache
 
