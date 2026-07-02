@@ -1,0 +1,46 @@
+name: OpenAPI Validate
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'docs/openapi.yaml'
+      - 'docs/openapi/.spectral.yaml'
+      - 'web/packages/api-client/**'
+      - 'web/pnpm-lock.yaml'
+      - 'web/pnpm-workspace.yaml'
+      - '.github/workflows/openapi-validate.yml'
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'docs/openapi.yaml'
+      - 'docs/openapi/.spectral.yaml'
+      - 'web/packages/api-client/**'
+      - 'web/pnpm-lock.yaml'
+      - 'web/pnpm-workspace.yaml'
+      - '.github/workflows/openapi-validate.yml'
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '10'
+
+      - name: Lint OpenAPI contract
+        run: pnpm dlx @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error
+
+      - name: Install web workspace dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check shared API client
+        working-directory: web
+        run: pnpm --filter @foodflow/api-client typecheck

@@ -290,7 +290,7 @@ components:
         isDefault: { type: boolean }
       required: [id, label, street, district, city, lat, lng]
       example:
-        id: "addr-001"
+        id: "11111111-1111-4111-8111-111111111111"
         label: "Nhà riêng"
         street: "123 Nguyễn Huệ"
         ward: "Phường Bến Nghé"
@@ -361,7 +361,7 @@ components:
         createdAt: { type: string, format: date-time }
       required: [id, amount, type, balanceAfter, createdAt]
       example:
-        id: "txn-001"
+        id: "22222222-2222-4222-8222-222222222222"
         amount: 200000
         type: "topup"
         reference: "sepay-ref-abc123"
@@ -398,7 +398,7 @@ components:
         minOrderAmount: { type: integer, description: "Minimum order amount in VND" }
       required: [id, name, slug, cuisineTypes, priceRange, rating, totalReviews, isOpen]
       example:
-        id: "rest-001"
+        id: "33333333-3333-4333-8333-333333333333"
         name: "Phở 24"
         slug: "pho-24"
         logoUrl: "https://cdn.foodflow.vn/restaurants/pho24-logo.png"
@@ -458,7 +458,7 @@ components:
           items: { $ref: "#/components/schemas/MenuItemOption" }
       required: [id, name, basePrice, isAvailable]
       example:
-        id: "item-001"
+        id: "44444444-4444-4444-8444-444444444444"
         name: "Phở bò tái chín"
         description: "Phở bò với thịt tái và chín, kèm rau thơm"
         imageUrl: "https://cdn.foodflow.vn/menu/pho-bo-tai-chin.jpg"
@@ -482,7 +482,7 @@ components:
               value:         { type: string }
               priceModifier: { type: integer, description: "Additional VND" }
       example:
-        id: "opt-001"
+        id: "55555555-5555-4555-8555-555555555555"
         name: "Size"
         isRequired: true
         isMultiple: false
@@ -502,7 +502,7 @@ components:
         createdAt:      { type: string, format: date-time }
       required: [id, foodRating, deliveryRating, customerName, createdAt]
       example:
-        id: "rev-001"
+        id: "ffffffff-ffff-4fff-8fff-ffffffffffff"
         foodRating: 5
         deliveryRating: 4
         comment: "Phở ngon, nước dùng đậm đà"
@@ -520,7 +520,7 @@ components:
         notes:         { type: string, maxLength: 500 }
       required: [addressId]
       example:
-        addressId: "addr-001"
+        addressId: "11111111-1111-4111-8111-111111111111"
         paymentMethod: "wallet"
         promotionCode: "WELCOME2026"
         notes: "Không hành, thêm ớt"
@@ -574,7 +574,7 @@ components:
         estimatedDelivery: { type: string, format: date-time }
       required: [id, status, subtotal, deliveryFee, total, paymentMethod, items, restaurant, createdAt]
       example:
-        id: "order-001"
+        id: "66666666-6666-4666-8666-666666666666"
         status: "preparing"
         subtotal: 130000
         deliveryFee: 15000
@@ -584,9 +584,9 @@ components:
         notes: "Không hành, thêm ớt"
         items:
           - { name: "Phở bò tái chín", quantity: 2, unitPrice: 65000, options: ["Size Lớn"], lineTotal: 130000 }
-        restaurant: { id: "rest-001", name: "Phở 24" }
+        restaurant: { id: "33333333-3333-4333-8333-333333333333", name: "Phở 24" }
         deliveryAddress:
-          id: "addr-001"
+          id: "11111111-1111-4111-8111-111111111111"
           label: "Nhà riêng"
           street: "123 Nguyễn Huệ"
           ward: "Phường Bến Nghé"
@@ -670,7 +670,7 @@ components:
         completedAt: { type: string, format: date-time }
       required: [orderId, status, earnings]
       example:
-        orderId: "order-001"
+        orderId: "66666666-6666-4666-8666-666666666666"
         status: "completed"
         earnings: 12000
         distanceKm: 2.3
@@ -721,8 +721,8 @@ components:
         createdAt:      { type: string, format: date-time }
       required: [id, orderId, amount, method, status, createdAt]
       example:
-        id: "pi-001"
-        orderId: "order-001"
+        id: "77777777-7777-4777-8777-777777777777"
+        orderId: "66666666-6666-4666-8666-666666666666"
         amount: 125000
         method: "wallet"
         status: "completed"
@@ -754,7 +754,7 @@ components:
         createdAt:     { type: string, format: date-time }
       required: [id, code, type, value, usageLimit, startsAt, expiresAt, isActive]
       example:
-        id: "promo-001"
+        id: "88888888-8888-4888-8888-888888888888"
         code: "WELCOME2026"
         type: "percentage"
         value: 20
@@ -823,7 +823,7 @@ components:
       required: [code, restaurantId, orderAmount]
       example:
         code: "WELCOME2026"
-        restaurantId: "rest-001"
+        restaurantId: "33333333-3333-4333-8333-333333333333"
         orderAmount: 200000
 
     PromotionValidateResult:
@@ -890,12 +890,12 @@ components:
         createdAt: { type: string, format: date-time }
       required: [id, title, body, type, isRead, createdAt]
       example:
-        id: "notif-001"
+        id: "99999999-9999-4999-8999-999999999999"
         title: "Đơn hàng #order-001 đang được chuẩn bị"
         body: "Nhà hàng Phở 24 đã nhận đơn và đang chế biến món ăn của bạn"
         type: "order_update"
         isRead: false
-        payload: { orderId: "order-001", event: "preparing" }
+        payload: { orderId: "66666666-6666-4666-8666-666666666666", event: "preparing" }
         createdAt: "2026-06-09T11:05:00Z"
 
     RegisterFcmTokenRequest:
@@ -932,15 +932,13 @@ components:
           items: { $ref: "#/components/schemas/TicketReply" }
       required: [id, subject, issueType, priority, status, userId, createdAt, updatedAt]
       example:
-        id: "ticket-001"
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
         subject: "Đơn hàng giao thiếu món"
         issueType: "missing_item"
         priority: "medium"
         status: "in_progress"
-        orderId: "order-001"
-        userId: "user-001"
-        resolutionNotes: null
-        csatScore: null
+        orderId: "66666666-6666-4666-8666-666666666666"
+        userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
         createdAt: "2026-06-09T12:00:00Z"
         updatedAt: "2026-06-09T12:30:00Z"
         replies: []
@@ -956,9 +954,9 @@ components:
         createdAt: { type: string, format: date-time }
       required: [id, ticketId, authorId, body, createdAt]
       example:
-        id: "reply-001"
-        ticketId: "ticket-001"
-        authorId: "admin-001"
+        id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+        ticketId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        authorId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
         authorRole: "admin"
         body: "Chúng tôi đã kiểm tra và sẽ hoàn tiền cho món thiếu. Xin lỗi bạn vì sự bất tiện này."
         createdAt: "2026-06-09T12:30:00Z"
@@ -976,7 +974,7 @@ components:
         subject: "Đơn hàng giao thiếu món"
         issueType: "missing_item"
         priority: "medium"
-        orderId: "order-001"
+        orderId: "66666666-6666-4666-8666-666666666666"
         body: "Tôi đặt 2 bát phở nhưng chỉ nhận được 1 bát."
 
     CreateReplyRequest:
@@ -1101,7 +1099,7 @@ components:
               revenue:    { type: integer, description: "VND" }
       required: [restaurantId, restaurantName, totalOrders, totalRevenue]
       example:
-        restaurantId: "rest-001"
+        restaurantId: "33333333-3333-4333-8333-333333333333"
         restaurantName: "Phở 24"
         totalOrders: 345
         totalRevenue: 42150000
@@ -1698,7 +1696,7 @@ paths:
                     required: [name]
               required: [categoryId, name, basePrice]
               example:
-                categoryId: "cat-001"
+                categoryId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
                 name: "Bún bò Huế đặc biệt"
                 description: "Bún bò Huế chuẩn vị, cay nồng"
                 basePrice: 55000
@@ -2181,9 +2179,9 @@ paths:
                 userId: { type: string, format: uuid }
               required: [orderId, event, userId]
               example:
-                orderId: "order-001"
+                orderId: "66666666-6666-4666-8666-666666666666"
                 event: "delayed"
-                userId: "user-001"
+                userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
       responses:
         "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean } } } } } }
 
@@ -2412,7 +2410,7 @@ paths:
                 value: { type: string }
               required: [ticketIds, action]
               example:
-                ticketIds: ["ticket-001", "ticket-002"]
+                ticketIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "abababab-abab-4bab-8bab-abababababab"]
                 action: "close"
                 value: "spam"
       responses:

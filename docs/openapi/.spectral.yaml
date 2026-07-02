@@ -1,0 +1,27 @@
+extends:
+  - spectral:oas
+
+rules:
+  info-contact-required:
+    description: OpenAPI info must include a contact block.
+    severity: error
+    given: $.info
+    then:
+      field: contact
+      function: truthy
+
+  operation-tags-required:
+    description: Every operation must declare at least one tag.
+    severity: error
+    given: $.paths[*][*]
+    then:
+      field: tags
+      function: truthy
+
+  operation-operationId-required:
+    description: Every operation must declare an operationId for client generation.
+    severity: error
+    given: $.paths[*][*]
+    then:
+      field: operationId
+      function: truthy
