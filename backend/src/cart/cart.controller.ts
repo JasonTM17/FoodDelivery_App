@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, UsePipes } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
@@ -22,14 +22,19 @@ export class CartController {
   }
 
   @Post('items')
-  @UsePipes(new ZodValidationPipe(addCartItemSchema))
-  addItem(@CurrentUser() user: JwtPayload, @Body() dto: AddCartItemDto) {
+  addItem(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(addCartItemSchema)) dto: AddCartItemDto,
+  ) {
     return this.cartService.addItem(user.sub, dto)
   }
 
   @Patch('items/:id')
-  @UsePipes(new ZodValidationPipe(updateCartItemSchema))
-  updateItem(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateCartItemDto) {
+  updateItem(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateCartItemSchema)) dto: UpdateCartItemDto,
+  ) {
     return this.cartService.updateItem(user.sub, id, dto)
   }
 
@@ -44,8 +49,10 @@ export class CartController {
   }
 
   @Post('apply-promotion')
-  @UsePipes(new ZodValidationPipe(applyPromotionSchema))
-  applyPromotion(@CurrentUser() user: JwtPayload, @Body() dto: ApplyPromotionDto) {
+  applyPromotion(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(applyPromotionSchema)) dto: ApplyPromotionDto,
+  ) {
     return this.cartService.applyPromotion(user.sub, dto)
   }
 }

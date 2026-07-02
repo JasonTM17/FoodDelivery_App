@@ -24,6 +24,7 @@ import { WebhooksModule } from './webhooks/webhooks.module'
 import { PromotionsModule } from './promotions/promotions.module'
 import { ReferralModule } from './referral/referral.module'
 import { RestaurantPortalModule } from './restaurant-portal/restaurant-portal.module'
+import { AiModule } from './ai/ai.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { I18nSetupModule } from './i18n/i18n.module'
@@ -72,6 +73,7 @@ import Redis from 'ioredis'
     PromotionsModule,
     ReferralModule,
     RestaurantPortalModule,
+    AiModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

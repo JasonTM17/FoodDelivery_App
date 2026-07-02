@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UsePipes, UseInterceptors } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
@@ -23,8 +23,10 @@ export class OrdersController {
   @Post('orders')
   @Roles('customer')
   @UseInterceptors(IdempotencyInterceptor)
-  @UsePipes(new ZodValidationPipe(placeOrderSchema))
-  placeOrder(@CurrentUser() user: JwtPayload, @Body() dto: PlaceOrderDto) {
+  placeOrder(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(placeOrderSchema)) dto: PlaceOrderDto,
+  ) {
     return this.ordersService.placeOrder(user.sub, dto)
   }
 
@@ -48,15 +50,21 @@ export class OrdersController {
 
   @Post('orders/:id/cancel')
   @Roles('customer')
-  @UsePipes(new ZodValidationPipe(cancelOrderSchema))
-  cancelOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto?: CancelOrderDto) {
+  cancelOrder(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(cancelOrderSchema)) dto?: CancelOrderDto,
+  ) {
     return this.ordersService.cancelOrder(id, user.sub, user.role, dto)
   }
 
   @Post('orders/:id/review')
   @Roles('customer')
-  @UsePipes(new ZodValidationPipe(createReviewSchema))
-  submitReview(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateReviewDto) {
+  submitReview(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(createReviewSchema)) dto: CreateReviewDto,
+  ) {
     return this.ordersService.submitReview(id, user.sub, dto)
   }
 
@@ -82,22 +90,20 @@ export class OrdersController {
 
   @Post('restaurant/orders/:id/messages')
   @Roles('restaurant')
-  @UsePipes(new ZodValidationPipe(createOrderChatMessageSchema))
   createRestaurantOrderMessage(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Body() dto: CreateOrderChatMessageDto,
+    @Body(new ZodValidationPipe(createOrderChatMessageSchema)) dto: CreateOrderChatMessageDto,
   ) {
     return this.orderChatService.createRestaurantOrderMessage(id, user.sub, dto)
   }
 
   @Patch('restaurant/orders/:id/status')
   @Roles('restaurant')
-  @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))
   async updateRestaurantOrderStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Body() dto: UpdateOrderStatusDto,
+    @Body(new ZodValidationPipe(updateOrderStatusSchema)) dto: UpdateOrderStatusDto,
   ) {
     await this.ordersService.updateOrderStatus(id, dto.status, user.sub, user.role, dto.note)
     return this.ordersService.getRestaurantOrderDetail(id, user.sub)
@@ -107,11 +113,10 @@ export class OrdersController {
 
   @Patch('driver/orders/:id/status')
   @Roles('driver')
-  @UsePipes(new ZodValidationPipe(updateOrderStatusSchema))
   updateDriverOrderStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Body() dto: UpdateOrderStatusDto,
+    @Body(new ZodValidationPipe(updateOrderStatusSchema)) dto: UpdateOrderStatusDto,
   ) {
     return this.ordersService.updateOrderStatus(id, dto.status, user.sub, user.role, dto.note)
   }

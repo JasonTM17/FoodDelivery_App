@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, UsePipes,
+  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { MenuService } from './menu.service'
@@ -39,26 +39,26 @@ export class MenuController {
   }
 
   @Post('categories')
-  @UsePipes(new ZodValidationPipe(createCategorySchema))
   createCategory(
     @CurrentUser() user: { id: string },
-    @Body() dto: CreateCategoryDto,
+    @Body(new ZodValidationPipe(createCategorySchema)) dto: CreateCategoryDto,
   ) {
     return this.menuService.createCategory(user.id, dto)
   }
 
   @Patch('categories/reorder')
-  @UsePipes(new ZodValidationPipe(reorderMenuEntitySchema))
-  reorderCategories(@CurrentUser() user: { id: string }, @Body() dto: ReorderMenuEntityDto) {
+  reorderCategories(
+    @CurrentUser() user: { id: string },
+    @Body(new ZodValidationPipe(reorderMenuEntitySchema)) dto: ReorderMenuEntityDto,
+  ) {
     return this.menuService.reorderCategories(user.id, dto.items)
   }
 
   @Patch('categories/:id')
-  @UsePipes(new ZodValidationPipe(updateCategorySchema))
   updateCategory(
     @CurrentUser() user: { id: string },
     @Param('id') id: string,
-    @Body() dto: UpdateCategoryDto,
+    @Body(new ZodValidationPipe(updateCategorySchema)) dto: UpdateCategoryDto,
   ) {
     return this.menuService.updateCategory(user.id, id, dto)
   }
@@ -72,26 +72,26 @@ export class MenuController {
   }
 
   @Post('items')
-  @UsePipes(new ZodValidationPipe(createMenuItemSchema))
   createMenuItem(
     @CurrentUser() user: { id: string },
-    @Body() dto: CreateMenuItemDto,
+    @Body(new ZodValidationPipe(createMenuItemSchema)) dto: CreateMenuItemDto,
   ) {
     return this.menuService.createMenuItem(user.id, dto)
   }
 
   @Patch('items/reorder')
-  @UsePipes(new ZodValidationPipe(reorderMenuEntitySchema))
-  reorderItems(@CurrentUser() user: { id: string }, @Body() dto: ReorderMenuEntityDto) {
+  reorderItems(
+    @CurrentUser() user: { id: string },
+    @Body(new ZodValidationPipe(reorderMenuEntitySchema)) dto: ReorderMenuEntityDto,
+  ) {
     return this.menuService.reorderItems(user.id, dto.items)
   }
 
   @Patch('items/:id')
-  @UsePipes(new ZodValidationPipe(updateMenuItemSchema))
   updateMenuItem(
     @CurrentUser() user: { id: string },
     @Param('id') id: string,
-    @Body() dto: UpdateMenuItemDto,
+    @Body(new ZodValidationPipe(updateMenuItemSchema)) dto: UpdateMenuItemDto,
   ) {
     return this.menuService.updateMenuItem(user.id, id, dto)
   }
