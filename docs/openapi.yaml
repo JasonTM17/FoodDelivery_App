@@ -515,7 +515,7 @@ components:
       type: object
       properties:
         addressId:     { type: string, format: uuid }
-        paymentMethod: { type: string, enum: [cash, wallet, sepay], default: cash }
+        paymentMethod: { type: string, enum: [cash, wallet, sepay], default: cash, description: "Legacy mock_wallet is accepted for one compatibility cycle and normalized to wallet." }
         promotionCode: { type: string }
         notes:         { type: string, maxLength: 500 }
       required: [addressId]

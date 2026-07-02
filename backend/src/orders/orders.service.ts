@@ -149,6 +149,7 @@ export class OrdersService {
     }
 
     const total = subtotal + deliveryFee - promotionDiscount
+    const paymentMethod = normalizePaymentMethod(dto.paymentMethod)
 
     const order = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -162,7 +163,7 @@ export class OrdersService {
           deliveryFee,
           promotionDiscount,
           total,
-          paymentMethod: dto.paymentMethod as unknown as PrismaPaymentMethod,
+          paymentMethod,
           notes: dto.notes,
           estimatedPrepTimeMinutes: restaurant.prepTimeAvgMinutes,
           orderItems: {
@@ -200,29 +201,55 @@ export class OrdersService {
       return order
     })
 
-    // Process payment async — fire-and-forget outside txn
-    this.paymentsService.processPayment(order.id, Number(total), dto.paymentMethod).catch(console.error)
-
-    // Schedule auto-timeout: cancel if restaurant doesn't accept in 5 min
-    await this.orderTimeoutQueue.add(
-      'restaurant-accept-timeout',
-      { orderId: order.id, expectedStatus: 'paid' },
-      { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
+    // Payment must settle or create a real provider intent before side effects run.
+    const paymentResult = await this.paymentsService.processPayment(
+      order.id,
+      Number(total),
+      paymentMethod,
     )
 
-    // Notify restaurant
-    this.ordersGateway.notifyRestaurant(restaurant.id, {
-      orderId: order.id,
-      orderCode,
-      total: Number(total),
-      items: cart.items.map(i => ({ name: i.menuItem.name, quantity: i.quantity })),
-    })
-    this.ordersGateway.notifyAdmins('admin:new_order', {
-      orderId: order.id, orderCode, restaurantId: restaurant.id,
-      total: Number(total), createdAt: new Date().toISOString(),
-    })
+    const status = paymentResult.failureCode
+      ? 'cancelled'
+      : paymentResult.readyForRestaurant
+        ? 'restaurant_pending'
+        : 'pending_payment'
 
-    return order
+    // Schedule auto-timeout: cancel if restaurant doesn't accept in 5 min
+    if (paymentResult.readyForRestaurant) {
+      await this.orderTimeoutQueue.add(
+        'restaurant-accept-timeout',
+        {
+          orderId: order.id,
+          expectedStatus: 'restaurant_pending',
+          targetStatus: 'cancelled',
+          reason: 'Restaurant did not accept order in time',
+        },
+        { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
+      )
+
+      this.ordersGateway.notifyRestaurant(restaurant.id, {
+        orderId: order.id,
+        orderCode,
+        total: Number(total),
+        items: cart.items.map(i => ({ name: i.menuItem.name, quantity: i.quantity })),
+      })
+    }
+    this.ordersGateway.notifyAdmins(
+      paymentResult.failureCode ? 'admin:order_payment_failed' : 'admin:new_order',
+      {
+        orderId: order.id,
+        orderCode,
+        restaurantId: restaurant.id,
+        total: Number(total),
+        status,
+        ...(paymentResult.failureCode ? { failureCode: paymentResult.failureCode } : {}),
+        createdAt: new Date().toISOString(),
+      },
+    )
+
+    return paymentResult.paymentIntent
+      ? { ...order, status, paymentIntent: paymentResult.paymentIntent }
+      : { ...order, status }
   }
 
   async getRestaurantOrders(userId: string, status?: string) {
@@ -396,6 +423,13 @@ function serializeRestaurantOrder(order: RestaurantOrderView) {
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   }
+}
+
+function normalizePaymentMethod(method: PlaceOrderDto['paymentMethod']): PrismaPaymentMethod {
+  if (method === 'wallet') {
+    return PrismaPaymentMethod.mock_wallet
+  }
+  return method as unknown as PrismaPaymentMethod
 }
 
 function serializeSelectedOptions(value: Prisma.JsonValue) {

@@ -1,5 +1,6 @@
-import { SepayProvider } from './providers/sepay.provider'
+import { ServiceUnavailableException } from '@nestjs/common'
 import { createHmac } from 'crypto'
+import { SepayProvider } from './providers/sepay.provider'
 
 describe('SepayProvider', () => {
   let provider: SepayProvider
@@ -9,31 +10,16 @@ describe('SepayProvider', () => {
     delete process.env.SEPAY_WEBHOOK_SECRET
     delete process.env.SEPAY_BASE_URL
     delete process.env.SEPAY_ACCOUNT_NUMBER
-    provider = new SepayProvider()
     jest.restoreAllMocks()
+    provider = new SepayProvider()
   })
 
-  describe('createPaymentIntent — mock mode (no API key)', () => {
-    it('returns mock intent with MOCK- prefix when SEPAY_API_KEY not set', async () => {
-      const result = await provider.createPaymentIntent('order-abc-123', 100_000)
-
-      expect(result.transaction_ref).toMatch(/^MOCK-/)
-      expect(result.qr_code_url).toContain('mock')
-      expect(result.expires_at).toBeInstanceOf(Date)
-      expect(result.expires_at.getTime()).toBeGreaterThan(Date.now())
+  describe('createPaymentIntent', () => {
+    it('throws explicit unavailable error when SEPAY_API_KEY is not set', async () => {
+      await expect(provider.createPaymentIntent('order-abc-123', 100_000))
+        .rejects.toThrow(ServiceUnavailableException)
     })
 
-    it('expires_at is ~15 minutes from now', async () => {
-      const before = Date.now()
-      const result = await provider.createPaymentIntent('order-1', 50_000)
-      const expectedMs = 15 * 60 * 1000
-
-      expect(result.expires_at.getTime() - before).toBeGreaterThan(expectedMs - 2000)
-      expect(result.expires_at.getTime() - before).toBeLessThan(expectedMs + 2000)
-    })
-  })
-
-  describe('createPaymentIntent — real API (with API key)', () => {
     it('calls SePay API and returns parsed response', async () => {
       process.env.SEPAY_API_KEY = 'test-key-123'
       provider = new SepayProvider()
@@ -58,6 +44,7 @@ describe('SepayProvider', () => {
       )
       expect(result.transaction_ref).toBe('REAL-REF-001')
       expect(result.qr_code_url).toBe('https://qr.sepay.vn/real-ref')
+      expect(result.expires_at.getTime()).toBeGreaterThan(Date.now())
     })
 
     it('falls back to generated ref when API omits transaction_ref', async () => {
@@ -88,8 +75,8 @@ describe('SepayProvider', () => {
   })
 
   describe('verifyWebhookSignature', () => {
-    it('returns true when SEPAY_WEBHOOK_SECRET is not set', () => {
-      expect(provider.verifyWebhookSignature('{"foo":"bar"}', 'any-sig')).toBe(true)
+    it('returns false when SEPAY_WEBHOOK_SECRET is not set', () => {
+      expect(provider.verifyWebhookSignature('{"foo":"bar"}', 'any-sig')).toBe(false)
     })
 
     it('returns true for correct HMAC signature', () => {
@@ -117,13 +104,12 @@ describe('SepayProvider', () => {
     })
   })
 
-  describe('refund — mock mode', () => {
-    it('resolves immediately without hitting network when no API key', async () => {
-      await expect(provider.refund('TXN-MOCK-001', 50_000, 'customer request')).resolves.toBeUndefined()
+  describe('refund', () => {
+    it('throws explicit unavailable error when SEPAY_API_KEY is not set', async () => {
+      await expect(provider.refund('TXN-MISSING-CONFIG', 50_000, 'customer request'))
+        .rejects.toThrow(ServiceUnavailableException)
     })
-  })
 
-  describe('refund — real API', () => {
     it('calls SePay refund endpoint successfully', async () => {
       process.env.SEPAY_API_KEY = 'test-key'
       provider = new SepayProvider()

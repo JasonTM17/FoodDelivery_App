@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common'
 import { Job } from 'bullmq'
 import { PrismaService } from '../database/prisma.service'
 import { OrderStatus } from './order-state-machine'
+import { OrdersService } from './orders.service'
 
 export interface TimeoutJobData {
   orderId: string
@@ -11,20 +12,13 @@ export interface TimeoutJobData {
   reason: string
 }
 
-// Forward-declare to avoid circular dep at module level; injected via DI
-export interface IOrdersService {
-  transition(orderId: string, toStatus: OrderStatus, actor: string, reason?: string): Promise<unknown>
-}
-
-export const ORDERS_SERVICE_TOKEN = 'ORDERS_SERVICE_FOR_TIMEOUT'
-
 @Processor('order-timeout')
 export class AutoTimeoutProcessor extends WorkerHost {
   private readonly logger = new Logger(AutoTimeoutProcessor.name)
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly ordersService: IOrdersService,
+    private readonly ordersService: OrdersService,
   ) {
     super()
   }
@@ -53,7 +47,7 @@ export class AutoTimeoutProcessor extends WorkerHost {
       return
     }
 
-    await this.ordersService.transition(orderId, targetStatus, 'system', reason)
+    await this.ordersService.transition(orderId, targetStatus, 'system', 'system', reason)
     this.logger.warn(`Order ${orderId} auto-timed-out: ${expectedStatus} → ${targetStatus}`)
   }
 }

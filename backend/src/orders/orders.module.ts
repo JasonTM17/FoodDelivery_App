@@ -10,10 +10,13 @@ import { RefundProcessor } from './refund.processor'
 import { AutoTimeoutProcessor } from './auto-timeout.processor'
 import { PartialFulfillmentService } from './partial-fulfillment.service'
 import { CartModule } from '../cart/cart.module'
+import { PaymentsModule } from '../payments/payments.module'
+import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
 
 @Module({
   imports: [
     forwardRef(() => CartModule),
+    PaymentsModule,
     BullModule.registerQueue({ name: 'dispatch' }),
     BullModule.registerQueue({ name: 'refund' }),
     BullModule.registerQueue({ name: 'order-timeout' }),
@@ -22,6 +25,7 @@ import { CartModule } from '../cart/cart.module'
   providers: [
     OrdersService,
     PaymentsService,
+    WalletPaymentCaptureService,
     OrdersGateway,
     IdempotencyInterceptor,
     CancellationService,

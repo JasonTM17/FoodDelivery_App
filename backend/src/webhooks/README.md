@@ -27,6 +27,7 @@ npx jest webhooks
 ## Runbook
 
 - **Signature mismatch:** Logs raw payload to `webhook_audit` for forensics; returns 401 (provider will retry).
+- **Missing SePay secret:** `POST /webhooks/sepay/payment-success` rejects requests when `SEPAY_WEBHOOK_SECRET` is unset; configure the secret before enabling SePay in runtime.
 - **Replay attack:** Rejected by Redis dedup key `wh:dedup:{provider}:{eventId}`. TTL window prevents legitimate retries from being blocked.
 - **Provider rotation:** Update env secret + redeploy. Old in-flight webhooks fail signature, will retry per provider policy.
 - **SePay timeout:** SePay retries 3x with backoff. Backend must complete idempotent operation within 10s SLA.

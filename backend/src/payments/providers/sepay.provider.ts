@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 export interface PaymentIntentResult {
@@ -17,13 +17,13 @@ export class SepayProvider {
     this.apiKey = process.env.SEPAY_API_KEY
     this.baseUrl = process.env.SEPAY_BASE_URL ?? 'https://my.sepay.vn/userapi'
     if (!this.apiKey) {
-      this.logger.warn('SEPAY_API_KEY not set — provider running in mock mode')
+      this.logger.warn('SEPAY_API_KEY not set — SePay payment intents are unavailable')
     }
   }
 
   async createPaymentIntent(orderId: string, amount: number): Promise<PaymentIntentResult> {
     if (!this.apiKey) {
-      return this.buildMockIntent(orderId)
+      throw new ServiceUnavailableException('SEPAY_PROVIDER_NOT_CONFIGURED')
     }
 
     const transactionRef = `FF-${orderId.slice(0, 8).toUpperCase()}-${Date.now()}`
@@ -64,8 +64,8 @@ export class SepayProvider {
   verifyWebhookSignature(rawBody: string, signatureHeader: string): boolean {
     const secret = process.env.SEPAY_WEBHOOK_SECRET
     if (!secret) {
-      this.logger.warn('SEPAY_WEBHOOK_SECRET not set — skipping signature verification')
-      return true
+      this.logger.error('SEPAY_WEBHOOK_SECRET not set — rejecting webhook')
+      return false
     }
     const expected = createHmac('sha256', secret).update(rawBody).digest('hex')
     try {
@@ -77,8 +77,7 @@ export class SepayProvider {
 
   async refund(transactionRef: string, amount: number, reason: string): Promise<void> {
     if (!this.apiKey) {
-      this.logger.log(`[MOCK] refund transactionRef=${transactionRef} amount=${amount} reason=${reason}`)
-      return
+      throw new ServiceUnavailableException('SEPAY_PROVIDER_NOT_CONFIGURED')
     }
 
     const res = await fetch(`${this.baseUrl}/transactions/refund`, {
@@ -93,15 +92,6 @@ export class SepayProvider {
     if (!res.ok) {
       const text = await res.text()
       throw new Error(`SePay refund ${res.status}: ${text}`)
-    }
-  }
-
-  private buildMockIntent(_orderId: string): PaymentIntentResult {
-    const ref = `MOCK-${crypto.randomUUID().slice(0, 12).toUpperCase()}`
-    return {
-      qr_code_url: `https://qr.sepay.vn/mock/${ref}`,
-      transaction_ref: ref,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000),
     }
   }
 }

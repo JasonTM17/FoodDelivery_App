@@ -1,6 +1,7 @@
-import { AutoTimeoutProcessor, IOrdersService, TimeoutJobData } from './auto-timeout.processor'
+import { AutoTimeoutProcessor, TimeoutJobData } from './auto-timeout.processor'
 import { PrismaService } from '../database/prisma.service'
 import { Job } from 'bullmq'
+import { OrdersService } from './orders.service'
 
 const makeJob = (data: TimeoutJobData): Job<TimeoutJobData> =>
   ({ data } as unknown as Job<TimeoutJobData>)
@@ -18,7 +19,7 @@ describe('AutoTimeoutProcessor', () => {
       order: { findUnique: prismaOrderFindUnique },
     } as unknown as PrismaService
 
-    const ordersService: IOrdersService = { transition: ordersServiceTransition }
+    const ordersService = { transition: ordersServiceTransition } as unknown as OrdersService
     processor = new AutoTimeoutProcessor(prisma, ordersService)
   })
 
@@ -31,7 +32,7 @@ describe('AutoTimeoutProcessor', () => {
       reason: 'Restaurant did not accept in time',
     }))
     expect(ordersServiceTransition).toHaveBeenCalledWith(
-      'ord-1', 'cancelled', 'system', 'Restaurant did not accept in time',
+      'ord-1', 'cancelled', 'system', 'system', 'Restaurant did not accept in time',
     )
   })
 
@@ -77,7 +78,7 @@ describe('AutoTimeoutProcessor', () => {
       reason: 'Driver did not arrive',
     }))
     expect(ordersServiceTransition).toHaveBeenCalledWith(
-      'ord-4', 'cancelled', 'system', 'Driver did not arrive',
+      'ord-4', 'cancelled', 'system', 'system', 'Driver did not arrive',
     )
   })
 })

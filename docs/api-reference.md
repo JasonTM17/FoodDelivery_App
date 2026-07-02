@@ -83,7 +83,8 @@ Body: { code }
 ### POST /orders
 Place order from cart. Requires customer role.
 ```
-Body: { addressId, paymentMethod (cash|mock_wallet), promotionCode?, notes? }
+Body: { addressId, paymentMethod (cash|wallet|sepay), promotionCode?, notes? }
+Note: legacy `mock_wallet` requests are accepted and normalized to `wallet` internally.
 ```
 
 ### GET /orders
