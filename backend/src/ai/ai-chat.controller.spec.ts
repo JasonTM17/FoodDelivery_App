@@ -60,6 +60,24 @@ describe('AiChatController', () => {
     )
     expect(response.end).toHaveBeenCalled()
   })
+
+  it('ends the SSE stream with degraded state if reply creation throws after headers are flushed', async () => {
+    chat.createReply.mockRejectedValue(new Error('memory unavailable'))
+    const response = makeSseResponse()
+
+    await controller.stream(
+      { message: 'Need help', sessionId: 'session-1' },
+      { sub: 'user-1', role: 'customer' },
+      response as never,
+    )
+
+    expect(response.write.mock.calls.map(call => call[0])).toEqual([
+      'data: {"type":"thinking","content":""}\n\n',
+      'data: {"type":"degraded","content":"AI_SERVICE_UNAVAILABLE"}\n\n',
+      'data: {"type":"done","content":""}\n\n',
+    ])
+    expect(response.end).toHaveBeenCalled()
+  })
 })
 
 function makeSseResponse() {

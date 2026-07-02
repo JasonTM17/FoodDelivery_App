@@ -97,6 +97,22 @@ describe('AiChatService', () => {
     expect(result).toMatchObject({ action: 'escalated', reply: 'DeepSeek answer', severity: 'HIGH' })
   })
 
+  it('continues with empty history when conversation memory is unavailable', async () => {
+    config.get.mockImplementation((key: string, defaultValue?: string) => ({
+      AI_CHAT_PROVIDER: 'deepseek',
+    }[key] ?? defaultValue))
+    memory.getHistory.mockRejectedValueOnce(new Error('memory backend unavailable'))
+    deepSeek.createReply.mockResolvedValue({ reply: 'Memory-free answer' })
+
+    const result = await service.createReply({ message: 'Where is my order?', sessionId: 'session-1' }, user)
+
+    expect(deepSeek.createReply).toHaveBeenCalledWith(expect.objectContaining({
+      history: [],
+      sessionId: 'session-1',
+    }))
+    expect(result).toMatchObject({ action: 'answered', reply: 'Memory-free answer' })
+  })
+
   it('returns degraded state when DeepSeek provider is selected but unavailable', async () => {
     config.get.mockImplementation((key: string, defaultValue?: string) => ({
       AI_CHAT_PROVIDER: 'deepseek',

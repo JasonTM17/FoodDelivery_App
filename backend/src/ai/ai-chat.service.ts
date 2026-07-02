@@ -62,7 +62,7 @@ export class AiChatService {
     const fastPathKey = this.matchFastPath(message.trim())
     if (fastPathKey) {
       const reply = this.translate(`ai_templates.${fastPathKey}`)
-      await this.memory.appendBatch(sessionId, [
+      await this.safeAppendBatch(sessionId, [
         { role: 'user', content: message, timestamp: new Date().toISOString() },
         { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
       ])
@@ -70,8 +70,8 @@ export class AiChatService {
     }
 
     const sentimentLabel = this.sentiment.detect(message)
-    const history = await this.memory.getHistory(sessionId)
-    await this.memory.append(sessionId, {
+    const history = await this.safeGetHistory(sessionId)
+    await this.safeAppend(sessionId, {
       role: 'user',
       content: message,
       timestamp: new Date().toISOString(),
@@ -82,7 +82,7 @@ export class AiChatService {
       const rawReply = data.reply ?? this.translate('ai_templates.fallback')
       const reply = this.outputFilter.filter(rawReply)
 
-      await this.memory.append(sessionId, {
+      await this.safeAppend(sessionId, {
         role: 'assistant',
         content: reply,
         timestamp: new Date().toISOString(),
@@ -96,7 +96,7 @@ export class AiChatService {
         severity: data.severity,
       }
     } catch (err) {
-      this.logger.error(`AI chat error: ${(err as Error).message}`)
+      this.logger.error(`AI chat provider error: ${this.safeErrorCode(err)}`)
       return {
         reply: this.translate('ai_templates.service_unavailable'),
         sessionId,
@@ -164,5 +164,36 @@ export class AiChatService {
 
   private translate(key: string): string {
     return this.i18n.t(key) as string
+  }
+
+  private async safeGetHistory(sessionId: string): Promise<unknown[]> {
+    try {
+      return await this.memory.getHistory(sessionId)
+    } catch (err) {
+      this.logger.warn(`AI chat memory read skipped: ${this.safeErrorCode(err)}`)
+      return []
+    }
+  }
+
+  private async safeAppend(sessionId: string, message: { role: 'user' | 'assistant'; content: string; timestamp: string }): Promise<void> {
+    try {
+      await this.memory.append(sessionId, message)
+    } catch (err) {
+      this.logger.warn(`AI chat memory append skipped: ${this.safeErrorCode(err)}`)
+    }
+  }
+
+  private async safeAppendBatch(sessionId: string, messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }>): Promise<void> {
+    try {
+      await this.memory.appendBatch(sessionId, messages)
+    } catch (err) {
+      this.logger.warn(`AI chat memory append skipped: ${this.safeErrorCode(err)}`)
+    }
+  }
+
+  private safeErrorCode(err: unknown): string {
+    const message = err instanceof Error ? err.message : 'UNKNOWN'
+    if (/^(DEEPSEEK|N8N|MESSAGE|INVALID)[A-Z0-9_:-]*$/.test(message)) return message
+    return 'UPSTREAM_UNAVAILABLE'
   }
 }

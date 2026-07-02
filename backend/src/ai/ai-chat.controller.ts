@@ -29,12 +29,18 @@ export class AiChatController {
     }
 
     emit('thinking', '')
-    const result = await this.chat.createReply(body, user)
-    this.emitWords(result.reply, emit)
-    if (result.escalated) emit('escalated', result.severity ?? 'HIGH')
-    if (result.action === 'degraded') emit('degraded', 'AI_SERVICE_UNAVAILABLE')
-    emit('done', '')
-    res.end()
+    try {
+      const result = await this.chat.createReply(body, user)
+      this.emitWords(result.reply, emit)
+      if (result.escalated) emit('escalated', result.severity ?? 'HIGH')
+      if (result.action === 'degraded') emit('degraded', 'AI_SERVICE_UNAVAILABLE')
+      emit('done', '')
+    } catch {
+      emit('degraded', 'AI_SERVICE_UNAVAILABLE')
+      emit('done', '')
+    } finally {
+      res.end()
+    }
   }
 
   private emitWords(text: string, emit: (type: string, content: string) => void): void {
