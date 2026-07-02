@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
 import { PromotionTypePicker } from './promotion-type-picker';
 import { PromotionTargetSelector } from './promotion-target-selector';
 import { PromotionScheduleEditor } from './promotion-schedule-editor';
 import { PromotionChannelSelector } from './promotion-channel-selector';
 import { PromotionComboBuilder } from './promotion-combo-builder';
-import { PromotionItemSelector } from './promotion-item-selector';
+import { PromotionApplyScopeSection, PromotionLimitsSection } from './promotion-form-sections';
 import { AudiencePreview } from '../shared/audience-preview';
 import type { Promotion, PromotionType, PromotionChannel, PromotionSchedule, PromotionAudience, ComboConfig } from '@/lib/types';
 import { validatePromotion } from '@/lib/promotion-engine';
@@ -21,6 +22,8 @@ interface PromotionFormProps {
 
 export function PromotionForm({ initialData, onSubmit, isSubmitting }: PromotionFormProps) {
   const router = useRouter();
+  const t = useTranslations('promotions.form');
+  const tValidation = useTranslations('promotions.validation');
 
   const [code, setCode] = useState(initialData?.code || '');
   const [name, setName] = useState(initialData?.name || '');
@@ -75,7 +78,7 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
 
     const validation = validatePromotion(data);
     if (!validation.valid) {
-      setErrors(validation.errors);
+      setErrors(validation.errors.map((error) => tValidation(error)));
       return;
     }
 
@@ -84,60 +87,56 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Back */}
       <button type="button" onClick={() => router.back()} className="btn-ghost -ml-2 text-sm">
         <ArrowLeft className="h-4 w-4 mr-1.5" />
-        Quay lại
+        {t('back')}
       </button>
 
-      {/* Errors */}
       {errors.length > 0 && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-          <p className="text-sm font-medium text-red-700 mb-1">Vui lòng sửa các lỗi sau:</p>
+          <p className="text-sm font-medium text-red-700 mb-1">{t('errorsTitle')}</p>
           <ul className="text-sm text-red-600 space-y-0.5 list-disc list-inside">
             {errors.map((e, i) => <li key={i}>{e}</li>)}
           </ul>
         </div>
       )}
 
-      {/* Basic info */}
       <section className="card space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">Thông tin cơ bản</h2>
+        <h2 className="text-base font-semibold text-gray-900">{t('basicTitle')}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Mã khuyến mãi *</label>
+            <label className="label">{t('code')}</label>
             <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="input-field font-mono" placeholder="VD: WELCOME20" />
           </div>
           <div>
-            <label className="label">Tên khuyến mãi *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="VD: Chào mừng 20%" />
+            <label className="label">{t('name')}</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder={t('namePlaceholder')} />
           </div>
         </div>
         <div>
-          <label className="label">Mô tả</label>
+          <label className="label">{t('description')}</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field resize-none" rows={2} />
         </div>
       </section>
 
-      {/* Type */}
       <section className="card space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">Loại khuyến mãi</h2>
+        <h2 className="text-base font-semibold text-gray-900">{t('typeTitle')}</h2>
         <PromotionTypePicker value={type} onChange={setType} />
 
         {(type === 'percent' || type === 'fixed') && (
           <div className="grid grid-cols-3 gap-4 mt-4">
             <div>
-              <label className="label">{type === 'percent' ? 'Phần trăm giảm' : 'Số tiền giảm'} *</label>
+              <label className="label">{type === 'percent' ? t('percentValue') : t('fixedValue')}</label>
               <input type="number" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="input-field" min={0} max={type === 'percent' ? 100 : undefined} />
             </div>
             {type === 'percent' && (
               <div>
-                <label className="label">Giảm tối đa (VND)</label>
+                <label className="label">{t('maxDiscount')}</label>
                 <input type="number" value={maxDiscountVnd} onChange={(e) => setMaxDiscountVnd(e.target.value)} className="input-field" min={0} />
               </div>
             )}
             <div>
-              <label className="label">Đơn tối thiểu (VND)</label>
+              <label className="label">{t('minOrder')}</label>
               <input type="number" value={minOrderVnd} onChange={(e) => setMinOrderVnd(e.target.value)} className="input-field" min={0} />
             </div>
           </div>
@@ -154,29 +153,8 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
         )}
       </section>
 
-      {/* Items selector */}
-      <section className="card space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">Áp dụng cho</h2>
-        <div className="flex gap-2">
-          {(['all', 'category', 'items'] as const).map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setAppliesTo(opt)}
-              className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                appliesTo === opt ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              {opt === 'all' ? 'Tất cả' : opt === 'category' ? 'Danh mục' : 'Món cụ thể'}
-            </button>
-          ))}
-        </div>
-        {appliesTo === 'items' && (
-          <PromotionItemSelector value={itemIds} onChange={setItemIds} />
-        )}
-      </section>
+      <PromotionApplyScopeSection appliesTo={appliesTo} setAppliesTo={setAppliesTo} itemIds={itemIds} setItemIds={setItemIds} />
 
-      {/* Target */}
       <section className="card space-y-4">
         <PromotionTargetSelector
           value={audience}
@@ -192,43 +170,23 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
         />
       </section>
 
-      {/* Schedule */}
       <section className="card">
         <PromotionScheduleEditor value={schedule} onChange={setSchedule} />
       </section>
 
-      {/* Channels */}
       <section className="card">
         <PromotionChannelSelector value={channels} onChange={setChannels} />
       </section>
 
-      {/* Limits */}
-      <section className="card space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">Giới hạn</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label">Tổng lượt dùng</label>
-            <input type="number" value={maxUsage} onChange={(e) => setMaxUsage(e.target.value)} className="input-field" placeholder="Không giới hạn" min={1} />
-          </div>
-          <div>
-            <label className="label">Giới hạn/khách</label>
-            <input type="number" value={perUserLimit} onChange={(e) => setPerUserLimit(e.target.value)} className="input-field" min={1} />
-          </div>
-        </div>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={stackable} onChange={(e) => setStackable(e.target.checked)} className="rounded border-gray-300" />
-          <span className="text-sm text-gray-700">Cho phép kết hợp với khuyến mãi khác</span>
-        </label>
-      </section>
+      <PromotionLimitsSection maxUsage={maxUsage} setMaxUsage={setMaxUsage} perUserLimit={perUserLimit} setPerUserLimit={setPerUserLimit} stackable={stackable} setStackable={setStackable} />
 
-      {/* Submit */}
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
         <button
           type="submit"
           disabled={isSubmitting}
           className="btn-primary"
         >
-          {isSubmitting ? 'Đang lưu...' : initialData?.id ? 'Cập nhật' : 'Tạo khuyến mãi'}
+          {isSubmitting ? t('saving') : initialData?.id ? t('update') : t('create')}
         </button>
       </div>
     </form>

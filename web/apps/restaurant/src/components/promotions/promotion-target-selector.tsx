@@ -1,7 +1,7 @@
 'use client';
 
 import type { PromotionAudience } from '@/lib/types';
-import { getAudienceLabel } from '@/lib/promotion-engine';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface PromotionTargetSelectorProps {
@@ -16,9 +16,12 @@ const AUDIENCES: PromotionAudience[] = ['all', 'new', 'vip', 'lapsed', 'segment'
 export function PromotionTargetSelector({
   value, onChange, minOrderCount, onMinOrderCountChange,
 }: PromotionTargetSelectorProps) {
+  const t = useTranslations('promotions.audience');
+  const tForm = useTranslations('promotions.form');
+
   return (
     <div className="space-y-3" data-testid="promotion-target-selector">
-      <h4 className="text-sm font-semibold text-gray-900">Đối tượng áp dụng</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{tForm('targetTitle')}</h4>
       <div className="space-y-2">
         {AUDIENCES.map((aud) => (
           <label
@@ -36,14 +39,14 @@ export function PromotionTargetSelector({
               onChange={() => onChange(aud)}
               className="h-4 w-4 text-brand-600"
             />
-            <span className="text-sm text-gray-900">{getAudienceLabel(aud)}</span>
+            <span className="text-sm text-gray-900">{t(aud)}</span>
           </label>
         ))}
       </div>
 
       {value === 'order_history' && (
         <div className="ml-8">
-          <label className="label">Số đơn hàng tối thiểu</label>
+          <label className="label">{tForm('minOrderCount')}</label>
           <input
             type="number"
             value={minOrderCount || ''}
