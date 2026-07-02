@@ -12,6 +12,10 @@ import { NotificationsModule } from '../notifications/notifications.module'
 import { OrdersModule } from '../orders/orders.module'
 import { AdminAuditController } from './admin-audit.controller'
 import { AdminAuditService } from './admin-audit.service'
+import { AdminExportController } from './admin-export.controller'
+import { AdminExportService } from './admin-export.service'
+import { AdminSettingsController } from './admin-settings.controller'
+import { AdminSettingsService } from './admin-settings.service'
 
 @Module({
   imports: [OrdersModule, NotificationsModule],
@@ -22,6 +26,8 @@ import { AdminAuditService } from './admin-audit.service'
     AdminResourcesController,
     AdminSupportController,
     AdminAuditController,
+    AdminExportController,
+    AdminSettingsController,
   ],
   providers: [
     AdminService,
@@ -29,6 +35,8 @@ import { AdminAuditService } from './admin-audit.service'
     AdminResourcesService,
     AdminSupportService,
     AdminAuditService,
+    AdminExportService,
+    AdminSettingsService,
   ],
 })
 export class AdminModule {}

@@ -2,21 +2,10 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiGet } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
+import { apiDownload, apiGet } from '@/lib/api';
 import { PageHeader } from '@foodflow/ui/page-header';
 import { EmptyState } from '@foodflow/ui/empty-state';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -24,58 +13,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download, FileSpreadsheet, FileJson, FileArchive, Clock, CheckCircle, XCircle, Loader2, FileText } from 'lucide-react';
+import { FileText, XCircle } from 'lucide-react';
+import { ExportJobsTable, type ExportJob } from './export-jobs-table';
 
-interface ExportJob {
-  id: string;
-  type: string;
-  format: 'csv' | 'json' | 'parquet';
-  status: 'queued' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  rowCount?: number;
-  filterSummary: Record<string, string>;
-  createdAt: string;
-  completedAt?: string;
-  downloadUrl?: string;
-  errorMessage?: string;
-}
-
-const statusBadges: Record<string, { label: string; variant: 'secondary' | 'default' | 'destructive' }> = {
-  queued: { label: 'Đang chờ', variant: 'secondary' },
-  processing: { label: 'Đang xử lý', variant: 'default' },
-  completed: { label: 'Hoàn thành', variant: 'default' },
-  failed: { label: 'Thất bại', variant: 'destructive' },
-};
-
-const formatIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  csv: FileSpreadsheet,
-  json: FileJson,
-  parquet: FileArchive,
-};
+const statusFilters = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'queued', label: 'Đang chờ' },
+  { value: 'running', label: 'Đang xử lý' },
+  { value: 'completed', label: 'Hoàn thành' },
+  { value: 'failed', label: 'Thất bại' },
+  { value: 'cancelled', label: 'Đã hủy' },
+];
 
 export default function ExportJobsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery<{ jobs: ExportJob[] }>({
+  const { data, isError, isLoading, refetch } = useQuery<{ jobs: ExportJob[] }>({
     queryKey: ['export-jobs'],
-    queryFn: () => apiGet('/admin/export-jobs?limit=30'),
+    queryFn: () => apiGet('/admin/exports?limit=30'),
     refetchInterval: 5000,
   });
 
-  const jobs = data?.jobs || [];
-  const filtered = statusFilter === 'all' ? jobs : jobs.filter((j) => j.status === statusFilter);
+  const jobs = data?.jobs ?? [];
+  const filtered = statusFilter === 'all' ? jobs : jobs.filter(job => job.status === statusFilter);
 
-  if (isLoading) {
+  const handleDownload = async (job: ExportJob) => {
+    setDownloadingId(job.id);
+    try {
+      const blob = await apiDownload(`/admin/exports/${job.id}/download`);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `foodflow-${job.resource || job.type}-${job.id.slice(0, 8)}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  if (isLoading) return <ExportJobsSkeleton />;
+
+  if (isError) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-        <div className="h-12 animate-pulse rounded-lg bg-muted" />
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
-          ))}
-        </div>
-      </div>
+      <EmptyState
+        icon={XCircle}
+        title="Không thể tải lịch sử xuất dữ liệu"
+        description="Kiểm tra kết nối hoặc thử lại sau vài giây."
+        actionLabel="Thử lại"
+        onAction={() => refetch()}
+      />
     );
   }
 
@@ -92,18 +80,14 @@ export default function ExportJobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base">Job xuất dữ liệu</CardTitle>
-              <CardDescription>{filtered.length} job trong 30 ngày qua</CardDescription>
+              <CardDescription>{filtered.length} job gần nhất</CardDescription>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="queued">Đang chờ</SelectItem>
-                <SelectItem value="processing">Đang xử lý</SelectItem>
-                <SelectItem value="completed">Hoàn thành</SelectItem>
-                <SelectItem value="failed">Thất bại</SelectItem>
+                {statusFilters.map(filter => (
+                  <SelectItem key={filter.value} value={filter.value}>{filter.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -113,96 +97,27 @@ export default function ExportJobsPage() {
             <EmptyState
               icon={FileText}
               title="Chưa có job xuất dữ liệu nào"
-              description="Dữ liệu xuất từ trang Audit sẽ hiển thị ở đây"
+              description="Dữ liệu xuất từ Reports hoặc Audit sẽ hiển thị ở đây."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Job ID</TableHead>
-                  <TableHead>Định dạng</TableHead>
-                  <TableHead>Bộ lọc</TableHead>
-                  <TableHead>Số dòng</TableHead>
-                  <TableHead>Tiến độ</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead className="w-24" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((job) => {
-                  const Icon = formatIcons[job.format] || FileText;
-                  const badge = statusBadges[job.status] || statusBadges.queued;
-                  return (
-                    <TableRow key={job.id}>
-                      <TableCell className="font-mono text-xs">{job.id.slice(0, 8)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{job.format.toUpperCase()}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(job.filterSummary || {}).slice(0, 2).map(([k, v]) => (
-                            <Badge key={k} variant="outline" className="text-[10px] py-0">
-                              {k}: {v}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {job.rowCount != null ? job.rowCount.toLocaleString('vi-VN') : '—'}
-                      </TableCell>
-                      <TableCell>
-                        {job.status === 'processing' ? (
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-                            <div className="h-full bg-primary transition-all" style={{ width: `${job.progress}%` }} />
-                          </div>
-                        ) : job.status === 'completed' ? (
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-                            <div className="h-full bg-green-500" style={{ width: '100%' }} />
-                          </div>
-                        ) : job.status === 'failed' ? (
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-                            <div className="h-full bg-destructive" style={{ width: `${job.progress}%` }} />
-                          </div>
-                        ) : null}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={badge.variant}>
-                          {job.status === 'processing' && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                          {job.status === 'completed' && <CheckCircle className="mr-1 h-3 w-3" />}
-                          {job.status === 'failed' && <XCircle className="mr-1 h-3 w-3" />}
-                          {job.status === 'queued' && <Clock className="mr-1 h-3 w-3" />}
-                          {badge.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDate(job.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        {job.downloadUrl && job.status === 'completed' && (
-                          <Button variant="outline" size="icon" asChild>
-                            <a href={job.downloadUrl} target="_blank" rel="noopener noreferrer" download>
-                              <Download className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                        {job.status === 'failed' && job.errorMessage && (
-                          <span className="text-xs text-destructive cursor-help" title={job.errorMessage}>
-                            Lỗi
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <ExportJobsTable jobs={filtered} downloadingId={downloadingId} onDownload={handleDownload} />
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ExportJobsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+      <div className="h-12 animate-pulse rounded-lg bg-muted" />
+      <div className="space-y-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
     </div>
   );
 }
