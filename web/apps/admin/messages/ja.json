@@ -240,6 +240,64 @@
     "description": "管理者の活動履歴",
     "exportCsv": "CSVエクスポート"
   },
+  "reports": {
+    "title": "レポートとエクスポート",
+    "description": "標準エクスポートサービスからレポートを作成・ダウンロードします",
+    "createTitle": "レポートを作成",
+    "createDescription": "レポート、期間、利用可能な形式を選択してください",
+    "recentTitle": "最近のレポート",
+    "recentDescription": "管理者が作成した最新のレポートジョブ",
+    "fields": {
+      "reportType": "レポート種類",
+      "period": "期間",
+      "dateFrom": "開始日",
+      "dateTo": "終了日",
+      "format": "形式"
+    },
+    "resources": {
+      "audit_logs": "監査ログ",
+      "drivers": "ドライバー",
+      "orders": "注文",
+      "promotions": "プロモーション",
+      "restaurants": "レストラン",
+      "revenue": "売上",
+      "users": "ユーザー"
+    },
+    "periods": {
+      "today": "今日",
+      "7d": "過去7日間",
+      "30d": "過去30日間",
+      "thisMonth": "今月",
+      "thisQuarter": "今四半期",
+      "custom": "カスタム"
+    },
+    "statuses": {
+      "queued": "待機中",
+      "running": "処理中",
+      "completed": "完了",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み"
+    },
+    "formatUnavailable": "{format} — 利用不可",
+    "formatNotice": "XLSX と Parquet はストレージワーカーが構成されるまで無効です。",
+    "generating": "作成中...",
+    "generate": "レポート作成",
+    "generateError": "レポートを作成できませんでした。",
+    "download": "ダウンロード",
+    "downloadLabel": "レポート {id} をダウンロード",
+    "downloadError": "レポートをダウンロードできませんでした。",
+    "dateRangeRequired": "カスタム期間の開始日と終了日を選択してください。",
+    "dateRangeInvalid": "開始日は終了日より後にできません。",
+    "rowCount": "{count} 行",
+    "failedLabel": "エラー",
+    "emptyTitle": "レポートがありません",
+    "emptyDescription": "CSV レポートを作成するとここに表示されます。",
+    "loadError": "レポートを読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "retry": "再試行",
+    "permissionDenied": "アクセス権限がありません",
+    "permissionDeniedDescription": "このアカウントではエクスポートジョブを閲覧できません。"
+  },
   "settings": {
     "title": "システム設定",
     "description": "FoodFlowプラットフォームの設定",

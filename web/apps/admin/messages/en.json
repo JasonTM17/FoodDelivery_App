@@ -240,6 +240,64 @@
     "description": "Admin activity history",
     "exportCsv": "Export CSV"
   },
+  "reports": {
+    "title": "Reports & exports",
+    "description": "Create and download reports through the canonical export service",
+    "createTitle": "Create a report",
+    "createDescription": "Choose the report, time range, and available export format",
+    "recentTitle": "Recent reports",
+    "recentDescription": "Latest report jobs created by administrators",
+    "fields": {
+      "reportType": "Report type",
+      "period": "Time range",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "format": "Format"
+    },
+    "resources": {
+      "audit_logs": "Audit logs",
+      "drivers": "Drivers",
+      "orders": "Orders",
+      "promotions": "Promotions",
+      "restaurants": "Restaurants",
+      "revenue": "Revenue",
+      "users": "Users"
+    },
+    "periods": {
+      "today": "Today",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "thisMonth": "This month",
+      "thisQuarter": "This quarter",
+      "custom": "Custom range"
+    },
+    "statuses": {
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "formatUnavailable": "{format} — unavailable",
+    "formatNotice": "XLSX and Parquet remain disabled until their storage workers are configured.",
+    "generating": "Creating...",
+    "generate": "Create report",
+    "generateError": "Could not create the report.",
+    "download": "Download",
+    "downloadLabel": "Download report {id}",
+    "downloadError": "Could not download the report.",
+    "dateRangeRequired": "Choose both dates for a custom range.",
+    "dateRangeInvalid": "The start date must not be after the end date.",
+    "rowCount": "{count, plural, =0 {No rows} one {# row} other {# rows}}",
+    "failedLabel": "Error",
+    "emptyTitle": "No reports yet",
+    "emptyDescription": "Create a CSV report to see it here.",
+    "loadError": "Could not load reports",
+    "loadErrorDescription": "Check the connection and try again.",
+    "retry": "Try again",
+    "permissionDenied": "Permission denied",
+    "permissionDeniedDescription": "Your account cannot view export jobs."
+  },
   "settings": {
     "title": "System Settings",
     "description": "Configure the FoodFlow platform",

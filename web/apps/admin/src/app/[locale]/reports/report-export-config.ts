@@ -1,33 +1,67 @@
+import type {
+  AdminExportFormat,
+  AdminExportJobsPayload,
+  AdminExportResource,
+  AdminExportStatus,
+  CreateAdminExportRequest,
+} from '@foodflow/api-client';
 import { FileArchive, FileSpreadsheet, FileText } from 'lucide-react';
 
-export const reportTypes = [
-  { value: 'revenue', label: 'Doanh thu' },
-  { value: 'orders', label: 'Đơn hàng' },
-  { value: 'users', label: 'Người dùng' },
-  { value: 'drivers', label: 'Tài xế' },
-  { value: 'restaurants', label: 'Nhà hàng' },
-  { value: 'promotions', label: 'Khuyến mãi' },
+export type AdminExportPeriod = NonNullable<CreateAdminExportRequest['period']>;
+
+export const reportTypes: AdminExportResource[] = [
+  'revenue',
+  'orders',
+  'users',
+  'drivers',
+  'restaurants',
+  'promotions',
 ];
 
-export const datePresets = [
-  { value: 'today', label: 'Hôm nay' },
-  { value: '7d', label: '7 ngày qua' },
-  { value: '30d', label: '30 ngày qua' },
-  { value: 'thisMonth', label: 'Tháng này' },
-  { value: 'thisQuarter', label: 'Quý này' },
-  { value: 'custom', label: 'Tùy chỉnh' },
+export const datePresets: AdminExportPeriod[] = [
+  'today',
+  '7d',
+  '30d',
+  'thisMonth',
+  'thisQuarter',
+  'custom',
 ];
 
-export const exportFormats = [
-  { value: 'csv', label: 'CSV', icon: FileSpreadsheet },
-  { value: 'xlsx', label: 'XLSX', icon: FileText },
-  { value: 'parquet', label: 'Parquet', icon: FileArchive },
+export const exportFormats: Array<{
+  value: AdminExportFormat;
+  icon: typeof FileText;
+  disabled: boolean;
+}> = [
+  { value: 'csv', icon: FileSpreadsheet, disabled: false },
+  { value: 'xlsx', icon: FileText, disabled: true },
+  { value: 'parquet', icon: FileArchive, disabled: true },
 ];
 
-export const statusBadges: Record<string, { label: string; variant: 'secondary' | 'default' | 'destructive' }> = {
-  queued: { label: 'Đang chờ', variant: 'secondary' },
-  running: { label: 'Đang xử lý', variant: 'default' },
-  completed: { label: 'Hoàn thành', variant: 'default' },
-  failed: { label: 'Thất bại', variant: 'destructive' },
-  cancelled: { label: 'Đã hủy', variant: 'secondary' },
+export const statusBadgeVariants: Record<
+  AdminExportStatus,
+  'secondary' | 'default' | 'destructive'
+> = {
+  queued: 'secondary',
+  running: 'default',
+  completed: 'default',
+  failed: 'destructive',
+  cancelled: 'secondary',
 };
+
+export type CustomDateRangeError = 'required' | 'invalid' | null;
+
+export function validateCustomDateRange(
+  period: AdminExportPeriod,
+  dateFrom: string,
+  dateTo: string,
+): CustomDateRangeError {
+  if (period !== 'custom') return null;
+  if (!dateFrom || !dateTo) return 'required';
+  if (dateFrom > dateTo) return 'invalid';
+  return null;
+}
+
+export function getExportPollingInterval(data?: AdminExportJobsPayload): number | false {
+  const hasPendingJob = data?.jobs.some(job => job.status === 'queued' || job.status === 'running');
+  return hasPendingJob ? 5_000 : false;
+}

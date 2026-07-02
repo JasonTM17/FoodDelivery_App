@@ -240,6 +240,64 @@
     "description": "Lịch sử hoạt động của admin",
     "exportCsv": "Xuất CSV"
   },
+  "reports": {
+    "title": "Báo cáo & xuất dữ liệu",
+    "description": "Tạo và tải báo cáo qua dịch vụ xuất dữ liệu chuẩn",
+    "createTitle": "Tạo báo cáo mới",
+    "createDescription": "Chọn loại báo cáo, khoảng thời gian và định dạng đang khả dụng",
+    "recentTitle": "Báo cáo gần đây",
+    "recentDescription": "Các job báo cáo mới nhất do quản trị viên tạo",
+    "fields": {
+      "reportType": "Loại báo cáo",
+      "period": "Khoảng thời gian",
+      "dateFrom": "Từ ngày",
+      "dateTo": "Đến ngày",
+      "format": "Định dạng"
+    },
+    "resources": {
+      "audit_logs": "Nhật ký kiểm toán",
+      "drivers": "Tài xế",
+      "orders": "Đơn hàng",
+      "promotions": "Khuyến mãi",
+      "restaurants": "Nhà hàng",
+      "revenue": "Doanh thu",
+      "users": "Người dùng"
+    },
+    "periods": {
+      "today": "Hôm nay",
+      "7d": "7 ngày qua",
+      "30d": "30 ngày qua",
+      "thisMonth": "Tháng này",
+      "thisQuarter": "Quý này",
+      "custom": "Tùy chỉnh"
+    },
+    "statuses": {
+      "queued": "Đang chờ",
+      "running": "Đang xử lý",
+      "completed": "Hoàn thành",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy"
+    },
+    "formatUnavailable": "{format} — chưa khả dụng",
+    "formatNotice": "XLSX và Parquet bị vô hiệu hóa cho đến khi worker lưu trữ được cấu hình.",
+    "generating": "Đang tạo...",
+    "generate": "Tạo báo cáo",
+    "generateError": "Không thể tạo báo cáo.",
+    "download": "Tải xuống",
+    "downloadLabel": "Tải báo cáo {id}",
+    "downloadError": "Không thể tải báo cáo.",
+    "dateRangeRequired": "Hãy chọn đủ hai ngày cho khoảng tùy chỉnh.",
+    "dateRangeInvalid": "Ngày bắt đầu không được sau ngày kết thúc.",
+    "rowCount": "{count} dòng",
+    "failedLabel": "Lỗi",
+    "emptyTitle": "Chưa có báo cáo",
+    "emptyDescription": "Tạo báo cáo CSV để xem tại đây.",
+    "loadError": "Không thể tải báo cáo",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "retry": "Thử lại",
+    "permissionDenied": "Không có quyền truy cập",
+    "permissionDeniedDescription": "Tài khoản của bạn không thể xem các job xuất dữ liệu."
+  },
   "settings": {
     "title": "Cài đặt hệ thống",
     "description": "Cấu hình nền tảng FoodFlow",
