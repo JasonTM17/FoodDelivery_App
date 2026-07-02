@@ -16,14 +16,14 @@ jobs:
           fetch-depth: 0
 
       - name: Generate changelog
-        uses: orhun/git-cliff-action@v3
+        uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
         env:
           OUTPUT: CHANGELOG.md
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Docker image for SBOM
         run: docker build -t foodflow-backend:${{ github.ref_name }} ./backend
