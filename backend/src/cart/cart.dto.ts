@@ -1,5 +1,4 @@
-import { IsString, IsInt, IsOptional, Min, IsArray, ValidateNested, IsNumber } from 'class-validator'
-import { Type } from 'class-transformer'
+import { IsString, IsInt, IsOptional, Min, IsArray } from 'class-validator'
 
 export class AddCartItemDto {
   @IsString()

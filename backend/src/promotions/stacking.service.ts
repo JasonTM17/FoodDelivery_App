@@ -60,14 +60,22 @@ export class StackingService {
       }
 
       if (p.type === 'percentage') {
-        hasPercent ? rejected.push(candidate) : (accepted.push(candidate), (hasPercent = true))
+        if (hasPercent) {
+          rejected.push(candidate)
+        } else {
+          accepted.push(candidate)
+          hasPercent = true
+        }
         continue
       }
 
       if (p.type === 'free_delivery') {
-        hasFreeDelivery
-          ? rejected.push(candidate)
-          : (accepted.push(candidate), (hasFreeDelivery = true))
+        if (hasFreeDelivery) {
+          rejected.push(candidate)
+        } else {
+          accepted.push(candidate)
+          hasFreeDelivery = true
+        }
         continue
       }
 

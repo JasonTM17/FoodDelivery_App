@@ -9,6 +9,7 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import { goOnlineSchema } from './drivers.zod'
 
 @ApiTags('drivers')
+@ApiBearerAuth()
 @Controller('driver')
 @UseGuards(JwtAuthGuard)
 @Roles('driver')

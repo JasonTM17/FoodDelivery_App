@@ -48,7 +48,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
       client.join(room)
 
       this.logger.log(`User ${payload.sub} connected to notifications (socket ${client.id})`)
-    } catch (err) {
+    } catch {
       this.logger.warn(`WebSocket connection rejected: invalid token (socket ${client.id})`)
       client.disconnect(true)
     }

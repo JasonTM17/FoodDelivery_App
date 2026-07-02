@@ -9,7 +9,7 @@ export class AiController {
   @Post('chat')
   async chat(
     @CurrentUser() user: JwtPayload,
-    @Body() body: { message: string; sessionId?: string; orderId?: string },
+    @Body() _body: { message: string; sessionId?: string; orderId?: string },
   ) {
     return {
       reply: `Xin chào! Tôi là FoodFlow AI Assistant. Bạn cần giúp gì? (User: ${user.sub})`,

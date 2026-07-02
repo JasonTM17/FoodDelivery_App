@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { KycStatus, OrderStatus, RestaurantApprovalStatus } from '@prisma/client'
+import { KycStatus, RestaurantApprovalStatus } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { OrdersService } from '../orders/orders.service'
 
@@ -133,10 +133,10 @@ export class AdminResourcesService {
   async getUser(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id }, include: { customerProfile: true, driverProfile: true, restaurantProfile: { include: { restaurant: true } } },
+      omit: { passwordHash: true },
     })
     if (!user) throw new NotFoundException('USER_NOT_FOUND')
-    const { passwordHash: _passwordHash, ...safeUser } = user
-    return safeUser
+    return user
   }
 
   async getUserWallet(id: string) {

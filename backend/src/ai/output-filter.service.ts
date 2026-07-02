@@ -21,7 +21,7 @@ const INJECTION_PATTERNS: RegExp[] = [
 const VN_PHONE_RE = /(?<!\*\*\*\*)(\+?84|0)[3-9]\d{8}\b/g
 
 // Email mask: keep first char + *** before @, keep domain
-const EMAIL_RE = /[a-zA-Z0-9._%+\-]{2,}@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}/g
+const EMAIL_RE = /[a-zA-Z0-9._%+-]{2,}@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/g
 
 // Full national ID (CCCD 12 digits) — mask middle 8
 const CCCD_RE = /\b(\d{3})\d{6}(\d{3})\b/g

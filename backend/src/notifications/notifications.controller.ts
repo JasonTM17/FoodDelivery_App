@@ -6,6 +6,7 @@ import { JwtPayload } from '../auth/jwt-payload.interface'
 import { NotificationsService } from './notifications.service'
 
 @ApiTags('notifications')
+@ApiBearerAuth()
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {

@@ -6,6 +6,7 @@ import { JwtPayload } from '../auth/jwt-payload.interface'
 import { TrackingService } from './tracking.service'
 
 @ApiTags('tracking')
+@ApiBearerAuth()
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class TrackingController {
