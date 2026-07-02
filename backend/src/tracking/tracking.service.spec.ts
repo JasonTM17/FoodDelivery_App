@@ -7,6 +7,7 @@ import { PrismaService } from '../database/prisma.service'
 
 describe('TrackingService', () => {
   let service: TrackingService
+  let module: TestingModule
 
   const mockRedis = { geoadd: jest.fn(), setex: jest.fn(), get: jest.fn(), geopos: jest.fn() }
   const mockPrisma = {
@@ -23,7 +24,7 @@ describe('TrackingService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         TrackingService,
         { provide: PrismaService, useValue: mockPrisma },
@@ -34,6 +35,10 @@ describe('TrackingService', () => {
       ],
     }).compile()
     service = module.get(TrackingService)
+  })
+
+  afterEach(async () => {
+    await module?.close()
   })
 
   describe('calculateETA', () => {
