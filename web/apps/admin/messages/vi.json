@@ -79,9 +79,34 @@
     "createAction": "Tạo mới",
     "back": "Quay lại",
     "notFound": "Không tìm thấy khuyến mãi.",
-    "types": { "percentage": "Phần trăm", "fixed": "Cố định", "free_delivery": "Miễn phí vận chuyển", "bogo": "Mua một tặng một", "combo": "Combo" },
-    "columns": { "code": "Mã", "type": "Loại", "value": "Giá trị", "usage": "Đã dùng / giới hạn", "expiry": "Hạn sử dụng", "active": "Kích hoạt", "actions": "Thao tác" },
-    "fields": { "code": "Mã khuyến mãi", "type": "Loại", "percentageValue": "Phần trăm giảm", "fixedValue": "Số tiền giảm", "minOrder": "Đơn tối thiểu", "maxDiscount": "Giảm tối đa", "usageLimit": "Giới hạn lượt dùng", "startDate": "Ngày bắt đầu", "endDate": "Ngày kết thúc", "description": "Mô tả" }
+    "types": {
+      "percentage": "Phần trăm",
+      "fixed": "Cố định",
+      "free_delivery": "Miễn phí vận chuyển",
+      "bogo": "Mua một tặng một",
+      "combo": "Combo"
+    },
+    "columns": {
+      "code": "Mã",
+      "type": "Loại",
+      "value": "Giá trị",
+      "usage": "Đã dùng / giới hạn",
+      "expiry": "Hạn sử dụng",
+      "active": "Kích hoạt",
+      "actions": "Thao tác"
+    },
+    "fields": {
+      "code": "Mã khuyến mãi",
+      "type": "Loại",
+      "percentageValue": "Phần trăm giảm",
+      "fixedValue": "Số tiền giảm",
+      "minOrder": "Đơn tối thiểu",
+      "maxDiscount": "Giảm tối đa",
+      "usageLimit": "Giới hạn lượt dùng",
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "description": "Mô tả"
+    }
   },
   "login": {
     "title": "FoodFlow Admin",
@@ -176,7 +201,9 @@
       "delivering": "Đang giao",
       "delivered": "Đã giao",
       "completed": "Hoàn tất",
-      "cancelled": "Đã hủy"
+      "cancelled": "Đã hủy",
+      "pending": "Ch? x?c nh?n",
+      "confirmed": "?? x?c nh?n"
     }
   },
   "orderDetail": {
@@ -318,7 +345,11 @@
     "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
     "retry": "Thử lại",
     "permissionDenied": "Không có quyền truy cập",
-    "permissionDeniedDescription": "Tài khoản của bạn không thể xem các job xuất dữ liệu."
+    "permissionDeniedDescription": "Tài khoản của bạn không thể xem các job xuất dữ liệu.",
+    "processedRows": "{processed} d?ng",
+    "processedRowsWithTotal": "{processed} / {total} d?ng",
+    "estimatedRows": "D? ki?n: {count} d?ng",
+    "cancel": "H?y"
   },
   "reports": {
     "title": "Báo cáo & xuất dữ liệu",
@@ -386,7 +417,60 @@
   },
   "support": {
     "title": "Hỗ trợ",
-    "description": "Quản lý yêu cầu hỗ trợ từ khách hàng"
+    "description": "Quản lý yêu cầu hỗ trợ từ khách hàng",
+    "statuses": {
+      "open": "M?",
+      "in_progress": "?ang x? l?",
+      "waiting_customer": "Ch? kh?ch",
+      "resolved": "?? gi?i quy?t",
+      "closed": "?? ??ng"
+    },
+    "priorities": {
+      "low": "Th?p",
+      "medium": "Trung b?nh",
+      "normal": "B?nh th??ng",
+      "high": "Cao",
+      "urgent": "Kh?n c?p",
+      "critical": "Kh?n c?p"
+    },
+    "sla": {
+      "overdue": "Qu? h?n",
+      "remainingPercent": "{percent}% c?n l?i",
+      "expiringSoon": "S?p h?t h?n",
+      "almostOverdue": "G?n qu? h?n",
+      "overdueBy": "Qu? h?n {time}",
+      "remainingTime": "C?n {time}"
+    },
+    "statusUpdateError": "Kh?ng th? c?p nh?t tr?ng th?i",
+    "mutationError": "Kh?ng th? c?p nh?t ticket",
+    "emptyColumn": "Kh?ng c? ticket",
+    "orderShort": "??n: #{id}",
+    "assigned": "?? nh?n",
+    "detailTitle": "Chi ti?t y?u c?u",
+    "userLabel": "Ng??i d?ng:",
+    "orderLabel": "??n h?ng:",
+    "createdAtLabel": "Ng?y t?o:",
+    "assigneeLabel": "Ng??i x? l?:",
+    "unassigned": "Ch?a ph?n c?ng",
+    "resolutionNotes": "Ghi ch? x? l?",
+    "resolutionPlaceholder": "Nh?p ghi ch? x? l?...",
+    "statusLabel": "Tr?ng th?i",
+    "claim": "Nh?n x? l?",
+    "cancel": "H?y",
+    "saveChanges": "L?u thay ??i",
+    "thread": {
+      "empty": "Ch?a c? tin nh?n n?o",
+      "agentRole": "(H? tr? vi?n)",
+      "customerRole": "(Kh?ch h?ng)",
+      "internalNote": "Ghi ch? n?i b?"
+    },
+    "internalNote": {
+      "saveError": "Kh?ng th? l?u ghi ch? n?i b?",
+      "visibility": "Ch? hi?n th? cho ??i h? tr?",
+      "placeholder": "Ghi ch? n?i b?...",
+      "saving": "?ang l?u...",
+      "submit": "Th?m ghi ch? n?i b?"
+    }
   },
   "supportDetail": {
     "breadcrumbs": {
@@ -774,5 +858,9 @@
     "vatNumber": "Mã số thuế",
     "vatEnabled": "VAT / Thuế",
     "vatEnabledDesc": "Áp dụng VAT vào giao dịch"
+  },
+  "realtimeOrders": {
+    "title": "??n h?ng tr?c ti?p",
+    "empty": "Ch?a c? ??n h?ng m?i"
   }
 }

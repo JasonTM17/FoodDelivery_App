@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { timeSince } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/layout/admin-page-header';
 import TicketPriorityBadge from '@/components/badges/ticket-priority-badge';
 import { Button } from '@/components/ui/button';
@@ -50,16 +50,17 @@ interface Ticket {
   resolutionNotes: string;
 }
 
-const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  open: { label: 'Mở', icon: MessageSquare, color: 'border-blue-500' },
-  in_progress: { label: 'Đang xử lý', icon: UserCheck, color: 'border-orange-500' },
-  resolved: { label: 'Đã giải quyết', icon: CheckCircle, color: 'border-green-500' },
-  closed: { label: 'Đã đóng', icon: Archive, color: 'border-gray-500' },
+const statusConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  open: { icon: MessageSquare, color: 'border-blue-500' },
+  in_progress: { icon: UserCheck, color: 'border-orange-500' },
+  resolved: { icon: CheckCircle, color: 'border-green-500' },
+  closed: { icon: Archive, color: 'border-gray-500' },
 };
 
 const statusColumns = ['open', 'in_progress', 'resolved', 'closed'] as const;
 
 export default function SupportPage() {
+  const locale = useLocale();
   const t = useTranslations('support');
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -93,7 +94,7 @@ export default function SupportPage() {
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
       setDetailOpen(false);
     } catch (err) {
-      setMutationError((err as { message?: string }).message || 'Không thể cập nhật ticket');
+      setMutationError((err as { message?: string }).message || t('mutationError'));
     }
   };
 
@@ -139,7 +140,7 @@ export default function SupportPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Icon className="h-4 w-4" />
-                    <CardTitle className="text-sm font-medium">{config.label}</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t(`statuses.${col}`)}</CardTitle>
                   </div>
                   <Badge variant="outline">{columnTickets.length}</Badge>
                 </div>
@@ -149,7 +150,7 @@ export default function SupportPage() {
                   <div className="space-y-2 p-1">
                     {columnTickets.length === 0 ? (
                       <p className="py-8 text-center text-xs text-muted-foreground">
-                        Không có ticket
+                        {t('emptyColumn')}
                       </p>
                     ) : (
                       columnTickets.map((ticket) => (
@@ -177,17 +178,17 @@ export default function SupportPage() {
                             </span>
                             <span className="flex items-center gap-0.5">
                               <Clock className="h-3 w-3" />
-                              {timeSince(ticket.createdAt)}
+                              {timeSince(ticket.createdAt, locale)}
                             </span>
                           </div>
                           {ticket.orderId && (
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              Đơn: #{ticket.orderId}
+                              {t('orderShort', { id: ticket.orderId })}
                             </p>
                           )}
                           {ticket.assignedTo && (
                             <Badge variant="outline" className="mt-1 text-[10px] py-0">
-                              Đã nhận
+                              {t('assigned')}
                             </Badge>
                           )}
                         </Button>
@@ -204,7 +205,7 @@ export default function SupportPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Chi tiết yêu cầu</DialogTitle>
+            <DialogTitle>{t('detailTitle')}</DialogTitle>
             <DialogDescription>
               {selectedTicket && `#${selectedTicket.id.slice(0, 8)}`}
             </DialogDescription>
@@ -223,7 +224,7 @@ export default function SupportPage() {
                   <TicketPriorityBadge priority={selectedTicket.priority} />
                 </div>
                 <Badge variant="outline">
-                  {statusConfig[selectedTicket.status as keyof typeof statusConfig]?.label || selectedTicket.status}
+                  {selectedTicket.status in statusConfig ? t(`statuses.${selectedTicket.status}`) : selectedTicket.status}
                 </Badge>
               </div>
 
@@ -233,30 +234,30 @@ export default function SupportPage() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Người dùng: </span>
+                  <span className="text-muted-foreground">{t('userLabel')} </span>
                   <span>{selectedTicket.userName}</span>
                 </div>
                 {selectedTicket.orderId && (
                   <div>
-                    <span className="text-muted-foreground">Đơn hàng: </span>
+                    <span className="text-muted-foreground">{t('orderLabel')} </span>
                     <span>#{selectedTicket.orderId}</span>
                   </div>
                 )}
                 <div>
-                  <span className="text-muted-foreground">Ngày tạo: </span>
-                  <span>{timeSince(selectedTicket.createdAt)}</span>
+                  <span className="text-muted-foreground">{t('createdAtLabel')} </span>
+                  <span>{timeSince(selectedTicket.createdAt, locale)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Người xử lý: </span>
-                  <span>{selectedTicket.assignedTo || 'Chưa phân công'}</span>
+                  <span className="text-muted-foreground">{t('assigneeLabel')} </span>
+                  <span>{selectedTicket.assignedTo || t('unassigned')}</span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="resolution">Ghi chú xử lý</Label>
+                <Label htmlFor="resolution">{t('resolutionNotes')}</Label>
                 <Textarea
                   id="resolution"
-                  placeholder="Nhập ghi chú xử lý..."
+                  placeholder={t('resolutionPlaceholder')}
                   value={resolutionNotes}
                   onChange={(e) => setResolutionNotes(e.target.value)}
                   rows={3}
@@ -264,16 +265,15 @@ export default function SupportPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ticketStatus">Trạng thái</Label>
+                <Label htmlFor="ticketStatus">{t('statusLabel')}</Label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
                   <SelectTrigger id="ticketStatus">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="open">Mở</SelectItem>
-                    <SelectItem value="in_progress">Đang xử lý</SelectItem>
-                    <SelectItem value="resolved">Đã giải quyết</SelectItem>
-                    <SelectItem value="closed">Đã đóng</SelectItem>
+                    {statusColumns.map((status) => (
+                      <SelectItem key={status} value={status}>{t(`statuses.${status}`)}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -290,13 +290,13 @@ export default function SupportPage() {
                 }}
               >
                 <UserCheck className="mr-2 h-4 w-4" />
-                Nhận xử lý
+                {t('claim')}
               </Button>
             )}
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
-            <Button onClick={updateTicket}>Lưu thay đổi</Button>
+            <Button onClick={updateTicket}>{t('saveChanges')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

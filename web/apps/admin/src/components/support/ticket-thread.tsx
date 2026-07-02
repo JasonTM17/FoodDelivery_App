@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface ThreadMessage {
   id: string;
@@ -23,6 +24,7 @@ interface TicketThreadProps {
 }
 
 export default function TicketThread({ ticketId, className }: TicketThreadProps) {
+  const t = useTranslations('support.thread');
   const { data, isLoading } = useQuery<{ messages: ThreadMessage[] }>({
     queryKey: ['ticket-thread', ticketId],
     queryFn: () => apiGet(`/admin/support-tickets/${ticketId}/messages`),
@@ -44,7 +46,7 @@ export default function TicketThread({ ticketId, className }: TicketThreadProps)
   return (
     <div className={cn('space-y-4', className)}>
       {messages.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Chưa có tin nhắn nào</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t('empty')}</p>
       ) : (
         messages.map((msg, i) => (
           <div key={msg.id}>
@@ -70,11 +72,11 @@ export default function TicketThread({ ticketId, className }: TicketThreadProps)
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{msg.sender.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {msg.sender.role === 'agent' ? '(Hỗ trợ viên)' : '(Khách hàng)'}
+                        {msg.sender.role === 'agent' ? t('agentRole') : t('customerRole')}
                       </span>
                       {msg.isInternalNote && (
                         <span className="rounded bg-yellow-200 px-1.5 py-0.5 text-[10px] font-medium text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
-                          Ghi chú nội bộ
+                          {t('internalNote')}
                         </span>
                       )}
                       <span className="ml-auto text-xs text-muted-foreground">

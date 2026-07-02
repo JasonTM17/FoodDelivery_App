@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface SlaTimerProps {
   deadline: Date | string;
@@ -12,6 +13,7 @@ interface SlaTimerProps {
 }
 
 export default function SlaTimer({ deadline, label, className, onOverdue }: SlaTimerProps) {
+  const t = useTranslations('support.sla');
   const [minutesLeft, setMinutesLeft] = useState<number>(0);
   const [overdue, setOverdue] = useState(false);
 
@@ -52,7 +54,9 @@ export default function SlaTimer({ deadline, label, className, onOverdue }: SlaT
     >
       <Clock className="h-3.5 w-3.5" />
       <span>
-        {overdue ? `Quá hạn ${formatTime(minutesLeft)}` : `Còn ${formatTime(minutesLeft)}`}
+        {overdue
+          ? t('overdueBy', { time: formatTime(minutesLeft) })
+          : t('remainingTime', { time: formatTime(minutesLeft) })}
         {label && ` • ${label}`}
       </span>
     </div>

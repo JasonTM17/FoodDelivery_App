@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 const priorityStyles: Record<string, string> = {
   low: 'bg-muted text-muted-foreground border-border',
@@ -9,18 +10,12 @@ const priorityStyles: Record<string, string> = {
   urgent: 'bg-red-100 text-red-700 border-red-200',
 };
 
-const priorityLabels: Record<string, string> = {
-  low: 'Thấp',
-  medium: 'Trung bình',
-  high: 'Cao',
-  urgent: 'Khẩn cấp',
-};
-
 interface TicketPriorityBadgeProps {
   priority: string;
 }
 
 export default function TicketPriorityBadge({ priority }: TicketPriorityBadgeProps) {
+  const t = useTranslations('support.priorities');
   const normalized = priority.toLowerCase();
   return (
     <span
@@ -29,7 +24,7 @@ export default function TicketPriorityBadge({ priority }: TicketPriorityBadgePro
         priorityStyles[normalized] || 'bg-muted text-muted-foreground border-border'
       )}
     >
-      {priorityLabels[normalized] || priority}
+      {normalized in priorityStyles ? t(normalized) : priority}
     </span>
   );
 }

@@ -79,9 +79,34 @@
     "createAction": "Create",
     "back": "Back",
     "notFound": "Promotion not found.",
-    "types": { "percentage": "Percentage", "fixed": "Fixed amount", "free_delivery": "Free delivery", "bogo": "Buy one get one", "combo": "Combo" },
-    "columns": { "code": "Code", "type": "Type", "value": "Value", "usage": "Used / limit", "expiry": "Expiry", "active": "Active", "actions": "Actions" },
-    "fields": { "code": "Promotion code", "type": "Type", "percentageValue": "Discount percentage", "fixedValue": "Discount amount", "minOrder": "Minimum order", "maxDiscount": "Maximum discount", "usageLimit": "Usage limit", "startDate": "Start date", "endDate": "End date", "description": "Description" }
+    "types": {
+      "percentage": "Percentage",
+      "fixed": "Fixed amount",
+      "free_delivery": "Free delivery",
+      "bogo": "Buy one get one",
+      "combo": "Combo"
+    },
+    "columns": {
+      "code": "Code",
+      "type": "Type",
+      "value": "Value",
+      "usage": "Used / limit",
+      "expiry": "Expiry",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "fields": {
+      "code": "Promotion code",
+      "type": "Type",
+      "percentageValue": "Discount percentage",
+      "fixedValue": "Discount amount",
+      "minOrder": "Minimum order",
+      "maxDiscount": "Maximum discount",
+      "usageLimit": "Usage limit",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "description": "Description"
+    }
   },
   "login": {
     "title": "FoodFlow Admin",
@@ -176,7 +201,9 @@
       "delivering": "Delivering",
       "delivered": "Delivered",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "pending": "Pending confirmation",
+      "confirmed": "Confirmed"
     }
   },
   "orderDetail": {
@@ -318,7 +345,11 @@
     "loadErrorDescription": "Check the connection and try again.",
     "retry": "Try again",
     "permissionDenied": "Permission denied",
-    "permissionDeniedDescription": "Your account cannot view export jobs."
+    "permissionDeniedDescription": "Your account cannot view export jobs.",
+    "processedRows": "{processed} rows",
+    "processedRowsWithTotal": "{processed} / {total} rows",
+    "estimatedRows": "Estimated: {count} rows",
+    "cancel": "Cancel"
   },
   "reports": {
     "title": "Reports & exports",
@@ -386,7 +417,60 @@
   },
   "support": {
     "title": "Support",
-    "description": "Manage customer support requests"
+    "description": "Manage customer support requests",
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "waiting_customer": "Waiting for customer",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priorities": {
+      "low": "Low",
+      "medium": "Medium",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent",
+      "critical": "Critical"
+    },
+    "sla": {
+      "overdue": "Overdue",
+      "remainingPercent": "{percent}% remaining",
+      "expiringSoon": "Expiring soon",
+      "almostOverdue": "Nearly overdue",
+      "overdueBy": "Overdue by {time}",
+      "remainingTime": "{time} remaining"
+    },
+    "statusUpdateError": "Could not update status",
+    "mutationError": "Could not update ticket",
+    "emptyColumn": "No tickets",
+    "orderShort": "Order: #{id}",
+    "assigned": "Claimed",
+    "detailTitle": "Request details",
+    "userLabel": "User:",
+    "orderLabel": "Order:",
+    "createdAtLabel": "Created:",
+    "assigneeLabel": "Assignee:",
+    "unassigned": "Unassigned",
+    "resolutionNotes": "Resolution notes",
+    "resolutionPlaceholder": "Enter resolution notes...",
+    "statusLabel": "Status",
+    "claim": "Claim",
+    "cancel": "Cancel",
+    "saveChanges": "Save changes",
+    "thread": {
+      "empty": "No messages yet",
+      "agentRole": "(Agent)",
+      "customerRole": "(Customer)",
+      "internalNote": "Internal note"
+    },
+    "internalNote": {
+      "saveError": "Could not save internal note",
+      "visibility": "Only visible to the support team",
+      "placeholder": "Internal note...",
+      "saving": "Saving...",
+      "submit": "Add internal note"
+    }
   },
   "supportDetail": {
     "breadcrumbs": {
@@ -774,5 +858,9 @@
     "vatNumber": "VAT Number",
     "vatEnabled": "VAT / Tax",
     "vatEnabledDesc": "Apply VAT to transactions"
+  },
+  "realtimeOrders": {
+    "title": "Live orders",
+    "empty": "No new orders yet"
   }
 }

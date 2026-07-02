@@ -3,24 +3,24 @@ import { render, screen } from '@testing-library/react';
 import TicketSlaBadge from '@/components/support/ticket-sla-badge';
 
 describe('TicketSlaBadge', () => {
-  it('shows "Quá hạn" when overdue', () => {
+  it('shows the overdue translation key when overdue', () => {
     render(<TicketSlaBadge sla={{ percentRemaining: 0, overdue: true }} />);
-    expect(screen.getByText('Quá hạn')).toBeInTheDocument();
+    expect(screen.getByText('overdue')).toBeInTheDocument();
   });
 
-  it('shows percentage and success variant when >50% remaining', () => {
+  it('shows percentage translation key and success variant when >50% remaining', () => {
     render(<TicketSlaBadge sla={{ percentRemaining: 0.75, overdue: false }} />);
-    expect(screen.getByText('75% còn lại')).toBeInTheDocument();
+    expect(screen.getByText('remainingPercent')).toBeInTheDocument();
   });
 
-  it('shows "Sắp hết hạn" when 25-50% remaining', () => {
+  it('shows the expiring soon translation key when 25-50% remaining', () => {
     render(<TicketSlaBadge sla={{ percentRemaining: 0.4, overdue: false }} />);
-    expect(screen.getByText('Sắp hết hạn')).toBeInTheDocument();
+    expect(screen.getByText('expiringSoon')).toBeInTheDocument();
   });
 
-  it('shows "Gần quá hạn" when <25% remaining', () => {
+  it('shows the almost overdue translation key when <25% remaining', () => {
     render(<TicketSlaBadge sla={{ percentRemaining: 0.1, overdue: false }} />);
-    expect(screen.getByText('Gần quá hạn')).toBeInTheDocument();
+    expect(screen.getByText('almostOverdue')).toBeInTheDocument();
   });
 
   it('has data-testid sla-badge', () => {

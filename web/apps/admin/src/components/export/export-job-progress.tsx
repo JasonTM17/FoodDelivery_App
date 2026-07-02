@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface ExportJob {
   id: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: 'queued' | 'running' | 'processing' | 'completed' | 'failed' | 'cancelled';
   progress: number;
   totalRows?: number;
   processedRows?: number;
@@ -22,10 +23,12 @@ interface ExportJobProgressProps {
 }
 
 const statusConfig: Record<string, { label: string; variant: 'secondary' | 'default' | 'destructive' }> = {
-  queued: { label: 'Đang chờ', variant: 'secondary' },
-  processing: { label: 'Đang xử lý', variant: 'default' },
-  completed: { label: 'Hoàn thành', variant: 'default' },
-  failed: { label: 'Thất bại', variant: 'destructive' },
+  queued: { label: 'queued', variant: 'secondary' },
+  running: { label: 'running', variant: 'default' },
+  processing: { label: 'running', variant: 'default' },
+  completed: { label: 'completed', variant: 'default' },
+  failed: { label: 'failed', variant: 'destructive' },
+  cancelled: { label: 'cancelled', variant: 'secondary' },
 };
 
 export default function ExportJobProgress({
@@ -34,21 +37,24 @@ export default function ExportJobProgress({
   onCancel,
   className,
 }: ExportJobProgressProps) {
+  const locale = useLocale();
+  const t = useTranslations('exportJobs');
   const badge = statusConfig[job.status] || statusConfig.queued;
+  const localeTag = locale === 'ja' ? 'ja-JP' : locale === 'en' ? 'en-US' : 'vi-VN';
 
   return (
     <div className={cn('space-y-3 rounded-lg border p-4', className)} data-testid="export-job-progress">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Job #{job.id.slice(0, 8)}</span>
-          <Badge variant={badge.variant}>{badge.label}</Badge>
+          <Badge variant={badge.variant}>{t(`statuses.${badge.label}`)}</Badge>
         </div>
-        {job.status === 'processing' && (
+        {(job.status === 'processing' || job.status === 'running') && (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         )}
       </div>
 
-      {job.status === 'processing' && (
+      {(job.status === 'processing' || job.status === 'running') && (
         <>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
@@ -58,8 +64,12 @@ export default function ExportJobProgress({
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              {job.processedRows?.toLocaleString('vi-VN') || 0}
-              {job.totalRows ? ` / ${job.totalRows.toLocaleString('vi-VN')}` : ''} dòng
+              {job.totalRows
+                ? t('processedRowsWithTotal', {
+                    processed: (job.processedRows ?? 0).toLocaleString(localeTag),
+                    total: job.totalRows.toLocaleString(localeTag),
+                  })
+                : t('processedRows', { processed: (job.processedRows ?? 0).toLocaleString(localeTag) })}
             </span>
             <span>{job.progress}%</span>
           </div>
@@ -68,7 +78,7 @@ export default function ExportJobProgress({
 
       {job.status === 'queued' && estimatedRowCount && (
         <p className="text-xs text-muted-foreground">
-          Dự kiến: {estimatedRowCount.toLocaleString('vi-VN')} dòng
+          {t('estimatedRows', { count: estimatedRowCount.toLocaleString(localeTag) })}
         </p>
       )}
 
@@ -83,7 +93,7 @@ export default function ExportJobProgress({
         <div className="flex justify-end">
           <Button variant="ghost" size="sm" onClick={onCancel}>
             <XCircle className="mr-1.5 h-3.5 w-3.5" />
-            Hủy
+            {t('cancel')}
           </Button>
         </div>
       )}

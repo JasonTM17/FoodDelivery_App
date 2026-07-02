@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { apiPatch } from '@/lib/api';
 import {
   Select,
@@ -18,15 +19,16 @@ interface TicketStatusPickerProps {
   className?: string;
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  open: { label: 'Mở', color: 'border-blue-500' },
-  in_progress: { label: 'Đang xử lý', color: 'border-orange-500' },
-  waiting_customer: { label: 'Chờ khách', color: 'border-yellow-500' },
-  resolved: { label: 'Đã giải quyết', color: 'border-green-500' },
-  closed: { label: 'Đã đóng', color: 'border-gray-500' },
+const statusConfig: Record<string, { color: string }> = {
+  open: { color: 'border-blue-500' },
+  in_progress: { color: 'border-orange-500' },
+  waiting_customer: { color: 'border-yellow-500' },
+  resolved: { color: 'border-green-500' },
+  closed: { color: 'border-gray-500' },
 };
 
 export default function TicketStatusPicker({ ticketId, currentStatus, className }: TicketStatusPickerProps) {
+  const t = useTranslations('support');
   const queryClient = useQueryClient();
   const [status, setStatus] = useState(currentStatus);
   const [updating, setUpdating] = useState(false);
@@ -42,7 +44,7 @@ export default function TicketStatusPicker({ ticketId, currentStatus, className 
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
     } catch (err) {
       setStatus(currentStatus);
-      setUpdateError((err as { message?: string }).message || 'Không thể cập nhật trạng thái');
+      setUpdateError((err as { message?: string }).message || t('statusUpdateError'));
     } finally {
       setUpdating(false);
     }
@@ -58,8 +60,8 @@ export default function TicketStatusPicker({ ticketId, currentStatus, className 
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Object.entries(statusConfig).map(([k, v]) => (
-            <SelectItem key={k} value={k}>{v.label}</SelectItem>
+          {Object.keys(statusConfig).map((key) => (
+            <SelectItem key={key} value={key}>{t(`statuses.${key}`)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

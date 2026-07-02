@@ -31,18 +31,25 @@ export function formatDateShort(dateString: string): string {
   }).format(date);
 }
 
-export function timeSince(dateString: string): string {
+const localeTags: Record<string, string> = {
+  vi: 'vi-VN',
+  en: 'en-US',
+  ja: 'ja-JP',
+};
+
+export function timeSince(dateString: string, locale = 'vi'): string {
   const now = new Date();
   const date = new Date(dateString);
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat(localeTags[locale] ?? locale, { numeric: 'auto' });
 
-  if (seconds < 60) return `${seconds}s trước`;
+  if (seconds < 60) return formatter.format(-seconds, 'second');
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}ph trước`;
+  if (minutes < 60) return formatter.format(-minutes, 'minute');
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}giờ trước`;
+  if (hours < 24) return formatter.format(-hours, 'hour');
   const days = Math.floor(hours / 24);
-  return `${days} ngày trước`;
+  return formatter.format(-days, 'day');
 }
 
 export function getStatusColor(status: string): string {

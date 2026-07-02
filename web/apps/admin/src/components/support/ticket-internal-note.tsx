@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Lock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface TicketInternalNoteProps {
   onSubmit: (body: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface TicketInternalNoteProps {
 }
 
 export default function TicketInternalNote({ onSubmit, className }: TicketInternalNoteProps) {
+  const t = useTranslations('support.internalNote');
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -24,7 +26,7 @@ export default function TicketInternalNote({ onSubmit, className }: TicketIntern
       await onSubmit(body);
       setBody('');
     } catch (err) {
-      setSaveError((err as { message?: string }).message || 'Không thể lưu ghi chú nội bộ');
+      setSaveError((err as { message?: string }).message || t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -34,10 +36,10 @@ export default function TicketInternalNote({ onSubmit, className }: TicketIntern
     <div className={cn('space-y-2', className)} data-testid="internal-note">
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Lock className="h-3 w-3" />
-        <span>Chỉ hiển thị cho đội hỗ trợ</span>
+        <span>{t('visibility')}</span>
       </div>
       <Textarea
-        placeholder="Ghi chú nội bộ..."
+        placeholder={t('placeholder')}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={2}
@@ -51,7 +53,7 @@ export default function TicketInternalNote({ onSubmit, className }: TicketIntern
           onClick={handleSubmit}
           disabled={!body.trim() || saving}
         >
-          {saving ? 'Đang lưu...' : 'Thêm ghi chú nội bộ'}
+          {saving ? t('saving') : t('submit')}
         </Button>
       </div>
       {saveError && <p className="text-xs text-destructive">{saveError}</p>}
