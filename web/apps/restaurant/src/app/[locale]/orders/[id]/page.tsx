@@ -117,7 +117,7 @@ export default function OrderDetailPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{t('heading', { code: order.code })}</h1>
-            <p className="text-sm text-gray-500">{formatDateTime(order.createdAt)}</p>
+            <p className="text-sm text-gray-500">{formatDateTime(order.createdAt, t('unknownTime'))}</p>
           </div>
         </div>
         <StatusPill status={order.status} />

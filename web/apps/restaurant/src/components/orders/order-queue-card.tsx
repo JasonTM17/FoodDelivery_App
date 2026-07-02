@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/navigation';
 import { Clock, User, ChevronRight, AlertCircle } from 'lucide-react';
 import type { Order } from '@/lib/types';
@@ -15,6 +15,7 @@ interface OrderQueueCardProps {
 export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
   const router = useRouter();
   const t = useTranslations('orders.queueCard');
+  const locale = useLocale();
   const isPending = order.status === 'restaurant_pending';
 
   return (
@@ -69,7 +70,7 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            {formatTimeAgo(order.createdAt)}
+            {formatTimeAgo(order.createdAt, locale, t('unknownTime'))}
           </span>
         </div>
         {order.tableNumber && (

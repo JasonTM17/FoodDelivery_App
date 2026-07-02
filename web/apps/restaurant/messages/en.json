@@ -43,6 +43,7 @@
     "viewAll": "View all",
     "noRecentOrders": "No recent orders",
     "itemCount": "{count} items",
+    "unknownTime": "Unknown",
     "status": {
       "created": "Created",
       "pendingPayment": "Pending payment",
@@ -88,6 +89,7 @@
       "newBadge": "New",
       "moreItems": "+{count, plural, one {# more item} other {# more items}}",
       "total": "Total",
+      "unknownTime": "Unknown",
       "table": "Table {tableNumber}"
     },
     "newOrder": "New Order",
@@ -122,6 +124,7 @@
     "metaTitle": "Order information",
     "codeLabel": "Order code",
     "orderedAtLabel": "Ordered",
+    "unknownTime": "Unknown",
     "itemCountLabel": "Items",
     "status": {
       "restaurant_pending": "Waiting for confirmation",

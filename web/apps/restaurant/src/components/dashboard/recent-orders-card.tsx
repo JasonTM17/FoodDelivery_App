@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowRight, ChevronRight, ShoppingBag } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { DashboardOrder } from '@/lib/types';
 import { cn, formatCurrency, formatTimeAgo } from '@/lib/utils';
 
@@ -17,6 +17,7 @@ export default function RecentOrdersCard({
   onOpenAll,
 }: RecentOrdersCardProps) {
   const t = useTranslations('dashboard');
+  const locale = useLocale();
 
   return (
     <div className="lg:col-span-2 card">
@@ -50,7 +51,7 @@ export default function RecentOrdersCard({
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-xs text-gray-400 font-mono w-16 shrink-0">
-                  {formatTimeAgo(order.createdAt)}
+                  {formatTimeAgo(order.createdAt, locale, t('unknownTime'))}
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">

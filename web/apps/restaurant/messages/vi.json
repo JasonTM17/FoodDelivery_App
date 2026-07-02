@@ -43,6 +43,7 @@
     "viewAll": "Xem tất cả",
     "noRecentOrders": "Chưa có đơn hàng nào",
     "itemCount": "{count} món",
+    "unknownTime": "Không rõ",
     "status": {
       "created": "Mới tạo",
       "pendingPayment": "Chờ thanh toán",
@@ -88,6 +89,7 @@
       "newBadge": "Mới",
       "moreItems": "+{count} món khác",
       "total": "Tổng cộng",
+      "unknownTime": "Không rõ",
       "table": "Bàn {tableNumber}"
     },
     "newOrder": "Đơn mới",
@@ -122,6 +124,7 @@
     "metaTitle": "Thông tin đơn hàng",
     "codeLabel": "Mã đơn",
     "orderedAtLabel": "Thời gian đặt",
+    "unknownTime": "Không rõ",
     "itemCountLabel": "Số món",
     "status": {
       "restaurant_pending": "Chờ xác nhận",

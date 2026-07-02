@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { formatDistanceToNow, format as dateFormat, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { enUS, ja, vi } from 'date-fns/locale';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,43 +14,38 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatTimeAgo(dateString: string): string {
+function resolveDateFnsLocale(locale?: string) {
+  if (locale?.startsWith('ja')) return ja;
+  if (locale?.startsWith('vi')) return vi;
+  return enUS;
+}
+
+export function formatTimeAgo(dateString: string, locale?: string, fallback = 'Unknown'): string {
   try {
     return formatDistanceToNow(parseISO(dateString), {
       addSuffix: true,
-      locale: vi,
+      locale: resolveDateFnsLocale(locale),
     });
   } catch {
-    return 'Không rõ';
+    return fallback;
   }
 }
 
-export function formatDateTime(dateString: string): string {
+export function formatDateTime(dateString: string, fallback = 'Unknown'): string {
   try {
     return dateFormat(parseISO(dateString), 'HH:mm - dd/MM/yyyy');
   } catch {
-    return 'Không rõ';
+    return fallback;
   }
 }
 
-export function formatTime(dateString: string): string {
+export function formatTime(dateString: string, fallback = 'Unknown'): string {
   try {
     return dateFormat(parseISO(dateString), 'HH:mm');
   } catch {
-    return 'Không rõ';
+    return fallback;
   }
 }
-
-export const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: 'Chờ xác nhận',
-  confirmed: 'Đã xác nhận',
-  preparing: 'Đang chuẩn bị',
-  ready: 'Sẵn sàng',
-  delivering: 'Đang giao',
-  delivered: 'Đã giao',
-  cancelled: 'Đã hủy',
-  rejected: 'Từ chối',
-};
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: 'bg-red-100 text-red-800 border-red-200',

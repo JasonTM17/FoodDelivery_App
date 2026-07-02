@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { FileText, Hash, MapPin, Phone, Receipt, User } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { Order } from '@/lib/types';
 import { cn, formatCurrency, formatTimeAgo } from '@/lib/utils';
 
@@ -130,6 +130,7 @@ export function CustomerInfoCard({ order }: { order: Order }) {
 
 export function OrderMetaCard({ order }: { order: Order }) {
   const t = useTranslations('orderDetail');
+  const locale = useLocale();
   return (
     <div className="card">
       <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
@@ -138,7 +139,7 @@ export function OrderMetaCard({ order }: { order: Order }) {
       </h2>
       <div className="space-y-2 text-sm">
         <MetaRow label={t('codeLabel')} value={order.code} />
-        <MetaRow label={t('orderedAtLabel')} value={formatTimeAgo(order.createdAt)} />
+        <MetaRow label={t('orderedAtLabel')} value={formatTimeAgo(order.createdAt, locale, t('unknownTime'))} />
         <MetaRow label={t('itemCountLabel')} value={String(order.items.reduce((sum, item) => sum + item.quantity, 0))} />
       </div>
     </div>
