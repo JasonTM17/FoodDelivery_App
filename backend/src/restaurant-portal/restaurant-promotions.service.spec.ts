@@ -109,6 +109,28 @@ describe('RestaurantPromotionsService', () => {
     expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: 'customer-a' }))
     expect(result).toEqual({ targeted: 1, sent: 1 })
   })
+
+  it('limits notification concurrency while preserving the broadcast result', async () => {
+    const customers = Array.from({ length: 101 }, (_, index) => ({ id: `customer-${index}` }))
+    let activeNotifications = 0
+    let maxConcurrency = 0
+
+    resolveCustomerIds.mockResolvedValue(customers.map(customer => customer.id))
+    findCustomers.mockResolvedValue(customers)
+    createNotification.mockImplementation(async () => {
+      activeNotifications += 1
+      maxConcurrency = Math.max(maxConcurrency, activeNotifications)
+      await new Promise(resolve => setImmediate(resolve))
+      activeNotifications -= 1
+      return { id: 'notification' }
+    })
+
+    const result = await service.broadcast(userId, 'promotion-1')
+
+    expect(maxConcurrency).toBe(50)
+    expect(createNotification).toHaveBeenCalledTimes(101)
+    expect(result).toEqual({ targeted: 101, sent: 101 })
+  })
 })
 
 function makeDto(overrides: Partial<CreateRestaurantPromotionDto> = {}): CreateRestaurantPromotionDto {

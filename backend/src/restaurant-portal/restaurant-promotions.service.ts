@@ -16,6 +16,7 @@ import {
   toPromotionTargetingQuery,
   unmapPromotionType,
 } from './restaurant-promotion.utils'
+import { settlePromotionNotificationBatches } from './restaurant-promotion-notification-batches'
 @Injectable()
 export class RestaurantPromotionsService {
   constructor(
@@ -143,13 +144,16 @@ export class RestaurantPromotionsService {
       select: { id: true },
       take: 5000,
     })
-    const results = await Promise.allSettled(customers.map(customer => this.notifications.create({
-      userId: customer.id,
-      title: promotion.name,
-      body: promotion.description ?? `Mã ưu đãi ${promotion.code} đang có hiệu lực.`,
-      type: 'promotion.broadcast',
-      payload: { promotionId: promotion.id, code: promotion.code },
-    })))
+    const results = await settlePromotionNotificationBatches(
+      customers.map(customer => customer.id),
+      customerId => this.notifications.create({
+        userId: customerId,
+        title: promotion.name,
+        body: promotion.description ?? `Mã ưu đãi ${promotion.code} đang có hiệu lực.`,
+        type: 'promotion.broadcast',
+        payload: { promotionId: promotion.id, code: promotion.code },
+      }),
+    )
     return {
       targeted: customers.length,
       sent: results.filter(result => result.status === 'fulfilled').length,
