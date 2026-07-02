@@ -21,7 +21,7 @@ describe('RouteErrorState', () => {
   it('shows safe localized copy and a digest without exposing the raw error', () => {
     const reset = vi.fn();
     const error = Object.assign(
-      new Error('postgres://user:password@internal-host/foodflow'),
+      new Error('INTERNAL_DATABASE_CREDENTIAL_DO_NOT_RENDER'),
       { digest: 'ERR-4F12' },
     );
 
@@ -30,7 +30,7 @@ describe('RouteErrorState', () => {
     expect(screen.getByRole('alert')).toHaveAccessibleName('Unable to load revenue');
     expect(screen.getByText('Revenue data is temporarily unavailable.')).toBeVisible();
     expect(screen.getByText('Reference: ERR-4F12')).toBeVisible();
-    expect(screen.queryByText(/postgres:\/\//)).not.toBeInTheDocument();
+    expect(screen.queryByText(/INTERNAL_DATABASE_CREDENTIAL_DO_NOT_RENDER/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(reset).toHaveBeenCalledOnce();
