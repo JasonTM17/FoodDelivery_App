@@ -51,8 +51,8 @@ pnpm start:dev       # http://localhost:3001/api
 
 # 3. Web Dashboard
 cd web && pnpm install && pnpm dev
-# Admin:  http://localhost:3002
-# Restaurant: http://localhost:3003
+# Admin:  http://localhost:3000
+# Restaurant: http://localhost:3002
 
 # 4. Mobile App
 cd mobile && flutter pub get
