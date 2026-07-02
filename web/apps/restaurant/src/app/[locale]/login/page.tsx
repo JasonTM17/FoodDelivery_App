@@ -59,7 +59,7 @@ export default function LoginPage() {
         {/* Form */}
         <div className="card p-6">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-3 mb-4 text-sm text-red-700">
+            <div role="alert" className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-3 mb-4 text-sm text-red-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
