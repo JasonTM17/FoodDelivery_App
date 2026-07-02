@@ -195,6 +195,9 @@ importers:
       '@foodflow/i18n':
         specifier: workspace:^
         version: link:../../packages/i18n
+      '@foodflow/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1

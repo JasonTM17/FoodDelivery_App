@@ -8,7 +8,7 @@ const shouldUseStandaloneOutput =
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(shouldUseStandaloneOutput ? { output: 'standalone' } : {}),
-  transpilePackages: ['@vis.gl/react-google-maps', '@foodflow/i18n'],
+  transpilePackages: ['@vis.gl/react-google-maps', '@foodflow/i18n', '@foodflow/ui'],
   images: {
     remotePatterns: [
       {

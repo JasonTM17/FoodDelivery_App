@@ -9,7 +9,7 @@ const shouldUseStandaloneOutput =
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(shouldUseStandaloneOutput ? { output: 'standalone' } : {}),
-  transpilePackages: ['@foodflow/i18n'],
+  transpilePackages: ['@foodflow/i18n', '@foodflow/ui'],
   images: {
     remotePatterns: [
       {

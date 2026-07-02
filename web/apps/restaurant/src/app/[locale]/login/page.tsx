@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { Store, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api, setToken, setStoredRestaurant } from '@/lib/api';
 import type { AuthResponse } from '@/lib/types';
 
@@ -50,9 +51,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500 mb-4">
-            <Store className="h-8 w-8 text-white" />
-          </div>
+          <FoodFlowLogo showWordmark={false} markClassName="h-16 w-16" className="mb-4 justify-center" />
           <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-sm text-gray-500 mt-1">{t('description')}</p>
         </div>

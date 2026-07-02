@@ -10,7 +10,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Store,
   Star,
   Bell,
   UserCircle,
@@ -21,6 +20,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
+import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { clearToken, getStoredRestaurant } from '@/lib/api';
@@ -86,9 +86,7 @@ export function RestaurantSidebar() {
           collapsed && 'justify-center px-2'
         )}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 shrink-0">
-          <Store className="h-5 w-5 text-white" />
-        </div>
+        <FoodFlowLogo showWordmark={false} markClassName="h-9 w-9" className="shrink-0" />
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">

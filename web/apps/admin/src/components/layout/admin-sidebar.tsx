@@ -3,6 +3,7 @@
 import { Link, usePathname } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import type { Ref } from 'react';
+import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import {
   BarChart3,
   Bot,
@@ -60,12 +61,14 @@ export default function AdminSidebar({ className, initialFocusRef, onNavigate }:
 
   return (
     <aside className={cn('flex h-full w-64 flex-col bg-sidebar', className)}>
-      <div className="flex h-16 shrink-0 items-center gap-2 border-b border-white/10 px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-active" aria-hidden="true">
-          <span className="text-sm font-bold text-white">FF</span>
-        </div>
-        <span className="text-lg font-semibold text-white">{t('sidebar.brand')}</span>
-        <span className="ml-auto whitespace-nowrap rounded-full bg-primary/20 px-1.5 py-0.5 text-[9px] font-medium text-primary">
+      <div className="flex h-16 shrink-0 items-center gap-2 border-b border-white/10 px-4">
+        <FoodFlowLogo
+          label={t('sidebar.brand')}
+          className="min-w-0 flex-1"
+          markClassName="h-9 w-9"
+          wordmarkClassName="text-white"
+        />
+        <span className="ml-2 whitespace-nowrap rounded-full bg-primary/20 px-1.5 py-0.5 text-[9px] font-medium text-primary">
           {t('sidebar.adminBadge')}
         </span>
       </div>
