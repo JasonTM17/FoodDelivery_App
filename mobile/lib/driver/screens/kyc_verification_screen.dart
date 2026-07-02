@@ -14,8 +14,7 @@ class KycVerificationScreen extends ConsumerStatefulWidget {
       _KycVerificationScreenState();
 }
 
-class _KycVerificationScreenState
-    extends ConsumerState<KycVerificationScreen> {
+class _KycVerificationScreenState extends ConsumerState<KycVerificationScreen> {
   /// Uploaded public URLs per document slot; null = not yet uploaded.
   final List<String?> _uploadedUrls = [null, null, null, null];
   int _uploading = -1;
@@ -89,17 +88,22 @@ class _KycVerificationScreenState
             ),
             const SizedBox(height: 20),
             ListTile(
-              leading:
-                  const Icon(Icons.camera_alt, color: AppColors.primary),
-              title: Text(AppLocalizations.of(context)!.driverKycTakePhoto,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: Text(
+                AppLocalizations.of(context).driverKycTakePhoto,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.photo_library, color: AppColors.primary),
-              title: Text(AppLocalizations.of(context)!.driverKycGallery,
-                  style: const TextStyle(color: Colors.white)),
+              leading: const Icon(
+                Icons.photo_library,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                AppLocalizations.of(context).driverKycGallery,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             const SizedBox(height: 16),
@@ -127,14 +131,12 @@ class _KycVerificationScreenState
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(AppLocalizations.of(context)!.driverKycNote)),
+        SnackBar(content: Text(AppLocalizations.of(context).driverKycNote)),
       );
       context.go('/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Gửi đơn thất bại. Vui lòng thử lại.')),
+        const SnackBar(content: Text('Gửi đơn thất bại. Vui lòng thử lại.')),
       );
     }
   }
@@ -145,7 +147,7 @@ class _KycVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -157,7 +159,10 @@ class _KycVerificationScreenState
         ),
         title: Text(
           l10n.driverKycTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -168,7 +173,11 @@ class _KycVerificationScreenState
             children: [
               Text(
                 l10n.driverKycUploadTitle,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -205,21 +214,25 @@ class _KycVerificationScreenState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: _submitting
                       ? const SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.white),
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
                         )
                       : Text(
                           l10n.driverKycSubmit,
                           style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
@@ -266,56 +279,56 @@ class _UploadZone extends StatelessWidget {
               : const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isUploaded
-                ? AppColors.primary
-                : const Color(0xFF374151),
+            color: isUploaded ? AppColors.primary : const Color(0xFF374151),
             width: isUploaded ? 1.5 : 1.0,
           ),
         ),
         child: isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                    color: AppColors.primary))
+                child: CircularProgressIndicator(color: AppColors.primary),
+              )
             : isUploaded
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check_circle,
-                          color: AppColors.primary, size: 28),
-                      const SizedBox(width: 10),
-                      Text(
-                        label,
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.refresh,
-                          color: Color(0xFF6B7280), size: 16),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon,
-                          color: const Color(0xFF6B7280), size: 28),
-                      const SizedBox(height: 6),
-                      Text(
-                        label,
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Chụp ảnh hoặc tải lên',
-                        style: TextStyle(
-                            fontSize: 12, color: Color(0xFF6B7280)),
-                      ),
-                    ],
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primary,
+                    size: 28,
                   ),
+                  const SizedBox(width: 10),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.refresh, color: Color(0xFF6B7280), size: 16),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: const Color(0xFF6B7280), size: 28),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Chụp ảnh hoặc tải lên',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -326,7 +339,7 @@ class _NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),

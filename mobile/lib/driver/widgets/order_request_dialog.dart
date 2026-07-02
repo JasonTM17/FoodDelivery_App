@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../shared/models/order.dart';
@@ -111,7 +113,9 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w800,
-                            color: isUrgent ? AppColors.error : AppColors.primary,
+                            color: isUrgent
+                                ? AppColors.error
+                                : AppColors.primary,
                           ),
                         ),
                       ),
@@ -143,7 +147,9 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -182,7 +188,9 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -240,41 +248,45 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
                           ),
                         ),
                         const SizedBox(height: 10),
-                        ...widget.order.items.take(3).map((item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF374151),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${item.quantity}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
+                        ...widget.order.items
+                            .take(3)
+                            .map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF374151),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${item.quantity}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      item.name,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Color(0xFFD1D5DB),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        item.name,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFFD1D5DB),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            )),
+                            ),
                         if (widget.order.items.length > 3)
                           Text(
                             '+${widget.order.items.length - 3} món nữa',
@@ -348,7 +360,9 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               elevation: 4,
-                              shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                              shadowColor: AppColors.primary.withValues(
+                                alpha: 0.4,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -383,10 +397,7 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFFD1D5DB),
-            ),
+            style: const TextStyle(fontSize: 13, color: Color(0xFFD1D5DB)),
           ),
         ),
       ],
@@ -397,9 +408,13 @@ class _OrderRequestDialogState extends State<OrderRequestDialog>
     const r = 6371;
     final dLat = _deg2rad(lat2 - lat1);
     final dLng = _deg2rad(lng2 - lng1);
-    final a = (dLat / 2).sin() * (dLat / 2).sin() +
-        _deg2rad(lat1).cos() * _deg2rad(lat2).cos() * (dLng / 2).sin() * (dLng / 2).sin();
-    final c = 2 * a.sqrt().asin();
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_deg2rad(lat1)) *
+            math.cos(_deg2rad(lat2)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final c = 2 * math.asin(math.sqrt(a));
     final distance = r * c;
     if (distance < 1) {
       return '${(distance * 1000).round()}m';

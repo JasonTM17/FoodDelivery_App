@@ -30,14 +30,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Position? _currentLocation;
 
   final List<String> _cuisines = [
-    'Tất cả', 'Đồ ăn nhanh', 'Việt Nam', 'Nhật Bản',
-    'Hàn Quốc', 'Trung Hoa', 'Tráng miệng', 'Đồ uống',
+    'Tất cả',
+    'Đồ ăn nhanh',
+    'Việt Nam',
+    'Nhật Bản',
+    'Hàn Quốc',
+    'Trung Hoa',
+    'Tráng miệng',
+    'Đồ uống',
   ];
 
   final List<_BannerItem> _banners = [
-    _BannerItem('Giảm 50% đơn đầu', 'Cho đơn hàng đầu tiên từ 50k', AppColors.primary),
-    _BannerItem('Miễn phí giao hàng', 'Cho đơn từ 100k trong giờ vàng', AppColors.accent),
-    _BannerItem('Mới ra mắt', 'Ưu đãi đặc biệt cuối tuần', AppColors.orderPreparing),
+    _BannerItem(
+      'Giảm 50% đơn đầu',
+      'Cho đơn hàng đầu tiên từ 50k',
+      AppColors.primary,
+    ),
+    _BannerItem(
+      'Miễn phí giao hàng',
+      'Cho đơn từ 100k trong giờ vàng',
+      AppColors.accent,
+    ),
+    _BannerItem(
+      'Mới ra mắt',
+      'Ưu đãi đặc biệt cuối tuần',
+      AppColors.orderPreparing,
+    ),
   ];
 
   @override
@@ -55,10 +73,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
       if (mounted) {
         _currentLocation = position;
-        ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
-          latitude: position.latitude,
-          longitude: position.longitude,
-        );
+        ref
+            .read(restaurantProvider.notifier)
+            .fetchNearbyRestaurants(
+              latitude: position.latitude,
+              longitude: position.longitude,
+            );
       }
     } catch (_) {
       if (mounted) {
@@ -88,7 +108,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: CustomScrollView(
             slivers: [
               // Header
-              SliverToBoxAdapter(child: _buildHeader(authState.user?.fullName ?? '')),
+              SliverToBoxAdapter(
+                child: _buildHeader(authState.user?.fullName ?? ''),
+              ),
 
               // Address bar
               SliverToBoxAdapter(child: _buildAddressBar()),
@@ -110,19 +132,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.nearbyRestaurants,
+                        AppLocalizations.of(context).nearbyRestaurants,
                         style: AppTextStyles.headline3,
                       ),
                       TextButton(
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
-                            latitude: _currentLocation?.latitude,
-                            longitude: _currentLocation?.longitude,
-                            cuisine: null,
-                          );
+                          ref
+                              .read(restaurantProvider.notifier)
+                              .fetchNearbyRestaurants(
+                                latitude: _currentLocation?.latitude,
+                                longitude: _currentLocation?.longitude,
+                                cuisine: null,
+                              );
                         },
-                        child: Text(AppLocalizations.of(context)!.viewAll),
+                        child: Text(AppLocalizations.of(context).viewAll),
                       ),
                     ],
                   ),
@@ -145,7 +169,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              AppLocalizations.of(context)!.loadingRestaurants,
+                              AppLocalizations.of(context).loadingRestaurants,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -154,9 +178,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      LoadingShimmer(type: ShimmerType.restaurant, itemCount: 3),
+                      LoadingShimmer(
+                        type: ShimmerType.restaurant,
+                        itemCount: 3,
+                      ),
                     ],
-                  )
+                  ),
                 )
               else if (restaurantState.error != null)
                 SliverFillRemaining(
@@ -177,21 +204,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 )
               else
                 SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final restaurant = restaurantState.nearbyRestaurants[index];
-                      return RestaurantCard(
-                        restaurant: restaurant,
-                        onTap: () {
-                          Navigator.of(context).pushNamed(
-                            '/restaurant-detail',
-                            arguments: restaurant.id,
-                          );
-                        },
-                      );
-                    },
-                    childCount: restaurantState.nearbyRestaurants.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final restaurant = restaurantState.nearbyRestaurants[index];
+                    return RestaurantCard(
+                      restaurant: restaurant,
+                      onTap: () {
+                        Navigator.of(context).pushNamed(
+                          '/restaurant-detail',
+                          arguments: restaurant.id,
+                        );
+                      },
+                    );
+                  }, childCount: restaurantState.nearbyRestaurants.length),
                 ),
 
               // Bottom padding for nav bar
@@ -205,7 +229,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader(String userName) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
@@ -218,13 +242,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 userName.isNotEmpty
                     ? l10n.greetingNamed(userName)
                     : l10n.greetingAnonymous,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 2),
-              Text(
-                l10n.homeQuestion,
-                style: AppTextStyles.headline2,
-              ),
+              Text(l10n.homeQuestion, style: AppTextStyles.headline2),
             ],
           ),
           GestureDetector(
@@ -259,22 +282,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: GestureDetector(
               onTap: () => Navigator.of(context).pushNamed('/addresses'),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.locating,
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        AppLocalizations.of(context).locating,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textHint, size: 20),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textHint,
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -292,7 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _searchController,
         focusNode: _searchFocusNode,
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(context)!.searchHint,
+          hintText: AppLocalizations.of(context).searchHint,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -338,11 +371,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onTap: () {
                 setState(() => _selectedCuisine = cuisine);
                 final cuisineParam = cuisine == 'Tất cả' ? null : cuisine;
-                ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(
-                  latitude: _currentLocation?.latitude,
-                  longitude: _currentLocation?.longitude,
-                  cuisine: cuisineParam,
-                );
+                ref
+                    .read(restaurantProvider.notifier)
+                    .fetchNearbyRestaurants(
+                      latitude: _currentLocation?.latitude,
+                      longitude: _currentLocation?.longitude,
+                      cuisine: cuisineParam,
+                    );
               },
             ),
           );
@@ -358,7 +393,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           CarouselSlider(
             items: _banners
-                .map((b) => PromoBanner(title: b.title, subtitle: b.subtitle, color: b.color))
+                .map(
+                  (b) => PromoBanner(
+                    title: b.title,
+                    subtitle: b.subtitle,
+                    color: b.color,
+                  ),
+                )
                 .toList(),
             options: CarouselOptions(
               height: 140,
@@ -366,7 +407,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               autoPlayInterval: const Duration(seconds: 4),
               enlargeCenterPage: false,
               viewportFraction: 1.0,
-              onPageChanged: (index, _) => setState(() => _currentBannerIndex = index),
+              onPageChanged: (index, _) =>
+                  setState(() => _currentBannerIndex = index),
             ),
           ),
           const SizedBox(height: 8),
@@ -392,7 +434,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmptyRestaurants() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return EmptyState(
       icon: Icons.store_mall_directory_outlined,
       title: l10n.noRestaurantsTitle,
@@ -403,7 +445,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildBottomNav(int cartItemCount) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -425,12 +467,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildNavItem(Icons.search_rounded, l10n.navSearch, false, () {
                 FocusScope.of(context).requestFocus(_searchFocusNode);
               }),
-              _buildNavItem(Icons.shopping_cart_outlined, l10n.navCart, false, () {
-                Navigator.of(context).pushNamed('/cart');
-              }, badgeCount: cartItemCount),
-              _buildNavItem(Icons.receipt_long_outlined, l10n.navOrders, false, () {
-                Navigator.of(context).pushNamed('/orders');
-              }),
+              _buildNavItem(
+                Icons.shopping_cart_outlined,
+                l10n.navCart,
+                false,
+                () {
+                  Navigator.of(context).pushNamed('/cart');
+                },
+                badgeCount: cartItemCount,
+              ),
+              _buildNavItem(
+                Icons.receipt_long_outlined,
+                l10n.navOrders,
+                false,
+                () {
+                  Navigator.of(context).pushNamed('/orders');
+                },
+              ),
               _buildNavItem(Icons.person_outline, l10n.navProfile, false, () {
                 Navigator.of(context).pushNamed('/profile');
               }),
@@ -474,7 +527,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         color: AppColors.error,
                         shape: BoxShape.circle,
                       ),
-                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
                       child: Text(
                         badgeCount.toString(),
                         style: const TextStyle(
