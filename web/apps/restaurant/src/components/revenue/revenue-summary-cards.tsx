@@ -3,6 +3,7 @@
 import type { RevenueSummary } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface RevenueSummaryCardsProps {
   summary: RevenueSummary;
@@ -10,28 +11,31 @@ interface RevenueSummaryCardsProps {
 }
 
 export function RevenueSummaryCards({ summary, industryAvg }: RevenueSummaryCardsProps) {
+  const t = useTranslations('revenue');
+  const promotionShare = summary.bySource.find(s => s.source === 'promotion')?.pct || 0;
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="revenue-summary-cards">
       <KpiCard
-        label="Hôm nay"
+        label={t('today')}
         value={formatCurrency(summary.total.vnd)}
         delta={summary.delta.vsYesterday}
-        sub={`${summary.total.orderCount} đơn`}
+        sub={t('orderCount', { count: summary.total.orderCount })}
       />
       <KpiCard
-        label="Giá trị TB đơn"
+        label={t('avgOrderValue')}
         value={formatCurrency(summary.avg.orderValue)}
-        sub={industryAvg ? `TB ngành: ${formatCurrency(industryAvg.avgOrderValue)}` : undefined}
+        sub={industryAvg ? t('industryAverage', { amount: formatCurrency(industryAvg.avgOrderValue) }) : undefined}
         delta={industryAvg ? Math.round(((summary.avg.orderValue - industryAvg.avgOrderValue) / industryAvg.avgOrderValue) * 100) : undefined}
       />
       <KpiCard
-        label="Giá trị TB/ngày"
+        label={t('avgPerDay')}
         value={formatCurrency(summary.avg.perDay)}
       />
       <KpiCard
-        label="Tổng KM"
+        label={t('promotionTotal')}
         value={formatCurrency(summary.bySource.find(s => s.source === 'promotion')?.vnd || 0)}
-        sub={`${summary.bySource.find(s => s.source === 'promotion')?.pct || 0}% doanh thu`}
+        sub={t('revenueShare', { pct: promotionShare })}
       />
     </div>
   );

@@ -31,6 +31,35 @@
     "settingsHours": "Giờ mở cửa",
     "logout": "Đăng xuất"
   },
+  "dashboard": {
+    "title": "Tổng quan",
+    "description": "Hiệu suất kinh doanh 7 ngày gần nhất",
+    "loadError": "Không thể tải tổng quan nhà hàng",
+    "retry": "Thử lại",
+    "emptyTitle": "Chưa có dữ liệu tổng quan",
+    "emptyDescription": "Dữ liệu sẽ xuất hiện khi backend trả về đơn hàng, doanh thu và insight thật.",
+    "last7Days": "7 ngày qua",
+    "recentOrders": "Đơn hàng gần đây",
+    "viewAll": "Xem tất cả",
+    "noRecentOrders": "Chưa có đơn hàng nào",
+    "itemCount": "{count} món",
+    "status": {
+      "created": "Mới tạo",
+      "pendingPayment": "Chờ thanh toán",
+      "paid": "Đã thanh toán",
+      "restaurantPending": "Chờ xác nhận",
+      "restaurantAccepted": "Đã xác nhận",
+      "preparing": "Đang chuẩn bị",
+      "readyForPickup": "Sẵn sàng lấy",
+      "driverAssigned": "Đã có tài xế",
+      "pickedUp": "Đã lấy món",
+      "delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy",
+      "refunded": "Đã hoàn tiền"
+    }
+  },
   "orders": {
     "title": "Đơn hàng",
     "description": "Quản lý và xử lý đơn hàng đến",
@@ -150,6 +179,26 @@
     "totalOrders": "Tổng đơn",
     "totalRevenue": "Tổng doanh thu",
     "avgOrderValue": "Giá trị đơn TB",
+    "avgPerDay": "Giá trị TB/ngày",
+    "promotionTotal": "Tổng KM",
+    "orderCount": "{count} đơn",
+    "industryAverage": "TB ngành: {amount}",
+    "revenueShare": "{pct}% doanh thu",
+    "revenueForPeriod": "Doanh thu {period}",
+    "currentPeriod": "Kỳ này",
+    "drillDown": {
+      "title": "Chi tiết doanh thu",
+      "empty": "Chưa có giao dịch trong khoảng thời gian này.",
+      "columns": {
+        "date": "Ngày",
+        "orders": "Đơn",
+        "gross": "Tổng",
+        "discount": "Khuyến mãi",
+        "net": "Thực thu",
+        "avgOrder": "TB đơn",
+        "newReturning": "Mới/Quay lại"
+      }
+    },
     "completedOrdersDescription": "Phân tích từ đơn hàng đã hoàn tất",
     "loadErrorTitle": "Không thể tải doanh thu",
     "loadError": "Không thể tải dữ liệu doanh thu.",

@@ -31,6 +31,35 @@
     "settingsHours": "Opening Hours",
     "logout": "Sign Out"
   },
+  "dashboard": {
+    "title": "Overview",
+    "description": "Business performance for the last 7 days",
+    "loadError": "Could not load restaurant overview",
+    "retry": "Retry",
+    "emptyTitle": "No overview data yet",
+    "emptyDescription": "Data appears when the backend returns real orders, revenue, and insights.",
+    "last7Days": "Last 7 days",
+    "recentOrders": "Recent orders",
+    "viewAll": "View all",
+    "noRecentOrders": "No recent orders",
+    "itemCount": "{count} items",
+    "status": {
+      "created": "Created",
+      "pendingPayment": "Pending payment",
+      "paid": "Paid",
+      "restaurantPending": "Pending confirmation",
+      "restaurantAccepted": "Confirmed",
+      "preparing": "Preparing",
+      "readyForPickup": "Ready for pickup",
+      "driverAssigned": "Driver assigned",
+      "pickedUp": "Picked up",
+      "delivering": "Delivering",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    }
+  },
   "orders": {
     "title": "Orders",
     "description": "Manage and process incoming orders",
@@ -150,6 +179,26 @@
     "totalOrders": "Total orders",
     "totalRevenue": "Total revenue",
     "avgOrderValue": "Avg order value",
+    "avgPerDay": "Avg value/day",
+    "promotionTotal": "Total promo",
+    "orderCount": "{count} orders",
+    "industryAverage": "Industry avg: {amount}",
+    "revenueShare": "{pct}% of revenue",
+    "revenueForPeriod": "Revenue {period}",
+    "currentPeriod": "Current period",
+    "drillDown": {
+      "title": "Revenue details",
+      "empty": "No transactions in this time range.",
+      "columns": {
+        "date": "Date",
+        "orders": "Orders",
+        "gross": "Gross",
+        "discount": "Discount",
+        "net": "Net",
+        "avgOrder": "Avg order",
+        "newReturning": "New/Returning"
+      }
+    },
     "completedOrdersDescription": "Analysis from completed orders",
     "loadErrorTitle": "Unable to load revenue",
     "loadError": "Unable to load revenue data.",

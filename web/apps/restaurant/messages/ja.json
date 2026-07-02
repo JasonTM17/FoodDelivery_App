@@ -31,6 +31,35 @@
     "settingsHours": "営業時間",
     "logout": "ログアウト"
   },
+  "dashboard": {
+    "title": "概要",
+    "description": "直近7日間の事業パフォーマンス",
+    "loadError": "レストラン概要を読み込めません",
+    "retry": "再試行",
+    "emptyTitle": "概要データはまだありません",
+    "emptyDescription": "バックエンドが実際の注文、売上、インサイトを返すと表示されます。",
+    "last7Days": "過去7日間",
+    "recentOrders": "最近の注文",
+    "viewAll": "すべて表示",
+    "noRecentOrders": "最近の注文はありません",
+    "itemCount": "{count}品",
+    "status": {
+      "created": "作成済み",
+      "pendingPayment": "支払い待ち",
+      "paid": "支払い済み",
+      "restaurantPending": "確認待ち",
+      "restaurantAccepted": "確認済み",
+      "preparing": "準備中",
+      "readyForPickup": "受け取り準備完了",
+      "driverAssigned": "ドライバー割り当て済み",
+      "pickedUp": "受け取り済み",
+      "delivering": "配達中",
+      "delivered": "配達済み",
+      "completed": "完了",
+      "cancelled": "キャンセル済み",
+      "refunded": "返金済み"
+    }
+  },
   "orders": {
     "title": "注文",
     "description": "入ってきた注文を管理・処理する",
@@ -150,6 +179,26 @@
     "totalOrders": "総注文数",
     "totalRevenue": "総売上",
     "avgOrderValue": "平均注文額",
+    "avgPerDay": "1日平均額",
+    "promotionTotal": "プロモ合計",
+    "orderCount": "{count}件",
+    "industryAverage": "業界平均: {amount}",
+    "revenueShare": "売上の{pct}%",
+    "revenueForPeriod": "{period}の売上",
+    "currentPeriod": "当期",
+    "drillDown": {
+      "title": "売上詳細",
+      "empty": "この期間の取引はありません。",
+      "columns": {
+        "date": "日付",
+        "orders": "注文",
+        "gross": "総額",
+        "discount": "割引",
+        "net": "純売上",
+        "avgOrder": "平均注文",
+        "newReturning": "新規/再訪"
+      }
+    },
     "completedOrdersDescription": "完了した注文から売上を分析します",
     "loadErrorTitle": "売上を読み込めません",
     "loadError": "売上データを読み込めません。",

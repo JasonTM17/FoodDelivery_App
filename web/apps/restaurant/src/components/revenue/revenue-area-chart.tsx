@@ -1,6 +1,7 @@
 'use client';
 
 import { formatCurrency } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface RevenueAreaChartProps {
   data: { date: string; vnd: number; orderCount: number }[];
@@ -9,6 +10,7 @@ interface RevenueAreaChartProps {
 }
 
 export function RevenueAreaChart({ data, comparison, periodLabel }: RevenueAreaChartProps) {
+  const t = useTranslations('revenue');
   const maxVal = Math.max(
     ...data.map(d => d.vnd),
     ...(comparison?.map(c => c.vnd) || []),
@@ -19,7 +21,7 @@ export function RevenueAreaChart({ data, comparison, periodLabel }: RevenueAreaC
     <div className="space-y-3" data-testid="revenue-area-chart">
       {periodLabel && (
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-gray-900">Doanh thu {periodLabel}</h4>
+          <h4 className="text-sm font-semibold text-gray-900">{t('revenueForPeriod', { period: periodLabel })}</h4>
         </div>
       )}
 
@@ -39,7 +41,7 @@ export function RevenueAreaChart({ data, comparison, periodLabel }: RevenueAreaC
             <div
               key={point.date}
               className="flex-1 flex flex-col justify-end group relative"
-              title={`${point.date}: ${formatCurrency(point.vnd)} (${point.orderCount} đơn)`}
+              title={`${point.date}: ${formatCurrency(point.vnd)} (${t('orderCount', { count: point.orderCount })})`}
             >
               <div
                 className="w-full bg-brand-400/60 rounded-t-sm hover:bg-brand-400 transition-colors"
@@ -59,7 +61,7 @@ export function RevenueAreaChart({ data, comparison, periodLabel }: RevenueAreaC
         <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
           <div className="flex items-center gap-1">
             <div className="h-3 w-3 rounded-sm bg-brand-400/60" />
-            <span>Kỳ này</span>
+            <span>{t('currentPeriod')}</span>
           </div>
         </div>
       )}

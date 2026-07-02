@@ -2,25 +2,37 @@
 
 import type { RevenueBreakdownRow } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface RevenueDrillDownTableProps {
   data: RevenueBreakdownRow[];
 }
 
 export function RevenueDrillDownTable({ data }: RevenueDrillDownTableProps) {
+  const t = useTranslations('revenue.drillDown');
+  const columns = [
+    t('columns.date'),
+    t('columns.orders'),
+    t('columns.gross'),
+    t('columns.discount'),
+    t('columns.net'),
+    t('columns.avgOrder'),
+    t('columns.newReturning'),
+  ];
+
   return (
     <div className="space-y-3" data-testid="revenue-drill-down-table">
-      <h4 className="text-sm font-semibold text-gray-900">Chi tiết doanh thu</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
       {data.length === 0 ? (
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-gray-500">
-          Chưa có giao dịch trong khoảng thời gian này.
+          {t('empty')}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50">
-                {['Ngày', 'Đơn', 'Tổng', 'Khuyến mãi', 'Thực thu', 'TB đơn', 'Mới/Quay lại'].map((label) => (
+                {columns.map((label) => (
                   <th key={label} className="px-3 py-2 text-right text-xs font-medium text-gray-500 first:text-left">
                     {label}
                   </th>
