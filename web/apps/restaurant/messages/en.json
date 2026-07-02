@@ -458,6 +458,86 @@
       }
     }
   },
+  "routeErrors": {
+    "retry": "Retry",
+    "reference": "Reference: {reference}",
+    "analytics": {
+      "title": "Unable to load analytics",
+      "description": "Analytics data is temporarily unavailable. Please try again."
+    },
+    "insights": {
+      "title": "Unable to load insights",
+      "description": "Business insights are temporarily unavailable. Please try again."
+    },
+    "login": {
+      "title": "Unable to open sign in",
+      "description": "The sign-in page encountered a temporary problem. Please try again."
+    },
+    "menuEdit": {
+      "title": "Unable to edit this item",
+      "description": "Item details are temporarily unavailable. Please try again."
+    },
+    "menuCategories": {
+      "title": "Unable to load categories",
+      "description": "Menu categories are temporarily unavailable. Please try again."
+    },
+    "menu": {
+      "title": "Unable to load the menu",
+      "description": "Menu data is temporarily unavailable. Please try again."
+    },
+    "menuNew": {
+      "title": "Unable to add an item",
+      "description": "The new-item form encountered a temporary problem. Please try again."
+    },
+    "notifications": {
+      "title": "Unable to load notifications",
+      "description": "Notifications are temporarily unavailable. Please try again."
+    },
+    "orderDetail": {
+      "title": "Unable to load order details",
+      "description": "Order details are temporarily unavailable. Please try again."
+    },
+    "orders": {
+      "title": "Unable to load orders",
+      "description": "The order list is temporarily unavailable. Please try again."
+    },
+    "promotions": {
+      "title": "Unable to load promotions",
+      "description": "Promotions are temporarily unavailable. Please try again."
+    },
+    "promotionNew": {
+      "title": "Unable to open the promotion builder",
+      "description": "The promotion builder encountered a temporary problem. Please try again."
+    },
+    "revenue": {
+      "title": "Unable to load revenue",
+      "description": "Revenue data is temporarily unavailable. Please try again."
+    },
+    "reviews": {
+      "title": "Unable to load reviews",
+      "description": "Reviews are temporarily unavailable. Please try again."
+    },
+    "settings": {
+      "title": "Unable to load settings",
+      "description": "Restaurant settings are temporarily unavailable. Please try again."
+    },
+    "settingsHours": {
+      "title": "Unable to load operating hours",
+      "description": "Operating hours are temporarily unavailable. Please try again."
+    },
+    "settingsProfile": {
+      "title": "Unable to load the profile",
+      "description": "The restaurant profile is temporarily unavailable. Please try again."
+    },
+    "staff": {
+      "title": "Unable to load staff",
+      "description": "The staff list is temporarily unavailable. Please try again."
+    },
+    "root": {
+      "title": "Something went wrong",
+      "description": "We could not complete this request. Please try again."
+    }
+  },
   "reviews": {
     "title": "Customer Reviews",
     "description": "View and respond to customer reviews",

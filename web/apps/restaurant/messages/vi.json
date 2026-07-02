@@ -458,6 +458,86 @@
       }
     }
   },
+  "routeErrors": {
+    "retry": "Thử lại",
+    "reference": "Mã tham chiếu: {reference}",
+    "analytics": {
+      "title": "Không thể tải phân tích",
+      "description": "Dữ liệu phân tích tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "insights": {
+      "title": "Không thể tải đề xuất",
+      "description": "Các đề xuất kinh doanh tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "login": {
+      "title": "Không thể mở trang đăng nhập",
+      "description": "Trang đăng nhập gặp sự cố tạm thời. Vui lòng thử lại."
+    },
+    "menuEdit": {
+      "title": "Không thể tải trang chỉnh sửa món",
+      "description": "Thông tin món ăn tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "menuCategories": {
+      "title": "Không thể tải danh mục",
+      "description": "Danh mục thực đơn tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "menu": {
+      "title": "Không thể tải thực đơn",
+      "description": "Dữ liệu thực đơn tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "menuNew": {
+      "title": "Không thể mở trang thêm món",
+      "description": "Biểu mẫu thêm món gặp sự cố tạm thời. Vui lòng thử lại."
+    },
+    "notifications": {
+      "title": "Không thể tải thông báo",
+      "description": "Danh sách thông báo tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "orderDetail": {
+      "title": "Không thể tải chi tiết đơn hàng",
+      "description": "Chi tiết đơn hàng tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "orders": {
+      "title": "Không thể tải đơn hàng",
+      "description": "Danh sách đơn hàng tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "promotions": {
+      "title": "Không thể tải khuyến mãi",
+      "description": "Danh sách khuyến mãi tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "promotionNew": {
+      "title": "Không thể mở trình tạo khuyến mãi",
+      "description": "Trình tạo khuyến mãi gặp sự cố tạm thời. Vui lòng thử lại."
+    },
+    "revenue": {
+      "title": "Không thể tải doanh thu",
+      "description": "Dữ liệu doanh thu tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "reviews": {
+      "title": "Không thể tải đánh giá",
+      "description": "Danh sách đánh giá tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "settings": {
+      "title": "Không thể tải cài đặt",
+      "description": "Cài đặt nhà hàng tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "settingsHours": {
+      "title": "Không thể tải giờ hoạt động",
+      "description": "Giờ hoạt động tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "settingsProfile": {
+      "title": "Không thể tải hồ sơ",
+      "description": "Hồ sơ nhà hàng tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "staff": {
+      "title": "Không thể tải nhân viên",
+      "description": "Danh sách nhân viên tạm thời chưa sẵn sàng. Vui lòng thử lại."
+    },
+    "root": {
+      "title": "Đã xảy ra lỗi",
+      "description": "Không thể hoàn tất yêu cầu lúc này. Vui lòng thử lại."
+    }
+  },
   "reviews": {
     "title": "Đánh giá khách hàng",
     "description": "Xem và phản hồi đánh giá từ khách hàng",
