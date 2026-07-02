@@ -22,25 +22,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CheckSquare, XCircle, UserCheck, AlertTriangle, Tag, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface BulkAction {
   id: string;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   requiresValue?: boolean;
 }
 
 const bulkActions: BulkAction[] = [
-  { id: 'close', label: 'Đóng ticket', icon: XCircle },
-  { id: 'assign', label: 'Phân công', icon: UserCheck, requiresValue: true },
-  { id: 'change_priority', label: 'Đổi ưu tiên', icon: AlertTriangle, requiresValue: true },
-  { id: 'add_tag', label: 'Thêm tag', icon: Tag, requiresValue: true },
-  { id: 'export', label: 'Xuất CSV', icon: Download },
+  { id: 'close', labelKey: 'close', icon: XCircle },
+  { id: 'assign', labelKey: 'assign', icon: UserCheck, requiresValue: true },
+  { id: 'change_priority', labelKey: 'changePriority', icon: AlertTriangle, requiresValue: true },
+  { id: 'add_tag', labelKey: 'addTag', icon: Tag, requiresValue: true },
+  { id: 'export', labelKey: 'export', icon: Download },
 ];
+
+interface AssigneeOption {
+  id: string;
+  name: string;
+}
 
 interface TicketBulkActionsProps {
   selectedIds: string[];
   totalCount: number;
+  assignees?: AssigneeOption[];
   onClearSelection: () => void;
   onBulkAction: (action: string, value?: string, reason?: string) => Promise<void>;
   className?: string;
@@ -49,10 +56,12 @@ interface TicketBulkActionsProps {
 export default function TicketBulkActions({
   selectedIds,
   totalCount,
+  assignees = [],
   onClearSelection,
   onBulkAction,
   className,
 }: TicketBulkActionsProps) {
+  const t = useTranslations('bulkActions');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string>('');
   const [actionValue, setActionValue] = useState('');
@@ -73,7 +82,7 @@ export default function TicketBulkActions({
       setReason('');
       onClearSelection();
     } catch (err) {
-      setBulkError((err as { message?: string }).message || 'Không thể thực hiện thao tác hàng loạt');
+      setBulkError((err as { message?: string }).message || t('error'));
     } finally {
       setProcessing(false);
     }
@@ -93,7 +102,7 @@ export default function TicketBulkActions({
         <div className="flex items-center gap-2">
           <CheckSquare className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">
-            Đã chọn {selectedIds.length}/{totalCount} ticket
+            {t('selectedCount', { selected: selectedIds.length, total: totalCount })}
           </span>
         </div>
         <div className="flex flex-1 items-center gap-2">
@@ -110,12 +119,12 @@ export default function TicketBulkActions({
               }}
             >
               <ba.icon className="mr-1.5 h-3.5 w-3.5" />
-              {ba.label}
+              {t(`actions.${ba.labelKey}`)}
             </Button>
           ))}
         </div>
         <Button variant="ghost" size="sm" onClick={onClearSelection}>
-          Bỏ chọn
+          {t('clear')}
         </Button>
       </div>
 
@@ -123,25 +132,32 @@ export default function TicketBulkActions({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {action?.label || 'Thao tác hàng loạt'}
+              {action ? t(`actions.${action.labelKey}`) : t('fallbackTitle')}
             </DialogTitle>
             <DialogDescription>
-              Áp dụng cho <Badge variant="secondary">{selectedIds.length} ticket</Badge>
+              {t.rich('applyDescription', {
+                count: selectedIds.length,
+                badge: (chunks) => <Badge variant="secondary">{chunks}</Badge>,
+              })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {selectedAction === 'assign' && (
               <div className="space-y-2">
-                <Label htmlFor="bulk-assignee">Người xử lý</Label>
+                <Label htmlFor="bulk-assignee">{t('assigneeLabel')}</Label>
                 <Select value={actionValue} onValueChange={setActionValue}>
                   <SelectTrigger id="bulk-assignee">
-                    <SelectValue placeholder="Chọn người xử lý..." />
+                    <SelectValue placeholder={t('assigneePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="agent_1">Nguyễn Văn A</SelectItem>
-                    <SelectItem value="agent_2">Trần Thị B</SelectItem>
-                    <SelectItem value="agent_pool">Tổ hỗ trợ</SelectItem>
+                    {assignees.length > 0 ? (
+                      assignees.map((assignee) => (
+                        <SelectItem key={assignee.id} value={assignee.id}>{assignee.name}</SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="__no_assignees" disabled>{t('noAssignees')}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -149,16 +165,16 @@ export default function TicketBulkActions({
 
             {selectedAction === 'change_priority' && (
               <div className="space-y-2">
-                <Label htmlFor="bulk-priority">Ưu tiên mới</Label>
+                <Label htmlFor="bulk-priority">{t('priorityLabel')}</Label>
                 <Select value={actionValue} onValueChange={setActionValue}>
                   <SelectTrigger id="bulk-priority">
-                    <SelectValue placeholder="Chọn mức ưu tiên..." />
+                    <SelectValue placeholder={t('priorityPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="critical">Khẩn cấp</SelectItem>
-                    <SelectItem value="high">Cao</SelectItem>
-                    <SelectItem value="normal">Bình thường</SelectItem>
-                    <SelectItem value="low">Thấp</SelectItem>
+                    <SelectItem value="critical">{t('priorities.critical')}</SelectItem>
+                    <SelectItem value="high">{t('priorities.high')}</SelectItem>
+                    <SelectItem value="normal">{t('priorities.normal')}</SelectItem>
+                    <SelectItem value="low">{t('priorities.low')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -169,12 +185,12 @@ export default function TicketBulkActions({
                 <Label htmlFor="bulk-tag">Tag</Label>
                 <Select value={actionValue} onValueChange={setActionValue}>
                   <SelectTrigger id="bulk-tag">
-                    <SelectValue placeholder="Chọn tag..." />
+                    <SelectValue placeholder={t('tagPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="refund">Hoàn tiền</SelectItem>
-                    <SelectItem value="delivery">Giao hàng</SelectItem>
-                    <SelectItem value="quality">Chất lượng</SelectItem>
+                    <SelectItem value="refund">{t('tags.refund')}</SelectItem>
+                    <SelectItem value="delivery">{t('tags.delivery')}</SelectItem>
+                    <SelectItem value="quality">{t('tags.quality')}</SelectItem>
                     <SelectItem value="spam">Spam</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>
                   </SelectContent>
@@ -184,10 +200,10 @@ export default function TicketBulkActions({
 
             {(selectedAction === 'close' || selectedAction === 'change_priority') && (
               <div className="space-y-2">
-                <Label htmlFor="bulk-reason">Lý do (hiển thị trong log)</Label>
+                <Label htmlFor="bulk-reason">{t('reasonLabel')}</Label>
                 <Textarea
                   id="bulk-reason"
-                  placeholder="Nhập lý do thao tác hàng loạt..."
+                  placeholder={t('reasonPlaceholder')}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={2}
@@ -200,13 +216,13 @@ export default function TicketBulkActions({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleExecute}
               disabled={processing || (bulkActions.find((a) => a.id === selectedAction)?.requiresValue && !actionValue)}
             >
-              {processing ? 'Đang xử lý...' : `Áp dụng cho ${selectedIds.length} ticket`}
+              {processing ? t('processing') : t('applyButton', { count: selectedIds.length })}
             </Button>
           </DialogFooter>
         </DialogContent>

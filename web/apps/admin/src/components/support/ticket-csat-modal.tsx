@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface TicketCsatModalProps {
   open: boolean;
@@ -20,9 +21,8 @@ interface TicketCsatModalProps {
   onSubmit: (score: number, comment: string) => Promise<void>;
 }
 
-const starLabels = ['Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Tuyệt vời'];
-
 export default function TicketCsatModal({ open, onOpenChange, onSubmit }: TicketCsatModalProps) {
+  const t = useTranslations('csat');
   const [score, setScore] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [comment, setComment] = useState('');
@@ -39,7 +39,7 @@ export default function TicketCsatModal({ open, onOpenChange, onSubmit }: Ticket
       setComment('');
       onOpenChange(false);
     } catch (err) {
-      setSubmitError((err as { message?: string }).message || 'Không thể gửi đánh giá');
+      setSubmitError((err as { message?: string }).message || t('submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -49,7 +49,7 @@ export default function TicketCsatModal({ open, onOpenChange, onSubmit }: Ticket
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Đánh giá trải nghiệm hỗ trợ</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-4">
@@ -76,15 +76,15 @@ export default function TicketCsatModal({ open, onOpenChange, onSubmit }: Ticket
           </div>
           {score > 0 && (
             <p className="text-sm font-medium text-muted-foreground">
-              {starLabels[score - 1]}
+              {t(`stars.${score}`)}
             </p>
           )}
 
           <div className="w-full space-y-2">
-            <Label htmlFor="csat-comment">Nhận xét thêm (không bắt buộc)</Label>
+            <Label htmlFor="csat-comment">{t('commentLabel')}</Label>
             <Textarea
               id="csat-comment"
-              placeholder="Chia sẻ thêm về trải nghiệm của bạn..."
+              placeholder={t('commentPlaceholder')}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
@@ -96,10 +96,10 @@ export default function TicketCsatModal({ open, onOpenChange, onSubmit }: Ticket
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Để sau
+            {t('later')}
           </Button>
           <Button onClick={handleSubmit} disabled={score === 0 || submitting}>
-            {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+            {submitting ? t('sending') : t('submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -420,6 +420,58 @@
     "searchPlaceholder": "Search macros...",
     "empty": "No macros found"
   },
+  "bulkActions": {
+    "selectedCount": "Selected {selected}/{total} tickets",
+    "clear": "Clear selection",
+    "fallbackTitle": "Bulk action",
+    "applyDescription": "Apply to <badge>{count} tickets</badge>",
+    "error": "Could not complete bulk action",
+    "assigneeLabel": "Assignee",
+    "assigneePlaceholder": "Choose assignee...",
+    "noAssignees": "No assignees available",
+    "priorityLabel": "New priority",
+    "priorityPlaceholder": "Choose priority...",
+    "tagPlaceholder": "Choose tag...",
+    "reasonLabel": "Reason (shown in log)",
+    "reasonPlaceholder": "Enter bulk action reason...",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "applyButton": "Apply to {count} tickets",
+    "actions": {
+      "close": "Close tickets",
+      "assign": "Assign",
+      "changePriority": "Change priority",
+      "addTag": "Add tag",
+      "export": "Export CSV"
+    },
+    "priorities": {
+      "critical": "Critical",
+      "high": "High",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "tags": {
+      "refund": "Refund",
+      "delivery": "Delivery",
+      "quality": "Quality"
+    }
+  },
+  "csat": {
+    "title": "Rate support experience",
+    "commentLabel": "Additional comment (optional)",
+    "commentPlaceholder": "Share more about your experience...",
+    "later": "Later",
+    "sending": "Sending...",
+    "submit": "Submit rating",
+    "submitError": "Could not submit rating",
+    "stars": {
+      "1": "Very poor",
+      "2": "Poor",
+      "3": "Okay",
+      "4": "Good",
+      "5": "Excellent"
+    }
+  },
   "driverMap": {
     "sidebarTitle": "Online drivers",
     "activeCount": "{count, plural, =0 {No active drivers} one {# active driver} other {# active drivers}}",

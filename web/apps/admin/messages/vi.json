@@ -420,6 +420,58 @@
     "searchPlaceholder": "Tìm macro...",
     "empty": "Không tìm thấy macro"
   },
+  "bulkActions": {
+    "selectedCount": "Đã chọn {selected}/{total} ticket",
+    "clear": "Bỏ chọn",
+    "fallbackTitle": "Thao tác hàng loạt",
+    "applyDescription": "Áp dụng cho <badge>{count} ticket</badge>",
+    "error": "Không thể thực hiện thao tác hàng loạt",
+    "assigneeLabel": "Người xử lý",
+    "assigneePlaceholder": "Chọn người xử lý...",
+    "noAssignees": "Không có người xử lý khả dụng",
+    "priorityLabel": "Ưu tiên mới",
+    "priorityPlaceholder": "Chọn mức ưu tiên...",
+    "tagPlaceholder": "Chọn tag...",
+    "reasonLabel": "Lý do (hiển thị trong log)",
+    "reasonPlaceholder": "Nhập lý do thao tác hàng loạt...",
+    "cancel": "Hủy",
+    "processing": "Đang xử lý...",
+    "applyButton": "Áp dụng cho {count} ticket",
+    "actions": {
+      "close": "Đóng ticket",
+      "assign": "Phân công",
+      "changePriority": "Đổi ưu tiên",
+      "addTag": "Thêm tag",
+      "export": "Xuất CSV"
+    },
+    "priorities": {
+      "critical": "Khẩn cấp",
+      "high": "Cao",
+      "normal": "Bình thường",
+      "low": "Thấp"
+    },
+    "tags": {
+      "refund": "Hoàn tiền",
+      "delivery": "Giao hàng",
+      "quality": "Chất lượng"
+    }
+  },
+  "csat": {
+    "title": "Đánh giá trải nghiệm hỗ trợ",
+    "commentLabel": "Nhận xét thêm (không bắt buộc)",
+    "commentPlaceholder": "Chia sẻ thêm về trải nghiệm của bạn...",
+    "later": "Để sau",
+    "sending": "Đang gửi...",
+    "submit": "Gửi đánh giá",
+    "submitError": "Không thể gửi đánh giá",
+    "stars": {
+      "1": "Rất tệ",
+      "2": "Tệ",
+      "3": "Bình thường",
+      "4": "Tốt",
+      "5": "Tuyệt vời"
+    }
+  },
   "driverMap": {
     "sidebarTitle": "Tài xế trực tuyến",
     "activeCount": "{count, plural, =0 {Không có tài xế hoạt động} one {# tài xế hoạt động} other {# tài xế hoạt động}}",

@@ -420,6 +420,58 @@
     "searchPlaceholder": "マクロを検索...",
     "empty": "マクロが見つかりません"
   },
+  "bulkActions": {
+    "selectedCount": "{selected}/{total} 件を選択中",
+    "clear": "選択を解除",
+    "fallbackTitle": "一括操作",
+    "applyDescription": "<badge>{count} 件</badge>に適用",
+    "error": "一括操作を実行できません",
+    "assigneeLabel": "担当者",
+    "assigneePlaceholder": "担当者を選択...",
+    "noAssignees": "利用可能な担当者がいません",
+    "priorityLabel": "新しい優先度",
+    "priorityPlaceholder": "優先度を選択...",
+    "tagPlaceholder": "タグを選択...",
+    "reasonLabel": "理由（ログに表示）",
+    "reasonPlaceholder": "一括操作の理由を入力...",
+    "cancel": "キャンセル",
+    "processing": "処理中...",
+    "applyButton": "{count} 件に適用",
+    "actions": {
+      "close": "チケットを閉じる",
+      "assign": "割り当て",
+      "changePriority": "優先度を変更",
+      "addTag": "タグを追加",
+      "export": "CSVエクスポート"
+    },
+    "priorities": {
+      "critical": "緊急",
+      "high": "高",
+      "normal": "通常",
+      "low": "低"
+    },
+    "tags": {
+      "refund": "返金",
+      "delivery": "配達",
+      "quality": "品質"
+    }
+  },
+  "csat": {
+    "title": "サポート体験を評価",
+    "commentLabel": "追加コメント（任意）",
+    "commentPlaceholder": "体験について詳しく共有してください...",
+    "later": "後で",
+    "sending": "送信中...",
+    "submit": "評価を送信",
+    "submitError": "評価を送信できません",
+    "stars": {
+      "1": "とても悪い",
+      "2": "悪い",
+      "3": "普通",
+      "4": "良い",
+      "5": "とても良い"
+    }
+  },
   "driverMap": {
     "sidebarTitle": "オンライン配達員",
     "activeCount": "{count, plural, =0 {稼働中の配達員はいません} one {#人が稼働中} other {#人が稼働中}}",
