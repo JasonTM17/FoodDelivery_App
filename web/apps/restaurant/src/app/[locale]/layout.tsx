@@ -1,5 +1,6 @@
+import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '@foodflow/i18n';
 
@@ -33,4 +34,29 @@ export default async function LocaleLayout({
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params: { locale },
+}: Pick<LocaleLayoutProps, 'params'>): Promise<Metadata> {
+  if (!(locales as readonly string[]).includes(locale)) return {};
+  const t = await getTranslations({ locale, namespace: 'metadata' });
+
+  return {
+    title: {
+      template: t('titleTemplate'),
+      default: t('title'),
+    },
+    description: t('description'),
+    openGraph: {
+      title: t('title'),
+      description: t('description'),
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: t('title'),
+      description: t('description'),
+    },
+  };
 }

@@ -16,17 +16,7 @@ const LOCALES = ['vi', 'en', 'ja'] as const
 const appMessages = { vi: viMessages, en: enMessages, ja: jaMessages }
 
 export const metadata: Metadata = {
-  title: {
-    template: '%s | FoodFlow Nhà hàng',
-    default: 'FoodFlow Nhà hàng',
-  },
-  description: 'Hệ thống quản lý nhà hàng FoodFlow — quản lý đơn hàng, thực đơn, doanh thu nhà hàng',
-  openGraph: {
-    title: 'FoodFlow Nhà hàng',
-    description: 'Hệ thống quản lý nhà hàng FoodFlow',
-    type: 'website',
-  },
-  twitter: { card: 'summary', title: 'FoodFlow Nhà hàng' },
+  title: 'FoodFlow Restaurant',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

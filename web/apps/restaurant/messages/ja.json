@@ -458,6 +458,21 @@
       }
     }
   },
+  "metadata": {
+    "title": "FoodFlow レストラン",
+    "titleTemplate": "%s | FoodFlow レストラン",
+    "description": "FoodFlowで注文、メニュー、売上、店舗運営を管理します。"
+  },
+  "rootStates": {
+    "loading": {
+      "label": "レストラン管理画面を読み込み中"
+    },
+    "notFound": {
+      "title": "ページが見つかりません",
+      "description": "指定されたページは存在しないか移動しました。アドレスをご確認ください。",
+      "backToDashboard": "概要に戻る"
+    }
+  },
   "routeErrors": {
     "retry": "再試行",
     "reference": "参照コード: {reference}",

@@ -1,21 +1,24 @@
-import Link from 'next/link'
-import { Store, ArrowLeft } from 'lucide-react'
+'use client';
+
+import { ArrowLeft, Store } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/navigation';
 
 export default function NotFound() {
+  const t = useTranslations('rootStates.notFound');
+
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-100 mb-6">
-        <Store className="h-10 w-10 text-brand-600" />
+    <main className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-100">
+        <Store className="h-10 w-10 text-brand-600" aria-hidden="true" />
       </div>
-      <h1 className="text-6xl font-bold text-gray-300 mb-2">404</h1>
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy trang</h2>
-      <p className="text-sm text-gray-500 mb-8 max-w-md text-center">
-        Trang bạn yêu cầu không tồn tại hoặc đã bị di chuyển. Vui lòng kiểm tra lại đường dẫn.
-      </p>
-      <Link href="/orders" className="btn-primary">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Về trang đơn hàng
+      <p className="mb-2 text-6xl font-bold text-gray-300" aria-hidden="true">404</p>
+      <h1 className="mb-2 text-xl font-semibold text-gray-900">{t('title')}</h1>
+      <p className="mb-8 max-w-md text-sm text-gray-500">{t('description')}</p>
+      <Link href="/" className="btn-primary">
+        <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+        {t('backToDashboard')}
       </Link>
-    </div>
-  )
+    </main>
+  );
 }

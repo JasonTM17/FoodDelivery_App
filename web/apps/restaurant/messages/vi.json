@@ -458,6 +458,21 @@
       }
     }
   },
+  "metadata": {
+    "title": "FoodFlow Nhà hàng",
+    "titleTemplate": "%s | FoodFlow Nhà hàng",
+    "description": "Quản lý đơn hàng, thực đơn, doanh thu và vận hành nhà hàng trên FoodFlow."
+  },
+  "rootStates": {
+    "loading": {
+      "label": "Đang tải trang nhà hàng"
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "description": "Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển. Vui lòng kiểm tra lại đường dẫn.",
+      "backToDashboard": "Về tổng quan"
+    }
+  },
   "routeErrors": {
     "retry": "Thử lại",
     "reference": "Mã tham chiếu: {reference}",

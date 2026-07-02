@@ -458,6 +458,21 @@
       }
     }
   },
+  "metadata": {
+    "title": "FoodFlow Restaurant",
+    "titleTemplate": "%s | FoodFlow Restaurant",
+    "description": "Manage restaurant orders, menus, revenue, and operations with FoodFlow."
+  },
+  "rootStates": {
+    "loading": {
+      "label": "Loading restaurant dashboard"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you requested does not exist or has moved. Please check the address.",
+      "backToDashboard": "Back to overview"
+    }
+  },
   "routeErrors": {
     "retry": "Retry",
     "reference": "Reference: {reference}",
