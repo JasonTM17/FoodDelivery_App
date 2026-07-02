@@ -204,7 +204,7 @@ async function main() {
 
   // ─── 2. Restaurants (50+) ───
   const restaurantIds: string[] = []
-  const restaurantLocations: Array<{ id: string; lat: number; lng: number; name: string }> = []
+  const restaurantLocations: Array<{ id: string; lat: number; lng: number; name: string; prep: number }> = []
 
   for (let i = 0; i < RESTAURANT_TEMPLATES.length; i++) {
     const t = RESTAURANT_TEMPLATES[i]
@@ -243,7 +243,7 @@ async function main() {
     const restaurant = await prisma.restaurant.findUnique({ where: { slug } })
     if (!restaurant) { console.log(`  ⚠️ Restaurant ${slug} not found`); continue }
     restaurantIds.push(restaurant.id)
-    restaurantLocations.push({ id: restaurant.id, lat, lng, name: t.name })
+    restaurantLocations.push({ id: restaurant.id, lat, lng, name: t.name, prep: t.prep })
 
     // Create restaurant profile
     await prisma.restaurantProfile.upsert({
