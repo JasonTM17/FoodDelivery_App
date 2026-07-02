@@ -38,7 +38,13 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `N8N_WEBHOOK_URL` | Yes | — | N8N webhook base URL |
 | `N8N_API_KEY` | Yes | — | API key for N8N webhook auth |
 | `GOOGLE_MAPS_API_KEY` | No | — | Google Maps Geocoding API key |
-| `GEMINI_API_KEY` | No | — | Gemini API key (for AI chat) |
+| `AI_CHAT_PROVIDER` | No | `n8n` unless `DEEPSEEK_API_KEY` is set | Chatbot provider: `deepseek` or `n8n` |
+| `DEEPSEEK_API_KEY` | No | — | DeepSeek API key for direct chatbot replies. Keep in secret manager / ignored `.env`, never commit |
+| `DEEPSEEK_BASE_URL` | No | `https://api.deepseek.com` | DeepSeek OpenAI-compatible base URL |
+| `DEEPSEEK_MODEL` | No | `deepseek-v4-flash` | DeepSeek model for chatbot replies |
+| `DEEPSEEK_THINKING` | No | `disabled` | Set `enabled` only if the chat flow can handle slower reasoning responses |
+| `DEEPSEEK_DAILY_BUDGET_USD` | No | — | Optional AI monitor budget display |
+| `GEMINI_API_KEY` | No | — | Legacy Gemini/N8N workflow key, not used by direct DeepSeek provider |
 | `PORT` | No | `3001` | Server port |
 | `NODE_ENV` | No | `development` | Environment (`development`, `production`, `test`) |
 | `CORS_ORIGINS` | No | `http://localhost:3000,...` | Comma-separated allowed origins |

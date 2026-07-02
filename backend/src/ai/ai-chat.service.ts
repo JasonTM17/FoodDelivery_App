@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { I18nService } from 'nestjs-i18n'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
 import { ConversationMemoryService } from './conversation-memory.service'
+import { DeepSeekChatProviderService } from './deepseek-chat-provider.service'
 import { OutputFilterService } from './output-filter.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
 
@@ -37,6 +38,7 @@ export class AiChatService {
     private readonly memory: ConversationMemoryService,
     private readonly sentiment: SentimentDetectionService,
     private readonly outputFilter: OutputFilterService,
+    private readonly deepSeek: DeepSeekChatProviderService,
     private readonly config: ConfigService,
     private readonly i18n: I18nService,
   ) {}
@@ -76,7 +78,7 @@ export class AiChatService {
     })
 
     try {
-      const data = await this.fetchN8nReply({ message, sessionId, orderId, userId: user.sub, sentimentLabel, history })
+      const data = await this.fetchProviderReply({ message, sessionId, orderId, userId: user.sub, sentimentLabel, history })
       const rawReply = data.reply ?? this.translate('ai_templates.fallback')
       const reply = this.outputFilter.filter(rawReply)
 
@@ -105,6 +107,29 @@ export class AiChatService {
 
   private matchFastPath(message: string): FastPathKey | undefined {
     return FAST_PATH.find(([pattern]) => pattern.test(message))?.[1]
+  }
+
+  private async fetchProviderReply(input: {
+    message: string
+    sessionId: string
+    orderId?: string
+    userId: string
+    sentimentLabel: string
+    history: unknown[]
+  }) {
+    const provider = this.chatProvider()
+    if (provider === 'deepseek') {
+      return this.deepSeek.createReply(input)
+    }
+
+    return this.fetchN8nReply(input)
+  }
+
+  private chatProvider(): 'deepseek' | 'n8n' {
+    const configured = this.config.get<string>('AI_CHAT_PROVIDER')?.trim().toLowerCase()
+    if (configured === 'deepseek' || configured === 'n8n') return configured
+    if (this.config.get<string>('DEEPSEEK_API_KEY')?.trim()) return 'deepseek'
+    return 'n8n'
   }
 
   private async fetchN8nReply({

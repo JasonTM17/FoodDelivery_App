@@ -368,6 +368,7 @@
     "retry": "Thử lại",
     "openDashboard": "Mở N8N dashboard",
     "dashboardUnavailable": "Dashboard chưa khả dụng",
+    "providerInstance": "{provider} instance",
     "degradedReason": "Lý do degraded",
     "noWorkflowsTitle": "Chưa cấu hình telemetry workflow",
     "noWorkflowsDescription": "Kết nối N8N monitoring API trước khi hiển thị sức khỏe workflow hoặc lần chạy gần nhất.",
@@ -384,7 +385,7 @@
     "selfResolved": "Tự giải quyết",
     "escalated": "Chuyển người xử lý",
     "resolutionRate": "Tỉ lệ tự giải quyết",
-    "geminiCostToday": "Chi phí Gemini hôm nay",
+    "aiCostToday": "Chi phí AI hôm nay",
     "budget": "ngân sách"
   },
   "analytics": {

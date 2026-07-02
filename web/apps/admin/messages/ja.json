@@ -368,6 +368,7 @@
     "retry": "再試行",
     "openDashboard": "N8Nダッシュボードを開く",
     "dashboardUnavailable": "ダッシュボード未設定",
+    "providerInstance": "{provider}インスタンス",
     "degradedReason": "縮退理由",
     "noWorkflowsTitle": "ワークフローテレメトリ未設定",
     "noWorkflowsDescription": "ワークフロー状態や実行履歴を表示するには、N8N monitoring APIを接続してください。",
@@ -384,7 +385,7 @@
     "selfResolved": "自己解決",
     "escalated": "エスカレーション",
     "resolutionRate": "解決率",
-    "geminiCostToday": "本日のGeminiコスト",
+    "aiCostToday": "本日のAIコスト",
     "budget": "予算"
   },
   "analytics": {

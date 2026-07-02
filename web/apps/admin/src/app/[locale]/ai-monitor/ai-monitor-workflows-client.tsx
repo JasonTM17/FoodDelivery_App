@@ -54,12 +54,17 @@ export default function AiMonitorWorkflowsClient() {
     );
   }
 
+  const providerName = data.instance.provider === 'deepseek' ? 'DeepSeek' : 'N8N';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Activity className="h-4 w-4 text-emerald-500" />
-          <span className="text-sm font-medium">N8N Instance</span>
+          <span className="text-sm font-medium">{t('providerInstance', { provider: providerName })}</span>
+          {data.instance.model ? (
+            <Badge variant="outline" className="font-mono text-xs">{data.instance.model}</Badge>
+          ) : null}
           <StatusBadge status={data.instance.status} />
         </div>
         {data.instance.dashboardUrl ? (

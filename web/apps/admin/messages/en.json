@@ -368,6 +368,7 @@
     "retry": "Retry",
     "openDashboard": "Open N8N dashboard",
     "dashboardUnavailable": "Dashboard unavailable",
+    "providerInstance": "{provider} instance",
     "degradedReason": "Degraded reason",
     "noWorkflowsTitle": "No workflow telemetry configured",
     "noWorkflowsDescription": "Connect the N8N monitoring API before showing workflow health or recent executions.",
@@ -384,7 +385,7 @@
     "selfResolved": "Self resolved",
     "escalated": "Escalated",
     "resolutionRate": "Resolution rate",
-    "geminiCostToday": "Gemini cost today",
+    "aiCostToday": "AI cost today",
     "budget": "budget"
   },
   "analytics": {

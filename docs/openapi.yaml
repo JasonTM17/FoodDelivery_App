@@ -1139,7 +1139,9 @@ components:
             status: { $ref: "#/components/schemas/AiMonitorStatus" }
             dashboardUrl: { type: string, nullable: true }
             degradedReason: { type: string, nullable: true }
-          required: [status, dashboardUrl, degradedReason]
+            provider: { type: string, enum: [deepseek, n8n] }
+            model: { type: string, nullable: true }
+          required: [status, dashboardUrl, degradedReason, provider, model]
         workflows:
           type: array
           items: { $ref: "#/components/schemas/AdminAiMonitorWorkflow" }
@@ -2944,7 +2946,7 @@ paths:
     get:
       tags: [ai]
       summary: Get AI/N8N monitor overview
-      description: Returns real monitor state when configured; otherwise returns explicit degraded/not-configured state with no fabricated workflow, cost, token, or execution metrics.
+      description: Returns real monitor state when configured; otherwise returns explicit degraded/not-configured state for DeepSeek or N8N with no fabricated workflow, cost, token, or execution metrics.
       operationId: admin_aiMonitor_getOverview
       x-foo-actor: admin
       responses:
@@ -2985,7 +2987,7 @@ paths:
     post:
       tags: [ai]
       summary: Create one chatbot reply
-      description: Runs the FoodFlow chatbot pipeline once and returns answered, escalated, or degraded state without streaming.
+      description: Runs the FoodFlow chatbot pipeline once. The runtime can use DeepSeek V4 Flash or the legacy N8N workflow and returns answered, escalated, or degraded state without streaming.
       operationId: ai_chat_create
       x-foo-actor: user
       requestBody:

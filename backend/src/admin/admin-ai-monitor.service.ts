@@ -8,6 +8,8 @@ export interface AdminAiMonitorOverview {
     status: AiMonitorStatus
     dashboardUrl: string | null
     degradedReason: string | null
+    provider: 'deepseek' | 'n8n'
+    model: string | null
   }
   workflows: AdminAiMonitorWorkflow[]
   executions: AdminAiMonitorExecution[]
@@ -49,18 +51,23 @@ export class AdminAiMonitorService {
   constructor(private readonly config: ConfigService) {}
 
   getOverview(): AdminAiMonitorOverview {
+    const provider = this.chatProvider()
     const dashboardUrl = this.firstConfigured('N8N_DASHBOARD_URL', 'N8N_URL')
     const apiUrl = this.firstConfigured('N8N_MONITORING_API_URL', 'N8N_API_URL')
     const apiKey = this.firstConfigured('N8N_MONITORING_API_KEY', 'N8N_API_KEY')
     const monitoringConfigured = Boolean(apiUrl && apiKey)
+    const deepSeekConfigured = Boolean(this.firstConfigured('DEEPSEEK_API_KEY'))
+    const configured = provider === 'deepseek' ? deepSeekConfigured : monitoringConfigured
 
     return {
       instance: {
-        status: monitoringConfigured ? 'degraded' : 'not_configured',
+        status: configured ? 'degraded' : 'not_configured',
         dashboardUrl,
-        degradedReason: monitoringConfigured
-          ? 'N8N_MONITORING_ADAPTER_NOT_ENABLED'
-          : 'N8N_MONITORING_NOT_CONFIGURED',
+        degradedReason: this.degradedReason(provider, configured),
+        provider,
+        model: provider === 'deepseek'
+          ? this.firstConfigured('DEEPSEEK_MODEL') ?? 'deepseek-v4-flash'
+          : null,
       },
       workflows: [],
       executions: [],
@@ -70,7 +77,7 @@ export class AdminAiMonitorService {
         escalated: null,
         resolutionRate: null,
         costTodayUsd: null,
-        budgetTodayUsd: this.numberConfig('GEMINI_DAILY_BUDGET_USD'),
+        budgetTodayUsd: this.numberConfig('DEEPSEEK_DAILY_BUDGET_USD', 'AI_DAILY_BUDGET_USD', 'GEMINI_DAILY_BUDGET_USD'),
         inputTokens: null,
         outputTokens: null,
         requests: null,
@@ -91,10 +98,28 @@ export class AdminAiMonitorService {
     return null
   }
 
-  private numberConfig(key: string): number | null {
-    const raw = this.config.get<string>(key)
-    if (!raw?.trim()) return null
-    const value = Number(raw)
-    return Number.isFinite(value) ? value : null
+  private chatProvider(): 'deepseek' | 'n8n' {
+    const configured = this.config.get<string>('AI_CHAT_PROVIDER')?.trim().toLowerCase()
+    if (configured === 'deepseek' || configured === 'n8n') return configured
+    if (this.firstConfigured('DEEPSEEK_API_KEY')) return 'deepseek'
+    return 'n8n'
+  }
+
+  private degradedReason(provider: 'deepseek' | 'n8n', configured: boolean): string {
+    if (provider === 'deepseek') {
+      return configured ? 'AI_MONITOR_TELEMETRY_NOT_ENABLED' : 'DEEPSEEK_NOT_CONFIGURED'
+    }
+
+    return configured ? 'N8N_MONITORING_ADAPTER_NOT_ENABLED' : 'N8N_MONITORING_NOT_CONFIGURED'
+  }
+
+  private numberConfig(...keys: string[]): number | null {
+    for (const key of keys) {
+      const raw = this.config.get<string>(key)
+      if (!raw?.trim()) continue
+      const value = Number(raw)
+      if (Number.isFinite(value)) return value
+    }
+    return null
   }
 }

@@ -112,6 +112,8 @@ export interface AdminAiMonitorOverview {
     status: AiMonitorStatus;
     dashboardUrl: string | null;
     degradedReason: string | null;
+    provider: 'deepseek' | 'n8n';
+    model: string | null;
   };
   workflows: AdminAiMonitorWorkflow[];
   executions: AdminAiMonitorExecution[];

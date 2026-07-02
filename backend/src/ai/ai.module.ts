@@ -6,6 +6,7 @@ import { AiChatController } from './ai-chat.controller'
 import { ChatClassifyController } from './chat-classify.controller'
 import { AiToolsService } from './ai-tools.service'
 import { AiChatService } from './ai-chat.service'
+import { DeepSeekChatProviderService } from './deepseek-chat-provider.service'
 import { AiServiceJwtStrategy } from './ai-service-jwt.strategy'
 import { ConversationMemoryService } from './conversation-memory.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
@@ -18,6 +19,7 @@ import { OutputFilterService } from './output-filter.service'
   providers: [
     AiToolsService,
     AiChatService,
+    DeepSeekChatProviderService,
     AiServiceJwtStrategy,
     ConversationMemoryService,
     SentimentDetectionService,

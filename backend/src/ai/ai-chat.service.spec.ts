@@ -12,9 +12,17 @@ describe('AiChatService', () => {
     containsInjection: jest.fn(),
     filter: jest.fn(),
   }
+  const deepSeek = { createReply: jest.fn() }
   const config = { get: jest.fn() }
   const i18n = { t: jest.fn() }
-  const service = new AiChatService(memory as never, sentiment as never, outputFilter as never, config as never, i18n as never)
+  const service = new AiChatService(
+    memory as never,
+    sentiment as never,
+    outputFilter as never,
+    deepSeek as never,
+    config as never,
+    i18n as never,
+  )
   const user = { sub: 'user-1', role: 'customer' }
   const originalFetch = global.fetch
 
@@ -26,7 +34,11 @@ describe('AiChatService', () => {
     memory.getHistory.mockResolvedValue([{ role: 'assistant', content: 'old', timestamp: '2026-07-02T00:00:00.000Z' }])
     memory.append.mockResolvedValue(undefined)
     memory.appendBatch.mockResolvedValue(undefined)
-    config.get.mockReturnValue('https://n8n.example.test/webhook/ai-support-chat')
+    deepSeek.createReply.mockReset()
+    config.get.mockImplementation((key: string, defaultValue?: string) => ({
+      AI_CHAT_PROVIDER: 'n8n',
+      N8N_WEBHOOK_URL: 'https://n8n.example.test/webhook/ai-support-chat',
+    }[key] ?? defaultValue))
     i18n.t.mockImplementation((key: string) => ({
       'ai_templates.greeting': 'Hello from FoodFlow AI',
       'ai_templates.fallback': 'Fallback reply',
@@ -64,6 +76,41 @@ describe('AiChatService', () => {
       expect.objectContaining({ role: 'assistant', content: 'Hello from FoodFlow AI' }),
     ]))
     expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('uses DeepSeek provider when configured without calling N8N', async () => {
+    config.get.mockImplementation((key: string, defaultValue?: string) => ({
+      AI_CHAT_PROVIDER: 'deepseek',
+    }[key] ?? defaultValue))
+    deepSeek.createReply.mockResolvedValue({ reply: 'DeepSeek answer', escalated: true, severity: 'HIGH' })
+
+    const result = await service.createReply({ message: 'My order is very late', sessionId: 'session-1' }, user)
+
+    expect(deepSeek.createReply).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'My order is very late',
+      sessionId: 'session-1',
+      userId: 'user-1',
+      sentimentLabel: 'neutral',
+    }))
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(memory.append).toHaveBeenCalledWith('session-1', expect.objectContaining({ role: 'assistant', content: 'DeepSeek answer' }))
+    expect(result).toMatchObject({ action: 'escalated', reply: 'DeepSeek answer', severity: 'HIGH' })
+  })
+
+  it('returns degraded state when DeepSeek provider is selected but unavailable', async () => {
+    config.get.mockImplementation((key: string, defaultValue?: string) => ({
+      AI_CHAT_PROVIDER: 'deepseek',
+    }[key] ?? defaultValue))
+    deepSeek.createReply.mockRejectedValue(new Error('DEEPSEEK_NOT_CONFIGURED'))
+
+    const result = await service.createReply({ message: 'Need help', sessionId: 'session-1' }, user)
+
+    expect(result).toEqual({
+      reply: 'AI service unavailable',
+      sessionId: 'session-1',
+      action: 'degraded',
+    })
+    expect(memory.append).not.toHaveBeenCalledWith('session-1', expect.objectContaining({ role: 'assistant' }))
   })
 
   it('calls N8N with history, filters the reply, and returns escalation metadata', async () => {

@@ -5,6 +5,8 @@ export interface AiMonitorOverview {
     status: AiMonitorStatus;
     dashboardUrl: string | null;
     degradedReason: string | null;
+    provider: 'deepseek' | 'n8n';
+    model: string | null;
   };
   workflows: AiMonitorWorkflow[];
   executions: AiMonitorExecution[];
