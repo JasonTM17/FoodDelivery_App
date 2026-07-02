@@ -1,33 +1,35 @@
 'use client';
 
-import PromotionForm from '@/components/promotions/promotion-form';
-import { PageHeader } from '@foodflow/ui/page-header';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from '@/navigation';
-import { useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
+import PromotionForm from '@/components/promotions/promotion-form';
+import { Button } from '@/components/ui/button';
+import { Link, useRouter } from '@/navigation';
+import { PageHeader } from '@foodflow/ui/page-header';
 
 export default function NewPromotionPage() {
   const router = useRouter();
+  const promotionsT = useTranslations('promotions');
+  const t = useTranslations('adminPromotionManagement');
 
   return (
     <div className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: 'Admin' },
-          { label: 'Khuyến mãi', href: '/promotions' },
-          { label: 'Tạo mới' },
+          { label: promotionsT('title'), href: '/promotions' },
+          { label: t('createTitle') },
         ]}
-        title="Tạo khuyến mãi mới"
-        description="Thiết lập mã khuyến mãi mới cho người dùng"
-        actions={
+        title={t('createTitle')}
+        description={t('createDescription')}
+        actions={(
           <Button variant="ghost" size="sm" asChild>
             <Link href="/promotions">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại
+              <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+              {t('back')}
             </Link>
           </Button>
-        }
+        )}
       />
       <PromotionForm onSuccess={() => router.push('/promotions')} />
     </div>

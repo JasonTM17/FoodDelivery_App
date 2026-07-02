@@ -94,11 +94,11 @@ export function AdminPromotionsTable(props: AdminPromotionsTableProps) {
                     {promotion.usageCount} / {promotion.usageLimit > 0 ? promotion.usageLimit : '∞'}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {promotion.endDate ? formatDate(promotion.endDate) : t('noExpiry')}
+                    {promotion.expiresAt ? formatDate(promotion.expiresAt) : t('noExpiry')}
                   </TableCell>
                   <TableCell>
                     <Switch
-                      checked={promotion.active}
+                      checked={promotion.isActive}
                       onCheckedChange={() => props.onToggle(promotion)}
                       aria-label={t('toggleLabel', { code: promotion.code })}
                     />

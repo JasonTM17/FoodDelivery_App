@@ -27,7 +27,9 @@
     "saving": "Đang lưu...",
     "update": "Cập nhật",
     "createAction": "Tạo mới",
-    "types": { "percentage": "Phần trăm", "fixed": "Cố định" },
+    "back": "Quay lại",
+    "notFound": "Không tìm thấy khuyến mãi.",
+    "types": { "percentage": "Phần trăm", "fixed": "Cố định", "free_delivery": "Miễn phí vận chuyển", "bogo": "Mua một tặng một", "combo": "Combo" },
     "columns": { "code": "Mã", "type": "Loại", "value": "Giá trị", "usage": "Đã dùng / giới hạn", "expiry": "Hạn sử dụng", "active": "Kích hoạt", "actions": "Thao tác" },
     "fields": { "code": "Mã khuyến mãi", "type": "Loại", "percentageValue": "Phần trăm giảm", "fixedValue": "Số tiền giảm", "minOrder": "Đơn tối thiểu", "maxDiscount": "Giảm tối đa", "usageLimit": "Giới hạn lượt dùng", "startDate": "Ngày bắt đầu", "endDate": "Ngày kết thúc", "description": "Mô tả" }
   },

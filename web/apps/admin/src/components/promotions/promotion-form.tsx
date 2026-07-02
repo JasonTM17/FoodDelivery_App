@@ -3,8 +3,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiPost, apiPut } from '@/lib/api';
+import { apiPatch, apiPost } from '@/lib/api';
 import { promotionSchema, type PromotionFormValues } from '@/lib/schemas/promotion-schema';
+import { toAdminPromotionPayload } from './admin-promotions-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +34,7 @@ interface PromotionFormProps {
 }
 
 const discountTypeLabels: Record<string, string> = {
+  combo: 'Combo',
   percent: 'Phần trăm (%)',
   fixed: 'Cố định (VND)',
   bogo: 'Mua 1 tặng 1',
@@ -75,9 +77,9 @@ export default function PromotionForm({ defaultValues, editId, onSuccess }: Prom
     setSaveError('');
     try {
       if (editId) {
-        await apiPut(`/admin/promotions/${editId}`, data);
+        await apiPatch(`/admin/promotions/${editId}`, toAdminPromotionPayload(data));
       } else {
-        await apiPost('/admin/promotions', data);
+        await apiPost('/admin/promotions', toAdminPromotionPayload(data));
       }
       queryClient.invalidateQueries({ queryKey: ['promotions'] });
       onSuccess?.();

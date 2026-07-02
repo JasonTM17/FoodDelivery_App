@@ -27,7 +27,9 @@
     "saving": "Saving...",
     "update": "Update",
     "createAction": "Create",
-    "types": { "percentage": "Percentage", "fixed": "Fixed amount" },
+    "back": "Back",
+    "notFound": "Promotion not found.",
+    "types": { "percentage": "Percentage", "fixed": "Fixed amount", "free_delivery": "Free delivery", "bogo": "Buy one get one", "combo": "Combo" },
     "columns": { "code": "Code", "type": "Type", "value": "Value", "usage": "Used / limit", "expiry": "Expiry", "active": "Active", "actions": "Actions" },
     "fields": { "code": "Promotion code", "type": "Type", "percentageValue": "Discount percentage", "fixedValue": "Discount amount", "minOrder": "Minimum order", "maxDiscount": "Maximum discount", "usageLimit": "Usage limit", "startDate": "Start date", "endDate": "End date", "description": "Description" }
   },

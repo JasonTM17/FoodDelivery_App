@@ -205,14 +205,19 @@ export class AdminService {
     const promo = await this.prisma.promotion.create({
       data: {
         code: dto.code,
+        name: dto.name ?? dto.code,
+        description: dto.description,
         type: dto.type,
         value: dto.value,
         minOrderAmount: dto.minOrderAmount ?? 0,
         maxDiscount: dto.maxDiscount ?? null,
         usageLimit: dto.usageLimit,
+        maxPerUser: dto.maxPerUser,
+        targeting: dto.targeting as Prisma.InputJsonValue | undefined,
         startsAt: new Date(dto.startsAt),
         expiresAt: new Date(dto.expiresAt),
         isActive: dto.isActive ?? true,
+        status: dto.isActive === false ? 'paused' : 'active',
       },
     })
 
@@ -239,14 +244,21 @@ export class AdminService {
 
     const data: Prisma.PromotionUpdateInput = {}
     if (dto.code !== undefined) data.code = dto.code
+    if (dto.name !== undefined) data.name = dto.name
+    if (dto.description !== undefined) data.description = dto.description
     if (dto.type !== undefined) data.type = dto.type
     if (dto.value !== undefined) data.value = dto.value
     if (dto.minOrderAmount !== undefined) data.minOrderAmount = dto.minOrderAmount
     if (dto.maxDiscount !== undefined) data.maxDiscount = dto.maxDiscount
     if (dto.usageLimit !== undefined) data.usageLimit = dto.usageLimit
+    if (dto.maxPerUser !== undefined) data.maxPerUser = dto.maxPerUser
+    if (dto.targeting !== undefined) data.targeting = dto.targeting as Prisma.InputJsonValue
     if (dto.startsAt !== undefined) data.startsAt = new Date(dto.startsAt)
     if (dto.expiresAt !== undefined) data.expiresAt = new Date(dto.expiresAt)
-    if (dto.isActive !== undefined) data.isActive = dto.isActive
+    if (dto.isActive !== undefined) {
+      data.isActive = dto.isActive
+      data.status = dto.isActive ? 'active' : 'paused'
+    }
 
     const promo = await this.prisma.promotion.update({ where: { id }, data })
 
@@ -274,7 +286,10 @@ export class AdminService {
     }
     const promo = await this.prisma.promotion.update({
       where: { id },
-      data: { isActive: !existing.isActive },
+      data: {
+        isActive: !existing.isActive,
+        status: existing.isActive ? 'paused' : 'active',
+      },
     })
     return {
       ...promo,

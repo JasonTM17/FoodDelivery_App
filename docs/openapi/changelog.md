@@ -5,6 +5,7 @@
 - Added `GET /restaurant/promotions/targeting-preview`.
 - Audience reach is derived from successful restaurant order history and remains tenant-scoped.
 - Promotion broadcasts now resolve the same tenant-scoped audience and report targeted/sent counts.
+- Admin promotion create/update now uses the canonical Prisma field names and preserves name, description, per-user limit, targeting, and status.
 - Saved segments return an explicit problem detail until a persisted segment source is available.
 
 ## v1.0.0 (2026-06-09)

@@ -1,74 +1,96 @@
-export type AdminPromotionType = 'percentage' | 'fixed';
+import type { PromotionFormValues } from '@/lib/schemas/promotion-schema';
+
+export type AdminPromotionType = 'percentage' | 'fixed' | 'free_delivery' | 'bogo' | 'combo';
 
 export interface AdminPromotion {
   id: string;
   code: string;
+  name: string;
+  description: string | null;
   type: AdminPromotionType;
   value: number;
-  minOrder: number;
-  maxDiscount: number;
+  minOrderAmount: number;
+  maxDiscount: number | null;
   usageCount: number;
   usageLimit: number;
-  startDate: string;
-  endDate: string;
-  active: boolean;
-  description: string;
+  maxPerUser: number | null;
+  targeting: { audience?: string; segmentId?: string } | null;
+  startsAt: string;
+  expiresAt: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
-export interface AdminPromotionFormData {
+export interface AdminPromotionPayload {
   code: string;
+  name: string;
+  description?: string;
   type: AdminPromotionType;
-  value: string;
-  minOrder: string;
-  maxDiscount: string;
-  usageLimit: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  active: boolean;
+  value: number;
+  minOrderAmount: number;
+  maxDiscount?: number;
+  usageLimit: number;
+  maxPerUser: number;
+  targeting: { audience: string; segmentId?: string };
+  startsAt: string;
+  expiresAt: string;
+  isActive: boolean;
 }
 
-export function createEmptyPromotionForm(): AdminPromotionFormData {
+const MAX_UNLIMITED_USAGE = 2_147_483_647;
+
+export function toAdminPromotionPayload(values: PromotionFormValues): AdminPromotionPayload {
+  const typeMap: Record<PromotionFormValues['discountType'], AdminPromotionType> = {
+    percent: 'percentage',
+    fixed: 'fixed',
+    bogo: 'bogo',
+    shipping: 'free_delivery',
+    combo: 'combo',
+  };
+
   return {
-    code: '',
-    type: 'percentage',
-    value: '',
-    minOrder: '',
-    maxDiscount: '',
-    usageLimit: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-    active: true,
+    code: values.code,
+    name: values.name,
+    description: values.description || undefined,
+    type: typeMap[values.discountType],
+    value: values.discountValue,
+    minOrderAmount: values.minOrderVnd ?? 0,
+    maxDiscount: values.maxDiscountVnd || undefined,
+    usageLimit: values.maxUsage ?? MAX_UNLIMITED_USAGE,
+    maxPerUser: values.perUserLimit,
+    targeting: {
+      audience: values.audience,
+      ...(values.segmentId ? { segmentId: values.segmentId } : {}),
+    },
+    startsAt: values.validFrom.toISOString(),
+    expiresAt: values.validUntil.toISOString(),
+    isActive: values.active,
   };
 }
 
-export function promotionToFormData(promotion: AdminPromotion): AdminPromotionFormData {
+export function toPromotionFormValues(promotion: AdminPromotion): Partial<PromotionFormValues> {
+  const typeMap: Record<AdminPromotionType, PromotionFormValues['discountType']> = {
+    percentage: 'percent',
+    fixed: 'fixed',
+    bogo: 'bogo',
+    free_delivery: 'shipping',
+    combo: 'combo',
+  };
+
   return {
     code: promotion.code,
-    type: promotion.type,
-    value: String(promotion.value),
-    minOrder: promotion.minOrder ? String(promotion.minOrder) : '',
-    maxDiscount: promotion.maxDiscount ? String(promotion.maxDiscount) : '',
-    usageLimit: promotion.usageLimit ? String(promotion.usageLimit) : '',
-    startDate: promotion.startDate?.split('T')[0] ?? '',
-    endDate: promotion.endDate?.split('T')[0] ?? '',
+    name: promotion.name,
     description: promotion.description ?? '',
-    active: promotion.active,
-  };
-}
-
-export function toPromotionPayload(formData: AdminPromotionFormData) {
-  return {
-    code: formData.code,
-    type: formData.type,
-    value: Number(formData.value),
-    minOrder: formData.minOrder ? Number(formData.minOrder) : 0,
-    maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : 0,
-    usageLimit: formData.usageLimit ? Number(formData.usageLimit) : 0,
-    startDate: formData.startDate || null,
-    endDate: formData.endDate || null,
-    description: formData.description,
-    active: formData.active,
+    discountType: typeMap[promotion.type],
+    discountValue: promotion.value,
+    minOrderVnd: promotion.minOrderAmount,
+    maxDiscountVnd: promotion.maxDiscount ?? undefined,
+    audience: (promotion.targeting?.audience as PromotionFormValues['audience']) ?? 'all',
+    segmentId: promotion.targeting?.segmentId,
+    perUserLimit: promotion.maxPerUser ?? 1,
+    maxUsage: promotion.usageLimit === MAX_UNLIMITED_USAGE ? undefined : promotion.usageLimit,
+    validFrom: new Date(promotion.startsAt),
+    validUntil: new Date(promotion.expiresAt),
+    active: promotion.isActive,
   };
 }

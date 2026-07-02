@@ -3,7 +3,8 @@
 import { use } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { apiGet, apiPut } from '@/lib/api';
+import { apiGet, apiPatch } from '@/lib/api';
+import type { AdminPromotion } from '@/components/promotions/admin-promotions-types';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@foodflow/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -15,36 +16,28 @@ import { ArrowLeft, Percent, DollarSign, Calendar, Users } from 'lucide-react';
 import { Link } from '@/navigation';
 import PromotionFunnelClient from './promotion-funnel-client';
 
-interface PromotionDetail {
-  id: string;
-  code: string;
-  type: 'percentage' | 'fixed';
-  value: number;
-  minOrder: number;
-  maxDiscount: number;
-  usageCount: number;
-  usageLimit: number;
-  startDate: string | null;
-  endDate: string | null;
-  active: boolean;
-  description: string;
-  createdAt: string;
-  totalSaved: number;
+interface PromotionAnalytics {
+  discountCost: number;
 }
 
 export default function PromotionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useTranslations('promotionDetail');
+  const managementT = useTranslations('adminPromotionManagement');
   const queryClient = useQueryClient();
 
-  const { data: promo, isLoading } = useQuery<PromotionDetail>({
+  const { data: promo, isLoading } = useQuery<AdminPromotion>({
     queryKey: ['promotion', id],
-    queryFn: () => apiGet<PromotionDetail>(`/admin/promotions/${id}`),
+    queryFn: () => apiGet<AdminPromotion>(`/admin/promotions/${id}`),
+  });
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<PromotionAnalytics>({
+    queryKey: ['promotion', id, 'analytics'],
+    queryFn: () => apiGet<PromotionAnalytics>(`/admin/promotions/${id}/analytics`),
   });
 
   const toggleActive = async () => {
     if (!promo) return;
-    await apiPut(`/admin/promotions/${id}`, { active: !promo.active });
+    await apiPatch(`/admin/promotions/${id}/toggle`);
     queryClient.invalidateQueries({ queryKey: ['promotion', id] });
   };
 
@@ -69,7 +62,7 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
     );
   }
 
-  const isExpired = promo.endDate ? new Date(promo.endDate) < new Date() : false;
+  const isExpired = new Date(promo.expiresAt) < new Date();
 
   return (
     <div className="space-y-6">
@@ -84,7 +77,7 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
         actions={
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{t('activeToggle')}</span>
-            <Switch checked={promo.active} onCheckedChange={toggleActive} />
+            <Switch checked={promo.isActive} onCheckedChange={toggleActive} />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/promotions"><ArrowLeft className="mr-2 h-4 w-4" />{t('back')}</Link>
             </Button>
@@ -109,7 +102,7 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('type')}</span>
                 <Badge variant="outline">
-                  {promo.type === 'percentage' ? t('typePercentage') : t('typeFixed')}
+                  {managementT(`types.${promo.type}`)}
                 </Badge>
               </div>
               <Separator />
@@ -119,16 +112,16 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
                   {promo.type === 'percentage' ? `${promo.value}%` : formatCurrency(promo.value)}
                 </span>
               </div>
-              {promo.minOrder > 0 && (
+              {promo.minOrderAmount > 0 && (
                 <>
                   <Separator />
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('minOrder')}</span>
-                    <span>{formatCurrency(promo.minOrder)}</span>
+                    <span>{formatCurrency(promo.minOrderAmount)}</span>
                   </div>
                 </>
               )}
-              {promo.maxDiscount > 0 && (
+              {promo.maxDiscount !== null && promo.maxDiscount > 0 && (
                 <>
                   <Separator />
                   <div className="flex justify-between">
@@ -156,13 +149,13 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('startDate')}</span>
-                <span>{promo.startDate ? formatDate(promo.startDate) : t('noLimit')}</span>
+                <span>{formatDate(promo.startsAt)}</span>
               </div>
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('endDate')}</span>
                 <div className="flex items-center gap-2">
-                  <span>{promo.endDate ? formatDate(promo.endDate) : t('noLimit')}</span>
+                  <span>{formatDate(promo.expiresAt)}</span>
                   {isExpired && <Badge variant="destructive">{t('expired')}</Badge>}
                 </div>
               </div>
@@ -207,7 +200,9 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('totalSaved')}</span>
-                <span className="font-medium text-green-600">{formatCurrency(promo.totalSaved || 0)}</span>
+                <span className="font-medium text-green-600">
+                  {analyticsLoading || !analytics ? '…' : formatCurrency(analytics.discountCost)}
+                </span>
               </div>
             </CardContent>
           </Card>

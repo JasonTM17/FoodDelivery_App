@@ -10,7 +10,7 @@ export const promotionSchema = z.object({
     .string()
     .min(5, 'Tên khuyến mãi cần ít nhất 5 ký tự')
     .max(100, 'Tên khuyến mãi tối đa 100 ký tự'),
-  discountType: z.enum(['percent', 'fixed', 'bogo', 'shipping'], {
+  discountType: z.enum(['percent', 'fixed', 'bogo', 'shipping', 'combo'], {
     errorMap: () => ({ message: 'Loại giảm giá không hợp lệ' }),
   }),
   discountValue: z.coerce.number().positive('Giá trị phải là số dương'),

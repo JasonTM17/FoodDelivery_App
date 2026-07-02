@@ -29,6 +29,7 @@ const audienceLabels: Record<string, string> = {
 };
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  combo: Gift,
   percent: Percent,
   fixed: DollarSign,
   bogo: Gift,
@@ -65,6 +66,8 @@ export default function PromotionPreview({ values }: PromotionPreviewProps) {
                   ? `Giảm ${formatCurrency(values.discountValue || 0)}`
                   : values.discountType === 'bogo'
                   ? 'Mua 1 tặng 1'
+                  : values.discountType === 'combo'
+                  ? 'Ưu đãi combo'
                   : 'Miễn phí vận chuyển'}
               </span>
             </div>

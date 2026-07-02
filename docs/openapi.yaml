@@ -737,12 +737,17 @@ components:
       properties:
         id:            { type: string, format: uuid }
         code:          { type: string }
-        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        name:          { type: string, maxLength: 150 }
+        description:   { type: string }
+        type:          { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
         value:         { type: integer, description: "Percent (if percentage) or VND (if fixed)" }
         minOrderAmount: { type: integer, description: "Minimum order amount in VND" }
         maxDiscount:   { type: integer, description: "Max discount cap in VND" }
         usageLimit:    { type: integer }
         usageCount:    { type: integer }
+        maxPerUser:    { type: integer, minimum: 1 }
+        targeting:     { type: object, additionalProperties: true }
+        status:        { type: string, enum: [draft, scheduled, active, paused, expired, archived] }
         startsAt:      { type: string, format: date-time }
         expiresAt:     { type: string, format: date-time }
         isActive:      { type: boolean }
@@ -766,11 +771,15 @@ components:
       type: object
       properties:
         code:          { type: string, maxLength: 50 }
-        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        name:          { type: string, maxLength: 150 }
+        description:   { type: string, maxLength: 2000 }
+        type:          { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
         value:         { type: integer, description: "Percent or VND" }
         minOrderAmount: { type: integer, description: "VND" }
         maxDiscount:   { type: integer, description: "VND" }
         usageLimit:    { type: integer, minimum: 1 }
+        maxPerUser:    { type: integer, minimum: 1 }
+        targeting:     { type: object, additionalProperties: true }
         startsAt:      { type: string, format: date-time }
         expiresAt:     { type: string, format: date-time }
         isActive:      { type: boolean, default: true }
@@ -790,11 +799,15 @@ components:
       type: object
       properties:
         code:          { type: string, maxLength: 50 }
-        type:          { type: string, enum: [percentage, fixed, free_delivery] }
+        name:          { type: string, maxLength: 150 }
+        description:   { type: string, maxLength: 2000 }
+        type:          { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
         value:         { type: integer }
         minOrderAmount: { type: integer, description: "VND" }
         maxDiscount:   { type: integer, description: "VND" }
         usageLimit:    { type: integer, minimum: 1 }
+        maxPerUser:    { type: integer, minimum: 1 }
+        targeting:     { type: object, additionalProperties: true }
         startsAt:      { type: string, format: date-time }
         expiresAt:     { type: string, format: date-time }
         isActive:      { type: boolean }

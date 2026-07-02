@@ -3,6 +3,7 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsObject,
   IsDateString,
   IsEnum,
   Min,
@@ -16,6 +17,15 @@ export class CreatePromotionDto {
   @IsString()
   @MaxLength(50)
   code: string
+
+  @IsString()
+  @MaxLength(150)
+  @IsOptional()
+  name?: string
+
+  @IsString()
+  @IsOptional()
+  description?: string
 
   @IsEnum(PromotionType)
   type: PromotionType
@@ -38,6 +48,15 @@ export class CreatePromotionDto {
   @Min(1)
   usageLimit: number
 
+  @IsNumber({ maxDecimalPlaces: 0 })
+  @Min(1)
+  @IsOptional()
+  maxPerUser?: number
+
+  @IsObject()
+  @IsOptional()
+  targeting?: Record<string, unknown>
+
   @IsDateString()
   startsAt: string
 
@@ -54,6 +73,15 @@ export class UpdatePromotionDto {
   @MaxLength(50)
   @IsOptional()
   code?: string
+
+  @IsString()
+  @MaxLength(150)
+  @IsOptional()
+  name?: string
+
+  @IsString()
+  @IsOptional()
+  description?: string
 
   @IsEnum(PromotionType)
   @IsOptional()
@@ -78,6 +106,15 @@ export class UpdatePromotionDto {
   @Min(1)
   @IsOptional()
   usageLimit?: number
+
+  @IsNumber({ maxDecimalPlaces: 0 })
+  @Min(1)
+  @IsOptional()
+  maxPerUser?: number
+
+  @IsObject()
+  @IsOptional()
+  targeting?: Record<string, unknown>
 
   @IsDateString()
   @IsOptional()

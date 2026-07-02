@@ -27,7 +27,9 @@
     "saving": "保存中...",
     "update": "更新",
     "createAction": "作成",
-    "types": { "percentage": "パーセント", "fixed": "固定額" },
+    "back": "戻る",
+    "notFound": "プロモーションが見つかりません。",
+    "types": { "percentage": "パーセント", "fixed": "固定額", "free_delivery": "送料無料", "bogo": "1つ買うと1つ無料", "combo": "コンボ" },
     "columns": { "code": "コード", "type": "種類", "value": "値", "usage": "使用数 / 上限", "expiry": "有効期限", "active": "有効", "actions": "操作" },
     "fields": { "code": "プロモーションコード", "type": "種類", "percentageValue": "割引率", "fixedValue": "割引額", "minOrder": "最低注文額", "maxDiscount": "最大割引額", "usageLimit": "使用上限", "startDate": "開始日", "endDate": "終了日", "description": "説明" }
   },
