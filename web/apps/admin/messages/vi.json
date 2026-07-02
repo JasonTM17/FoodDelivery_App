@@ -240,6 +240,49 @@
     "description": "Lịch sử hoạt động của admin",
     "exportCsv": "Xuất CSV"
   },
+  "exportJobs": {
+    "title": "Lịch sử xuất dữ liệu",
+    "description": "Theo dõi các job xuất dữ liệu nền và tải tệp đã hoàn thành",
+    "listTitle": "Job xuất dữ liệu",
+    "count": "{count} job gần nhất",
+    "statusFilter": "Lọc theo trạng thái",
+    "statuses": {
+      "all": "Tất cả trạng thái",
+      "queued": "Đang chờ",
+      "running": "Đang xử lý",
+      "completed": "Hoàn thành",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy"
+    },
+    "columns": {
+      "jobId": "Mã job",
+      "format": "Định dạng",
+      "filters": "Bộ lọc",
+      "rows": "Số dòng",
+      "progress": "Tiến độ",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "filterKeys": {
+      "period": "Khoảng thời gian",
+      "dateFrom": "Từ ngày",
+      "dateTo": "Đến ngày"
+    },
+    "progressLabel": "Tiến độ xuất dữ liệu",
+    "downloadLabel": "Tải bản xuất {id}",
+    "downloadError": "Không thể tải bản xuất dữ liệu.",
+    "failedLabel": "Lỗi",
+    "emptyTitle": "Chưa có job xuất dữ liệu",
+    "emptyDescription": "Dữ liệu xuất từ Báo cáo và Nhật ký sẽ hiển thị tại đây.",
+    "filteredEmptyTitle": "Không có job ở trạng thái này",
+    "filteredEmptyDescription": "Chọn trạng thái khác để xem thêm job xuất dữ liệu.",
+    "loadError": "Không thể tải lịch sử xuất dữ liệu",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "retry": "Thử lại",
+    "permissionDenied": "Không có quyền truy cập",
+    "permissionDeniedDescription": "Tài khoản của bạn không thể xem các job xuất dữ liệu."
+  },
   "reports": {
     "title": "Báo cáo & xuất dữ liệu",
     "description": "Tạo và tải báo cáo qua dịch vụ xuất dữ liệu chuẩn",

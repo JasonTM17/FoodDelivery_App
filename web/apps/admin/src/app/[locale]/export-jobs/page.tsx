@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import type { AdminExportJob, AdminExportJobsPayload } from '@foodflow/api-client';
+import { ApiClientError } from '@foodflow/api-client';
 import { useQuery } from '@tanstack/react-query';
-import { apiDownload, apiGet } from '@/lib/api';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { FileText, RefreshCw, ShieldX } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { EmptyState } from '@foodflow/ui/empty-state';
+import { PageHeader } from '@foodflow/ui/page-header';
+import { Skeleton } from '@foodflow/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -13,94 +17,108 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, XCircle } from 'lucide-react';
-import { ExportJobsTable, type ExportJob } from './export-jobs-table';
-
-const statusFilters = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'queued', label: 'Đang chờ' },
-  { value: 'running', label: 'Đang xử lý' },
-  { value: 'completed', label: 'Hoàn thành' },
-  { value: 'failed', label: 'Thất bại' },
-  { value: 'cancelled', label: 'Đã hủy' },
-];
+import { apiDownload, apiGet } from '@/lib/api';
+import {
+  exportJobStatuses,
+  getExportJobsPollingInterval,
+  getExportJobsQueryParams,
+  type ExportJobsStatusFilter,
+} from './export-jobs-config';
+import { ExportJobsTable } from './export-jobs-table';
 
 export default function ExportJobsPage() {
-  const [statusFilter, setStatusFilter] = useState('all');
+  const t = useTranslations('exportJobs');
+  const [statusFilter, setStatusFilter] = useState<ExportJobsStatusFilter>('all');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const { data, isError, isLoading, refetch } = useQuery<{ jobs: ExportJob[] }>({
-    queryKey: ['export-jobs'],
-    queryFn: () => apiGet('/admin/exports?limit=30'),
-    refetchInterval: 5000,
+  const [downloadError, setDownloadError] = useState('');
+  const query = useQuery<AdminExportJobsPayload>({
+    queryKey: ['export-jobs', statusFilter],
+    queryFn: () => apiGet<AdminExportJobsPayload>('/admin/exports', {
+      params: getExportJobsQueryParams(statusFilter),
+    }),
+    refetchInterval: queryState => getExportJobsPollingInterval(queryState.state.data),
   });
 
-  const jobs = data?.jobs ?? [];
-  const filtered = statusFilter === 'all' ? jobs : jobs.filter(job => job.status === statusFilter);
+  const jobs = query.data?.jobs ?? [];
 
-  const handleDownload = async (job: ExportJob) => {
+  const handleDownload = async (job: AdminExportJob) => {
     setDownloadingId(job.id);
+    setDownloadError('');
     try {
       const blob = await apiDownload(`/admin/exports/${job.id}/download`);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `foodflow-${job.resource || job.type}-${job.id.slice(0, 8)}.csv`;
+      anchor.download = `foodflow-${job.resource}-${job.id.slice(0, 8)}.${job.format}`;
       anchor.click();
-      URL.revokeObjectURL(url);
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (error) {
+      setDownloadError(error instanceof Error && error.message ? error.message : t('downloadError'));
     } finally {
       setDownloadingId(null);
     }
   };
 
-  if (isLoading) return <ExportJobsSkeleton />;
-
-  if (isError) {
-    return (
-      <EmptyState
-        icon={XCircle}
-        title="Không thể tải lịch sử xuất dữ liệu"
-        description="Kiểm tra kết nối hoặc thử lại sau vài giây."
-        actionLabel="Thử lại"
-        onAction={() => refetch()}
-      />
-    );
-  }
+  const isPermissionDenied = query.error instanceof ApiClientError && query.error.status === 403;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[{ label: 'Admin' }, { label: 'Lịch sử xuất dữ liệu' }]}
-        title="Lịch sử xuất dữ liệu"
-        description="Theo dõi trạng thái các job xuất dữ liệu nền"
+        breadcrumbs={[{ label: 'Admin' }, { label: t('title') }]}
+        title={t('title')}
+        description={t('description')}
       />
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-base">Job xuất dữ liệu</CardTitle>
-              <CardDescription>{filtered.length} job gần nhất</CardDescription>
+              <CardTitle className="text-base">{t('listTitle')}</CardTitle>
+              <CardDescription>{t('count', { count: jobs.length })}</CardDescription>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+            <Select value={statusFilter} onValueChange={value => setStatusFilter(value as ExportJobsStatusFilter)}>
+              <SelectTrigger className="w-full sm:w-40" aria-label={t('statusFilter')}>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {statusFilters.map(filter => (
-                  <SelectItem key={filter.value} value={filter.value}>{filter.label}</SelectItem>
+                {exportJobStatuses.map(status => (
+                  <SelectItem key={status} value={status}>{t(`statuses.${status}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </CardHeader>
         <CardContent>
-          {filtered.length === 0 ? (
+          {downloadError && <p role="alert" className="mb-4 text-sm text-destructive">{downloadError}</p>}
+          {query.isLoading ? (
+            <ExportJobsSkeleton />
+          ) : isPermissionDenied ? (
+            <EmptyState
+              icon={ShieldX}
+              title={t('permissionDenied')}
+              description={t('permissionDeniedDescription')}
+            />
+          ) : query.isError ? (
+            <EmptyState
+              icon={RefreshCw}
+              title={t('loadError')}
+              description={t('loadErrorDescription')}
+              actionLabel={t('retry')}
+              onAction={() => query.refetch()}
+            />
+          ) : jobs.length === 0 ? (
             <EmptyState
               icon={FileText}
-              title="Chưa có job xuất dữ liệu nào"
-              description="Dữ liệu xuất từ Reports hoặc Audit sẽ hiển thị ở đây."
+              title={statusFilter === 'all' ? t('emptyTitle') : t('filteredEmptyTitle')}
+              description={statusFilter === 'all' ? t('emptyDescription') : t('filteredEmptyDescription')}
             />
           ) : (
-            <ExportJobsTable jobs={filtered} downloadingId={downloadingId} onDownload={handleDownload} />
+            <ExportJobsTable
+              jobs={jobs}
+              downloadingId={downloadingId}
+              onDownload={handleDownload}
+            />
           )}
         </CardContent>
       </Card>
@@ -110,14 +128,10 @@ export default function ExportJobsPage() {
 
 function ExportJobsSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-      <div className="h-12 animate-pulse rounded-lg bg-muted" />
-      <div className="space-y-3">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
-        ))}
-      </div>
+    <div className="space-y-3" aria-busy="true">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <Skeleton key={index} className="h-16 w-full" />
+      ))}
     </div>
   );
 }

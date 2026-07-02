@@ -240,6 +240,49 @@
     "description": "管理者の活動履歴",
     "exportCsv": "CSVエクスポート"
   },
+  "exportJobs": {
+    "title": "エクスポート履歴",
+    "description": "バックグラウンドのエクスポートジョブを追跡し、完了したファイルをダウンロードします",
+    "listTitle": "エクスポートジョブ",
+    "count": "最近のジョブ {count} 件",
+    "statusFilter": "状態で絞り込む",
+    "statuses": {
+      "all": "すべての状態",
+      "queued": "待機中",
+      "running": "処理中",
+      "completed": "完了",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み"
+    },
+    "columns": {
+      "jobId": "ジョブID",
+      "format": "形式",
+      "filters": "フィルター",
+      "rows": "行数",
+      "progress": "進捗",
+      "status": "状態",
+      "createdAt": "作成日時",
+      "actions": "操作"
+    },
+    "filterKeys": {
+      "period": "期間",
+      "dateFrom": "開始日",
+      "dateTo": "終了日"
+    },
+    "progressLabel": "エクスポート進捗",
+    "downloadLabel": "エクスポート {id} をダウンロード",
+    "downloadError": "エクスポートをダウンロードできませんでした。",
+    "failedLabel": "エラー",
+    "emptyTitle": "エクスポートジョブがありません",
+    "emptyDescription": "レポートと監査ログのエクスポートがここに表示されます。",
+    "filteredEmptyTitle": "この状態のジョブはありません",
+    "filteredEmptyDescription": "別の状態を選択してください。",
+    "loadError": "エクスポート履歴を読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "retry": "再試行",
+    "permissionDenied": "アクセス権限がありません",
+    "permissionDeniedDescription": "このアカウントではエクスポートジョブを閲覧できません。"
+  },
   "reports": {
     "title": "レポートとエクスポート",
     "description": "標準エクスポートサービスからレポートを作成・ダウンロードします",

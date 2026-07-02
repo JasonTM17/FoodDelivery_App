@@ -240,6 +240,49 @@
     "description": "Admin activity history",
     "exportCsv": "Export CSV"
   },
+  "exportJobs": {
+    "title": "Export history",
+    "description": "Track background data export jobs and download completed files",
+    "listTitle": "Export jobs",
+    "count": "{count, plural, =0 {No matching jobs} one {# recent job} other {# recent jobs}}",
+    "statusFilter": "Filter by status",
+    "statuses": {
+      "all": "All statuses",
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "columns": {
+      "jobId": "Job ID",
+      "format": "Format",
+      "filters": "Filters",
+      "rows": "Rows",
+      "progress": "Progress",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "filterKeys": {
+      "period": "Period",
+      "dateFrom": "Start date",
+      "dateTo": "End date"
+    },
+    "progressLabel": "Export progress",
+    "downloadLabel": "Download export {id}",
+    "downloadError": "Could not download the export.",
+    "failedLabel": "Error",
+    "emptyTitle": "No export jobs yet",
+    "emptyDescription": "Reports and audit exports will appear here.",
+    "filteredEmptyTitle": "No jobs match this status",
+    "filteredEmptyDescription": "Choose another status to see more export jobs.",
+    "loadError": "Could not load export history",
+    "loadErrorDescription": "Check the connection and try again.",
+    "retry": "Try again",
+    "permissionDenied": "Permission denied",
+    "permissionDeniedDescription": "Your account cannot view export jobs."
+  },
   "reports": {
     "title": "Reports & exports",
     "description": "Create and download reports through the canonical export service",
