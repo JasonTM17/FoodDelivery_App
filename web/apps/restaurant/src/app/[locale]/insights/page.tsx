@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Lightbulb, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { AiSuggestionCard } from '@/components/insights/ai-suggestion-card';
 import { PeakHoursHeatmap } from '@/components/insights/peak-hours-heatmap';
 import { BestSellersList } from '@/components/insights/best-sellers-list';
@@ -19,6 +20,7 @@ const EMPTY_INSIGHTS: RestaurantInsights = {
 };
 
 export default function InsightsPage() {
+  const t = useTranslations('insights');
   const [insights, setInsights] = useState<RestaurantInsights>(EMPTY_INSIGHTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,13 +32,13 @@ export default function InsightsPage() {
       const data = await api.get<RestaurantInsights>('/restaurant/insights');
       setInsights(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải dữ liệu phân tích';
+      const message = err instanceof Error ? err.message : t('loadError');
       setInsights(EMPTY_INSIGHTS);
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadInsights();
@@ -53,18 +55,16 @@ export default function InsightsPage() {
           <Lightbulb className="h-5 w-5 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Phân tích & Đề xuất</h1>
-          <p className="text-sm text-gray-500">
-            Gợi ý dựa trên dữ liệu đơn hàng, menu và doanh thu thật
-          </p>
+          <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-sm text-gray-500">{t('description')}</p>
         </div>
       </div>
 
-      {error && <RetryableError message={error} onRetry={loadInsights} />}
+      {error && <RetryableError message={error} onRetry={loadInsights} retryLabel={t('retry')} />}
 
       <section>
         <h2 className="text-base font-semibold text-gray-900 mb-3">
-          Hôm nay có {insights.suggestions.length} đề xuất cho bạn
+          {t('suggestionCount', { count: insights.suggestions.length })}
         </h2>
         <div className="space-y-3">
           {insights.suggestions.map((suggestion) => (
@@ -73,9 +73,7 @@ export default function InsightsPage() {
           {insights.suggestions.length === 0 && (
             <div className="card text-center py-8">
               <Lightbulb className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">
-                Chưa có đề xuất nào. Dữ liệu sẽ hiển thị sau khi có đủ đơn hàng.
-              </p>
+              <p className="text-sm text-gray-500">{t('emptySuggestions')}</p>
             </div>
           )}
         </div>
@@ -112,9 +110,20 @@ function InsightsSkeleton() {
   );
 }
 
-function RetryableError({ message, onRetry }: { message: string; onRetry: () => void }) {
+function RetryableError({
+  message,
+  onRetry,
+  retryLabel,
+}: {
+  message: string;
+  onRetry: () => void;
+  retryLabel: string;
+}) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between"
+      role="alert"
+    >
       <span>{message}</span>
       <button
         type="button"
@@ -122,7 +131,7 @@ function RetryableError({ message, onRetry }: { message: string; onRetry: () => 
         className="inline-flex items-center justify-center gap-1 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
       >
         <RefreshCw className="h-3.5 w-3.5" />
-        Thử lại
+        {retryLabel}
       </button>
     </div>
   );

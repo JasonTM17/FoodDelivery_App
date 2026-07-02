@@ -462,6 +462,68 @@
     "noData": "No data yet",
     "noCategories": "No category revenue yet"
   },
+  "insights": {
+    "title": "Analytics & Recommendations",
+    "description": "Recommendations based on real order, menu, and revenue data",
+    "loadError": "Unable to load insights",
+    "retry": "Retry",
+    "suggestionCount": "You have {count} recommendations today",
+    "emptySuggestions": "No recommendations yet. Data appears after enough orders are available.",
+    "suggestions": {
+      "apply": "Apply",
+      "dismiss": "Dismiss",
+      "types": {
+        "pricing": "Pricing",
+        "menu_mix": "Menu",
+        "marketing": "Marketing",
+        "operations": "Operations"
+      }
+    },
+    "peakHours": {
+      "title": "Peak hours",
+      "empty": "Not enough orders to calculate peak hours yet",
+      "tableLabel": "Order heatmap by day and hour",
+      "hourShort": "{hour}h",
+      "cellLabel": "{count} orders - {day} {hour}h",
+      "low": "Low",
+      "high": "High",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "bestSellers": {
+      "title": "Top sellers",
+      "empty": "Not enough best-seller item data yet",
+      "metrics": "{orders} orders · {revenueShare}% of revenue"
+    },
+    "slowMovers": {
+      "title": "Slow movers ({count})",
+      "empty": "No slow-moving items",
+      "metrics": "{orders} orders in {period} days · Down {pctDecline}%",
+      "recommendations": {
+        "bundle": "Bundle",
+        "discount": "Discount",
+        "remove": "Remove from menu"
+      }
+    },
+    "revenueForecast": {
+      "title": "Revenue forecast",
+      "empty": "Not enough revenue history to forecast yet",
+      "chartLabel": "Revenue forecast chart",
+      "confidenceTitle": "Confidence range: {lower} - {upper}",
+      "actualTitle": "Actual: {amount}",
+      "predictedTitle": "Forecast: {amount}",
+      "actual": "Actual",
+      "predicted": "Forecast",
+      "confidence": "Confidence range"
+    }
+  },
   "orderChat": {
     "title": "Chat with driver",
     "titleWithDriver": "Chat with driver: {driverName}",

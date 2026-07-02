@@ -462,6 +462,68 @@
     "noData": "Chưa có dữ liệu",
     "noCategories": "Chưa có doanh thu theo danh mục"
   },
+  "insights": {
+    "title": "Phân tích & Đề xuất",
+    "description": "Gợi ý dựa trên dữ liệu đơn hàng, menu và doanh thu thật",
+    "loadError": "Không thể tải dữ liệu phân tích",
+    "retry": "Thử lại",
+    "suggestionCount": "Hôm nay có {count} đề xuất cho bạn",
+    "emptySuggestions": "Chưa có đề xuất nào. Dữ liệu sẽ hiển thị sau khi có đủ đơn hàng.",
+    "suggestions": {
+      "apply": "Áp dụng",
+      "dismiss": "Bỏ qua",
+      "types": {
+        "pricing": "Định giá",
+        "menu_mix": "Thực đơn",
+        "marketing": "Marketing",
+        "operations": "Vận hành"
+      }
+    },
+    "peakHours": {
+      "title": "Giờ cao điểm",
+      "empty": "Chưa có đủ đơn hàng để tính giờ cao điểm",
+      "tableLabel": "Bản đồ nhiệt đơn hàng theo ngày và giờ",
+      "hourShort": "{hour}h",
+      "cellLabel": "{count} đơn - {day} {hour}h",
+      "low": "Ít",
+      "high": "Nhiều",
+      "days": {
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7",
+        "sun": "CN"
+      }
+    },
+    "bestSellers": {
+      "title": "Top món bán chạy",
+      "empty": "Chưa có đủ dữ liệu món bán chạy",
+      "metrics": "{orders} đơn · {revenueShare}% doanh thu"
+    },
+    "slowMovers": {
+      "title": "Món bán chậm ({count})",
+      "empty": "Không có món bán chậm",
+      "metrics": "{orders} đơn trong {period} ngày · Giảm {pctDecline}%",
+      "recommendations": {
+        "bundle": "Gộp combo",
+        "discount": "Giảm giá",
+        "remove": "Xoá khỏi menu"
+      }
+    },
+    "revenueForecast": {
+      "title": "Dự báo doanh thu",
+      "empty": "Chưa có đủ lịch sử doanh thu để dự báo",
+      "chartLabel": "Biểu đồ dự báo doanh thu",
+      "confidenceTitle": "Khoảng tin cậy: {lower} - {upper}",
+      "actualTitle": "Thực tế: {amount}",
+      "predictedTitle": "Dự báo: {amount}",
+      "actual": "Thực tế",
+      "predicted": "Dự báo",
+      "confidence": "Khoảng tin cậy"
+    }
+  },
   "orderChat": {
     "title": "Chat với tài xế",
     "titleWithDriver": "Chat với tài xế: {driverName}",

@@ -3,6 +3,7 @@
 import type { SlowMover } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Package, Tag, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface SlowMoversAlertProps {
   items: SlowMover[];
@@ -14,18 +15,14 @@ const RECOMMENDATION_ICONS: Record<string, React.ReactNode> = {
   remove: <Trash2 className="h-4 w-4" />,
 };
 
-const RECOMMENDATION_LABELS: Record<string, string> = {
-  bundle: 'Gộp combo',
-  discount: 'Giảm giá',
-  remove: 'Xoá khỏi menu',
-};
-
 export function SlowMoversAlert({ items }: SlowMoversAlertProps) {
+  const t = useTranslations('insights.slowMovers');
+
   if (items.length === 0) {
     return (
       <div className="card text-center py-6">
         <AlertTriangle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">Không có món bán chậm</p>
+        <p className="text-sm text-gray-500">{t('empty')}</p>
       </div>
     );
   }
@@ -34,7 +31,7 @@ export function SlowMoversAlert({ items }: SlowMoversAlertProps) {
     <div className="space-y-3" data-testid="slow-movers-alert">
       <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
         <AlertTriangle className="h-4 w-4 text-amber-500" />
-        Món bán chậm ({items.length})
+        {t('title', { count: items.length })}
       </h4>
       <div className="space-y-2">
         {items.map((item) => (
@@ -42,7 +39,11 @@ export function SlowMoversAlert({ items }: SlowMoversAlertProps) {
             <div>
               <p className="text-sm font-medium text-gray-900">{item.name}</p>
               <p className="text-xs text-gray-500">
-                {item.ordersInPeriod} đơn trong {item.period} ngày · Giảm {item.pctDecline}%
+                {t('metrics', {
+                  orders: item.ordersInPeriod,
+                  period: item.period,
+                  pctDecline: item.pctDecline,
+                })}
               </p>
             </div>
             <span className={cn(
@@ -52,7 +53,7 @@ export function SlowMoversAlert({ items }: SlowMoversAlertProps) {
               'bg-red-50 text-red-700'
             )}>
               {RECOMMENDATION_ICONS[item.recommendation]}
-              {RECOMMENDATION_LABELS[item.recommendation]}
+              {t(`recommendations.${item.recommendation}`)}
             </span>
           </div>
         ))}

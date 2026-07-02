@@ -2,15 +2,17 @@
 
 import type { PeakHour } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface PeakHoursHeatmapProps {
   data: PeakHour[];
 }
 
-const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export function PeakHoursHeatmap({ data }: PeakHoursHeatmapProps) {
+  const t = useTranslations('insights.peakHours');
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => t(`days.${day}`));
   const maxCount = Math.max(...data.map(d => d.orderCount), 1);
 
   const getIntensity = (day: number, hour: number): number => {
@@ -29,21 +31,21 @@ export function PeakHoursHeatmap({ data }: PeakHoursHeatmapProps) {
 
   return (
     <div className="space-y-2" data-testid="peak-hours-heatmap">
-      <h4 className="text-sm font-semibold text-gray-900">Giờ cao điểm</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
       <div className="overflow-x-auto">
         {data.length === 0 && (
           <div className="mb-3 rounded-lg border border-dashed border-gray-200 py-6 text-center">
-            <p className="text-sm text-gray-500">Chưa có đủ đơn hàng để tính giờ cao điểm</p>
+            <p className="text-sm text-gray-500">{t('empty')}</p>
           </div>
         )}
-        <div className="grid grid-cols-[50px_repeat(24,1fr)] text-xs">
+        <div className="grid grid-cols-[50px_repeat(24,1fr)] text-xs" aria-label={t('tableLabel')}>
           <div />
           {HOURS.map(h => (
             <div key={h} className="text-center text-gray-400 py-1">
-              {h}h
+              {t('hourShort', { hour: h })}
             </div>
           ))}
-          {DAYS.map((day, di) => (
+          {days.map((day, di) => (
             <div key={day} className="contents">
               <div className="flex items-center text-gray-600 font-medium">{day}</div>
               {HOURS.map(h => {
@@ -53,7 +55,8 @@ export function PeakHoursHeatmap({ data }: PeakHoursHeatmapProps) {
                   <div
                     key={h}
                     className={cn('aspect-square rounded-sm', getColorClass(intensity))}
-                    title={cell ? `${cell.orderCount} đơn - ${DAYS[di]} ${h}h` : undefined}
+                    aria-label={t('cellLabel', { count: cell?.orderCount ?? 0, day, hour: h })}
+                    title={cell ? t('cellLabel', { count: cell.orderCount, day, hour: h }) : undefined}
                   />
                 );
               })}
@@ -62,7 +65,7 @@ export function PeakHoursHeatmap({ data }: PeakHoursHeatmapProps) {
         </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-gray-500">
-        <span>Ít</span>
+        <span>{t('low')}</span>
         <div className="flex gap-0.5">
           <div className="h-3 w-3 rounded-sm bg-gray-50 border" />
           <div className="h-3 w-3 rounded-sm bg-brand-100" />
@@ -71,7 +74,7 @@ export function PeakHoursHeatmap({ data }: PeakHoursHeatmapProps) {
           <div className="h-3 w-3 rounded-sm bg-brand-400" />
           <div className="h-3 w-3 rounded-sm bg-brand-500" />
         </div>
-        <span>Nhiều</span>
+        <span>{t('high')}</span>
       </div>
     </div>
   );

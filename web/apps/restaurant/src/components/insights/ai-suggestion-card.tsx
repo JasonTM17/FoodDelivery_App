@@ -2,7 +2,8 @@
 
 import type { AiSuggestion, SuggestionType } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Lightbulb, TrendingDown, TrendingUp, AlertTriangle, Star } from 'lucide-react';
+import { Lightbulb, TrendingUp, AlertTriangle, Star } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AiSuggestionCardProps {
   suggestion: AiSuggestion;
@@ -18,14 +19,9 @@ const TYPE_ICONS: Record<SuggestionType, React.ReactNode> = {
   operations: <AlertTriangle className="h-5 w-5" />,
 };
 
-const TYPE_LABELS: Record<SuggestionType, string> = {
-  pricing: 'Định giá',
-  menu_mix: 'Thực đơn',
-  marketing: 'Marketing',
-  operations: 'Vận hành',
-};
-
 export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: AiSuggestionCardProps) {
+  const t = useTranslations('insights.suggestions');
+
   return (
     <div className="card space-y-3" data-testid="ai-suggestion-card">
       <div className="flex items-start justify-between">
@@ -41,7 +37,7 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 uppercase">{TYPE_LABELS[suggestion.type]}</span>
+              <span className="text-xs text-gray-400 uppercase">{t(`types.${suggestion.type}`)}</span>
             </div>
             <h3 className="text-sm font-semibold text-gray-900 mt-0.5">{suggestion.title}</h3>
             <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
@@ -61,7 +57,7 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
               disabled={loading}
               className="btn-primary text-xs py-1.5 disabled:opacity-50"
             >
-              Áp dụng
+              {t('apply')}
             </button>
           )}
           {onDismiss && (
@@ -70,7 +66,7 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
               onClick={onDismiss}
               className="btn-ghost text-xs text-gray-500"
             >
-              Bỏ qua
+              {t('dismiss')}
             </button>
           )}
         </div>

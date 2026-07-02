@@ -462,6 +462,68 @@
     "noData": "データなし",
     "noCategories": "カテゴリー別売上はまだありません"
   },
+  "insights": {
+    "title": "分析とおすすめ",
+    "description": "実際の注文、メニュー、売上データに基づくおすすめ",
+    "loadError": "インサイトを読み込めません",
+    "retry": "再試行",
+    "suggestionCount": "本日のおすすめは{count}件です",
+    "emptySuggestions": "おすすめはまだありません。十分な注文データが集まると表示されます。",
+    "suggestions": {
+      "apply": "適用",
+      "dismiss": "閉じる",
+      "types": {
+        "pricing": "価格設定",
+        "menu_mix": "メニュー",
+        "marketing": "マーケティング",
+        "operations": "運用"
+      }
+    },
+    "peakHours": {
+      "title": "ピーク時間",
+      "empty": "ピーク時間を計算する注文データがまだ不足しています",
+      "tableLabel": "曜日と時間別の注文ヒートマップ",
+      "hourShort": "{hour}時",
+      "cellLabel": "{day} {hour}時 - {count}件",
+      "low": "少",
+      "high": "多",
+      "days": {
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土",
+        "sun": "日"
+      }
+    },
+    "bestSellers": {
+      "title": "売れ筋メニュー",
+      "empty": "売れ筋メニューを表示するデータがまだ不足しています",
+      "metrics": "{orders}件 · 売上の{revenueShare}%"
+    },
+    "slowMovers": {
+      "title": "販売が遅い商品（{count}件）",
+      "empty": "販売が遅い商品はありません",
+      "metrics": "{period}日間で{orders}件 · {pctDecline}%減少",
+      "recommendations": {
+        "bundle": "セット化",
+        "discount": "割引",
+        "remove": "メニューから削除"
+      }
+    },
+    "revenueForecast": {
+      "title": "売上予測",
+      "empty": "予測に必要な売上履歴がまだ不足しています",
+      "chartLabel": "売上予測チャート",
+      "confidenceTitle": "信頼区間: {lower} - {upper}",
+      "actualTitle": "実績: {amount}",
+      "predictedTitle": "予測: {amount}",
+      "actual": "実績",
+      "predicted": "予測",
+      "confidence": "信頼区間"
+    }
+  },
   "orderChat": {
     "title": "ドライバーとチャット",
     "titleWithDriver": "ドライバーとチャット: {driverName}",
