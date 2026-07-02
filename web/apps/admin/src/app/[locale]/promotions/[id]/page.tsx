@@ -56,8 +56,8 @@ export default function PromotionDetailPage({ params }: { params: Promise<{ id: 
   if (!promo) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-destructive">Không tìm thấy khuyến mãi</p>
-        <Button asChild><Link href="/promotions">Quay lại</Link></Button>
+        <p className="text-destructive">{t('notFound')}</p>
+        <Button asChild><Link href="/promotions">{t('back')}</Link></Button>
       </div>
     );
   }

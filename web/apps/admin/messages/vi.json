@@ -1,5 +1,55 @@
 {
   "adminPromotionManagement": {
+    "form": {
+      "basicInfo": "Thông tin cơ bản",
+      "code": "Mã khuyến mãi *",
+      "codePlaceholder": "Ví dụ: WELCOME30",
+      "name": "Tên khuyến mãi *",
+      "namePlaceholder": "Ví dụ: Ưu đãi chào mừng",
+      "discountSettings": "Thiết lập giảm giá",
+      "type": "Loại *",
+      "discountPercentage": "Phần trăm giảm (%) *",
+      "discountAmount": "Số tiền giảm (VND) *",
+      "conditions": "Điều kiện và giới hạn",
+      "perUserLimit": "Giới hạn mỗi người dùng",
+      "maxUsage": "Tổng lượt dùng (để trống nếu không giới hạn)",
+      "audience": "Đối tượng *",
+      "timing": "Thời gian áp dụng",
+      "status": "Trạng thái",
+      "activateNow": "Kích hoạt ngay"
+    },
+    "audiences": {
+      "all": "Tất cả người dùng",
+      "new": "Người dùng mới",
+      "vip": "Người dùng VIP",
+      "segment": "Phân khúc đã chọn"
+    },
+    "preview": {
+      "title": "Xem trước",
+      "empty": "Nhập thông tin để xem trước khuyến mãi.",
+      "active": "Đang hoạt động",
+      "inactive": "Đang tắt",
+      "percentOffer": "Giảm {value}%",
+      "fixedOffer": "Giảm {value}",
+      "bogoOffer": "Mua một tặng một",
+      "comboOffer": "Ưu đãi combo",
+      "shippingOffer": "Miễn phí vận chuyển",
+      "minimumOrder": "Đơn tối thiểu: {value}",
+      "maximumDiscount": "Giảm tối đa: {value}",
+      "perUser": "{count} lượt/người",
+      "maxUsage": "Tối đa {count} lượt"
+    },
+    "validation": {
+      "codeMin": "Mã khuyến mãi cần ít nhất 3 ký tự.",
+      "codeMax": "Mã khuyến mãi không được quá 20 ký tự.",
+      "codeFormat": "Chỉ dùng chữ in hoa, số và dấu gạch dưới.",
+      "nameMin": "Tên khuyến mãi cần ít nhất 5 ký tự.",
+      "nameMax": "Tên khuyến mãi không được quá 100 ký tự.",
+      "discountType": "Chọn loại giảm giá hợp lệ.",
+      "positiveValue": "Nhập giá trị lớn hơn 0.",
+      "invalidDate": "Nhập ngày hợp lệ.",
+      "dateOrder": "Ngày bắt đầu phải trước ngày kết thúc."
+    },
     "sectionTitle": "Mã khuyến mãi",
     "count": "{count} mã khuyến mãi",
     "loading": "Đang tải khuyến mãi...",
@@ -228,6 +278,10 @@
     "rejectReasonPlaceholder": "Nhập lý do từ chối..."
   },
   "promotionDetail": {
+    "notFound": "Không tìm thấy khuyến mãi.",
+    "loadError": "Không tải được chi tiết khuyến mãi",
+    "loadErrorDescription": "Kiểm tra kết nối và thử lại.",
+    "retry": "Thử lại",
     "title": "Chi tiết khuyến mãi",
     "description": "Thông tin chi tiết và thống kê sử dụng khuyến mãi",
     "breadcrumbParent": "Khuyến mãi",

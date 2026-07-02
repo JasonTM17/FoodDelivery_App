@@ -1,5 +1,55 @@
 {
   "adminPromotionManagement": {
+    "form": {
+      "basicInfo": "Basic information",
+      "code": "Promotion code *",
+      "codePlaceholder": "For example: WELCOME30",
+      "name": "Promotion name *",
+      "namePlaceholder": "For example: Welcome offer",
+      "discountSettings": "Discount settings",
+      "type": "Type *",
+      "discountPercentage": "Discount percentage (%) *",
+      "discountAmount": "Discount amount (VND) *",
+      "conditions": "Eligibility and limits",
+      "perUserLimit": "Limit per user",
+      "maxUsage": "Total uses (leave blank for unlimited)",
+      "audience": "Audience *",
+      "timing": "Schedule",
+      "status": "Status",
+      "activateNow": "Activate immediately"
+    },
+    "audiences": {
+      "all": "All users",
+      "new": "New users",
+      "vip": "VIP users",
+      "segment": "Selected segment"
+    },
+    "preview": {
+      "title": "Preview",
+      "empty": "Enter promotion details to see a preview.",
+      "active": "Active",
+      "inactive": "Inactive",
+      "percentOffer": "Save {value}%",
+      "fixedOffer": "Save {value}",
+      "bogoOffer": "Buy one, get one free",
+      "comboOffer": "Combo offer",
+      "shippingOffer": "Free delivery",
+      "minimumOrder": "Minimum order: {value}",
+      "maximumDiscount": "Maximum discount: {value}",
+      "perUser": "{count} uses per user",
+      "maxUsage": "Maximum {count} uses"
+    },
+    "validation": {
+      "codeMin": "The promotion code must contain at least 3 characters.",
+      "codeMax": "The promotion code cannot exceed 20 characters.",
+      "codeFormat": "Use uppercase letters, numbers, and underscores only.",
+      "nameMin": "The promotion name must contain at least 5 characters.",
+      "nameMax": "The promotion name cannot exceed 100 characters.",
+      "discountType": "Select a valid discount type.",
+      "positiveValue": "Enter a value greater than zero.",
+      "invalidDate": "Enter a valid date.",
+      "dateOrder": "The start date must be before the end date."
+    },
     "sectionTitle": "Promotion codes",
     "count": "{count} promotion codes",
     "loading": "Loading promotions...",
@@ -228,6 +278,10 @@
     "rejectReasonPlaceholder": "Enter reason for rejection..."
   },
   "promotionDetail": {
+    "notFound": "Promotion not found.",
+    "loadError": "Could not load promotion details",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Retry",
     "title": "Promotion Detail",
     "description": "Detailed promotion information and usage statistics",
     "breadcrumbParent": "Promotions",

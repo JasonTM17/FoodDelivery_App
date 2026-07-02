@@ -1,5 +1,55 @@
 {
   "adminPromotionManagement": {
+    "form": {
+      "basicInfo": "基本情報",
+      "code": "プロモーションコード *",
+      "codePlaceholder": "例: WELCOME30",
+      "name": "プロモーション名 *",
+      "namePlaceholder": "例: ウェルカム特典",
+      "discountSettings": "割引設定",
+      "type": "種類 *",
+      "discountPercentage": "割引率 (%) *",
+      "discountAmount": "割引額 (VND) *",
+      "conditions": "適用条件と上限",
+      "perUserLimit": "ユーザーごとの上限",
+      "maxUsage": "合計使用回数（無制限の場合は空欄）",
+      "audience": "対象ユーザー *",
+      "timing": "適用期間",
+      "status": "ステータス",
+      "activateNow": "すぐに有効化"
+    },
+    "audiences": {
+      "all": "すべてのユーザー",
+      "new": "新規ユーザー",
+      "vip": "VIPユーザー",
+      "segment": "選択したセグメント"
+    },
+    "preview": {
+      "title": "プレビュー",
+      "empty": "プロモーション情報を入力するとプレビューを確認できます。",
+      "active": "有効",
+      "inactive": "無効",
+      "percentOffer": "{value}%割引",
+      "fixedOffer": "{value}割引",
+      "bogoOffer": "1つ購入でもう1つ無料",
+      "comboOffer": "コンボ特典",
+      "shippingOffer": "送料無料",
+      "minimumOrder": "最低注文額: {value}",
+      "maximumDiscount": "最大割引額: {value}",
+      "perUser": "ユーザーごとに{count}回",
+      "maxUsage": "最大{count}回"
+    },
+    "validation": {
+      "codeMin": "プロモーションコードは3文字以上で入力してください。",
+      "codeMax": "プロモーションコードは20文字以内で入力してください。",
+      "codeFormat": "大文字、数字、アンダースコアのみ使用できます。",
+      "nameMin": "プロモーション名は5文字以上で入力してください。",
+      "nameMax": "プロモーション名は100文字以内で入力してください。",
+      "discountType": "有効な割引種類を選択してください。",
+      "positiveValue": "0より大きい値を入力してください。",
+      "invalidDate": "有効な日付を入力してください。",
+      "dateOrder": "開始日は終了日より前に設定してください。"
+    },
     "sectionTitle": "プロモーションコード",
     "count": "{count}件のプロモーションコード",
     "loading": "プロモーションを読み込み中...",
@@ -228,6 +278,10 @@
     "rejectReasonPlaceholder": "拒否理由を入力してください..."
   },
   "promotionDetail": {
+    "notFound": "プロモーションが見つかりません。",
+    "loadError": "プロモーション詳細を読み込めませんでした",
+    "loadErrorDescription": "接続を確認して再試行してください。",
+    "retry": "再試行",
     "title": "プロモーション詳細",
     "description": "プロモーションの詳細情報と使用統計",
     "breadcrumbParent": "プロモーション",
