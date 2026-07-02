@@ -168,6 +168,52 @@
     "price": "価格",
     "available": "在庫あり",
     "unavailable": "品切れ",
+    "board": {
+      "summary": "{items}品 · {categories}カテゴリー",
+      "loadError": "メニューを読み込めません",
+      "updateError": "商品の状態を更新できません",
+      "retry": "再試行",
+      "searchPlaceholder": "メニュー商品を検索...",
+      "emptyTitle": "メニュー商品はまだありません",
+      "emptyDescription": "最初の商品をメニューに追加します",
+      "searchEmpty": "“{query}”に一致する商品はありません"
+    },
+    "categoryAccordion": {
+      "itemCount": "{count}品",
+      "empty": "このカテゴリーにはまだ商品がありません"
+    },
+    "row": {
+      "dragHandle": "ドラッグして並び替え",
+      "noDescription": "説明なし",
+      "availableTitle": "販売中 — クリックして一時停止",
+      "unavailableTitle": "一時停止中 — クリックして販売",
+      "available": "あり",
+      "unavailable": "なし"
+    },
+    "availability": {
+      "title": "提供状態",
+      "modes": {
+        "always": "常に提供",
+        "scheduled": "時間帯指定",
+        "hidden": "非表示"
+      },
+      "from": "開始",
+      "to": "終了"
+    },
+    "bulkActions": {
+      "selectedCount": "{count}品を選択中",
+      "selectAll": "すべて選択",
+      "show": "表示",
+      "hide": "非表示",
+      "moveCategory": "カテゴリー移動",
+      "delete": "削除"
+    },
+    "photoUpload": {
+      "label": "商品写真",
+      "previewAria": "商品写真プレビュー",
+      "removeAria": "商品写真を削除",
+      "upload": "写真をアップロード"
+    },
     "newPage": {
       "title": "新しい商品を追加",
       "description": "レストランメニューに商品を追加します",

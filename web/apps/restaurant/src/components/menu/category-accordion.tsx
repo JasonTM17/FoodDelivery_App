@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
+import { useTranslations } from 'next-intl';
 import type { MenuItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { MenuItemRow } from './menu-item-row';
@@ -36,6 +37,7 @@ export function CategoryAccordion({
   onReorder,
   defaultOpen = true,
 }: CategoryAccordionProps) {
+  const t = useTranslations('menu.categoryAccordion');
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const sensors = useSensors(
@@ -63,7 +65,7 @@ export function CategoryAccordion({
           <UtensilsCrossed className="h-4 w-4 text-brand-500 shrink-0" />
           <span className="font-semibold text-gray-900">{category}</span>
           <span className="text-xs text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">
-            {items.length} món
+            {t('itemCount', { count: items.length })}
           </span>
         </div>
         {isOpen ? (
@@ -77,7 +79,7 @@ export function CategoryAccordion({
         <div className={cn('p-3 space-y-2', items.length === 0 && 'pb-4')}>
           {items.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-2">
-              Chưa có món trong danh mục này
+              {t('empty')}
             </p>
           ) : (
             <DndContext

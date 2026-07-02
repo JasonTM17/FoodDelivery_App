@@ -1,27 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from '@/navigation';
 import { UtensilsCrossed, Plus, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { CategoryAccordion } from './category-accordion';
 import { api } from '@/lib/api';
 import type { MenuItem } from '@/lib/types';
 
 export function MenuBoard() {
+  const t = useTranslations('menu');
+  const tBoard = useTranslations('menu.board');
+  const loadErrorMessage = tBoard('loadError');
+  const updateErrorMessage = tBoard('updateError');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const fetchMenuItems = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const data = await api.get<MenuItem[]>('/restaurant/menu/items');
+      setMenuItems(data);
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || loadErrorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loadErrorMessage]);
+
   useEffect(() => {
-    api
-      .get<MenuItem[]>('/restaurant/menu/items')
-      .then(setMenuItems)
-      .catch((err: unknown) =>
-        setError((err as { message?: string }).message || 'Không thể tải thực đơn')
-      )
-      .finally(() => setIsLoading(false));
-  }, []);
+    void fetchMenuItems();
+  }, [fetchMenuItems]);
 
   const handleToggle = async (item: MenuItem) => {
     try {
@@ -30,7 +42,7 @@ export function MenuBoard() {
       });
       setMenuItems((prev) => prev.map((m) => (m.id === item.id ? updated : m)));
     } catch (err) {
-      setError((err as { message?: string }).message || 'Không thể cập nhật trạng thái món');
+      setError((err as { message?: string }).message || updateErrorMessage);
     }
   };
 
@@ -80,21 +92,24 @@ export function MenuBoard() {
             <UtensilsCrossed className="h-5 w-5 text-brand-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Thực đơn</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
             <p className="text-sm text-gray-500">
-              {menuItems.length} món ăn · {categories.length} danh mục
+              {tBoard('summary', { items: menuItems.length, categories: categories.length })}
             </p>
           </div>
         </div>
         <Link href="/menu/new" className="btn-primary">
           <Plus className="h-4 w-4 mr-1.5" />
-          Thêm món
+          {t('addItem')}
         </Link>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6" role="alert">
           <p className="text-sm text-red-700">{error}</p>
+          <button type="button" onClick={() => void fetchMenuItems()} className="mt-3 btn-ghost text-xs text-red-700">
+            {tBoard('retry')}
+          </button>
         </div>
       )}
 
@@ -104,7 +119,7 @@ export function MenuBoard() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Tìm kiếm món ăn..."
+          placeholder={tBoard('searchPlaceholder')}
           className="input-field pl-10"
         />
       </div>
@@ -112,11 +127,11 @@ export function MenuBoard() {
       {menuItems.length === 0 ? (
         <div className="text-center py-16">
           <UtensilsCrossed className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-base font-semibold text-gray-900 mb-1">Chưa có món ăn</h3>
-          <p className="text-sm text-gray-500 mb-4">Thêm món ăn đầu tiên vào thực đơn</p>
+          <h3 className="text-base font-semibold text-gray-900 mb-1">{tBoard('emptyTitle')}</h3>
+          <p className="text-sm text-gray-500 mb-4">{tBoard('emptyDescription')}</p>
           <Link href="/menu/new" className="btn-primary">
             <Plus className="h-4 w-4 mr-1.5" />
-            Thêm món
+            {t('addItem')}
           </Link>
         </div>
       ) : (
@@ -135,7 +150,7 @@ export function MenuBoard() {
             categories.every((cat) => (groupedItems[cat]?.length ?? 0) === 0) && (
               <div className="text-center py-12">
                 <p className="text-sm text-gray-500">
-                  Không tìm thấy món phù hợp với &ldquo;{searchQuery}&rdquo;
+                  {tBoard('searchEmpty', { query: searchQuery })}
                 </p>
               </div>
             )}

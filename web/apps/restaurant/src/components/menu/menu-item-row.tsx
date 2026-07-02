@@ -3,6 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ImageOff, ToggleLeft, ToggleRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { MenuItem } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 
@@ -12,6 +13,7 @@ interface MenuItemRowProps {
 }
 
 export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
+  const t = useTranslations('menu.row');
   const {
     attributes,
     listeners,
@@ -41,7 +43,7 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
         {...attributes}
         {...listeners}
         className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 touch-none"
-        aria-label="Kéo để sắp xếp"
+        aria-label={t('dragHandle')}
       >
         <GripVertical className="h-4 w-4" />
       </button>
@@ -64,7 +66,7 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-900 truncate text-sm">{item.name}</p>
         <p className="text-xs text-gray-400 truncate">
-          {item.description || 'Chưa có mô tả'}
+          {item.description || t('noDescription')}
         </p>
       </div>
 
@@ -80,12 +82,12 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
             ? 'border-green-200 text-green-600 hover:bg-green-50'
             : 'border-red-200 text-red-600 hover:bg-red-50'
         )}
-        title={item.available ? 'Đang bán — nhấn để tạm ngưng' : 'Tạm ngưng — nhấn để bán'}
+        title={item.available ? t('availableTitle') : t('unavailableTitle')}
       >
         {item.available ? (
-          <><ToggleRight className="h-4 w-4" /><span className="hidden sm:inline">Còn</span></>
+          <><ToggleRight className="h-4 w-4" /><span className="hidden sm:inline">{t('available')}</span></>
         ) : (
-          <><ToggleLeft className="h-4 w-4" /><span className="hidden sm:inline">Hết</span></>
+          <><ToggleLeft className="h-4 w-4" /><span className="hidden sm:inline">{t('unavailable')}</span></>
         )}
       </button>
     </div>

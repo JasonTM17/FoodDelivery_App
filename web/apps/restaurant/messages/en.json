@@ -168,6 +168,52 @@
     "price": "Price",
     "available": "Available",
     "unavailable": "Out of stock",
+    "board": {
+      "summary": "{items, plural, one {# item} other {# items}} · {categories, plural, one {# category} other {# categories}}",
+      "loadError": "Could not load menu",
+      "updateError": "Could not update item status",
+      "retry": "Retry",
+      "searchPlaceholder": "Search menu items...",
+      "emptyTitle": "No menu items yet",
+      "emptyDescription": "Add the first item to your menu",
+      "searchEmpty": "No items match “{query}”"
+    },
+    "categoryAccordion": {
+      "itemCount": "{count, plural, one {# item} other {# items}}",
+      "empty": "No items in this category yet"
+    },
+    "row": {
+      "dragHandle": "Drag to reorder",
+      "noDescription": "No description",
+      "availableTitle": "Available — click to pause",
+      "unavailableTitle": "Paused — click to sell",
+      "available": "In stock",
+      "unavailable": "Out"
+    },
+    "availability": {
+      "title": "Availability",
+      "modes": {
+        "always": "Always available",
+        "scheduled": "By time window",
+        "hidden": "Hidden"
+      },
+      "from": "From",
+      "to": "To"
+    },
+    "bulkActions": {
+      "selectedCount": "{count, plural, one {# item selected} other {# items selected}}",
+      "selectAll": "Select all",
+      "show": "Show",
+      "hide": "Hide",
+      "moveCategory": "Move category",
+      "delete": "Delete"
+    },
+    "photoUpload": {
+      "label": "Item photo",
+      "previewAria": "Menu item photo preview",
+      "removeAria": "Remove menu item photo",
+      "upload": "Upload photo"
+    },
     "newPage": {
       "title": "Add new item",
       "description": "Add an item to the restaurant menu",

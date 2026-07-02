@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface MenuItemAvailabilityToggleProps {
@@ -12,15 +13,17 @@ interface MenuItemAvailabilityToggleProps {
 export function MenuItemAvailabilityToggle({
   mode, onModeChange, schedule, onScheduleChange,
 }: MenuItemAvailabilityToggleProps) {
+  const t = useTranslations('menu.availability');
+
   return (
     <div className="space-y-3" data-testid="menu-item-availability-toggle">
-      <h4 className="text-sm font-semibold text-gray-900">Khả dụng</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
 
       <div className="flex gap-2">
         {([
-          { value: 'always' as const, label: 'Luôn có sẵn' },
-          { value: 'scheduled' as const, label: 'Theo khung giờ' },
-          { value: 'hidden' as const, label: 'Ẩn' },
+          { value: 'always' as const, label: t('modes.always') },
+          { value: 'scheduled' as const, label: t('modes.scheduled') },
+          { value: 'hidden' as const, label: t('modes.hidden') },
         ]).map((opt) => (
           <button
             key={opt.value}
@@ -41,20 +44,20 @@ export function MenuItemAvailabilityToggle({
       {mode === 'scheduled' && (
         <div className="flex items-center gap-3 ml-4">
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-600">Từ</label>
+            <label className="text-xs text-gray-600">{t('from')}</label>
             <input
               type="time"
               value={schedule?.open || ''}
-              onChange={(e) => onScheduleChange?.({ ...schedule!, open: e.target.value })}
+              onChange={(e) => onScheduleChange?.({ open: e.target.value, close: schedule?.close ?? '' })}
               className="input-field w-28 text-sm"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-600">Đến</label>
+            <label className="text-xs text-gray-600">{t('to')}</label>
             <input
               type="time"
               value={schedule?.close || ''}
-              onChange={(e) => onScheduleChange?.({ ...schedule!, close: e.target.value })}
+              onChange={(e) => onScheduleChange?.({ open: schedule?.open ?? '', close: e.target.value })}
               className="input-field w-28 text-sm"
             />
           </div>

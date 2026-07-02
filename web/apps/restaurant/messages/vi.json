@@ -168,6 +168,52 @@
     "price": "Giá",
     "available": "Có sẵn",
     "unavailable": "Hết hàng",
+    "board": {
+      "summary": "{items} món ăn · {categories} danh mục",
+      "loadError": "Không thể tải thực đơn",
+      "updateError": "Không thể cập nhật trạng thái món",
+      "retry": "Thử lại",
+      "searchPlaceholder": "Tìm kiếm món ăn...",
+      "emptyTitle": "Chưa có món ăn",
+      "emptyDescription": "Thêm món ăn đầu tiên vào thực đơn",
+      "searchEmpty": "Không tìm thấy món phù hợp với “{query}”"
+    },
+    "categoryAccordion": {
+      "itemCount": "{count} món",
+      "empty": "Chưa có món trong danh mục này"
+    },
+    "row": {
+      "dragHandle": "Kéo để sắp xếp",
+      "noDescription": "Chưa có mô tả",
+      "availableTitle": "Đang bán — nhấn để tạm ngưng",
+      "unavailableTitle": "Tạm ngưng — nhấn để bán",
+      "available": "Còn",
+      "unavailable": "Hết"
+    },
+    "availability": {
+      "title": "Khả dụng",
+      "modes": {
+        "always": "Luôn có sẵn",
+        "scheduled": "Theo khung giờ",
+        "hidden": "Ẩn"
+      },
+      "from": "Từ",
+      "to": "Đến"
+    },
+    "bulkActions": {
+      "selectedCount": "Đã chọn {count} món",
+      "selectAll": "Chọn tất cả",
+      "show": "Hiện",
+      "hide": "Ẩn",
+      "moveCategory": "Chuyển danh mục",
+      "delete": "Xoá"
+    },
+    "photoUpload": {
+      "label": "Ảnh món",
+      "previewAria": "Xem trước ảnh món",
+      "removeAria": "Xoá ảnh món",
+      "upload": "Tải ảnh lên"
+    },
     "newPage": {
       "title": "Thêm món mới",
       "description": "Thêm món ăn vào thực đơn nhà hàng",

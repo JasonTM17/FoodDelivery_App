@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface MenuItemPhotoUploadProps {
   value: string;
@@ -11,6 +11,7 @@ interface MenuItemPhotoUploadProps {
 }
 
 export function MenuItemPhotoUpload({ value, onChange, onUpload }: MenuItemPhotoUploadProps) {
+  const t = useTranslations('menu.photoUpload');
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,12 +40,12 @@ export function MenuItemPhotoUpload({ value, onChange, onUpload }: MenuItemPhoto
 
   return (
     <div data-testid="menu-item-photo-upload">
-      <label className="label">Ảnh món</label>
+      <label className="label">{t('label')}</label>
       {preview ? (
         <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
           <div
             role="img"
-            aria-label="Preview"
+            aria-label={t('previewAria')}
             className="h-full w-full bg-gray-100 bg-cover bg-center"
             style={{ backgroundImage: `url(${JSON.stringify(preview)})` }}
           />
@@ -52,6 +53,7 @@ export function MenuItemPhotoUpload({ value, onChange, onUpload }: MenuItemPhoto
             type="button"
             onClick={() => { setPreview(''); onChange(''); }}
             className="absolute top-1 right-1 rounded-full bg-white/80 p-0.5 hover:bg-white"
+            aria-label={t('removeAria')}
           >
             <X className="h-4 w-4 text-gray-700" />
           </button>
@@ -68,7 +70,7 @@ export function MenuItemPhotoUpload({ value, onChange, onUpload }: MenuItemPhoto
           ) : (
             <>
               <Upload className="h-6 w-6 text-gray-400 mb-1" />
-              <span className="text-xs text-gray-500">Tải ảnh lên</span>
+              <span className="text-xs text-gray-500">{t('upload')}</span>
             </>
           )}
         </button>
