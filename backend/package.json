@@ -46,7 +46,7 @@
     "ioredis": "^5.11.1",
     "minio": "^8.0.5",
     "nanoid": "^5.1.11",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "^8.0.11",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prom-client": "^15.1.3",
