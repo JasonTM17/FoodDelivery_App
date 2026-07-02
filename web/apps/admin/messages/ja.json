@@ -167,7 +167,39 @@
   "drivers": {
     "title": "ドライバー管理",
     "description": "システム内のドライバー一覧",
-    "viewMap": "地図を表示"
+    "viewMap": "地図を表示",
+    "listTitle": "ドライバー",
+    "loading": "ドライバーを読み込み中...",
+    "total": "合計 {count} 人",
+    "loadError": "ドライバーを読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "permissionDenied": "アクセス権限がありません",
+    "permissionDeniedDescription": "このアカウントではドライバーデータを閲覧できません。",
+    "retry": "再試行",
+    "emptyTitle": "ドライバーがいません",
+    "emptyDescription": "登録されたドライバーアカウントがここに表示されます。",
+    "previousPage": "前のページ",
+    "nextPage": "次のページ",
+    "page": "{page}/{totalPages} ページ",
+    "columns": {
+      "driver": "ドライバー",
+      "phone": "電話番号",
+      "vehicle": "車両",
+      "rating": "評価",
+      "deliveries": "配達数",
+      "status": "状態",
+      "joinedAt": "登録日"
+    },
+    "statuses": {
+      "online": "待機中",
+      "offline": "オフライン",
+      "delivering": "配達中"
+    },
+    "vehicleTypes": {
+      "motorbike": "バイク",
+      "car": "自動車",
+      "bicycle": "自転車"
+    }
   },
   "driversMap": {
     "title": "ドライバーマップ",

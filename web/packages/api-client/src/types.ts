@@ -162,6 +162,25 @@ export interface AdminAiMonitorStats {
   averageLatencyMs: number | null;
 }
 
+export type AdminDriverStatus = 'online' | 'offline' | 'delivering';
+export type AdminDriverVehicleType = 'motorbike' | 'car' | 'bicycle';
+
+export interface AdminDriver {
+  id: string;
+  profileId: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  rating: number;
+  totalDeliveries: number;
+  status: AdminDriverStatus;
+  vehicleType: AdminDriverVehicleType;
+  vehiclePlate: string | null;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface AiChatRequest {
   message: string;
   sessionId?: string;

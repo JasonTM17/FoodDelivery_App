@@ -167,7 +167,39 @@
   "drivers": {
     "title": "Driver Management",
     "description": "List of drivers in the system",
-    "viewMap": "View map"
+    "viewMap": "View map",
+    "listTitle": "Drivers",
+    "loading": "Loading drivers...",
+    "total": "{count, plural, =0 {No drivers} one {# driver} other {# drivers}}",
+    "loadError": "Could not load drivers",
+    "loadErrorDescription": "Check the connection and try again.",
+    "permissionDenied": "Permission denied",
+    "permissionDeniedDescription": "Your account cannot view driver data.",
+    "retry": "Try again",
+    "emptyTitle": "No drivers yet",
+    "emptyDescription": "Driver accounts will appear here after registration.",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page {page} of {totalPages}",
+    "columns": {
+      "driver": "Driver",
+      "phone": "Phone",
+      "vehicle": "Vehicle",
+      "rating": "Rating",
+      "deliveries": "Deliveries",
+      "status": "Status",
+      "joinedAt": "Joined"
+    },
+    "statuses": {
+      "online": "Available",
+      "offline": "Offline",
+      "delivering": "Delivering"
+    },
+    "vehicleTypes": {
+      "motorbike": "Motorbike",
+      "car": "Car",
+      "bicycle": "Bicycle"
+    }
   },
   "driversMap": {
     "title": "Driver Map",

@@ -1,53 +1,34 @@
 'use client';
 
+import { useState } from 'react';
+import { ApiClientError, type AdminDriver } from '@foodflow/api-client';
 import { useQuery } from '@tanstack/react-query';
-import { apiGet } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Star, MapPin } from 'lucide-react';
-import { Link } from '@/navigation';
+import { ChevronLeft, ChevronRight, MapPin, RefreshCw, ShieldX, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import { PageHeader } from '@foodflow/ui/page-header';
+import { Skeleton } from '@foodflow/ui/skeleton';
+import { AdminDriversTable } from '@/components/drivers/admin-drivers-table';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { apiGetEnvelope } from '@/lib/api';
+import { Link } from '@/navigation';
 
-interface Driver {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  rating: number;
-  totalDeliveries: number;
-  status: string;
-  vehicleType: string;
-  createdAt: string;
-}
-
-interface DriversResponse {
-  drivers: Driver[];
-  total: number;
-}
+const PAGE_SIZE = 20;
 
 export default function DriversPage() {
   const t = useTranslations('drivers');
-  const { data, isLoading } = useQuery<DriversResponse>({
-    queryKey: ['drivers'],
-    queryFn: () => apiGet<DriversResponse>('/admin/drivers'),
+  const [page, setPage] = useState(1);
+  const query = useQuery({
+    queryKey: ['drivers', page],
+    queryFn: () => apiGetEnvelope<AdminDriver[]>('/admin/drivers', {
+      params: { page, limit: PAGE_SIZE },
+    }),
   });
+  const drivers = query.data?.data ?? [];
+  const total = query.data?.meta?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const isPermissionDenied = query.error instanceof ApiClientError && query.error.status === 403;
 
   return (
     <div className="space-y-6">
@@ -55,87 +36,77 @@ export default function DriversPage() {
         breadcrumbs={[{ label: 'Admin' }, { label: t('title') }]}
         title={t('title')}
         description={t('description')}
-        actions={
+        actions={(
           <Button asChild>
             <Link href="/drivers/map">
               <MapPin className="mr-2 h-4 w-4" />
               {t('viewMap')}
             </Link>
           </Button>
-        }
+        )}
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Tài xế</CardTitle>
-          <CardDescription>
-            {data ? `Tổng số: ${data.total} tài xế` : 'Đang tải...'}
-          </CardDescription>
+          <CardTitle>{t('listTitle')}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {query.isLoading ? t('loading') : t('total', { count: total })}
+          </p>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {query.isLoading ? (
             <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded bg-muted" />
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full" />
               ))}
             </div>
-          ) : data && data.drivers.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tài xế</TableHead>
-                  <TableHead>SĐT</TableHead>
-                  <TableHead>Phương tiện</TableHead>
-                  <TableHead>Đánh giá</TableHead>
-                  <TableHead>Số đơn</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ngày tham gia</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.drivers.map((driver) => (
-                  <TableRow key={driver.id}>
-                    <TableCell className="font-medium">{driver.name}</TableCell>
-                    <TableCell>{driver.phone}</TableCell>
-                    <TableCell>{driver.vehicleType || '—'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span>{driver.rating.toFixed(1)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{driver.totalDeliveries}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          driver.status === 'online' || driver.status === 'free'
-                            ? 'success'
-                            : driver.status === 'delivering'
-                            ? 'warning'
-                            : 'secondary'
-                        }
-                      >
-                        {driver.status === 'online' || driver.status === 'free'
-                          ? 'Rảnh'
-                          : driver.status === 'delivering'
-                          ? 'Đang giao'
-                          : 'Bận'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(driver.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          ) : isPermissionDenied ? (
+            <EmptyState
+              icon={ShieldX}
+              title={t('permissionDenied')}
+              description={t('permissionDeniedDescription')}
+            />
+          ) : query.isError ? (
+            <EmptyState
+              icon={RefreshCw}
+              title={t('loadError')}
+              description={t('loadErrorDescription')}
+              actionLabel={t('retry')}
+              onAction={() => query.refetch()}
+            />
+          ) : drivers.length > 0 ? (
+            <AdminDriversTable drivers={drivers} />
           ) : (
-            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-              Chưa có tài xế nào
-            </div>
+            <EmptyState icon={Users} title={t('emptyTitle')} description={t('emptyDescription')} />
           )}
         </CardContent>
       </Card>
+
+      {!query.isLoading && !query.isError && totalPages > 1 && (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            aria-label={t('previousPage')}
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(current => Math.max(1, current - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {t('page', { page, totalPages })}
+          </span>
+          <Button
+            aria-label={t('nextPage')}
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(current => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

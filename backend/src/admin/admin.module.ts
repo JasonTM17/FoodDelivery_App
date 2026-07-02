@@ -18,6 +18,8 @@ import { AdminSettingsController } from './admin-settings.controller'
 import { AdminSettingsService } from './admin-settings.service'
 import { AdminAiMonitorController } from './admin-ai-monitor.controller'
 import { AdminAiMonitorService } from './admin-ai-monitor.service'
+import { AdminDriversController } from './admin-drivers.controller'
+import { AdminDriversService } from './admin-drivers.service'
 
 @Module({
   imports: [OrdersModule, NotificationsModule],
@@ -31,6 +33,7 @@ import { AdminAiMonitorService } from './admin-ai-monitor.service'
     AdminExportController,
     AdminSettingsController,
     AdminAiMonitorController,
+    AdminDriversController,
   ],
   providers: [
     AdminService,
@@ -41,6 +44,7 @@ import { AdminAiMonitorService } from './admin-ai-monitor.service'
     AdminExportService,
     AdminSettingsService,
     AdminAiMonitorService,
+    AdminDriversService,
   ],
 })
 export class AdminModule {}

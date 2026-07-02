@@ -106,6 +106,34 @@ test.describe('Batch 4 API contracts', () => {
     expect(job.downloadUrl).toMatch(/^\/admin\/exports\/.+\/download$/);
   });
 
+  test('admin drivers returns database profiles with canonical pagination', async ({ request }) => {
+    const { accessToken } = await login(
+      request,
+      TEST_USERS.admin.email,
+      TEST_USERS.admin.password,
+    );
+
+    const response = await request.get(`${API_URL}/admin/drivers?page=1&limit=20`, {
+      headers: authHeaders(accessToken),
+    });
+
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json() as Envelope<Array<{
+      id: string;
+      email: string;
+      status: string;
+      totalDeliveries: number;
+    }>>;
+    expect(body).toMatchObject({ success: true });
+    expect(body.meta).toMatchObject({ page: 1, limit: 20 });
+    for (const driver of body.data ?? []) {
+      expect(driver.id).toBeTruthy();
+      expect(driver.email).toContain('@');
+      expect(['online', 'offline', 'delivering']).toContain(driver.status);
+      expect(driver.totalDeliveries).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   test('restaurant menu categories are updated with PATCH, not legacy PUT', async ({ request }) => {
     const { accessToken } = await login(
       request,

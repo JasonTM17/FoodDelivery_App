@@ -167,7 +167,39 @@
   "drivers": {
     "title": "Quản lý tài xế",
     "description": "Danh sách tài xế trong hệ thống",
-    "viewMap": "Xem bản đồ"
+    "viewMap": "Xem bản đồ",
+    "listTitle": "Tài xế",
+    "loading": "Đang tải tài xế...",
+    "total": "Tổng số: {count} tài xế",
+    "loadError": "Không thể tải danh sách tài xế",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "permissionDenied": "Không có quyền truy cập",
+    "permissionDeniedDescription": "Tài khoản của bạn không thể xem dữ liệu tài xế.",
+    "retry": "Thử lại",
+    "emptyTitle": "Chưa có tài xế",
+    "emptyDescription": "Tài khoản tài xế sẽ xuất hiện tại đây sau khi đăng ký.",
+    "previousPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "page": "Trang {page}/{totalPages}",
+    "columns": {
+      "driver": "Tài xế",
+      "phone": "SĐT",
+      "vehicle": "Phương tiện",
+      "rating": "Đánh giá",
+      "deliveries": "Số đơn",
+      "status": "Trạng thái",
+      "joinedAt": "Ngày tham gia"
+    },
+    "statuses": {
+      "online": "Rảnh",
+      "offline": "Ngoại tuyến",
+      "delivering": "Đang giao"
+    },
+    "vehicleTypes": {
+      "motorbike": "Xe máy",
+      "car": "Ô tô",
+      "bicycle": "Xe đạp"
+    }
   },
   "driversMap": {
     "title": "Bản đồ tài xế",

@@ -1325,6 +1325,37 @@ components:
         orderCount: 45
         weight: 0.85
 
+    AdminDriver:
+      type: object
+      properties:
+        id: { type: string, format: uuid, description: Driver user ID }
+        profileId: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        rating: { type: number, minimum: 0, maximum: 5 }
+        totalDeliveries: { type: integer, minimum: 0 }
+        status: { type: string, enum: [online, offline, delivering] }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: string, nullable: true }
+        isVerified: { type: boolean }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required:
+        - id
+        - profileId
+        - name
+        - email
+        - phone
+        - rating
+        - totalDeliveries
+        - status
+        - vehicleType
+        - vehiclePlate
+        - isVerified
+        - isActive
+        - createdAt
+
     # ── Paged responses ──
 
     PaginatedUsers:
@@ -1375,6 +1406,13 @@ components:
         data: { type: array, items: { $ref: "#/components/schemas/DriverTrip" } }
         meta: { $ref: "#/components/schemas/PaginationMeta" }
       required: [data, meta]
+    PaginatedAdminDrivers:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { type: array, items: { $ref: "#/components/schemas/AdminDriver" } }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [success, data, meta]
     PaginatedReviews:
       type: object
       properties:
@@ -3052,6 +3090,33 @@ paths:
   # ═══════════════════════════════════════════════
   # ADMIN USER & RESTAURANT MANAGEMENT
   # ═══════════════════════════════════════════════
+
+  /admin/drivers:
+    get:
+      tags: [drivers]
+      summary: List driver accounts for administration
+      description: Returns database-backed driver identity, vehicle, verification and derived availability state. Tracking coordinates remain on `/admin/online-drivers`.
+      operationId: admin_listDrivers
+      x-foo-actor: admin
+      parameters:
+        - name: search
+          in: query
+          description: Match driver name, email, phone, or vehicle plate.
+          schema: { type: string, maxLength: 100 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [online, offline, delivering] }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Paginated driver accounts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedAdminDrivers" }
+        "400": { description: Invalid query parameters, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "401": { description: Authentication required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: Admin role required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users:
     get:
