@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from '@vis.gl/react-google-maps';
 import type { DriverLocation } from '@/hooks/use-realtime-driver-locations';
+import { buildDriverInfoWindowHtml, type DriverMarkerCopy } from './driver-marker-html';
 
 const statusColors: Record<string, string> = {
   online: '#22c55e',
@@ -14,11 +15,26 @@ const statusColors: Record<string, string> = {
 interface DriverMarkersProps {
   drivers: DriverLocation[];
   statusLabels: Record<DriverLocation['status'], string>;
+  selectedDriverId?: string;
+  copy: DriverMarkerCopy;
+  onSelect: (driver: DriverLocation) => void;
 }
 
-export default function DriverMarkers({ drivers, statusLabels }: DriverMarkersProps) {
+interface MarkerEntry {
+  driver: DriverLocation;
+  marker: google.maps.Marker;
+}
+
+export default function DriverMarkers({
+  drivers,
+  statusLabels,
+  selectedDriverId,
+  copy,
+  onSelect,
+}: DriverMarkersProps) {
   const map = useMap();
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const markerEntriesRef = useRef<MarkerEntry[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const boundaryRef = useRef<google.maps.Data | null>(null);
 
@@ -44,6 +60,7 @@ export default function DriverMarkers({ drivers, statusLabels }: DriverMarkersPr
     return () => {
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
+      markerEntriesRef.current = [];
     };
   }, [map]);
 
@@ -51,7 +68,7 @@ export default function DriverMarkers({ drivers, statusLabels }: DriverMarkersPr
     if (!map || !infoWindowRef.current) return undefined;
     markersRef.current.forEach((marker) => marker.setMap(null));
 
-    const newMarkers = drivers.map((driver) => {
+    const newEntries = drivers.map((driver) => {
       const color = statusColors[driver.status] || '#22c55e';
       const marker = new google.maps.Marker({
         map,
@@ -68,27 +85,64 @@ export default function DriverMarkers({ drivers, statusLabels }: DriverMarkersPr
       });
 
       marker.addListener('click', () => {
-        infoWindowRef.current?.setContent(
-          `<div style="min-width:180px;padding:8px;font-size:13px"><strong>${escapeHtml(driver.name)}</strong><br/>Rating: ${driver.rating.toFixed(1)}<br/>Status: ${escapeHtml(statusLabels[driver.status])}${driver.currentOrder ? `<br/>Order: ${escapeHtml(driver.currentOrder)}` : ''}</div>`,
-        );
-        infoWindowRef.current?.open(map, marker);
+        onSelect(driver);
+        openDriverInfoWindow(map, infoWindowRef.current, marker, driver, statusLabels, copy);
       });
 
-      return marker;
+      return { driver, marker };
     });
 
-    markersRef.current = newMarkers;
-    return () => { newMarkers.forEach((marker) => marker.setMap(null)); };
-  }, [map, drivers, statusLabels]);
+    markerEntriesRef.current = newEntries;
+    markersRef.current = newEntries.map((entry) => entry.marker);
+    fitMapToDrivers(map, drivers);
+
+    const selectedEntry = findSelectedEntry(newEntries, selectedDriverId);
+    if (selectedEntry) {
+      openDriverInfoWindow(map, infoWindowRef.current, selectedEntry.marker, selectedEntry.driver, statusLabels, copy);
+    }
+
+    return () => { newEntries.forEach((entry) => entry.marker.setMap(null)); };
+  }, [map, drivers, selectedDriverId, statusLabels, copy, onSelect]);
+
+  useEffect(() => {
+    if (!map || !infoWindowRef.current) return;
+
+    const selectedEntry = findSelectedEntry(markerEntriesRef.current, selectedDriverId);
+    if (!selectedEntry) return;
+
+    openDriverInfoWindow(map, infoWindowRef.current, selectedEntry.marker, selectedEntry.driver, statusLabels, copy);
+  }, [map, selectedDriverId, statusLabels, copy]);
 
   return null;
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function findSelectedEntry(entries: MarkerEntry[], selectedDriverId?: string): MarkerEntry | undefined {
+  if (!selectedDriverId) return undefined;
+  return entries.find((entry) => entry.driver.id === selectedDriverId || entry.driver.driverId === selectedDriverId);
+}
+
+function openDriverInfoWindow(
+  map: google.maps.Map,
+  infoWindow: google.maps.InfoWindow | null,
+  marker: google.maps.Marker,
+  driver: DriverLocation,
+  statusLabels: Record<DriverLocation['status'], string>,
+  copy: DriverMarkerCopy,
+): void {
+  infoWindow?.setContent(buildDriverInfoWindowHtml(driver, statusLabels[driver.status], copy));
+  infoWindow?.open(map, marker);
+  map.panTo({ lat: driver.lat, lng: driver.lng });
+}
+
+function fitMapToDrivers(map: google.maps.Map, drivers: DriverLocation[]): void {
+  if (drivers.length === 0) return;
+  if (drivers.length === 1) {
+    map.setCenter({ lat: drivers[0].lat, lng: drivers[0].lng });
+    map.setZoom(13);
+    return;
+  }
+
+  const bounds = new google.maps.LatLngBounds();
+  drivers.forEach((driver) => bounds.extend({ lat: driver.lat, lng: driver.lng }));
+  map.fitBounds(bounds, 80);
 }

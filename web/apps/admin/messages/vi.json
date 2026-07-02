@@ -483,6 +483,11 @@
     "missingKeyDescription": "Thêm public Google Maps key vào môi trường admin để hiển thị bản đồ trực tiếp.",
     "renderErrorTitle": "Không tải được bản đồ tài xế",
     "renderErrorDescription": "Route bản đồ bị lỗi khi render. Kiểm tra kết nối backend rồi thử lại.",
+    "info": {
+      "rating": "Đánh giá",
+      "status": "Trạng thái",
+      "vehicle": "Phương tiện"
+    },
     "connection": {
       "connecting": "Đang kết nối",
       "connected": "Realtime",

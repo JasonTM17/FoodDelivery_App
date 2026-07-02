@@ -483,6 +483,11 @@
     "missingKeyDescription": "Add the public Google Maps key to the admin environment to display the live map.",
     "renderErrorTitle": "Driver map is unavailable",
     "renderErrorDescription": "The map route failed to render. Retry after checking the backend connection.",
+    "info": {
+      "rating": "Rating",
+      "status": "Status",
+      "vehicle": "Vehicle"
+    },
     "connection": {
       "connecting": "Connecting",
       "connected": "Live",

@@ -483,6 +483,11 @@
     "missingKeyDescription": "ライブ地図を表示するには、admin環境に公開Google Mapsキーを追加してください。",
     "renderErrorTitle": "配達員マップを表示できません",
     "renderErrorDescription": "マップ画面の描画に失敗しました。バックエンド接続を確認して再試行してください。",
+    "info": {
+      "rating": "評価",
+      "status": "状態",
+      "vehicle": "車両"
+    },
     "connection": {
       "connecting": "接続中",
       "connected": "ライブ",

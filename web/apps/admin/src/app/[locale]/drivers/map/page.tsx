@@ -84,6 +84,13 @@ export default function DriverMapPage() {
     busy: t('status.busy'),
   }), [t]);
 
+  const markerCopy = useMemo(() => ({
+    rating: t('info.rating'),
+    status: t('info.status'),
+    order: t('order'),
+    vehicle: t('info.vehicle'),
+  }), [t]);
+
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
       <DriverListSidebar
@@ -123,7 +130,13 @@ export default function DriverMapPage() {
               style={{ width: '100%', height: '100%' }}
               restriction={{ latLngBounds: VIETNAM_BOUNDS, strictBounds: false }}
             >
-              <DriverMarkers drivers={drivers} statusLabels={statusLabels} />
+              <DriverMarkers
+                drivers={drivers}
+                statusLabels={statusLabels}
+                selectedDriverId={selectedDriver?.id}
+                copy={markerCopy}
+                onSelect={setSelectedDriver}
+              />
             </Map>
           </APIProvider>
         ) : (
