@@ -52,21 +52,3 @@ export interface OrderStatusTimeline {
   timestamp: string | null;
   icon: string;
 }
-
-export const LEGACY_ORDER_STATUSES = [
-  { status: 'pending', label: 'Chờ xác nhận' },
-  { status: 'confirmed', label: 'Đã xác nhận' },
-  { status: 'preparing', label: 'Đang chuẩn bị' },
-  { status: 'ready', label: 'Sẵn sàng' },
-  { status: 'delivering', label: 'Đang giao' },
-  { status: 'delivered', label: 'Đã giao' },
-];
-
-export const ORDER_STATUSES: { status: OrderStatus; label: string }[] = [
-  { status: 'restaurant_pending', label: 'Chờ xác nhận' },
-  { status: 'restaurant_accepted', label: 'Đã xác nhận' },
-  { status: 'preparing', label: 'Đang chuẩn bị' },
-  { status: 'ready_for_pickup', label: 'Sẵn sàng lấy món' },
-  { status: 'delivering', label: 'Đang giao' },
-  { status: 'delivered', label: 'Đã giao' },
-];
