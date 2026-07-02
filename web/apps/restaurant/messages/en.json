@@ -306,15 +306,32 @@
   "analytics": {
     "title": "Analytics",
     "description": "Restaurant performance overview",
+    "loading": "Loading analytics",
+    "retry": "Retry",
+    "errorTitle": "Analytics unavailable",
+    "errorDescription": "We could not load the restaurant analytics from the server. Retry when the connection is stable.",
     "today": "Today",
     "week": "This week",
     "month": "This month",
     "totalOrders": "Total orders",
+    "totalOrdersSub": "Delivered and completed orders",
     "totalRevenue": "Total revenue",
+    "totalRevenueSub": "From delivered and completed orders",
     "avgOrderValue": "Avg order value",
+    "avgOrderValueSub": "Average per day: {amount}",
     "completionRate": "Completion rate",
     "hourlyOrders": "Orders by hour",
+    "ordersByHourTable": "Orders by hour data table",
+    "hourLabel": "{hour}:00",
+    "hourTooltip": "{hour}:00: {count} orders",
     "byCategory": "By category",
-    "noData": "No data yet"
+    "categoryRevenueTable": "Revenue by category data table",
+    "categoryColumn": "Category",
+    "hourColumn": "Hour",
+    "ordersColumn": "Orders",
+    "revenueColumn": "Revenue",
+    "shareColumn": "Share",
+    "noData": "No data yet",
+    "noCategories": "No category revenue yet"
   }
 }

@@ -306,15 +306,32 @@
   "analytics": {
     "title": "Phân tích",
     "description": "Hiệu suất hoạt động nhà hàng",
+    "loading": "Đang tải phân tích",
+    "retry": "Thử lại",
+    "errorTitle": "Không thể tải phân tích",
+    "errorDescription": "Không thể tải dữ liệu phân tích nhà hàng từ máy chủ. Vui lòng thử lại khi kết nối ổn định.",
     "today": "Hôm nay",
     "week": "Tuần này",
     "month": "Tháng này",
     "totalOrders": "Tổng đơn hàng",
+    "totalOrdersSub": "Đơn đã giao và hoàn thành",
     "totalRevenue": "Tổng doanh thu",
+    "totalRevenueSub": "Từ đơn đã giao và hoàn thành",
     "avgOrderValue": "Giá trị TB / đơn",
+    "avgOrderValueSub": "Trung bình mỗi ngày: {amount}",
     "completionRate": "Tỷ lệ hoàn thành",
     "hourlyOrders": "Đơn hàng theo giờ",
+    "ordersByHourTable": "Bảng dữ liệu đơn hàng theo giờ",
+    "hourLabel": "{hour}:00",
+    "hourTooltip": "{hour}:00: {count} đơn",
     "byCategory": "Theo danh mục",
-    "noData": "Chưa có dữ liệu"
+    "categoryRevenueTable": "Bảng dữ liệu doanh thu theo danh mục",
+    "categoryColumn": "Danh mục",
+    "hourColumn": "Giờ",
+    "ordersColumn": "Đơn hàng",
+    "revenueColumn": "Doanh thu",
+    "shareColumn": "Tỷ trọng",
+    "noData": "Chưa có dữ liệu",
+    "noCategories": "Chưa có doanh thu theo danh mục"
   }
 }
