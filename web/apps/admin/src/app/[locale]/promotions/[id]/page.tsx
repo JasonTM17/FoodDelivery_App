@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { apiGet, apiPatch } from '@/lib/api';
@@ -20,8 +19,8 @@ interface PromotionAnalytics {
   discountCost: number;
 }
 
-export default function PromotionDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function PromotionDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const t = useTranslations('promotionDetail');
   const managementT = useTranslations('adminPromotionManagement');
   const queryClient = useQueryClient();

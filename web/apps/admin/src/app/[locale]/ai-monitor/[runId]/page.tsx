@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { apiGet } from '@/lib/api';
@@ -38,9 +37,9 @@ function StatusBadge({ status }: { status: string }) {
 export default function AiMonitorRunDetailPage({
   params,
 }: {
-  params: Promise<{ runId: string }>;
+  params: { runId: string };
 }) {
-  const { runId } = use(params);
+  const { runId } = params;
   const t = useTranslations('aiMonitorDetail');
 
   const { data: run, isLoading } = useQuery<WorkflowRun>({

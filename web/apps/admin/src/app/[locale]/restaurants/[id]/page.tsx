@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -53,9 +52,9 @@ interface Restaurant {
 export default function RestaurantDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = use(params);
+  const { id } = params;
   const queryClient = useQueryClient();
 
   const { data: restaurant, isLoading } = useQuery<Restaurant>({

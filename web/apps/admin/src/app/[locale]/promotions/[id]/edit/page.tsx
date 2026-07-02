@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -14,8 +13,8 @@ import { apiGet } from '@/lib/api';
 import { Link, useRouter } from '@/navigation';
 import { PageHeader } from '@/components/layout/admin-page-header';
 
-export default function EditPromotionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function EditPromotionPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const router = useRouter();
   const promotionsT = useTranslations('promotions');
   const t = useTranslations('adminPromotionManagement');

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { apiGet, apiPost } from '@/lib/api';
@@ -27,8 +27,8 @@ interface PendingRestaurant {
   businessLicense: string | null;
 }
 
-export default function RestaurantApprovePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function RestaurantApprovePage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const t = useTranslations('restaurantApprove');
   const queryClient = useQueryClient();
   const [rejectReason, setRejectReason] = useState('');

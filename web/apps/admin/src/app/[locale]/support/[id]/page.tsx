@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
@@ -35,8 +35,8 @@ interface TicketDetail {
   slaOverdue: boolean;
 }
 
-export default function SupportTicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function SupportTicketDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);

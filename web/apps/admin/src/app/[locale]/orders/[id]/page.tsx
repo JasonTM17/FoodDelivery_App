@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -31,9 +31,9 @@ interface Order {
 export default function OrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = use(params);
+  const { id } = params;
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
