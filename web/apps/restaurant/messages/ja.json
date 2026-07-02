@@ -197,6 +197,18 @@
       "unavailable": "未対応",
       "degradedDescription": "バックエンドはまだ加盟店プロモーションの売上、コンバージョン、ROI合計を返しません。偽の数値ではなく実際の利用回数のみ表示します。"
     },
+    "analytics": {
+      "title": "プロモーション効果",
+      "usage": "利用回数",
+      "revenue": "プロモ売上",
+      "conversion": "コンバージョン率",
+      "roi": "ROI",
+      "timeline": "日別利用",
+      "emptyTimeline": "データはまだありません",
+      "unavailable": "未対応",
+      "degradedTitle": "詳細分析は未対応です",
+      "degradedDescription": "バックエンドはこのプロモーションの売上、コンバージョン、ROI、タイムラインをまだ返しません。偽のゼロではなく実際の利用回数のみ表示します。"
+    },
     "status": {
       "all": "すべて",
       "draft": "下書き",

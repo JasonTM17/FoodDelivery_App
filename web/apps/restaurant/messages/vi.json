@@ -197,6 +197,18 @@
       "unavailable": "Chưa khả dụng",
       "degradedDescription": "Backend hiện chưa trả revenue, conversion và ROI tổng hợp cho merchant promotions; chỉ hiển thị lượt dùng thật thay vì số giả."
     },
+    "analytics": {
+      "title": "Hiệu quả khuyến mãi",
+      "usage": "Lượt dùng",
+      "revenue": "Doanh thu từ KM",
+      "conversion": "Tỷ lệ quy đổi",
+      "roi": "ROI",
+      "timeline": "Lượt dùng theo ngày",
+      "emptyTimeline": "Chưa có dữ liệu",
+      "unavailable": "Chưa khả dụng",
+      "degradedTitle": "Analytics chi tiết chưa khả dụng",
+      "degradedDescription": "Backend hiện chưa trả revenue, conversion, ROI hoặc timeline cho khuyến mãi này. Màn hình chỉ hiển thị usage thật thay vì dùng số 0 giả."
+    },
     "status": {
       "all": "Tất cả",
       "draft": "Nháp",

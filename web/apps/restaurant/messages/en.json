@@ -197,6 +197,18 @@
       "unavailable": "Unavailable",
       "degradedDescription": "The backend does not return merchant promotion revenue, conversion, or ROI totals yet; the panel shows real usage only instead of fake numbers."
     },
+    "analytics": {
+      "title": "Promotion performance",
+      "usage": "Usage",
+      "revenue": "Promo revenue",
+      "conversion": "Conversion rate",
+      "roi": "ROI",
+      "timeline": "Daily usage",
+      "emptyTimeline": "No data yet",
+      "unavailable": "Unavailable",
+      "degradedTitle": "Detailed analytics unavailable",
+      "degradedDescription": "The backend does not return revenue, conversion, ROI, or timeline data for this promotion yet. The panel shows real usage instead of fake zeroes."
+    },
     "status": {
       "all": "All",
       "draft": "Draft",
