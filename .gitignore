@@ -79,6 +79,10 @@ supabase/.temp/
 # Coverage
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+web/e2e/playwright-report/
+web/e2e/test-results/
 
 # Build output
 dist/
