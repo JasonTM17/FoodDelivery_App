@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { MenuItem, MenuItemOption } from '@/lib/types';
 import { MenuItemOptionsBuilder } from './menu-item-options-builder';
+import { getMenuItemFormError } from './menu-item-form-validation';
 
 export interface MenuItemFormData {
   name: string;
@@ -33,6 +34,7 @@ const DEFAULT_CATEGORY_KEYS = [
 
 export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFormProps) {
   const t = useTranslations('menu.form');
+  const formId = useId();
   const defaultCategories = useMemo(
     () => DEFAULT_CATEGORY_KEYS.map(key => ({ key, label: t(`categories.${key}`) })),
     [t],
@@ -51,74 +53,89 @@ export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFo
     event.preventDefault();
     setError('');
 
-    if (!name.trim()) {
-      setError(t('errors.nameRequired'));
-      return;
-    }
-    if (!price || parseFloat(price) <= 0) {
-      setError(t('errors.priceInvalid'));
-      return;
-    }
-    if (!category && !customCategory) {
-      setError(t('errors.categoryRequired'));
+    const validationError = getMenuItemFormError({
+      name,
+      description,
+      price,
+      category,
+      customCategory,
+      useCustomCategory: showCustomCategory,
+      image,
+      options,
+    });
+    if (validationError) {
+      setError(t(`errors.${validationError}`));
       return;
     }
 
     await onSubmit({
       name: name.trim(),
       description: description.trim(),
-      price: parseFloat(price),
+      price: Number(price),
       category: showCustomCategory ? customCategory.trim() : category,
-      image,
+      image: image.trim(),
       available: initialData?.available ?? true,
       options,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      aria-label={t('formAria')}
+      aria-describedby={error ? `${formId}-error` : undefined}
+    >
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div id={`${formId}-error`} className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
           {error}
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
-          <label className="label">{t('name')}</label>
+          <label htmlFor={`${formId}-name`} className="label">{t('name')}</label>
           <input
+            id={`${formId}-name`}
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            maxLength={100}
+            required
             className="input-field"
             placeholder={t('namePlaceholder')}
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="label">{t('description')}</label>
+          <label htmlFor={`${formId}-description`} className="label">{t('description')}</label>
           <textarea
+            id={`${formId}-description`}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
+            maxLength={500}
             className="input-field resize-none"
             placeholder={t('descriptionPlaceholder')}
           />
         </div>
 
         <div>
-          <label className="label">{t('price')}</label>
-          <input type="number" value={price} onChange={(event) => setPrice(event.target.value)} className="input-field" placeholder="0" min="0" />
+          <label htmlFor={`${formId}-price`} className="label">{t('price')}</label>
+          <input id={`${formId}-price`} type="number" value={price} onChange={(event) => setPrice(event.target.value)} className="input-field" placeholder="0" min="1" required />
         </div>
 
         <div>
-          <label className="label">{t('category')}</label>
+          <label htmlFor={`${formId}-category`} className="label">{t('category')}</label>
           {showCustomCategory ? (
             <div className="flex gap-2">
               <input
+                id={`${formId}-category`}
                 type="text"
                 value={customCategory}
                 onChange={(event) => setCustomCategory(event.target.value)}
+                maxLength={100}
+                required
                 className="input-field"
                 placeholder={t('customCategoryPlaceholder')}
               />
@@ -128,7 +145,7 @@ export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFo
             </div>
           ) : (
             <div className="flex gap-2">
-              <select value={category} onChange={(event) => setCategory(event.target.value)} className="select-field">
+              <select id={`${formId}-category`} value={category} onChange={(event) => setCategory(event.target.value)} className="select-field" required>
                 <option value="">{t('selectCategory')}</option>
                 {defaultCategories.map((cat) => <option key={cat.key} value={cat.label}>{cat.label}</option>)}
               </select>
@@ -140,8 +157,8 @@ export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFo
         </div>
 
         <div>
-          <label className="label">{t('imageUrl')}</label>
-          <input type="url" value={image} onChange={(event) => setImage(event.target.value)} className="input-field" placeholder="https://..." />
+          <label htmlFor={`${formId}-image`} className="label">{t('imageUrl')}</label>
+          <input id={`${formId}-image`} type="url" value={image} onChange={(event) => setImage(event.target.value)} className="input-field" placeholder="https://..." inputMode="url" />
         </div>
       </div>
 

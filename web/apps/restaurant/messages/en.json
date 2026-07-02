@@ -244,6 +244,7 @@
       }
     },
     "form": {
+      "formAria": "Menu item details form",
       "name": "Item name *",
       "namePlaceholder": "E.g. rare beef pho",
       "description": "Description",
@@ -269,8 +270,18 @@
       },
       "errors": {
         "nameRequired": "Please enter the item name",
+        "nameTooShort": "Item name must contain at least 2 characters",
+        "nameTooLong": "Item name cannot exceed 100 characters",
+        "descriptionTooLong": "Description cannot exceed 500 characters",
         "priceInvalid": "Please enter a valid price",
-        "categoryRequired": "Please choose a category"
+        "categoryRequired": "Please choose a category",
+        "imageInvalid": "Image must use a valid HTTP or HTTPS URL",
+        "optionsLimit": "Each item can have up to 5 option groups",
+        "optionNameRequired": "Enter a name for every option group",
+        "optionChoiceRequired": "Each option group needs at least one choice",
+        "choicesLimit": "Each option group can have up to 10 choices",
+        "choiceNameRequired": "Enter a name for every choice",
+        "choicePriceInvalid": "Choice surcharge cannot be negative"
       },
       "options": {
         "title": "Item options ({count}/{max})",

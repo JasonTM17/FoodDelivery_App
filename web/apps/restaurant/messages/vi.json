@@ -244,6 +244,7 @@
       }
     },
     "form": {
+      "formAria": "Biểu mẫu thông tin món ăn",
       "name": "Tên món *",
       "namePlaceholder": "VD: Phở bò tái chín",
       "description": "Mô tả",
@@ -269,8 +270,18 @@
       },
       "errors": {
         "nameRequired": "Vui lòng nhập tên món",
+        "nameTooShort": "Tên món phải có ít nhất 2 ký tự",
+        "nameTooLong": "Tên món không được vượt quá 100 ký tự",
+        "descriptionTooLong": "Mô tả không được vượt quá 500 ký tự",
         "priceInvalid": "Vui lòng nhập giá hợp lệ",
-        "categoryRequired": "Vui lòng chọn danh mục"
+        "categoryRequired": "Vui lòng chọn danh mục",
+        "imageInvalid": "Ảnh phải dùng đường dẫn HTTP hoặc HTTPS hợp lệ",
+        "optionsLimit": "Mỗi món có tối đa 5 nhóm tùy chọn",
+        "optionNameRequired": "Vui lòng nhập tên cho mọi nhóm tùy chọn",
+        "optionChoiceRequired": "Mỗi nhóm tùy chọn phải có ít nhất một lựa chọn",
+        "choicesLimit": "Mỗi nhóm tùy chọn có tối đa 10 lựa chọn",
+        "choiceNameRequired": "Vui lòng nhập tên cho mọi lựa chọn",
+        "choicePriceInvalid": "Phụ phí lựa chọn không được là số âm"
       },
       "options": {
         "title": "Tùy chọn món ({count}/{max})",

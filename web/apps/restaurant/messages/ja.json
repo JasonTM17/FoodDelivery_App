@@ -244,6 +244,7 @@
       }
     },
     "form": {
+      "formAria": "商品情報フォーム",
       "name": "商品名 *",
       "namePlaceholder": "例: 牛肉フォー",
       "description": "説明",
@@ -269,8 +270,18 @@
       },
       "errors": {
         "nameRequired": "商品名を入力してください",
+        "nameTooShort": "商品名は2文字以上で入力してください",
+        "nameTooLong": "商品名は100文字以内で入力してください",
+        "descriptionTooLong": "説明は500文字以内で入力してください",
         "priceInvalid": "有効な価格を入力してください",
-        "categoryRequired": "カテゴリーを選択してください"
+        "categoryRequired": "カテゴリーを選択してください",
+        "imageInvalid": "画像には有効なHTTPまたはHTTPS URLを使用してください",
+        "optionsLimit": "オプショングループは商品ごとに最大5件です",
+        "optionNameRequired": "すべてのオプショングループ名を入力してください",
+        "optionChoiceRequired": "各オプショングループに1件以上の選択肢が必要です",
+        "choicesLimit": "各オプショングループの選択肢は最大10件です",
+        "choiceNameRequired": "すべての選択肢名を入力してください",
+        "choicePriceInvalid": "選択肢の追加料金に負の値は使用できません"
       },
       "options": {
         "title": "商品オプション（{count}/{max}）",
