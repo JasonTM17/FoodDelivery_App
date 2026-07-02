@@ -1012,54 +1012,37 @@ components:
     AuditLogEntry:
       type: object
       properties:
-        id:        { type: string, format: uuid }
-        userId:    { type: string, format: uuid }
-        action:    { type: string, description: "e.g. user.created, order.cancelled, promotion.deleted" }
-        resource:  { type: string, description: "e.g. users, orders, promotions" }
-        resourceId: { type: string, format: uuid }
-        detail:    { type: object, description: "Arbitrary JSON diff" }
-        ip:        { type: string }
+        id:        { type: string, description: "Serialized bigint audit identifier" }
+        adminId:   { type: string, format: uuid }
+        admin:
+          type: object
+          properties:
+            id:       { type: string, format: uuid }
+            email:    { type: string, format: email }
+            fullName: { type: string }
+        action:       { type: string, description: "e.g. promotion.updated" }
+        targetType:   { type: string, description: "e.g. promotion, restaurant" }
+        targetId:     { type: string, format: uuid, nullable: true }
+        oldValue:     { type: object, nullable: true, additionalProperties: true }
+        newValue:     { type: object, nullable: true, additionalProperties: true }
+        ipAddress:    { type: string }
         userAgent: { type: string }
+        correlationId: { type: string, nullable: true }
+        severity: { type: string }
+        metadata: { type: object, nullable: true, additionalProperties: true }
         createdAt: { type: string, format: date-time }
-      required: [id, action, resource, createdAt]
+      required: [id, adminId, action, targetType, ipAddress, createdAt]
       example:
-        id: "audit-001"
-        userId: "admin-001"
-        action: "promotion.deleted"
-        resource: "promotions"
-        resourceId: "promo-002"
-        detail: { previous: { code: "OLD2025", isActive: true } }
-        ip: "192.168.1.1"
+        id: "42"
+        adminId: "8e65cf48-5f95-4b8e-94cc-3e14062b6339"
+        action: "promotion.updated"
+        targetType: "promotion"
+        targetId: "53e01a32-3918-4c47-b1df-b03338d97f11"
+        oldValue: { isActive: false }
+        newValue: { isActive: true }
+        ipAddress: "192.168.1.1"
         userAgent: "Mozilla/5.0 ..."
         createdAt: "2026-06-09T14:00:00Z"
-
-    AuditSearchRequest:
-      type: object
-      properties:
-        q:          { type: string, description: "Full-text search query" }
-        resource:   { type: string }
-        action:     { type: string }
-        userId:     { type: string, format: uuid }
-        fromDate:   { type: string, format: date-time }
-        toDate:     { type: string, format: date-time }
-      example:
-        q: "promotion"
-        resource: "promotions"
-        fromDate: "2026-06-01T00:00:00Z"
-        toDate: "2026-06-09T23:59:59Z"
-
-    AuditExportRequest:
-      type: object
-      properties:
-        format:    { type: string, enum: [csv, json] }
-        fromDate:  { type: string, format: date-time }
-        toDate:    { type: string, format: date-time }
-        resource:  { type: string }
-      required: [format]
-      example:
-        format: "csv"
-        fromDate: "2026-06-01T00:00:00Z"
-        toDate: "2026-06-09T23:59:59Z"
 
     # ── Analytics ──
 
@@ -2448,39 +2431,26 @@ paths:
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - { name: actor, in: query, schema: { type: string }, description: "Admin UUID, email, or name" }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date-time } }
+        - { name: dateTo, in: query, schema: { type: string, format: date-time } }
       responses:
         "200": { description: "Audit logs", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedAuditLogs" } } } }
 
-  /admin/audit-logs/search:
-    post:
-      tags: [audit]
-      summary: Full-text search audit logs
-      operationId: audit_search
-      x-foo-actor: admin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/AuditSearchRequest" }
-      parameters:
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/LimitParam"
-      responses:
-        "200": { description: "Search results", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedAuditLogs" } } } }
-
   /admin/audit-logs/export:
-    post:
+    get:
       tags: [audit]
-      summary: Export audit logs
+      summary: Export filtered audit logs as CSV
       operationId: audit_export
       x-foo-actor: admin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/AuditExportRequest" }
+      parameters:
+        - { name: actor, in: query, schema: { type: string }, description: "Admin UUID, email, or name" }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date-time } }
+        - { name: dateTo, in: query, schema: { type: string, format: date-time } }
       responses:
-        "200": { description: "Export download", content: { application/octet-stream: { schema: { type: string, format: binary } } } }
+        "200": { description: "UTF-8 CSV download", content: { text/csv: { schema: { type: string, format: binary } } } }
 
   # ═══════════════════════════════════════════════
   # ANALYTICS (admin)

@@ -137,15 +137,6 @@ export class AdminService {
     return this.prisma.aiSupportTicket.update({ where: { id: ticketId }, data })
   }
 
-  async getAuditLogs(params: { page?: number; limit?: number }) {
-    const page = params.page ?? 1; const limit = params.limit ?? 50
-    const [logs, total] = await Promise.all([
-      this.prisma.adminAuditLog.findMany({ skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' } }),
-      this.prisma.adminAuditLog.count(),
-    ])
-    return { logs, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
-  }
-
   async getTopRestaurants(days: number = 7) {
     const since = new Date(); since.setDate(since.getDate() - days)
     return this.prisma.$queryRawUnsafe<Array<{ name: string; orderCount: number; revenue: number }>>(

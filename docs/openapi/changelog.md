@@ -1,5 +1,7 @@
 # OpenAPI Changelog
 
+- 2026-07-02: Aligned admin audit list filters, canonical pagination envelope, bigint serialization, and filtered CSV download with implemented routes.
+
 ## v1.0.1 (2026-07-02)
 
 - Added `GET /restaurant/promotions/targeting-preview`.

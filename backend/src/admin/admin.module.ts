@@ -10,6 +10,8 @@ import { AdminSupportService } from './admin-support.service'
 import { AdminTrackingController } from './admin-tracking.controller'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { OrdersModule } from '../orders/orders.module'
+import { AdminAuditController } from './admin-audit.controller'
+import { AdminAuditService } from './admin-audit.service'
 
 @Module({
   imports: [OrdersModule, NotificationsModule],
@@ -19,12 +21,14 @@ import { OrdersModule } from '../orders/orders.module'
     AdminDashboardController,
     AdminResourcesController,
     AdminSupportController,
+    AdminAuditController,
   ],
   providers: [
     AdminService,
     AdminDashboardService,
     AdminResourcesService,
     AdminSupportService,
+    AdminAuditService,
   ],
 })
 export class AdminModule {}

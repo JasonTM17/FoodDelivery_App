@@ -69,11 +69,6 @@ export class AdminController {
     return this.adminService.updateSupportTicket(id, body)
   }
 
-  @Get('audit-logs')
-  getAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getAuditLogs({ page: Number(page), limit: Number(limit) })
-  }
-
   @Get('promotions')
   async getPromotions(@Query() query: PromotionQueryDto) {
     return this.adminService.getPromotions(query)

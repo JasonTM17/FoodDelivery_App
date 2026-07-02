@@ -25,7 +25,6 @@ describe('AdminController', () => {
     toggleRestaurantStatus: jest.fn(),
     getSupportTickets: jest.fn().mockResolvedValue({ tickets: [], meta: { page: 1, limit: 20, total: 0 } }),
     updateSupportTicket: jest.fn(),
-    getAuditLogs: jest.fn().mockResolvedValue({ logs: [], meta: { page: 1, limit: 50, total: 0 } }),
     getTopRestaurants: jest.fn().mockResolvedValue([]),
     getRevenueChart: jest.fn().mockResolvedValue([]),
     getPromotions: jest.fn().mockResolvedValue({ promotions: [mockPromotion], meta: { page: 1, limit: 20, total: 1, totalPages: 1 } }),
