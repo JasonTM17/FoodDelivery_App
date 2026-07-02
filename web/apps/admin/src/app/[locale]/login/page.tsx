@@ -48,7 +48,7 @@ export default function LoginPage() {
       localStorage.setItem('admin_refresh_token', res.refreshToken);
       localStorage.setItem('admin_user', JSON.stringify(res.user));
       if (rememberMe) localStorage.setItem('admin_remember_email', email);
-      // Navigate to dashboard (not yet locale-prefixed)
+      // The next-intl router preserves the active locale.
       router.replace('/overview');
     } catch (err) {
       setError(err instanceof Error ? err.message : tCommon('errors.generic'));

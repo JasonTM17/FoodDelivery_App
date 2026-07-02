@@ -41,6 +41,8 @@
     "noData": "データなし",
     "refresh": "更新",
     "close": "閉じる",
+    "home": "ホーム",
+    "breadcrumb": "パンくずリスト",
     "view": "表示",
     "detail": "詳細",
     "actions": "操作",

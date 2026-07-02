@@ -41,6 +41,8 @@
     "noData": "No data",
     "refresh": "Refresh",
     "close": "Close",
+    "home": "Home",
+    "breadcrumb": "Breadcrumb",
     "view": "View",
     "detail": "Detail",
     "actions": "Actions",

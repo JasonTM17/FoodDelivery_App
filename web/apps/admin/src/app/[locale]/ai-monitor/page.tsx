@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageHeader } from '@foodflow/ui/page-header'
+import { PageHeader } from '@/components/layout/admin-page-header'
 import AiMonitorWorkflowsClient from './ai-monitor-workflows-client'
 import AiMonitorStatsClient from './ai-monitor-stats-client';
 import { getTranslations } from 'next-intl/server';

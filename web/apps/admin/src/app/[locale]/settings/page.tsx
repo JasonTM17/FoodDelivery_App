@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { apiPatch } from '@/lib/api';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
+const navigationRouterMock = vi.hoisted(() => ({
+  push: vi.fn(),
+  replace: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn(),
+  refresh: vi.fn(),
+  prefetch: vi.fn(),
+}));
+
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
@@ -13,14 +22,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-    refresh: vi.fn(),
-    prefetch: vi.fn(),
-  }),
+  useRouter: () => navigationRouterMock,
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),
@@ -39,18 +41,31 @@ vi.mock('next-intl/server', () => ({
 }));
 
 // Mock @/navigation
-vi.mock('@/navigation', () => ({
-  Link: ({ children, href, ...props }: Record<string, unknown>) => {
-    const React = require('react');
-    return React.createElement('a', { href, ...props }, children);
-  },
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    back: vi.fn(),
-  }),
-  usePathname: () => '/',
-}));
+vi.mock('@/navigation', () => {
+  const React = require('react');
+  const Link = React.forwardRef(
+    ({ children, href, onClick, ...props }: Record<string, unknown>, ref: unknown) => React.createElement(
+      'a',
+      {
+        ref,
+        href,
+        ...props,
+        onClick: (event: { preventDefault: () => void }) => {
+          event.preventDefault();
+          if (typeof onClick === 'function') onClick(event);
+        },
+      },
+      children,
+    ),
+  );
+  Link.displayName = 'MockNavigationLink';
+
+  return {
+    Link,
+    useRouter: () => navigationRouterMock,
+    usePathname: () => '/',
+  };
+});
 
 // Mock @/lib/api
 vi.mock('@/lib/api', () => ({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import { usePathname, useRouter } from '@/navigation';
 import {
@@ -23,9 +23,11 @@ export function LocaleSwitcher() {
   const current = useLocale() as LocaleCode;
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations('topbar');
 
   const switchLocale = (locale: LocaleCode) => {
     document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    document.documentElement.lang = locale;
     router.replace(pathname, { locale });
   };
 
@@ -38,9 +40,9 @@ export function LocaleSwitcher() {
           variant="ghost"
           size="sm"
           className="gap-1 px-2 text-xs font-medium"
-          aria-label="Switch language"
+          aria-label={t('switchLanguage')}
         >
-          <Globe className="h-3.5 w-3.5" />
+          <Globe aria-hidden="true" className="h-3.5 w-3.5" />
           <span aria-hidden="true">{selected.flag}</span>
           <span>{selected.label}</span>
         </Button>

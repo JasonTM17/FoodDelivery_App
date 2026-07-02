@@ -98,11 +98,18 @@
   "topbar": {
     "searchPlaceholder": "Tìm kiếm...",
     "adminRole": "Quản trị viên",
-    "notifications": "Thông báo"
+    "notifications": "Thông báo",
+    "openNavigation": "Mở menu quản trị",
+    "accountMenu": "Mở menu tài khoản",
+    "switchLanguage": "Chuyển ngôn ngữ"
   },
   "sidebar": {
     "brand": "FoodFlow",
-    "logout": "Đăng xuất"
+    "adminBadge": "Admin",
+    "logout": "Đăng xuất",
+    "navigation": "Điều hướng quản trị",
+    "mobileTitle": "Menu quản trị FoodFlow",
+    "mobileDescription": "Chọn một khu vực để quản lý nền tảng"
   },
   "breadcrumb": {
     "overview": "Tổng quan",
@@ -114,6 +121,8 @@
     "promotions": "Khuyến mãi",
     "support": "Hỗ trợ",
     "analytics": "Phân tích",
+    "reports": "Báo cáo",
+    "exportJobs": "Tải dữ liệu",
     "settings": "Cài đặt",
     "logs": "Nhật ký",
     "aiMonitor": "AI Monitor"

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { getTranslations } from 'next-intl/server';
 import OverviewKpiClient from './overview-kpi-client';
 import OverviewChartsClient from './overview-charts-client';

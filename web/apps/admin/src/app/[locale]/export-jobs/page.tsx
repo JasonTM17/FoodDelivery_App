@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FileText, RefreshCw, ShieldX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { EmptyState } from '@foodflow/ui/empty-state';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { Skeleton } from '@foodflow/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {

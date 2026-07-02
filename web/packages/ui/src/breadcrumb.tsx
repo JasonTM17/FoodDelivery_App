@@ -11,28 +11,37 @@ export interface BreadcrumbItem {
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
   className?: string;
+  homeHref?: string;
+  homeLabel?: string;
+  label?: string;
 }
 
-export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
+export function Breadcrumb({
+  items,
+  className = '',
+  homeHref = '/',
+  homeLabel = 'Home',
+  label = 'Breadcrumb',
+}: BreadcrumbProps) {
   return (
-    <nav aria-label="Breadcrumb" className={`animate-fade-in-up ${className}`}>
+    <nav aria-label={label} className={`animate-fade-in-up ${className}`}>
       <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <li>
           <Link
-            href="/"
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
+            href={homeHref}
+            className="flex items-center gap-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Home className="h-3.5 w-3.5" />
-            <span className="sr-only">Trang chủ</span>
+            <Home aria-hidden="true" className="h-3.5 w-3.5" />
+            <span className="sr-only">{homeLabel}</span>
           </Link>
         </li>
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-1.5">
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground/50" />
             {item.href && index < items.length - 1 ? (
               <Link
                 href={item.href}
-                className="hover:text-foreground transition-colors"
+                className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {item.label}
               </Link>

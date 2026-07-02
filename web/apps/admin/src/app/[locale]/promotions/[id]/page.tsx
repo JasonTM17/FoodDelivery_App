@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { apiGet, apiPatch } from '@/lib/api';
 import type { AdminPromotion } from '@/components/promotions/admin-promotions-types';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

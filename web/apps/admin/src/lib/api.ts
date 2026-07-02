@@ -4,6 +4,7 @@ import {
   type PaginationMeta,
   type TokenPair,
 } from '@foodflow/api-client';
+import { clearAdminSession } from '@/lib/admin-session';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -19,9 +20,7 @@ function setTokens(tokens: TokenPair): void {
 }
 
 function clearTokens(): void {
-  localStorage.removeItem('admin_token');
-  localStorage.removeItem('admin_refresh_token');
-  localStorage.removeItem('admin_user');
+  clearAdminSession();
 }
 
 function redirectToLocalizedLogin(): void {

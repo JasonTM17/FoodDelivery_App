@@ -10,7 +10,7 @@ import type {
 } from '@foodflow/api-client';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiDownload, apiGet, apiPost } from '@/lib/api';
 import { ReportExportForm } from './report-export-form';

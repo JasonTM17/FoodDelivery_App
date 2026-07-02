@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import PromotionForm from '@/components/promotions/promotion-form';
 import { Button } from '@/components/ui/button';
 import { Link, useRouter } from '@/navigation';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 
 export default function NewPromotionPage() {
   const router = useRouter();

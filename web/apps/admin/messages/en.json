@@ -98,11 +98,18 @@
   "topbar": {
     "searchPlaceholder": "Search...",
     "adminRole": "Administrator",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "openNavigation": "Open admin menu",
+    "accountMenu": "Open account menu",
+    "switchLanguage": "Switch language"
   },
   "sidebar": {
     "brand": "FoodFlow",
-    "logout": "Sign Out"
+    "adminBadge": "Admin",
+    "logout": "Sign Out",
+    "navigation": "Admin navigation",
+    "mobileTitle": "FoodFlow admin menu",
+    "mobileDescription": "Choose an area to manage the platform"
   },
   "breadcrumb": {
     "overview": "Overview",
@@ -114,6 +121,8 @@
     "promotions": "Promotions",
     "support": "Support",
     "analytics": "Analytics",
+    "reports": "Reports",
+    "exportJobs": "Data Exports",
     "settings": "Settings",
     "logs": "Logs",
     "aiMonitor": "AI Monitor"

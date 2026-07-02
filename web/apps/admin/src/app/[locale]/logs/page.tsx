@@ -8,7 +8,7 @@ import { apiDownload, apiGetEnvelope } from '@/lib/api';
 import type { AuditLogEntry, AuditLogFilters } from '@/components/audit/audit-log-types';
 import { AuditLogFilterBar } from '@/components/audit/audit-log-filter-bar';
 import { AuditLogTable } from '@/components/audit/audit-log-table';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { EmptyState } from '@foodflow/ui/empty-state';
 import { Skeleton } from '@foodflow/ui/skeleton';
 import { Button } from '@/components/ui/button';

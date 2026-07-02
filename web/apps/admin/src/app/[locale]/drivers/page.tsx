@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, MapPin, RefreshCw, ShieldX, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { EmptyState } from '@foodflow/ui/empty-state';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import { Skeleton } from '@foodflow/ui/skeleton';
 import { AdminDriversTable } from '@/components/drivers/admin-drivers-table';
 import { Button } from '@/components/ui/button';

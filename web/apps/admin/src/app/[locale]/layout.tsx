@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '@foodflow/i18n';
+import { RootLayoutClient } from '../root-layout-client';
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -10,8 +11,7 @@ interface LocaleLayoutProps {
 
 /**
  * Locale-scoped layout for admin app.
- * Provides NextIntlClientProvider for all routes under /[locale]/.
- * Nested inside app/layout.tsx (HTML shell + RootLayoutClient).
+ * Provides locale messages before the authenticated application shell renders.
  */
 export default async function LocaleLayout({
   children,
@@ -26,7 +26,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
+      <RootLayoutClient>{children}</RootLayoutClient>
     </NextIntlClientProvider>
   );
 }

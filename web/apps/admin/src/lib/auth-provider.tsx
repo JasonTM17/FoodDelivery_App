@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from '@/navigation'
+import { clearAdminSession } from '@/lib/admin-session'
 
 interface AuthState {
   token: string | null
@@ -23,7 +24,6 @@ const AuthContext = createContext<AuthState>({
 
 const TOKEN_KEY = 'admin_token'
 const USER_KEY = 'admin_user'
-const REFRESH_KEY = 'admin_refresh_token'
 const PUBLIC_PATHS = ['/login']
 
 export function useAuth(): AuthState {
@@ -45,9 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
-    localStorage.removeItem(REFRESH_KEY)
+    clearAdminSession()
     setTokenState(null)
     setUser(null)
     router.replace('/login')

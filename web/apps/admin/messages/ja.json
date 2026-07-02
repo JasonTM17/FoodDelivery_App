@@ -98,11 +98,18 @@
   "topbar": {
     "searchPlaceholder": "検索...",
     "adminRole": "管理者",
-    "notifications": "通知"
+    "notifications": "通知",
+    "openNavigation": "管理メニューを開く",
+    "accountMenu": "アカウントメニューを開く",
+    "switchLanguage": "言語を切り替える"
   },
   "sidebar": {
     "brand": "FoodFlow",
-    "logout": "ログアウト"
+    "adminBadge": "管理",
+    "logout": "ログアウト",
+    "navigation": "管理ナビゲーション",
+    "mobileTitle": "FoodFlow管理メニュー",
+    "mobileDescription": "プラットフォームを管理するエリアを選択します"
   },
   "breadcrumb": {
     "overview": "概要",
@@ -114,6 +121,8 @@
     "promotions": "プロモーション",
     "support": "サポート",
     "analytics": "分析",
+    "reports": "レポート",
+    "exportJobs": "データエクスポート",
     "settings": "設定",
     "logs": "ログ",
     "aiMonitor": "AIモニター"

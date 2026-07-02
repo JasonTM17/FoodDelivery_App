@@ -9,7 +9,7 @@ import type { AdminPromotion } from '@/components/promotions/admin-promotions-ty
 import { Button } from '@/components/ui/button';
 import { apiDelete, apiGet, apiPatch } from '@/lib/api';
 import { useRouter } from '@/navigation';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 
 interface PromotionsResponse {
   promotions: AdminPromotion[];

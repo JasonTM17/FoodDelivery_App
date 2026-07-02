@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPatch } from '@/lib/api';
 import { timeSince } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import TicketPriorityBadge from '@/components/badges/ticket-priority-badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

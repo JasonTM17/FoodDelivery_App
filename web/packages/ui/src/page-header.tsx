@@ -6,12 +6,28 @@ export interface PageHeaderProps {
   title: string
   description?: string
   actions?: React.ReactNode
+  breadcrumbLabel?: string
+  homeHref?: string
+  homeLabel?: string
 }
 
-export function PageHeader({ breadcrumbs, title, description, actions }: PageHeaderProps) {
+export function PageHeader({
+  breadcrumbs,
+  title,
+  description,
+  actions,
+  breadcrumbLabel,
+  homeHref,
+  homeLabel,
+}: PageHeaderProps) {
   return (
     <div className="space-y-4">
-      <Breadcrumb items={breadcrumbs} />
+      <Breadcrumb
+        items={breadcrumbs}
+        label={breadcrumbLabel}
+        homeHref={homeHref}
+        homeLabel={homeLabel}
+      />
       <div className="animate-fade-in-up flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-green-500 to-amber-500 bg-clip-text text-transparent">

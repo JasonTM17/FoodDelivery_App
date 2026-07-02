@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 import UsersTableClient from './users-table-client';
 import { getTranslations } from 'next-intl/server';
 

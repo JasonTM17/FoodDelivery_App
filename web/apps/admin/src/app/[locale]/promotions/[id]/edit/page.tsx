@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { apiGet } from '@/lib/api';
 import { Link, useRouter } from '@/navigation';
-import { PageHeader } from '@foodflow/ui/page-header';
+import { PageHeader } from '@/components/layout/admin-page-header';
 
 export default function EditPromotionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
