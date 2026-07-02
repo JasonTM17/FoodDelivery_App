@@ -1,5 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import { OrderStatus, PaymentMethod, PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
+import { SeedPriceRange, toDatabasePriceRange } from './seed-database-values'
 
 const prisma = new PrismaClient()
 
@@ -81,22 +82,26 @@ const RESTAURANT_TEMPLATES = [
 ]
 
 // ─── Menu data by restaurant type ───
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MENU_DATA: Record<string, any> = {
-  pho: [{
+type SeedMenuTemplate = {
+  cat: string
+  items: Array<{ name: string; price: number }>
+}
+
+const MENU_DATA: Record<string, SeedMenuTemplate> = {
+  pho: {
     cat: 'Phở', items: [
       { name: 'Phở bò tái', price: 55000 }, { name: 'Phở bò chín', price: 55000 },
       { name: 'Phở tái nạm', price: 65000 }, { name: 'Phở tái gầu', price: 65000 },
       { name: 'Phở gà', price: 50000 }, { name: 'Phở đặc biệt', price: 85000 },
       { name: 'Phở không thịt', price: 35000 },
     ]
-  }],
-  bun_bo: [{
+  },
+  bun_bo: {
     cat: 'Bún Bò', items: [
       { name: 'Bún bò đặc biệt', price: 55000 }, { name: 'Bún bò thập cẩm', price: 45000 },
       { name: 'Bún bò chay', price: 35000 }, { name: 'Bún bò giò heo', price: 60000 },
     ]
-  }],
+  },
   com_tam: {
     cat: 'Cơm Tấm', items: [
       { name: 'Cơm tấm sườn', price: 40000 }, { name: 'Cơm tấm sườn bì chả', price: 50000 },
@@ -227,7 +232,7 @@ async function main() {
     // Create restaurant with PostGIS point
     await prisma.$executeRawUnsafe(
       `INSERT INTO restaurants (id, name, slug, description, logo_url, cover_url, location, address_line, city, district, phone, cuisine_types, price_range, rating, total_reviews, is_open, is_active, prep_time_avg_minutes, min_order_amount, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', $9, $10, $11, $12::price_range_enum, $13, $14, true, true, $15, $16, NOW())`,
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', $9, $10, $11::text[], $12::"PriceRange", $13, $14, true, true, $15, $16, NOW())`,
       t.name, slug, `${t.name} - Món ngon mỗi ngày tại ${district.name}`,
       `https://picsum.photos/seed/${slug}/200/200`, `https://picsum.photos/seed/${slug}-cover/800/400`,
       lng, lat,
@@ -235,7 +240,7 @@ async function main() {
       district.name,
       `090${String(1000000 + i).slice(-7)}`,
       `{${t.cuisine.join(',')}}`,
-      t.price,
+      toDatabasePriceRange(t.price as SeedPriceRange),
       jitter(4.0, 20), randInt(10, 500),
       t.prep, randInt(0, 3) * 10000,
     )
@@ -358,7 +363,7 @@ async function main() {
       const labels = ['Nhà', 'Công ty', 'Trường học', 'Nhà bạn']
       await prisma.$executeRawUnsafe(
         `INSERT INTO addresses (id, user_id, label, address_line, location, is_default, created_at)
-         VALUES (gen_random_uuid(), $1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6, NOW())`,
+         VALUES (gen_random_uuid(), $1::uuid, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6, NOW())`,
         customer.id, a < labels.length ? labels[a] : `Địa chỉ ${a + 1}`,
         `${randInt(1, 500)} ${pick(STREETS)}, ${dist.name}`,
         addrLng, addrLat, a === 0,
@@ -384,7 +389,7 @@ async function main() {
   for (const p of promos) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO promotions (id, code, type, value, min_order_amount, max_discount, usage_limit, usage_count, starts_at, expires_at, is_active)
-       VALUES (gen_random_uuid(), $1, $2::promotion_type_enum, $3, $4, $5, $6, $7, $8, $9, $10)`,
+       VALUES (gen_random_uuid(), $1, $2::"PromotionType", $3, $4, $5, $6, $7, $8, $9, $10)`,
       p.code, p.type, p.value, p.minOrder, p.maxDiscount, p.limit, Math.random() > 0.3 ? randInt(0, p.limit) : 0,
       new Date('2026-01-01'), new Date('2026-12-31'), Math.random() > 0.2,
     )
@@ -392,7 +397,18 @@ async function main() {
   console.log(`✅ ${promos.length} promotions created`)
 
   // ─── 6. Historical Orders (500+) ───
-  const ORDER_STATUSES = ['completed', 'completed', 'completed', 'completed', 'completed', 'cancelled', 'completed', 'completed', 'completed', 'delivering']
+  const ORDER_STATUSES: OrderStatus[] = [
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.cancelled,
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.completed,
+    OrderStatus.delivering,
+  ]
   let ordersCreated = 0
 
   for (let i = 0; i < 500; i++) {
@@ -402,11 +418,11 @@ async function main() {
     const status = pick(ORDER_STATUSES)
 
     // Get a random address for this customer
-    const addresses = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
-      `SELECT id FROM addresses WHERE user_id = $1::uuid LIMIT 1`, customerId,
-    )
-    if (addresses.length === 0) continue
-    const addressId = addresses[0].id
+    const address = await prisma.address.findFirst({
+      where: { userId: customerId },
+      select: { id: true },
+    })
+    if (!address) continue
 
     // Get menu items for this restaurant
     const items = await prisma.menuItem.findMany({
@@ -415,22 +431,46 @@ async function main() {
     })
     if (items.length === 0) continue
 
-    const orderCode = `FD-${String(randInt(1, 31)).padStart(2, '0')}${String(randInt(1, 12)).padStart(2, '0')}${String(i + 1).padStart(4, '0')}-${String(randInt(1, 999)).padStart(3, '0')}`
-    const subtotal = items.reduce((sum, item) => sum + Number(item.basePrice) * randInt(1, 3), 0)
+    const orderCode = `FD${String(i + 1).padStart(10, '0')}`
+    const selectedItems = items.map(item => ({ item, quantity: randInt(1, 3) }))
+    const subtotal = selectedItems.reduce(
+      (sum, { item, quantity }) => sum + Number(item.basePrice) * quantity,
+      0,
+    )
     const deliveryFee = randInt(10000, 30000)
     const promotionDiscount = Math.random() > 0.7 ? randInt(5000, 30000) : 0
     const total = subtotal + deliveryFee - promotionDiscount
     const daysAgo = randInt(0, 60)
     const createdAt = new Date(Date.now() - daysAgo * 86400000 - randInt(0, 86400000))
 
-    try {
-      const order = await prisma.$executeRawUnsafe(
-        `INSERT INTO orders (id, order_code, customer_id, restaurant_id, driver_id, delivery_address_id, status, subtotal, delivery_fee, promotion_discount, total, payment_method, estimated_prep_time_minutes, created_at, updated_at)
-         VALUES (gen_random_uuid(), $1, $2::uuid, $3::uuid, $4::uuid, $5::uuid, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-        orderCode, customerId, restaurant.id, driverId, addressId, status, subtotal, deliveryFee, promotionDiscount, total, 'cash', restaurant.prep || 15, createdAt, createdAt,
-      )
-      ordersCreated++
-    } catch (e) { /* skip */ }
+    await prisma.order.create({
+      data: {
+        orderCode,
+        customerId,
+        restaurantId: restaurant.id,
+        driverId,
+        deliveryAddressId: address.id,
+        status,
+        subtotal,
+        deliveryFee,
+        promotionDiscount,
+        total,
+        paymentMethod: PaymentMethod.cash,
+        estimatedPrepTimeMinutes: restaurant.prep || 15,
+        createdAt,
+        updatedAt: createdAt,
+        orderItems: {
+          create: selectedItems.map(({ item, quantity }) => ({
+            menuItemId: item.id,
+            nameSnapshot: item.name,
+            quantity,
+            unitPrice: item.basePrice,
+            selectedOptions: [],
+          })),
+        },
+      },
+    })
+    ordersCreated++
   }
   console.log(`✅ ${ordersCreated} historical orders created`)
 

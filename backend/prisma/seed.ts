@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
+import { SeedPriceRange, toDatabasePriceRange } from './seed-database-values'
 
 const prisma = new PrismaClient()
 
@@ -55,7 +56,7 @@ async function main() {
 
     const restaurant = await prisma.$executeRawUnsafe(
       `INSERT INTO restaurants (id, name, slug, description, logo_url, cover_url, location, address_line, city, district, phone, cuisine_types, price_range, rating, total_reviews, is_open, is_active, prep_time_avg_minutes, min_order_amount, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', 'Quận 1', $9, $10, $11::price_range_enum, 4.5, ${50 + i * 23}, true, true, $12, $13, NOW())
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', 'Quận 1', $9, $10::text[], $11::"PriceRange", 4.5, ${50 + i * 23}, true, true, $12, $13, NOW())
        RETURNING id`,
       r.name, r.slug, `${r.name} - Món ngon mỗi ngày`,
       `https://picsum.photos/seed/${r.slug}/200/200`,
@@ -64,7 +65,7 @@ async function main() {
       `${100 + i} Đường Nguyễn Huệ, Phường Bến Nghé`,
       `09000001${i}`,
       `{${r.cuisine.join(',')}}`,
-      r.price,
+      toDatabasePriceRange(r.price as SeedPriceRange),
       r.prep, r.minOrder,
     )
 
@@ -155,7 +156,7 @@ async function main() {
     const aLng = 106.6980 + Math.random() * 0.01
     await prisma.$executeRawUnsafe(
       `INSERT INTO addresses (id, user_id, label, address_line, location, is_default, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), true, NOW())`,
+       VALUES (gen_random_uuid(), $1::uuid, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), true, NOW())`,
       customer.id, 'Nhà', `${100 + i * 10} Đường Lê Lợi, Phường Bến Thành, Quận 1`, aLng, aLat,
     )
   }
