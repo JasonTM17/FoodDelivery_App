@@ -24,7 +24,8 @@ All required vars documented in `.env.example`. Production must override:
 - `N8N_ENCRYPTION_KEY` — used to encrypt N8N credentials
 - `MINIO_SECRET_KEY` — min 8 chars
 - `POSTGRES_PASSWORD` — strong password
-- `GOOGLE_MAPS_API_KEY` — Google Cloud Console
+- `GOOGLE_MAPS_API_KEY` — backend Google Directions/Geocoding key
+- `NEXT_PUBLIC_GOOGLE_MAPS_KEY` — admin web browser key for the live driver map; restrict by HTTP referrer
 - `DEEPSEEK_API_KEY` — DeepSeek chatbot provider key; keep only in the deployment secret store
 - `DEEPSEEK_MODEL` — default `deepseek-v4-flash` unless the provider contract changes
 - `GEMINI_API_KEY` — Google AI Studio for legacy N8N/Gemini workflows
