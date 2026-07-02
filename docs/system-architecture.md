@@ -51,6 +51,16 @@ Driver GPS (3s interval)
   → Fallback: HTTP polling every 10s
 ```
 
+## Web Integration Contract
+
+Admin and Restaurant dashboards use locale-prefixed Next.js App Router routes (`/[locale]/...`) and share the web API envelope:
+
+- Success: `{ success: true, data, meta? }`
+- Error: RFC 7807 Problem Details with stable `code`
+- Pagination: collections in `data`, page context in `meta`
+
+The restaurant order flow used by web E2E is the same runtime path as customers: authenticated address lookup, cart item mutation, `POST /orders`, then restaurant status transitions through `/restaurant/orders/:id/status`. Admin order detail pages consume flattened order detail data from the admin resource service so UI fields do not depend on Prisma relation shapes.
+
 ## Driver Dispatch Algorithm
 
 1. GEOSEARCH Redis for online drivers within 5km

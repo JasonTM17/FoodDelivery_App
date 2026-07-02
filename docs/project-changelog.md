@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed (Batch 4 — Web/Backend Integration)
+- Registered the backend AI module so `POST /ai/chat` is available in the runtime app.
+- Scoped menu, cart, and order Zod validation pipes to request bodies so authenticated user and route params are not validated as payload objects.
+- Added authenticated `GET /users/addresses` support for real cart-to-order checkout flows.
+- Constrained generated order codes to the existing 12-character database column width.
+- Flattened admin order detail responses for address, customer, restaurant, driver, discount, note, and items fields used by Next.js pages.
+- Updated admin dynamic detail pages to use Next.js 14 client `params` objects directly.
+- Added accessible login error announcement on the restaurant web login page.
+
+### Test (Batch 4 — Web/Backend Integration)
+- Stabilized Playwright API helpers around real cart checkout, address lookup, restaurant profile lookup, menu item lookup, and restaurant order status transitions.
+- Verified the localized Batch 4 web E2E suite on Chromium and Firefox against local backend, database, Redis, and web dev servers.
+
 ### Added (Batch 3 — Stitch Finalize + Production Hardening)
 - Customer profile menu wired to loyalty/wallet/referral/help screens
 - Driver support contact buttons wired to `url_launcher` (tel/mailto/https)

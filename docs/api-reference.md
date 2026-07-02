@@ -34,6 +34,28 @@ Headers: Authorization: Bearer <token>
 Body: { refreshToken? }
 ```
 
+## Users
+
+### GET /users/addresses
+List the current user's address book. Requires user authentication.
+
+Response envelope:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "address-id",
+      "addressLine": "123 Le Loi",
+      "lat": 10.7769,
+      "lng": 106.7009,
+      "isDefault": true
+    }
+  ]
+}
+```
+
 ## Restaurants
 
 ### GET /restaurants/nearby
@@ -86,6 +108,8 @@ Place order from cart. Requires customer role.
 Body: { addressId, paymentMethod (cash|wallet|sepay), promotionCode?, notes? }
 Note: legacy `mock_wallet` requests are accepted and normalized to `wallet` internally.
 ```
+
+Order codes are generated as 12-character values using the `FDYYMMDDXXXX` pattern to match the database column width.
 
 ### GET /orders
 Get customer's order history.
@@ -261,15 +285,15 @@ Connect to `ws://localhost:3001` with namespace:
 
 ## Error Format
 
+Web/admin/restaurant API errors use RFC 7807 Problem Details directly, not the success envelope:
+
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "ORDER_NOT_FOUND",
-    "message": "Không tìm thấy đơn hàng",
-    "details": {}
-  },
-  "timestamp": "2026-06-04T18:15:00+07:00",
-  "path": "/api/orders/xxx"
+  "type": "https://api.foodflow.vn/errors/not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "Order not found",
+  "instance": "/api/orders/xxx",
+  "code": "ORDER_NOT_FOUND"
 }
 ```

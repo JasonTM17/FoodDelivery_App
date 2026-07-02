@@ -37,6 +37,17 @@
 
 ## v0.3 — Production
 
+### Batch 4 Web/Backend Parity
+- [x] RFC 7807 error formatting for web/admin/restaurant API clients
+- [x] AI chat module registered in the backend runtime path
+- [x] Restaurant menu/cart/order body validation scoped to request bodies
+- [x] Customer address lookup supports real cart-to-order E2E checkout
+- [x] Admin order detail payload flattened for Next.js detail routes
+- [x] Chromium and Firefox Playwright coverage for localized real order flows
+- [ ] Full axe serious/critical scan across Batch 4 pages
+- [ ] Visual regression against approved Stitch screens
+- [ ] Supabase/Vercel deployment validation after all local gates pass
+
 ### Auth + Security
 - [ ] JWT upgrade: HS256 → Ed25519 + JWKS — phase 1 dual-verify IN PROGRESS
 - [ ] Web Dockerfiles for admin + restaurant portals (P1-1 from audit)
