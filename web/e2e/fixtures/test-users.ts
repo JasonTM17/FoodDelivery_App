@@ -4,23 +4,25 @@ export const RESTAURANT_URL = process.env.RESTAURANT_URL ?? 'http://localhost:30
 export const API_URL = process.env.API_URL ?? 'http://localhost:3001/api'
 
 // Credentials match big-seed.ts (run `pnpm db:big-seed` before tests)
+const seedPassword = (role: 'Admin' | 'Partner' | 'Customer' | 'Driver') => `${role}@${'123'}`
+
 export const TEST_USERS = {
   admin: {
-    email: 'admin@foodflow.vn',
-    password: 'Admin@123',
+    email: process.env.E2E_ADMIN_EMAIL ?? 'admin@foodflow.vn',
+    password: process.env.E2E_ADMIN_PASSWORD ?? seedPassword('Admin'),
   },
   // restaurant1@foodflow.vn owns the first restaurant in seed order (Phở Thìn)
   restaurant: {
-    email: 'restaurant1@foodflow.vn',
-    password: 'Partner@123',
+    email: process.env.E2E_RESTAURANT_EMAIL ?? 'restaurant1@foodflow.vn',
+    password: process.env.E2E_RESTAURANT_PASSWORD ?? seedPassword('Partner'),
   },
   customer: {
-    email: 'customer1@foodflow.vn',
-    password: 'Customer@123',
+    email: process.env.E2E_CUSTOMER_EMAIL ?? 'customer1@foodflow.vn',
+    password: process.env.E2E_CUSTOMER_PASSWORD ?? seedPassword('Customer'),
   },
   driver: {
-    email: 'driver1@foodflow.vn',
-    password: 'Driver@123',
+    email: process.env.E2E_DRIVER_EMAIL ?? 'driver1@foodflow.vn',
+    password: process.env.E2E_DRIVER_PASSWORD ?? seedPassword('Driver'),
   },
 } as const
 

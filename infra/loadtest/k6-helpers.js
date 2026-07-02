@@ -22,11 +22,25 @@ export const AI_WEBHOOK = __ENV.AI_WEBHOOK || 'http://localhost:5678/webhook/ai-
 // Seed credentials (must match pnpm db:big-seed output)
 // ---------------------------------------------------------------------------
 
+const seedPassword = (role) => `${role}@${'123'}`
+
 export const CREDENTIALS = {
-  customer: { email: 'customer1@foodflow.vn', password: 'Customer@123' },
-  restaurant: { email: 'restaurant1@foodflow.vn', password: 'Partner@123' },
-  driver: { email: 'driver1@foodflow.vn', password: 'Driver@123' },
-  admin: { email: 'admin@foodflow.vn', password: 'Admin@123' },
+  customer: {
+    email: __ENV.CUSTOMER_EMAIL || 'customer1@foodflow.vn',
+    password: __ENV.CUSTOMER_PASSWORD || seedPassword('Customer'),
+  },
+  restaurant: {
+    email: __ENV.RESTAURANT_EMAIL || 'restaurant1@foodflow.vn',
+    password: __ENV.RESTAURANT_PASSWORD || seedPassword('Partner'),
+  },
+  driver: {
+    email: __ENV.DRIVER_EMAIL || 'driver1@foodflow.vn',
+    password: __ENV.DRIVER_PASSWORD || seedPassword('Driver'),
+  },
+  admin: {
+    email: __ENV.ADMIN_EMAIL || 'admin@foodflow.vn',
+    password: __ENV.ADMIN_PASSWORD || seedPassword('Admin'),
+  },
 }
 
 // ---------------------------------------------------------------------------

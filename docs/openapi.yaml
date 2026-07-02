@@ -154,7 +154,7 @@ components:
       required: [email, password, fullName]
       example:
         email: "nguyenvana@example.com"
-        password: "MatKhau@123"
+        password: "REPLACE_WITH_STRONG_PASSWORD"
         fullName: "Nguyễn Văn A"
         phone: "+84987654321"
         role: "customer"
@@ -167,7 +167,7 @@ components:
       required: [email, password]
       example:
         email: "customer1@foodflow.vn"
-        password: "Customer@123"
+        password: "REPLACE_WITH_TEST_PASSWORD"
 
     RefreshRequest:
       type: object
@@ -175,14 +175,14 @@ components:
         refreshToken: { type: string }
       required: [refreshToken]
       example:
-        refreshToken: "dGhpcyBpcyBhIHJvdGF0aW5nIG9wYXF1ZSByZWZyZXNoIHRva2Vu"
+        refreshToken: "REPLACE_WITH_OPAQUE_REFRESH_TOKEN"
 
     LogoutRequest:
       type: object
       properties:
         refreshToken: { type: string }
       example:
-        refreshToken: "dGhpcyBpcyBhIHJvdGF0aW5nIG9wYXF1ZSByZWZyZXNoIHRva2Vu"
+        refreshToken: "REPLACE_WITH_OPAQUE_REFRESH_TOKEN"
 
     ForgotPasswordRequest:
       type: object
@@ -199,8 +199,8 @@ components:
         password: { type: string, minLength: 8, maxLength: 72 }
       required: [token, password]
       example:
-        token: "eyJhbGciOiJFZERTQSJ9.xxx"
-        password: "MatKhauMoi@456"
+        token: "REPLACE_WITH_RESET_TOKEN"
+        password: "REPLACE_WITH_NEW_STRONG_PASSWORD"
 
     VerifyEmailRequest:
       type: object
@@ -945,7 +945,7 @@ components:
         deviceId: { type: string }
       required: [token, platform]
       example:
-        token: "fcm-device-token-abc123"
+        token: "REPLACE_WITH_FCM_TOKEN"
         platform: "android"
         deviceId: "device-001"
 
