@@ -1,20 +1,53 @@
 import { AlertCircle, ToggleLeft, ToggleRight, UserCircle, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 const CUISINE_OPTIONS = [
-  'Việt Nam', 'Trung Hoa', 'Nhật Bản', 'Hàn Quốc', 'Thái Lan',
-  'Ý', 'Fastfood', 'Chay', 'Hải sản', 'Lẩu', 'Nướng', 'Bánh mì',
-];
+  { value: 'vietnamese', labelKey: 'vietnamese' },
+  { value: 'chinese', labelKey: 'chinese' },
+  { value: 'japanese', labelKey: 'japanese' },
+  { value: 'korean', labelKey: 'korean' },
+  { value: 'thai', labelKey: 'thai' },
+  { value: 'italian', labelKey: 'italian' },
+  { value: 'fast_food', labelKey: 'fastFood' },
+  { value: 'vegetarian', labelKey: 'vegetarian' },
+  { value: 'seafood', labelKey: 'seafood' },
+  { value: 'hotpot', labelKey: 'hotpot' },
+  { value: 'grill', labelKey: 'grill' },
+  { value: 'banh_mi', labelKey: 'banhMi' },
+] as const;
+
+const CUISINE_ALIASES: Record<string, string> = {
+  'viet nam': 'vietnamese',
+  'mon viet': 'vietnamese',
+  'trung hoa': 'chinese',
+  'nhat ban': 'japanese',
+  'han quoc': 'korean',
+  'thai lan': 'thai',
+  y: 'italian',
+  fastfood: 'fast_food',
+  chay: 'vegetarian',
+  'hai san': 'seafood',
+  lau: 'hotpot',
+  nuong: 'grill',
+  'banh mi': 'banh_mi',
+};
+
+export function canonicalizeCuisineValues(values: string[]): string[] {
+  return Array.from(new Set(values.map(value => CUISINE_ALIASES[normalizeCuisineValue(value)] ?? value)));
+}
 
 export function ProfileHeader() {
+  const t = useTranslations('settings.profileForm');
+
   return (
     <div className="mb-6 flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
         <UserCircle className="h-5 w-5 text-brand-600" />
       </div>
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Hồ sơ nhà hàng</h1>
-        <p className="text-sm text-gray-500">Thông tin hiển thị cho khách hàng</p>
+        <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+        <p className="text-sm text-gray-500">{t('description')}</p>
       </div>
     </div>
   );
@@ -49,17 +82,19 @@ export function BasicInfoFields({
   cuisines: string[];
   onToggleCuisine: (cuisine: string) => void;
 }) {
+  const t = useTranslations('settings.profileForm.basic');
+
   return (
     <div className="card mb-6 space-y-4">
-      <h2 className="text-base font-semibold text-gray-900">Thông tin cơ bản</h2>
-      <TextField label="Tên nhà hàng" value={values.name} onChange={setters.setName} required />
+      <h2 className="text-base font-semibold text-gray-900">{t('title')}</h2>
+      <TextField label={t('name')} value={values.name} onChange={setters.setName} required />
       <div>
-        <label className="label">Mô tả</label>
+        <label className="label">{t('description')}</label>
         <textarea value={values.description} onChange={event => setters.setDescription(event.target.value)} rows={3} className="input-field resize-none" />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <TextField label="Địa chỉ" value={values.address} onChange={setters.setAddress} required />
-        <TextField label="Số điện thoại" value={values.phone} onChange={setters.setPhone} type="tel" required />
+        <TextField label={t('address')} value={values.address} onChange={setters.setAddress} required />
+        <TextField label={t('phone')} value={values.phone} onChange={setters.setPhone} type="tel" required />
       </div>
       <CuisinePicker cuisines={cuisines} onToggleCuisine={onToggleCuisine} />
     </div>
@@ -77,14 +112,19 @@ export function OperationsFields({
   setMinOrder: (value: string) => void;
   setIsOpen: (value: boolean) => void;
 }) {
+  const t = useTranslations('settings.profileForm.operations');
+
   return (
     <div className="card mb-6 space-y-4">
-      <h2 className="text-base font-semibold text-gray-900">Thiết lập vận hành</h2>
+      <h2 className="text-base font-semibold text-gray-900">{t('title')}</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <TextField label="Đơn tối thiểu (đ)" value={minOrder} onChange={setMinOrder} type="number" />
+        <TextField label={t('minOrder')} value={minOrder} onChange={setMinOrder} type="number" />
       </div>
       <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-        <div><p className="text-sm font-medium text-gray-900">Nhận đơn</p><p className="text-xs text-gray-500">Bật để nhà hàng hiển thị và nhận đơn mới</p></div>
+        <div>
+          <p className="text-sm font-medium text-gray-900">{t('acceptingOrders')}</p>
+          <p className="text-xs text-gray-500">{t('acceptingOrdersDescription')}</p>
+        </div>
         <button type="button" onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
           {isOpen ? <ToggleRight className="h-8 w-8 text-brand-500" /> : <ToggleLeft className="h-8 w-8 text-gray-400" />}
         </button>
@@ -117,18 +157,31 @@ function TextField({ label, value, onChange, type = 'text', required = false }: 
 }
 
 function CuisinePicker({ cuisines, onToggleCuisine }: { cuisines: string[]; onToggleCuisine: (cuisine: string) => void }) {
+  const t = useTranslations('settings.profileForm.cuisines');
+  const selectedCuisines = new Set(canonicalizeCuisineValues(cuisines));
+
   return (
     <div>
-      <label className="label">Ẩm thực</label>
+      <label className="label">{t('label')}</label>
       <div className="mt-1 flex flex-wrap gap-2">
         {CUISINE_OPTIONS.map(cuisine => (
-          <button key={cuisine} type="button" onClick={() => onToggleCuisine(cuisine)}
-            className={cn('rounded-full border px-3 py-1.5 text-xs font-medium transition-colors', cuisines.includes(cuisine) ? 'border-brand-500 bg-brand-500 text-white' : 'border-gray-300 text-gray-600 hover:border-brand-300 hover:text-brand-600')}
+          <button key={cuisine.value} type="button" onClick={() => onToggleCuisine(cuisine.value)}
+            className={cn('rounded-full border px-3 py-1.5 text-xs font-medium transition-colors', selectedCuisines.has(cuisine.value) ? 'border-brand-500 bg-brand-500 text-white' : 'border-gray-300 text-gray-600 hover:border-brand-300 hover:text-brand-600')}
           >
-            {cuisines.includes(cuisine) && <X className="mr-1 inline h-3 w-3" />}{cuisine}
+            {selectedCuisines.has(cuisine.value) && <X className="mr-1 inline h-3 w-3" />}
+            {t(`options.${cuisine.labelKey}`)}
           </button>
         ))}
       </div>
     </div>
   );
+}
+
+function normalizeCuisineValue(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ');
 }

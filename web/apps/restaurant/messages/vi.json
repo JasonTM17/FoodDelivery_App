@@ -317,7 +317,59 @@
     "description": "Cấu hình nhà hàng của bạn",
     "profile": "Hồ sơ nhà hàng",
     "hours": "Giờ mở cửa",
-    "general": "Cài đặt chung"
+    "general": "Cài đặt chung",
+    "profileForm": {
+      "title": "Hồ sơ nhà hàng",
+      "description": "Thông tin hiển thị cho khách hàng",
+      "loadError": "Không thể tải thông tin nhà hàng",
+      "uploadError": "Không thể tải ảnh lên. Vui lòng thử lại.",
+      "saveSuccess": "Đã lưu hồ sơ nhà hàng",
+      "saveError": "Không thể lưu thông tin",
+      "basic": {
+        "title": "Thông tin cơ bản",
+        "name": "Tên nhà hàng",
+        "description": "Mô tả",
+        "address": "Địa chỉ",
+        "phone": "Số điện thoại"
+      },
+      "operations": {
+        "title": "Thiết lập vận hành",
+        "minOrder": "Đơn tối thiểu (đ)",
+        "acceptingOrders": "Nhận đơn",
+        "acceptingOrdersDescription": "Bật để nhà hàng hiển thị và nhận đơn mới"
+      },
+      "cuisines": {
+        "label": "Ẩm thực",
+        "options": {
+          "vietnamese": "Việt Nam",
+          "chinese": "Trung Hoa",
+          "japanese": "Nhật Bản",
+          "korean": "Hàn Quốc",
+          "thai": "Thái Lan",
+          "italian": "Ý",
+          "fastFood": "Fastfood",
+          "vegetarian": "Chay",
+          "seafood": "Hải sản",
+          "hotpot": "Lẩu",
+          "grill": "Nướng",
+          "banhMi": "Bánh mì"
+        }
+      },
+      "images": {
+        "title": "Ảnh đại diện",
+        "cover": "Ảnh bìa (16:9)",
+        "logo": "Logo nhà hàng",
+        "uploadCover": "Nhấn để tải ảnh bìa",
+        "uploadLogo": "Nhấn để tải logo",
+        "logoHint": "Ảnh vuông, tối thiểu 200×200px. Định dạng JPG, PNG, WebP."
+      },
+      "saveBar": {
+        "lastUpdated": "Cập nhật lần cuối: {date}",
+        "uploading": "Đang tải ảnh...",
+        "saving": "Đang lưu...",
+        "save": "Lưu hồ sơ"
+      }
+    }
   },
   "settingsProfile": {
     "title": "Hồ sơ nhà hàng",

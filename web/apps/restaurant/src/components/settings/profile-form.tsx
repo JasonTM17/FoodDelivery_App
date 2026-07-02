@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { api, setStoredRestaurant } from '@/lib/api';
 import type { Restaurant } from '@/lib/types';
 import {
   AlertMessage,
   BasicInfoFields,
+  canonicalizeCuisineValues,
   OperationsFields,
   ProfileHeader,
   ProfileSkeleton,
@@ -35,18 +37,19 @@ export function ProfileForm() {
 
   const coverRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('settings.profileForm');
 
   useEffect(() => {
     (async () => {
       try {
         hydrateForm(await api.get<Restaurant>('/restaurant/profile'));
       } catch (err: unknown) {
-        setError((err as { message?: string }).message || 'Không thể tải thông tin nhà hàng');
+        setError((err as { message?: string }).message || t('loadError'));
       } finally {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [t]);
 
   const hydrateForm = (data: Restaurant) => {
     const extra = data as Restaurant & {
@@ -62,7 +65,7 @@ export function ProfileForm() {
     setAddress(data.address ?? data.addressLine ?? '');
     setPhone(data.phone);
     setIsOpen(data.isOpen ?? data.isActive);
-    setCuisines(extra.cuisines ?? data.cuisineTypes ?? []);
+    setCuisines(canonicalizeCuisineValues(extra.cuisines ?? data.cuisineTypes ?? []));
     setMinOrder(String(extra.minOrderAmount ?? 0));
     setCoverPreview(cover);
     setCoverUrl(cover);
@@ -84,7 +87,7 @@ export function ProfileForm() {
     setUploading(false);
 
     if (!uploaded) {
-      setError('Không thể tải ảnh lên. Vui lòng thử lại.');
+      setError(t('uploadError'));
       return;
     }
     if (type === 'cover') setCoverUrl(uploaded);
@@ -109,10 +112,10 @@ export function ProfileForm() {
       });
       hydrateForm(updated);
       setStoredRestaurant(updated);
-      setSuccess('Đã lưu hồ sơ nhà hàng');
+      setSuccess(t('saveSuccess'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Không thể lưu thông tin');
+      setError((err as { message?: string }).message || t('saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -148,7 +151,10 @@ export function ProfileForm() {
   );
 
   function toggleCuisine(cuisine: string) {
-    setCuisines(prev => (prev.includes(cuisine) ? prev.filter(item => item !== cuisine) : [...prev, cuisine]));
+    setCuisines(prev => {
+      const canonical = canonicalizeCuisineValues(prev);
+      return canonical.includes(cuisine) ? canonical.filter(item => item !== cuisine) : [...canonical, cuisine];
+    });
   }
 }
 

@@ -317,7 +317,59 @@
     "description": "レストランを設定する",
     "profile": "レストランプロフィール",
     "hours": "営業時間",
-    "general": "一般設定"
+    "general": "一般設定",
+    "profileForm": {
+      "title": "レストランプロフィール",
+      "description": "顧客に表示される情報",
+      "loadError": "レストラン情報を読み込めません",
+      "uploadError": "画像をアップロードできませんでした。もう一度お試しください。",
+      "saveSuccess": "レストランプロフィールを保存しました",
+      "saveError": "レストランプロフィールを保存できません",
+      "basic": {
+        "title": "基本情報",
+        "name": "レストラン名",
+        "description": "説明",
+        "address": "住所",
+        "phone": "電話番号"
+      },
+      "operations": {
+        "title": "運用設定",
+        "minOrder": "最低注文額（VND）",
+        "acceptingOrders": "注文受付",
+        "acceptingOrdersDescription": "オンにするとレストランを表示し、新規注文を受け付けます"
+      },
+      "cuisines": {
+        "label": "料理ジャンル",
+        "options": {
+          "vietnamese": "ベトナム料理",
+          "chinese": "中華",
+          "japanese": "日本料理",
+          "korean": "韓国料理",
+          "thai": "タイ料理",
+          "italian": "イタリアン",
+          "fastFood": "ファストフード",
+          "vegetarian": "ベジタリアン",
+          "seafood": "シーフード",
+          "hotpot": "鍋",
+          "grill": "グリル",
+          "banhMi": "バインミー"
+        }
+      },
+      "images": {
+        "title": "プロフィール画像",
+        "cover": "カバー画像（16:9）",
+        "logo": "レストランロゴ",
+        "uploadCover": "クリックしてカバー画像をアップロード",
+        "uploadLogo": "クリックしてロゴをアップロード",
+        "logoHint": "正方形画像、最低200×200px。JPG、PNG、WebP対応。"
+      },
+      "saveBar": {
+        "lastUpdated": "最終更新: {date}",
+        "uploading": "画像をアップロード中...",
+        "saving": "保存中...",
+        "save": "プロフィールを保存"
+      }
+    }
   },
   "settingsProfile": {
     "title": "レストランプロフィール",

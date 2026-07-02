@@ -317,7 +317,59 @@
     "description": "Configure your restaurant",
     "profile": "Restaurant profile",
     "hours": "Opening hours",
-    "general": "General settings"
+    "general": "General settings",
+    "profileForm": {
+      "title": "Restaurant profile",
+      "description": "Information shown to customers",
+      "loadError": "Could not load restaurant profile",
+      "uploadError": "Could not upload the image. Please try again.",
+      "saveSuccess": "Restaurant profile saved",
+      "saveError": "Could not save restaurant profile",
+      "basic": {
+        "title": "Basic information",
+        "name": "Restaurant name",
+        "description": "Description",
+        "address": "Address",
+        "phone": "Phone number"
+      },
+      "operations": {
+        "title": "Operations",
+        "minOrder": "Minimum order (VND)",
+        "acceptingOrders": "Accepting orders",
+        "acceptingOrdersDescription": "Turn on to show the restaurant and accept new orders"
+      },
+      "cuisines": {
+        "label": "Cuisine",
+        "options": {
+          "vietnamese": "Vietnamese",
+          "chinese": "Chinese",
+          "japanese": "Japanese",
+          "korean": "Korean",
+          "thai": "Thai",
+          "italian": "Italian",
+          "fastFood": "Fast food",
+          "vegetarian": "Vegetarian",
+          "seafood": "Seafood",
+          "hotpot": "Hotpot",
+          "grill": "Grill",
+          "banhMi": "Bánh mì"
+        }
+      },
+      "images": {
+        "title": "Profile images",
+        "cover": "Cover image (16:9)",
+        "logo": "Restaurant logo",
+        "uploadCover": "Click to upload cover image",
+        "uploadLogo": "Click to upload logo",
+        "logoHint": "Square image, at least 200×200px. JPG, PNG, or WebP."
+      },
+      "saveBar": {
+        "lastUpdated": "Last updated: {date}",
+        "uploading": "Uploading image...",
+        "saving": "Saving...",
+        "save": "Save profile"
+      }
+    }
   },
   "settingsProfile": {
     "title": "Restaurant Profile",
