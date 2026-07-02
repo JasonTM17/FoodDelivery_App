@@ -23,7 +23,7 @@ import type {
   RevenueBreakdownRow,
   RevenueSummary,
 } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDateInputValue } from '@/lib/utils';
 
 type Period = '7' | '30' | '90';
 
@@ -35,6 +35,7 @@ const PERIOD_OPTIONS: { id: Period; labelKey: 'last7' | 'last30' | 'last90' }[] 
 
 export default function RevenuePage() {
   const t = useTranslations('revenue');
+  const loadErrorMessage = t('loadError');
   const [period, setPeriod] = useState<Period>('7');
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [benchmark, setBenchmark] = useState<IndustryBenchmark | null>(null);
@@ -46,10 +47,11 @@ export default function RevenuePage() {
   const loadRevenue = useCallback(async (signal: AbortSignal) => {
     setLoading(true);
     setError(null);
-    const endDate = new Date().toISOString().slice(0, 10);
-    const startDate = new Date(Date.now() - Number(period) * 86_400_000)
-      .toISOString()
-      .slice(0, 10);
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - (Number(period) - 1));
+    const endDate = formatLocalDateInputValue(end);
+    const startDate = formatLocalDateInputValue(start);
 
     try {
       const [summaryData, benchmarkData, breakdownData] = await Promise.all([
@@ -66,11 +68,11 @@ export default function RevenuePage() {
       setSummary(null);
       setBenchmark(null);
       setDrillDown([]);
-      setError(cause instanceof Error ? cause.message : t('loadError'));
+      setError(cause instanceof Error ? cause.message : loadErrorMessage);
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [period, t]);
+  }, [loadErrorMessage, period]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -153,6 +155,8 @@ export default function RevenuePage() {
             avgOrderValue: benchmark.industry.avgOrderValue,
             repeatRate: benchmark.industry.repeatCustomerRate,
           }}
+          cohortSize={benchmark.cohortSize}
+          source={benchmark.source}
           updatedAt={benchmark.updatedAt}
         />
       )}

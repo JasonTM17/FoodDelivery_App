@@ -1,6 +1,7 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
+import { formatLocalDateInputValue } from '@/lib/utils';
 
 interface DateRangePickerProps {
   value: { start: string; end: string };
@@ -8,41 +9,50 @@ interface DateRangePickerProps {
   presets?: { label: string; days: number }[];
 }
 
-const DEFAULT_PRESETS = [
-  { label: '7 ngày', days: 7 },
-  { label: '30 ngày', days: 30 },
-  { label: '90 ngày', days: 90 },
-  { label: 'Năm nay', days: 365 },
-];
-
 export function DateRangePicker({
-  value, onChange, presets = DEFAULT_PRESETS,
+  value, onChange, presets,
 }: DateRangePickerProps) {
+  const t = useTranslations('shared.dateRange');
+  const resolvedPresets = presets ?? [
+    { label: t('presets.last7'), days: 7 },
+    { label: t('presets.last30'), days: 30 },
+    { label: t('presets.last90'), days: 90 },
+    { label: t('presets.last365'), days: 365 },
+  ];
+
   const applyPreset = (days: number) => {
-    const end = new Date().toISOString().slice(0, 10);
-    const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    onChange({ start, end });
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - Math.max(days - 1, 0));
+    onChange({
+      start: formatLocalDateInputValue(start),
+      end: formatLocalDateInputValue(end),
+    });
   };
 
   return (
-    <div className="flex items-center gap-3" data-testid="date-range-picker">
+    <div className="flex flex-wrap items-center gap-3" data-testid="date-range-picker">
       <div className="flex items-center gap-2">
         <input
           type="date"
           value={value.start}
           onChange={(e) => onChange({ ...value, start: e.target.value })}
+          aria-label={t('startDate')}
+          max={value.end || undefined}
           className="input-field w-36 text-sm"
         />
-        <span className="text-sm text-gray-400">-</span>
+        <span className="text-sm text-gray-400" aria-hidden="true">–</span>
         <input
           type="date"
           value={value.end}
           onChange={(e) => onChange({ ...value, end: e.target.value })}
+          aria-label={t('endDate')}
+          min={value.start || undefined}
           className="input-field w-36 text-sm"
         />
       </div>
-      <div className="flex gap-1">
-        {presets.map((preset) => (
+      <div className="flex flex-wrap gap-1" aria-label={t('presetsAria')}>
+        {resolvedPresets.map((preset) => (
           <button
             key={preset.days}
             type="button"

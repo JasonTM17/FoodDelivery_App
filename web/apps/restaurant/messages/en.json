@@ -359,6 +359,103 @@
       "last7": "7 days",
       "last30": "30 days",
       "last90": "90 days"
+    },
+    "benchmark": {
+      "title": "Industry benchmark",
+      "updatedAt": "Updated: {date}",
+      "cohortSource": "Compared with an anonymous cohort of {count} similar restaurants.",
+      "platformSource": "Fewer than 10 similar restaurants qualified; using an anonymous platform aggregate ({count} restaurants).",
+      "averageOrderValue": "Average order value",
+      "averageOrderValueProgress": "Average order value against the reference",
+      "repeatRate": "Repeat customer rate",
+      "repeatRateProgress": "Repeat customer rate against the reference",
+      "industryAverage": "Reference average: {value}",
+      "refreshCadence": "Data is refreshed quarterly"
+    },
+    "categoryMix": {
+      "title": "Revenue by category",
+      "empty": "No category revenue yet.",
+      "chartAria": "Category revenue chart, total {total}",
+      "total": "total",
+      "legendValue": "{amount} · {pct}%"
+    },
+    "hourly": {
+      "title": "Revenue by hour",
+      "empty": "No hourly revenue yet.",
+      "chartAria": "Hourly revenue bar chart",
+      "tooltip": "{hour}:00: {amount} ({count} orders)",
+      "peak": "Peak hours",
+      "offPeak": "Off-peak hours",
+      "tableCaption": "Hourly revenue data",
+      "hourLabel": "{hour}:00",
+      "columns": {
+        "hour": "Hour",
+        "revenue": "Revenue",
+        "orders": "Orders"
+      }
+    },
+    "paymentMethods": {
+      "title": "Payment methods",
+      "empty": "No payment data yet.",
+      "value": "{amount} · {pct}%",
+      "progressAria": "Revenue paid with {method}",
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "wallet": "E-wallet",
+        "sepay": "SePay",
+        "vnpay": "VNPay"
+      }
+    },
+    "sources": {
+      "title": "Order sources",
+      "empty": "No order-source data yet.",
+      "value": "{amount} · {pct}%",
+      "sources": {
+        "organic": "Organic",
+        "promotion": "Promotion",
+        "referral": "Referral",
+        "search": "Search"
+      }
+    },
+    "comparison": {
+      "title": "Comparison",
+      "lastWeek": "Previous period",
+      "lastMonth": "Same period 30 days earlier",
+      "insufficientData": "Insufficient data",
+      "unavailable": "Unavailable"
+    },
+    "export": {
+      "button": "Export report",
+      "csv": "Export CSV",
+      "excel": "Export Excel",
+      "menuAria": "Report export formats",
+      "emptyDisabled": "There is no data to export",
+      "defaultFilename": "revenue"
+    },
+    "daily": {
+      "empty": "No revenue in this period yet.",
+      "chartAria": "Daily revenue chart",
+      "tooltip": "{date}: {amount} ({count} orders)",
+      "tableCaption": "Daily revenue data",
+      "columns": {
+        "date": "Date",
+        "revenue": "Revenue",
+        "orders": "Orders"
+      }
+    }
+  },
+  "shared": {
+    "dateRange": {
+      "startDate": "Start date",
+      "endDate": "End date",
+      "presetsAria": "Quick date ranges",
+      "presets": {
+        "last7": "7 days",
+        "last30": "30 days",
+        "last90": "90 days",
+        "last365": "365 days"
+      }
     }
   },
   "reviews": {

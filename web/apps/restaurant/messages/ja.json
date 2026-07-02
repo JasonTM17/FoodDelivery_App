@@ -359,6 +359,103 @@
       "last7": "7日間",
       "last30": "30日間",
       "last90": "90日間"
+    },
+    "benchmark": {
+      "title": "業界ベンチマーク",
+      "updatedAt": "更新: {date}",
+      "cohortSource": "類似する{count}店舗の匿名グループと比較しています。",
+      "platformSource": "類似店舗が10店未満のため、匿名化されたプラットフォーム全体の集計を使用します（{count}店舗）。",
+      "averageOrderValue": "平均注文額",
+      "averageOrderValueProgress": "基準に対する平均注文額",
+      "repeatRate": "リピート顧客率",
+      "repeatRateProgress": "基準に対するリピート顧客率",
+      "industryAverage": "基準平均: {value}",
+      "refreshCadence": "データは四半期ごとに更新されます"
+    },
+    "categoryMix": {
+      "title": "カテゴリ別売上",
+      "empty": "カテゴリ別の売上データはまだありません。",
+      "chartAria": "カテゴリ別売上グラフ、合計{total}",
+      "total": "合計",
+      "legendValue": "{amount} · {pct}%"
+    },
+    "hourly": {
+      "title": "時間帯別売上",
+      "empty": "時間帯別の売上データはまだありません。",
+      "chartAria": "時間帯別売上の棒グラフ",
+      "tooltip": "{hour}時: {amount}（{count}件）",
+      "peak": "ピーク時間",
+      "offPeak": "閑散時間",
+      "tableCaption": "時間帯別売上データ",
+      "hourLabel": "{hour}時",
+      "columns": {
+        "hour": "時間",
+        "revenue": "売上",
+        "orders": "注文"
+      }
+    },
+    "paymentMethods": {
+      "title": "支払い方法",
+      "empty": "支払いデータはまだありません。",
+      "value": "{amount} · {pct}%",
+      "progressAria": "{method}による売上",
+      "methods": {
+        "cash": "現金",
+        "card": "カード",
+        "wallet": "電子ウォレット",
+        "sepay": "SePay",
+        "vnpay": "VNPay"
+      }
+    },
+    "sources": {
+      "title": "注文流入元",
+      "empty": "注文流入元のデータはまだありません。",
+      "value": "{amount} · {pct}%",
+      "sources": {
+        "organic": "自然流入",
+        "promotion": "プロモーション",
+        "referral": "紹介",
+        "search": "検索"
+      }
+    },
+    "comparison": {
+      "title": "比較",
+      "lastWeek": "前期間",
+      "lastMonth": "30日前の同期間",
+      "insufficientData": "データ不足",
+      "unavailable": "利用不可"
+    },
+    "export": {
+      "button": "レポートを出力",
+      "csv": "CSVを出力",
+      "excel": "Excelを出力",
+      "menuAria": "レポート出力形式",
+      "emptyDisabled": "出力するデータがありません",
+      "defaultFilename": "revenue"
+    },
+    "daily": {
+      "empty": "この期間の売上はまだありません。",
+      "chartAria": "日別売上グラフ",
+      "tooltip": "{date}: {amount}（{count}件）",
+      "tableCaption": "日別売上データ",
+      "columns": {
+        "date": "日付",
+        "revenue": "売上",
+        "orders": "注文"
+      }
+    }
+  },
+  "shared": {
+    "dateRange": {
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "presetsAria": "期間のクイック選択",
+      "presets": {
+        "last7": "7日間",
+        "last30": "30日間",
+        "last90": "90日間",
+        "last365": "365日間"
+      }
     }
   },
   "reviews": {

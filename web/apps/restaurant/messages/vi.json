@@ -359,6 +359,103 @@
       "last7": "7 ngày",
       "last30": "30 ngày",
       "last90": "90 ngày"
+    },
+    "benchmark": {
+      "title": "So sánh ngành",
+      "updatedAt": "Cập nhật: {date}",
+      "cohortSource": "So sánh với nhóm ẩn danh gồm {count} nhà hàng tương đồng.",
+      "platformSource": "Nhóm tương đồng chưa đủ 10 nhà hàng; dùng dữ liệu tổng hợp ẩn danh toàn nền tảng ({count} nhà hàng).",
+      "averageOrderValue": "Giá trị đơn trung bình",
+      "averageOrderValueProgress": "Giá trị đơn trung bình so với mốc tham chiếu",
+      "repeatRate": "Tỷ lệ khách quay lại",
+      "repeatRateProgress": "Tỷ lệ khách quay lại so với mốc tham chiếu",
+      "industryAverage": "Trung bình tham chiếu: {value}",
+      "refreshCadence": "Dữ liệu được cập nhật hàng quý"
+    },
+    "categoryMix": {
+      "title": "Phân bổ theo danh mục",
+      "empty": "Chưa có doanh thu theo danh mục.",
+      "chartAria": "Biểu đồ doanh thu theo danh mục, tổng {total}",
+      "total": "tổng",
+      "legendValue": "{amount} · {pct}%"
+    },
+    "hourly": {
+      "title": "Doanh thu theo giờ",
+      "empty": "Chưa có doanh thu theo giờ.",
+      "chartAria": "Biểu đồ cột doanh thu theo giờ",
+      "tooltip": "{hour} giờ: {amount} ({count} đơn)",
+      "peak": "Giờ cao điểm",
+      "offPeak": "Giờ thấp điểm",
+      "tableCaption": "Bảng dữ liệu doanh thu theo giờ",
+      "hourLabel": "{hour} giờ",
+      "columns": {
+        "hour": "Giờ",
+        "revenue": "Doanh thu",
+        "orders": "Đơn hàng"
+      }
+    },
+    "paymentMethods": {
+      "title": "Phương thức thanh toán",
+      "empty": "Chưa có dữ liệu thanh toán.",
+      "value": "{amount} · {pct}%",
+      "progressAria": "Doanh thu qua {method}",
+      "methods": {
+        "cash": "Tiền mặt",
+        "card": "Thẻ",
+        "wallet": "Ví điện tử",
+        "sepay": "SePay",
+        "vnpay": "VNPay"
+      }
+    },
+    "sources": {
+      "title": "Nguồn đơn hàng",
+      "empty": "Chưa có dữ liệu nguồn đơn hàng.",
+      "value": "{amount} · {pct}%",
+      "sources": {
+        "organic": "Tự nhiên",
+        "promotion": "Khuyến mãi",
+        "referral": "Giới thiệu",
+        "search": "Tìm kiếm"
+      }
+    },
+    "comparison": {
+      "title": "So sánh",
+      "lastWeek": "Kỳ trước",
+      "lastMonth": "Cùng kỳ 30 ngày trước",
+      "insufficientData": "Chưa đủ dữ liệu",
+      "unavailable": "Không có"
+    },
+    "export": {
+      "button": "Xuất báo cáo",
+      "csv": "Xuất CSV",
+      "excel": "Xuất Excel",
+      "menuAria": "Định dạng xuất báo cáo",
+      "emptyDisabled": "Chưa có dữ liệu để xuất",
+      "defaultFilename": "doanh-thu"
+    },
+    "daily": {
+      "empty": "Chưa có doanh thu trong kỳ này.",
+      "chartAria": "Biểu đồ doanh thu theo ngày",
+      "tooltip": "{date}: {amount} ({count} đơn)",
+      "tableCaption": "Bảng dữ liệu doanh thu theo ngày",
+      "columns": {
+        "date": "Ngày",
+        "revenue": "Doanh thu",
+        "orders": "Đơn hàng"
+      }
+    }
+  },
+  "shared": {
+    "dateRange": {
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "presetsAria": "Chọn nhanh khoảng ngày",
+      "presets": {
+        "last7": "7 ngày",
+        "last30": "30 ngày",
+        "last90": "90 ngày",
+        "last365": "365 ngày"
+      }
     }
   },
   "reviews": {

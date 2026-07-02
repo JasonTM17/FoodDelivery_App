@@ -1,18 +1,19 @@
 'use client';
 
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface PaymentMethodBarProps {
   data: { method: string; vnd: number; pct: number }[];
 }
 
-const METHOD_LABELS: Record<string, string> = {
-  cash: 'Tiền mặt',
-  card: 'Thẻ',
-  wallet: 'Ví',
-  sepay: 'Sepay',
-  vnpay: 'VNPay',
-};
+const METHOD_KEYS = {
+  cash: 'methods.cash',
+  card: 'methods.card',
+  wallet: 'methods.wallet',
+  sepay: 'methods.sepay',
+  vnpay: 'methods.vnpay',
+} as const;
 
 const METHOD_COLORS: Record<string, string> = {
   cash: '#10B981',
@@ -23,31 +24,54 @@ const METHOD_COLORS: Record<string, string> = {
 };
 
 export function PaymentMethodBar({ data }: PaymentMethodBarProps) {
-  const maxVal = Math.max(...data.map(d => d.vnd), 1);
+  const locale = useLocale();
+  const t = useTranslations('revenue.paymentMethods');
+  const maxValue = Math.max(...data.map((item) => item.vnd), 1);
 
   return (
     <div className="space-y-3" data-testid="payment-method-bar">
-      <h4 className="text-sm font-semibold text-gray-900">Phương thức thanh toán</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
 
-      <div className="space-y-2">
-        {data.map((d) => (
-          <div key={d.method} className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">{METHOD_LABELS[d.method] || d.method}</span>
-              <span className="text-gray-900 font-medium">{formatCurrency(d.vnd)}</span>
-            </div>
-            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${(d.vnd / maxVal) * 100}%`,
-                  backgroundColor: METHOD_COLORS[d.method] || '#6B7280',
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      {data.length === 0 ? (
+        <p className="rounded-lg border border-dashed p-8 text-center text-sm text-gray-500">
+          {t('empty')}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {data.map((item) => {
+            const labelKey = METHOD_KEYS[item.method as keyof typeof METHOD_KEYS];
+            const label = labelKey ? t(labelKey) : item.method;
+
+            return (
+              <div key={item.method} className="space-y-1">
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-gray-600">{label}</span>
+                  <span className="text-right font-medium text-gray-900">
+                    {t('value', {
+                      amount: formatCurrency(item.vnd, locale),
+                      pct: item.pct,
+                    })}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    role="progressbar"
+                    aria-label={t('progressAria', { method: label })}
+                    aria-valuemin={0}
+                    aria-valuemax={maxValue}
+                    aria-valuenow={item.vnd}
+                    style={{
+                      width: `${Math.max((item.vnd / maxValue) * 100, 0)}%`,
+                      backgroundColor: METHOD_COLORS[item.method] || '#6B7280',
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import type { RevenueSummary } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface RevenueSummaryCardsProps {
   summary: RevenueSummary;
@@ -11,30 +11,37 @@ interface RevenueSummaryCardsProps {
 }
 
 export function RevenueSummaryCards({ summary, industryAvg }: RevenueSummaryCardsProps) {
+  const locale = useLocale();
   const t = useTranslations('revenue');
   const promotionShare = summary.bySource.find(s => s.source === 'promotion')?.pct || 0;
+  const industryOrderAverage = industryAvg?.avgOrderValue ?? 0;
+  const industryDelta = industryOrderAverage > 0
+    ? Math.round(((summary.avg.orderValue - industryOrderAverage) / industryOrderAverage) * 100)
+    : undefined;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="revenue-summary-cards">
       <KpiCard
-        label={t('today')}
-        value={formatCurrency(summary.total.vnd)}
+        label={t('totalRevenue')}
+        value={formatCurrency(summary.total.vnd, locale)}
         delta={summary.delta.vsYesterday}
         sub={t('orderCount', { count: summary.total.orderCount })}
       />
       <KpiCard
         label={t('avgOrderValue')}
-        value={formatCurrency(summary.avg.orderValue)}
-        sub={industryAvg ? t('industryAverage', { amount: formatCurrency(industryAvg.avgOrderValue) }) : undefined}
-        delta={industryAvg ? Math.round(((summary.avg.orderValue - industryAvg.avgOrderValue) / industryAvg.avgOrderValue) * 100) : undefined}
+        value={formatCurrency(summary.avg.orderValue, locale)}
+        sub={industryOrderAverage > 0
+          ? t('industryAverage', { amount: formatCurrency(industryOrderAverage, locale) })
+          : undefined}
+        delta={industryDelta}
       />
       <KpiCard
         label={t('avgPerDay')}
-        value={formatCurrency(summary.avg.perDay)}
+        value={formatCurrency(summary.avg.perDay, locale)}
       />
       <KpiCard
         label={t('promotionTotal')}
-        value={formatCurrency(summary.bySource.find(s => s.source === 'promotion')?.vnd || 0)}
+        value={formatCurrency(summary.bySource.find(s => s.source === 'promotion')?.vnd || 0, locale)}
         sub={t('revenueShare', { pct: promotionShare })}
       />
     </div>
