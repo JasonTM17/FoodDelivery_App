@@ -5,6 +5,7 @@ import { AiToolsController } from './ai-tools.controller'
 import { AiChatController } from './ai-chat.controller'
 import { ChatClassifyController } from './chat-classify.controller'
 import { AiToolsService } from './ai-tools.service'
+import { AiChatService } from './ai-chat.service'
 import { AiServiceJwtStrategy } from './ai-service-jwt.strategy'
 import { ConversationMemoryService } from './conversation-memory.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
@@ -16,12 +17,13 @@ import { OutputFilterService } from './output-filter.service'
   controllers: [AiController, AiChatController, AiToolsController, ChatClassifyController],
   providers: [
     AiToolsService,
+    AiChatService,
     AiServiceJwtStrategy,
     ConversationMemoryService,
     SentimentDetectionService,
     ToolJustificationService,
     OutputFilterService,
   ],
-  exports: [ConversationMemoryService, SentimentDetectionService, ToolJustificationService, OutputFilterService],
+  exports: [AiChatService, ConversationMemoryService, SentimentDetectionService, ToolJustificationService, OutputFilterService],
 })
 export class AiModule {}
