@@ -388,6 +388,38 @@
     "title": "サポート",
     "description": "顧客サポートリクエストの管理"
   },
+  "supportDetail": {
+    "breadcrumbs": {
+      "admin": "Admin",
+      "support": "サポート"
+    },
+    "back": "戻る",
+    "notFound": "サポートチケットが見つかりません",
+    "replyPlaceholder": "返信を入力...",
+    "markdownSupported": "Markdown対応",
+    "send": "送信",
+    "sending": "送信中...",
+    "replyError": "返信を送信できません",
+    "userInfo": "ユーザー情報",
+    "order": "注文",
+    "ticketDetails": "チケット詳細",
+    "statusLabel": "ステータス",
+    "createdAt": "作成日",
+    "assignee": "担当者",
+    "unassigned": "未割り当て",
+    "slaOverdue": "SLA期限超過",
+    "initialDescription": "初期説明",
+    "status": {
+      "open": "未対応",
+      "inProgress": "対応中",
+      "resolved": "解決済み",
+      "closed": "クローズ"
+    }
+  },
+  "macros": {
+    "searchPlaceholder": "マクロを検索...",
+    "empty": "マクロが見つかりません"
+  },
   "driverMap": {
     "sidebarTitle": "オンライン配達員",
     "activeCount": "{count, plural, =0 {稼働中の配達員はいません} one {#人が稼働中} other {#人が稼働中}}",

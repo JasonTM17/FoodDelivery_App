@@ -388,6 +388,38 @@
     "title": "Hỗ trợ",
     "description": "Quản lý yêu cầu hỗ trợ từ khách hàng"
   },
+  "supportDetail": {
+    "breadcrumbs": {
+      "admin": "Admin",
+      "support": "Hỗ trợ"
+    },
+    "back": "Quay lại",
+    "notFound": "Không tìm thấy yêu cầu hỗ trợ",
+    "replyPlaceholder": "Nhập phản hồi...",
+    "markdownSupported": "Hỗ trợ Markdown",
+    "send": "Gửi",
+    "sending": "Đang gửi...",
+    "replyError": "Không thể gửi phản hồi",
+    "userInfo": "Thông tin người dùng",
+    "order": "Đơn hàng",
+    "ticketDetails": "Chi tiết ticket",
+    "statusLabel": "Trạng thái",
+    "createdAt": "Ngày tạo",
+    "assignee": "Người xử lý",
+    "unassigned": "Chưa phân công",
+    "slaOverdue": "SLA đã quá hạn",
+    "initialDescription": "Mô tả ban đầu",
+    "status": {
+      "open": "Mở",
+      "inProgress": "Đang xử lý",
+      "resolved": "Đã giải quyết",
+      "closed": "Đã đóng"
+    }
+  },
+  "macros": {
+    "searchPlaceholder": "Tìm macro...",
+    "empty": "Không tìm thấy macro"
+  },
   "driverMap": {
     "sidebarTitle": "Tài xế trực tuyến",
     "activeCount": "{count, plural, =0 {Không có tài xế hoạt động} one {# tài xế hoạt động} other {# tài xế hoạt động}}",

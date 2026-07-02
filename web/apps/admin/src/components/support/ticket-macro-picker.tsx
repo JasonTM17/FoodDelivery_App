@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Search, Zap } from 'lucide-react';
 import { applyMacro, type MacroTemplate, type MacroContext } from '@/lib/macro-engine';
+import { useTranslations } from 'next-intl';
 
 interface TicketMacroPickerProps {
   macros: MacroTemplate[];
@@ -26,6 +27,7 @@ export default function TicketMacroPicker({
   onSelect,
   className,
 }: TicketMacroPickerProps) {
+  const t = useTranslations('macros');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -62,7 +64,7 @@ export default function TicketMacroPicker({
           <div className="relative">
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Tìm macro..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -72,7 +74,7 @@ export default function TicketMacroPicker({
         </div>
         <ScrollArea className="h-64">
           {Object.keys(grouped).length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Không tìm thấy macro</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t('empty')}</p>
           ) : (
             <div className="p-1">
               {Object.entries(grouped).map(([category, items]) => (

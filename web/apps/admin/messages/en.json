@@ -388,6 +388,38 @@
     "title": "Support",
     "description": "Manage customer support requests"
   },
+  "supportDetail": {
+    "breadcrumbs": {
+      "admin": "Admin",
+      "support": "Support"
+    },
+    "back": "Back",
+    "notFound": "Support ticket not found",
+    "replyPlaceholder": "Write a reply...",
+    "markdownSupported": "Markdown supported",
+    "send": "Send",
+    "sending": "Sending...",
+    "replyError": "Could not send reply",
+    "userInfo": "User information",
+    "order": "Order",
+    "ticketDetails": "Ticket details",
+    "statusLabel": "Status",
+    "createdAt": "Created at",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "slaOverdue": "SLA is overdue",
+    "initialDescription": "Initial description",
+    "status": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  },
+  "macros": {
+    "searchPlaceholder": "Search macros...",
+    "empty": "No macros found"
+  },
   "driverMap": {
     "sidebarTitle": "Online drivers",
     "activeCount": "{count, plural, =0 {No active drivers} one {# active driver} other {# active drivers}}",

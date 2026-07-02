@@ -16,6 +16,13 @@ export interface MacroTemplate {
   tags: string[];
 }
 
+export interface DefaultMacroCopy {
+  refundFull: { name: string; body: string };
+  escalate: { name: string; body: string };
+  infoRequest: { name: string; body: string };
+  resolved: { name: string; body: string };
+}
+
 function get(obj: Record<string, unknown>, path: string): string {
   const keys = path.split('.');
   let current: unknown = obj;
@@ -38,41 +45,43 @@ export function extractVariables(template: string): string[] {
   return Array.from(new Set(vars));
 }
 
-export const DEFAULT_MACROS: MacroTemplate[] = [
-  {
-    id: 'macro_refund_full',
-    name: 'Hoàn tiền toàn bộ',
-    category: 'refund',
-    shortcut: '/refund',
-    body: 'Xin chào {{customer.name}},\n\nĐơn hàng {{order.id}} đã được hoàn tiền {{refund.amount}} vào ví FoodFlow. Thời gian xử lý: 3-5 ngày làm việc.\n\nTrân trọng,\n{{agent.name}}',
-    variables: ['customer.name', 'order.id', 'refund.amount', 'agent.name'],
-    tags: ['refund', 'resolved'],
-  },
-  {
-    id: 'macro_escalate',
-    name: 'Chuyển cấp quản lý',
-    category: 'escalation',
-    shortcut: '/escalate',
-    body: 'Xin chào {{customer.name}},\n\nYêu cầu của bạn đã được chuyển đến quản lý cấp cao để xử lý. Chúng tôi sẽ phản hồi trong vòng 24 giờ.\n\nTrân trọng,\n{{agent.name}}',
-    variables: ['customer.name', 'agent.name'],
-    tags: ['escalation'],
-  },
-  {
-    id: 'macro_info_request',
-    name: 'Yêu cầu thông tin thêm',
-    category: 'info',
-    shortcut: '/moreinfo',
-    body: 'Xin chào {{customer.name}},\n\nĐể xử lý yêu cầu của bạn nhanh hơn, vui lòng cung cấp thêm thông tin về:\n- Ảnh chụp màn hình lỗi\n- Thời gian xảy ra sự cố\n- Phiên bản ứng dụng\n\nTrân trọng,\n{{agent.name}}',
-    variables: ['customer.name', 'agent.name'],
-    tags: ['info_request'],
-  },
-  {
-    id: 'macro_resolved',
-    name: 'Đã giải quyết',
-    category: 'close',
-    shortcut: '/resolved',
-    body: 'Xin chào {{customer.name}},\n\nYêu cầu của bạn đã được xử lý xong. Nếu cần hỗ trợ thêm, vui lòng tạo yêu cầu mới.\n\nĐánh giá trải nghiệm: [link CSAT]\n\nTrân trọng,\n{{agent.name}}',
-    variables: ['customer.name', 'agent.name'],
-    tags: ['resolved', 'csat'],
-  },
-];
+export function createDefaultMacros(copy: DefaultMacroCopy): MacroTemplate[] {
+  return [
+    {
+      id: 'macro_refund_full',
+      name: copy.refundFull.name,
+      category: 'refund',
+      shortcut: '/refund',
+      body: copy.refundFull.body,
+      variables: ['customer.name', 'order.id', 'refund.amount', 'agent.name'],
+      tags: ['refund', 'resolved'],
+    },
+    {
+      id: 'macro_escalate',
+      name: copy.escalate.name,
+      category: 'escalation',
+      shortcut: '/escalate',
+      body: copy.escalate.body,
+      variables: ['customer.name', 'agent.name'],
+      tags: ['escalation'],
+    },
+    {
+      id: 'macro_info_request',
+      name: copy.infoRequest.name,
+      category: 'info',
+      shortcut: '/moreinfo',
+      body: copy.infoRequest.body,
+      variables: ['customer.name', 'agent.name'],
+      tags: ['info_request'],
+    },
+    {
+      id: 'macro_resolved',
+      name: copy.resolved.name,
+      category: 'close',
+      shortcut: '/resolved',
+      body: copy.resolved.body,
+      variables: ['customer.name', 'agent.name'],
+      tags: ['resolved', 'csat'],
+    },
+  ];
+}
