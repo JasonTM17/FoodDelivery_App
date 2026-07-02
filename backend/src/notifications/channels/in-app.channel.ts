@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { NotificationsGateway } from '../notifications.gateway'
 import { NotificationChannel, ChannelPayload, ChannelResult } from './notification-channel.interface'
 
@@ -8,7 +8,9 @@ export class InAppChannel implements NotificationChannel {
   private readonly logger = new Logger(InAppChannel.name)
 
   constructor(
-    @Optional() private readonly gateway?: NotificationsGateway,
+    @Optional()
+    @Inject(forwardRef(() => NotificationsGateway))
+    private readonly gateway?: NotificationsGateway,
   ) {}
 
   async send(userId: string, payload: ChannelPayload): Promise<ChannelResult> {

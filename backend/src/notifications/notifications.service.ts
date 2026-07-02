@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional, Inject, BadRequestException } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma } from '@prisma/client'
 import Redis from 'ioredis'
@@ -37,11 +37,13 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly templateLoader: TemplateLoader,
-    private readonly inApp: InAppChannel,
+    @Inject(forwardRef(() => InAppChannel)) private readonly inApp: InAppChannel,
     private readonly fcm: FcmChannel,
     private readonly smtp: SmtpChannel,
     private readonly twilio: TwilioChannel,
-    @Optional() private readonly gateway?: NotificationsGateway,
+    @Optional()
+    @Inject(forwardRef(() => NotificationsGateway))
+    private readonly gateway?: NotificationsGateway,
   ) {}
 
   async fanout(
