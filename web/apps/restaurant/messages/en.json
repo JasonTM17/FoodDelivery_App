@@ -92,7 +92,24 @@
   },
   "notifications": {
     "title": "Notifications",
-    "description": "View system notifications"
+    "description": "View system notifications",
+    "loading": "Loading notifications",
+    "loadError": "Could not load notifications",
+    "markReadError": "Could not update read status",
+    "retry": "Retry",
+    "justNow": "Just now",
+    "hoursAgo": "{count} hours ago",
+    "unreadCount": "{count} unread notifications",
+    "allRead": "All read",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "tabs": {
+      "all": "All",
+      "order": "Orders",
+      "message": "Messages",
+      "system": "System",
+      "stock": "Stock"
+    }
   },
   "settings": {
     "title": "Settings",

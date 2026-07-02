@@ -1,171 +1,191 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Bell, ShoppingBag, MessageSquare, AlertTriangle, Package, CheckCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Bell, CheckCheck } from 'lucide-react';
 import { api } from '@/lib/api';
-
-type NotifType = 'order' | 'message' | 'system' | 'stock';
-
-interface Notification {
-  id: string;
-  type: NotifType;
-  title: string;
-  body: string;
-  isRead: boolean;
-  createdAt: string;
-}
-
-const TYPE_CONFIG: Record<NotifType, { icon: React.ElementType; color: string; label: string }> = {
-  order:   { icon: ShoppingBag,    color: 'text-brand-600 bg-brand-100',  label: 'Đơn hàng' },
-  message: { icon: MessageSquare, color: 'text-blue-600 bg-blue-100',    label: 'Tin nhắn' },
-  system:  { icon: AlertTriangle, color: 'text-amber-600 bg-amber-100',  label: 'Hệ thống' },
-  stock:   { icon: Package,       color: 'text-red-600 bg-red-100',      label: 'Tồn kho' },
-};
-
-const TABS: { key: NotifType | 'all'; label: string }[] = [
-  { key: 'all',     label: 'Tất cả' },
-  { key: 'order',   label: 'Đơn hàng' },
-  { key: 'message', label: 'Tin nhắn' },
-  { key: 'system',  label: 'Hệ thống' },
-  { key: 'stock',   label: 'Tồn kho' },
-];
+import { cn } from '@/lib/utils';
+import { NotificationsErrorState, NotificationsLoadingState } from './notifications-feedback-states';
+import {
+  dateLocales,
+  getCategory,
+  tabs,
+  type Notification,
+  type NotificationCategory,
+  type NotificationsResponse,
+  typeConfig,
+} from './notifications-list-helpers';
 
 export function NotificationsList() {
+  const t = useTranslations('notifications');
+  const locale = useLocale();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<NotifType | 'all'>('all');
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<NotificationCategory | 'all'>('all');
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const [markingIds, setMarkingIds] = useState<Set<string>>(new Set());
+
+  const loadNotifications = () => {
+    setIsLoading(true);
+    setError(null);
+    api.get<NotificationsResponse>('/notifications')
+      .then(data => setNotifications(data.notifications ?? []))
+      .catch((err: Error) => setError(err.message || t('loadError')))
+      .finally(() => setIsLoading(false));
+  };
 
   useEffect(() => {
-    api.get<{ notifications: Notification[] }>('/notifications')
-      .then((data) => setNotifications(data.notifications))
-      .catch(() => {/* silently show empty list on error */})
-      .finally(() => setIsLoading(false));
+    loadNotifications();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+  const unreadCount = notifications.filter(notification => !notification.isRead).length;
+  const filtered = useMemo(
+    () => activeTab === 'all'
+      ? notifications
+      : notifications.filter(notification => getCategory(notification.type) === activeTab),
+    [activeTab, notifications],
+  );
 
   const markAllRead = async () => {
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
+    const previous = notifications;
+    setIsMarkingAll(true);
+    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
     try {
       await api.patch('/notifications/read-all');
-    } catch {
-      // optimistic update already applied; revert not needed
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError((err as { message?: string }).message || t('markReadError'));
+    } finally {
+      setIsMarkingAll(false);
     }
   };
 
   const markRead = async (id: string) => {
-    setNotifications((prev) => prev.map((notification) => (notification.id === id ? { ...notification, isRead: true } : notification)));
+    const previous = notifications;
+    setMarkingIds(prev => new Set(prev).add(id));
+    setNotifications(prev => prev.map(notification => (
+      notification.id === id ? { ...notification, isRead: true } : notification
+    )));
     try {
       await api.patch(`/notifications/${id}/read`);
-    } catch {
-      // optimistic update already applied
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError((err as { message?: string }).message || t('markReadError'));
+    } finally {
+      setMarkingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
-  const filtered = activeTab === 'all' ? notifications : notifications.filter((n) => n.type === activeTab);
-
   const formatTime = (iso: string) => {
     const date = new Date(iso);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffH = Math.floor(diffMs / 3600000);
-    if (diffH < 1) return 'Vừa xong';
-    if (diffH < 24) return `${diffH} giờ trước`;
-    return date.toLocaleDateString('vi-VN');
+    const diffHours = Math.floor((Date.now() - date.getTime()) / 3_600_000);
+    if (diffHours < 1) return t('justNow');
+    if (diffHours < 24) return t('hoursAgo', { count: diffHours });
+    return date.toLocaleDateString(dateLocales[locale] ?? 'vi-VN');
   };
 
   if (isLoading) {
+    return <NotificationsLoadingState label={t('loading')} />;
+  }
+
+  if (error && notifications.length === 0) {
     return (
-      <div className="space-y-2">
-        <div className="h-10 w-40 animate-pulse rounded-lg bg-gray-100 mb-6" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-50 border border-gray-200" />
-        ))}
-      </div>
+      <NotificationsErrorState title={t('loadError')} error={error} retryLabel={t('retry')} onRetry={loadNotifications} />
     );
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
-            <Bell className="h-5 w-5 text-purple-600" />
+            <Bell className="h-5 w-5 text-purple-600" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Thông báo</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
             <p className="text-sm text-gray-500">
-              {unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Tất cả đã đọc'}
+              {unreadCount > 0 ? t('unreadCount', { count: unreadCount }) : t('allRead')}
             </p>
           </div>
         </div>
-        {unreadCount > 0 && (
-          <button onClick={markAllRead} className="btn-secondary flex items-center gap-1.5">
-            <CheckCheck className="h-4 w-4" />
-            Đánh dấu tất cả đã đọc
+        {unreadCount > 0 ? (
+          <button
+            onClick={markAllRead}
+            disabled={isMarkingAll}
+            className="btn-secondary flex items-center gap-1.5"
+          >
+            <CheckCheck className="h-4 w-4" aria-hidden="true" />
+            {t('markAllRead')}
           </button>
-        )}
+        ) : null}
       </div>
 
-      <div className="flex gap-1 mb-4 border-b border-gray-200">
-        {TABS.map((tab) => {
-          const count = tab.key === 'all'
-            ? notifications.filter((notification) => !notification.isRead).length
-            : notifications.filter((notification) => notification.type === tab.key && !notification.isRead).length;
+      {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+
+      <div className="mb-4 flex gap-1 border-b border-gray-200">
+        {tabs.map(tab => {
+          const count = notifications.filter(notification => (
+            !notification.isRead && (tab === 'all' || getCategory(notification.type) === tab)
+          )).length;
           return (
             <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn('flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px',
-                activeTab === tab.key
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+                activeTab === tab
                   ? 'border-brand-500 text-brand-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')}
-            >
-              {tab.label}
-              {count > 0 && (
-                <span className="inline-flex items-center justify-center h-4.5 min-w-[1.1rem] px-1 text-xs font-semibold rounded-full bg-brand-500 text-white leading-none py-0.5">
-                  {count}
-                </span>
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
               )}
+            >
+              {t(`tabs.${tab}`)}
+              {count > 0 ? <span className="inline-flex h-4.5 min-w-[1.1rem] items-center justify-center rounded-full bg-brand-500 px-1 py-0.5 text-xs font-semibold leading-none text-white">{count}</span> : null}
             </button>
           );
         })}
       </div>
 
       <div className="space-y-2">
-        {filtered.length === 0 && (
-          <div className="card text-center py-12">
-            <Bell className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Không có thông báo nào</p>
+        {filtered.length === 0 ? (
+          <div className="card py-12 text-center">
+            <Bell className="mx-auto mb-3 h-10 w-10 text-gray-300" aria-hidden="true" />
+            <p className="text-sm text-gray-500">{t('empty')}</p>
           </div>
-        )}
-        {filtered.map((notif) => {
-          const cfg = TYPE_CONFIG[notif.type];
-          const Icon = cfg.icon;
+        ) : null}
+        {filtered.map((notification) => {
+          const category = getCategory(notification.type);
+          const config = typeConfig[category];
+          const Icon = config.icon;
           return (
             <button
-              key={notif.id}
-              onClick={() => markRead(notif.id)}
-              className={cn('w-full text-left rounded-xl border p-4 transition-all hover:shadow-sm',
-                notif.isRead ? 'bg-white border-gray-200' : 'bg-brand-50/40 border-brand-100')}
+              key={notification.id}
+              onClick={() => markRead(notification.id)}
+              disabled={markingIds.has(notification.id)}
+              className={cn(
+                'w-full rounded-xl border p-4 text-left transition-all hover:shadow-sm',
+                notification.isRead ? 'border-gray-200 bg-white' : 'border-brand-100 bg-brand-50/40',
+              )}
             >
               <div className="flex items-start gap-3">
-                <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg shrink-0', cfg.color)}>
-                  <Icon className="h-4 w-4" />
+                <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', config.color)}>
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={cn('text-sm', notif.isRead ? 'font-medium text-gray-700' : 'font-semibold text-gray-900')}>
-                      {notif.title}
+                    <p className={cn('text-sm', notification.isRead ? 'font-medium text-gray-700' : 'font-semibold text-gray-900')}>
+                      {notification.title}
                     </p>
-                    <span className="text-xs text-gray-400 shrink-0 mt-0.5">{formatTime(notif.createdAt)}</span>
+                    <span className="mt-0.5 shrink-0 text-xs text-gray-400">{formatTime(notification.createdAt)}</span>
                   </div>
-                  <p className="text-sm text-gray-500 mt-0.5 truncate">{notif.body}</p>
+                  <p className="mt-0.5 truncate text-sm text-gray-500">{notification.body}</p>
                 </div>
-                {!notif.isRead && (
-                  <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0 mt-1.5" />
-                )}
+                {!notification.isRead ? <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" /> : null}
               </div>
             </button>
           );

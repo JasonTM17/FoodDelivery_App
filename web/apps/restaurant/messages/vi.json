@@ -92,7 +92,24 @@
   },
   "notifications": {
     "title": "Thông báo",
-    "description": "Xem thông báo từ hệ thống"
+    "description": "Xem thông báo từ hệ thống",
+    "loading": "Đang tải thông báo",
+    "loadError": "Không tải được thông báo",
+    "markReadError": "Không thể cập nhật trạng thái đã đọc",
+    "retry": "Thử lại",
+    "justNow": "Vừa xong",
+    "hoursAgo": "{count} giờ trước",
+    "unreadCount": "{count} thông báo chưa đọc",
+    "allRead": "Tất cả đã đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "empty": "Không có thông báo nào",
+    "tabs": {
+      "all": "Tất cả",
+      "order": "Đơn hàng",
+      "message": "Tin nhắn",
+      "system": "Hệ thống",
+      "stock": "Tồn kho"
+    }
   },
   "settings": {
     "title": "Cài đặt",
