@@ -11,10 +11,18 @@ Thumbs.db
 ehthumbs.db
 
 # Claude / AI assistants — private state
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+CLAUDE.local.md
+AGENTS.local.md
+GEMINI.local.md
 .claude*
 .omc/
 .codex/
 .commandcode/
+.mcp.json
+.cursor/mcp.json
 
 # Private plans & notes
 plans/
@@ -39,6 +47,12 @@ release-manifest.json
 .env.*
 !.env.example
 !.env.production.example
+.envrc
+*.local.env
+*.secret
+*.secrets
+secrets/
+credentials/
 
 # Node
 node_modules/
@@ -47,6 +61,13 @@ node_modules/
 
 # Docker
 .docker/
+
+# Provider CLI local state
+.vercel/
+.netlify/
+supabase/.branches/
+supabase/.temp/
+.supabase/
 
 # Logs (runtime log dirs only — not source-code page routes)
 *.log
@@ -75,4 +96,21 @@ out/
 # Misc
 *.pem
 *.key
+*.p12
+*.pfx
+*.jks
+*.crt
+*.csr
+id_rsa
+id_ed25519
+credentials*.json
+service-account*.json
+*service_account*.json
+firebase-adminsdk*.json
+google-credentials*.json
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.backup
 backend/coverage-orders/
