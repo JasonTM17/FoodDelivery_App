@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/navigation';
 import { Tag } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { PromotionForm } from '@/components/promotions/promotion-form';
 import { fetchPromotion, updatePromotion } from '@/lib/actions/promotion-actions';
 import type { Promotion } from '@/lib/types';
@@ -13,6 +14,8 @@ export default function PromotionEditPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const t = useTranslations('promotions.editPage');
+  const loadErrorMessage = t('loadError');
   const [promotion, setPromotion] = useState<Promotion | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,14 +29,14 @@ export default function PromotionEditPage({
           if (!cancelled) setPromotion(data);
         })
         .catch((err: unknown) => {
-          if (!cancelled) setError((err as { message?: string }).message || 'Không thể tải khuyến mãi');
+          if (!cancelled) setError((err as { message?: string }).message || loadErrorMessage);
         })
         .finally(() => {
           if (!cancelled) setLoading(false);
         });
     });
     return () => { cancelled = true; };
-  }, [params]);
+  }, [params, loadErrorMessage]);
 
   const handleSubmit = async (data: Partial<Promotion>) => {
     if (!promotion) return;
@@ -43,7 +46,7 @@ export default function PromotionEditPage({
       const updated = await updatePromotion(promotion.id, data);
       router.push(`/promotions/${updated.id}`);
     } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Không thể cập nhật khuyến mãi');
+      setError((err as { message?: string }).message || t('submitError'));
       setIsSubmitting(false);
     }
   };
@@ -59,7 +62,7 @@ export default function PromotionEditPage({
 
   if (error && !promotion) {
     return (
-      <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
+      <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700" role="alert">{error}</div>
     );
   }
 
@@ -70,13 +73,13 @@ export default function PromotionEditPage({
           <Tag className="h-5 w-5 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Chỉnh sửa khuyến mãi</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-sm text-gray-500">{promotion?.name}</p>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6" role="alert">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}

@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from '@/navigation';
 import { Tag } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { PromotionForm } from '@/components/promotions/promotion-form';
 import { createPromotion } from '@/lib/actions/promotion-actions';
 import type { Promotion } from '@/lib/types';
 
 export default function PromotionNewPage() {
   const router = useRouter();
+  const t = useTranslations('promotions.newPage');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,7 +21,7 @@ export default function PromotionNewPage() {
       const created = await createPromotion(data);
       router.push(`/promotions/${created.id}`);
     } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Không thể tạo khuyến mãi');
+      setError((err as { message?: string }).message || t('submitError'));
       setIsSubmitting(false);
     }
   };
@@ -31,13 +33,13 @@ export default function PromotionNewPage() {
           <Tag className="h-5 w-5 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Tạo khuyến mãi mới</h1>
-          <p className="text-sm text-gray-500">Thiết lập chương trình khuyến mãi</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-sm text-gray-500">{t('description')}</p>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6" role="alert">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}

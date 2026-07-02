@@ -814,6 +814,77 @@
         "email": "メール",
         "sms": "SMS"
       }
+    },
+    "schedule": {
+      "title": "プロモーション期間",
+      "validFrom": "開始日",
+      "validUntil": "終了日",
+      "recurring": "繰り返し",
+      "weekly": "毎週",
+      "monthly": "毎月",
+      "dayOfMonth": "月の日付",
+      "days": {
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土",
+        "sun": "日"
+      }
+    },
+    "comboBuilder": {
+      "bogofTitle": "Buy X Get Y 設定",
+      "comboTitle": "コンボ設定",
+      "buy": "購入",
+      "get": "付与",
+      "itemUnit": "品",
+      "comboPrice": "コンボ価格"
+    },
+    "typePicker": {
+      "percent": {
+        "label": "割合割引",
+        "description": "注文金額の割合で割引"
+      },
+      "fixed": {
+        "label": "定額割引",
+        "description": "固定金額を割引"
+      },
+      "bogof": {
+        "label": "Buy X Get Y",
+        "description": "一定数量の購入で商品を付与"
+      },
+      "combo": {
+        "label": "コンボ",
+        "description": "複数商品を固定コンボ価格で提供"
+      }
+    },
+    "roiChart": {
+      "title": "プロモーション売上と費用",
+      "chartAria": "プロモーション売上と割引費用のグラフ",
+      "revenue": "プロモーション売上",
+      "discount": "割引費用"
+    },
+    "itemSelector": {
+      "searchPlaceholder": "商品を検索...",
+      "loadError": "メニュー商品を読み込めません",
+      "retry": "再試行",
+      "empty": "商品が見つかりません"
+    },
+    "newPage": {
+      "title": "新しいプロモーションを作成",
+      "description": "プロモーションキャンペーンを設定します",
+      "submitError": "プロモーションを作成できません",
+      "errorBoundary": {
+        "title": "プロモーションキャンペーンを作成できません",
+        "description": "問題が発生しました。もう一度お試しください。",
+        "retry": "再試行"
+      }
+    },
+    "editPage": {
+      "title": "プロモーションを編集",
+      "loadError": "プロモーションを読み込めません",
+      "submitError": "プロモーションを更新できません"
     }
   },
   "analytics": {

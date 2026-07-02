@@ -814,6 +814,77 @@
         "email": "Email",
         "sms": "SMS"
       }
+    },
+    "schedule": {
+      "title": "Promotion schedule",
+      "validFrom": "Start date",
+      "validUntil": "End date",
+      "recurring": "Recurring",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "dayOfMonth": "Day of month",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "comboBuilder": {
+      "bogofTitle": "Buy X get Y configuration",
+      "comboTitle": "Combo configuration",
+      "buy": "Buy",
+      "get": "Get",
+      "itemUnit": "items",
+      "comboPrice": "Combo price"
+    },
+    "typePicker": {
+      "percent": {
+        "label": "Percent off",
+        "description": "Discount by order percentage"
+      },
+      "fixed": {
+        "label": "Fixed amount",
+        "description": "Discount a fixed amount"
+      },
+      "bogof": {
+        "label": "Buy X get Y",
+        "description": "Reward items after a quantity threshold"
+      },
+      "combo": {
+        "label": "Combo",
+        "description": "Multiple items at a fixed combo price"
+      }
+    },
+    "roiChart": {
+      "title": "Promotion revenue and cost",
+      "chartAria": "Promotion revenue and discount cost chart",
+      "revenue": "Promotion revenue",
+      "discount": "Discount cost"
+    },
+    "itemSelector": {
+      "searchPlaceholder": "Search items...",
+      "loadError": "Could not load menu items",
+      "retry": "Retry",
+      "empty": "No items found"
+    },
+    "newPage": {
+      "title": "Create new promotion",
+      "description": "Set up a promotion campaign",
+      "submitError": "Could not create promotion",
+      "errorBoundary": {
+        "title": "Could not create promotion campaign",
+        "description": "Something went wrong. Please try again.",
+        "retry": "Retry"
+      }
+    },
+    "editPage": {
+      "title": "Edit promotion",
+      "loadError": "Could not load promotion",
+      "submitError": "Could not update promotion"
     }
   },
   "analytics": {

@@ -1,7 +1,7 @@
 'use client';
 
-import { ArrowRight, Plus, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface ComboConfig {
   buy: number;
@@ -17,17 +17,18 @@ interface PromotionComboBuilderProps {
 }
 
 export function PromotionComboBuilder({ type, value, onChange }: PromotionComboBuilderProps) {
+  const t = useTranslations('promotions.comboBuilder');
   const config = value || { buy: 2, get: 1, getItemIds: [] };
 
   return (
     <div className="space-y-3" data-testid="promotion-combo-builder">
       <h4 className="text-sm font-semibold text-gray-900">
-        {type === 'bogof' ? 'Cấu hình Mua X tặng Y' : 'Cấu hình Combo'}
+        {type === 'bogof' ? t('bogofTitle') : t('comboTitle')}
       </h4>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Mua</span>
+          <span className="text-sm text-gray-600">{t('buy')}</span>
           <input
             type="number"
             value={config.buy}
@@ -35,13 +36,13 @@ export function PromotionComboBuilder({ type, value, onChange }: PromotionComboB
             className="input-field w-16 text-center"
             min={1}
           />
-          <span className="text-sm text-gray-600">món</span>
+          <span className="text-sm text-gray-600">{t('itemUnit')}</span>
         </div>
 
         <ArrowRight className="h-5 w-5 text-brand-500" />
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Tặng</span>
+          <span className="text-sm text-gray-600">{t('get')}</span>
           <input
             type="number"
             value={config.get}
@@ -49,13 +50,13 @@ export function PromotionComboBuilder({ type, value, onChange }: PromotionComboB
             className="input-field w-16 text-center"
             min={1}
           />
-          <span className="text-sm text-gray-600">món</span>
+          <span className="text-sm text-gray-600">{t('itemUnit')}</span>
         </div>
       </div>
 
       {type === 'combo' && (
         <div>
-          <label className="label">Giá combo</label>
+          <label className="label">{t('comboPrice')}</label>
           <input
             type="number"
             value={config.comboPrice ?? ''}

@@ -1,6 +1,8 @@
 'use client';
 
 import { Percent, DollarSign, Gift, Package } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import type { PromotionType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -9,14 +11,16 @@ interface PromotionTypePickerProps {
   onChange: (type: PromotionType) => void;
 }
 
-const TYPES: { value: PromotionType; label: string; description: string; icon: React.ReactNode }[] = [
-  { value: 'percent', label: 'Giảm %', description: 'Giảm theo phần trăm đơn hàng', icon: <Percent className="h-5 w-5" /> },
-  { value: 'fixed', label: 'Giảm tiền', description: 'Giảm số tiền cố định', icon: <DollarSign className="h-5 w-5" /> },
-  { value: 'bogof', label: 'Mua X tặng Y', description: 'Mua số lượng nhất định được tặng món', icon: <Gift className="h-5 w-5" /> },
-  { value: 'combo', label: 'Combo', description: 'Combo nhiều món giá cố định', icon: <Package className="h-5 w-5" /> },
+const TYPES: { value: PromotionType; icon: ReactNode }[] = [
+  { value: 'percent', icon: <Percent className="h-5 w-5" /> },
+  { value: 'fixed', icon: <DollarSign className="h-5 w-5" /> },
+  { value: 'bogof', icon: <Gift className="h-5 w-5" /> },
+  { value: 'combo', icon: <Package className="h-5 w-5" /> },
 ];
 
 export function PromotionTypePicker({ value, onChange }: PromotionTypePickerProps) {
+  const t = useTranslations('promotions.typePicker');
+
   return (
     <div className="grid grid-cols-2 gap-3" data-testid="promotion-type-picker">
       {TYPES.map((type) => (
@@ -38,8 +42,8 @@ export function PromotionTypePicker({ value, onChange }: PromotionTypePickerProp
             {type.icon}
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">{type.label}</p>
-            <p className="text-xs text-gray-500">{type.description}</p>
+            <p className="text-sm font-semibold text-gray-900">{t(`${type.value}.label`)}</p>
+            <p className="text-xs text-gray-500">{t(`${type.value}.description`)}</p>
           </div>
         </button>
       ))}

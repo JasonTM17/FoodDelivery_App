@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Check, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { MenuItem } from '@/lib/types';
 
 interface PromotionItemSelectorProps {
@@ -12,16 +13,29 @@ interface PromotionItemSelectorProps {
 }
 
 export function PromotionItemSelector({ value, onChange }: PromotionItemSelectorProps) {
+  const t = useTranslations('promotions.itemSelector');
+  const loadErrorMessage = t('loadError');
   const [items, setItems] = useState<MenuItem[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get<MenuItem[]>('/restaurant/menu/items');
+      setItems(data);
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || loadErrorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadErrorMessage]);
 
   useEffect(() => {
-    api.get<MenuItem[]>('/restaurant/menu/items')
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
+    void loadItems();
+  }, [loadItems]);
 
   const filtered = items.filter((item) =>
     !search || item.name.toLowerCase().includes(search.toLowerCase())
@@ -40,7 +54,7 @@ export function PromotionItemSelector({ value, onChange }: PromotionItemSelector
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm món..."
+          placeholder={t('searchPlaceholder')}
           className="input-field pl-9 text-sm"
         />
       </div>
@@ -48,6 +62,13 @@ export function PromotionItemSelector({ value, onChange }: PromotionItemSelector
       {loading ? (
         <div className="space-y-1">
           {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded bg-gray-100 animate-pulse" />)}
+        </div>
+      ) : error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => void loadItems()} className="mt-2 btn-ghost text-xs text-red-700">
+            {t('retry')}
+          </button>
         </div>
       ) : (
         <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg">
@@ -67,13 +88,13 @@ export function PromotionItemSelector({ value, onChange }: PromotionItemSelector
                 {selected ? (
                   <Check className="h-4 w-4 text-brand-600" />
                 ) : (
-                  <span className="text-xs text-gray-400">{item.price?.toLocaleString()}đ</span>
+                  <span className="text-xs text-gray-400">{formatCurrency(item.price ?? 0)}</span>
                 )}
               </button>
             );
           })}
           {filtered.length === 0 && (
-            <p className="px-3 py-6 text-center text-sm text-gray-400">Không tìm thấy món</p>
+            <p className="px-3 py-6 text-center text-sm text-gray-400">{t('empty')}</p>
           )}
         </div>
       )}

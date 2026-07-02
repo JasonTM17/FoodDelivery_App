@@ -814,6 +814,77 @@
         "email": "Email",
         "sms": "SMS"
       }
+    },
+    "schedule": {
+      "title": "Lịch khuyến mãi",
+      "validFrom": "Ngày bắt đầu",
+      "validUntil": "Ngày kết thúc",
+      "recurring": "Định kỳ",
+      "weekly": "Hàng tuần",
+      "monthly": "Hàng tháng",
+      "dayOfMonth": "Ngày trong tháng",
+      "days": {
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7",
+        "sun": "CN"
+      }
+    },
+    "comboBuilder": {
+      "bogofTitle": "Cấu hình Mua X tặng Y",
+      "comboTitle": "Cấu hình Combo",
+      "buy": "Mua",
+      "get": "Tặng",
+      "itemUnit": "món",
+      "comboPrice": "Giá combo"
+    },
+    "typePicker": {
+      "percent": {
+        "label": "Giảm %",
+        "description": "Giảm theo phần trăm đơn hàng"
+      },
+      "fixed": {
+        "label": "Giảm tiền",
+        "description": "Giảm số tiền cố định"
+      },
+      "bogof": {
+        "label": "Mua X tặng Y",
+        "description": "Mua số lượng nhất định được tặng món"
+      },
+      "combo": {
+        "label": "Combo",
+        "description": "Combo nhiều món giá cố định"
+      }
+    },
+    "roiChart": {
+      "title": "Doanh thu và chi phí khuyến mãi",
+      "chartAria": "Biểu đồ doanh thu và chi phí giảm giá của khuyến mãi",
+      "revenue": "Doanh thu từ KM",
+      "discount": "Chi phí giảm giá"
+    },
+    "itemSelector": {
+      "searchPlaceholder": "Tìm món...",
+      "loadError": "Không thể tải món",
+      "retry": "Thử lại",
+      "empty": "Không tìm thấy món"
+    },
+    "newPage": {
+      "title": "Tạo khuyến mãi mới",
+      "description": "Thiết lập chương trình khuyến mãi",
+      "submitError": "Không thể tạo khuyến mãi",
+      "errorBoundary": {
+        "title": "Không thể tạo chương trình khuyến mãi",
+        "description": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        "retry": "Thử lại"
+      }
+    },
+    "editPage": {
+      "title": "Chỉnh sửa khuyến mãi",
+      "loadError": "Không thể tải khuyến mãi",
+      "submitError": "Không thể cập nhật khuyến mãi"
     }
   },
   "analytics": {

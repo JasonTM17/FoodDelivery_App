@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { PromotionSchedule } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -9,13 +10,15 @@ interface PromotionScheduleEditorProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 1, label: 'T2' }, { value: 2, label: 'T3' },
-  { value: 3, label: 'T4' }, { value: 4, label: 'T5' },
-  { value: 5, label: 'T6' }, { value: 6, label: 'T7' },
-  { value: 0, label: 'CN' },
+  { value: 1, key: 'mon' }, { value: 2, key: 'tue' },
+  { value: 3, key: 'wed' }, { value: 4, key: 'thu' },
+  { value: 5, key: 'fri' }, { value: 6, key: 'sat' },
+  { value: 0, key: 'sun' },
 ];
 
 export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEditorProps) {
+  const t = useTranslations('promotions.schedule');
+
   const updateField = (field: keyof PromotionSchedule, val: unknown) => {
     onChange({ ...value, [field]: val });
   };
@@ -31,11 +34,11 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
 
   return (
     <div className="space-y-4" data-testid="promotion-schedule-editor">
-      <h4 className="text-sm font-semibold text-gray-900">Lịch khuyến mãi</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label">Ngày bắt đầu</label>
+          <label className="label">{t('validFrom')}</label>
           <input
             type="datetime-local"
             value={toInputValue(value.validFrom)}
@@ -44,7 +47,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
           />
         </div>
         <div>
-          <label className="label">Ngày kết thúc</label>
+          <label className="label">{t('validUntil')}</label>
           <input
             type="datetime-local"
             value={toInputValue(value.validUntil)}
@@ -70,7 +73,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
             }}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Định kỳ</span>
+          <span className="text-sm text-gray-700">{t('recurring')}</span>
         </label>
 
         {value.recurring && (
@@ -87,7 +90,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
                   onChange={() => onChange({ ...value, recurring: { ...value.recurring!, type: 'weekly', daysOfWeek: [] } })}
                   className="sr-only"
                 />
-                Hàng tuần
+                {t('weekly')}
               </label>
               <label className={cn(
                 'rounded-lg border px-3 py-1.5 text-xs cursor-pointer',
@@ -100,7 +103,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
                   onChange={() => onChange({ ...value, recurring: { type: 'monthly', dayOfMonth: 1 } })}
                   className="sr-only"
                 />
-                Hàng tháng
+                {t('monthly')}
               </label>
             </div>
 
@@ -118,7 +121,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     )}
                   >
-                    {day.label}
+                    {t(`days.${day.key}`)}
                   </button>
                 ))}
               </div>
@@ -126,7 +129,7 @@ export function PromotionScheduleEditor({ value, onChange }: PromotionScheduleEd
 
             {value.recurring.type === 'monthly' && (
               <div>
-                <label className="label">Ngày trong tháng</label>
+                <label className="label">{t('dayOfMonth')}</label>
                 <input
                   type="number"
                   value={value.recurring.dayOfMonth || ''}

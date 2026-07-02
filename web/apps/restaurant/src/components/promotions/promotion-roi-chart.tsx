@@ -1,19 +1,20 @@
 'use client';
 
-import { formatCurrency } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface PromotionRoiChartProps {
   data: { date: string; revenueAttributed: number; discountGiven: number }[];
 }
 
 export function PromotionRoiChart({ data }: PromotionRoiChartProps) {
+  const t = useTranslations('promotions.roiChart');
   const maxVal = Math.max(...data.map(d => Math.max(d.revenueAttributed, d.discountGiven)), 1);
 
   return (
     <div className="space-y-3" data-testid="promotion-roi-chart">
-      <h4 className="text-sm font-semibold text-gray-900">Doanh thu và chi phí khuyến mãi</h4>
+      <h4 className="text-sm font-semibold text-gray-900">{t('title')}</h4>
 
-      <div className="flex items-end gap-0.5 h-32">
+      <div className="flex items-end gap-0.5 h-32" role="img" aria-label={t('chartAria')}>
         {data.map((point) => (
           <div key={point.date} className="flex-1 flex flex-col justify-end items-center gap-0.5 group">
             <div className="flex gap-px w-full justify-center">
@@ -33,11 +34,11 @@ export function PromotionRoiChart({ data }: PromotionRoiChartProps) {
       <div className="flex items-center gap-4 text-xs text-gray-500">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded-sm bg-brand-500" />
-          <span>Doanh thu từ KM</span>
+          <span>{t('revenue')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded-sm bg-red-400" />
-          <span>Chi phí giảm giá</span>
+          <span>{t('discount')}</span>
         </div>
       </div>
     </div>
