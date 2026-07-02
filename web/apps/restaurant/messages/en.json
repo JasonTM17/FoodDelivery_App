@@ -241,6 +241,30 @@
         "choiceNamePlaceholder": "Choice name",
         "priceDeltaPlaceholder": "Extra fee"
       }
+    },
+    "categoriesPage": {
+      "title": "Categories",
+      "description": "Manage menu item categories",
+      "back": "Back to menu",
+      "add": "Add category",
+      "loadError": "Could not load categories",
+      "deleteError": "Delete failed",
+      "createError": "Could not add category",
+      "updateError": "Update failed",
+      "deleteConfirm": "Delete this category?",
+      "addDialogTitle": "Add new category",
+      "editDialogTitle": "Edit category",
+      "icon": "Icon",
+      "categoryName": "Category name",
+      "categoryPlaceholder": "E.g. Main dishes",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "categoryTree": {
+      "itemCount": "{count, plural, one {# item} other {# items}}",
+      "hide": "Hide",
+      "show": "Show",
+      "addCategory": "+ Add category"
     }
   },
   "menuNew": {

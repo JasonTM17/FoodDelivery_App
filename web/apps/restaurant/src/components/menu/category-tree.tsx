@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { MenuCategory } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface CategoryTreeProps {
@@ -14,6 +14,7 @@ interface CategoryTreeProps {
 }
 
 export function CategoryTree({ categories, onToggleVisibility, onEdit, onDelete, onAdd }: CategoryTreeProps) {
+  const t = useTranslations('menu.categoryTree');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleExpand = (id: string) => {
@@ -37,9 +38,9 @@ export function CategoryTree({ categories, onToggleVisibility, onEdit, onDelete,
             <GripVertical className="h-4 w-4 text-gray-300" />
             <span className="text-lg">{cat.icon || '📁'}</span>
             <span className="flex-1 text-sm text-gray-900">{cat.name}</span>
-            <span className="text-xs text-gray-400">{cat.itemCount} món</span>
+            <span className="text-xs text-gray-400">{t('itemCount', { count: cat.itemCount })}</span>
             <div className="hidden group-hover:flex items-center gap-1">
-              <button type="button" onClick={() => onToggleVisibility?.(cat.id)} className="btn-ghost p-1" title={cat.isVisible ? 'Ẩn' : 'Hiện'}>
+              <button type="button" onClick={() => onToggleVisibility?.(cat.id)} className="btn-ghost p-1" title={cat.isVisible ? t('hide') : t('show')}>
                 {cat.isVisible ? <Eye className="h-3.5 w-3.5 text-gray-400" /> : <EyeOff className="h-3.5 w-3.5 text-gray-400" />}
               </button>
               <button type="button" onClick={() => onEdit?.(cat.id)} className="btn-ghost p-1">
@@ -58,7 +59,7 @@ export function CategoryTree({ categories, onToggleVisibility, onEdit, onDelete,
                 <div key={child.id} className="flex items-center gap-2 rounded-lg px-3 py-1.5 hover:bg-gray-50 group">
                   <span className="text-lg">{child.icon || '📌'}</span>
                   <span className="flex-1 text-sm text-gray-700">{child.name}</span>
-                  <span className="text-xs text-gray-400">{child.itemCount} món</span>
+                  <span className="text-xs text-gray-400">{t('itemCount', { count: child.itemCount })}</span>
                 </div>
               ))}
             </div>
@@ -72,7 +73,7 @@ export function CategoryTree({ categories, onToggleVisibility, onEdit, onDelete,
           onClick={() => onAdd()}
           className="w-full rounded-lg border-2 border-dashed border-gray-200 py-2 text-sm text-gray-400 hover:border-brand-300 hover:text-brand-500 transition-colors"
         >
-          + Thêm danh mục
+          {t('addCategory')}
         </button>
       )}
     </div>

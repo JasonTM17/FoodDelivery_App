@@ -241,6 +241,30 @@
         "choiceNamePlaceholder": "Tên lựa chọn",
         "priceDeltaPlaceholder": "Phụ thu"
       }
+    },
+    "categoriesPage": {
+      "title": "Danh mục",
+      "description": "Quản lý danh mục món ăn",
+      "back": "Quay lại thực đơn",
+      "add": "Thêm danh mục",
+      "loadError": "Không thể tải danh mục",
+      "deleteError": "Xoá thất bại",
+      "createError": "Thêm danh mục thất bại",
+      "updateError": "Cập nhật thất bại",
+      "deleteConfirm": "Xoá danh mục này?",
+      "addDialogTitle": "Thêm danh mục mới",
+      "editDialogTitle": "Sửa danh mục",
+      "icon": "Biểu tượng",
+      "categoryName": "Tên danh mục",
+      "categoryPlaceholder": "VD: Món chính",
+      "cancel": "Huỷ",
+      "save": "Lưu"
+    },
+    "categoryTree": {
+      "itemCount": "{count} món",
+      "hide": "Ẩn",
+      "show": "Hiện",
+      "addCategory": "+ Thêm danh mục"
     }
   },
   "menuNew": {

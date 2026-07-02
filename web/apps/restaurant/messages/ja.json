@@ -241,6 +241,30 @@
         "choiceNamePlaceholder": "選択肢名",
         "priceDeltaPlaceholder": "追加料金"
       }
+    },
+    "categoriesPage": {
+      "title": "カテゴリー",
+      "description": "メニュー商品のカテゴリーを管理します",
+      "back": "メニューに戻る",
+      "add": "カテゴリーを追加",
+      "loadError": "カテゴリーを読み込めません",
+      "deleteError": "削除に失敗しました",
+      "createError": "カテゴリーを追加できません",
+      "updateError": "更新に失敗しました",
+      "deleteConfirm": "このカテゴリーを削除しますか？",
+      "addDialogTitle": "新しいカテゴリーを追加",
+      "editDialogTitle": "カテゴリーを編集",
+      "icon": "アイコン",
+      "categoryName": "カテゴリー名",
+      "categoryPlaceholder": "例: メイン",
+      "cancel": "キャンセル",
+      "save": "保存"
+    },
+    "categoryTree": {
+      "itemCount": "{count}品",
+      "hide": "非表示",
+      "show": "表示",
+      "addCategory": "+ カテゴリーを追加"
     }
   },
   "menuNew": {
