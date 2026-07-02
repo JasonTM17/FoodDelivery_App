@@ -130,6 +130,7 @@ describe('JwtStrategy.validate', () => {
     findUnique.mockResolvedValue(baseUser)
     const result = await strategy.validate({ sub: 'u1', role: 'CUSTOMER' })
     expect(result.id).toBe('u1')
+    expect(result.sub).toBe('u1')
     expect(findUnique).toHaveBeenCalledWith({ where: { id: 'u1' }, select: expect.any(Object) })
   })
 
