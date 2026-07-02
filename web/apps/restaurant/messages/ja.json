@@ -474,6 +474,15 @@
     "titleTemplate": "%s | FoodFlow レストラン",
     "description": "FoodFlowで注文、メニュー、売上、店舗運営を管理します。"
   },
+  "localeSwitcher": {
+    "triggerAria": "言語を切り替えます。現在の言語: {language}",
+    "menuAria": "言語セレクター",
+    "languages": {
+      "vi": "ベトナム語",
+      "en": "英語",
+      "ja": "日本語"
+    }
+  },
   "rootStates": {
     "loading": {
       "label": "レストラン管理画面を読み込み中"
@@ -1060,6 +1069,28 @@
       "combo": {
         "label": "コンボ",
         "description": "複数商品を固定コンボ価格で提供"
+      }
+    },
+    "channelSelector": {
+      "title": "配信チャネル",
+      "toggleAria": "{channel}チャネルを切り替え",
+      "channels": {
+        "in_app": {
+          "label": "アプリ内",
+          "description": "FoodFlowの顧客画面内にプロモーションを表示します。"
+        },
+        "push": {
+          "label": "プッシュ通知",
+          "description": "対象顧客へプッシュ配信プロバイダー経由で通知します。"
+        },
+        "email": {
+          "label": "メール",
+          "description": "設定済みのメール配信経由でキャンペーンを送信します。"
+        },
+        "sms": {
+          "label": "SMS",
+          "description": "設定済みのSMS配信経由でキャンペーンを送信します。"
+        }
       }
     },
     "roiChart": {

@@ -474,6 +474,15 @@
     "titleTemplate": "%s | FoodFlow Restaurant",
     "description": "Manage restaurant orders, menus, revenue, and operations with FoodFlow."
   },
+  "localeSwitcher": {
+    "triggerAria": "Switch language. Current language: {language}",
+    "menuAria": "Language selector",
+    "languages": {
+      "vi": "Vietnamese",
+      "en": "English",
+      "ja": "Japanese"
+    }
+  },
   "rootStates": {
     "loading": {
       "label": "Loading restaurant dashboard"
@@ -1060,6 +1069,28 @@
       "combo": {
         "label": "Combo",
         "description": "Multiple items at a fixed combo price"
+      }
+    },
+    "channelSelector": {
+      "title": "Distribution channels",
+      "toggleAria": "Toggle {channel} channel",
+      "channels": {
+        "in_app": {
+          "label": "In-app",
+          "description": "Show the promotion inside FoodFlow customer surfaces."
+        },
+        "push": {
+          "label": "Push notification",
+          "description": "Notify eligible customers through the push provider."
+        },
+        "email": {
+          "label": "Email",
+          "description": "Send the campaign through configured email delivery."
+        },
+        "sms": {
+          "label": "SMS",
+          "description": "Send the campaign through configured SMS delivery."
+        }
       }
     },
     "roiChart": {

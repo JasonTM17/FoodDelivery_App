@@ -474,6 +474,15 @@
     "titleTemplate": "%s | FoodFlow Nhà hàng",
     "description": "Quản lý đơn hàng, thực đơn, doanh thu và vận hành nhà hàng trên FoodFlow."
   },
+  "localeSwitcher": {
+    "triggerAria": "Đổi ngôn ngữ. Ngôn ngữ hiện tại: {language}",
+    "menuAria": "Chọn ngôn ngữ",
+    "languages": {
+      "vi": "Tiếng Việt",
+      "en": "Tiếng Anh",
+      "ja": "Tiếng Nhật"
+    }
+  },
   "rootStates": {
     "loading": {
       "label": "Đang tải trang nhà hàng"
@@ -1060,6 +1069,28 @@
       "combo": {
         "label": "Combo",
         "description": "Combo nhiều món giá cố định"
+      }
+    },
+    "channelSelector": {
+      "title": "Kênh phân phối",
+      "toggleAria": "Chọn/bỏ chọn kênh {channel}",
+      "channels": {
+        "in_app": {
+          "label": "Trong ứng dụng",
+          "description": "Hiển thị khuyến mãi trong các màn khách hàng của FoodFlow."
+        },
+        "push": {
+          "label": "Thông báo đẩy",
+          "description": "Gửi thông báo đến khách đủ điều kiện qua nhà cung cấp push."
+        },
+        "email": {
+          "label": "Email",
+          "description": "Gửi chiến dịch qua cấu hình nhà cung cấp email."
+        },
+        "sms": {
+          "label": "SMS",
+          "description": "Gửi chiến dịch qua cấu hình nhà cung cấp SMS."
+        }
       }
     },
     "roiChart": {

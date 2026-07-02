@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeDiscountAmount,
-  getChannelCost,
   validatePromotion,
 } from '@/lib/promotion-engine';
 import type { Promotion } from '@/lib/types';
@@ -71,14 +70,5 @@ describe('computeDiscountAmount', () => {
 
   it('never returns a negative amount', () => {
     expect(computeDiscountAmount('fixed', -10, 100_000)).toBe(0);
-  });
-});
-
-describe('getChannelCost', () => {
-  it('uses actual configured delivery costs', () => {
-    expect(getChannelCost('in_app')).toBe(0);
-    expect(getChannelCost('push')).toBe(0);
-    expect(getChannelCost('email')).toBe(50);
-    expect(getChannelCost('sms')).toBe(350);
   });
 });

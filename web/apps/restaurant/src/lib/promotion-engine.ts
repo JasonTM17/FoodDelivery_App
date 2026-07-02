@@ -80,23 +80,3 @@ export function getPromotionStatusColor(status: string): string {
   };
   return map[status] || 'bg-gray-100 text-gray-700';
 }
-
-export function getChannelLabel(channel: string): string {
-  const map: Record<string, string> = {
-    in_app: 'In-app',
-    push: 'Push',
-    email: 'Email',
-    sms: 'SMS',
-  };
-  return map[channel] || channel;
-}
-
-export function getChannelCost(channel: string): number {
-  const map: Record<string, number> = {
-    in_app: 0,
-    push: 0,
-    email: 50,
-    sms: 350,
-  };
-  return map[channel] || 0;
-}
