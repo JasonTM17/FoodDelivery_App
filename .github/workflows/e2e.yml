@@ -29,11 +29,27 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-          cache-dependency-path: web/pnpm-lock.yaml
+          cache-dependency-path: |
+            backend/pnpm-lock.yaml
+            web/pnpm-lock.yaml
 
       # ── Backend stack ────────────────────────────────────────────────────
-      - name: Start Docker Compose stack
-        run: docker compose up -d postgres redis minio backend
+      - name: Start database and supporting services
+        run: docker compose up -d postgres redis minio
+
+      - name: Install backend dependencies
+        run: cd backend && pnpm install --frozen-lockfile
+
+      - name: Apply migrations and seed database
+        run: |
+          cd backend
+          pnpm prisma migrate deploy
+          pnpm db:big-seed
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+
+      - name: Start backend
+        run: docker compose up -d backend
 
       - name: Wait for backend health
         run: |
@@ -43,13 +59,8 @@ jobs:
             fi
             echo "Waiting for backend ($i/30)..."; sleep 5
           done
+          docker compose logs backend
           echo "Backend did not start in time"; exit 1
-
-      - name: Seed database
-        run: |
-          cd backend
-          pnpm install --frozen-lockfile
-          pnpm db:big-seed
 
       # ── Web apps ─────────────────────────────────────────────────────────
       - name: Install web dependencies
@@ -72,11 +83,11 @@ jobs:
           npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
 
       # ── Playwright ───────────────────────────────────────────────────────
-      - name: Install Playwright (Chromium only)
+      - name: Install Playwright browsers
         run: cd web && pnpm test:e2e:install
 
-      - name: Run E2E tests
-        run: cd web && pnpm test:e2e --project=chromium
+      - name: Run E2E tests on Chromium and Firefox
+        run: cd web && pnpm test:e2e --project=chromium --project=firefox
         env:
           CI: 'true'
           ADMIN_URL: http://localhost:3000

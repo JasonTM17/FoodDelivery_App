@@ -12,21 +12,29 @@ Playwright test suite covering the four critical user flows: admin dashboard, re
 ## Quick Start
 
 ```bash
-# 1. Start the backend stack
-docker compose up -d
+# 1. Start the database and supporting services
+docker compose up -d postgres redis minio
 
-# 2. Seed the database (first time only, or after reset)
-cd backend && pnpm db:big-seed && cd ..
+# 2. Apply migrations and seed the database
+cd backend
+pnpm install --frozen-lockfile
+pnpm prisma migrate deploy
+pnpm db:big-seed
+cd ..
 
-# 3. Start both web apps (two terminals)
+# 3. Start the backend and both web apps (three terminals)
+docker compose up -d backend
 pnpm --filter admin dev          # → http://localhost:3000
 pnpm --filter restaurant dev     # → http://localhost:3002
 
 # 4. Install Playwright browser (once)
 cd web && pnpm test:e2e:install
 
-# 5. Run all E2E tests
+# 5. Run all E2E tests (Chromium, Firefox, and mobile Chromium)
 cd web && pnpm test:e2e
+
+# Desktop release gate only
+pnpm test:e2e --project=chromium --project=firefox
 ```
 
 ## Environment Variables
@@ -68,11 +76,11 @@ npx playwright show-report web/e2e/playwright-report
 ## CI Integration
 
 The `.github/workflows/e2e.yml` workflow:
-1. Starts Docker Compose (postgres, redis, minio, backend)
-2. Seeds the database
-3. Starts admin and restaurant apps as background processes
+1. Starts PostgreSQL, Redis, and MinIO
+2. Applies Prisma migrations to a clean database and seeds real data
+3. Starts the backend, admin, and restaurant apps
 4. Waits for all services to pass health checks
-5. Runs the Playwright suite on Chromium only (CI flag)
+5. Runs the Playwright suite on Chromium and Firefox
 6. Uploads `playwright-report/` and trace zips as artifacts on failure
 
 Artifacts are retained for 14 days. To investigate a CI failure, download the artifact and run `npx playwright show-report`.
