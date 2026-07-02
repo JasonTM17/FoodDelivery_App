@@ -1,5 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common'
 import { ThrottlerStorage } from '@nestjs/throttler'
+import { randomUUID } from 'crypto'
 import Redis from 'ioredis'
 
 interface ThrottlerStorageRecord {
@@ -46,7 +47,7 @@ export class ThrottlerStorageRedis implements ThrottlerStorage {
     const windowStart = now - ttl * 1000
 
     const pipeline = this.redis.pipeline()
-    pipeline.zadd(redisKey, now, `${now}:${Math.random()}`)
+    pipeline.zadd(redisKey, now, `${now}:${randomUUID()}`)
     pipeline.zremrangebyscore(redisKey, 0, windowStart)
     pipeline.zcard(redisKey)
     pipeline.expire(redisKey, ttl)

@@ -1,5 +1,6 @@
 import { Injectable, Inject, Optional } from '@nestjs/common'
 import { I18nService, I18nContext } from 'nestjs-i18n'
+import { randomUUID } from 'crypto'
 import Redis from 'ioredis'
 import { FraudCheckResult } from './promotions.types'
 import { fallbackT } from '../i18n/fallback-translations'
@@ -41,8 +42,8 @@ export class FraudDetectionService {
   async record(fingerprint: string): Promise<void> {
     const key = `promo:device:${fingerprint}`
     const now = Date.now()
-    // Unique member: timestamp + random suffix to allow multiple entries per ms
-    await this.redis.zadd(key, now, `${now}-${Math.random().toString(36).slice(2)}`)
+    // Unique member: timestamp + UUID suffix to allow multiple entries per ms
+    await this.redis.zadd(key, now, `${now}-${randomUUID()}`)
     await this.redis.expire(key, WINDOW_SECONDS)
   }
 }
