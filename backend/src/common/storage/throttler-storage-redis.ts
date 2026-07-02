@@ -8,6 +8,7 @@ interface ThrottlerStorageRecord {
   timeToExpire: number
   isBlocked: boolean
   timeToBlockExpire: number
+  expiresAt?: number
 }
 
 @Injectable()
@@ -44,19 +45,20 @@ export class ThrottlerStorageRedis implements ThrottlerStorage {
 
     const redisKey = `rl:${throttlerName}:${key}`
     const now = Date.now()
-    const windowStart = now - ttl * 1000
+    const windowStart = now - ttl
+    const ttlSeconds = Math.max(1, Math.ceil(ttl / 1000))
 
     const pipeline = this.redis.pipeline()
     pipeline.zadd(redisKey, now, `${now}:${randomUUID()}`)
     pipeline.zremrangebyscore(redisKey, 0, windowStart)
     pipeline.zcard(redisKey)
-    pipeline.expire(redisKey, ttl)
+    pipeline.expire(redisKey, ttlSeconds)
 
     const results = await pipeline.exec()
     const totalHits = (results?.[2]?.[1] as number) ?? 0
 
-    const blockedUntil = totalHits > limit ? now + blockDuration * 1000 : undefined
-    const timeToExpire = ttl * 1000
+    const blockedUntil = totalHits > limit ? now + blockDuration : undefined
+    const timeToExpire = ttl
 
     return {
       totalHits,
@@ -74,14 +76,27 @@ export class ThrottlerStorageRedis implements ThrottlerStorage {
     throttlerName: string,
   ): ThrottlerStorageRecord {
     const mapKey = `${throttlerName}:${key}`
-    const record = this.memoryFallback.get(mapKey) ?? { totalHits: 0, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 }
+    const now = Date.now()
+    const existing = this.memoryFallback.get(mapKey)
+    const record =
+      existing?.expiresAt && existing.expiresAt > now
+        ? existing
+        : {
+            totalHits: 0,
+            timeToExpire: ttl,
+            isBlocked: false,
+            timeToBlockExpire: 0,
+            expiresAt: now + ttl,
+          }
 
     record.totalHits++
-    record.timeToExpire = ttl * 1000
+    record.timeToExpire = Math.max((record.expiresAt ?? now) - now, 0)
     record.isBlocked = record.totalHits > limit
 
     if (record.isBlocked) {
-      record.timeToBlockExpire = blockDuration * 1000
+      record.timeToBlockExpire = blockDuration
+    } else {
+      record.timeToBlockExpire = 0
     }
 
     this.memoryFallback.set(mapKey, record)

@@ -5,6 +5,12 @@ import { AppModule } from './app.module'
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter'
 import helmet from 'helmet'
 
+const DEFAULT_CORS_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3002',
+  'http://localhost:3003',
+]
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
@@ -15,7 +21,10 @@ async function bootstrap() {
 
   app.use(helmet())
   app.enableCors({
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(','),
+    origin: (process.env.CORS_ORIGINS ?? DEFAULT_CORS_ORIGINS.join(','))
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
   })
