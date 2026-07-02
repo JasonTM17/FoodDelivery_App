@@ -223,7 +223,52 @@
   },
   "analytics": {
     "title": "Analytics",
-    "description": "Business performance and customer behaviour"
+    "description": "Business performance and customer behaviour",
+    "periods": {
+      "today": "Today",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "kpis": {
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "users": "Active users",
+      "restaurants": "Restaurants",
+      "drivers": "Online drivers"
+    },
+    "deltaCompared": "{value} vs previous period",
+    "charts": {
+      "funnelTitle": "Order funnel",
+      "topRestaurantsTitle": "Top restaurants",
+      "retentionTitle": "Customer retention",
+      "funnel": {
+        "placed": "Orders placed",
+        "accepted": "Restaurant accepted",
+        "delivery": "In delivery",
+        "completed": "Completed"
+      }
+    },
+    "empty": {
+      "kpisTitle": "No KPIs yet",
+      "kpisDescription": "No data is available for the selected period.",
+      "funnelTitle": "No orders yet",
+      "funnelDescription": "The funnel appears after orders exist in the last 30 days.",
+      "restaurantsTitle": "No restaurant revenue yet",
+      "restaurantsDescription": "Top restaurants appear after completed orders exist."
+    },
+    "errors": {
+      "loadTitle": "Could not load analytics",
+      "loadDescription": "Check the connection and try again.",
+      "permissionTitle": "You cannot view analytics",
+      "permissionDescription": "The current account does not have permission to view this data."
+    },
+    "actions": {
+      "retry": "Retry"
+    },
+    "degraded": {
+      "retentionTitle": "Retention cohort unavailable",
+      "retentionDescription": "The backend does not expose a cohort retention endpoint yet. This panel shows a degraded state instead of fake numbers."
+    }
   },
   "aiMonitorDetail": {
     "title": "Run Detail",

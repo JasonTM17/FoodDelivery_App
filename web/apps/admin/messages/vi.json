@@ -223,7 +223,52 @@
   },
   "analytics": {
     "title": "Phân tích",
-    "description": "Hiệu quả kinh doanh và hành vi khách hàng"
+    "description": "Hiệu quả kinh doanh và hành vi khách hàng",
+    "periods": {
+      "today": "Hôm nay",
+      "7d": "7 ngày",
+      "30d": "30 ngày"
+    },
+    "kpis": {
+      "revenue": "Doanh thu",
+      "orders": "Đơn hàng",
+      "users": "Người dùng hoạt động",
+      "restaurants": "Nhà hàng",
+      "drivers": "Tài xế online"
+    },
+    "deltaCompared": "{value} so với kỳ trước",
+    "charts": {
+      "funnelTitle": "Phễu đơn hàng",
+      "topRestaurantsTitle": "Top nhà hàng",
+      "retentionTitle": "Retention khách hàng",
+      "funnel": {
+        "placed": "Đơn được tạo",
+        "accepted": "Nhà hàng nhận",
+        "delivery": "Đang giao",
+        "completed": "Hoàn thành"
+      }
+    },
+    "empty": {
+      "kpisTitle": "Chưa có KPI",
+      "kpisDescription": "Chưa có dữ liệu trong khoảng thời gian đã chọn.",
+      "funnelTitle": "Chưa có đơn hàng",
+      "funnelDescription": "Phễu sẽ hiển thị khi hệ thống có đơn trong 30 ngày gần nhất.",
+      "restaurantsTitle": "Chưa có doanh thu nhà hàng",
+      "restaurantsDescription": "Top nhà hàng sẽ hiển thị khi có đơn đã hoàn thành."
+    },
+    "errors": {
+      "loadTitle": "Không tải được dữ liệu phân tích",
+      "loadDescription": "Kiểm tra kết nối rồi thử lại.",
+      "permissionTitle": "Bạn không có quyền xem phân tích",
+      "permissionDescription": "Tài khoản hiện tại chưa được cấp quyền xem dữ liệu này."
+    },
+    "actions": {
+      "retry": "Thử lại"
+    },
+    "degraded": {
+      "retentionTitle": "Retention cohort chưa khả dụng",
+      "retentionDescription": "Backend hiện chưa cung cấp endpoint cohort retention. Màn hình hiển thị trạng thái degraded thay vì dùng số giả."
+    }
   },
   "aiMonitorDetail": {
     "title": "Chi tiết lần chạy",

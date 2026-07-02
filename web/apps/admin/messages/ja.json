@@ -223,7 +223,52 @@
   },
   "analytics": {
     "title": "分析",
-    "description": "ビジネスパフォーマンスと顧客行動"
+    "description": "ビジネスパフォーマンスと顧客行動",
+    "periods": {
+      "today": "今日",
+      "7d": "7日間",
+      "30d": "30日間"
+    },
+    "kpis": {
+      "revenue": "売上",
+      "orders": "注文",
+      "users": "アクティブユーザー",
+      "restaurants": "レストラン",
+      "drivers": "オンライン配達員"
+    },
+    "deltaCompared": "前期間比 {value}",
+    "charts": {
+      "funnelTitle": "注文ファネル",
+      "topRestaurantsTitle": "上位レストラン",
+      "retentionTitle": "顧客リテンション",
+      "funnel": {
+        "placed": "作成された注文",
+        "accepted": "レストラン承認",
+        "delivery": "配達中",
+        "completed": "完了"
+      }
+    },
+    "empty": {
+      "kpisTitle": "KPIはまだありません",
+      "kpisDescription": "選択した期間のデータはありません。",
+      "funnelTitle": "注文はまだありません",
+      "funnelDescription": "直近30日間に注文があるとファネルが表示されます。",
+      "restaurantsTitle": "レストラン売上はまだありません",
+      "restaurantsDescription": "完了注文があると上位レストランが表示されます。"
+    },
+    "errors": {
+      "loadTitle": "分析データを読み込めません",
+      "loadDescription": "接続を確認して再試行してください。",
+      "permissionTitle": "分析を表示できません",
+      "permissionDescription": "現在のアカウントにはこのデータを表示する権限がありません。"
+    },
+    "actions": {
+      "retry": "再試行"
+    },
+    "degraded": {
+      "retentionTitle": "リテンションコホートは未対応です",
+      "retentionDescription": "バックエンドにはまだコホートリテンションのエンドポイントがありません。偽の数値ではなく degraded 状態を表示します。"
+    }
   },
   "aiMonitorDetail": {
     "title": "実行詳細",
