@@ -63,34 +63,39 @@ export class FoodFlowApiClient {
     path: string,
     options: ApiRequestOptions = {},
   ): Promise<{ data: T; meta?: PaginationMeta }> {
-    const response = await this.send(path, options);
-
-    if (response.status === 401 && options.requireAuth !== false && !options.skipRefresh) {
-      const refreshed = await this.refreshAccessToken();
-      if (!refreshed) {
-        this.options.clearTokens();
-        this.options.onUnauthorized?.();
-        throw new ApiClientError({
-          title: 'Unauthorized',
-          detail: 'Your session has expired.',
-          status: 401,
-          code: 'AUTH_SESSION_EXPIRED',
-        });
-      }
-
-      const retryResponse = await this.send(path, { ...options, skipRefresh: true });
-      return this.parseEnvelope<T>(retryResponse);
-    }
-
+    const response = await this.sendWithRefresh(path, options);
     return this.parseEnvelope<T>(response);
   }
 
   async requestBlob(path: string, options: ApiRequestOptions = {}): Promise<Blob> {
-    const response = await this.send(path, options);
+    const response = await this.sendWithRefresh(path, options);
     if (!response.ok) {
       throw await this.toError(response);
     }
     return response.blob();
+  }
+
+  private async sendWithRefresh(path: string, options: ApiRequestOptions): Promise<Response> {
+    const response = await this.send(path, options);
+    if (response.status !== 401 || options.requireAuth === false || options.skipRefresh) {
+      return response;
+    }
+
+    await response.body?.cancel();
+    const refreshed = await this.refreshAccessToken();
+    if (!refreshed) this.expireSession();
+    return this.send(path, { ...options, skipRefresh: true });
+  }
+
+  private expireSession(): never {
+    this.options.clearTokens();
+    this.options.onUnauthorized?.();
+    throw new ApiClientError({
+      title: 'Unauthorized',
+      detail: 'Your session has expired.',
+      status: 401,
+      code: 'AUTH_SESSION_EXPIRED',
+    });
   }
 
   private async send(path: string, options: ApiRequestOptions): Promise<Response> {
