@@ -1,5 +1,5 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
-import { Prisma, PromotionStatus, PromotionType } from '@prisma/client'
+import { ConflictException, Injectable } from '@nestjs/common'
+import { Prisma, PromotionStatus } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { RestaurantAccessService } from './restaurant-access.service'
@@ -8,15 +8,22 @@ import {
   CreateRestaurantPromotionDto,
   UpdateRestaurantPromotionDto,
 } from './restaurant-promotion.dto'
-
+import { RestaurantPromotionTargetingService } from './restaurant-promotion-targeting.service'
+import {
+  buildPromotionScope,
+  mapPromotionType,
+  promotionScopesIntersect,
+  toPromotionTargetingQuery,
+  unmapPromotionType,
+} from './restaurant-promotion.utils'
 @Injectable()
 export class RestaurantPromotionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: RestaurantAccessService,
     private readonly notifications: NotificationsService,
+    private readonly targeting: RestaurantPromotionTargetingService,
   ) {}
-
   async list(userId: string, params: { status?: string; search?: string; page: number; limit: number }) {
     const restaurantId = await this.access.getRestaurantId(userId)
     const where: Prisma.PromotionWhereInput = {
@@ -36,7 +43,6 @@ export class RestaurantPromotionsService {
     ])
     return { promotions: promotions.map(promotion => this.serialize(promotion)), total }
   }
-
   async get(userId: string, id: string) {
     const promotion = await this.findOwned(userId, id)
     return { promotion: this.serialize(promotion) }
@@ -51,7 +57,7 @@ export class RestaurantPromotionsService {
     const promotion = await this.prisma.promotion.create({
       data: {
         restaurantId, createdById: userId, code: dto.code, name: dto.name,
-        description: dto.description, type: mapType(dto.type), value: dto.discountValue,
+        description: dto.description, type: mapPromotionType(dto.type), value: dto.discountValue,
         minOrderAmount: dto.minOrderVnd ?? 0, maxDiscount: dto.maxDiscountVnd,
         usageLimit: dto.maxUsage ?? 2_147_483_647, maxPerUser: dto.perUserLimit,
         startsAt: new Date(dto.schedule.validFrom), expiresAt: new Date(dto.schedule.validUntil),
@@ -60,7 +66,7 @@ export class RestaurantPromotionsService {
         targeting: dto.target as Prisma.InputJsonValue,
         recurrence: (dto.schedule.recurring ?? dto.comboConfig) as Prisma.InputJsonValue | undefined,
         channels: dto.channels,
-        items: { create: buildScope(dto) },
+        items: { create: buildPromotionScope(dto) },
       },
       include: { items: true },
     })
@@ -88,7 +94,7 @@ export class RestaurantPromotionsService {
           ...(dto.code !== undefined ? { code: dto.code } : {}),
           ...(dto.name !== undefined ? { name: dto.name } : {}),
           ...(dto.description !== undefined ? { description: dto.description } : {}),
-          ...(dto.type !== undefined ? { type: mapType(dto.type) } : {}),
+          ...(dto.type !== undefined ? { type: mapPromotionType(dto.type) } : {}),
           ...(dto.discountValue !== undefined ? { value: dto.discountValue } : {}),
           ...(dto.minOrderVnd !== undefined ? { minOrderAmount: dto.minOrderVnd } : {}),
           ...(dto.maxDiscountVnd !== undefined ? { maxDiscount: dto.maxDiscountVnd } : {}),
@@ -99,7 +105,9 @@ export class RestaurantPromotionsService {
           ...(dto.target !== undefined ? { targeting: dto.target as Prisma.InputJsonValue } : {}),
           ...(dto.channels !== undefined ? { channels: dto.channels } : {}),
           ...(dto.schedule ? { startsAt, expiresAt, recurrence: dto.schedule.recurring as Prisma.InputJsonValue | undefined } : {}),
-          ...(dto.appliesTo || dto.itemIds || dto.categoryId ? { items: { create: buildScope(dto) } } : {}),
+          ...(dto.appliesTo || dto.itemIds || dto.categoryId
+            ? { items: { create: buildPromotionScope(dto) } }
+            : {}),
         },
         include: { items: true },
       })
@@ -126,8 +134,14 @@ export class RestaurantPromotionsService {
 
   async broadcast(userId: string, id: string) {
     const promotion = await this.findOwned(userId, id)
+    const customerIds = await this.targeting.resolveCustomerIds(
+      userId,
+      toPromotionTargetingQuery(promotion.targeting),
+    )
     const customers = await this.prisma.user.findMany({
-      where: { role: 'customer', isActive: true }, select: { id: true }, take: 5000,
+      where: { id: { in: customerIds }, role: 'customer', isActive: true },
+      select: { id: true },
+      take: 5000,
     })
     const results = await Promise.allSettled(customers.map(customer => this.notifications.create({
       userId: customer.id,
@@ -136,7 +150,10 @@ export class RestaurantPromotionsService {
       type: 'promotion.broadcast',
       payload: { promotionId: promotion.id, code: promotion.code },
     })))
-    return { sent: results.filter(result => result.status === 'fulfilled').length }
+    return {
+      targeted: customers.length,
+      sent: results.filter(result => result.status === 'fulfilled').length,
+    }
   }
 
   private findOwned(userId: string, id: string) {
@@ -159,8 +176,8 @@ export class RestaurantPromotionsService {
       },
       include: { items: true },
     })
-    const scope = buildScope(dto)
-    const overlaps = candidates.some(candidate => scopesIntersect(candidate.items, scope))
+    const scope = buildPromotionScope(dto)
+    const overlaps = candidates.some(candidate => promotionScopesIntersect(candidate.items, scope))
     if (overlaps) throw new ConflictException('PROMOTION_SCOPE_OVERLAP')
   }
 
@@ -169,7 +186,7 @@ export class RestaurantPromotionsService {
     const categoryId = promotion.items.find(item => item.categoryId)?.categoryId ?? undefined
     return {
       id: promotion.id, code: promotion.code, name: promotion.name, description: promotion.description,
-      type: unmapType(promotion.type), discountValue: Number(promotion.value),
+      type: unmapPromotionType(promotion.type), discountValue: Number(promotion.value),
       minOrderVnd: Number(promotion.minOrderAmount), maxDiscountVnd: promotion.maxDiscount ? Number(promotion.maxDiscount) : undefined,
       appliesTo: categoryId ? 'category' : itemIds.length ? 'items' : 'all', categoryId, itemIds,
       target: promotion.targeting ?? { audience: 'all' },
@@ -179,24 +196,4 @@ export class RestaurantPromotionsService {
       createdBy: promotion.createdById ?? 'system',
     }
   }
-}
-
-function mapType(type: string): PromotionType {
-  return ({ percent: 'percentage', bogof: 'bogo' }[type] ?? type) as PromotionType
-}
-function unmapType(type: PromotionType): string {
-  return ({ percentage: 'percent', bogo: 'bogof' }[type] ?? type)
-}
-function buildScope(dto: { appliesTo?: string; itemIds?: string[]; categoryId?: string }) {
-  if (dto.appliesTo === 'category' && dto.categoryId) return [{ categoryId: dto.categoryId }]
-  if (dto.appliesTo === 'items') return (dto.itemIds ?? []).map(menuItemId => ({ menuItemId }))
-  return []
-}
-function scopesIntersect(
-  left: Array<{ menuItemId: string | null; categoryId: string | null }>,
-  right: Array<{ menuItemId?: string; categoryId?: string }>,
-): boolean {
-  if (left.length === 0 || right.length === 0) return true
-  return left.some(a => right.some(b =>
-    (a.menuItemId && a.menuItemId === b.menuItemId) || (a.categoryId && a.categoryId === b.categoryId)))
 }

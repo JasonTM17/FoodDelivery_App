@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common'
 import { RestaurantPromotionsService } from './restaurant-promotions.service'
 import { PrismaService } from '../database/prisma.service'
 import { RestaurantAccessService } from './restaurant-access.service'
+import { RestaurantPromotionTargetingService } from './restaurant-promotion-targeting.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { CreateRestaurantPromotionDto } from './restaurant-promotion.dto'
 
@@ -12,7 +13,11 @@ describe('RestaurantPromotionsService', () => {
   const getRestaurantId = jest.fn()
   const findUnique = jest.fn()
   const findMany = jest.fn()
+  const findFirstOrThrow = jest.fn()
+  const findCustomers = jest.fn()
   const create = jest.fn()
+  const createNotification = jest.fn()
+  const resolveCustomerIds = jest.fn()
 
   let service: RestaurantPromotionsService
 
@@ -21,12 +26,19 @@ describe('RestaurantPromotionsService', () => {
     getRestaurantId.mockResolvedValue(restaurantId)
     findUnique.mockResolvedValue(null)
     findMany.mockResolvedValue([])
+    findFirstOrThrow.mockResolvedValue(makePromotion())
+    findCustomers.mockResolvedValue([])
     create.mockResolvedValue(makePromotion())
+    resolveCustomerIds.mockResolvedValue([])
 
     service = new RestaurantPromotionsService(
-      { promotion: { findUnique, findMany, create } } as unknown as PrismaService,
+      {
+        promotion: { findUnique, findMany, findFirstOrThrow, create },
+        user: { findMany: findCustomers },
+      } as unknown as PrismaService,
       { getRestaurantId } as unknown as RestaurantAccessService,
-      { create: jest.fn() } as unknown as NotificationsService,
+      { create: createNotification } as unknown as NotificationsService,
+      { resolveCustomerIds } as unknown as RestaurantPromotionTargetingService,
     )
   })
 
@@ -81,6 +93,21 @@ describe('RestaurantPromotionsService', () => {
 
     expect(findMany).not.toHaveBeenCalled()
     expect(result.promotion.stackable).toBe(true)
+  })
+
+  it('broadcasts only to customers resolved from the owned restaurant audience', async () => {
+    resolveCustomerIds.mockResolvedValue(['customer-a'])
+    findCustomers.mockResolvedValue([{ id: 'customer-a' }])
+
+    const result = await service.broadcast(userId, 'promotion-1')
+
+    expect(resolveCustomerIds).toHaveBeenCalledWith(userId, { audience: 'all' })
+    expect(findCustomers).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: { in: ['customer-a'] } }),
+    }))
+    expect(createNotification).toHaveBeenCalledTimes(1)
+    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: 'customer-a' }))
+    expect(result).toEqual({ targeted: 1, sent: 1 })
   })
 })
 

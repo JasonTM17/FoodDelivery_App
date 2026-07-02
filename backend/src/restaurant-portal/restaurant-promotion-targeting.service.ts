@@ -22,20 +22,34 @@ export class RestaurantPromotionTargetingService {
   ) {}
 
   async preview(userId: string, query: PromotionTargetingPreviewQueryDto) {
-    const restaurantId = await this.access.getRestaurantId(userId)
-    if (query.audience === 'segment') {
-      throw new BadRequestException('PROMOTION_SEGMENT_UNAVAILABLE')
-    }
+    this.assertSupported(query)
+    const customers = await this.loadCustomers(userId)
 
-    const customers = await this.prisma.order.groupBy({
+    return buildTargetingPreview(customers, query)
+  }
+
+  async resolveCustomerIds(userId: string, query: PromotionTargetingPreviewQueryDto) {
+    this.assertSupported(query)
+    const customers = await this.loadCustomers(userId)
+    return selectTargetCustomers(customers, query).map(customer => customer.customerId)
+  }
+
+  private async loadCustomers(userId: string) {
+    const restaurantId = await this.access.getRestaurantId(userId)
+
+    return this.prisma.order.groupBy({
       by: ['customerId'],
       where: { restaurantId, status: { in: TARGETABLE_STATUSES } },
       _count: { _all: true },
       _min: { createdAt: true },
       _max: { createdAt: true },
     })
+  }
 
-    return buildTargetingPreview(customers, query)
+  private assertSupported(query: PromotionTargetingPreviewQueryDto) {
+    if (query.audience === 'segment') {
+      throw new BadRequestException('PROMOTION_SEGMENT_UNAVAILABLE')
+    }
   }
 }
 
@@ -51,24 +65,7 @@ export function buildTargetingPreview(
   const returningCustomers = customers.filter(customer =>
     isBefore(customer._min.createdAt, cutoff) && isOnOrAfter(customer._max.createdAt, cutoff))
 
-  let estimatedReach: number
-  switch (query.audience) {
-    case 'new':
-      estimatedReach = newCustomers.length
-      break
-    case 'vip':
-      estimatedReach = customers.length === 0 ? 0 : Math.max(1, Math.ceil(customers.length * 0.1))
-      break
-    case 'lapsed':
-      estimatedReach = lapsedCustomers.length
-      break
-    case 'order_history':
-      estimatedReach = customers.filter(customer =>
-        customer._count._all >= (query.minOrderCount ?? 1)).length
-      break
-    default:
-      estimatedReach = customers.length
-  }
+  const estimatedReach = selectTargetCustomers(customers, query, now).length
 
   return {
     audience: query.audience,
@@ -79,6 +76,30 @@ export function buildTargetingPreview(
       toBreakdownRow('lapsed', lapsedCustomers.length, customers.length),
     ],
     updatedAt: now.toISOString(),
+  }
+}
+
+function selectTargetCustomers(
+  customers: CustomerOrderAggregate[],
+  query: PromotionTargetingPreviewQueryDto,
+  now = new Date(),
+) {
+  const windowDays = query.lastOrderWithinDays ?? DEFAULT_AUDIENCE_WINDOW_DAYS
+  const cutoff = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000)
+
+  switch (query.audience) {
+    case 'new':
+      return customers.filter(customer => isOnOrAfter(customer._min.createdAt, cutoff))
+    case 'vip':
+      return [...customers]
+        .sort((left, right) => right._count._all - left._count._all)
+        .slice(0, customers.length === 0 ? 0 : Math.max(1, Math.ceil(customers.length * 0.1)))
+    case 'lapsed':
+      return customers.filter(customer => isBefore(customer._max.createdAt, cutoff))
+    case 'order_history':
+      return customers.filter(customer => customer._count._all >= (query.minOrderCount ?? 1))
+    default:
+      return customers
   }
 }
 

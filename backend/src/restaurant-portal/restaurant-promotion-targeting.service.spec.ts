@@ -38,6 +38,16 @@ describe('RestaurantPromotionTargetingService', () => {
     })).rejects.toBeInstanceOf(BadRequestException)
     expect(groupBy).not.toHaveBeenCalled()
   })
+
+  it('resolves VIP customer ids by successful-order count', async () => {
+    groupBy.mockResolvedValue([
+      makeCustomer('regular', 2, '2026-01-01T00:00:00.000Z', '2026-06-20T00:00:00.000Z'),
+      makeCustomer('vip', 20, '2026-01-01T00:00:00.000Z', '2026-06-20T00:00:00.000Z'),
+    ])
+
+    await expect(service.resolveCustomerIds('owner-1', { audience: 'vip' }))
+      .resolves.toEqual(['vip'])
+  })
 })
 
 describe('buildTargetingPreview', () => {

@@ -853,6 +853,18 @@ components:
         data: { $ref: "#/components/schemas/PromotionTargetingPreview" }
       required: [success, data]
 
+    PromotionBroadcastEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            targeted: { type: integer, minimum: 0 }
+            sent: { type: integer, minimum: 0 }
+          required: [targeted, sent]
+      required: [success, data]
+
     Notification:
       type: object
       properties:
@@ -1910,6 +1922,34 @@ paths:
               schema: { $ref: "#/components/schemas/PromotionTargetingPreviewEnvelope" }
         "400":
           description: Invalid or unsupported targeting parameters
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
+
+  /restaurant/promotions/{promotionId}/broadcast:
+    post:
+      tags: [promotions]
+      summary: Broadcast a promotion to its tenant-scoped target audience
+      operationId: restaurant_broadcastPromotion
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Broadcast result for active target customers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PromotionBroadcastEnvelope" }
+        "400":
+          description: The promotion target is not currently supported
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
+        "404":
+          description: Promotion not found for the authenticated restaurant
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ProblemDetail" }
