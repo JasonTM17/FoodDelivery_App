@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgis/postgis:16-3.4-alpine
@@ -10,7 +8,7 @@ services:
       POSTGRES_PASSWORD: foodflow_dev
       POSTGRES_DB: foodflow
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
