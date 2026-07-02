@@ -1358,6 +1358,31 @@ components:
         - isActive
         - createdAt
 
+    AdminDriverLocation:
+      type: object
+      description: Live admin map location enriched from Redis driver presence and database-backed driver profile/order state.
+      properties:
+        id: { type: string, format: uuid, description: Driver user ID, example: 4d2b9fb7-8aa4-49f5-96f9-77d931f8f5a1 }
+        driverId: { type: string, format: uuid, description: Driver user ID, example: 4d2b9fb7-8aa4-49f5-96f9-77d931f8f5a1 }
+        name: { type: string, example: Nguyen Van Tai }
+        rating: { type: number, minimum: 0, maximum: 5, example: 4.8 }
+        status: { type: string, enum: [online, free, delivering, busy] }
+        lat: { type: number, format: double, example: 10.7769 }
+        lng: { type: number, format: double, example: 106.7009 }
+        currentOrder: { type: string, nullable: true, description: Active order code or ID when driver has an active order. }
+        vehicleType: { type: string, nullable: true, example: motorbike }
+        vehiclePlate: { type: string, nullable: true, example: 59A1-12345 }
+        lastSeenAt: { type: string, format: date-time }
+      required:
+        - id
+        - driverId
+        - name
+        - rating
+        - status
+        - lat
+        - lng
+        - lastSeenAt
+
     # ── Paged responses ──
 
     PaginatedUsers:
@@ -1415,6 +1440,14 @@ components:
         data: { type: array, items: { $ref: "#/components/schemas/AdminDriver" } }
         meta: { $ref: "#/components/schemas/PaginationMeta" }
       required: [success, data, meta]
+    AdminDriverLocationsResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/AdminDriverLocation" }
+      required: [success, data]
     PaginatedReviews:
       type: object
       properties:
@@ -3117,6 +3150,22 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedAdminDrivers" }
         "400": { description: Invalid query parameters, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "401": { description: Authentication required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: Admin role required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/online-drivers:
+    get:
+      tags: [drivers]
+      summary: List live online driver map positions
+      description: Returns Redis-backed active driver coordinates enriched with database-backed driver identity, vehicle profile and active order state for the admin map.
+      operationId: admin_listOnlineDriverLocations
+      x-foo-actor: admin
+      responses:
+        "200":
+          description: Online driver locations for the admin map
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminDriverLocationsResponse" }
         "401": { description: Authentication required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "403": { description: Admin role required, content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 

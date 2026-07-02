@@ -11,25 +11,19 @@ const statusColors: Record<string, string> = {
   busy: '#ef4444',
 };
 
-const statusLabels: Record<string, string> = {
-  online: 'Rảnh',
-  free: 'Rảnh',
-  delivering: 'Đang giao',
-  busy: 'Bận',
-};
-
 interface DriverMarkersProps {
   drivers: DriverLocation[];
+  statusLabels: Record<DriverLocation['status'], string>;
 }
 
-export default function DriverMarkers({ drivers }: DriverMarkersProps) {
+export default function DriverMarkers({ drivers, statusLabels }: DriverMarkersProps) {
   const map = useMap();
   const markersRef = useRef<google.maps.Marker[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const boundaryRef = useRef<google.maps.Data | null>(null);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map) return undefined;
     const dataLayer = new google.maps.Data();
     dataLayer.loadGeoJson('/data/vietnam-boundary.geojson');
     dataLayer.setStyle({
@@ -45,17 +39,17 @@ export default function DriverMarkers({ drivers }: DriverMarkersProps) {
   }, [map]);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map) return undefined;
     infoWindowRef.current = new google.maps.InfoWindow();
     return () => {
-      markersRef.current.forEach((m) => m.setMap(null));
+      markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
   }, [map]);
 
   useEffect(() => {
-    if (!map || !infoWindowRef.current) return;
-    markersRef.current.forEach((m) => m.setMap(null));
+    if (!map || !infoWindowRef.current) return undefined;
+    markersRef.current.forEach((marker) => marker.setMap(null));
 
     const newMarkers = drivers.map((driver) => {
       const color = statusColors[driver.status] || '#22c55e';
@@ -74,20 +68,27 @@ export default function DriverMarkers({ drivers }: DriverMarkersProps) {
       });
 
       marker.addListener('click', () => {
-        if (infoWindowRef.current) {
-          infoWindowRef.current.setContent(
-            `<div style="min-width:180px;padding:8px;font-size:13px"><strong>${driver.name}</strong><br/>Đánh giá: ${driver.rating.toFixed(1)}<br/>Trạng thái: ${statusLabels[driver.status] || driver.status}${driver.currentOrder ? `<br/>Đơn: ${driver.currentOrder}` : ''}</div>`
-          );
-          infoWindowRef.current.open(map, marker);
-        }
+        infoWindowRef.current?.setContent(
+          `<div style="min-width:180px;padding:8px;font-size:13px"><strong>${escapeHtml(driver.name)}</strong><br/>Rating: ${driver.rating.toFixed(1)}<br/>Status: ${escapeHtml(statusLabels[driver.status])}${driver.currentOrder ? `<br/>Order: ${escapeHtml(driver.currentOrder)}` : ''}</div>`,
+        );
+        infoWindowRef.current?.open(map, marker);
       });
 
       return marker;
     });
 
     markersRef.current = newMarkers;
-    return () => { newMarkers.forEach((m) => m.setMap(null)); };
-  }, [map, drivers]);
+    return () => { newMarkers.forEach((marker) => marker.setMap(null)); };
+  }, [map, drivers, statusLabels]);
 
   return null;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

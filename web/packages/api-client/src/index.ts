@@ -18,6 +18,8 @@ export type {
   AdminAiMonitorStats,
   AdminAiMonitorWorkflow,
   AdminDriver,
+  AdminDriverLocation,
+  AdminDriverLocationStatus,
   AdminDriverStatus,
   AdminDriverVehicleType,
   AiChatReply,

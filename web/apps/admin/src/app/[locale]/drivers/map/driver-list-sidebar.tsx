@@ -1,10 +1,10 @@
 'use client';
 
+import { AlertCircle, MapPin, RefreshCw, Star } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MapPin, Star } from 'lucide-react';
 import type { DriverLocation } from '@/hooks/use-realtime-driver-locations';
 
 const statusColors: Record<string, string> = {
@@ -14,48 +14,73 @@ const statusColors: Record<string, string> = {
   busy: 'bg-red-500',
 };
 
-const statusLabels: Record<string, string> = {
-  online: 'Rảnh',
-  free: 'Rảnh',
-  delivering: 'Đang giao',
-  busy: 'Bận',
-};
-
 interface DriverListSidebarProps {
   drivers: DriverLocation[];
+  isLoading: boolean;
+  error: string | null;
   selectedDriverId?: string;
+  statusLabels: Record<DriverLocation['status'], string>;
+  copy: {
+    title: string;
+    activeCount: string;
+    empty: string;
+    retry: string;
+  };
   onSelect: (driver: DriverLocation) => void;
+  onRetry: () => void;
 }
 
 export default function DriverListSidebar({
   drivers,
+  isLoading,
+  error,
   selectedDriverId,
+  statusLabels,
+  copy,
   onSelect,
+  onRetry,
 }: DriverListSidebarProps) {
   return (
-    <Card className="w-80 flex-shrink-0">
+    <Card className="w-full flex-shrink-0 lg:w-80">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <MapPin className="h-4 w-4 text-primary" />
-          Tài xế trực tuyến
+          {copy.title}
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {drivers.length} tài xế đang hoạt động
-        </p>
+        <p className="text-xs text-muted-foreground">{copy.activeCount}</p>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(100vh-16rem)]">
           <div className="divide-y px-3">
-            {drivers.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Không có tài xế nào trực tuyến
-              </p>
+            {error ? (
+              <div className="space-y-3 py-8 text-center text-sm text-muted-foreground">
+                <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+                <p>{error}</p>
+                <Button variant="outline" size="sm" onClick={onRetry}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  {copy.retry}
+                </Button>
+              </div>
+            ) : isLoading ? (
+              <div className="space-y-3 py-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="flex items-center gap-3 py-3">
+                    <div className="h-10 w-10 rounded-full bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/3 rounded bg-muted" />
+                      <div className="h-3 w-1/2 rounded bg-muted" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : drivers.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">{copy.empty}</p>
             ) : (
               drivers.map((driver) => (
                 <Button
                   key={driver.id}
                   variant="ghost"
-                  className={`flex w-full h-auto items-center gap-3 py-3 justify-start rounded-none font-normal ${
+                  className={`flex h-auto w-full items-center justify-start gap-3 rounded-none py-3 font-normal ${
                     selectedDriverId === driver.id ? 'bg-muted hover:bg-muted' : ''
                   }`}
                   onClick={() => onSelect(driver)}
@@ -72,14 +97,14 @@ export default function DriverListSidebar({
                       }`}
                     />
                   </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium truncate">{driver.name}</p>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-medium">{driver.name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-0.5">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         {driver.rating.toFixed(1)}
                       </span>
-                      <span>{statusLabels[driver.status] || driver.status}</span>
+                      <span>{statusLabels[driver.status]}</span>
                     </div>
                   </div>
                 </Button>

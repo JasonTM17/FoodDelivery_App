@@ -360,6 +360,29 @@
     "title": "サポート",
     "description": "顧客サポートリクエストの管理"
   },
+  "driverMap": {
+    "sidebarTitle": "オンライン配達員",
+    "activeCount": "{count, plural, =0 {稼働中の配達員はいません} one {#人が稼働中} other {#人が稼働中}}",
+    "empty": "現在オンラインの配達員はいません。",
+    "retry": "再試行",
+    "refresh": "更新",
+    "order": "注文",
+    "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
+    "missingKeyDescription": "ライブ地図を表示するには、admin環境に公開Google Mapsキーを追加してください。",
+    "renderErrorTitle": "配達員マップを表示できません",
+    "renderErrorDescription": "マップ画面の描画に失敗しました。バックエンド接続を確認して再試行してください。",
+    "connection": {
+      "connecting": "接続中",
+      "connected": "ライブ",
+      "disconnected": "オフライン"
+    },
+    "status": {
+      "online": "待機中",
+      "free": "待機中",
+      "delivering": "配達中",
+      "busy": "対応中"
+    }
+  },
   "aiMonitor": {
     "title": "AI & N8N モニター",
     "description": "FoodFlowの自動ワークフローとAIアシスタントの監視",

@@ -360,6 +360,29 @@
     "title": "Support",
     "description": "Manage customer support requests"
   },
+  "driverMap": {
+    "sidebarTitle": "Online drivers",
+    "activeCount": "{count, plural, =0 {No active drivers} one {# active driver} other {# active drivers}}",
+    "empty": "No drivers are currently online.",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "order": "Order",
+    "missingKeyTitle": "Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY",
+    "missingKeyDescription": "Add the public Google Maps key to the admin environment to display the live map.",
+    "renderErrorTitle": "Driver map is unavailable",
+    "renderErrorDescription": "The map route failed to render. Retry after checking the backend connection.",
+    "connection": {
+      "connecting": "Connecting",
+      "connected": "Live",
+      "disconnected": "Offline"
+    },
+    "status": {
+      "online": "Available",
+      "free": "Available",
+      "delivering": "Delivering",
+      "busy": "Busy"
+    }
+  },
   "aiMonitor": {
     "title": "AI & N8N Monitor",
     "description": "Monitor automated workflows and AI assistant on FoodFlow",

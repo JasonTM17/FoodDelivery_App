@@ -166,6 +166,7 @@ export interface AdminAiMonitorStats {
 
 export type AdminDriverStatus = 'online' | 'offline' | 'delivering';
 export type AdminDriverVehicleType = 'motorbike' | 'car' | 'bicycle';
+export type AdminDriverLocationStatus = 'online' | 'free' | 'delivering' | 'busy';
 
 export interface AdminDriver {
   id: string;
@@ -181,6 +182,20 @@ export interface AdminDriver {
   isVerified: boolean;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface AdminDriverLocation {
+  id: string;
+  driverId: string;
+  name: string;
+  rating: number;
+  status: AdminDriverLocationStatus;
+  lat: number;
+  lng: number;
+  currentOrder?: string;
+  vehicleType?: string;
+  vehiclePlate?: string | null;
+  lastSeenAt: string;
 }
 
 export interface AiChatRequest {

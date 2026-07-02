@@ -8,7 +8,7 @@ let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(`${SOCKET_URL}/admin`, {
+    socket = io(`${SOCKET_URL}/events`, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,

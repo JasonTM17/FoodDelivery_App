@@ -360,6 +360,29 @@
     "title": "Hỗ trợ",
     "description": "Quản lý yêu cầu hỗ trợ từ khách hàng"
   },
+  "driverMap": {
+    "sidebarTitle": "Tài xế trực tuyến",
+    "activeCount": "{count, plural, =0 {Không có tài xế hoạt động} one {# tài xế hoạt động} other {# tài xế hoạt động}}",
+    "empty": "Hiện không có tài xế trực tuyến.",
+    "retry": "Thử lại",
+    "refresh": "Làm mới",
+    "order": "Đơn",
+    "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",
+    "missingKeyDescription": "Thêm public Google Maps key vào môi trường admin để hiển thị bản đồ trực tiếp.",
+    "renderErrorTitle": "Không tải được bản đồ tài xế",
+    "renderErrorDescription": "Route bản đồ bị lỗi khi render. Kiểm tra kết nối backend rồi thử lại.",
+    "connection": {
+      "connecting": "Đang kết nối",
+      "connected": "Realtime",
+      "disconnected": "Mất kết nối"
+    },
+    "status": {
+      "online": "Rảnh",
+      "free": "Rảnh",
+      "delivering": "Đang giao",
+      "busy": "Bận"
+    }
+  },
   "aiMonitor": {
     "title": "AI & N8N Monitor",
     "description": "Giám sát workflow tự động và trợ lý AI của nền tảng FoodFlow",

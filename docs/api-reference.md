@@ -168,7 +168,30 @@ Restaurant management list.
 Support ticket list with kanban status.
 
 ### GET /admin/online-drivers
-Real-time online driver positions from Redis.
+Real-time online driver positions from Redis, enriched with DB driver profile and active order.
+
+Response envelope:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "driver-user-id",
+      "driverId": "driver-user-id",
+      "name": "Nguyen Van Tai",
+      "rating": 4.8,
+      "status": "delivering",
+      "lat": 10.7769,
+      "lng": 106.7009,
+      "currentOrder": "ORD-20260702-0001",
+      "vehicleType": "motorbike",
+      "vehiclePlate": "59A1-12345",
+      "lastSeenAt": "2026-07-02T09:00:00.000Z"
+    }
+  ]
+}
+```
 
 ### GET /admin/audit-logs
 Admin activity audit trail.
@@ -187,12 +210,15 @@ Connect to `ws://localhost:3001` with namespace:
 | `order:subscribe` | `{ orderId }` |
 | `driver:go_online` | `{ lat, lng }` |
 | `driver:go_offline` | `{}` |
+| `/events: admin:subscribe_drivers` | `{}` |
+| `/events: admin:unsubscribe_drivers` | `{}` |
 
 ### Server → Client
 | Event | Payload |
 |-------|---------|
 | `order:status_changed` | `{ orderId, status, timestamp }` |
 | `driver:location_changed` | `{ driverId, lat, lng, bearing, timestamp }` |
+| `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |
 | `delivery:eta_updated` | `{ orderId, etaMinutes }` |
 
