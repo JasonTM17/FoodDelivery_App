@@ -8,6 +8,9 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/notification_provider.dart';
+import '../widgets/notification_tile.dart';
+import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -38,43 +41,33 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     super.dispose();
   }
 
-  List<NotificationModel> _filtered(
-      List<NotificationModel> all, int tab) {
+  List<NotificationModel> _filtered(List<NotificationModel> all, int tab) {
     if (tab == 0) return all;
     final type = _typeMap[tab];
     return all.where((e) => e.type == type).toList();
   }
 
-  IconData _icon(String type) {
-    switch (type) {
-      case 'order':
-        return Icons.receipt_long_outlined;
-      case 'promo':
-        return Icons.local_offer_outlined;
-      default:
-        return Icons.notifications_none_outlined;
+  void _handleTap(NotificationModel item) {
+    if (!item.isRead) {
+      ref.read(notificationProvider.notifier).markRead(item.id);
     }
-  }
-
-  Color _iconColor(String type) {
-    switch (type) {
-      case 'order':
-        return AppColors.info;
-      case 'promo':
-        return AppColors.accent;
-      default:
-        return AppColors.textSecondary;
+    // Route to target screen based on notification type + deepLink
+    if (item.deepLink != null && item.deepLink!.isNotEmpty) {
+      context.push(item.deepLink!);
+      return;
     }
-  }
-
-  String _formatTime(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
-    return DateFormat('dd/MM/yyyy').format(dt);
+    // Fallback routing by type
+    switch (item.type) {
+      case 'order':
+        context.push(Routes.orders);
+        break;
+      case 'promo':
+        context.push(Routes.vouchers);
+        break;
+      default:
+        // System notification — no deep link, just mark as read
+        break;
+    }
   }
 
   @override
@@ -86,7 +79,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: BackButton(color: AppColors.textPrimary),
+        leading: const BackButton(color: AppColors.textPrimary),
         title: const Text('Thông báo', style: AppTextStyles.headline3),
         centerTitle: true,
         actions: [
@@ -98,9 +91,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               'Đọc tất cả',
               style: TextStyle(
                 fontSize: 12,
-                color: state.unreadCount > 0
-                    ? AppColors.primary
-                    : AppColors.textHint,
+                color: state.unreadCount > 0 ? AppColors.primary : AppColors.textHint,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -109,8 +100,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         bottom: TabBar(
           controller: _tabController,
           labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          unselectedLabelStyle:
-              const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+          unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
@@ -152,67 +142,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: items.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.divider),
-        itemBuilder: (_, i) => _buildCard(items[i]),
-      ),
-    );
-  }
-
-  Widget _buildCard(NotificationModel item) {
-    return InkWell(
-      onTap: () {
-        if (!item.isRead) {
-          ref.read(notificationProvider.notifier).markRead(item.id);
-        }
-        if (item.deepLink != null) context.push(item.deepLink!);
-      },
-      child: Container(
-        color: item.isRead ? null : AppColors.primary.withValues(alpha: 0.04),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _iconColor(item.type).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(_icon(item.type), size: 20, color: _iconColor(item.type)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title,
-                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.body,
-                    style: AppTextStyles.bodySmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(_formatTime(item.createdAt), style: AppTextStyles.caption),
-                ],
-              ),
-            ),
-            if (!item.isRead)
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 4, left: 8),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
+        separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.divider),
+        itemBuilder: (_, i) => NotificationTile(
+          notification: items[i],
+          onTap: () => _handleTap(items[i]),
         ),
       ),
     );

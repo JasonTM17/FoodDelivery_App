@@ -486,5 +486,122 @@
   "driver_settings_version": "Phiên bản {version}",
   "@driver_settings_version": {
     "placeholders": { "version": { "type": "String" } }
-  }
+  },
+
+  "favoritesTitle": "Yêu thích",
+  "favoritesEmpty": "Chưa có nhà hàng yêu thích",
+  "favoritesEmptySubtitle": "Hãy khám phá và thêm vào danh sách yêu thích của bạn",
+  "favoritesEmptyCta": "Khám phá nhà hàng",
+
+  "searchInputHint": "Tìm món ăn, nhà hàng...",
+  "searchButtonLabel": "Tìm",
+  "searchRecentLabel": "Tìm kiếm gần đây",
+  "searchClearAll": "Xóa tất cả",
+  "searchEmptyTitle": "Tìm kiếm món ăn, nhà hàng",
+  "searchEmptySubtitle": "Nhập tên món hoặc nhà hàng bạn muốn tìm",
+  "searchNoResults": "Không tìm thấy kết quả cho \"{query}\"",
+  "@searchNoResults": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "searchNoResultsSubtitle": "Thử từ khóa khác hoặc thay đổi bộ lọc",
+  "searchClosedBadge": "Đóng cửa",
+  "searchFilterNearest": "Gần nhất",
+  "searchFilterTopRated": "Đánh giá cao",
+  "searchFilterPriceLowHigh": "Giá thấp → cao",
+  "searchFilterOpenNow": "Đang mở",
+
+  "vouchersTitle": "Ưu đãi & Voucher",
+  "vouchersTabMine": "Của tôi",
+  "vouchersTabAvailable": "Khả dụng",
+  "vouchersTabExpired": "Hết hạn",
+  "vouchersCodeCopied": "Đã sao chép mã",
+  "vouchersEmptyMine": "Chưa có voucher",
+  "vouchersEmptyAvailable": "Chưa có voucher khả dụng",
+  "vouchersEmptyAvailableSubtitle": "Khám phá các voucher đang có sẵn",
+  "vouchersEmptyExpired": "Không có voucher hết hạn",
+  "vouchersEmptyExpiredSubtitle": "Voucher hết hạn sẽ xuất hiện ở đây",
+  "vouchersUseNow": "Dùng ngay",
+  "vouchersPercentOff": "Giảm {percent}%",
+  "@vouchersPercentOff": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "vouchersMinOrder": "Đơn tối thiểu {amount}",
+  "@vouchersMinOrder": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "vouchersExpiresAt": "HSD: {date}",
+  "@vouchersExpiresAt": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "membershipTitle": "FoodFlow Pro",
+  "membershipFreeLabel": "Miễn phí",
+  "membershipProTier": "Pro",
+  "membershipProPlusTier": "Pro+",
+  "membershipProPrice": "{price}/tháng",
+  "@membershipProPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "membershipCurrentBadge": "Gói hiện tại",
+  "membershipUpgradeCta": "Nâng cấp ngay",
+  "membershipChoosePlan": "Chọn gói phù hợp với bạn",
+  "membershipUpgradeBenefit": "Nâng cấp để nhận thêm đặc quyền",
+  "membershipUpgradedMessage": "Đã nâng cấp lên {tier}!",
+  "@membershipUpgradedMessage": {
+    "placeholders": { "tier": { "type": "String" } }
+  },
+  "membershipUpgradeFailed": "Không thể nâng cấp",
+  "membershipValidUntil": "Có hiệu lực đến {date}",
+  "@membershipValidUntil": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "membershipPerMonth": "/tháng",
+  "membershipBenefitBasicDelivery": "Giao hàng cơ bản",
+  "membershipBenefitBasicPoints": "Tích điểm thưởng 1%",
+  "membershipBenefitFreeDelivery": "Miễn phí giao hàng không giới hạn",
+  "membershipBenefitPriorityDriver": "Ưu tiên tài xế cao cấp",
+  "membershipBenefitBonusPoints3": "Tích điểm thưởng 3%",
+  "membershipBenefitVipDriver": "Ưu tiên tài xế cao cấp nhất",
+  "membershipBenefitBonusPoints5": "Tích điểm thưởng 5%",
+  "membershipBenefitVoucher100k": "Voucher sinh nhật 100K₫",
+  "membershipBenefitVoucher200k": "Voucher sinh nhật 200K₫",
+  "membershipBenefitVipSupport": "Hỗ trợ 24/7 VIP",
+
+  "cancelOrderTitle": "Hủy đơn hàng",
+  "cancelOrderSuccess": "Đã hủy đơn hàng thành công",
+  "cancelOrderFailed": "Không thể hủy đơn hàng",
+  "cancelOrderInfoHeader": "Thông tin đơn hàng",
+  "cancelOrderReasonHeader": "Chọn lý do hủy",
+  "cancelOrderReasonSubtitle": "Chúng tôi rất tiếc nếu có điều gì không như ý",
+  "cancelOrderReasonSlow": "Nhà hàng quá lâu",
+  "cancelOrderReasonChanged": "Đổi ý",
+  "cancelOrderReasonWrong": "Đặt nhầm",
+  "cancelOrderReasonOther": "Khác",
+  "cancelOrderNoteHint": "Ghi chú thêm (tùy chọn)",
+  "cancelOrderRefundNote": "Hoàn tiền trong 3-5 ngày làm việc",
+  "cancelOrderConfirmCta": "Xác nhận hủy",
+
+  "helpCenterSearchHint": "Tìm câu hỏi...",
+  "helpCenterChatCta": "Chat với hỗ trợ",
+  "helpCenterNoResults": "Không tìm thấy câu hỏi phù hợp",
+  "helpCategoryOrders": "Đơn hàng",
+  "helpCategoryPayment": "Thanh toán",
+  "helpCategoryDelivery": "Giao hàng",
+  "helpCategoryAccount": "Tài khoản",
+  "helpFaqCancelOrderQ": "Làm thế nào để hủy đơn hàng?",
+  "helpFaqCancelOrderA": "Bạn có thể hủy đơn hàng trong vòng 2 phút sau khi đặt. Vào \"Đơn hàng\" → chọn đơn → nhấn \"Hủy đơn\".",
+  "helpFaqLateDeliveryQ": "Đơn hàng bị trễ phải làm gì?",
+  "helpFaqLateDeliveryA": "Vui lòng liên hệ chat hỗ trợ để chúng tôi kiểm tra trực tiếp với tài xế.",
+  "helpFaqPaymentMethodsQ": "Phương thức thanh toán nào được chấp nhận?",
+  "helpFaqPaymentMethodsA": "Hiện tại chúng tôi chấp nhận tiền mặt khi nhận hàng và ví điện tử FoodFlow.",
+  "helpFaqTopUpWalletQ": "Làm thế nào để nạp tiền vào ví?",
+  "helpFaqTopUpWalletA": "Vào \"Cá nhân\" → \"Ví điện tử\" → nhấn \"Nạp tiền\" và chọn mệnh giá mong muốn.",
+  "helpFaqAddAddressQ": "Làm sao để thêm địa chỉ giao hàng?",
+  "helpFaqAddAddressA": "Vào \"Cá nhân\" → \"Địa chỉ của tôi\" → nhấn \"Thêm địa chỉ\" và nhập thông tin.",
+  "helpFaqMissingOrderQ": "Tôi không nhận được đơn hàng, phải làm gì?",
+  "helpFaqMissingOrderA": "Nếu tài xế đã đánh dấu giao thành công nhưng bạn chưa nhận được, hãy liên hệ hỗ trợ ngay.",
+  "helpFaqRewardPointsQ": "Điểm thưởng được tích như thế nào?",
+  "helpFaqRewardPointsA": "Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.",
+  "helpFaqTrackOrderQ": "Làm sao để theo dõi đơn hàng real-time?",
+  "helpFaqTrackOrderA": "Sau khi đặt hàng thành công, vào \"Đơn hàng\" → chọn đơn đang hoạt động → nhấn \"Theo dõi\"."
 }

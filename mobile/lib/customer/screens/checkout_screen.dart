@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../shared/providers/cart_provider.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/models/user.dart';
@@ -7,6 +8,7 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/address_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -214,7 +216,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
             )),
             TextButton.icon(
-              onPressed: () => Navigator.of(context).pushNamed('/addresses'),
+              onPressed: () => context.push(Routes.addresses),
               icon: const Icon(Icons.add, size: 18),
               label: Text(l10n.checkoutAddAddress),
             ),

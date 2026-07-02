@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/cart_provider.dart';
 import '../widgets/cart_item_tile.dart';
@@ -8,6 +9,7 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -292,7 +294,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pushNamed('/checkout'),
+                  onPressed: () => context.push(Routes.checkout),
                   child: Text(
                     '${l10n.cartPlaceOrder} · ${_formatPrice(cartState.total)}',
                     style: const TextStyle(fontSize: 16),

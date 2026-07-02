@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../router/route_names.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -41,7 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      context.go(Routes.home);
     }
   }
 
@@ -218,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.of(context).pushNamed('/register'),
+                      onPressed: () => context.push(Routes.register),
                       child: Text(
                         l10n.registerLink,
                         style: const TextStyle(
@@ -232,9 +234,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 8),
 
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/register-driver');
-                  },
+                  onPressed: () => context.push(Routes.registerDriver),
                   child: Text(
                     l10n.registerAsDriver,
                     style: const TextStyle(

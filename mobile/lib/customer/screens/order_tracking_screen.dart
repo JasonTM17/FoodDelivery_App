@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/providers/tracking_provider.dart';
@@ -11,6 +12,7 @@ import '../../shared/theme/vietnam_map_constants.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../../l10n/app_localizations.dart';
+import '../router/route_names.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -237,10 +239,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                               Icons.chat_outlined,
                                               AppLocalizations.of(context)!.trackingMessageDriver,
                                               AppColors.accent,
-                                              () => Navigator.of(context).pushNamed(
-                                                '/chat',
-                                                arguments: widget.orderId,
-                                              ),
+                                              () => context.push(Routes.chat, extra: widget.orderId),
                                             ),
                                           ],
                                         ),

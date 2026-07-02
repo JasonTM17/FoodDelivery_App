@@ -1273,4 +1273,291 @@ class AppLocalizationsVi extends AppLocalizations {
   String driver_settings_version(String version) {
     return 'Phiên bản $version';
   }
+
+  @override
+  String get favoritesTitle => 'Yêu thích';
+
+  @override
+  String get favoritesEmpty => 'Chưa có nhà hàng yêu thích';
+
+  @override
+  String get favoritesEmptySubtitle =>
+      'Hãy khám phá và thêm vào danh sách yêu thích của bạn';
+
+  @override
+  String get favoritesEmptyCta => 'Khám phá nhà hàng';
+
+  @override
+  String get searchInputHint => 'Tìm món ăn, nhà hàng...';
+
+  @override
+  String get searchButtonLabel => 'Tìm';
+
+  @override
+  String get searchRecentLabel => 'Tìm kiếm gần đây';
+
+  @override
+  String get searchClearAll => 'Xóa tất cả';
+
+  @override
+  String get searchEmptyTitle => 'Tìm kiếm món ăn, nhà hàng';
+
+  @override
+  String get searchEmptySubtitle => 'Nhập tên món hoặc nhà hàng bạn muốn tìm';
+
+  @override
+  String searchNoResults(String query) {
+    return 'Không tìm thấy kết quả cho \"$query\"';
+  }
+
+  @override
+  String get searchNoResultsSubtitle => 'Thử từ khóa khác hoặc thay đổi bộ lọc';
+
+  @override
+  String get searchClosedBadge => 'Đóng cửa';
+
+  @override
+  String get searchFilterNearest => 'Gần nhất';
+
+  @override
+  String get searchFilterTopRated => 'Đánh giá cao';
+
+  @override
+  String get searchFilterPriceLowHigh => 'Giá thấp → cao';
+
+  @override
+  String get searchFilterOpenNow => 'Đang mở';
+
+  @override
+  String get vouchersTitle => 'Ưu đãi & Voucher';
+
+  @override
+  String get vouchersTabMine => 'Của tôi';
+
+  @override
+  String get vouchersTabAvailable => 'Khả dụng';
+
+  @override
+  String get vouchersTabExpired => 'Hết hạn';
+
+  @override
+  String get vouchersCodeCopied => 'Đã sao chép mã';
+
+  @override
+  String get vouchersEmptyMine => 'Chưa có voucher';
+
+  @override
+  String get vouchersEmptyAvailable => 'Chưa có voucher khả dụng';
+
+  @override
+  String get vouchersEmptyAvailableSubtitle =>
+      'Khám phá các voucher đang có sẵn';
+
+  @override
+  String get vouchersEmptyExpired => 'Không có voucher hết hạn';
+
+  @override
+  String get vouchersEmptyExpiredSubtitle =>
+      'Voucher hết hạn sẽ xuất hiện ở đây';
+
+  @override
+  String get vouchersUseNow => 'Dùng ngay';
+
+  @override
+  String vouchersPercentOff(int percent) {
+    return 'Giảm $percent%';
+  }
+
+  @override
+  String vouchersMinOrder(String amount) {
+    return 'Đơn tối thiểu $amount';
+  }
+
+  @override
+  String vouchersExpiresAt(String date) {
+    return 'HSD: $date';
+  }
+
+  @override
+  String get membershipTitle => 'FoodFlow Pro';
+
+  @override
+  String get membershipFreeLabel => 'Miễn phí';
+
+  @override
+  String get membershipProTier => 'Pro';
+
+  @override
+  String get membershipProPlusTier => 'Pro+';
+
+  @override
+  String membershipProPrice(String price) {
+    return '$price/tháng';
+  }
+
+  @override
+  String get membershipCurrentBadge => 'Gói hiện tại';
+
+  @override
+  String get membershipUpgradeCta => 'Nâng cấp ngay';
+
+  @override
+  String get membershipChoosePlan => 'Chọn gói phù hợp với bạn';
+
+  @override
+  String get membershipUpgradeBenefit => 'Nâng cấp để nhận thêm đặc quyền';
+
+  @override
+  String membershipUpgradedMessage(String tier) {
+    return 'Đã nâng cấp lên $tier!';
+  }
+
+  @override
+  String get membershipUpgradeFailed => 'Không thể nâng cấp';
+
+  @override
+  String membershipValidUntil(String date) {
+    return 'Có hiệu lực đến $date';
+  }
+
+  @override
+  String get membershipPerMonth => '/tháng';
+
+  @override
+  String get membershipBenefitBasicDelivery => 'Giao hàng cơ bản';
+
+  @override
+  String get membershipBenefitBasicPoints => 'Tích điểm thưởng 1%';
+
+  @override
+  String get membershipBenefitFreeDelivery =>
+      'Miễn phí giao hàng không giới hạn';
+
+  @override
+  String get membershipBenefitPriorityDriver => 'Ưu tiên tài xế cao cấp';
+
+  @override
+  String get membershipBenefitBonusPoints3 => 'Tích điểm thưởng 3%';
+
+  @override
+  String get membershipBenefitVipDriver => 'Ưu tiên tài xế cao cấp nhất';
+
+  @override
+  String get membershipBenefitBonusPoints5 => 'Tích điểm thưởng 5%';
+
+  @override
+  String get membershipBenefitVoucher100k => 'Voucher sinh nhật 100K₫';
+
+  @override
+  String get membershipBenefitVoucher200k => 'Voucher sinh nhật 200K₫';
+
+  @override
+  String get membershipBenefitVipSupport => 'Hỗ trợ 24/7 VIP';
+
+  @override
+  String get cancelOrderTitle => 'Hủy đơn hàng';
+
+  @override
+  String get cancelOrderSuccess => 'Đã hủy đơn hàng thành công';
+
+  @override
+  String get cancelOrderFailed => 'Không thể hủy đơn hàng';
+
+  @override
+  String get cancelOrderInfoHeader => 'Thông tin đơn hàng';
+
+  @override
+  String get cancelOrderReasonHeader => 'Chọn lý do hủy';
+
+  @override
+  String get cancelOrderReasonSubtitle =>
+      'Chúng tôi rất tiếc nếu có điều gì không như ý';
+
+  @override
+  String get cancelOrderReasonSlow => 'Nhà hàng quá lâu';
+
+  @override
+  String get cancelOrderReasonChanged => 'Đổi ý';
+
+  @override
+  String get cancelOrderReasonWrong => 'Đặt nhầm';
+
+  @override
+  String get cancelOrderReasonOther => 'Khác';
+
+  @override
+  String get cancelOrderNoteHint => 'Ghi chú thêm (tùy chọn)';
+
+  @override
+  String get cancelOrderRefundNote => 'Hoàn tiền trong 3-5 ngày làm việc';
+
+  @override
+  String get cancelOrderConfirmCta => 'Xác nhận hủy';
+
+  @override
+  String get helpCenterSearchHint => 'Tìm câu hỏi...';
+
+  @override
+  String get helpCenterChatCta => 'Chat với hỗ trợ';
+
+  @override
+  String get helpCenterNoResults => 'Không tìm thấy câu hỏi phù hợp';
+
+  @override
+  String get helpFaqCancelOrderQ => 'Làm thế nào để hủy đơn hàng?';
+
+  @override
+  String get helpFaqCancelOrderA =>
+      'Bạn có thể hủy đơn hàng trong vòng 2 phút sau khi đặt. Vào \"Đơn hàng\" → chọn đơn → nhấn \"Hủy đơn\".';
+
+  @override
+  String get helpFaqLateDeliveryQ => 'Đơn hàng bị trễ phải làm gì?';
+
+  @override
+  String get helpFaqLateDeliveryA =>
+      'Vui lòng liên hệ chat hỗ trợ để chúng tôi kiểm tra trực tiếp với tài xế.';
+
+  @override
+  String get helpFaqPaymentMethodsQ =>
+      'Phương thức thanh toán nào được chấp nhận?';
+
+  @override
+  String get helpFaqPaymentMethodsA =>
+      'Hiện tại chúng tôi chấp nhận tiền mặt khi nhận hàng và ví điện tử FoodFlow.';
+
+  @override
+  String get helpFaqTopUpWalletQ => 'Làm thế nào để nạp tiền vào ví?';
+
+  @override
+  String get helpFaqTopUpWalletA =>
+      'Vào \"Cá nhân\" → \"Ví điện tử\" → nhấn \"Nạp tiền\" và chọn mệnh giá mong muốn.';
+
+  @override
+  String get helpFaqAddAddressQ => 'Làm sao để thêm địa chỉ giao hàng?';
+
+  @override
+  String get helpFaqAddAddressA =>
+      'Vào \"Cá nhân\" → \"Địa chỉ của tôi\" → nhấn \"Thêm địa chỉ\" và nhập thông tin.';
+
+  @override
+  String get helpFaqMissingOrderQ =>
+      'Tôi không nhận được đơn hàng, phải làm gì?';
+
+  @override
+  String get helpFaqMissingOrderA =>
+      'Nếu tài xế đã đánh dấu giao thành công nhưng bạn chưa nhận được, hãy liên hệ hỗ trợ ngay.';
+
+  @override
+  String get helpFaqRewardPointsQ => 'Điểm thưởng được tích như thế nào?';
+
+  @override
+  String get helpFaqRewardPointsA =>
+      'Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.';
+
+  @override
+  String get helpFaqTrackOrderQ => 'Làm sao để theo dõi đơn hàng real-time?';
+
+  @override
+  String get helpFaqTrackOrderA =>
+      'Sau khi đặt hàng thành công, vào \"Đơn hàng\" → chọn đơn đang hoạt động → nhấn \"Theo dõi\".';
 }

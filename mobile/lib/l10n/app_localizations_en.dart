@@ -1270,4 +1270,289 @@ class AppLocalizationsEn extends AppLocalizations {
   String driver_settings_version(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get favoritesTitle => 'Favorites';
+
+  @override
+  String get favoritesEmpty => 'No favorite restaurants yet';
+
+  @override
+  String get favoritesEmptySubtitle =>
+      'Explore and add restaurants to your favorites';
+
+  @override
+  String get favoritesEmptyCta => 'Explore restaurants';
+
+  @override
+  String get searchInputHint => 'Search food, restaurants...';
+
+  @override
+  String get searchButtonLabel => 'Search';
+
+  @override
+  String get searchRecentLabel => 'Recent searches';
+
+  @override
+  String get searchClearAll => 'Clear all';
+
+  @override
+  String get searchEmptyTitle => 'Search food, restaurants';
+
+  @override
+  String get searchEmptySubtitle =>
+      'Enter a dish name or restaurant you\'re looking for';
+
+  @override
+  String searchNoResults(String query) {
+    return 'No results found for \"$query\"';
+  }
+
+  @override
+  String get searchNoResultsSubtitle => 'Try other keywords or change filters';
+
+  @override
+  String get searchClosedBadge => 'Closed';
+
+  @override
+  String get searchFilterNearest => 'Nearest';
+
+  @override
+  String get searchFilterTopRated => 'Top rated';
+
+  @override
+  String get searchFilterPriceLowHigh => 'Price low → high';
+
+  @override
+  String get searchFilterOpenNow => 'Open now';
+
+  @override
+  String get vouchersTitle => 'Offers & Vouchers';
+
+  @override
+  String get vouchersTabMine => 'My vouchers';
+
+  @override
+  String get vouchersTabAvailable => 'Available';
+
+  @override
+  String get vouchersTabExpired => 'Expired';
+
+  @override
+  String get vouchersCodeCopied => 'Code copied';
+
+  @override
+  String get vouchersEmptyMine => 'No vouchers yet';
+
+  @override
+  String get vouchersEmptyAvailable => 'No vouchers available';
+
+  @override
+  String get vouchersEmptyAvailableSubtitle => 'Explore available vouchers';
+
+  @override
+  String get vouchersEmptyExpired => 'No expired vouchers';
+
+  @override
+  String get vouchersEmptyExpiredSubtitle =>
+      'Expired vouchers will appear here';
+
+  @override
+  String get vouchersUseNow => 'Use now';
+
+  @override
+  String vouchersPercentOff(int percent) {
+    return '$percent% off';
+  }
+
+  @override
+  String vouchersMinOrder(String amount) {
+    return 'Min order $amount';
+  }
+
+  @override
+  String vouchersExpiresAt(String date) {
+    return 'Expires: $date';
+  }
+
+  @override
+  String get membershipTitle => 'FoodFlow Pro';
+
+  @override
+  String get membershipFreeLabel => 'Free';
+
+  @override
+  String get membershipProTier => 'Pro';
+
+  @override
+  String get membershipProPlusTier => 'Pro+';
+
+  @override
+  String membershipProPrice(String price) {
+    return '$price/month';
+  }
+
+  @override
+  String get membershipCurrentBadge => 'Current plan';
+
+  @override
+  String get membershipUpgradeCta => 'Upgrade now';
+
+  @override
+  String get membershipChoosePlan => 'Choose a plan that fits you';
+
+  @override
+  String get membershipUpgradeBenefit => 'Upgrade to unlock more benefits';
+
+  @override
+  String membershipUpgradedMessage(String tier) {
+    return 'Upgraded to $tier!';
+  }
+
+  @override
+  String get membershipUpgradeFailed => 'Unable to upgrade';
+
+  @override
+  String membershipValidUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get membershipPerMonth => '/month';
+
+  @override
+  String get membershipBenefitBasicDelivery => 'Basic delivery';
+
+  @override
+  String get membershipBenefitBasicPoints => 'Earn 1% reward points';
+
+  @override
+  String get membershipBenefitFreeDelivery => 'Unlimited free delivery';
+
+  @override
+  String get membershipBenefitPriorityDriver => 'Priority premium drivers';
+
+  @override
+  String get membershipBenefitBonusPoints3 => 'Earn 3% reward points';
+
+  @override
+  String get membershipBenefitVipDriver => 'Top-tier priority drivers';
+
+  @override
+  String get membershipBenefitBonusPoints5 => 'Earn 5% reward points';
+
+  @override
+  String get membershipBenefitVoucher100k => 'Birthday voucher 100K₫';
+
+  @override
+  String get membershipBenefitVoucher200k => 'Birthday voucher 200K₫';
+
+  @override
+  String get membershipBenefitVipSupport => '24/7 VIP support';
+
+  @override
+  String get cancelOrderTitle => 'Cancel Order';
+
+  @override
+  String get cancelOrderSuccess => 'Order cancelled successfully';
+
+  @override
+  String get cancelOrderFailed => 'Unable to cancel order';
+
+  @override
+  String get cancelOrderInfoHeader => 'Order information';
+
+  @override
+  String get cancelOrderReasonHeader => 'Select cancellation reason';
+
+  @override
+  String get cancelOrderReasonSubtitle =>
+      'We\'re sorry if something wasn\'t right';
+
+  @override
+  String get cancelOrderReasonSlow => 'Restaurant too slow';
+
+  @override
+  String get cancelOrderReasonChanged => 'Changed my mind';
+
+  @override
+  String get cancelOrderReasonWrong => 'Ordered by mistake';
+
+  @override
+  String get cancelOrderReasonOther => 'Other';
+
+  @override
+  String get cancelOrderNoteHint => 'Additional note (optional)';
+
+  @override
+  String get cancelOrderRefundNote => 'Refund within 3-5 business days';
+
+  @override
+  String get cancelOrderConfirmCta => 'Confirm cancellation';
+
+  @override
+  String get helpCenterSearchHint => 'Search questions...';
+
+  @override
+  String get helpCenterChatCta => 'Chat with support';
+
+  @override
+  String get helpCenterNoResults => 'No matching questions found';
+
+  @override
+  String get helpFaqCancelOrderQ => 'How do I cancel an order?';
+
+  @override
+  String get helpFaqCancelOrderA =>
+      'You can cancel an order within 2 minutes of placing it. Go to \"Orders\" → select order → tap \"Cancel\".';
+
+  @override
+  String get helpFaqLateDeliveryQ => 'What should I do if my order is late?';
+
+  @override
+  String get helpFaqLateDeliveryA =>
+      'Please contact chat support so we can check directly with the driver.';
+
+  @override
+  String get helpFaqPaymentMethodsQ => 'Which payment methods are accepted?';
+
+  @override
+  String get helpFaqPaymentMethodsA =>
+      'We currently accept cash on delivery and FoodFlow e-wallet.';
+
+  @override
+  String get helpFaqTopUpWalletQ => 'How do I top up my wallet?';
+
+  @override
+  String get helpFaqTopUpWalletA =>
+      'Go to \"Profile\" → \"Wallet\" → tap \"Top Up\" and select the desired amount.';
+
+  @override
+  String get helpFaqAddAddressQ => 'How do I add a delivery address?';
+
+  @override
+  String get helpFaqAddAddressA =>
+      'Go to \"Profile\" → \"My Addresses\" → tap \"Add Address\" and enter the details.';
+
+  @override
+  String get helpFaqMissingOrderQ =>
+      'I didn\'t receive my order, what should I do?';
+
+  @override
+  String get helpFaqMissingOrderA =>
+      'If the driver marked the order as delivered but you haven\'t received it, contact support immediately.';
+
+  @override
+  String get helpFaqRewardPointsQ => 'How are reward points earned?';
+
+  @override
+  String get helpFaqRewardPointsA =>
+      'You earn 10 points for every completed order. Successfully referring a friend gives you an extra 50 points.';
+
+  @override
+  String get helpFaqTrackOrderQ => 'How do I track my order in real-time?';
+
+  @override
+  String get helpFaqTrackOrderA =>
+      'After placing an order, go to \"Orders\" → select the active order → tap \"Track\".';
 }
