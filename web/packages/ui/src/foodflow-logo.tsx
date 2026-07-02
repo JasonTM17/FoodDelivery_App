@@ -21,9 +21,11 @@ export function FoodFlowLogo({
   ...props
 }: FoodFlowLogoProps) {
   const id = React.useId().replace(/:/g, "")
-  const backgroundId = `foodflow-mark-bg-${id}`
-  const shineId = `foodflow-mark-shine-${id}`
+  const surfaceId = `foodflow-mark-surface-${id}`
+  const glowId = `foodflow-mark-glow-${id}`
   const routeId = `foodflow-mark-route-${id}`
+  const leafId = `foodflow-mark-leaf-${id}`
+  const pinId = `foodflow-mark-pin-${id}`
 
   return (
     <div
@@ -39,75 +41,82 @@ export function FoodFlowLogo({
         className={cn("h-10 w-10 shrink-0 drop-shadow-sm", markClassName)}
       >
         <defs>
-          <linearGradient id={backgroundId} x1="9" y1="8" x2="56" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F97316" />
-            <stop offset="0.56" stopColor="#FB923C" />
-            <stop offset="1" stopColor="#16A34A" />
+          <linearGradient id={surfaceId} x1="8" y1="8" x2="57" y2="57" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#EA580C" />
+            <stop offset="0.48" stopColor="#F97316" />
+            <stop offset="1" stopColor="#15803D" />
           </linearGradient>
-          <radialGradient id={shineId} cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(22 16) rotate(51.8) scale(42.4)">
+          <radialGradient id={glowId} cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(21 16) rotate(48) scale(42)">
             <stop stopColor="#FFF7ED" stopOpacity="0.95" />
-            <stop offset="1" stopColor="#FFF7ED" stopOpacity="0" />
+            <stop offset="1" stopColor="#FFF7ED" stopOpacity="0.04" />
           </radialGradient>
-          <linearGradient id={routeId} x1="15" y1="19" x2="49" y2="47" gradientUnits="userSpaceOnUse">
+          <linearGradient id={routeId} x1="15" y1="17" x2="51" y2="40" gradientUnits="userSpaceOnUse">
             <stop stopColor="#FFFFFF" />
-            <stop offset="0.54" stopColor="#FFEDD5" />
+            <stop offset="0.55" stopColor="#FED7AA" />
             <stop offset="1" stopColor="#DCFCE7" />
+          </linearGradient>
+          <linearGradient id={leafId} x1="30" y1="12" x2="48" y2="29" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#DCFCE7" />
+            <stop offset="1" stopColor="#22C55E" />
+          </linearGradient>
+          <linearGradient id={pinId} x1="38" y1="29" x2="51" y2="50" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#166534" />
+            <stop offset="1" stopColor="#14532D" />
           </linearGradient>
         </defs>
 
-        <rect x="4" y="4" width="56" height="56" rx="17" fill={`url(#${backgroundId})`} />
-        <rect x="4" y="4" width="56" height="56" rx="17" fill={`url(#${shineId})`} />
-        <rect x="5.25" y="5.25" width="53.5" height="53.5" rx="16" fill="none" stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="1.5" />
+        <rect x="4" y="4" width="56" height="56" rx="18" fill={`url(#${surfaceId})`} />
+        <rect x="4" y="4" width="56" height="56" rx="18" fill={`url(#${glowId})`} />
+        <rect x="5.25" y="5.25" width="53.5" height="53.5" rx="16.75" fill="none" stroke="#FFFFFF" strokeOpacity="0.32" strokeWidth="1.5" />
 
         <path
-          d="M18.5 22.5c5.8-5.7 15.1-6.6 21.8-1.8 4.4 3.1 6.9 7.4 7.2 12.1"
+          d="M16.5 26.4c7-9.9 21.8-10.9 31-.5"
           fill="none"
           stroke={`url(#${routeId})`}
-          strokeWidth="4.2"
+          strokeWidth="4"
           strokeLinecap="round"
-          strokeDasharray="1 7"
           opacity="0.95"
         />
-        <circle cx="18.5" cy="22.5" r="4.2" fill="#FFF7ED" />
-        <circle cx="18.5" cy="22.5" r="1.6" fill="#F97316" />
+        <circle cx="16.5" cy="26.4" r="4.1" fill="#FFF7ED" />
+        <circle cx="16.5" cy="26.4" r="1.55" fill="#EA580C" />
 
         <path
-          d="M15.5 36.2h33c-1.7 8.5-8 14.1-16.5 14.1s-14.8-5.6-16.5-14.1Z"
+          d="M14.6 37.1h34.8c-2 8.3-8.6 13.8-17.4 13.8s-15.4-5.5-17.4-13.8Z"
           fill="#FFF7ED"
           opacity="0.96"
         />
-        <path d="M14.8 34.2h34.4" stroke="#FFEDD5" strokeWidth="3.8" strokeLinecap="round" />
+        <path d="M14.2 34.8h35.6" stroke="#FFEDD5" strokeWidth="3.9" strokeLinecap="round" />
         <path
-          d="M21.2 31.1c4.8-6.7 11.3-7.7 16.3-11.5"
+          d="M22.4 31.2c4.7-5.8 10.6-6.8 15.4-10.6"
           fill="none"
           stroke="#FFFFFF"
-          strokeWidth="4"
+          strokeWidth="3.6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
-          d="M24.2 29.3c4.7 1.1 8.7 2.5 13.2 6.4"
+          d="M23.8 28.7c4.4 1.2 8.3 2.8 12.9 6.7"
           fill="none"
           stroke="#FED7AA"
-          strokeWidth="3"
+          strokeWidth="2.8"
           strokeLinecap="round"
           strokeLinejoin="round"
           opacity="0.95"
         />
         <path
-          d="M40.6 12.3c5.2.5 8.6 4.1 9.1 9.2-5.1-.1-8.9-3.7-9.1-9.2Z"
-          fill="#BBF7D0"
+          d="M39.5 12.7c5.3.6 8.5 4.2 8.9 9.2-5.2 0-8.7-3.6-8.9-9.2Z"
+          fill={`url(#${leafId})`}
         />
         <path
-          d="M37.7 15c-3.8 4.2-3.8 9-.5 13.1 4.7-3.2 5.1-8.4.5-13.1Z"
+          d="M36.8 15.2c-3.6 4.4-3.5 9.2-.1 13.1 4.5-3.3 4.8-8.4.1-13.1Z"
           fill="#22C55E"
         />
         <path
-          d="M43.8 31.9c4.2 0 7.2 3 7.2 6.8 0 5.1-7.2 10.6-7.2 10.6s-7.2-5.5-7.2-10.6c0-3.8 3-6.8 7.2-6.8Z"
-          fill="#166534"
+          d="M44.5 31.9c4.1 0 7.1 3 7.1 6.8 0 5.1-7.1 10.7-7.1 10.7s-7.1-5.6-7.1-10.7c0-3.8 3-6.8 7.1-6.8Z"
+          fill={`url(#${pinId})`}
           opacity="0.92"
         />
-        <circle cx="43.8" cy="38.8" r="2.5" fill="#DCFCE7" />
+        <circle cx="44.5" cy="38.7" r="2.5" fill="#DCFCE7" />
       </svg>
 
       {showWordmark ? (

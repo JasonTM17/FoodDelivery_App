@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, RefreshCw } from 'lucide-react';
+import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
+import { RefreshCw } from 'lucide-react';
 
 export default function GlobalError({
   error,
@@ -14,9 +15,7 @@ export default function GlobalError({
     <html lang="vi">
       <body className="bg-background">
         <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-            <UtensilsCrossed className="h-10 w-10 text-primary" />
-          </div>
+          <FoodFlowLogo showWordmark={false} markClassName="h-20 w-20" />
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Lỗi hệ thống</h1>
             <p className="text-sm text-muted-foreground max-w-md">

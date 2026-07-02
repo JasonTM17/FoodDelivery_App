@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { UtensilsCrossed, ArrowLeft, Home } from 'lucide-react'
+import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo'
+import { ArrowLeft, Home } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function NotFound() {
@@ -10,9 +11,7 @@ export default function NotFound() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 mb-6">
-        <UtensilsCrossed className="h-10 w-10 text-primary" />
-      </div>
+      <FoodFlowLogo showWordmark={false} className="mb-6" markClassName="h-20 w-20" />
       <h1 className="text-6xl font-bold text-muted-foreground/30 mb-2">404</h1>
       <h2 className="text-xl font-semibold mb-2">Không tìm thấy trang</h2>
       <p className="text-sm text-muted-foreground mb-8 max-w-md text-center">
