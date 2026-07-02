@@ -5,14 +5,13 @@ export interface ApiSuccessResponse<T> {
 }
 
 export interface ApiErrorResponse {
-  success: false
-  error: {
-    code: string
-    message: string
-    details?: Record<string, unknown>
-  }
-  timestamp: string
-  path: string
+  type: string
+  title: string
+  detail: string
+  code: string
+  status: number
+  instance: string
+  errors?: unknown
 }
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse

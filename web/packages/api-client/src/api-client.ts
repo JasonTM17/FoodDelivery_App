@@ -152,15 +152,25 @@ export class FoodFlowApiClient {
     try {
       const value = (await response.json()) as Partial<ProblemDetail> & {
         message?: string | string[];
-        error?: string;
+        error?: string | {
+          code?: string;
+          message?: string;
+          details?: unknown;
+        };
       };
       const legacyMessage = Array.isArray(value.message) ? value.message.join('; ') : value.message;
+      const nestedError =
+        typeof value.error === 'object' && value.error !== null ? value.error : undefined;
+      const stringError = typeof value.error === 'string' ? value.error : undefined;
       return new ApiClientError({
-        ...fallback,
-        ...value,
-        title: value.title || legacyMessage || value.error || fallback.title,
-        detail: value.detail || legacyMessage,
+        type: value.type,
+        title:
+          value.title || legacyMessage || nestedError?.message || stringError || fallback.title,
+        detail: value.detail || legacyMessage || nestedError?.message,
         status: value.status || response.status,
+        instance: value.instance,
+        code: value.code || nestedError?.code,
+        errors: value.errors ?? nestedError?.details,
       });
     } catch {
       return new ApiClientError(fallback);

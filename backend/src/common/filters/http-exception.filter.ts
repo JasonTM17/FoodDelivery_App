@@ -17,33 +17,51 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR
     let message = 'Internal server error'
     let code = 'INTERNAL_ERROR'
-    let details: Record<string, unknown> = {}
+    let errors: unknown
 
     if (exception instanceof HttpException) {
       status = exception.getStatus()
+      code = this.getCodeFromStatus(status)
       const exResponse = exception.getResponse()
 
       if (typeof exResponse === 'string') {
         message = exResponse
       } else if (typeof exResponse === 'object') {
         const resp = exResponse as Record<string, unknown>
-        message = (resp.message as string) ?? exception.message
-        code = (resp.code as string) ?? this.getCodeFromStatus(status)
-        details = resp.details as Record<string, unknown> ?? {}
-
         if (Array.isArray(resp.message)) {
           message = 'Validation failed'
-          details = { errors: resp.message }
+          errors = resp.message
+        } else if (typeof resp.message === 'string') {
+          message = resp.message
+        } else {
+          message = exception.message
         }
+
+        code = typeof resp.code === 'string' ? resp.code : code
+        errors ??= resp.details
       }
     }
 
-    response.status(status).json({
-      success: false,
-      error: { code, message, details },
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    })
+    const problem = {
+      type: 'about:blank',
+      title: this.getTitleFromStatus(status),
+      detail: message,
+      code,
+      status,
+      instance: request.url,
+      ...(errors === undefined ? {} : { errors }),
+    }
+
+    response.status(status).type('application/problem+json').json(problem)
+  }
+
+  private getTitleFromStatus(status: number): string {
+    const statusName = HttpStatus[status] ?? 'Error'
+    return statusName
+      .toLowerCase()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 
   private getCodeFromStatus(status: number): string {
