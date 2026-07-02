@@ -227,6 +227,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get myAddressesSubtitle => '配送先住所を管理';
 
   @override
+  String get profileLoyalty => 'ポイントリワード';
+
+  @override
+  String get profileLoyaltySubtitle => 'ポイント確認と引き換え';
+
+  @override
+  String get profileWallet => 'マイウォレット';
+
+  @override
+  String get profileWalletSubtitle => '残高と取引履歴';
+
+  @override
+  String get profileReferral => '友達を招待';
+
+  @override
+  String get profileReferralSubtitle => '紹介してリワード獲得';
+
+  @override
+  String get profileHelp => 'ヘルプ & FAQ';
+
+  @override
+  String get profileHelpSubtitle => 'よくある質問と問い合わせ';
+
+  @override
   String get paymentMethods => '支払い方法';
 
   @override
@@ -321,4 +345,911 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get orderStatusCancelled => 'キャンセル済み';
+
+  @override
+  String get cartTitle => 'カート';
+
+  @override
+  String get cartEmpty => 'カートは空です';
+
+  @override
+  String get cartEmptySubtitle => '料理を追加してください';
+
+  @override
+  String get cartClearTitle => 'カートをクリアしますか？';
+
+  @override
+  String get cartClearContent => 'カート内のすべてのアイテムを削除してもよろしいですか？';
+
+  @override
+  String get cartKeep => 'そのまま';
+
+  @override
+  String get cartClearAll => 'すべて削除';
+
+  @override
+  String get cartPromoCode => 'プロモコード';
+
+  @override
+  String get cartPromoHint => '割引コードを入力';
+
+  @override
+  String get cartPromoRemove => '削除';
+
+  @override
+  String get cartPromoApply => '適用';
+
+  @override
+  String cartPromoApplied(String code) {
+    return 'コード $code を適用しました';
+  }
+
+  @override
+  String get cartSubtotal => '小計';
+
+  @override
+  String get cartDeliveryFee => '配達料';
+
+  @override
+  String get cartFreeDelivery => '無料';
+
+  @override
+  String get cartDiscountLabel => '割引';
+
+  @override
+  String get cartGrandTotal => '合計';
+
+  @override
+  String get cartViewCart => 'カートを見る';
+
+  @override
+  String get cartDelete => '削除';
+
+  @override
+  String get checkoutTitle => 'チェックアウト';
+
+  @override
+  String get checkoutDeliveryAddress => '配達先住所';
+
+  @override
+  String get checkoutNoAddress => '住所がありません';
+
+  @override
+  String get checkoutNoAddressSubtitle => '注文を続けるには住所を追加してください';
+
+  @override
+  String get checkoutAddAddress => '新しい住所を追加';
+
+  @override
+  String get checkoutPaymentMethod => '支払い方法';
+
+  @override
+  String get checkoutPaymentCash => '現金';
+
+  @override
+  String get checkoutPaymentCashSubtitle => '配達時に支払い';
+
+  @override
+  String get checkoutPaymentWallet => '電子ウォレット';
+
+  @override
+  String get checkoutNoteForDriver => 'ドライバーへのメモ';
+
+  @override
+  String get checkoutNoteHint => 'メモを追加...';
+
+  @override
+  String get checkoutOrderSummary => '注文概要';
+
+  @override
+  String get checkoutSelectAddress => '配達先住所を選択してください';
+
+  @override
+  String get checkoutOrderFailed => '注文に失敗しました';
+
+  @override
+  String get addressDefault => 'デフォルト';
+
+  @override
+  String get restaurantListTitle => '近くのお店';
+
+  @override
+  String get restaurantViewList => 'リスト';
+
+  @override
+  String get restaurantViewMap => 'マップ';
+
+  @override
+  String get restaurantNoResults => 'レストランが見つかりません';
+
+  @override
+  String get restaurantNoResultsSubtitle => '別のフィルターをお試しください';
+
+  @override
+  String get restaurantMenuTab => 'メニュー';
+
+  @override
+  String get restaurantReviewsTab => 'レビュー';
+
+  @override
+  String get restaurantInfoTab => '情報';
+
+  @override
+  String get restaurantMenuEmpty => 'メニュー更新中';
+
+  @override
+  String get restaurantMenuEmptySubtitle => 'このレストランにはまだメニューがありません';
+
+  @override
+  String get restaurantNoReviews => 'レビューはまだありません';
+
+  @override
+  String get restaurantInfoTitle => 'レストラン情報';
+
+  @override
+  String get foodPopular => '人気';
+
+  @override
+  String get foodSpecialNote => '特別なリクエスト';
+
+  @override
+  String get foodNoteHint => '例：ネギなし、辛さ控えめ...';
+
+  @override
+  String get foodRequired => '(必須)';
+
+  @override
+  String get foodAddToCart => 'カートに追加';
+
+  @override
+  String get trackingOrderStatus => '注文状況';
+
+  @override
+  String get trackingStepPending => '確認待ち';
+
+  @override
+  String get trackingStepPreparing => '準備中';
+
+  @override
+  String get trackingStepDelivering => '配達中';
+
+  @override
+  String get trackingStepDelivered => '配達完了';
+
+  @override
+  String get trackingOrderInProgress => '注文を配達中です';
+
+  @override
+  String get trackingCallDriver => '電話';
+
+  @override
+  String get trackingMessageDriver => 'メッセージ';
+
+  @override
+  String get orderHistoryTitle => '注文一覧';
+
+  @override
+  String orderHistoryTabActive(int count) {
+    return '進行中 ($count)';
+  }
+
+  @override
+  String orderHistoryTabCompleted(int count) {
+    return '完了 ($count)';
+  }
+
+  @override
+  String orderHistoryTabCancelled(int count) {
+    return 'キャンセル ($count)';
+  }
+
+  @override
+  String get orderHistoryNoActive => '進行中の注文はありません';
+
+  @override
+  String get orderHistoryNoCompleted => '完了した注文はありません';
+
+  @override
+  String get orderHistoryNoCancelled => 'キャンセルした注文はありません';
+
+  @override
+  String get orderHistoryEmptySubtitle => '注文がここに表示されます';
+
+  @override
+  String get orderHistoryTrack => '追跡';
+
+  @override
+  String get addressManagementTitle => 'マイアドレス';
+
+  @override
+  String get addressAdd => '住所を追加';
+
+  @override
+  String get addressLoading => '住所を読み込み中...';
+
+  @override
+  String get addressEmpty => '住所が登録されていません';
+
+  @override
+  String get addressEmptySubtitle => '注文するには住所を追加してください';
+
+  @override
+  String get addressSetDefault => 'デフォルトに設定';
+
+  @override
+  String get addressEdit => '編集';
+
+  @override
+  String get addressDeleteTitle => '住所を削除しますか？';
+
+  @override
+  String addressDeleteContent(String label) {
+    return '「$label」を削除しますか？';
+  }
+
+  @override
+  String get addressAddSuccess => '住所を追加しました';
+
+  @override
+  String get addressUpdateSuccess => '住所を更新しました';
+
+  @override
+  String get addressDeleteSuccess => '住所を削除しました';
+
+  @override
+  String get addressSave => '保存';
+
+  @override
+  String get addressLabelField => 'ラベル';
+
+  @override
+  String get addressFieldHint => '詳細な住所を入力';
+
+  @override
+  String get supportConnecting => '接続中...';
+
+  @override
+  String get supportDriverOnline => 'オンライン';
+
+  @override
+  String get supportAiHeader => 'AIサポート — よくある質問に素早く回答';
+
+  @override
+  String get supportNoMessages => 'メッセージはまだありません';
+
+  @override
+  String get supportNoMessagesSubtitle => '最初のメッセージを送って会話を始めましょう';
+
+  @override
+  String get supportMessageHint => 'メッセージを入力...';
+
+  @override
+  String get reviewTitle => '注文を評価する';
+
+  @override
+  String get reviewFoodQuality => '料理の品質';
+
+  @override
+  String get reviewDeliveryQuality => '配達の品質';
+
+  @override
+  String get reviewComment => 'コメント';
+
+  @override
+  String get reviewCommentHint => '料理と配達サービスについての感想を共有してください...';
+
+  @override
+  String get reviewSubmit => 'レビューを送信';
+
+  @override
+  String get reviewSuccess => 'レビューを送信しました！';
+
+  @override
+  String get reviewError => 'エラーが発生しました。再度お試しください。';
+
+  @override
+  String get reviewRatingExcellent => '最高！';
+
+  @override
+  String get reviewRatingGood => '良い';
+
+  @override
+  String get reviewRatingAverage => '普通';
+
+  @override
+  String get reviewRatingPoor => '悪い';
+
+  @override
+  String get reviewRatingBad => '非常に悪い';
+
+  @override
+  String get driverDashboardToday => '今日';
+
+  @override
+  String get driverDashboardOrders => '最近の注文';
+
+  @override
+  String get driverDashboardNoOrders => '注文はまだありません';
+
+  @override
+  String get driverStatEarnings => '収益';
+
+  @override
+  String get driverStatOnline => 'オンライン';
+
+  @override
+  String get driverEarningsTitle => '収益';
+
+  @override
+  String get driverEarningsPeriodToday => '今日';
+
+  @override
+  String get driverEarningsPeriodWeek => '今週';
+
+  @override
+  String get driverEarningsPeriodMonth => '今月';
+
+  @override
+  String get driverEarningsTotal => '総収益';
+
+  @override
+  String get driverEarningsAverage => '1件あたり平均';
+
+  @override
+  String get driverEarningsHistory => '配達履歴';
+
+  @override
+  String get driverEarningsEmpty => '収益データはまだありません';
+
+  @override
+  String get driverKycTitle => 'KYC認証';
+
+  @override
+  String get driverKycUploadTitle => '書類をアップロード';
+
+  @override
+  String get driverKycUploadSubtitle => '必要な書類をすべてアップロードしてください';
+
+  @override
+  String get driverKycCccdFront => '身分証明書（表面）';
+
+  @override
+  String get driverKycCccdBack => '身分証明書（裏面）';
+
+  @override
+  String get driverKycDriverLicense => '運転免許証';
+
+  @override
+  String get driverKycVehicleReg => '車両登録証';
+
+  @override
+  String get driverKycTakePhoto => '写真を撮る';
+
+  @override
+  String get driverKycGallery => 'ライブラリから選択';
+
+  @override
+  String get driverKycUploadHint => '写真を撮るかアップロード';
+
+  @override
+  String get driverKycSubmit => '申請を送信';
+
+  @override
+  String get driverKycNote => '申請は24〜48時間で審査されます。承認されたら通知が届きます。';
+
+  @override
+  String get driverHistoryTitle => '配達履歴';
+
+  @override
+  String get driverHistoryFilterDate => '日付でフィルター';
+
+  @override
+  String get driverHistoryEmpty => '配達履歴はありません';
+
+  @override
+  String get driverHistoryDeliveryFee => '配達料';
+
+  @override
+  String get locationPermissionTitle => '位置情報へのアクセスを許可';
+
+  @override
+  String get locationPermissionSubtitle =>
+      'FoodFlowは近くのレストランを探し、正確に配達するためにあなたの位置情報が必要です。';
+
+  @override
+  String get locationPermissionAllow => '許可する';
+
+  @override
+  String get locationPermissionManual => '住所を手動で入力';
+
+  @override
+  String get driverNavTitle => '配達';
+
+  @override
+  String get driverNavNoOrder => '現在進行中の注文はありません';
+
+  @override
+  String get driverNavRestaurant => 'レストラン';
+
+  @override
+  String get driverNavCallRestaurant => 'レストランに電話';
+
+  @override
+  String get driverNavDeliveryAddress => '配達先住所';
+
+  @override
+  String get driverNavArrivedAtRestaurant => 'レストランに到着';
+
+  @override
+  String get driverNavPreparingFood => '料理準備中';
+
+  @override
+  String get driverNavItemsToPickup => '受け取る商品';
+
+  @override
+  String get driverNavConfirmPickup => '受け取り確認';
+
+  @override
+  String get driverNavEta => 'ETA - 到着予定時刻';
+
+  @override
+  String get driverNavCustomerAddress => 'お客様の住所';
+
+  @override
+  String get driverNavCallCustomer => 'お客様に電話';
+
+  @override
+  String get driverNavConfirmDelivery => '配達完了';
+
+  @override
+  String get driverNavDeliverySuccess => '配達成功！';
+
+  @override
+  String get driverNavOrderTotal => '注文合計';
+
+  @override
+  String get driverNavYouEarned => 'あなたの収益';
+
+  @override
+  String get driverNavGoHome => 'ホームへ戻る';
+
+  @override
+  String get driverNavPhoneError => '電話アプリを開けません';
+
+  @override
+  String get cartPlaceOrder => '注文する';
+
+  @override
+  String get checkoutConfirmOrder => '注文を確定';
+
+  @override
+  String get onboardingSkip => 'スキップ';
+
+  @override
+  String get onboardingNext => '次へ';
+
+  @override
+  String get onboardingGetStarted => '始める';
+
+  @override
+  String get onboardingWelcomeTitle => 'FoodFlowへようこそ';
+
+  @override
+  String get onboardingWelcomeSubtitle => 'お気に入りのグルメを注文、素早くお届け';
+
+  @override
+  String get onboardingLocationTitle => '近くのレストランを探す';
+
+  @override
+  String get onboardingLocationSubtitle => '位置情報を許可して近くの最高のレストランを見つけましょう';
+
+  @override
+  String get onboardingNotificationTitle => 'リアルタイム注文更新';
+
+  @override
+  String get onboardingNotificationSubtitle => '注文確認・配達中にプッシュ通知でお知らせ';
+
+  @override
+  String get loyaltyTitle => 'ポイント';
+
+  @override
+  String get loyaltyPointsBalance => '現在のポイント';
+
+  @override
+  String loyaltyPoints(int count) {
+    return '${count}pt';
+  }
+
+  @override
+  String get loyaltyTierBronze => 'ブロンズ';
+
+  @override
+  String get loyaltyTierSilver => 'シルバー';
+
+  @override
+  String get loyaltyTierGold => 'ゴールド';
+
+  @override
+  String get loyaltyTierPlatinum => 'プラチナ';
+
+  @override
+  String get loyaltyNextTier => '次のティア';
+
+  @override
+  String loyaltyPointsToNextTier(int points) {
+    return 'ランクアップまであと${points}pt';
+  }
+
+  @override
+  String get loyaltyHistory => 'ポイント履歴';
+
+  @override
+  String get loyaltyHistoryEmpty => 'ポイント履歴がありません';
+
+  @override
+  String get loyaltyRedeem => 'ポイント交換';
+
+  @override
+  String get loyaltyEarnPoints => 'ポイントの獲得方法';
+
+  @override
+  String get loyaltyEarnOrderDesc => '注文完了ごとに10pt獲得';
+
+  @override
+  String get loyaltyEarnReferralDesc => '紹介成功ごとに50pt獲得';
+
+  @override
+  String get walletTitle => 'ウォレット';
+
+  @override
+  String get walletBalance => '残高';
+
+  @override
+  String get walletTopUp => 'チャージ';
+
+  @override
+  String get walletWithdraw => '出金';
+
+  @override
+  String get walletTransactionHistory => '取引履歴';
+
+  @override
+  String get walletTransactionEmpty => '取引履歴がありません';
+
+  @override
+  String get walletTopUpTitle => 'ウォレットチャージ';
+
+  @override
+  String get walletSelectAmount => '金額を選択';
+
+  @override
+  String get walletConfirmTopUp => 'チャージを確認';
+
+  @override
+  String get walletDebit => '支出';
+
+  @override
+  String get walletCredit => 'チャージ';
+
+  @override
+  String get referralTitle => '友達を招待';
+
+  @override
+  String get referralSubtitle => '招待コードを共有して特典をゲット';
+
+  @override
+  String get referralCode => 'あなたの招待コード';
+
+  @override
+  String get referralCopyCode => 'コードをコピー';
+
+  @override
+  String get referralCodeCopied => 'コードをコピーしました！';
+
+  @override
+  String get referralShareCode => 'コードを共有';
+
+  @override
+  String referralInviteCount(int count) {
+    return '$count人を招待済み';
+  }
+
+  @override
+  String get referralBonusEarned => '獲得済みボーナス';
+
+  @override
+  String get referralHowItWorks => '仕組み';
+
+  @override
+  String get referralStep1 => '招待コードを友達に共有';
+
+  @override
+  String get referralStep2 => '友達が登録して初回注文';
+
+  @override
+  String get referralStep3 => '二人とも50ptゲット';
+
+  @override
+  String get helpTitle => 'ヘルプセンター';
+
+  @override
+  String get helpSearchHint => '質問を検索...';
+
+  @override
+  String get helpFaq => 'よくある質問';
+
+  @override
+  String get helpFaqEmpty => '質問が見つかりません';
+
+  @override
+  String get helpChatSupport => 'チャットサポート';
+
+  @override
+  String get helpCallSupport => '電話サポート';
+
+  @override
+  String get helpEmailSupport => 'メールサポート';
+
+  @override
+  String get helpCategories => 'カテゴリ';
+
+  @override
+  String get helpCategoryOrders => '注文';
+
+  @override
+  String get helpCategoryPayment => '支払い';
+
+  @override
+  String get helpCategoryDelivery => '配達';
+
+  @override
+  String get helpCategoryAccount => 'アカウント';
+
+  @override
+  String get filterTitle => 'フィルター';
+
+  @override
+  String get filterApply => '適用';
+
+  @override
+  String get filterReset => 'リセット';
+
+  @override
+  String get filterRating => '評価';
+
+  @override
+  String get filterDeliveryTime => '配達時間';
+
+  @override
+  String get filterPriceRange => '価格帯';
+
+  @override
+  String filterMinutes(int min) {
+    return '$min分';
+  }
+
+  @override
+  String get filterFreeDelivery => '送料無料';
+
+  @override
+  String get filterOpenNow => '営業中';
+
+  @override
+  String get addressPickerTitle => '住所を選択';
+
+  @override
+  String get addressPickerSearchHint => '住所を検索...';
+
+  @override
+  String get addressPickerUseCurrentLocation => '現在地を使用';
+
+  @override
+  String get addressPickerSaved => '保存済み住所';
+
+  @override
+  String get addressPickerNoSaved => '保存済み住所なし';
+
+  @override
+  String get addressPickerConfirm => 'この住所を確認';
+
+  @override
+  String get driver_onboarding_vehicle_title => '車両情報';
+
+  @override
+  String get driver_onboarding_vehicle_subtitle => 'あなたの車両について教えてください';
+
+  @override
+  String get driver_onboarding_vehicle_type_label => '車両タイプ';
+
+  @override
+  String get driver_onboarding_vehicle_type_bike => '自転車';
+
+  @override
+  String get driver_onboarding_vehicle_type_motorbike => 'バイク';
+
+  @override
+  String get driver_onboarding_vehicle_type_car => '自動車';
+
+  @override
+  String get driver_onboarding_plate_label => 'ナンバープレート';
+
+  @override
+  String get driver_onboarding_plate_hint => 'ナンバープレートを入力';
+
+  @override
+  String get driver_onboarding_plate_required => 'ナンバープレートを入力してください';
+
+  @override
+  String get driver_onboarding_next => '次へ';
+
+  @override
+  String get driver_onboarding_documents_title => '必要書類';
+
+  @override
+  String get driver_onboarding_documents_subtitle => '審査に必要な書類をすべてアップロードしてください';
+
+  @override
+  String get driver_onboarding_agreement_title => 'ドライバー規約';
+
+  @override
+  String get driver_onboarding_agreement_subtitle => '規約を読んで同意してから参加してください';
+
+  @override
+  String get driver_onboarding_agreement_read => '利用規約を読んで同意します';
+
+  @override
+  String get driver_onboarding_agreement_accept => '同意して続ける';
+
+  @override
+  String get driver_onboarding_agreement_submit => '申請を送信';
+
+  @override
+  String get driver_onboarding_agreement_note =>
+      '申請は24〜48時間以内に審査されます。承認されたら通知が届きます。';
+
+  @override
+  String get driver_incentives_title => 'インセンティブ';
+
+  @override
+  String get driver_incentives_active => '進行中';
+
+  @override
+  String get driver_incentives_completed => '完了';
+
+  @override
+  String driver_incentives_progress(int current, int target) {
+    return '$current/$target件';
+  }
+
+  @override
+  String driver_incentives_reward(String amount) {
+    return '報酬: $amount';
+  }
+
+  @override
+  String get driver_incentives_empty => 'インセンティブはありません';
+
+  @override
+  String driver_incentives_expires(String date) {
+    return '有効期限: $date';
+  }
+
+  @override
+  String get driver_heatmap_title => '需要マップ';
+
+  @override
+  String get driver_heatmap_subtitle => '現在配達需要が高いエリア';
+
+  @override
+  String get driver_heatmap_high => '需要高';
+
+  @override
+  String get driver_heatmap_medium => '需要中';
+
+  @override
+  String get driver_heatmap_low => '需要低';
+
+  @override
+  String get driver_heatmap_legend => 'カラー凡例';
+
+  @override
+  String get driver_bank_title => '銀行口座';
+
+  @override
+  String get driver_bank_subtitle => '毎週の報酬受取用口座を追加';
+
+  @override
+  String get driver_bank_name_label => '銀行名';
+
+  @override
+  String get driver_bank_name_hint => '銀行を選択';
+
+  @override
+  String get driver_bank_account_label => '口座番号';
+
+  @override
+  String get driver_bank_account_hint => '口座番号を入力';
+
+  @override
+  String get driver_bank_account_required => '口座番号を入力してください';
+
+  @override
+  String get driver_bank_save => '口座を保存';
+
+  @override
+  String get driver_bank_saved => '銀行口座を保存しました';
+
+  @override
+  String get driver_bank_verify => '口座を確認';
+
+  @override
+  String get driver_support_title => 'ドライバーサポート';
+
+  @override
+  String get driver_support_subtitle => 'いつでもお手伝いします';
+
+  @override
+  String get driver_support_faq => 'よくある質問';
+
+  @override
+  String get driver_support_contact => 'サポートに連絡';
+
+  @override
+  String get driver_support_chat => 'ライブチャット';
+
+  @override
+  String get driver_support_email => 'メールを送る';
+
+  @override
+  String get driver_support_phone => 'ホットライン: 1800-xxxx';
+
+  @override
+  String get driver_support_faq_q1 => 'いつ支払われますか？';
+
+  @override
+  String get driver_support_faq_a1 => '毎週月曜日に銀行口座へ振り込まれます。';
+
+  @override
+  String get driver_support_faq_q2 => '配達エリアを変更するには？';
+
+  @override
+  String get driver_support_faq_a2 => '設定 > 活動エリアから変更できます。';
+
+  @override
+  String get driver_settings_title => '設定';
+
+  @override
+  String get driver_settings_notifications => 'プッシュ通知';
+
+  @override
+  String get driver_settings_notifications_subtitle => '新しい注文の通知を受け取る';
+
+  @override
+  String get driver_settings_language => '言語';
+
+  @override
+  String get driver_settings_language_subtitle => '日本語';
+
+  @override
+  String get driver_settings_privacy => 'プライバシーポリシー';
+
+  @override
+  String get driver_settings_about => 'アプリについて';
+
+  @override
+  String get driver_settings_logout => 'ログアウト';
+
+  @override
+  String get driver_settings_logout_confirm => 'ログアウトしますか？';
+
+  @override
+  String get driver_settings_sound => '通知音';
+
+  @override
+  String get driver_settings_sound_subtitle => '新しい注文が届いたときに音を鳴らす';
+
+  @override
+  String driver_settings_version(String version) {
+    return 'バージョン $version';
+  }
 }

@@ -228,6 +228,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myAddressesSubtitle => 'Manage delivery addresses';
 
   @override
+  String get profileLoyalty => 'Loyalty Rewards';
+
+  @override
+  String get profileLoyaltySubtitle => 'View points and redeem';
+
+  @override
+  String get profileWallet => 'My Wallet';
+
+  @override
+  String get profileWalletSubtitle => 'Balance and transactions';
+
+  @override
+  String get profileReferral => 'Invite Friends';
+
+  @override
+  String get profileReferralSubtitle => 'Earn rewards by referring';
+
+  @override
+  String get profileHelp => 'Help & FAQ';
+
+  @override
+  String get profileHelpSubtitle => 'Common questions + contact';
+
+  @override
   String get paymentMethods => 'Payment Methods';
 
   @override
@@ -322,4 +346,928 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderStatusCancelled => 'Cancelled';
+
+  @override
+  String get cartTitle => 'Cart';
+
+  @override
+  String get cartEmpty => 'Your cart is empty';
+
+  @override
+  String get cartEmptySubtitle => 'Add some food to get started';
+
+  @override
+  String get cartClearTitle => 'Clear cart?';
+
+  @override
+  String get cartClearContent =>
+      'Are you sure you want to remove all items from your cart?';
+
+  @override
+  String get cartKeep => 'Keep';
+
+  @override
+  String get cartClearAll => 'Clear all';
+
+  @override
+  String get cartPromoCode => 'Promo code';
+
+  @override
+  String get cartPromoHint => 'Enter discount code';
+
+  @override
+  String get cartPromoRemove => 'Remove';
+
+  @override
+  String get cartPromoApply => 'Apply';
+
+  @override
+  String cartPromoApplied(String code) {
+    return 'Applied code $code';
+  }
+
+  @override
+  String get cartSubtotal => 'Subtotal';
+
+  @override
+  String get cartDeliveryFee => 'Delivery fee';
+
+  @override
+  String get cartFreeDelivery => 'Free';
+
+  @override
+  String get cartDiscountLabel => 'Discount';
+
+  @override
+  String get cartGrandTotal => 'Total';
+
+  @override
+  String get cartViewCart => 'View cart';
+
+  @override
+  String get cartDelete => 'Delete';
+
+  @override
+  String get checkoutTitle => 'Checkout';
+
+  @override
+  String get checkoutDeliveryAddress => 'Delivery address';
+
+  @override
+  String get checkoutNoAddress => 'No addresses saved';
+
+  @override
+  String get checkoutNoAddressSubtitle => 'Add an address to continue ordering';
+
+  @override
+  String get checkoutAddAddress => 'Add new address';
+
+  @override
+  String get checkoutPaymentMethod => 'Payment method';
+
+  @override
+  String get checkoutPaymentCash => 'Cash';
+
+  @override
+  String get checkoutPaymentCashSubtitle => 'Pay on delivery';
+
+  @override
+  String get checkoutPaymentWallet => 'E-wallet';
+
+  @override
+  String get checkoutNoteForDriver => 'Note for driver';
+
+  @override
+  String get checkoutNoteHint => 'Add a note...';
+
+  @override
+  String get checkoutOrderSummary => 'Order summary';
+
+  @override
+  String get checkoutSelectAddress => 'Please select a delivery address';
+
+  @override
+  String get checkoutOrderFailed => 'Order failed';
+
+  @override
+  String get addressDefault => 'Default';
+
+  @override
+  String get restaurantListTitle => 'Nearby';
+
+  @override
+  String get restaurantViewList => 'List';
+
+  @override
+  String get restaurantViewMap => 'Map';
+
+  @override
+  String get restaurantNoResults => 'No restaurants found';
+
+  @override
+  String get restaurantNoResultsSubtitle => 'Try a different filter';
+
+  @override
+  String get restaurantMenuTab => 'Menu';
+
+  @override
+  String get restaurantReviewsTab => 'Reviews';
+
+  @override
+  String get restaurantInfoTab => 'Info';
+
+  @override
+  String get restaurantMenuEmpty => 'Menu updating';
+
+  @override
+  String get restaurantMenuEmptySubtitle => 'No items in this menu yet';
+
+  @override
+  String get restaurantNoReviews => 'No reviews yet';
+
+  @override
+  String get restaurantInfoTitle => 'Restaurant info';
+
+  @override
+  String get foodPopular => 'Popular';
+
+  @override
+  String get foodSpecialNote => 'Special instructions';
+
+  @override
+  String get foodNoteHint => 'e.g. No onion, less spicy...';
+
+  @override
+  String get foodRequired => '(Required)';
+
+  @override
+  String get foodAddToCart => 'Add to cart';
+
+  @override
+  String get trackingOrderStatus => 'Order status';
+
+  @override
+  String get trackingStepPending => 'Waiting confirmation';
+
+  @override
+  String get trackingStepPreparing => 'Preparing';
+
+  @override
+  String get trackingStepDelivering => 'On the way';
+
+  @override
+  String get trackingStepDelivered => 'Delivered';
+
+  @override
+  String get trackingOrderInProgress => 'Your order is on the way';
+
+  @override
+  String get trackingCallDriver => 'Call';
+
+  @override
+  String get trackingMessageDriver => 'Message';
+
+  @override
+  String get orderHistoryTitle => 'My Orders';
+
+  @override
+  String orderHistoryTabActive(int count) {
+    return 'Active ($count)';
+  }
+
+  @override
+  String orderHistoryTabCompleted(int count) {
+    return 'Completed ($count)';
+  }
+
+  @override
+  String orderHistoryTabCancelled(int count) {
+    return 'Cancelled ($count)';
+  }
+
+  @override
+  String get orderHistoryNoActive => 'No active orders';
+
+  @override
+  String get orderHistoryNoCompleted => 'No completed orders yet';
+
+  @override
+  String get orderHistoryNoCancelled => 'No cancelled orders';
+
+  @override
+  String get orderHistoryEmptySubtitle => 'Orders will appear here';
+
+  @override
+  String get orderHistoryTrack => 'Track';
+
+  @override
+  String get addressManagementTitle => 'My Addresses';
+
+  @override
+  String get addressAdd => 'Add address';
+
+  @override
+  String get addressLoading => 'Loading addresses...';
+
+  @override
+  String get addressEmpty => 'No addresses saved';
+
+  @override
+  String get addressEmptySubtitle => 'Add an address to start ordering';
+
+  @override
+  String get addressSetDefault => 'Set as default';
+
+  @override
+  String get addressEdit => 'Edit';
+
+  @override
+  String get addressDeleteTitle => 'Delete address?';
+
+  @override
+  String addressDeleteContent(String label) {
+    return 'Delete \"$label\"?';
+  }
+
+  @override
+  String get addressAddSuccess => 'Address added';
+
+  @override
+  String get addressUpdateSuccess => 'Address updated';
+
+  @override
+  String get addressDeleteSuccess => 'Address deleted';
+
+  @override
+  String get addressSave => 'Save';
+
+  @override
+  String get addressLabelField => 'Label';
+
+  @override
+  String get addressFieldHint => 'Enter detailed address';
+
+  @override
+  String get supportConnecting => 'Connecting...';
+
+  @override
+  String get supportDriverOnline => 'Online';
+
+  @override
+  String get supportAiHeader =>
+      'AI-powered support — quick answers to common questions';
+
+  @override
+  String get supportNoMessages => 'No messages yet';
+
+  @override
+  String get supportNoMessagesSubtitle =>
+      'Send your first message to start chatting';
+
+  @override
+  String get supportMessageHint => 'Type a message...';
+
+  @override
+  String get reviewTitle => 'Rate your order';
+
+  @override
+  String get reviewFoodQuality => 'Food quality';
+
+  @override
+  String get reviewDeliveryQuality => 'Delivery quality';
+
+  @override
+  String get reviewComment => 'Your comments';
+
+  @override
+  String get reviewCommentHint =>
+      'Share your experience with the food and delivery service...';
+
+  @override
+  String get reviewSubmit => 'Submit review';
+
+  @override
+  String get reviewSuccess => 'Review submitted!';
+
+  @override
+  String get reviewError => 'Something went wrong. Please try again.';
+
+  @override
+  String get reviewRatingExcellent => 'Excellent!';
+
+  @override
+  String get reviewRatingGood => 'Good';
+
+  @override
+  String get reviewRatingAverage => 'Average';
+
+  @override
+  String get reviewRatingPoor => 'Poor';
+
+  @override
+  String get reviewRatingBad => 'Very bad';
+
+  @override
+  String get driverDashboardToday => 'Today';
+
+  @override
+  String get driverDashboardOrders => 'Recent orders';
+
+  @override
+  String get driverDashboardNoOrders => 'No orders yet';
+
+  @override
+  String get driverStatEarnings => 'Earnings';
+
+  @override
+  String get driverStatOnline => 'Online';
+
+  @override
+  String get driverEarningsTitle => 'Earnings';
+
+  @override
+  String get driverEarningsPeriodToday => 'Today';
+
+  @override
+  String get driverEarningsPeriodWeek => 'This week';
+
+  @override
+  String get driverEarningsPeriodMonth => 'This month';
+
+  @override
+  String get driverEarningsTotal => 'Total earnings';
+
+  @override
+  String get driverEarningsAverage => 'Avg per order';
+
+  @override
+  String get driverEarningsHistory => 'Delivery history';
+
+  @override
+  String get driverEarningsEmpty => 'No earnings data yet';
+
+  @override
+  String get driverKycTitle => 'KYC Verification';
+
+  @override
+  String get driverKycUploadTitle => 'Upload documents';
+
+  @override
+  String get driverKycUploadSubtitle => 'Please upload all required documents';
+
+  @override
+  String get driverKycCccdFront => 'ID card (front)';
+
+  @override
+  String get driverKycCccdBack => 'ID card (back)';
+
+  @override
+  String get driverKycDriverLicense => 'Driver license';
+
+  @override
+  String get driverKycVehicleReg => 'Vehicle registration';
+
+  @override
+  String get driverKycTakePhoto => 'Take photo';
+
+  @override
+  String get driverKycGallery => 'Choose from gallery';
+
+  @override
+  String get driverKycUploadHint => 'Take photo or upload';
+
+  @override
+  String get driverKycSubmit => 'SUBMIT APPLICATION';
+
+  @override
+  String get driverKycNote =>
+      'Application reviewed in 24-48h. You will be notified when approved.';
+
+  @override
+  String get driverHistoryTitle => 'Delivery history';
+
+  @override
+  String get driverHistoryFilterDate => 'Filter by date';
+
+  @override
+  String get driverHistoryEmpty => 'No delivery history';
+
+  @override
+  String get driverHistoryDeliveryFee => 'Delivery fee';
+
+  @override
+  String get locationPermissionTitle => 'Allow location access';
+
+  @override
+  String get locationPermissionSubtitle =>
+      'FoodFlow needs your location to find nearby restaurants and deliver accurately.';
+
+  @override
+  String get locationPermissionAllow => 'Allow';
+
+  @override
+  String get locationPermissionManual => 'Enter address manually';
+
+  @override
+  String get driverNavTitle => 'Delivery';
+
+  @override
+  String get driverNavNoOrder => 'No active order';
+
+  @override
+  String get driverNavRestaurant => 'Restaurant';
+
+  @override
+  String get driverNavCallRestaurant => 'Call restaurant';
+
+  @override
+  String get driverNavDeliveryAddress => 'Delivery address';
+
+  @override
+  String get driverNavArrivedAtRestaurant => 'ARRIVED AT RESTAURANT';
+
+  @override
+  String get driverNavPreparingFood => 'Preparing food';
+
+  @override
+  String get driverNavItemsToPickup => 'Items to pick up';
+
+  @override
+  String get driverNavConfirmPickup => 'CONFIRM PICKUP';
+
+  @override
+  String get driverNavEta => 'ETA - Estimated arrival';
+
+  @override
+  String get driverNavCustomerAddress => 'Customer address';
+
+  @override
+  String get driverNavCallCustomer => 'Call customer';
+
+  @override
+  String get driverNavConfirmDelivery => 'CONFIRM DELIVERY';
+
+  @override
+  String get driverNavDeliverySuccess => 'Delivery successful!';
+
+  @override
+  String get driverNavOrderTotal => 'Order total';
+
+  @override
+  String get driverNavYouEarned => 'You earned';
+
+  @override
+  String get driverNavGoHome => 'GO TO HOME';
+
+  @override
+  String get driverNavPhoneError => 'Cannot open phone dialer';
+
+  @override
+  String get cartPlaceOrder => 'Place order';
+
+  @override
+  String get checkoutConfirmOrder => 'Confirm order';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to FoodFlow';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Order your favorite food, delivered fast to your door';
+
+  @override
+  String get onboardingLocationTitle => 'Find Restaurants Near You';
+
+  @override
+  String get onboardingLocationSubtitle =>
+      'Allow location access to discover the best restaurants around you';
+
+  @override
+  String get onboardingNotificationTitle => 'Real-time Order Updates';
+
+  @override
+  String get onboardingNotificationSubtitle =>
+      'Get notified when your order is confirmed and on its way';
+
+  @override
+  String get loyaltyTitle => 'Loyalty Points';
+
+  @override
+  String get loyaltyPointsBalance => 'Current Balance';
+
+  @override
+  String loyaltyPoints(int count) {
+    return '$count pts';
+  }
+
+  @override
+  String get loyaltyTierBronze => 'Bronze';
+
+  @override
+  String get loyaltyTierSilver => 'Silver';
+
+  @override
+  String get loyaltyTierGold => 'Gold';
+
+  @override
+  String get loyaltyTierPlatinum => 'Platinum';
+
+  @override
+  String get loyaltyNextTier => 'Next Tier';
+
+  @override
+  String loyaltyPointsToNextTier(int points) {
+    return 'Need $points more points to level up';
+  }
+
+  @override
+  String get loyaltyHistory => 'Points History';
+
+  @override
+  String get loyaltyHistoryEmpty => 'No points history yet';
+
+  @override
+  String get loyaltyRedeem => 'Redeem Points';
+
+  @override
+  String get loyaltyEarnPoints => 'How to Earn Points';
+
+  @override
+  String get loyaltyEarnOrderDesc => 'Each completed order = 10 points';
+
+  @override
+  String get loyaltyEarnReferralDesc => 'Each successful referral = 50 points';
+
+  @override
+  String get walletTitle => 'Wallet';
+
+  @override
+  String get walletBalance => 'Balance';
+
+  @override
+  String get walletTopUp => 'Top Up';
+
+  @override
+  String get walletWithdraw => 'Withdraw';
+
+  @override
+  String get walletTransactionHistory => 'Transaction History';
+
+  @override
+  String get walletTransactionEmpty => 'No transactions yet';
+
+  @override
+  String get walletTopUpTitle => 'Top Up Wallet';
+
+  @override
+  String get walletSelectAmount => 'Select Amount';
+
+  @override
+  String get walletConfirmTopUp => 'Confirm Top Up';
+
+  @override
+  String get walletDebit => 'Debit';
+
+  @override
+  String get walletCredit => 'Credit';
+
+  @override
+  String get referralTitle => 'Refer a Friend';
+
+  @override
+  String get referralSubtitle => 'Share your referral code and earn rewards';
+
+  @override
+  String get referralCode => 'Your Referral Code';
+
+  @override
+  String get referralCopyCode => 'Copy Code';
+
+  @override
+  String get referralCodeCopied => 'Code copied!';
+
+  @override
+  String get referralShareCode => 'Share Code';
+
+  @override
+  String referralInviteCount(int count) {
+    return 'Invited $count friends';
+  }
+
+  @override
+  String get referralBonusEarned => 'Bonus Earned';
+
+  @override
+  String get referralHowItWorks => 'How It Works';
+
+  @override
+  String get referralStep1 => 'Share your referral code';
+
+  @override
+  String get referralStep2 => 'Friend signs up and places first order';
+
+  @override
+  String get referralStep3 => 'Both of you earn 50 points';
+
+  @override
+  String get helpTitle => 'Help Center';
+
+  @override
+  String get helpSearchHint => 'Search questions...';
+
+  @override
+  String get helpFaq => 'Frequently Asked Questions';
+
+  @override
+  String get helpFaqEmpty => 'No questions found';
+
+  @override
+  String get helpChatSupport => 'Chat Support';
+
+  @override
+  String get helpCallSupport => 'Call Support';
+
+  @override
+  String get helpEmailSupport => 'Email Support';
+
+  @override
+  String get helpCategories => 'Categories';
+
+  @override
+  String get helpCategoryOrders => 'Orders';
+
+  @override
+  String get helpCategoryPayment => 'Payment';
+
+  @override
+  String get helpCategoryDelivery => 'Delivery';
+
+  @override
+  String get helpCategoryAccount => 'Account';
+
+  @override
+  String get filterTitle => 'Filters';
+
+  @override
+  String get filterApply => 'Apply';
+
+  @override
+  String get filterReset => 'Reset';
+
+  @override
+  String get filterRating => 'Rating';
+
+  @override
+  String get filterDeliveryTime => 'Delivery Time';
+
+  @override
+  String get filterPriceRange => 'Price Range';
+
+  @override
+  String filterMinutes(int min) {
+    return '$min min';
+  }
+
+  @override
+  String get filterFreeDelivery => 'Free Delivery';
+
+  @override
+  String get filterOpenNow => 'Open Now';
+
+  @override
+  String get addressPickerTitle => 'Select Address';
+
+  @override
+  String get addressPickerSearchHint => 'Search address...';
+
+  @override
+  String get addressPickerUseCurrentLocation => 'Use current location';
+
+  @override
+  String get addressPickerSaved => 'Saved Addresses';
+
+  @override
+  String get addressPickerNoSaved => 'No saved addresses';
+
+  @override
+  String get addressPickerConfirm => 'Confirm this address';
+
+  @override
+  String get driver_onboarding_vehicle_title => 'Vehicle Info';
+
+  @override
+  String get driver_onboarding_vehicle_subtitle => 'Tell us about your vehicle';
+
+  @override
+  String get driver_onboarding_vehicle_type_label => 'Vehicle type';
+
+  @override
+  String get driver_onboarding_vehicle_type_bike => 'Bicycle';
+
+  @override
+  String get driver_onboarding_vehicle_type_motorbike => 'Motorbike';
+
+  @override
+  String get driver_onboarding_vehicle_type_car => 'Car';
+
+  @override
+  String get driver_onboarding_plate_label => 'License plate';
+
+  @override
+  String get driver_onboarding_plate_hint => 'Enter license plate';
+
+  @override
+  String get driver_onboarding_plate_required => 'Please enter license plate';
+
+  @override
+  String get driver_onboarding_next => 'Next';
+
+  @override
+  String get driver_onboarding_documents_title => 'Required Documents';
+
+  @override
+  String get driver_onboarding_documents_subtitle =>
+      'Upload all required documents for review';
+
+  @override
+  String get driver_onboarding_agreement_title => 'Driver Terms';
+
+  @override
+  String get driver_onboarding_agreement_subtitle =>
+      'Read and agree to the terms to get started';
+
+  @override
+  String get driver_onboarding_agreement_read =>
+      'I have read and agree to the Terms of Service';
+
+  @override
+  String get driver_onboarding_agreement_accept => 'Agree and continue';
+
+  @override
+  String get driver_onboarding_agreement_submit => 'SUBMIT APPLICATION';
+
+  @override
+  String get driver_onboarding_agreement_note =>
+      'Application reviewed in 24-48h. You will be notified when approved.';
+
+  @override
+  String get driver_incentives_title => 'Incentives';
+
+  @override
+  String get driver_incentives_active => 'Active';
+
+  @override
+  String get driver_incentives_completed => 'Completed';
+
+  @override
+  String driver_incentives_progress(int current, int target) {
+    return '$current/$target orders';
+  }
+
+  @override
+  String driver_incentives_reward(String amount) {
+    return 'Reward: $amount';
+  }
+
+  @override
+  String get driver_incentives_empty => 'No incentives available';
+
+  @override
+  String driver_incentives_expires(String date) {
+    return 'Expires: $date';
+  }
+
+  @override
+  String get driver_heatmap_title => 'Demand Map';
+
+  @override
+  String get driver_heatmap_subtitle =>
+      'Areas with high delivery demand right now';
+
+  @override
+  String get driver_heatmap_high => 'High demand';
+
+  @override
+  String get driver_heatmap_medium => 'Medium demand';
+
+  @override
+  String get driver_heatmap_low => 'Low demand';
+
+  @override
+  String get driver_heatmap_legend => 'Color legend';
+
+  @override
+  String get driver_bank_title => 'Bank Account';
+
+  @override
+  String get driver_bank_subtitle => 'Add an account to receive weekly payouts';
+
+  @override
+  String get driver_bank_name_label => 'Bank name';
+
+  @override
+  String get driver_bank_name_hint => 'Select bank';
+
+  @override
+  String get driver_bank_account_label => 'Account number';
+
+  @override
+  String get driver_bank_account_hint => 'Enter account number';
+
+  @override
+  String get driver_bank_account_required => 'Please enter account number';
+
+  @override
+  String get driver_bank_save => 'Save account';
+
+  @override
+  String get driver_bank_saved => 'Bank account saved';
+
+  @override
+  String get driver_bank_verify => 'Verify account';
+
+  @override
+  String get driver_support_title => 'Driver Support';
+
+  @override
+  String get driver_support_subtitle => 'We are always here to help you';
+
+  @override
+  String get driver_support_faq => 'Frequently Asked Questions';
+
+  @override
+  String get driver_support_contact => 'Contact Support';
+
+  @override
+  String get driver_support_chat => 'Live chat';
+
+  @override
+  String get driver_support_email => 'Send email';
+
+  @override
+  String get driver_support_phone => 'Hotline: 1800-xxxx';
+
+  @override
+  String get driver_support_faq_q1 => 'When do I get paid?';
+
+  @override
+  String get driver_support_faq_a1 =>
+      'Earnings are transferred to your bank account every Monday.';
+
+  @override
+  String get driver_support_faq_q2 => 'How do I change my delivery zone?';
+
+  @override
+  String get driver_support_faq_a2 =>
+      'Go to Settings > Active zones to change your delivery area.';
+
+  @override
+  String get driver_settings_title => 'Settings';
+
+  @override
+  String get driver_settings_notifications => 'Push notifications';
+
+  @override
+  String get driver_settings_notifications_subtitle =>
+      'Receive alerts for new orders';
+
+  @override
+  String get driver_settings_language => 'Language';
+
+  @override
+  String get driver_settings_language_subtitle => 'English';
+
+  @override
+  String get driver_settings_privacy => 'Privacy policy';
+
+  @override
+  String get driver_settings_about => 'About the app';
+
+  @override
+  String get driver_settings_logout => 'Log out';
+
+  @override
+  String get driver_settings_logout_confirm =>
+      'Are you sure you want to log out?';
+
+  @override
+  String get driver_settings_sound => 'Notification sound';
+
+  @override
+  String get driver_settings_sound_subtitle =>
+      'Play sound when a new order arrives';
+
+  @override
+  String driver_settings_version(String version) {
+    return 'Version $version';
+  }
 }

@@ -20,6 +20,10 @@ import 'screens/onboarding_documents_screen.dart';
 import 'screens/onboarding_agreement_screen.dart';
 import 'screens/incentives_screen.dart';
 import 'screens/heatmap_screen.dart';
+import 'screens/offline_status_screen.dart';
+import 'screens/tip_adjustment_screen.dart';
+import 'screens/rating_history_screen.dart';
+import 'screens/trip_detail_screen.dart';
 import 'screens/bank_account_screen.dart';
 import 'screens/support_driver_screen.dart';
 import 'screens/settings_screen.dart';
@@ -102,6 +106,39 @@ final _router = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (_, __) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/offline-status',
+      builder: (_, __) => const OfflineStatusScreen(),
+    ),
+    GoRoute(
+      path: '/tip-adjustment',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return TipAdjustmentScreen(
+          tripId: extra['tripId'] as String? ?? '',
+          restaurantName: extra['restaurantName'] as String? ?? '',
+          customerName: extra['customerName'] as String? ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/rating-history',
+      builder: (_, __) => const RatingHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/trip-detail',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return TripDetailScreen(
+          tripId: extra['tripId'] as String? ?? '',
+          restaurantName: extra['restaurantName'] as String?,
+          fromLat: extra['fromLat'] as double?,
+          fromLng: extra['fromLng'] as double?,
+          toLat: extra['toLat'] as double?,
+          toLng: extra['toLng'] as double?,
+        );
+      },
     ),
   ],
 );

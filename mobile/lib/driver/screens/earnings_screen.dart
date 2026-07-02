@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_provider.dart';
+import '../providers/earnings_chart_provider.dart';
+import '../widgets/earnings_daily_bar_chart.dart';
 import '../../l10n/app_localizations.dart';
 
 class EarningsScreen extends ConsumerStatefulWidget {
@@ -16,7 +18,6 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   static const _periods = ['today', 'week', 'month'];
-  static const _periodLabels = ['Hôm nay', 'Tuần này', 'Tháng này'];
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverProvider.notifier).fetchEarnings('today');
+      ref.read(earningsChartProvider.notifier).load(EarningsPeriod.sevenDays);
     });
   }
 
@@ -43,7 +45,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(driverProvider);
     final earnings = state.earnings;
 
@@ -81,8 +83,10 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
                 children: [
                   if (earnings != null) ...[
                     _buildKpiCards(earnings, l10n),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                   ],
+                  _buildChartSection(),
+                  const SizedBox(height: 24),
                   Text(
                     l10n.driverEarningsHistory,
                     style: AppTextStyles.headline4.copyWith(color: Colors.white),
@@ -296,5 +300,22 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen>
     if (diff.inDays == 0) return 'Hôm nay';
     if (diff.inDays == 1) return 'Hôm qua';
     return '${date.day}/${date.month}';
+  }
+
+  Widget _buildChartSection() {
+    final chartState = ref.watch(earningsChartProvider);
+    if (chartState.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+    if (chartState.summary == null || chartState.summary!.byDay.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return EarningsDailyBarChart(
+      byDay: chartState.summary!.byDay,
+      maxAmount: chartState.summary!.totalVnd,
+    );
   }
 }

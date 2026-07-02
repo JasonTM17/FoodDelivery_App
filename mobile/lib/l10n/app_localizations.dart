@@ -532,6 +532,54 @@ abstract class AppLocalizations {
   /// **'Quản lý địa chỉ giao hàng'**
   String get myAddressesSubtitle;
 
+  /// No description provided for @profileLoyalty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tích điểm thưởng'**
+  String get profileLoyalty;
+
+  /// No description provided for @profileLoyaltySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem điểm và đổi quà'**
+  String get profileLoyaltySubtitle;
+
+  /// No description provided for @profileWallet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví của tôi'**
+  String get profileWallet;
+
+  /// No description provided for @profileWalletSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số dư và lịch sử giao dịch'**
+  String get profileWalletSubtitle;
+
+  /// No description provided for @profileReferral.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời bạn bè'**
+  String get profileReferral;
+
+  /// No description provided for @profileReferralSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thưởng khi giới thiệu'**
+  String get profileReferralSubtitle;
+
+  /// No description provided for @profileHelp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trợ giúp & FAQ'**
+  String get profileHelp;
+
+  /// No description provided for @profileHelpSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi thường gặp + liên hệ'**
+  String get profileHelpSubtitle;
+
   /// No description provided for @paymentMethods.
   ///
   /// In vi, this message translates to:
@@ -723,6 +771,1764 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã hủy'**
   String get orderStatusCancelled;
+
+  /// No description provided for @cartTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giỏ hàng'**
+  String get cartTitle;
+
+  /// No description provided for @cartEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giỏ hàng trống'**
+  String get cartEmpty;
+
+  /// No description provided for @cartEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy thêm món ăn vào giỏ hàng'**
+  String get cartEmptySubtitle;
+
+  /// No description provided for @cartClearTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa giỏ hàng?'**
+  String get cartClearTitle;
+
+  /// No description provided for @cartClearContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa tất cả món trong giỏ hàng?'**
+  String get cartClearContent;
+
+  /// No description provided for @cartKeep.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ lại'**
+  String get cartKeep;
+
+  /// No description provided for @cartClearAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tất cả'**
+  String get cartClearAll;
+
+  /// No description provided for @cartPromoCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã khuyến mãi'**
+  String get cartPromoCode;
+
+  /// No description provided for @cartPromoHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mã giảm giá'**
+  String get cartPromoHint;
+
+  /// No description provided for @cartPromoRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ'**
+  String get cartPromoRemove;
+
+  /// No description provided for @cartPromoApply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get cartPromoApply;
+
+  /// Applied promo code message
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã áp dụng mã {code}'**
+  String cartPromoApplied(String code);
+
+  /// No description provided for @cartSubtotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm tính'**
+  String get cartSubtotal;
+
+  /// No description provided for @cartDeliveryFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí giao hàng'**
+  String get cartDeliveryFee;
+
+  /// No description provided for @cartFreeDelivery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get cartFreeDelivery;
+
+  /// No description provided for @cartDiscountLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm giá'**
+  String get cartDiscountLabel;
+
+  /// No description provided for @cartGrandTotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng cộng'**
+  String get cartGrandTotal;
+
+  /// No description provided for @cartViewCart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem giỏ hàng'**
+  String get cartViewCart;
+
+  /// No description provided for @cartDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get cartDelete;
+
+  /// No description provided for @checkoutTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get checkoutTitle;
+
+  /// No description provided for @checkoutDeliveryAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ giao hàng'**
+  String get checkoutDeliveryAddress;
+
+  /// No description provided for @checkoutNoAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có địa chỉ nào'**
+  String get checkoutNoAddress;
+
+  /// No description provided for @checkoutNoAddressSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa chỉ để tiếp tục đặt hàng'**
+  String get checkoutNoAddressSubtitle;
+
+  /// No description provided for @checkoutAddAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa chỉ mới'**
+  String get checkoutAddAddress;
+
+  /// No description provided for @checkoutPaymentMethod.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phương thức thanh toán'**
+  String get checkoutPaymentMethod;
+
+  /// No description provided for @checkoutPaymentCash.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiền mặt'**
+  String get checkoutPaymentCash;
+
+  /// No description provided for @checkoutPaymentCashSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán khi nhận hàng'**
+  String get checkoutPaymentCashSubtitle;
+
+  /// No description provided for @checkoutPaymentWallet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví điện tử'**
+  String get checkoutPaymentWallet;
+
+  /// No description provided for @checkoutNoteForDriver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú cho tài xế'**
+  String get checkoutNoteForDriver;
+
+  /// No description provided for @checkoutNoteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ghi chú...'**
+  String get checkoutNoteHint;
+
+  /// No description provided for @checkoutOrderSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tóm tắt đơn hàng'**
+  String get checkoutOrderSummary;
+
+  /// No description provided for @checkoutSelectAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn địa chỉ giao hàng'**
+  String get checkoutSelectAddress;
+
+  /// No description provided for @checkoutOrderFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt hàng thất bại'**
+  String get checkoutOrderFailed;
+
+  /// No description provided for @addressDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mặc định'**
+  String get addressDefault;
+
+  /// No description provided for @restaurantListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quanh đây'**
+  String get restaurantListTitle;
+
+  /// No description provided for @restaurantViewList.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách'**
+  String get restaurantViewList;
+
+  /// No description provided for @restaurantViewMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản đồ'**
+  String get restaurantViewMap;
+
+  /// No description provided for @restaurantNoResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có nhà hàng nào'**
+  String get restaurantNoResults;
+
+  /// No description provided for @restaurantNoResultsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử chọn bộ lọc khác'**
+  String get restaurantNoResultsSubtitle;
+
+  /// No description provided for @restaurantMenuTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thực đơn'**
+  String get restaurantMenuTab;
+
+  /// No description provided for @restaurantReviewsTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá'**
+  String get restaurantReviewsTab;
+
+  /// No description provided for @restaurantInfoTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin'**
+  String get restaurantInfoTab;
+
+  /// No description provided for @restaurantMenuEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thực đơn đang cập nhật'**
+  String get restaurantMenuEmpty;
+
+  /// No description provided for @restaurantMenuEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà hàng chưa có món nào trong thực đơn'**
+  String get restaurantMenuEmptySubtitle;
+
+  /// No description provided for @restaurantNoReviews.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đánh giá nào'**
+  String get restaurantNoReviews;
+
+  /// No description provided for @restaurantInfoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin nhà hàng'**
+  String get restaurantInfoTitle;
+
+  /// No description provided for @foodPopular.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phổ biến'**
+  String get foodPopular;
+
+  /// No description provided for @foodSpecialNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú đặc biệt'**
+  String get foodSpecialNote;
+
+  /// No description provided for @foodNoteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Không hành, ít cay...'**
+  String get foodNoteHint;
+
+  /// No description provided for @foodRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'(Bắt buộc)'**
+  String get foodRequired;
+
+  /// No description provided for @foodAddToCart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm vào giỏ'**
+  String get foodAddToCart;
+
+  /// No description provided for @trackingOrderStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái đơn hàng'**
+  String get trackingOrderStatus;
+
+  /// No description provided for @trackingStepPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xác nhận'**
+  String get trackingStepPending;
+
+  /// No description provided for @trackingStepPreparing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuẩn bị'**
+  String get trackingStepPreparing;
+
+  /// No description provided for @trackingStepDelivering.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang giao'**
+  String get trackingStepDelivering;
+
+  /// No description provided for @trackingStepDelivered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giao'**
+  String get trackingStepDelivered;
+
+  /// No description provided for @trackingOrderInProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng đang được giao'**
+  String get trackingOrderInProgress;
+
+  /// No description provided for @trackingCallDriver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gọi'**
+  String get trackingCallDriver;
+
+  /// No description provided for @trackingMessageDriver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin'**
+  String get trackingMessageDriver;
+
+  /// No description provided for @orderHistoryTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng của tôi'**
+  String get orderHistoryTitle;
+
+  /// No description provided for @orderHistoryTabActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động ({count})'**
+  String orderHistoryTabActive(int count);
+
+  /// No description provided for @orderHistoryTabCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành ({count})'**
+  String orderHistoryTabCompleted(int count);
+
+  /// No description provided for @orderHistoryTabCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy ({count})'**
+  String orderHistoryTabCancelled(int count);
+
+  /// No description provided for @orderHistoryNoActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có đơn hàng đang hoạt động'**
+  String get orderHistoryNoActive;
+
+  /// No description provided for @orderHistoryNoCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đơn hàng hoàn thành'**
+  String get orderHistoryNoCompleted;
+
+  /// No description provided for @orderHistoryNoCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có đơn hàng đã hủy'**
+  String get orderHistoryNoCancelled;
+
+  /// No description provided for @orderHistoryEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các đơn hàng sẽ xuất hiện ở đây'**
+  String get orderHistoryEmptySubtitle;
+
+  /// No description provided for @orderHistoryTrack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi'**
+  String get orderHistoryTrack;
+
+  /// No description provided for @addressManagementTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ của tôi'**
+  String get addressManagementTitle;
+
+  /// No description provided for @addressAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa chỉ'**
+  String get addressAdd;
+
+  /// No description provided for @addressLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải địa chỉ...'**
+  String get addressLoading;
+
+  /// No description provided for @addressEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có địa chỉ nào'**
+  String get addressEmpty;
+
+  /// No description provided for @addressEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa chỉ để bắt đầu đặt hàng'**
+  String get addressEmptySubtitle;
+
+  /// No description provided for @addressSetDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt làm mặc định'**
+  String get addressSetDefault;
+
+  /// No description provided for @addressEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa'**
+  String get addressEdit;
+
+  /// No description provided for @addressDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa địa chỉ?'**
+  String get addressDeleteTitle;
+
+  /// No description provided for @addressDeleteContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa \"{label}\"?'**
+  String addressDeleteContent(String label);
+
+  /// No description provided for @addressAddSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm địa chỉ mới'**
+  String get addressAddSuccess;
+
+  /// No description provided for @addressUpdateSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật địa chỉ'**
+  String get addressUpdateSuccess;
+
+  /// No description provided for @addressDeleteSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa địa chỉ'**
+  String get addressDeleteSuccess;
+
+  /// No description provided for @addressSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get addressSave;
+
+  /// No description provided for @addressLabelField.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhãn'**
+  String get addressLabelField;
+
+  /// No description provided for @addressFieldHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập địa chỉ chi tiết'**
+  String get addressFieldHint;
+
+  /// No description provided for @supportConnecting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kết nối...'**
+  String get supportConnecting;
+
+  /// No description provided for @supportDriverOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động'**
+  String get supportDriverOnline;
+
+  /// No description provided for @supportAiHeader.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ bởi AI - Trả lời nhanh các câu hỏi thường gặp'**
+  String get supportAiHeader;
+
+  /// No description provided for @supportNoMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tin nhắn nào'**
+  String get supportNoMessages;
+
+  /// No description provided for @supportNoMessagesSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi tin nhắn đầu tiên để bắt đầu trò chuyện'**
+  String get supportNoMessagesSubtitle;
+
+  /// No description provided for @supportMessageHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tin nhắn...'**
+  String get supportMessageHint;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá đơn hàng'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewFoodQuality.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chất lượng món ăn'**
+  String get reviewFoodQuality;
+
+  /// No description provided for @reviewDeliveryQuality.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chất lượng giao hàng'**
+  String get reviewDeliveryQuality;
+
+  /// No description provided for @reviewComment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận xét của bạn'**
+  String get reviewComment;
+
+  /// No description provided for @reviewCommentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ trải nghiệm của bạn về món ăn và dịch vụ giao hàng...'**
+  String get reviewCommentHint;
+
+  /// No description provided for @reviewSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi đánh giá'**
+  String get reviewSubmit;
+
+  /// No description provided for @reviewSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá thành công!'**
+  String get reviewSuccess;
+
+  /// No description provided for @reviewError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra. Vui lòng thử lại.'**
+  String get reviewError;
+
+  /// No description provided for @reviewRatingExcellent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuyệt vời!'**
+  String get reviewRatingExcellent;
+
+  /// No description provided for @reviewRatingGood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốt'**
+  String get reviewRatingGood;
+
+  /// No description provided for @reviewRatingAverage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung bình'**
+  String get reviewRatingAverage;
+
+  /// No description provided for @reviewRatingPoor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kém'**
+  String get reviewRatingPoor;
+
+  /// No description provided for @reviewRatingBad.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rất tệ'**
+  String get reviewRatingBad;
+
+  /// No description provided for @driverDashboardToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverDashboardToday;
+
+  /// No description provided for @driverDashboardOrders.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn gần đây'**
+  String get driverDashboardOrders;
+
+  /// No description provided for @driverDashboardNoOrders.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đơn hàng nào'**
+  String get driverDashboardNoOrders;
+
+  /// No description provided for @driverStatEarnings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập'**
+  String get driverStatEarnings;
+
+  /// No description provided for @driverStatOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Online'**
+  String get driverStatOnline;
+
+  /// No description provided for @driverEarningsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập'**
+  String get driverEarningsTitle;
+
+  /// No description provided for @driverEarningsPeriodToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverEarningsPeriodToday;
+
+  /// No description provided for @driverEarningsPeriodWeek.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuần này'**
+  String get driverEarningsPeriodWeek;
+
+  /// No description provided for @driverEarningsPeriodMonth.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tháng này'**
+  String get driverEarningsPeriodMonth;
+
+  /// No description provided for @driverEarningsTotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng thu nhập'**
+  String get driverEarningsTotal;
+
+  /// No description provided for @driverEarningsAverage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung bình/đơn'**
+  String get driverEarningsAverage;
+
+  /// No description provided for @driverEarningsHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử giao hàng'**
+  String get driverEarningsHistory;
+
+  /// No description provided for @driverEarningsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu thu nhập'**
+  String get driverEarningsEmpty;
+
+  /// No description provided for @driverKycTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh KYC'**
+  String get driverKycTitle;
+
+  /// No description provided for @driverKycUploadTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lên giấy tờ'**
+  String get driverKycUploadTitle;
+
+  /// No description provided for @driverKycUploadSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng tải lên đầy đủ các giấy tờ yêu cầu'**
+  String get driverKycUploadSubtitle;
+
+  /// No description provided for @driverKycCccdFront.
+  ///
+  /// In vi, this message translates to:
+  /// **'CCCD mặt trước'**
+  String get driverKycCccdFront;
+
+  /// No description provided for @driverKycCccdBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'CCCD mặt sau'**
+  String get driverKycCccdBack;
+
+  /// No description provided for @driverKycDriverLicense.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bằng lái xe'**
+  String get driverKycDriverLicense;
+
+  /// No description provided for @driverKycVehicleReg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký xe'**
+  String get driverKycVehicleReg;
+
+  /// No description provided for @driverKycTakePhoto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh'**
+  String get driverKycTakePhoto;
+
+  /// No description provided for @driverKycGallery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn từ thư viện'**
+  String get driverKycGallery;
+
+  /// No description provided for @driverKycUploadHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh hoặc tải lên'**
+  String get driverKycUploadHint;
+
+  /// No description provided for @driverKycSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'GỬI ĐĂNG KÝ'**
+  String get driverKycSubmit;
+
+  /// No description provided for @driverKycNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.'**
+  String get driverKycNote;
+
+  /// No description provided for @driverHistoryTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử giao hàng'**
+  String get driverHistoryTitle;
+
+  /// No description provided for @driverHistoryFilterDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lọc theo ngày'**
+  String get driverHistoryFilterDate;
+
+  /// No description provided for @driverHistoryEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lịch sử giao hàng'**
+  String get driverHistoryEmpty;
+
+  /// No description provided for @driverHistoryDeliveryFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí giao hàng'**
+  String get driverHistoryDeliveryFee;
+
+  /// No description provided for @locationPermissionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép truy cập vị trí'**
+  String get locationPermissionTitle;
+
+  /// No description provided for @locationPermissionSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'FoodFlow cần vị trí của bạn để tìm nhà hàng gần nhất và giao hàng chính xác hơn.'**
+  String get locationPermissionSubtitle;
+
+  /// No description provided for @locationPermissionAllow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép'**
+  String get locationPermissionAllow;
+
+  /// No description provided for @locationPermissionManual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập địa chỉ thủ công'**
+  String get locationPermissionManual;
+
+  /// No description provided for @driverNavTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng'**
+  String get driverNavTitle;
+
+  /// No description provided for @driverNavNoOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có đơn hàng đang thực hiện'**
+  String get driverNavNoOrder;
+
+  /// No description provided for @driverNavRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà hàng'**
+  String get driverNavRestaurant;
+
+  /// No description provided for @driverNavCallRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gọi nhà hàng'**
+  String get driverNavCallRestaurant;
+
+  /// No description provided for @driverNavDeliveryAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ giao hàng'**
+  String get driverNavDeliveryAddress;
+
+  /// No description provided for @driverNavArrivedAtRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐÃ ĐẾN NHÀ HÀNG'**
+  String get driverNavArrivedAtRestaurant;
+
+  /// No description provided for @driverNavPreparingFood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuẩn bị món'**
+  String get driverNavPreparingFood;
+
+  /// No description provided for @driverNavItemsToPickup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Món cần lấy'**
+  String get driverNavItemsToPickup;
+
+  /// No description provided for @driverNavConfirmPickup.
+  ///
+  /// In vi, this message translates to:
+  /// **'XÁC NHẬN LẤY HÀNG'**
+  String get driverNavConfirmPickup;
+
+  /// No description provided for @driverNavEta.
+  ///
+  /// In vi, this message translates to:
+  /// **'ETA - Thời gian dự kiến'**
+  String get driverNavEta;
+
+  /// No description provided for @driverNavCustomerAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ khách hàng'**
+  String get driverNavCustomerAddress;
+
+  /// No description provided for @driverNavCallCustomer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gọi khách'**
+  String get driverNavCallCustomer;
+
+  /// No description provided for @driverNavConfirmDelivery.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐÃ GIAO HÀNG'**
+  String get driverNavConfirmDelivery;
+
+  /// No description provided for @driverNavDeliverySuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng thành công!'**
+  String get driverNavDeliverySuccess;
+
+  /// No description provided for @driverNavOrderTotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng đơn'**
+  String get driverNavOrderTotal;
+
+  /// No description provided for @driverNavYouEarned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn nhận được'**
+  String get driverNavYouEarned;
+
+  /// No description provided for @driverNavGoHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'VỀ TRANG CHỦ'**
+  String get driverNavGoHome;
+
+  /// No description provided for @driverNavPhoneError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở trình quay số'**
+  String get driverNavPhoneError;
+
+  /// No description provided for @cartPlaceOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt hàng'**
+  String get cartPlaceOrder;
+
+  /// No description provided for @checkoutConfirmOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận đặt hàng'**
+  String get checkoutConfirmOrder;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếp theo'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu ngay'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chào mừng đến FoodFlow'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt đồ ăn yêu thích, giao tận nơi nhanh chóng'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingLocationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm nhà hàng gần bạn'**
+  String get onboardingLocationTitle;
+
+  /// No description provided for @onboardingLocationSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép truy cập vị trí để tìm nhà hàng tốt nhất gần bạn'**
+  String get onboardingLocationSubtitle;
+
+  /// No description provided for @onboardingNotificationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật đơn hàng real-time'**
+  String get onboardingNotificationTitle;
+
+  /// No description provided for @onboardingNotificationSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo khi đơn hàng được xác nhận và giao hàng'**
+  String get onboardingNotificationSubtitle;
+
+  /// No description provided for @loyaltyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm thưởng'**
+  String get loyaltyTitle;
+
+  /// No description provided for @loyaltyPointsBalance.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điểm hiện có'**
+  String get loyaltyPointsBalance;
+
+  /// No description provided for @loyaltyPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} điểm'**
+  String loyaltyPoints(int count);
+
+  /// No description provided for @loyaltyTierBronze.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng'**
+  String get loyaltyTierBronze;
+
+  /// No description provided for @loyaltyTierSilver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạc'**
+  String get loyaltyTierSilver;
+
+  /// No description provided for @loyaltyTierGold.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vàng'**
+  String get loyaltyTierGold;
+
+  /// No description provided for @loyaltyTierPlatinum.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạch kim'**
+  String get loyaltyTierPlatinum;
+
+  /// No description provided for @loyaltyNextTier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng tiếp theo'**
+  String get loyaltyNextTier;
+
+  /// No description provided for @loyaltyPointsToNextTier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần thêm {points} điểm để lên hạng'**
+  String loyaltyPointsToNextTier(int points);
+
+  /// No description provided for @loyaltyHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử điểm'**
+  String get loyaltyHistory;
+
+  /// No description provided for @loyaltyHistoryEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lịch sử điểm thưởng'**
+  String get loyaltyHistoryEmpty;
+
+  /// No description provided for @loyaltyRedeem.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi điểm'**
+  String get loyaltyRedeem;
+
+  /// No description provided for @loyaltyEarnPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách kiếm điểm'**
+  String get loyaltyEarnPoints;
+
+  /// No description provided for @loyaltyEarnOrderDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi đơn hàng hoàn thành = 10 điểm'**
+  String get loyaltyEarnOrderDesc;
+
+  /// No description provided for @loyaltyEarnReferralDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi lần giới thiệu thành công = 50 điểm'**
+  String get loyaltyEarnReferralDesc;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví điện tử'**
+  String get walletTitle;
+
+  /// No description provided for @walletBalance.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số dư'**
+  String get walletBalance;
+
+  /// No description provided for @walletTopUp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nạp tiền'**
+  String get walletTopUp;
+
+  /// No description provided for @walletWithdraw.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rút tiền'**
+  String get walletWithdraw;
+
+  /// No description provided for @walletTransactionHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử giao dịch'**
+  String get walletTransactionHistory;
+
+  /// No description provided for @walletTransactionEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có giao dịch nào'**
+  String get walletTransactionEmpty;
+
+  /// No description provided for @walletTopUpTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nạp tiền vào ví'**
+  String get walletTopUpTitle;
+
+  /// No description provided for @walletSelectAmount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn số tiền'**
+  String get walletSelectAmount;
+
+  /// No description provided for @walletConfirmTopUp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận nạp tiền'**
+  String get walletConfirmTopUp;
+
+  /// No description provided for @walletDebit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiêu'**
+  String get walletDebit;
+
+  /// No description provided for @walletCredit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nạp tiền'**
+  String get walletCredit;
+
+  /// No description provided for @referralTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu bạn bè'**
+  String get referralTitle;
+
+  /// No description provided for @referralSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ mã giới thiệu và nhận thưởng'**
+  String get referralSubtitle;
+
+  /// No description provided for @referralCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã giới thiệu của bạn'**
+  String get referralCode;
+
+  /// No description provided for @referralCopyCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép mã'**
+  String get referralCopyCode;
+
+  /// No description provided for @referralCodeCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép mã!'**
+  String get referralCodeCopied;
+
+  /// No description provided for @referralShareCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ mã'**
+  String get referralShareCode;
+
+  /// No description provided for @referralInviteCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giới thiệu {count} người'**
+  String referralInviteCount(int count);
+
+  /// No description provided for @referralBonusEarned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thưởng đã nhận'**
+  String get referralBonusEarned;
+
+  /// No description provided for @referralHowItWorks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách thức hoạt động'**
+  String get referralHowItWorks;
+
+  /// No description provided for @referralStep1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ mã giới thiệu của bạn'**
+  String get referralStep1;
+
+  /// No description provided for @referralStep2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè đăng ký và đặt đơn đầu tiên'**
+  String get referralStep2;
+
+  /// No description provided for @referralStep3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cả hai cùng nhận 50 điểm thưởng'**
+  String get referralStep3;
+
+  /// No description provided for @helpTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung tâm hỗ trợ'**
+  String get helpTitle;
+
+  /// No description provided for @helpSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm câu hỏi...'**
+  String get helpSearchHint;
+
+  /// No description provided for @helpFaq.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi thường gặp'**
+  String get helpFaq;
+
+  /// No description provided for @helpFaqEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy câu hỏi nào'**
+  String get helpFaqEmpty;
+
+  /// No description provided for @helpChatSupport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chat hỗ trợ'**
+  String get helpChatSupport;
+
+  /// No description provided for @helpCallSupport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gọi hỗ trợ'**
+  String get helpCallSupport;
+
+  /// No description provided for @helpEmailSupport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hỗ trợ'**
+  String get helpEmailSupport;
+
+  /// No description provided for @helpCategories.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh mục'**
+  String get helpCategories;
+
+  /// No description provided for @helpCategoryOrders.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng'**
+  String get helpCategoryOrders;
+
+  /// No description provided for @helpCategoryPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get helpCategoryPayment;
+
+  /// No description provided for @helpCategoryDelivery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng'**
+  String get helpCategoryDelivery;
+
+  /// No description provided for @helpCategoryAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản'**
+  String get helpCategoryAccount;
+
+  /// No description provided for @filterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc'**
+  String get filterTitle;
+
+  /// No description provided for @filterApply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get filterApply;
+
+  /// No description provided for @filterReset.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt lại'**
+  String get filterReset;
+
+  /// No description provided for @filterRating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá'**
+  String get filterRating;
+
+  /// No description provided for @filterDeliveryTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian giao'**
+  String get filterDeliveryTime;
+
+  /// No description provided for @filterPriceRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoảng giá'**
+  String get filterPriceRange;
+
+  /// No description provided for @filterMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{min} phút'**
+  String filterMinutes(int min);
+
+  /// No description provided for @filterFreeDelivery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng miễn phí'**
+  String get filterFreeDelivery;
+
+  /// No description provided for @filterOpenNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở cửa'**
+  String get filterOpenNow;
+
+  /// No description provided for @addressPickerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn địa chỉ'**
+  String get addressPickerTitle;
+
+  /// No description provided for @addressPickerSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm địa chỉ...'**
+  String get addressPickerSearchHint;
+
+  /// No description provided for @addressPickerUseCurrentLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng vị trí hiện tại'**
+  String get addressPickerUseCurrentLocation;
+
+  /// No description provided for @addressPickerSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ đã lưu'**
+  String get addressPickerSaved;
+
+  /// No description provided for @addressPickerNoSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có địa chỉ đã lưu'**
+  String get addressPickerNoSaved;
+
+  /// No description provided for @addressPickerConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận địa chỉ này'**
+  String get addressPickerConfirm;
+
+  /// No description provided for @driver_onboarding_vehicle_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin phương tiện'**
+  String get driver_onboarding_vehicle_title;
+
+  /// No description provided for @driver_onboarding_vehicle_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho chúng tôi biết về xe của bạn'**
+  String get driver_onboarding_vehicle_subtitle;
+
+  /// No description provided for @driver_onboarding_vehicle_type_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại phương tiện'**
+  String get driver_onboarding_vehicle_type_label;
+
+  /// No description provided for @driver_onboarding_vehicle_type_bike.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xe đạp'**
+  String get driver_onboarding_vehicle_type_bike;
+
+  /// No description provided for @driver_onboarding_vehicle_type_motorbike.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xe máy'**
+  String get driver_onboarding_vehicle_type_motorbike;
+
+  /// No description provided for @driver_onboarding_vehicle_type_car.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô tô'**
+  String get driver_onboarding_vehicle_type_car;
+
+  /// No description provided for @driver_onboarding_plate_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Biển số xe'**
+  String get driver_onboarding_plate_label;
+
+  /// No description provided for @driver_onboarding_plate_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập biển số xe'**
+  String get driver_onboarding_plate_hint;
+
+  /// No description provided for @driver_onboarding_plate_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập biển số'**
+  String get driver_onboarding_plate_required;
+
+  /// No description provided for @driver_onboarding_next.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếp theo'**
+  String get driver_onboarding_next;
+
+  /// No description provided for @driver_onboarding_documents_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giấy tờ cần thiết'**
+  String get driver_onboarding_documents_title;
+
+  /// No description provided for @driver_onboarding_documents_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lên đầy đủ giấy tờ để được xét duyệt'**
+  String get driver_onboarding_documents_subtitle;
+
+  /// No description provided for @driver_onboarding_agreement_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều khoản tài xế'**
+  String get driver_onboarding_agreement_title;
+
+  /// No description provided for @driver_onboarding_agreement_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc và đồng ý với điều khoản để tham gia'**
+  String get driver_onboarding_agreement_subtitle;
+
+  /// No description provided for @driver_onboarding_agreement_read.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi đã đọc và đồng ý điều khoản dịch vụ'**
+  String get driver_onboarding_agreement_read;
+
+  /// No description provided for @driver_onboarding_agreement_accept.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng ý và tiếp tục'**
+  String get driver_onboarding_agreement_accept;
+
+  /// No description provided for @driver_onboarding_agreement_submit.
+  ///
+  /// In vi, this message translates to:
+  /// **'GỬI ĐĂNG KÝ'**
+  String get driver_onboarding_agreement_submit;
+
+  /// No description provided for @driver_onboarding_agreement_note.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.'**
+  String get driver_onboarding_agreement_note;
+
+  /// No description provided for @driver_incentives_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ưu đãi'**
+  String get driver_incentives_title;
+
+  /// No description provided for @driver_incentives_active.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get driver_incentives_active;
+
+  /// No description provided for @driver_incentives_completed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get driver_incentives_completed;
+
+  /// No description provided for @driver_incentives_progress.
+  ///
+  /// In vi, this message translates to:
+  /// **'{current}/{target} đơn'**
+  String driver_incentives_progress(int current, int target);
+
+  /// No description provided for @driver_incentives_reward.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thưởng: {amount}'**
+  String driver_incentives_reward(String amount);
+
+  /// No description provided for @driver_incentives_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có ưu đãi nào'**
+  String get driver_incentives_empty;
+
+  /// No description provided for @driver_incentives_expires.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn: {date}'**
+  String driver_incentives_expires(String date);
+
+  /// No description provided for @driver_heatmap_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản đồ nhu cầu'**
+  String get driver_heatmap_title;
+
+  /// No description provided for @driver_heatmap_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực đang có nhu cầu giao hàng cao'**
+  String get driver_heatmap_subtitle;
+
+  /// No description provided for @driver_heatmap_high.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhu cầu cao'**
+  String get driver_heatmap_high;
+
+  /// No description provided for @driver_heatmap_medium.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhu cầu trung bình'**
+  String get driver_heatmap_medium;
+
+  /// No description provided for @driver_heatmap_low.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhu cầu thấp'**
+  String get driver_heatmap_low;
+
+  /// No description provided for @driver_heatmap_legend.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chú giải màu sắc'**
+  String get driver_heatmap_legend;
+
+  /// No description provided for @driver_bank_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản ngân hàng'**
+  String get driver_bank_title;
+
+  /// No description provided for @driver_bank_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm tài khoản để nhận thanh toán hàng tuần'**
+  String get driver_bank_subtitle;
+
+  /// No description provided for @driver_bank_name_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên ngân hàng'**
+  String get driver_bank_name_label;
+
+  /// No description provided for @driver_bank_name_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngân hàng'**
+  String get driver_bank_name_hint;
+
+  /// No description provided for @driver_bank_account_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tài khoản'**
+  String get driver_bank_account_label;
+
+  /// No description provided for @driver_bank_account_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số tài khoản'**
+  String get driver_bank_account_hint;
+
+  /// No description provided for @driver_bank_account_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập số tài khoản'**
+  String get driver_bank_account_required;
+
+  /// No description provided for @driver_bank_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu tài khoản'**
+  String get driver_bank_save;
+
+  /// No description provided for @driver_bank_saved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu tài khoản ngân hàng'**
+  String get driver_bank_saved;
+
+  /// No description provided for @driver_bank_verify.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh tài khoản'**
+  String get driver_bank_verify;
+
+  /// No description provided for @driver_support_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ tài xế'**
+  String get driver_support_title;
+
+  /// No description provided for @driver_support_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi luôn sẵn sàng giúp đỡ bạn'**
+  String get driver_support_subtitle;
+
+  /// No description provided for @driver_support_faq.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi thường gặp'**
+  String get driver_support_faq;
+
+  /// No description provided for @driver_support_contact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ hỗ trợ'**
+  String get driver_support_contact;
+
+  /// No description provided for @driver_support_chat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chat trực tiếp'**
+  String get driver_support_chat;
+
+  /// No description provided for @driver_support_email.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi email'**
+  String get driver_support_email;
+
+  /// No description provided for @driver_support_phone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hotline: 1800-xxxx'**
+  String get driver_support_phone;
+
+  /// No description provided for @driver_support_faq_q1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi nhận tiền vào khi nào?'**
+  String get driver_support_faq_q1;
+
+  /// No description provided for @driver_support_faq_a1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập được chuyển vào tài khoản ngân hàng mỗi thứ Hai hàng tuần.'**
+  String get driver_support_faq_a1;
+
+  /// No description provided for @driver_support_faq_q2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm sao để thay đổi khu vực giao hàng?'**
+  String get driver_support_faq_q2;
+
+  /// No description provided for @driver_support_faq_a2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào Cài đặt > Khu vực hoạt động để thay đổi.'**
+  String get driver_support_faq_a2;
+
+  /// No description provided for @driver_settings_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get driver_settings_title;
+
+  /// No description provided for @driver_settings_notifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo đẩy'**
+  String get driver_settings_notifications;
+
+  /// No description provided for @driver_settings_notifications_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo về đơn hàng mới'**
+  String get driver_settings_notifications_subtitle;
+
+  /// No description provided for @driver_settings_language.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngôn ngữ'**
+  String get driver_settings_language;
+
+  /// No description provided for @driver_settings_language_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếng Việt'**
+  String get driver_settings_language_subtitle;
+
+  /// No description provided for @driver_settings_privacy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính sách bảo mật'**
+  String get driver_settings_privacy;
+
+  /// No description provided for @driver_settings_about.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về ứng dụng'**
+  String get driver_settings_about;
+
+  /// No description provided for @driver_settings_logout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng xuất'**
+  String get driver_settings_logout;
+
+  /// No description provided for @driver_settings_logout_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn đăng xuất?'**
+  String get driver_settings_logout_confirm;
+
+  /// No description provided for @driver_settings_sound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Âm thanh thông báo'**
+  String get driver_settings_sound;
+
+  /// No description provided for @driver_settings_sound_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát âm thanh khi có đơn hàng mới'**
+  String get driver_settings_sound_subtitle;
+
+  /// No description provided for @driver_settings_version.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản {version}'**
+  String driver_settings_version(String version);
 }
 
 class _AppLocalizationsDelegate
