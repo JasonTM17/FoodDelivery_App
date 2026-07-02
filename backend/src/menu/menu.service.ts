@@ -5,6 +5,7 @@ import {
   CreateOptionDto,
   CreateMenuItemDto, UpdateMenuItemDto,
 } from './menu.dto'
+import { buildMenuCategoryTree, toMenuCategoryNode } from './menu-category-tree'
 
 @Injectable()
 export class MenuService {
@@ -49,11 +50,12 @@ export class MenuService {
 
   async getCategories(userId: string) {
     const restaurantId = await this.getOwnedRestaurantId(userId)
-    return this.prisma.category.findMany({
+    const categories = await this.prisma.category.findMany({
       where: { restaurantId },
       include: { _count: { select: { menuItems: true } } },
       orderBy: [{ parentId: 'asc' }, { sortOrder: 'asc' }],
     })
+    return buildMenuCategoryTree(categories)
   }
 
   async getItems(userId: string) {
@@ -78,7 +80,7 @@ export class MenuService {
 
   async createCategory(userId: string, dto: CreateCategoryDto) {
     const restaurantId = await this.getOwnedRestaurantId(userId)
-    return this.prisma.category.create({
+    const category = await this.prisma.category.create({
       data: {
         restaurantId,
         name: dto.name,
@@ -88,6 +90,7 @@ export class MenuService {
         isVisible: dto.isVisible ?? true,
       },
     })
+    return toMenuCategoryNode(category)
   }
 
   async updateCategory(userId: string, categoryId: string, dto: UpdateCategoryDto) {
@@ -98,7 +101,7 @@ export class MenuService {
     if (!category || category.restaurantId !== restaurantId) {
       throw new NotFoundException('Category not found')
     }
-    return this.prisma.category.update({
+    const updated = await this.prisma.category.update({
       where: { id: categoryId },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
@@ -107,7 +110,9 @@ export class MenuService {
         ...(dto.icon !== undefined && { icon: dto.icon }),
         ...(dto.isVisible !== undefined && { isVisible: dto.isVisible }),
       },
+      include: { _count: { select: { menuItems: true } } },
     })
+    return toMenuCategoryNode(updated, updated._count.menuItems)
   }
 
   async deleteCategory(userId: string, categoryId: string) {
