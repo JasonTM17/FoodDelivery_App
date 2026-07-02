@@ -827,6 +827,32 @@ components:
 
     # ── Notifications ──
 
+    PromotionTargetingPreview:
+      type: object
+      properties:
+        audience:
+          type: string
+          enum: [all, new, vip, lapsed, order_history]
+        estimatedReach: { type: integer, minimum: 0 }
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string, enum: [new, returning, lapsed] }
+              count: { type: integer, minimum: 0 }
+              pct: { type: integer, minimum: 0, maximum: 100 }
+            required: [key, count, pct]
+        updatedAt: { type: string, format: date-time }
+      required: [audience, estimatedReach, breakdown, updatedAt]
+
+    PromotionTargetingPreviewEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/PromotionTargetingPreview" }
+      required: [success, data]
+
     Notification:
       type: object
       properties:
@@ -1854,6 +1880,39 @@ paths:
       responses:
         "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
         "400": { description: "Invalid transition", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/promotions/targeting-preview:
+    get:
+      tags: [promotions]
+      summary: Preview a promotion audience from successful restaurant orders
+      operationId: restaurant_previewPromotionTargeting
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: audience
+          in: query
+          required: true
+          schema: { type: string, enum: [all, new, vip, lapsed, segment, order_history] }
+        - name: minOrderCount
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: lastOrderWithinDays
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+        - name: segmentId
+          in: query
+          description: Reserved for persisted customer segments; unsupported segments return a problem detail.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Audience reach calculated from successful order history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PromotionTargetingPreviewEnvelope" }
+        "400":
+          description: Invalid or unsupported targeting parameters
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
 
   /driver/orders/{orderId}/status:
     patch:

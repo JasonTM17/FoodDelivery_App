@@ -8,6 +8,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -109,4 +110,26 @@ export class BulkPromotionDto {
 
   @IsIn(['pause', 'resume', 'archive'])
   action: 'pause' | 'resume' | 'archive'
+}
+
+export class PromotionTargetingPreviewQueryDto {
+  @IsIn(['all', 'new', 'vip', 'lapsed', 'segment', 'order_history'])
+  audience: 'all' | 'new' | 'vip' | 'lapsed' | 'segment' | 'order_history'
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  minOrderCount?: number
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  lastOrderWithinDays?: number
+
+  @IsOptional()
+  @IsString()
+  segmentId?: string
 }

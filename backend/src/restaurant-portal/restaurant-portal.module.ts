@@ -7,6 +7,7 @@ import { RestaurantInsightsService } from './restaurant-insights.service'
 import { RestaurantProfileController } from './restaurant-profile.controller'
 import { RestaurantProfileService } from './restaurant-profile.service'
 import { RestaurantPromotionsController } from './restaurant-promotions.controller'
+import { RestaurantPromotionTargetingService } from './restaurant-promotion-targeting.service'
 import { RestaurantPromotionsService } from './restaurant-promotions.service'
 import { RestaurantRevenueService } from './restaurant-revenue.service'
 import { RestaurantStaffController } from './restaurant-staff.controller'
@@ -26,6 +27,7 @@ import { RestaurantStaffService } from './restaurant-staff.service'
     RestaurantDashboardService,
     RestaurantRevenueService,
     RestaurantInsightsService,
+    RestaurantPromotionTargetingService,
     RestaurantPromotionsService,
     RestaurantStaffService,
   ],

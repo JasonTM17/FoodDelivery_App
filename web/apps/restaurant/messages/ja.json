@@ -1,4 +1,19 @@
 {
+  "promotionTargeting": {
+    "loading": "対象顧客数を計算しています",
+    "error": "対象顧客数を取得できませんでした。",
+    "retry": "再試行",
+    "empty": "条件に一致する顧客はいません。",
+    "estimate": "推定リーチ: {count}人",
+    "audiences": {
+      "all": "すべての顧客",
+      "new": "新規顧客（30日）",
+      "vip": "VIP顧客",
+      "lapsed": "休眠顧客（30日以上）",
+      "segment": "保存済みセグメント",
+      "order_history": "注文履歴による顧客"
+    }
+  },
   "login": {
     "title": "レストラン管理",
     "description": "注文とメニューを管理するためにログインしてください",

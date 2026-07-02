@@ -6,7 +6,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
-import { BulkPromotionDto, CreateRestaurantPromotionDto, UpdateRestaurantPromotionDto } from './restaurant-promotion.dto'
+import {
+  BulkPromotionDto,
+  CreateRestaurantPromotionDto,
+  PromotionTargetingPreviewQueryDto,
+  UpdateRestaurantPromotionDto,
+} from './restaurant-promotion.dto'
+import { RestaurantPromotionTargetingService } from './restaurant-promotion-targeting.service'
 import { RestaurantPromotionsService } from './restaurant-promotions.service'
 
 @ApiTags('restaurant-promotions')
@@ -15,7 +21,10 @@ import { RestaurantPromotionsService } from './restaurant-promotions.service'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.restaurant)
 export class RestaurantPromotionsController {
-  constructor(private readonly service: RestaurantPromotionsService) {}
+  constructor(
+    private readonly service: RestaurantPromotionsService,
+    private readonly targeting: RestaurantPromotionTargetingService,
+  ) {}
 
   @Get()
   list(
@@ -26,6 +35,14 @@ export class RestaurantPromotionsController {
     @Query('limit') limit = '20',
   ) {
     return this.service.list(user.sub, { status, search, page: Number(page), limit: Number(limit) })
+  }
+
+  @Get('targeting-preview')
+  previewTargeting(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: PromotionTargetingPreviewQueryDto,
+  ) {
+    return this.targeting.preview(user.sub, query)
   }
 
   @Get(':id')

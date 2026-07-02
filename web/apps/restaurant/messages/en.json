@@ -1,4 +1,19 @@
 {
+  "promotionTargeting": {
+    "loading": "Calculating audience reach",
+    "error": "Audience reach is temporarily unavailable.",
+    "retry": "Retry",
+    "empty": "No eligible customers in this audience.",
+    "estimate": "Estimated reach: {count} customers",
+    "audiences": {
+      "all": "All customers",
+      "new": "New customers (30 days)",
+      "vip": "VIP customers",
+      "lapsed": "Inactive customers (30+ days)",
+      "segment": "Saved segment",
+      "order_history": "Customers by order history"
+    }
+  },
   "login": {
     "title": "Restaurant Manager",
     "description": "Sign in to manage your orders and menu",

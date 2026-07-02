@@ -1,4 +1,19 @@
 {
+  "promotionTargeting": {
+    "loading": "Đang tính phạm vi khách hàng",
+    "error": "Chưa thể tải phạm vi khách hàng.",
+    "retry": "Thử lại",
+    "empty": "Chưa có khách hàng phù hợp.",
+    "estimate": "Ước tính tiếp cận: {count} khách hàng",
+    "audiences": {
+      "all": "Tất cả khách hàng",
+      "new": "Khách mới (30 ngày)",
+      "vip": "Khách VIP",
+      "lapsed": "Không hoạt động 30+ ngày",
+      "segment": "Phân khúc đã lưu",
+      "order_history": "Khách theo lịch sử đơn"
+    }
+  },
   "login": {
     "title": "Quản lý nhà hàng",
     "description": "Đăng nhập để quản lý đơn hàng và thực đơn",

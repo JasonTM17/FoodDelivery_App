@@ -12,7 +12,6 @@ import { PromotionItemSelector } from './promotion-item-selector';
 import { AudiencePreview } from '../shared/audience-preview';
 import type { Promotion, PromotionType, PromotionChannel, PromotionSchedule, PromotionAudience, ComboConfig } from '@/lib/types';
 import { validatePromotion } from '@/lib/promotion-engine';
-import { estimateReach } from '@/lib/targeting';
 
 interface PromotionFormProps {
   initialData?: Partial<Promotion>;
@@ -82,8 +81,6 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
 
     await onSubmit(data);
   };
-
-  const audienceReach = estimateReach({ audience, minOrderCount: minOrderCount ? parseInt(minOrderCount, 10) : undefined });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -187,7 +184,12 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
           minOrderCount={minOrderCount ? parseInt(minOrderCount, 10) : undefined}
           onMinOrderCountChange={(v) => setMinOrderCount(v.toString())}
         />
-        <AudiencePreview estimatedReach={audienceReach.estimatedReach} audienceLabel={audienceReach.audienceLabel} />
+        <AudiencePreview
+          target={{
+            audience,
+            minOrderCount: minOrderCount ? parseInt(minOrderCount, 10) : undefined,
+          }}
+        />
       </section>
 
       {/* Schedule */}
