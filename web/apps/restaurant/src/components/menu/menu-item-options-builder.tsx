@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { MenuItemOption, MenuItemChoice } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 interface MenuItemOptionsBuilderProps {
   options: MenuItemOption[];
@@ -12,6 +11,8 @@ interface MenuItemOptionsBuilderProps {
 }
 
 export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: MenuItemOptionsBuilderProps) {
+  const t = useTranslations('menu.form.options');
+
   const addOption = () => {
     if (options.length >= maxOptions) return;
     onChange([
@@ -61,7 +62,9 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
   return (
     <div className="space-y-4" data-testid="menu-item-options-builder">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Tuỳ chọn món ({options.length}/{maxOptions})</h4>
+        <h4 className="text-sm font-semibold text-gray-900">
+          {t('title', { count: options.length, max: maxOptions })}
+        </h4>
         <button
           type="button"
           onClick={addOption}
@@ -69,12 +72,12 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
           className="btn-secondary text-xs py-1.5 disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5 mr-1" />
-          Thêm tùy chọn
+          {t('addOption')}
         </button>
       </div>
 
       {options.length >= maxOptions && (
-        <p className="text-xs text-amber-600">Tối đa {maxOptions} tùy chọn</p>
+        <p className="text-xs text-amber-600">{t('maxOptions', { max: maxOptions })}</p>
       )}
 
       <div className="space-y-3">
@@ -83,24 +86,24 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="label">Tên tùy chọn</label>
+                  <label className="label">{t('optionName')}</label>
                   <input
                     type="text"
                     value={option.name}
                     onChange={(e) => updateOption(oi, 'name', e.target.value)}
                     className="input-field text-sm"
-                    placeholder="VD: Kích cỡ"
+                    placeholder={t('optionNamePlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="label">Kiểu</label>
+                  <label className="label">{t('type')}</label>
                   <select
                     value={option.type}
                     onChange={(e) => updateOption(oi, 'type', e.target.value)}
                     className="select-field text-sm"
                   >
-                    <option value="single">Chọn 1</option>
-                    <option value="multi">Chọn nhiều</option>
+                    <option value="single">{t('single')}</option>
+                    <option value="multi">{t('multi')}</option>
                   </select>
                 </div>
                 <div className="flex items-end gap-2 pb-1">
@@ -111,7 +114,7 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
                       onChange={(e) => updateOption(oi, 'required', e.target.checked)}
                       className="rounded border-gray-300"
                     />
-                    <span className="text-sm text-gray-700">Bắt buộc</span>
+                    <span className="text-sm text-gray-700">{t('required')}</span>
                   </label>
                   <button type="button" onClick={() => removeOption(oi)} className="btn-ghost text-red-500 p-1 ml-auto">
                     <Trash2 className="h-4 w-4" />
@@ -122,7 +125,7 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
 
             <div className="ml-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Lựa chọn ({option.choices.length}/10)</span>
+                <span className="text-xs text-gray-500">{t('choices', { count: option.choices.length, max: 10 })}</span>
                 <button
                   type="button"
                   onClick={() => addChoice(oi)}
@@ -130,7 +133,7 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
                   className="btn-ghost text-xs text-brand-600 disabled:opacity-50"
                 >
                   <Plus className="h-3 w-3 mr-1" />
-                  Thêm lựa chọn
+                  {t('addChoice')}
                 </button>
               </div>
               {option.choices.map((choice, ci) => (
@@ -141,14 +144,14 @@ export function MenuItemOptionsBuilder({ options, onChange, maxOptions = 5 }: Me
                     value={choice.name}
                     onChange={(e) => updateChoice(oi, ci, 'name', e.target.value)}
                     className="input-field flex-1 text-sm"
-                    placeholder="Tên lựa chọn"
+                    placeholder={t('choiceNamePlaceholder')}
                   />
                   <input
                     type="number"
                     value={choice.price || ''}
                     onChange={(e) => updateChoice(oi, ci, 'price', parseFloat(e.target.value) || 0)}
                     className="input-field w-24 text-sm"
-                    placeholder="Phụ thu"
+                    placeholder={t('priceDeltaPlaceholder')}
                   />
                   <button type="button" onClick={() => removeChoice(oi, ci)} className="btn-ghost text-red-500 p-1">
                     <Trash2 className="h-3.5 w-3.5" />

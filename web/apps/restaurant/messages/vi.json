@@ -167,7 +167,58 @@
     "category": "Danh mục",
     "price": "Giá",
     "available": "Có sẵn",
-    "unavailable": "Hết hàng"
+    "unavailable": "Hết hàng",
+    "newPage": {
+      "title": "Thêm món mới",
+      "description": "Thêm món ăn vào thực đơn nhà hàng",
+      "back": "Quay lại thực đơn",
+      "submitError": "Không thể thêm món. Vui lòng thử lại."
+    },
+    "form": {
+      "name": "Tên món *",
+      "namePlaceholder": "VD: Phở bò tái chín",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Mô tả ngắn về món ăn...",
+      "price": "Giá *",
+      "category": "Danh mục",
+      "selectCategory": "Chọn danh mục",
+      "addCategory": "Thêm",
+      "customCategoryPlaceholder": "Nhập danh mục mới",
+      "imageUrl": "URL hình ảnh",
+      "imagePreview": "Xem trước hình ảnh món",
+      "saving": "Đang lưu...",
+      "update": "Cập nhật",
+      "create": "Thêm món",
+      "categories": {
+        "appetizers": "Khai vị",
+        "main": "Món chính",
+        "soup": "Món soup",
+        "salad": "Salad",
+        "drinks": "Đồ uống",
+        "dessert": "Tráng miệng",
+        "combo": "Combo"
+      },
+      "errors": {
+        "nameRequired": "Vui lòng nhập tên món",
+        "priceInvalid": "Vui lòng nhập giá hợp lệ",
+        "categoryRequired": "Vui lòng chọn danh mục"
+      },
+      "options": {
+        "title": "Tùy chọn món ({count}/{max})",
+        "addOption": "Thêm tùy chọn",
+        "maxOptions": "Tối đa {max} tùy chọn",
+        "optionName": "Tên tùy chọn",
+        "optionNamePlaceholder": "VD: Kích cỡ",
+        "type": "Kiểu",
+        "single": "Chọn 1",
+        "multi": "Chọn nhiều",
+        "required": "Bắt buộc",
+        "choices": "Lựa chọn ({count}/{max})",
+        "addChoice": "Thêm lựa chọn",
+        "choiceNamePlaceholder": "Tên lựa chọn",
+        "priceDeltaPlaceholder": "Phụ thu"
+      }
+    }
   },
   "menuNew": {
     "title": "Thêm món mới",

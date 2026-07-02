@@ -167,7 +167,58 @@
     "category": "Category",
     "price": "Price",
     "available": "Available",
-    "unavailable": "Out of stock"
+    "unavailable": "Out of stock",
+    "newPage": {
+      "title": "Add new item",
+      "description": "Add an item to the restaurant menu",
+      "back": "Back to menu",
+      "submitError": "Could not add the item. Please try again."
+    },
+    "form": {
+      "name": "Item name *",
+      "namePlaceholder": "E.g. rare beef pho",
+      "description": "Description",
+      "descriptionPlaceholder": "Short description of this item...",
+      "price": "Price *",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "addCategory": "Add",
+      "customCategoryPlaceholder": "Enter a new category",
+      "imageUrl": "Image URL",
+      "imagePreview": "Menu item image preview",
+      "saving": "Saving...",
+      "update": "Update",
+      "create": "Add item",
+      "categories": {
+        "appetizers": "Appetizers",
+        "main": "Main dishes",
+        "soup": "Soup",
+        "salad": "Salad",
+        "drinks": "Drinks",
+        "dessert": "Dessert",
+        "combo": "Combo"
+      },
+      "errors": {
+        "nameRequired": "Please enter the item name",
+        "priceInvalid": "Please enter a valid price",
+        "categoryRequired": "Please choose a category"
+      },
+      "options": {
+        "title": "Item options ({count}/{max})",
+        "addOption": "Add option",
+        "maxOptions": "Up to {max} options",
+        "optionName": "Option name",
+        "optionNamePlaceholder": "E.g. Size",
+        "type": "Type",
+        "single": "Choose one",
+        "multi": "Choose multiple",
+        "required": "Required",
+        "choices": "Choices ({count}/{max})",
+        "addChoice": "Add choice",
+        "choiceNamePlaceholder": "Choice name",
+        "priceDeltaPlaceholder": "Extra fee"
+      }
+    }
   },
   "menuNew": {
     "title": "Add New Item",

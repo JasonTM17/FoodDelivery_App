@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft, UtensilsCrossed } from 'lucide-react';
 import { MenuItemForm } from '@/components/menu/menu-item-form';
 import { api } from '@/lib/api';
@@ -10,6 +11,7 @@ import type { MenuItem } from '@/lib/types';
 
 export default function NewMenuItemPage() {
   const router = useRouter();
+  const t = useTranslations('menu.newPage');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
@@ -22,7 +24,7 @@ export default function NewMenuItemPage() {
       router.push('/menu');
     } catch (err: unknown) {
       const apiError = err as { message?: string };
-      setSubmitError(apiError.message || 'Không thể thêm món. Vui lòng thử lại.');
+      setSubmitError(apiError.message || t('submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -32,11 +34,12 @@ export default function NewMenuItemPage() {
     <div>
       {/* Back button */}
       <button
+        type="button"
         onClick={() => router.push('/menu')}
         className="btn-ghost mb-4 -ml-2"
       >
         <ArrowLeft className="h-4 w-4 mr-1.5" />
-        Quay lại thực đơn
+        {t('back')}
       </button>
 
       {/* Header */}
@@ -45,8 +48,8 @@ export default function NewMenuItemPage() {
           <UtensilsCrossed className="h-5 w-5 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Thêm món mới</h1>
-          <p className="text-sm text-gray-500">Thêm món ăn vào thực đơn nhà hàng</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-sm text-gray-500">{t('description')}</p>
         </div>
       </div>
 

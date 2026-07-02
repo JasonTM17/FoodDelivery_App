@@ -167,7 +167,58 @@
     "category": "カテゴリー",
     "price": "価格",
     "available": "在庫あり",
-    "unavailable": "品切れ"
+    "unavailable": "品切れ",
+    "newPage": {
+      "title": "新しい商品を追加",
+      "description": "レストランメニューに商品を追加します",
+      "back": "メニューに戻る",
+      "submitError": "商品を追加できませんでした。もう一度お試しください。"
+    },
+    "form": {
+      "name": "商品名 *",
+      "namePlaceholder": "例: 牛肉フォー",
+      "description": "説明",
+      "descriptionPlaceholder": "商品の短い説明...",
+      "price": "価格 *",
+      "category": "カテゴリー",
+      "selectCategory": "カテゴリーを選択",
+      "addCategory": "追加",
+      "customCategoryPlaceholder": "新しいカテゴリーを入力",
+      "imageUrl": "画像URL",
+      "imagePreview": "商品画像プレビュー",
+      "saving": "保存中...",
+      "update": "更新",
+      "create": "商品を追加",
+      "categories": {
+        "appetizers": "前菜",
+        "main": "メイン",
+        "soup": "スープ",
+        "salad": "サラダ",
+        "drinks": "ドリンク",
+        "dessert": "デザート",
+        "combo": "セット"
+      },
+      "errors": {
+        "nameRequired": "商品名を入力してください",
+        "priceInvalid": "有効な価格を入力してください",
+        "categoryRequired": "カテゴリーを選択してください"
+      },
+      "options": {
+        "title": "商品オプション（{count}/{max}）",
+        "addOption": "オプションを追加",
+        "maxOptions": "最大{max}個まで",
+        "optionName": "オプション名",
+        "optionNamePlaceholder": "例: サイズ",
+        "type": "種類",
+        "single": "1つ選択",
+        "multi": "複数選択",
+        "required": "必須",
+        "choices": "選択肢（{count}/{max}）",
+        "addChoice": "選択肢を追加",
+        "choiceNamePlaceholder": "選択肢名",
+        "priceDeltaPlaceholder": "追加料金"
+      }
+    }
   },
   "menuNew": {
     "title": "新しいアイテムを追加",
