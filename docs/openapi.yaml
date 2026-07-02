@@ -52,6 +52,10 @@ tags:
     description: Support tickets, replies, SLA, macros, bulk actions, CSAT (admin)
   - name: audit
     description: Audit log (search tsvector, export, retention) -- admin only
+  - name: settings
+    description: Platform settings and degraded integration state -- admin only
+  - name: ai
+    description: FoodFlow AI chatbot and service integration
   - name: analytics
     description: KPI aggregations, business dashboards, heat maps -- admin only
 
@@ -1043,6 +1047,96 @@ components:
         createdAt: "2026-06-09T14:00:00Z"
 
     # ── Analytics ──
+
+    AdminExportJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users] }
+        resource: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users] }
+        format: { type: string, enum: [csv, xlsx, parquet] }
+        status: { type: string, enum: [queued, running, completed, failed, cancelled] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        rowCount: { type: integer, minimum: 0 }
+        totalRows: { type: integer, minimum: 0 }
+        filterSummary:
+          type: object
+          additionalProperties: { type: string }
+        requestedBy:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            email: { type: string, format: email }
+            fullName: { type: string }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        downloadUrl: { type: string }
+        errorMessage: { type: string }
+      required: [id, type, resource, format, status, progress, rowCount, totalRows, filterSummary, createdAt]
+
+    AdminExportJobsPayload:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items: { $ref: "#/components/schemas/AdminExportJob" }
+      required: [jobs]
+
+    CreateAdminExportRequest:
+      type: object
+      properties:
+        resource: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users] }
+        type: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users], deprecated: true }
+        format: { type: string, enum: [csv, xlsx, parquet] }
+        period: { type: string, enum: [today, 7d, 30d, thisMonth, thisQuarter, custom] }
+        dateFrom: { type: string, format: date }
+        dateTo: { type: string, format: date }
+        filters:
+          type: object
+          additionalProperties: true
+      required: [format]
+
+    AdminSettingValue:
+      type: object
+      additionalProperties: true
+
+    AdminSettingsSectionResponse:
+      type: object
+      properties:
+        section: { type: string, enum: [general, branding, compliance, integrations] }
+        settings: { $ref: "#/components/schemas/AdminSettingValue" }
+        updatedAt: { type: string, format: date-time, nullable: true }
+      required: [section, settings, updatedAt]
+
+    AdminSettingsPayload:
+      type: object
+      properties:
+        sections:
+          type: object
+          properties:
+            general: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+            branding: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+            compliance: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+            integrations: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+      required: [sections]
+
+    AiChatRequest:
+      type: object
+      properties:
+        message: { type: string, minLength: 1 }
+        sessionId: { type: string }
+        orderId: { type: string, format: uuid }
+      required: [message]
+
+    AiChatReply:
+      type: object
+      properties:
+        reply: { type: string }
+        sessionId: { type: string }
+        action: { type: string, enum: [answered, escalated, degraded] }
+        escalated: { type: boolean }
+        severity: { type: string }
+      required: [reply, sessionId, action]
 
     DashboardKpi:
       type: object
@@ -2453,6 +2547,264 @@ paths:
   # ═══════════════════════════════════════════════
   # ANALYTICS (admin)
   # ═══════════════════════════════════════════════
+
+  /admin/exports:
+    get:
+      tags: [audit]
+      summary: List admin export jobs
+      description: Returns recent export jobs backed by `AdminExportJob`; `processing` query values are mapped to `running` for one compatibility cycle.
+      operationId: admin_exports_list
+      x-foo-actor: admin
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+        - { name: status, in: query, schema: { type: string, enum: [all, queued, running, completed, failed, cancelled, processing] }, description: "`processing` is a temporary alias for `running`." }
+      responses:
+        "200":
+          description: "Export jobs"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminExportJobsPayload" }
+    post:
+      tags: [audit]
+      summary: Create an admin export job
+      description: Creates a canonical export job for CSV/XLSX/Parquet. CSV can complete inline; unavailable file workers return a failed degraded job instead of a fake file.
+      operationId: admin_exports_create
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAdminExportRequest" }
+      responses:
+        "201":
+          description: "Export job created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminExportJob" }
+        "400": { description: "Unsupported resource, format, or date", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/exports/{id}/download:
+    get:
+      tags: [audit]
+      summary: Download a completed CSV export
+      description: Streams the generated UTF-8 CSV for a completed export job. Non-CSV or incomplete jobs return a problem detail.
+      operationId: admin_exports_download
+      x-foo-actor: admin
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: "UTF-8 CSV download", content: { text/csv: { schema: { type: string, format: binary } } } }
+        "400": { description: "Export job is not ready or not CSV", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Export job not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/export-jobs:
+    get:
+      tags: [audit]
+      summary: List admin export jobs (legacy alias)
+      description: Deprecated alias for `GET /admin/exports`, kept for one compatibility cycle.
+      operationId: admin_exportJobs_listLegacy
+      deprecated: true
+      x-foo-actor: admin
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+        - { name: status, in: query, schema: { type: string, enum: [all, queued, running, completed, failed, cancelled, processing] } }
+      responses:
+        "200":
+          description: "Export jobs"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminExportJobsPayload" }
+
+  /admin/reports/jobs:
+    get:
+      tags: [audit]
+      summary: List report export jobs (legacy alias)
+      description: Deprecated alias for `GET /admin/exports`, kept for existing report pages during the Batch 4 transition.
+      operationId: admin_reports_listLegacy
+      deprecated: true
+      x-foo-actor: admin
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        "200":
+          description: "Export jobs"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminExportJobsPayload" }
+
+  /admin/reports/generate:
+    post:
+      tags: [audit]
+      summary: Create a report export job (legacy alias)
+      description: Deprecated alias for `POST /admin/exports`, accepting the same request contract.
+      operationId: admin_reports_generateLegacy
+      deprecated: true
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAdminExportRequest" }
+      responses:
+        "201":
+          description: "Export job created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminExportJob" }
+
+  /admin/settings:
+    get:
+      tags: [settings]
+      summary: Get all platform settings sections
+      description: Returns merged platform settings with defaults and degraded integration state. Sensitive values are redacted.
+      operationId: admin_settings_getAll
+      x-foo-actor: admin
+      responses:
+        "200":
+          description: "Platform settings"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminSettingsPayload" }
+    patch:
+      tags: [settings]
+      summary: Update one or more platform settings sections
+      description: Merges supplied section patches into `PlatformSetting` records and returns redacted settings.
+      operationId: admin_settings_updateAll
+      x-foo-actor: admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminSettingValue" }
+      responses:
+        "200":
+          description: "Updated platform settings"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminSettingsPayload" }
+
+  /admin/settings/{section}:
+    get:
+      tags: [settings]
+      summary: Get a platform settings section
+      description: Returns one settings section merged with defaults. Unsupported sections return a problem detail.
+      operationId: admin_settings_getSection
+      x-foo-actor: admin
+      parameters:
+        - { name: section, in: path, required: true, schema: { type: string, enum: [general, branding, compliance, integrations] } }
+      responses:
+        "200":
+          description: "Platform settings section"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+        "400": { description: "Unsupported section", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    patch:
+      tags: [settings]
+      summary: Update a platform settings section
+      description: Merges a patch into one settings section and tracks the admin user that made the update.
+      operationId: admin_settings_updateSection
+      x-foo-actor: admin
+      parameters:
+        - { name: section, in: path, required: true, schema: { type: string, enum: [general, branding, compliance, integrations] } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminSettingValue" }
+      responses:
+        "200":
+          description: "Updated platform settings section"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AdminSettingsSectionResponse" }
+        "400": { description: "Unsupported section", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /ai/chat:
+    post:
+      tags: [ai]
+      summary: Create one chatbot reply
+      description: Runs the FoodFlow chatbot pipeline once and returns answered, escalated, or degraded state without streaming.
+      operationId: ai_chat_create
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AiChatRequest" }
+      responses:
+        "200":
+          description: "Chatbot reply"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AiChatReply" }
+        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /ai/stream:
+    post:
+      tags: [ai]
+      summary: Stream a chatbot reply as server-sent events
+      description: Streams thinking/token/escalated/degraded/done events from the same chatbot service used by `POST /ai/chat`.
+      operationId: ai_chat_stream
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AiChatRequest" }
+      responses:
+        "200": { description: "SSE stream with thinking/token/escalated/degraded/done events", content: { text/event-stream: { schema: { type: string } } } }
+        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/dashboard:
     get:

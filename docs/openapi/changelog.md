@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-02: Added canonical admin export jobs, legacy report/export aliases, platform settings sections, and AI chatbot request/reply contracts. Export formats are normalized to `csv | xlsx | parquet`; statuses are `queued | running | completed | failed | cancelled`.
 - 2026-07-02: Aligned admin audit list filters, canonical pagination envelope, bigint serialization, and filtered CSV download with implemented routes.
 
 ## v1.0.1 (2026-07-02)
