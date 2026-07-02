@@ -317,7 +317,60 @@
   },
   "reviews": {
     "title": "Customer Reviews",
-    "description": "View and respond to customer reviews"
+    "description": "View and respond to customer reviews",
+    "dashboard": {
+      "loadError": "Could not load reviews",
+      "submitError": "Could not send reply",
+      "avgRating": "Average rating",
+      "totalReviews": "Total reviews",
+      "fiveStarRate": "5-star rate",
+      "responseRate": "Response rate",
+      "filterLabel": "Filter:",
+      "all": "All",
+      "commentOnly": "With comments only",
+      "empty": "No reviews yet",
+      "restaurantReply": "Restaurant reply",
+      "replyPlaceholder": "Write a reply...",
+      "sendReplyAria": "Send review reply",
+      "ratingAria": "{rating} out of 5 stars",
+      "starFilterAria": "Filter by {rating} stars",
+      "orderBadge": "#{orderId}"
+    },
+    "card": {
+      "dishLabel": "Item: {dishName}",
+      "photoAria": "Review photo {index}",
+      "restaurantReply": "Reply from restaurant",
+      "reply": "Reply",
+      "unknownTime": "Unknown",
+      "ratingAria": "{rating} out of 5 stars"
+    },
+    "filters": {
+      "all": "All",
+      "sortLabel": "Sort:",
+      "ratingAria": "{rating} stars",
+      "sort": {
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "lowest": "Lowest rating"
+      }
+    },
+    "replyModal": {
+      "title": "Reply to review",
+      "description": "Your reply will be shown publicly",
+      "required": "Please enter a reply",
+      "tooLong": "Replies can be up to 500 characters",
+      "sendError": "Could not send reply",
+      "placeholder": "Enter your reply...",
+      "count": "{count}/{max}",
+      "cancel": "Cancel",
+      "submit": "Send reply",
+      "submitting": "Sending..."
+    },
+    "errorBoundary": {
+      "title": "Could not load reviews",
+      "description": "Something went wrong. Please try again later.",
+      "retry": "Retry"
+    }
   },
   "notifications": {
     "title": "Notifications",

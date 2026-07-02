@@ -317,7 +317,60 @@
   },
   "reviews": {
     "title": "Đánh giá khách hàng",
-    "description": "Xem và phản hồi đánh giá từ khách hàng"
+    "description": "Xem và phản hồi đánh giá từ khách hàng",
+    "dashboard": {
+      "loadError": "Không thể tải đánh giá",
+      "submitError": "Không thể gửi phản hồi",
+      "avgRating": "Đánh giá trung bình",
+      "totalReviews": "Tổng đánh giá",
+      "fiveStarRate": "Tỷ lệ 5 sao",
+      "responseRate": "Tỷ lệ phản hồi",
+      "filterLabel": "Lọc:",
+      "all": "Tất cả",
+      "commentOnly": "Chỉ có bình luận",
+      "empty": "Chưa có đánh giá nào",
+      "restaurantReply": "Phản hồi của nhà hàng",
+      "replyPlaceholder": "Viết phản hồi...",
+      "sendReplyAria": "Gửi phản hồi đánh giá",
+      "ratingAria": "{rating}/5 sao",
+      "starFilterAria": "Lọc theo {rating} sao",
+      "orderBadge": "#{orderId}"
+    },
+    "card": {
+      "dishLabel": "Món: {dishName}",
+      "photoAria": "Ảnh đánh giá {index}",
+      "restaurantReply": "Phản hồi từ nhà hàng",
+      "reply": "Phản hồi",
+      "unknownTime": "Không rõ",
+      "ratingAria": "{rating}/5 sao"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "sortLabel": "Sắp xếp:",
+      "ratingAria": "{rating} sao",
+      "sort": {
+        "newest": "Mới nhất",
+        "oldest": "Cũ nhất",
+        "lowest": "Thấp nhất"
+      }
+    },
+    "replyModal": {
+      "title": "Phản hồi đánh giá",
+      "description": "Phản hồi của bạn sẽ hiển thị công khai",
+      "required": "Vui lòng nhập nội dung phản hồi",
+      "tooLong": "Phản hồi tối đa 500 ký tự",
+      "sendError": "Gửi phản hồi thất bại",
+      "placeholder": "Nhập phản hồi của bạn...",
+      "count": "{count}/{max}",
+      "cancel": "Huỷ",
+      "submit": "Gửi phản hồi",
+      "submitting": "Đang gửi..."
+    },
+    "errorBoundary": {
+      "title": "Không thể tải đánh giá",
+      "description": "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+      "retry": "Thử lại"
+    }
   },
   "notifications": {
     "title": "Thông báo",

@@ -317,7 +317,60 @@
   },
   "reviews": {
     "title": "顧客レビュー",
-    "description": "顧客レビューを表示・返信する"
+    "description": "顧客レビューを表示・返信する",
+    "dashboard": {
+      "loadError": "レビューを読み込めません",
+      "submitError": "返信を送信できません",
+      "avgRating": "平均評価",
+      "totalReviews": "レビュー数",
+      "fiveStarRate": "5つ星率",
+      "responseRate": "返信率",
+      "filterLabel": "フィルター:",
+      "all": "すべて",
+      "commentOnly": "コメントありのみ",
+      "empty": "レビューはまだありません",
+      "restaurantReply": "レストランの返信",
+      "replyPlaceholder": "返信を書く...",
+      "sendReplyAria": "レビュー返信を送信",
+      "ratingAria": "5点中{rating}点",
+      "starFilterAria": "{rating}つ星で絞り込み",
+      "orderBadge": "#{orderId}"
+    },
+    "card": {
+      "dishLabel": "商品: {dishName}",
+      "photoAria": "レビュー写真 {index}",
+      "restaurantReply": "レストランからの返信",
+      "reply": "返信",
+      "unknownTime": "不明",
+      "ratingAria": "5点中{rating}点"
+    },
+    "filters": {
+      "all": "すべて",
+      "sortLabel": "並び替え:",
+      "ratingAria": "{rating}つ星",
+      "sort": {
+        "newest": "新しい順",
+        "oldest": "古い順",
+        "lowest": "低評価順"
+      }
+    },
+    "replyModal": {
+      "title": "レビューに返信",
+      "description": "返信は公開表示されます",
+      "required": "返信内容を入力してください",
+      "tooLong": "返信は500文字以内です",
+      "sendError": "返信を送信できません",
+      "placeholder": "返信を入力...",
+      "count": "{count}/{max}",
+      "cancel": "キャンセル",
+      "submit": "返信を送信",
+      "submitting": "送信中..."
+    },
+    "errorBoundary": {
+      "title": "レビューを読み込めません",
+      "description": "問題が発生しました。後でもう一度お試しください。",
+      "retry": "再試行"
+    }
   },
   "notifications": {
     "title": "通知",

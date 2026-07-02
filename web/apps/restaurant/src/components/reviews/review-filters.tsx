@@ -1,6 +1,7 @@
 'use client';
 
-import { Star, Filter, X } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface ReviewFiltersProps {
@@ -11,9 +12,10 @@ interface ReviewFiltersProps {
 }
 
 export function ReviewFilters({ selectedRating, onRatingChange, sortBy, onSortChange }: ReviewFiltersProps) {
+  const t = useTranslations('reviews.filters');
+
   return (
     <div className="space-y-3" data-testid="review-filters">
-      {/* Rating filter */}
       <div className="flex items-center gap-1 flex-wrap">
         {[null, 5, 4, 3, 2, 1].map((rating) => (
           <button
@@ -28,28 +30,27 @@ export function ReviewFilters({ selectedRating, onRatingChange, sortBy, onSortCh
             )}
           >
             {rating === null ? (
-              'Tất cả'
+              t('all')
             ) : (
               <>
                 {rating}
-                <Star className={cn('h-3 w-3', rating > (selectedRating || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300')} />
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-label={t('ratingAria', { rating })} />
               </>
             )}
           </button>
         ))}
       </div>
 
-      {/* Sort */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500">Sắp xếp:</span>
+        <span className="text-xs text-gray-500">{t('sortLabel')}</span>
         <select
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value as 'newest' | 'oldest' | 'lowest')}
           className="text-xs border rounded-lg px-2 py-1"
         >
-          <option value="newest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="lowest">Thấp nhất</option>
+          <option value="newest">{t('sort.newest')}</option>
+          <option value="oldest">{t('sort.oldest')}</option>
+          <option value="lowest">{t('sort.lowest')}</option>
         </select>
       </div>
     </div>
