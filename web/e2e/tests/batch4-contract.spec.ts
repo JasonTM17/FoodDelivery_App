@@ -1,11 +1,6 @@
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { ADMIN_URL, API_URL, TEST_USERS } from '../fixtures/test-users';
-
-interface AuthPayload {
-  accessToken: string;
-  refreshToken?: string;
-  user?: { email?: string; role?: string };
-}
+import { loginViaApi } from '../fixtures/api-helpers';
 
 interface Envelope<T> {
   success?: boolean;
@@ -28,28 +23,13 @@ function unwrap<T>(body: unknown): T {
   return envelope?.success === true && 'data' in envelope ? envelope.data as T : body as T;
 }
 
-async function login(
-  request: APIRequestContext,
-  email: string,
-  password: string,
-): Promise<AuthPayload> {
-  const response = await request.post(`${API_URL}/auth/login`, {
-    data: { email, password },
-  });
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  const payload = unwrap<AuthPayload>(body);
-  expect(payload.accessToken).toBeTruthy();
-  return payload;
-}
-
 function authHeaders(token: string): { Authorization: string } {
   return { Authorization: `Bearer ${token}` };
 }
 
 test.describe('Batch 4 API contracts', () => {
   test('AI chatbot returns a protected, non-empty service reply', async ({ request }) => {
-    const { accessToken } = await login(
+    const { accessToken } = await loginViaApi(
       request,
       TEST_USERS.customer.email,
       TEST_USERS.customer.password,
@@ -69,7 +49,7 @@ test.describe('Batch 4 API contracts', () => {
   });
 
   test('admin settings and export jobs use canonical web envelopes', async ({ request }) => {
-    const { accessToken } = await login(
+    const { accessToken } = await loginViaApi(
       request,
       TEST_USERS.admin.email,
       TEST_USERS.admin.password,
@@ -107,7 +87,7 @@ test.describe('Batch 4 API contracts', () => {
   });
 
   test('admin drivers returns database profiles with canonical pagination', async ({ request }) => {
-    const { accessToken } = await login(
+    const { accessToken } = await loginViaApi(
       request,
       TEST_USERS.admin.email,
       TEST_USERS.admin.password,
@@ -135,7 +115,7 @@ test.describe('Batch 4 API contracts', () => {
   });
 
   test('restaurant menu categories are updated with PATCH, not legacy PUT', async ({ request }) => {
-    const { accessToken } = await login(
+    const { accessToken } = await loginViaApi(
       request,
       TEST_USERS.restaurant.email,
       TEST_USERS.restaurant.password,
@@ -165,7 +145,7 @@ test.describe('Batch 4 accessibility smoke', () => {
     page,
     request,
   }) => {
-    const { accessToken, refreshToken, user } = await login(
+    const { accessToken, refreshToken, role } = await loginViaApi(
       request,
       TEST_USERS.admin.email,
       TEST_USERS.admin.password,
@@ -177,7 +157,11 @@ test.describe('Batch 4 accessibility smoke', () => {
         if (refresh) localStorage.setItem('admin_refresh_token', refresh);
         localStorage.setItem('admin_user', JSON.stringify(adminUser ?? { role: 'admin' }));
       },
-      { token: accessToken, refresh: refreshToken, adminUser: user },
+      {
+        token: accessToken,
+        refresh: refreshToken,
+        adminUser: { email: TEST_USERS.admin.email, role },
+      },
     );
 
     await page.goto(`${ADMIN_URL}/vi/export-jobs`);

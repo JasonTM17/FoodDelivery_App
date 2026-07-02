@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, APIResponse } from '@playwright/test'
 import { API_URL } from './test-users'
 
 export interface AuthTokens {
@@ -8,10 +8,23 @@ export interface AuthTokens {
   role: string
 }
 
-async function assertOk(
-  resp: Awaited<ReturnType<APIRequestContext['post']>>,
-  label: string,
-): Promise<void> {
+interface Envelope<T> {
+  success?: boolean
+  data?: T
+}
+
+const authTokenCache = new Map<string, AuthTokens>()
+
+function unwrap<T>(body: unknown): T {
+  const envelope = body as Envelope<T>
+  return envelope?.success === true && 'data' in envelope ? envelope.data as T : body as T
+}
+
+function authHeaders(token: string): { Authorization: string } {
+  return { Authorization: `Bearer ${token}` }
+}
+
+async function assertOk(resp: APIResponse, label: string): Promise<void> {
   if (!resp.ok()) {
     const text = await resp.text()
     throw new Error(`${label}: HTTP ${resp.status()} — ${text}`)
@@ -23,17 +36,29 @@ export async function loginViaApi(
   email: string,
   password: string,
 ): Promise<AuthTokens> {
+  const cacheKey = `${email}:${password}`
+  const cached = authTokenCache.get(cacheKey)
+  if (cached) return cached
+
   const resp = await request.post(`${API_URL}/auth/login`, {
     data: { email, password },
   })
+
   await assertOk(resp, `login(${email})`)
-  const body = await resp.json()
-  return {
-    accessToken: body.accessToken,
-    refreshToken: body.refreshToken,
-    userId: body.user?.id ?? '',
-    role: body.user?.role ?? '',
+  const payload = unwrap<{
+    accessToken: string
+    refreshToken: string
+    user?: { id?: string; role?: string }
+  }>(await resp.json())
+
+  const tokens = {
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    userId: payload.user?.id ?? '',
+    role: payload.user?.role ?? '',
   }
+  authTokenCache.set(cacheKey, tokens)
+  return tokens
 }
 
 export async function registerViaApi(
@@ -47,39 +72,61 @@ export async function registerViaApi(
     data: { email, password, fullName, phone },
   })
   await assertOk(resp, `register(${email})`)
-  const body = await resp.json()
+  const payload = unwrap<{
+    accessToken: string
+    refreshToken: string
+    user?: { id?: string; role?: string }
+  }>(await resp.json())
+
   return {
-    accessToken: body.accessToken,
-    refreshToken: body.refreshToken,
-    userId: body.user?.id ?? '',
-    role: body.user?.role ?? '',
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    userId: payload.user?.id ?? '',
+    role: payload.user?.role ?? '',
   }
 }
 
-// Returns the restaurant ID that belongs to the currently-authenticated restaurant account
 export async function getRestaurantIdViaApi(
   request: APIRequestContext,
   token: string,
 ): Promise<string> {
-  const resp = await request.get(`${API_URL}/restaurants/mine`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const resp = await request.get(`${API_URL}/restaurant/profile`, {
+    headers: authHeaders(token),
   })
   if (!resp.ok()) return ''
-  const body = await resp.json()
-  return body.id ?? body.restaurantId ?? ''
+  const payload = unwrap<{ id?: string; restaurantId?: string }>(await resp.json())
+  return payload.id ?? payload.restaurantId ?? ''
 }
 
-// Returns the first available menu item ID for the given restaurant
 export async function getFirstMenuItemIdViaApi(
   request: APIRequestContext,
   restaurantId: string,
 ): Promise<string> {
   const resp = await request.get(`${API_URL}/restaurants/${restaurantId}/menu`)
   if (!resp.ok()) return ''
-  const body = await resp.json()
-  const categories: Array<{ items?: Array<{ id: string }> }> =
-    Array.isArray(body) ? body : (body.categories ?? [])
-  return categories[0]?.items?.[0]?.id ?? ''
+  const payload = unwrap<{
+    categories?: Array<{ items?: Array<{ id: string }>; menuItems?: Array<{ id: string }> }>
+    items?: Array<{ items?: Array<{ id: string }>; menuItems?: Array<{ id: string }> }>
+  }>(await resp.json())
+  const categories = Array.isArray(payload) ? payload : (payload.categories ?? payload.items ?? [])
+
+  for (const category of categories) {
+    const item = (category.items ?? category.menuItems ?? [])[0]
+    if (item?.id) return item.id
+  }
+  return ''
+}
+
+export async function getDefaultAddressIdViaApi(
+  request: APIRequestContext,
+  token: string,
+): Promise<string> {
+  const resp = await request.get(`${API_URL}/users/addresses`, {
+    headers: authHeaders(token),
+  })
+  await assertOk(resp, 'listAddresses')
+  const addresses = unwrap<Array<{ id: string; isDefault?: boolean }>>(await resp.json())
+  return (addresses.find(address => address.isDefault) ?? addresses[0])?.id ?? ''
 }
 
 export async function placeOrderViaApi(
@@ -88,20 +135,26 @@ export async function placeOrderViaApi(
   restaurantId: string,
   menuItemId: string,
 ): Promise<string> {
+  const addressId = await getDefaultAddressIdViaApi(request, token)
+  if (!addressId) throw new Error('placeOrder: no customer address available')
+
+  await request.delete(`${API_URL}/cart`, {
+    headers: authHeaders(token),
+  })
+
+  const cartResp = await request.post(`${API_URL}/cart/items`, {
+    headers: authHeaders(token),
+    data: { restaurantId, menuItemId, quantity: 1 },
+  })
+  await assertOk(cartResp, 'addCartItem')
+
   const resp = await request.post(`${API_URL}/orders`, {
-    headers: { Authorization: `Bearer ${token}` },
-    data: {
-      restaurantId,
-      items: [{ menuItemId, quantity: 1 }],
-      deliveryAddress: '1 Nguyễn Huệ, Quận 1, TP. HCM',
-      deliveryLat: 10.7757,
-      deliveryLng: 106.7004,
-      paymentMethod: 'cod',
-    },
+    headers: authHeaders(token),
+    data: { addressId, paymentMethod: 'cash' },
   })
   await assertOk(resp, 'placeOrder')
-  const body = await resp.json()
-  return body.id ?? body.orderId ?? ''
+  const payload = unwrap<{ id?: string; orderId?: string }>(await resp.json())
+  return payload.id ?? payload.orderId ?? ''
 }
 
 export async function getOrderStatusViaApi(
@@ -110,11 +163,11 @@ export async function getOrderStatusViaApi(
   orderId: string,
 ): Promise<string> {
   const resp = await request.get(`${API_URL}/orders/${orderId}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   })
   if (!resp.ok()) return ''
-  const body = await resp.json()
-  return body.status ?? ''
+  const payload = unwrap<{ status?: string }>(await resp.json())
+  return payload.status ?? ''
 }
 
 export async function updateOrderStatusViaApi(
@@ -124,9 +177,9 @@ export async function updateOrderStatusViaApi(
   status: string,
 ): Promise<boolean> {
   const resp = await request.patch(
-    `${API_URL}/restaurants/orders/${orderId}/status`,
+    `${API_URL}/restaurant/orders/${orderId}/status`,
     {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: authHeaders(token),
       data: { status },
     },
   )

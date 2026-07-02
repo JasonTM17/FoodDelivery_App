@@ -1,20 +1,20 @@
-import { test, expect } from '@playwright/test'
-import { RESTAURANT_URL, API_URL, TEST_USERS } from '../fixtures/test-users'
+import { expect, test } from '@playwright/test'
+import { API_URL, TEST_USERS } from '../fixtures/test-users'
 import {
-  loginViaApi,
-  getRestaurantIdViaApi,
   getFirstMenuItemIdViaApi,
-  placeOrderViaApi,
   getOrderStatusViaApi,
+  getRestaurantIdViaApi,
+  loginViaApi,
+  placeOrderViaApi,
 } from '../fixtures/api-helpers'
+import { loginRestaurantApp } from '../fixtures/ui-auth'
 
-// Shared context across tests in this describe block
 let customerToken: string
 let restaurantToken: string
 let restaurantId: string
 let menuItemId: string
 
-test.describe('Customer — quy trình đặt hàng', () => {
+test.describe('Customer order flow', () => {
   test.beforeAll(async ({ request }) => {
     const custAuth = await loginViaApi(
       request,
@@ -33,28 +33,26 @@ test.describe('Customer — quy trình đặt hàng', () => {
     menuItemId = await getFirstMenuItemIdViaApi(request, restaurantId)
   })
 
-  test('seed data hợp lệ: nhà hàng và thực đơn tồn tại', async ({ request }) => {
+  test('seed data has a restaurant and menu item', async ({ request }) => {
     expect(restaurantId).toBeTruthy()
     expect(menuItemId).toBeTruthy()
 
     const resp = await request.get(`${API_URL}/restaurants/${restaurantId}`)
     expect(resp.ok()).toBeTruthy()
     const body = await resp.json()
-    expect(body).toHaveProperty('name')
+    const restaurant = body.data ?? body
+    expect(restaurant).toHaveProperty('name')
   })
 
-  test('đặt đơn hàng mới → trạng thái ban đầu là pending', async ({ request }) => {
-    const orderId = await placeOrderViaApi(
-      request, customerToken, restaurantId, menuItemId,
-    )
+  test('placing a new order enters restaurant pending status', async ({ request }) => {
+    const orderId = await placeOrderViaApi(request, customerToken, restaurantId, menuItemId)
     expect(orderId).toBeTruthy()
 
     const status = await getOrderStatusViaApi(request, customerToken, orderId)
-    expect(status).toBe('pending')
+    expect(status).toBe('restaurant_pending')
   })
 
-  test('xem danh sách đơn hàng → ít nhất một đơn tồn tại', async ({ request }) => {
-    // Ensure there is at least one order before querying
+  test('orders list contains at least one order', async ({ request }) => {
     await placeOrderViaApi(request, customerToken, restaurantId, menuItemId)
 
     const resp = await request.get(`${API_URL}/orders`, {
@@ -62,40 +60,30 @@ test.describe('Customer — quy trình đặt hàng', () => {
     })
     expect(resp.ok()).toBeTruthy()
     const body = await resp.json()
-    const orders: unknown[] = body.orders ?? body.data ?? body ?? []
+    const orders: unknown[] = body.data?.orders ?? body.orders ?? body.data ?? body ?? []
     expect(orders.length).toBeGreaterThan(0)
   })
 
-  test('hủy đơn hàng → trạng thái chuyển thành cancelled', async ({ request }) => {
-    const orderId = await placeOrderViaApi(
-      request, customerToken, restaurantId, menuItemId,
-    )
+  test('cancelling an order moves it to cancelled', async ({ request }) => {
+    const orderId = await placeOrderViaApi(request, customerToken, restaurantId, menuItemId)
     const cancelResp = await request.post(`${API_URL}/orders/${orderId}/cancel`, {
       headers: { Authorization: `Bearer ${customerToken}` },
       data: { reason: 'E2E test cancellation' },
     })
-    // 200 OK or 204 No Content are both valid
-    expect([200, 204]).toContain(cancelResp.status())
+    expect([200, 201, 204]).toContain(cancelResp.status())
 
     const status = await getOrderStatusViaApi(request, customerToken, orderId)
-    expect(status).toMatch(/cancelled|canceled/)
+    expect(status).toBe('cancelled')
   })
 
-  test('nhà hàng thấy đơn hàng mới trên kanban', async ({ page, request }) => {
-    const orderId = await placeOrderViaApi(
-      request, customerToken, restaurantId, menuItemId,
-    )
+  test('restaurant sees a new pending order on kanban', async ({ page, request }) => {
+    const orderId = await placeOrderViaApi(request, customerToken, restaurantId, menuItemId)
     expect(orderId).toBeTruthy()
 
-    await page.goto(`${RESTAURANT_URL}/login`)
-    await page.getByLabel('Email').fill(TEST_USERS.restaurant.email)
-    await page.getByLabel('Mật khẩu').fill(TEST_USERS.restaurant.password)
-    await page.getByRole('button', { name: 'Đăng nhập' }).click()
-    await expect(page).toHaveURL(/\/orders/, { timeout: 15_000 })
-
-    // The kanban board must render at least one pending-status column/card
+    await loginRestaurantApp(page, request)
+    await expect(page.getByRole('heading', { name: /order queue/i })).toBeVisible({ timeout: 10_000 })
     await expect(
-      page.getByText(/đơn hàng mới|chờ xác nhận|pending/i).first(),
+      page.getByRole('heading', { name: /new/i }).first(),
     ).toBeVisible({ timeout: 10_000 })
   })
 })

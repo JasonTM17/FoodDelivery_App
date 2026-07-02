@@ -1,15 +1,18 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const isCi = process.env.CI === 'true' || process.env.CI === '1'
+
 export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
-  retries: process.env.CI ? 2 : 0,
+  retries: isCi ? 2 : 0,
+  workers: 1,
   fullyParallel: false,
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCi,
 
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    process.env.CI ? ['github'] : ['list'],
+    isCi ? ['github'] : ['list'],
   ],
 
   use: {
