@@ -21,6 +21,20 @@ export class UsersService {
     return user
   }
 
+  async listAddresses(userId: string) {
+    return this.prisma.address.findMany({
+      where: { userId },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        label: true,
+        addressLine: true,
+        isDefault: true,
+        createdAt: true,
+      },
+    })
+  }
+
   async updateProfile(userId: string, dto: UpdateUserDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } })
     if (!user) throw new NotFoundException('User not found')

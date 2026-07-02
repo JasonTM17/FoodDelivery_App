@@ -1,6 +1,7 @@
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { Queue } from 'bullmq'
-import { OrdersService } from './orders.service'
+import dayjs from 'dayjs'
+import { generateOrderCode, OrdersService } from './orders.service'
 import { PrismaService } from '../database/prisma.service'
 import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
@@ -60,6 +61,15 @@ describe('OrdersService', () => {
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
     )
+  })
+
+  describe('generateOrderCode()', () => {
+    it('fits the 12 character database column', () => {
+      const code = generateOrderCode(dayjs('2026-07-02T00:00:00Z'))
+
+      expect(code).toHaveLength(12)
+      expect(code).toMatch(/^FD260702.{4}$/)
+    })
   })
 
   describe('transition()', () => {

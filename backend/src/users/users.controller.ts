@@ -22,6 +22,11 @@ export class UsersController {
     return this.usersService.getProfile(user.id)
   }
 
+  @Get('addresses')
+  listAddresses(@CurrentUser() user: { id: string }) {
+    return this.usersService.listAddresses(user.id)
+  }
+
   @Patch('me')
   updateProfile(
     @CurrentUser() user: { id: string },

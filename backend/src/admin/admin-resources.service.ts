@@ -209,12 +209,44 @@ export class AdminResourcesService {
 
 function serializeOrder<T extends object>(order: T) {
   const values = order as Record<string, unknown>
+  const customer = values.customer as Record<string, unknown> | null | undefined
+  const restaurant = values.restaurant as Record<string, unknown> | null | undefined
+  const driver = values.driver as Record<string, unknown> | null | undefined
+  const deliveryAddress = values.deliveryAddress as Record<string, unknown> | null | undefined
+  const orderItems = Array.isArray(values.orderItems) ? values.orderItems as Array<Record<string, unknown>> : []
+  const promotionDiscount = Number(values.promotionDiscount ?? 0)
+
   return {
     ...order,
     total: Number(values.total ?? 0),
     subtotal: Number(values.subtotal ?? 0),
     deliveryFee: Number(values.deliveryFee ?? 0),
-    promotionDiscount: Number(values.promotionDiscount ?? 0),
+    promotionDiscount,
+    discount: promotionDiscount,
+    note: values.notes ?? values.note ?? '',
+    deliveryAddress: typeof values.deliveryAddress === 'string'
+      ? values.deliveryAddress
+      : String(deliveryAddress?.addressLine ?? ''),
+    customer: customer && {
+      id: String(customer.id ?? ''),
+      name: String(customer.fullName ?? customer.name ?? ''),
+      phone: String(customer.phone ?? ''),
+    },
+    restaurant: restaurant && {
+      id: String(restaurant.id ?? ''),
+      name: String(restaurant.name ?? ''),
+      address: String(restaurant.addressLine ?? restaurant.address ?? ''),
+    },
+    driver: driver && {
+      id: String(driver.id ?? ''),
+      name: String(driver.fullName ?? driver.name ?? ''),
+      phone: String(driver.phone ?? ''),
+    },
+    items: orderItems.map(item => ({
+      name: String(item.nameSnapshot ?? item.name ?? ''),
+      quantity: Number(item.quantity ?? 0),
+      price: Number(item.unitPrice ?? item.price ?? 0),
+    })),
   }
 }
 function serializePromotion<T extends { value: unknown; minOrderAmount: unknown; maxDiscount: unknown }>(promotion: T) {

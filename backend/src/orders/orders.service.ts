@@ -129,7 +129,7 @@ export class OrdersService {
       throw new UnprocessableEntityException('MIN_ORDER_NOT_MET')
     }
 
-    const orderCode = `FD-${dayjs().format('YYMMDD')}-${nanoid(4).toUpperCase()}`
+    const orderCode = generateOrderCode()
 
     // Pre-fetch promotion outside txn (read-only, idempotent)
     const code = dto.promotionCode ?? cart.promotionCode
@@ -430,6 +430,11 @@ function normalizePaymentMethod(method: PlaceOrderDto['paymentMethod']): PrismaP
     return PrismaPaymentMethod.mock_wallet
   }
   return method as unknown as PrismaPaymentMethod
+}
+
+export function generateOrderCode(now = dayjs()) {
+  const suffix = nanoid(4).toUpperCase().replace(/[^A-Z0-9]/g, '').padEnd(4, '0').slice(0, 4)
+  return `FD${now.format('YYMMDD')}${suffix}`
 }
 
 function serializeSelectedOptions(value: Prisma.JsonValue) {
