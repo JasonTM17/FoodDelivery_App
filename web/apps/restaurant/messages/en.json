@@ -318,6 +318,14 @@
     "profile": "Restaurant profile",
     "hours": "Opening hours",
     "general": "General settings",
+    "overview": {
+      "title": "Restaurant settings",
+      "description": "Manage profile, display images, and operating hours from focused screens.",
+      "profileDescription": "Update public information, images, cuisine types, and operational settings.",
+      "profileAction": "Open profile",
+      "hoursDescription": "Sync real opening hours with the backend and show clear save status.",
+      "hoursAction": "Open operating hours"
+    },
     "profileForm": {
       "title": "Restaurant profile",
       "description": "Information shown to customers",

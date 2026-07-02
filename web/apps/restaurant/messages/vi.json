@@ -318,6 +318,14 @@
     "profile": "Hồ sơ nhà hàng",
     "hours": "Giờ mở cửa",
     "general": "Cài đặt chung",
+    "overview": {
+      "title": "Cài đặt nhà hàng",
+      "description": "Quản lý hồ sơ, ảnh hiển thị và lịch hoạt động từ các màn chuyên biệt.",
+      "profileDescription": "Cập nhật thông tin hiển thị, ảnh đại diện, loại hình ẩm thực và thiết lập vận hành.",
+      "profileAction": "Mở hồ sơ",
+      "hoursDescription": "Đồng bộ lịch mở cửa thật với backend và xem trạng thái lưu rõ ràng.",
+      "hoursAction": "Mở lịch hoạt động"
+    },
     "profileForm": {
       "title": "Hồ sơ nhà hàng",
       "description": "Thông tin hiển thị cho khách hàng",

@@ -318,6 +318,14 @@
     "profile": "レストランプロフィール",
     "hours": "営業時間",
     "general": "一般設定",
+    "overview": {
+      "title": "レストラン設定",
+      "description": "プロフィール、表示画像、営業時間を専用画面から管理します。",
+      "profileDescription": "公開情報、画像、料理ジャンル、運用設定を更新します。",
+      "profileAction": "プロフィールを開く",
+      "hoursDescription": "実際の営業時間をバックエンドと同期し、保存状態を明確に表示します。",
+      "hoursAction": "営業時間を開く"
+    },
     "profileForm": {
       "title": "レストランプロフィール",
       "description": "顧客に表示される情報",
