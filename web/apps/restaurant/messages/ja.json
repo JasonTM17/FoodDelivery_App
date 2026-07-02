@@ -151,7 +151,58 @@
     "promoName": "キャンペーン名",
     "promoCode": "プロモコード",
     "autoGenCode": "自動生成",
-    "noData": "プロモーションなし"
+    "noData": "プロモーションなし",
+    "loading": "プロモーションを読み込み中",
+    "pause": "一時停止",
+    "resume": "有効化",
+    "archive": "アーカイブ",
+    "clearSelection": "選択解除",
+    "selectedCount": "{count} 件選択中",
+    "searchPlaceholder": "名前またはコードで検索...",
+    "emptyFiltered": "現在のフィルターに一致するプロモーションはありません",
+    "selectPromotion": "プロモーション {code} を選択",
+    "pauseError": "プロモーションを一時停止できません",
+    "archiveError": "プロモーションをアーカイブできません",
+    "bulkError": "一括操作に失敗しました",
+    "archiveConfirm": "選択したプロモーションをアーカイブしますか？",
+    "stats": {
+      "total": "キャンペーン合計",
+      "active": "実行中",
+      "draft": "下書き",
+      "usage": "利用回数"
+    },
+    "performance": {
+      "title": "パフォーマンス概要",
+      "usage": "プロモ利用",
+      "revenue": "プロモ売上",
+      "conversion": "コンバージョン率",
+      "roi": "ROI",
+      "unavailable": "未対応",
+      "degradedDescription": "バックエンドはまだ加盟店プロモーションの売上、コンバージョン、ROI合計を返しません。偽の数値ではなく実際の利用回数のみ表示します。"
+    },
+    "status": {
+      "all": "すべて",
+      "draft": "下書き",
+      "scheduled": "予約済み",
+      "active": "実行中",
+      "paused": "一時停止",
+      "expired": "期限切れ",
+      "archived": "アーカイブ済み"
+    },
+    "types": {
+      "percent": "割引率",
+      "fixed": "固定割引",
+      "bogof": "X個購入でY個無料",
+      "combo": "コンボ"
+    },
+    "audience": {
+      "all": "すべての顧客",
+      "new": "新規顧客",
+      "vip": "VIP顧客",
+      "lapsed": "休眠顧客",
+      "segment": "セグメント",
+      "order_history": "注文履歴"
+    }
   },
   "analytics": {
     "title": "アナリティクス",

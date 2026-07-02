@@ -151,7 +151,58 @@
     "promoName": "Campaign name",
     "promoCode": "Promo code",
     "autoGenCode": "Auto-generate",
-    "noData": "No promotions yet"
+    "noData": "No promotions yet",
+    "loading": "Loading promotions",
+    "pause": "Pause",
+    "resume": "Activate",
+    "archive": "Archive",
+    "clearSelection": "Clear selection",
+    "selectedCount": "{count} selected",
+    "searchPlaceholder": "Search by name or code...",
+    "emptyFiltered": "No promotions match the current filters",
+    "selectPromotion": "Select promotion {code}",
+    "pauseError": "Could not pause promotion",
+    "archiveError": "Could not archive promotion",
+    "bulkError": "Bulk action failed",
+    "archiveConfirm": "Archive the selected promotion(s)?",
+    "stats": {
+      "total": "Total campaigns",
+      "active": "Active",
+      "draft": "Draft",
+      "usage": "Usage"
+    },
+    "performance": {
+      "title": "Performance overview",
+      "usage": "Promotion uses",
+      "revenue": "Promo revenue",
+      "conversion": "Conversion rate",
+      "roi": "ROI",
+      "unavailable": "Unavailable",
+      "degradedDescription": "The backend does not return merchant promotion revenue, conversion, or ROI totals yet; the panel shows real usage only instead of fake numbers."
+    },
+    "status": {
+      "all": "All",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "active": "Active",
+      "paused": "Paused",
+      "expired": "Expired",
+      "archived": "Archived"
+    },
+    "types": {
+      "percent": "Percent off",
+      "fixed": "Fixed discount",
+      "bogof": "Buy X get Y",
+      "combo": "Combo"
+    },
+    "audience": {
+      "all": "All customers",
+      "new": "New customers",
+      "vip": "VIP customers",
+      "lapsed": "Lapsed customers",
+      "segment": "Segment",
+      "order_history": "Order history"
+    }
   },
   "analytics": {
     "title": "Analytics",

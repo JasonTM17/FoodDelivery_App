@@ -45,6 +45,7 @@ export interface Promotion {
   channels: PromotionChannel[];
   stackable: boolean;
   maxUsage?: number;
+  usageCount?: number;
   perUserLimit: number;
   status: PromotionStatus;
   createdAt: string;

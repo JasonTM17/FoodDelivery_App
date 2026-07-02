@@ -196,7 +196,8 @@ export class RestaurantPromotionsService {
       target: promotion.targeting ?? { audience: 'all' },
       schedule: { validFrom: promotion.startsAt, validUntil: promotion.expiresAt, recurring: promotion.recurrence },
       channels: promotion.channels, stackable: promotion.isStackable, maxUsage: promotion.usageLimit,
-      perUserLimit: promotion.maxPerUser ?? 1, status: promotion.status, createdAt: promotion.createdAt,
+      perUserLimit: promotion.maxPerUser ?? 1, usageCount: promotion.usageCount,
+      status: promotion.status, createdAt: promotion.createdAt,
       createdBy: promotion.createdById ?? 'system',
     }
   }

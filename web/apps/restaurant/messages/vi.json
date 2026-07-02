@@ -151,7 +151,58 @@
     "promoName": "Tên chương trình",
     "promoCode": "Mã khuyến mãi",
     "autoGenCode": "Tự tạo mã",
-    "noData": "Chưa có khuyến mãi"
+    "noData": "Chưa có khuyến mãi",
+    "loading": "Đang tải khuyến mãi",
+    "pause": "Tạm dừng",
+    "resume": "Kích hoạt",
+    "archive": "Lưu trữ",
+    "clearSelection": "Bỏ chọn",
+    "selectedCount": "Đã chọn {count}",
+    "searchPlaceholder": "Tìm theo tên hoặc mã...",
+    "emptyFiltered": "Không có khuyến mãi phù hợp với bộ lọc hiện tại",
+    "selectPromotion": "Chọn khuyến mãi {code}",
+    "pauseError": "Không thể tạm dừng",
+    "archiveError": "Không thể lưu trữ",
+    "bulkError": "Thao tác hàng loạt thất bại",
+    "archiveConfirm": "Lưu trữ khuyến mãi đã chọn?",
+    "stats": {
+      "total": "Tổng chương trình",
+      "active": "Đang hoạt động",
+      "draft": "Nháp",
+      "usage": "Lượt dùng"
+    },
+    "performance": {
+      "title": "Tổng quan hiệu suất",
+      "usage": "Lượt dùng KM",
+      "revenue": "Doanh thu từ KM",
+      "conversion": "Tỉ lệ quy đổi",
+      "roi": "ROI",
+      "unavailable": "Chưa khả dụng",
+      "degradedDescription": "Backend hiện chưa trả revenue, conversion và ROI tổng hợp cho merchant promotions; chỉ hiển thị lượt dùng thật thay vì số giả."
+    },
+    "status": {
+      "all": "Tất cả",
+      "draft": "Nháp",
+      "scheduled": "Đã lên lịch",
+      "active": "Đang hoạt động",
+      "paused": "Tạm dừng",
+      "expired": "Hết hạn",
+      "archived": "Đã lưu trữ"
+    },
+    "types": {
+      "percent": "Giảm %",
+      "fixed": "Giảm tiền",
+      "bogof": "Mua X tặng Y",
+      "combo": "Combo"
+    },
+    "audience": {
+      "all": "Tất cả khách hàng",
+      "new": "Khách mới",
+      "vip": "Khách VIP",
+      "lapsed": "Khách lâu chưa mua",
+      "segment": "Phân khúc",
+      "order_history": "Theo lịch sử đơn"
+    }
   },
   "analytics": {
     "title": "Phân tích",
