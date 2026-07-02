@@ -87,6 +87,7 @@
     "title": "FoodFlow Admin",
     "description": "Sign in to manage the system",
     "emailPlaceholder": "admin@foodflow.com",
+    "adminOnly": "This dashboard is available to administrators only.",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
     "loginButton": "Sign In",

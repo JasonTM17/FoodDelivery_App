@@ -87,6 +87,7 @@
     "title": "FoodFlow Admin",
     "description": "Đăng nhập để quản lý hệ thống",
     "emailPlaceholder": "admin@foodflow.com",
+    "adminOnly": "Bảng điều khiển này chỉ dành cho quản trị viên.",
     "rememberMe": "Ghi nhớ đăng nhập",
     "forgotPassword": "Quên mật khẩu?",
     "loginButton": "Đăng nhập",

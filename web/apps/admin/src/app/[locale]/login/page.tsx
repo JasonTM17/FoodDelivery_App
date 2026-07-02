@@ -37,8 +37,12 @@ export default function LoginPage() {
       const res = await apiPost<{
         accessToken: string;
         refreshToken: string;
-        user: { name: string; email: string; role: string };
-      }>('/auth/admin/login', { email, password });
+        user: { name?: string; fullName?: string; email: string; role: string };
+      }>('/auth/login', { email, password });
+
+      if (res.user.role !== 'admin') {
+        throw new Error(t('adminOnly'));
+      }
 
       localStorage.setItem('admin_token', res.accessToken);
       localStorage.setItem('admin_refresh_token', res.refreshToken);

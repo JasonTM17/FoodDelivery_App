@@ -87,6 +87,7 @@
     "title": "FoodFlow Admin",
     "description": "システムを管理するためにログインしてください",
     "emailPlaceholder": "admin@foodflow.com",
+    "adminOnly": "このダッシュボードは管理者のみ利用できます。",
     "rememberMe": "ログイン状態を保持する",
     "forgotPassword": "パスワードをお忘れですか？",
     "loginButton": "ログイン",
