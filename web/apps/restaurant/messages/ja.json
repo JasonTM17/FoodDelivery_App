@@ -111,6 +111,76 @@
       "stock": "在庫"
     }
   },
+  "staff": {
+    "title": "スタッフ管理",
+    "description": "スタッフ、権限、勤務スケジュールを管理",
+    "loading": "スタッフを読み込み中",
+    "loadError": "スタッフ一覧を読み込めません",
+    "retry": "再試行",
+    "permissionsTitle": "権限",
+    "matrixTitle": "権限マトリクス",
+    "permissionToggle": "{role} の {capability} 権限を切り替え",
+    "roles": {
+      "owner": "オーナー",
+      "manager": "マネージャー",
+      "kitchen": "キッチン",
+      "cashier": "レジ",
+      "viewer": "閲覧のみ"
+    },
+    "capabilities": {
+      "orders": "注文",
+      "menu": "メニュー",
+      "reports": "レポート",
+      "settings": "設定",
+      "staff": "スタッフ",
+      "promotions": "プロモーション"
+    },
+    "status": {
+      "active": "有効",
+      "blocked": "停止中"
+    },
+    "table": {
+      "title": "スタッフ ({count})",
+      "actions": "スタッフ操作",
+      "columns": {
+        "member": "スタッフ",
+        "role": "役割",
+        "permissions": "権限",
+        "status": "状態",
+        "joined": "参加日"
+      }
+    },
+    "invite": {
+      "action": "+ スタッフ招待",
+      "title": "スタッフ招待",
+      "description": "メールで招待を送信",
+      "email": "メール",
+      "add": "追加",
+      "cancel": "キャンセル",
+      "send": "招待を送信",
+      "sending": "送信中...",
+      "invalidEmail": "メール形式が正しくありません",
+      "duplicateEmail": "このメールは追加済みです",
+      "emptyEmail": "少なくとも1件のメールを追加してください",
+      "sendError": "招待を送信できません",
+      "removeEmail": "メール {email} を削除"
+    },
+    "schedule": {
+      "title": "勤務スケジュール",
+      "assigned": "シフトあり",
+      "empty": "空き",
+      "toggleSlot": "{day} {hour} のシフトを切り替え",
+      "days": {
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土",
+        "sun": "日"
+      }
+    }
+  },
   "settings": {
     "title": "設定",
     "description": "レストランを設定する",

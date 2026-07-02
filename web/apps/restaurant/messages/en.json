@@ -111,6 +111,76 @@
       "stock": "Stock"
     }
   },
+  "staff": {
+    "title": "Staff management",
+    "description": "Manage staff, permissions, and work schedules",
+    "loading": "Loading staff",
+    "loadError": "Could not load staff list",
+    "retry": "Retry",
+    "permissionsTitle": "Permissions",
+    "matrixTitle": "Permission matrix",
+    "permissionToggle": "Toggle {capability} permission for {role}",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "kitchen": "Kitchen",
+      "cashier": "Cashier",
+      "viewer": "Viewer"
+    },
+    "capabilities": {
+      "orders": "Orders",
+      "menu": "Menu",
+      "reports": "Reports",
+      "settings": "Settings",
+      "staff": "Staff",
+      "promotions": "Promotions"
+    },
+    "status": {
+      "active": "Active",
+      "blocked": "Blocked"
+    },
+    "table": {
+      "title": "Staff ({count})",
+      "actions": "Staff actions",
+      "columns": {
+        "member": "Staff",
+        "role": "Role",
+        "permissions": "Permissions",
+        "status": "Status",
+        "joined": "Joined"
+      }
+    },
+    "invite": {
+      "action": "+ Invite staff",
+      "title": "Invite staff",
+      "description": "Send invitations by email",
+      "email": "Email",
+      "add": "Add",
+      "cancel": "Cancel",
+      "send": "Send invite",
+      "sending": "Sending...",
+      "invalidEmail": "Invalid email",
+      "duplicateEmail": "Email has already been added",
+      "emptyEmail": "Add at least 1 email",
+      "sendError": "Could not send invite",
+      "removeEmail": "Remove email {email}"
+    },
+    "schedule": {
+      "title": "Work schedule",
+      "assigned": "Assigned",
+      "empty": "Empty",
+      "toggleSlot": "Toggle shift on {day} at {hour}",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    }
+  },
   "settings": {
     "title": "Settings",
     "description": "Configure your restaurant",

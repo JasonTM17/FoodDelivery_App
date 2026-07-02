@@ -111,6 +111,76 @@
       "stock": "Tồn kho"
     }
   },
+  "staff": {
+    "title": "Quản lý nhân viên",
+    "description": "Quản lý nhân viên, phân quyền và lịch làm việc",
+    "loading": "Đang tải nhân viên",
+    "loadError": "Không thể tải danh sách nhân viên",
+    "retry": "Thử lại",
+    "permissionsTitle": "Phân quyền",
+    "matrixTitle": "Ma trận phân quyền",
+    "permissionToggle": "Chuyển quyền {capability} cho vai trò {role}",
+    "roles": {
+      "owner": "Chủ quán",
+      "manager": "Quản lý",
+      "kitchen": "Bếp",
+      "cashier": "Thu ngân",
+      "viewer": "Chỉ xem"
+    },
+    "capabilities": {
+      "orders": "Đơn hàng",
+      "menu": "Thực đơn",
+      "reports": "Báo cáo",
+      "settings": "Cài đặt",
+      "staff": "Nhân viên",
+      "promotions": "Khuyến mãi"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "blocked": "Tạm khóa"
+    },
+    "table": {
+      "title": "Nhân viên ({count})",
+      "actions": "Thao tác nhân viên",
+      "columns": {
+        "member": "Nhân viên",
+        "role": "Vai trò",
+        "permissions": "Quyền",
+        "status": "Trạng thái",
+        "joined": "Tham gia"
+      }
+    },
+    "invite": {
+      "action": "+ Mời nhân viên",
+      "title": "Mời nhân viên",
+      "description": "Gửi lời mời qua email",
+      "email": "Email",
+      "add": "Thêm",
+      "cancel": "Hủy",
+      "send": "Gửi lời mời",
+      "sending": "Đang gửi...",
+      "invalidEmail": "Email không hợp lệ",
+      "duplicateEmail": "Email đã được thêm",
+      "emptyEmail": "Vui lòng thêm ít nhất 1 email",
+      "sendError": "Gửi thất bại",
+      "removeEmail": "Xóa email {email}"
+    },
+    "schedule": {
+      "title": "Lịch làm việc",
+      "assigned": "Có ca",
+      "empty": "Trống",
+      "toggleSlot": "Chuyển ca {day} lúc {hour}",
+      "days": {
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7",
+        "sun": "CN"
+      }
+    }
+  },
   "settings": {
     "title": "Cài đặt",
     "description": "Cấu hình nhà hàng của bạn",

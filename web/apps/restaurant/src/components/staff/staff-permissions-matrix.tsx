@@ -1,7 +1,7 @@
 'use client';
 
-import type { StaffRole, StaffCapability } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
+import type { StaffCapability, StaffRole } from '@/lib/types';
 
 interface StaffPermissionsMatrixProps {
   permissions: Record<StaffRole, StaffCapability[]>;
@@ -10,16 +10,7 @@ interface StaffPermissionsMatrixProps {
   readOnly?: boolean;
 }
 
-const ALL_CAPABILITIES: StaffCapability[] = ['orders', 'menu', 'reports', 'settings', 'staff', 'promotions'];
-
-const CAPABILITY_LABELS: Record<StaffCapability, string> = {
-  orders: 'Đơn hàng',
-  menu: 'Thực đơn',
-  reports: 'Báo cáo',
-  settings: 'Cài đặt',
-  staff: 'Nhân viên',
-  promotions: 'Khuyến mãi',
-};
+const allCapabilities: StaffCapability[] = ['orders', 'menu', 'reports', 'settings', 'staff', 'promotions'];
 
 const DEFAULT_PERMISSIONS: Record<StaffRole, StaffCapability[]> = {
   owner: ['orders', 'menu', 'reports', 'settings', 'staff', 'promotions'],
@@ -30,51 +21,54 @@ const DEFAULT_PERMISSIONS: Record<StaffRole, StaffCapability[]> = {
 };
 
 export function StaffPermissionsMatrix({
-  permissions, roleLabels, onChange, readOnly,
+  permissions,
+  roleLabels,
+  onChange,
+  readOnly,
 }: StaffPermissionsMatrixProps) {
+  const t = useTranslations('staff');
   const roles = Object.keys(permissions) as StaffRole[];
 
   return (
     <div className="space-y-3" data-testid="staff-permissions-matrix">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Ma trận phân quyền</h4>
+        <h4 className="text-sm font-semibold text-gray-900">{t('matrixTitle')}</h4>
       </div>
 
-      <div className="overflow-x-auto border rounded-lg">
+      <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Vai trò</th>
-              {ALL_CAPABILITIES.map((cap) => (
-                <th key={cap} className="text-center py-2 px-3 text-xs font-medium text-gray-500">
-                  {CAPABILITY_LABELS[cap]}
+            <tr className="border-b bg-gray-50">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('table.columns.role')}</th>
+              {allCapabilities.map(capability => (
+                <th key={capability} className="px-3 py-2 text-center text-xs font-medium text-gray-500">
+                  {t(`capabilities.${capability}`)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
+            {roles.map(role => (
               <tr key={role} className="border-b last:border-b-0">
-                <td className="py-2 px-3 text-xs font-medium text-gray-900">
-                  {roleLabels[role] || role}
-                </td>
-                {ALL_CAPABILITIES.map((cap) => {
-                  const has = permissions[role]?.includes(cap) || false;
+                <td className="px-3 py-2 text-xs font-medium text-gray-900">{roleLabels[role] || role}</td>
+                {allCapabilities.map((capability) => {
+                  const hasCapability = permissions[role]?.includes(capability) || false;
                   const isOwner = role === 'owner';
                   return (
-                    <td key={cap} className="text-center py-2 px-3">
+                    <td key={capability} className="px-3 py-2 text-center">
                       <input
                         type="checkbox"
-                        checked={has}
+                        checked={hasCapability}
                         disabled={readOnly || isOwner}
-                        onChange={(e) => {
+                        onChange={(event) => {
                           const current = permissions[role] || [];
-                          const next = e.target.checked
-                            ? [...current, cap]
-                            : current.filter(c => c !== cap);
+                          const next = event.target.checked
+                            ? [...current, capability]
+                            : current.filter(item => item !== capability);
                           onChange(role, next);
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                        aria-label={t('permissionToggle', { role: roleLabels[role], capability: t(`capabilities.${capability}`) })}
                       />
                     </td>
                   );

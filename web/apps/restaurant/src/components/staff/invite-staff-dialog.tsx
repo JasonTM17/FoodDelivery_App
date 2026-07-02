@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Mail, Send, ShieldCheck } from 'lucide-react';
 import type { StaffRole } from '@/lib/types';
-import { Mail, ShieldCheck, Send } from 'lucide-react';
 
 interface InviteStaffDialogProps {
   open: boolean;
@@ -10,14 +11,10 @@ interface InviteStaffDialogProps {
   onSend: (emails: string[], role: StaffRole) => Promise<void>;
 }
 
-const ROLES: { value: StaffRole; label: string }[] = [
-  { value: 'manager', label: 'Quản lý' },
-  { value: 'kitchen', label: 'Bếp' },
-  { value: 'cashier', label: 'Thu ngân' },
-  { value: 'viewer', label: 'Chỉ xem' },
-];
+const roles: StaffRole[] = ['manager', 'kitchen', 'cashier', 'viewer'];
 
 export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogProps) {
+  const t = useTranslations('staff');
   const [emailInput, setEmailInput] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
   const [role, setRole] = useState<StaffRole>('viewer');
@@ -30,11 +27,11 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
     const trimmed = emailInput.trim().toLowerCase();
     if (!trimmed) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError('Email không hợp lệ');
+      setError(t('invite.invalidEmail'));
       return;
     }
     if (emails.includes(trimmed)) {
-      setError('Email đã được thêm');
+      setError(t('invite.duplicateEmail'));
       return;
     }
     setEmails([...emails, trimmed]);
@@ -44,7 +41,7 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
 
   const handleSend = async () => {
     if (emails.length === 0) {
-      setError('Vui lòng thêm ít nhất 1 email');
+      setError(t('invite.emptyEmail'));
       return;
     }
     setSending(true);
@@ -54,7 +51,7 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
       setEmailInput('');
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gửi thất bại');
+      setError(err instanceof Error ? err.message : t('invite.sendError'));
     } finally {
       setSending(false);
     }
@@ -62,68 +59,68 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" data-testid="invite-staff-dialog">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center gap-3 mb-5">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+        <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100">
-            <Mail className="h-5 w-5 text-brand-600" />
+            <Mail className="h-5 w-5 text-brand-600" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Mời nhân viên</h2>
-            <p className="text-xs text-gray-500">Gửi lời mời qua email</p>
+            <h2 className="text-lg font-bold text-gray-900">{t('invite.title')}</h2>
+            <p className="text-xs text-gray-500">{t('invite.description')}</p>
           </div>
         </div>
 
-        {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700 mb-4">{error}</div>
-        )}
+        {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
 
         <div className="space-y-4">
           <div>
-            <label className="label">Email</label>
+            <label className="label">{t('invite.email')}</label>
             <div className="flex gap-2">
               <input
                 type="email"
                 value={emailInput}
-                onChange={(event) => setEmailInput(event.target.value)}
+                onChange={event => setEmailInput(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
                     event.preventDefault();
                     addEmail();
                   }
                 }}
-                placeholder="nhanvien@nhahang.vn"
+                placeholder="staff@example.com"
                 className="input-field flex-1"
               />
-              <button type="button" onClick={addEmail} className="btn-secondary text-sm">Thêm</button>
+              <button type="button" onClick={addEmail} className="btn-secondary text-sm">{t('invite.add')}</button>
             </div>
-            {emails.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {emails.map((email) => (
+            {emails.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {emails.map(email => (
                   <span key={email} className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs text-brand-700">
                     {email}
-                    <button type="button" onClick={() => setEmails(emails.filter((item) => item !== email))} className="hover:text-red-500">&times;</button>
+                    <button type="button" onClick={() => setEmails(emails.filter(item => item !== email))} className="hover:text-red-500" aria-label={t('invite.removeEmail', { email })}>
+                      &times;
+                    </button>
                   </span>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div>
             <label className="label flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Vai trò
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('table.columns.role')}
             </label>
-            <select value={role} onChange={(event) => setRole(event.target.value as StaffRole)} className="select-field">
-              {ROLES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            <select value={role} onChange={event => setRole(event.target.value as StaffRole)} className="select-field">
+              {roles.map(item => <option key={item} value={item}>{t(`roles.${item}`)}</option>)}
             </select>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="btn-ghost text-sm">Huỷ</button>
+        <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
+          <button type="button" onClick={onClose} className="btn-ghost text-sm">{t('invite.cancel')}</button>
           <button type="button" onClick={handleSend} disabled={sending || emails.length === 0} className="btn-primary text-sm disabled:opacity-50">
-            <Send className="h-4 w-4 mr-1" />
-            {sending ? 'Đang gửi...' : 'Gửi lời mời'}
+            <Send className="mr-1 h-4 w-4" aria-hidden="true" />
+            {sending ? t('invite.sending') : t('invite.send')}
           </button>
         </div>
       </div>
