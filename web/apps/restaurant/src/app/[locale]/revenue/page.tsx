@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, BarChart3, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { RevenueSummaryCards } from '@/components/revenue/revenue-summary-cards';
 import { RevenueAreaChart } from '@/components/revenue/revenue-area-chart';
 import { CategoryMixDonut } from '@/components/revenue/category-mix-donut';
@@ -26,13 +27,14 @@ import { cn } from '@/lib/utils';
 
 type Period = '7' | '30' | '90';
 
-const PERIOD_OPTIONS: { id: Period; label: string }[] = [
-  { id: '7', label: '7 ngày' },
-  { id: '30', label: '30 ngày' },
-  { id: '90', label: '90 ngày' },
+const PERIOD_OPTIONS: { id: Period; labelKey: 'last7' | 'last30' | 'last90' }[] = [
+  { id: '7', labelKey: 'last7' },
+  { id: '30', labelKey: 'last30' },
+  { id: '90', labelKey: 'last90' },
 ];
 
 export default function RevenuePage() {
+  const t = useTranslations('revenue');
   const [period, setPeriod] = useState<Period>('7');
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [benchmark, setBenchmark] = useState<IndustryBenchmark | null>(null);
@@ -64,11 +66,11 @@ export default function RevenuePage() {
       setSummary(null);
       setBenchmark(null);
       setDrillDown([]);
-      setError(cause instanceof Error ? cause.message : 'Không thể tải dữ liệu doanh thu.');
+      setError(cause instanceof Error ? cause.message : t('loadError'));
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [period]);
+  }, [period, t]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -82,10 +84,10 @@ export default function RevenuePage() {
     return (
       <div className="card mx-auto mt-16 max-w-lg text-center" role="alert">
         <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
-        <h1 className="mt-3 text-lg font-semibold text-gray-900">Không thể tải doanh thu</h1>
-        <p className="mt-1 text-sm text-gray-500">{error ?? 'Dữ liệu chưa sẵn sàng.'}</p>
+        <h1 className="mt-3 text-lg font-semibold text-gray-900">{t('loadErrorTitle')}</h1>
+        <p className="mt-1 text-sm text-gray-500">{error ?? t('dataUnavailable')}</p>
         <button className="btn-primary mt-4" onClick={() => setReloadKey((key) => key + 1)}>
-          <RefreshCw className="mr-2 h-4 w-4" /> Thử lại
+          <RefreshCw className="mr-2 h-4 w-4" /> {t('retry')}
         </button>
       </div>
     );
@@ -99,12 +101,12 @@ export default function RevenuePage() {
             <BarChart3 className="h-5 w-5 text-brand-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Doanh thu</h1>
-            <p className="text-sm text-gray-500">Phân tích từ đơn hàng đã hoàn tất</p>
+            <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+            <p className="text-sm text-gray-500">{t('completedOrdersDescription')}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex gap-1 rounded-lg bg-gray-100 p-1" aria-label="Khoảng thời gian">
+          <div className="flex gap-1 rounded-lg bg-gray-100 p-1" aria-label={t('periodAria')}>
             {PERIOD_OPTIONS.map((option) => (
               <button
                 key={option.id}
@@ -117,11 +119,11 @@ export default function RevenuePage() {
                     : 'text-gray-500 hover:text-gray-700',
                 )}
               >
-                {option.label}
+                {t(`periods.${option.labelKey}`)}
               </button>
             ))}
           </div>
-          <RevenueExportButton data={drillDown} filename={`doanh-thu-${period}-ngay`} />
+          <RevenueExportButton data={drillDown} filename={t('exportFilename', { days: period })} />
         </div>
       </header>
 
@@ -129,7 +131,7 @@ export default function RevenuePage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="card lg:col-span-2">
-          <RevenueAreaChart data={summary.byDay} periodLabel={`${period} ngày qua`} />
+          <RevenueAreaChart data={summary.byDay} periodLabel={t('periodLabel', { days: period })} />
         </div>
         <div className="card"><RevenueComparison summary={summary} /></div>
       </div>
@@ -161,8 +163,10 @@ export default function RevenuePage() {
 }
 
 function RevenuePageSkeleton() {
+  const t = useTranslations('revenue');
+
   return (
-    <div className="space-y-6" aria-label="Đang tải dữ liệu doanh thu" aria-busy="true">
+    <div className="space-y-6" aria-label={t('loading')} aria-busy="true">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((item) => <div key={item} className="card h-28 skeleton" />)}
       </div>

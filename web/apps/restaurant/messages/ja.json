@@ -70,7 +70,21 @@
     "month": "今月",
     "totalOrders": "総注文数",
     "totalRevenue": "総売上",
-    "avgOrderValue": "平均注文額"
+    "avgOrderValue": "平均注文額",
+    "completedOrdersDescription": "完了した注文から売上を分析します",
+    "loadErrorTitle": "売上を読み込めません",
+    "loadError": "売上データを読み込めません。",
+    "dataUnavailable": "データはまだ利用できません。",
+    "retry": "再試行",
+    "periodAria": "期間",
+    "periodLabel": "過去{days}日間",
+    "exportFilename": "revenue-{days}-days",
+    "loading": "売上データを読み込み中",
+    "periods": {
+      "last7": "7日間",
+      "last30": "30日間",
+      "last90": "90日間"
+    }
   },
   "reviews": {
     "title": "顧客レビュー",

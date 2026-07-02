@@ -70,7 +70,21 @@
     "month": "Tháng này",
     "totalOrders": "Tổng đơn",
     "totalRevenue": "Tổng doanh thu",
-    "avgOrderValue": "Giá trị đơn TB"
+    "avgOrderValue": "Giá trị đơn TB",
+    "completedOrdersDescription": "Phân tích từ đơn hàng đã hoàn tất",
+    "loadErrorTitle": "Không thể tải doanh thu",
+    "loadError": "Không thể tải dữ liệu doanh thu.",
+    "dataUnavailable": "Dữ liệu chưa sẵn sàng.",
+    "retry": "Thử lại",
+    "periodAria": "Khoảng thời gian",
+    "periodLabel": "{days} ngày qua",
+    "exportFilename": "doanh-thu-{days}-ngay",
+    "loading": "Đang tải dữ liệu doanh thu",
+    "periods": {
+      "last7": "7 ngày",
+      "last30": "30 ngày",
+      "last90": "90 ngày"
+    }
   },
   "reviews": {
     "title": "Đánh giá khách hàng",
