@@ -48,6 +48,19 @@
       "preparing": "Đang chuẩn bị",
       "ready": "Sẵn sàng"
     },
+    "statusActions": {
+      "reject": "Từ chối",
+      "confirm": "Xác nhận",
+      "startCooking": "Bắt đầu nấu",
+      "complete": "Hoàn thành",
+      "updateError": "Không thể cập nhật trạng thái đơn"
+    },
+    "queueCard": {
+      "newBadge": "Mới",
+      "moreItems": "+{count} món khác",
+      "total": "Tổng cộng",
+      "table": "Bàn {tableNumber}"
+    },
     "newOrder": "Đơn mới",
     "accept": "Nhận đơn",
     "reject": "Từ chối",
@@ -58,7 +71,59 @@
   },
   "orderDetail": {
     "title": "Chi tiết đơn hàng",
-    "description": "Thông tin chi tiết đơn hàng"
+    "description": "Thông tin chi tiết đơn hàng",
+    "heading": "Đơn hàng {code}",
+    "loadError": "Không thể tải thông tin đơn hàng",
+    "errorTitle": "Không thể tải chi tiết đơn hàng",
+    "notFoundTitle": "Không tìm thấy đơn hàng",
+    "notFoundDescription": "Đơn hàng không tồn tại hoặc không thuộc nhà hàng của bạn.",
+    "back": "Quay lại",
+    "retry": "Thử lại",
+    "backToOrders": "Quay lại đơn hàng",
+    "timelineTitle": "Trạng thái đơn hàng",
+    "itemsTitle": "Món đã gọi",
+    "total": "Tổng cộng",
+    "noteLabel": "Ghi chú:",
+    "customerTitle": "Thông tin khách hàng",
+    "customerNameLabel": "Tên khách hàng",
+    "phoneLabel": "Số điện thoại",
+    "addressLabel": "Địa chỉ",
+    "tableLabel": "Số bàn",
+    "tableValue": "Bàn {tableNumber}",
+    "metaTitle": "Thông tin đơn hàng",
+    "codeLabel": "Mã đơn",
+    "orderedAtLabel": "Thời gian đặt",
+    "itemCountLabel": "Số món",
+    "status": {
+      "restaurant_pending": "Chờ xác nhận",
+      "restaurant_accepted": "Đã xác nhận",
+      "preparing": "Đang chuẩn bị",
+      "ready_for_pickup": "Sẵn sàng lấy món",
+      "driver_assigned": "Đã có tài xế",
+      "picked_up": "Tài xế đã lấy món",
+      "delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã huỷ",
+      "refunded": "Đã hoàn tiền"
+    },
+    "actions": {
+      "accept": "Chấp nhận",
+      "reject": "Từ chối",
+      "startPreparing": "Bắt đầu chuẩn bị",
+      "readyForPickup": "Sẵn sàng lấy món",
+      "rejectReason": "Lý do từ chối",
+      "reason": "Lý do",
+      "confirm": "Xác nhận",
+      "cancel": "Huỷ",
+      "actionFailed": "Thao tác thất bại"
+    },
+    "prepTime": {
+      "title": "Thời gian chuẩn bị",
+      "minutes": "{minutes} phút",
+      "customPlaceholder": "Tuỳ chỉnh (phút)",
+      "set": "Đặt"
+    }
   },
   "menu": {
     "title": "Thực đơn",

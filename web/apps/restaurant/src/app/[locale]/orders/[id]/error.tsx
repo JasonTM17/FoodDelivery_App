@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 export default function OrderDetailError({
   error,
   reset,
@@ -7,17 +9,19 @@ export default function OrderDetailError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('orderDetail');
+
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
-        <span className="text-red-600 text-2xl font-bold">!</span>
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+        <span className="text-2xl font-bold text-red-600">!</span>
       </div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải chi tiết đơn hàng</h2>
-      <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-        {error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.'}
+      <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('errorTitle')}</h2>
+      <p className="mb-6 max-w-md text-center text-sm text-gray-500">
+        {error.message || t('loadError')}
       </p>
       <button onClick={reset} className="btn-primary">
-        Thử lại
+        {t('retry')}
       </button>
     </div>
   );

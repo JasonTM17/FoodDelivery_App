@@ -48,6 +48,19 @@
       "preparing": "準備中",
       "ready": "準備完了"
     },
+    "statusActions": {
+      "reject": "拒否",
+      "confirm": "確認",
+      "startCooking": "調理開始",
+      "complete": "完了",
+      "updateError": "注文ステータスを更新できませんでした"
+    },
+    "queueCard": {
+      "newBadge": "新規",
+      "moreItems": "他 {count} 件",
+      "total": "合計",
+      "table": "テーブル {tableNumber}"
+    },
     "newOrder": "新規注文",
     "accept": "承認",
     "reject": "拒否",
@@ -58,7 +71,59 @@
   },
   "orderDetail": {
     "title": "注文詳細",
-    "description": "注文の詳細情報"
+    "description": "注文の詳細情報",
+    "heading": "注文 {code}",
+    "loadError": "注文詳細を読み込めませんでした",
+    "errorTitle": "注文詳細を読み込めませんでした",
+    "notFoundTitle": "注文が見つかりません",
+    "notFoundDescription": "この注文は存在しないか、このレストランでは利用できません。",
+    "back": "戻る",
+    "retry": "再試行",
+    "backToOrders": "注文へ戻る",
+    "timelineTitle": "注文ステータス",
+    "itemsTitle": "注文商品",
+    "total": "合計",
+    "noteLabel": "メモ:",
+    "customerTitle": "顧客情報",
+    "customerNameLabel": "顧客名",
+    "phoneLabel": "電話番号",
+    "addressLabel": "住所",
+    "tableLabel": "テーブル番号",
+    "tableValue": "テーブル {tableNumber}",
+    "metaTitle": "注文情報",
+    "codeLabel": "注文コード",
+    "orderedAtLabel": "注文日時",
+    "itemCountLabel": "商品数",
+    "status": {
+      "restaurant_pending": "確認待ち",
+      "restaurant_accepted": "確認済み",
+      "preparing": "準備中",
+      "ready_for_pickup": "受け取り準備完了",
+      "driver_assigned": "ドライバー割り当て済み",
+      "picked_up": "受け取り済み",
+      "delivering": "配達中",
+      "delivered": "配達済み",
+      "completed": "完了",
+      "cancelled": "キャンセル済み",
+      "refunded": "返金済み"
+    },
+    "actions": {
+      "accept": "承認",
+      "reject": "拒否",
+      "startPreparing": "準備開始",
+      "readyForPickup": "受け取り準備完了",
+      "rejectReason": "拒否理由",
+      "reason": "理由",
+      "confirm": "確認",
+      "cancel": "キャンセル",
+      "actionFailed": "操作に失敗しました"
+    },
+    "prepTime": {
+      "title": "準備時間",
+      "minutes": "{minutes}分",
+      "customPlaceholder": "カスタム（分）",
+      "set": "設定"
+    }
   },
   "menu": {
     "title": "メニュー",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/navigation';
 import { Clock, User, ChevronRight, AlertCircle } from 'lucide-react';
 import type { Order } from '@/lib/types';
@@ -13,49 +14,50 @@ interface OrderQueueCardProps {
 
 export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
   const router = useRouter();
+  const t = useTranslations('orders.queueCard');
   const isPending = order.status === 'restaurant_pending';
 
   return (
     <div
       className={cn(
-        'card hover:shadow-md transition-all cursor-pointer group',
-        isPending && 'ring-2 ring-red-200 bg-red-50/30',
-        isNew && 'ring-2 ring-brand-400'
+        'card cursor-pointer transition-all hover:shadow-md group',
+        isPending && 'bg-red-50/30 ring-2 ring-red-200',
+        isNew && 'ring-2 ring-brand-400',
       )}
       onClick={() => router.push(`/orders/${order.id}`)}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-gray-900">{order.code}</span>
           {isPending && (
-            <span className="flex items-center gap-1 text-xs text-red-600 font-medium">
+            <span className="flex items-center gap-1 text-xs font-medium text-red-600">
               <AlertCircle className="h-3 w-3" />
-              Mới
+              {t('newBadge')}
             </span>
           )}
         </div>
-        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+        <ChevronRight className="h-4 w-4 text-gray-400 transition-colors group-hover:text-gray-600" />
       </div>
 
-      <div className="space-y-1 mb-3">
+      <div className="mb-3 space-y-1">
         {order.items.slice(0, 4).map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
-            <span className="text-gray-600 truncate">
-              <span className="text-gray-400 mr-1">x{item.quantity}</span>
+            <span className="truncate text-gray-600">
+              <span className="mr-1 text-gray-400">x{item.quantity}</span>
               {item.name}
             </span>
-            <span className="text-gray-500 ml-2 shrink-0">
+            <span className="ml-2 shrink-0 text-gray-500">
               {formatCurrency(item.price * item.quantity)}
             </span>
           </div>
         ))}
         {order.items.length > 4 && (
-          <p className="text-xs text-gray-400">+{order.items.length - 4} món khác</p>
+          <p className="text-xs text-gray-400">{t('moreItems', { count: order.items.length - 4 })}</p>
         )}
       </div>
 
-      <div className="flex items-center justify-between py-2 border-t border-dashed border-gray-200 mb-3">
-        <span className="text-sm font-semibold text-gray-900">Tổng cộng</span>
+      <div className="mb-3 flex items-center justify-between border-t border-dashed border-gray-200 py-2">
+        <span className="text-sm font-semibold text-gray-900">{t('total')}</span>
         <span className="text-base font-bold text-brand-600">{formatCurrency(order.total)}</span>
       </div>
 
@@ -71,7 +73,7 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
           </span>
         </div>
         {order.tableNumber && (
-          <span className="font-medium text-gray-700">Bàn {order.tableNumber}</span>
+          <span className="font-medium text-gray-700">{t('table', { tableNumber: order.tableNumber })}</span>
         )}
       </div>
 

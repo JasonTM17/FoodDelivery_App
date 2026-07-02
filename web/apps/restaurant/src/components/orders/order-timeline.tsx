@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock, CheckCircle2, CookingPot, PackageCheck, Bike, Home, Ban } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { OrderStatus } from '@/lib/types';
 import { cn, formatTime } from '@/lib/utils';
 
@@ -37,18 +38,20 @@ const STATUS_ORDER: OrderStatus[] = [
   'delivered',
 ];
 
-const STATUS_LABELS: Record<string, string> = {
-  restaurant_pending: 'Chờ xác nhận',
-  restaurant_accepted: 'Đã xác nhận',
-  preparing: 'Đang chuẩn bị',
-  ready_for_pickup: 'Sẵn sàng lấy món',
-  delivering: 'Đang giao',
-  delivered: 'Đã giao',
-  completed: 'Hoàn tất',
-  cancelled: 'Đã huỷ',
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  restaurant_pending: 'status.restaurant_pending',
+  restaurant_accepted: 'status.restaurant_accepted',
+  preparing: 'status.preparing',
+  ready_for_pickup: 'status.ready_for_pickup',
+  delivering: 'status.delivering',
+  delivered: 'status.delivered',
+  completed: 'status.completed',
+  cancelled: 'status.cancelled',
+  refunded: 'status.refunded',
 };
 
 export function OrderTimeline({ currentStatus, steps }: OrderTimelineProps) {
+  const t = useTranslations('orderDetail');
   const isCancelled = currentStatus === 'cancelled' || currentStatus === 'refunded';
   const normalizedCurrent = currentStatus === 'completed' ? 'delivered' : currentStatus;
   const currentIdx = STATUS_ORDER.indexOf(normalizedCurrent);
@@ -67,7 +70,7 @@ export function OrderTimeline({ currentStatus, steps }: OrderTimelineProps) {
               <div
                 className={cn(
                   'absolute left-4 top-8 w-0.5 -translate-x-1/2',
-                  isCompleted ? 'h-10 bg-brand-500' : 'h-10 bg-gray-200'
+                  isCompleted ? 'h-10 bg-brand-500' : 'h-10 bg-gray-200',
                 )}
                 style={{ height: 'calc(100% - 2rem)' }}
               />
@@ -77,20 +80,20 @@ export function OrderTimeline({ currentStatus, steps }: OrderTimelineProps) {
                 'relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors',
                 isCompleted ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-400',
                 isCurrent && 'ring-2 ring-brand-500 ring-offset-2',
-                isCancelled && 'opacity-40'
+                isCancelled && 'opacity-40',
               )}
             >
               {ICON_MAP[status]}
             </div>
-            <div className="pt-1.5 pb-6 min-w-0 flex-1">
+            <div className="min-w-0 flex-1 pb-6 pt-1.5">
               <p className={cn('text-sm font-medium', isCompleted ? 'text-gray-900' : 'text-gray-400')}>
-                {step?.label || STATUS_LABELS[status]}
+                {step?.label || t(STATUS_LABEL_KEYS[status])}
               </p>
               {step?.timestamp && (
-                <p className="text-xs text-gray-500 mt-0.5">{formatTime(step.timestamp)}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{formatTime(step.timestamp)}</p>
               )}
-              {step?.actor && <p className="text-xs text-gray-400 mt-0.5">{step.actor}</p>}
-              {step?.note && <p className="text-xs text-gray-500 mt-0.5 italic">{step.note}</p>}
+              {step?.actor && <p className="mt-0.5 text-xs text-gray-400">{step.actor}</p>}
+              {step?.note && <p className="mt-0.5 text-xs italic text-gray-500">{step.note}</p>}
             </div>
           </div>
         );
@@ -103,7 +106,7 @@ export function OrderTimeline({ currentStatus, steps }: OrderTimelineProps) {
           </div>
           <div className="pt-1.5">
             <p className="text-sm font-medium text-red-600">
-              {currentStatus === 'refunded' ? 'Đã hoàn tiền' : 'Đã huỷ'}
+              {currentStatus === 'refunded' ? t('status.refunded') : t('status.cancelled')}
             </p>
           </div>
         </div>

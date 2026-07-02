@@ -48,6 +48,19 @@
       "preparing": "Preparing",
       "ready": "Ready"
     },
+    "statusActions": {
+      "reject": "Reject",
+      "confirm": "Confirm",
+      "startCooking": "Start cooking",
+      "complete": "Complete",
+      "updateError": "Could not update order status"
+    },
+    "queueCard": {
+      "newBadge": "New",
+      "moreItems": "+{count, plural, one {# more item} other {# more items}}",
+      "total": "Total",
+      "table": "Table {tableNumber}"
+    },
     "newOrder": "New Order",
     "accept": "Accept",
     "reject": "Reject",
@@ -58,7 +71,59 @@
   },
   "orderDetail": {
     "title": "Order Detail",
-    "description": "Detailed order information"
+    "description": "Detailed order information",
+    "heading": "Order {code}",
+    "loadError": "Could not load order details",
+    "errorTitle": "Could not load order details",
+    "notFoundTitle": "Order not found",
+    "notFoundDescription": "This order does not exist or is not available to your restaurant.",
+    "back": "Back",
+    "retry": "Retry",
+    "backToOrders": "Back to orders",
+    "timelineTitle": "Order status",
+    "itemsTitle": "Ordered items",
+    "total": "Total",
+    "noteLabel": "Note:",
+    "customerTitle": "Customer information",
+    "customerNameLabel": "Customer name",
+    "phoneLabel": "Phone number",
+    "addressLabel": "Address",
+    "tableLabel": "Table number",
+    "tableValue": "Table {tableNumber}",
+    "metaTitle": "Order information",
+    "codeLabel": "Order code",
+    "orderedAtLabel": "Ordered",
+    "itemCountLabel": "Items",
+    "status": {
+      "restaurant_pending": "Waiting for confirmation",
+      "restaurant_accepted": "Confirmed",
+      "preparing": "Preparing",
+      "ready_for_pickup": "Ready for pickup",
+      "driver_assigned": "Driver assigned",
+      "picked_up": "Picked up",
+      "delivering": "Delivering",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    },
+    "actions": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "startPreparing": "Start preparing",
+      "readyForPickup": "Ready for pickup",
+      "rejectReason": "Rejection reason",
+      "reason": "Reason",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "actionFailed": "Action failed"
+    },
+    "prepTime": {
+      "title": "Preparation time",
+      "minutes": "{minutes} min",
+      "customPlaceholder": "Custom (minutes)",
+      "set": "Set"
+    }
   },
   "menu": {
     "title": "Menu",
