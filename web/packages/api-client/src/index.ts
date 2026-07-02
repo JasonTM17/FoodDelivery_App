@@ -26,8 +26,12 @@ export type {
   AiChatRequest,
   AiMonitorStatus,
   CreateAdminExportRequest,
+  CreateRestaurantOrderChatMessageRequest,
   PaginationMeta,
   ProblemDetail,
   QueryValue,
+  RestaurantOrderChatMessage,
+  RestaurantOrderChatMessagesPayload,
+  RestaurantOrderChatSenderType,
   TokenPair,
 } from './types';

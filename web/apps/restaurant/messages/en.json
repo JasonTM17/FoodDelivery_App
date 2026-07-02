@@ -34,6 +34,20 @@
   "orders": {
     "title": "Orders",
     "description": "Manage and process incoming orders",
+    "queueTitle": "Order queue",
+    "loading": "Loading...",
+    "orderCount": "{count, plural, one {# order} other {# orders}}",
+    "loadError": "Could not load orders",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "soundOn": "Turn sound on",
+    "soundOff": "Turn sound off",
+    "emptyColumn": "No orders yet",
+    "columns": {
+      "pending": "New",
+      "preparing": "Preparing",
+      "ready": "Ready"
+    },
     "newOrder": "New Order",
     "accept": "Accept",
     "reject": "Reject",
@@ -333,5 +347,27 @@
     "shareColumn": "Share",
     "noData": "No data yet",
     "noCategories": "No category revenue yet"
+  },
+  "orderChat": {
+    "title": "Chat with driver",
+    "titleWithDriver": "Chat with driver: {driverName}",
+    "connected": "Connected",
+    "reconnecting": "Reconnecting...",
+    "loading": "Loading driver chat",
+    "empty": "No messages yet. Send the first update when the driver is assigned.",
+    "driverMissing": "Driver has not been assigned yet. Chat will unlock after dispatch.",
+    "loadError": "Could not load driver chat.",
+    "sendError": "Could not send this message.",
+    "retry": "Retry",
+    "placeholder": "Type a message...",
+    "disabledPlaceholder": "Waiting for driver assignment",
+    "messageLabel": "Message",
+    "send": "Send message",
+    "quick": {
+      "ready": "Order is ready",
+      "fiveMinutes": "Need 5 more minutes",
+      "backGate": "Please use the back gate",
+      "thanks": "Thank you!"
+    }
   }
 }

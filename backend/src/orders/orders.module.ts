@@ -12,6 +12,7 @@ import { PartialFulfillmentService } from './partial-fulfillment.service'
 import { CartModule } from '../cart/cart.module'
 import { PaymentsModule } from '../payments/payments.module'
 import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
+import { OrderChatService } from './order-chat.service'
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
     RefundProcessor,
     AutoTimeoutProcessor,
     PartialFulfillmentService,
+    OrderChatService,
   ],
   exports: [OrdersService, OrdersGateway],
 })

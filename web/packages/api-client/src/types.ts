@@ -198,6 +198,25 @@ export interface AdminDriverLocation {
   lastSeenAt: string;
 }
 
+export type RestaurantOrderChatSenderType = 'customer' | 'driver' | 'restaurant' | 'ai' | 'system';
+
+export interface RestaurantOrderChatMessage {
+  id: string;
+  senderType: RestaurantOrderChatSenderType;
+  senderId: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export interface RestaurantOrderChatMessagesPayload {
+  messages: RestaurantOrderChatMessage[];
+  canReply: boolean;
+}
+
+export interface CreateRestaurantOrderChatMessageRequest {
+  content: string;
+}
+
 export interface AiChatRequest {
   message: string;
   sessionId?: string;

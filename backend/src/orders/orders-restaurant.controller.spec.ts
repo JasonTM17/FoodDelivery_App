@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
+import { OrderChatService } from './order-chat.service'
 
 describe('OrdersController — Restaurant', () => {
   let controller: OrdersController
@@ -17,6 +18,11 @@ describe('OrdersController — Restaurant', () => {
     submitReview: jest.fn(),
   }
 
+  const mockOrderChatService = {
+    getRestaurantOrderMessages: jest.fn().mockResolvedValue({ messages: [], canReply: false }),
+    createRestaurantOrderMessage: jest.fn().mockResolvedValue({ id: 'message-1', content: 'Ready' }),
+  }
+
   const mockRedis = {
     get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue('OK'),
@@ -27,6 +33,7 @@ describe('OrdersController — Restaurant', () => {
       controllers: [OrdersController],
       providers: [
         { provide: OrdersService, useValue: mockOrdersService },
+        { provide: OrderChatService, useValue: mockOrderChatService },
         { provide: 'REDIS_CLIENT', useValue: mockRedis },
       ],
     }).compile()
@@ -51,6 +58,20 @@ describe('OrdersController — Restaurant', () => {
     const result = await controller.updateRestaurantOrderStatus(user, 'order-1', { status: 'restaurant_accepted', note: 'OK' })
     expect(result.status).toBe('restaurant_accepted')
     expect(mockOrdersService.getRestaurantOrderDetail).toHaveBeenCalledWith('order-1', 'restaurant-1')
+  })
+
+  it('should return restaurant order chat messages', async () => {
+    const user = { sub: 'restaurant-1', role: 'restaurant' }
+    const result = await controller.getRestaurantOrderMessages(user, 'order-1')
+    expect(result).toEqual({ messages: [], canReply: false })
+    expect(mockOrderChatService.getRestaurantOrderMessages).toHaveBeenCalledWith('order-1', 'restaurant-1')
+  })
+
+  it('should create a restaurant order chat message', async () => {
+    const user = { sub: 'restaurant-1', role: 'restaurant' }
+    const result = await controller.createRestaurantOrderMessage(user, 'order-1', { content: 'Ready' })
+    expect(result).toEqual({ id: 'message-1', content: 'Ready' })
+    expect(mockOrderChatService.createRestaurantOrderMessage).toHaveBeenCalledWith('order-1', 'restaurant-1', { content: 'Ready' })
   })
 
   it('should update delivery status as driver', async () => {

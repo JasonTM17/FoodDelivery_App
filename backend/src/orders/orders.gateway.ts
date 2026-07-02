@@ -46,6 +46,11 @@ export class OrdersGateway {
     client.join(`restaurant:${data.restaurantId}`)
   }
 
+  @SubscribeMessage('restaurant:unsubscribe')
+  handleRestaurantUnsubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { restaurantId: string }) {
+    client.leave(`restaurant:${data.restaurantId}`)
+  }
+
   @SubscribeMessage('admin:subscribe_drivers')
   handleAdminSubscribe(@ConnectedSocket() client: Socket) {
     client.join('admin:drivers:all')

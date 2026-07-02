@@ -116,6 +116,38 @@ Get restaurant's order queue. Requires restaurant role.
 ### PATCH /restaurant/orders/:id/status
 Update order status (restaurant_accepted, preparing, ready_for_pickup).
 
+### GET /restaurant/orders/:id/messages
+Get persisted restaurant-driver order chat messages. Requires restaurant role and tenant ownership.
+
+Response envelope:
+
+```json
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "message-id",
+        "senderType": "driver",
+        "senderId": "driver-user-id",
+        "content": "Arrived at pickup",
+        "createdAt": "2026-07-02T10:00:00.000Z"
+      }
+    ],
+    "canReply": true
+  }
+}
+```
+
+### POST /restaurant/orders/:id/messages
+Create a restaurant-driver order chat message and broadcast `/events` `order:message_created`.
+
+```
+Body: { content }
+```
+
+Returns `400 ORDER_DRIVER_NOT_ASSIGNED` when dispatch has not assigned a driver yet.
+
 ## Driver
 
 ### POST /driver/online
@@ -208,6 +240,9 @@ Connect to `ws://localhost:3001` with namespace:
 |-------|---------|
 | `driver:location` | `{ lat, lng, bearing, speed, accuracy, timestamp }` |
 | `order:subscribe` | `{ orderId }` |
+| `order:unsubscribe` | `{ orderId }` |
+| `/events: restaurant:subscribe` | `{ restaurantId }` |
+| `/events: restaurant:unsubscribe` | `{ restaurantId }` |
 | `driver:go_online` | `{ lat, lng }` |
 | `driver:go_offline` | `{}` |
 | `/events: admin:subscribe_drivers` | `{}` |
@@ -216,7 +251,9 @@ Connect to `ws://localhost:3001` with namespace:
 ### Server → Client
 | Event | Payload |
 |-------|---------|
-| `order:status_changed` | `{ orderId, status, timestamp }` |
+| `/events: restaurant:new_order` | `{ orderId, orderCode, total, items }` |
+| `/events: order:status:changed` | `{ orderId, status, timestamp }` |
+| `/events: order:message_created` | `{ id, senderType, senderId, content, createdAt }` |
 | `driver:location_changed` | `{ driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |

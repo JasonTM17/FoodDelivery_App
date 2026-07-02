@@ -34,6 +34,20 @@
   "orders": {
     "title": "Đơn hàng",
     "description": "Quản lý và xử lý đơn hàng đến",
+    "queueTitle": "Quản lý đơn hàng",
+    "loading": "Đang tải...",
+    "orderCount": "{count} đơn hàng",
+    "loadError": "Không thể tải đơn hàng",
+    "refresh": "Làm mới",
+    "retry": "Thử lại",
+    "soundOn": "Bật âm thanh",
+    "soundOff": "Tắt âm thanh",
+    "emptyColumn": "Chưa có đơn hàng",
+    "columns": {
+      "pending": "Mới",
+      "preparing": "Đang chuẩn bị",
+      "ready": "Sẵn sàng"
+    },
     "newOrder": "Đơn mới",
     "accept": "Nhận đơn",
     "reject": "Từ chối",
@@ -333,5 +347,27 @@
     "shareColumn": "Tỷ trọng",
     "noData": "Chưa có dữ liệu",
     "noCategories": "Chưa có doanh thu theo danh mục"
+  },
+  "orderChat": {
+    "title": "Chat với tài xế",
+    "titleWithDriver": "Chat với tài xế: {driverName}",
+    "connected": "Đã kết nối",
+    "reconnecting": "Đang kết nối lại...",
+    "loading": "Đang tải chat tài xế",
+    "empty": "Chưa có tin nhắn. Gửi cập nhật đầu tiên khi tài xế đã nhận đơn.",
+    "driverMissing": "Đơn chưa có tài xế. Chat sẽ mở sau khi điều phối.",
+    "loadError": "Không thể tải chat tài xế.",
+    "sendError": "Không thể gửi tin nhắn này.",
+    "retry": "Thử lại",
+    "placeholder": "Nhập tin nhắn...",
+    "disabledPlaceholder": "Đang chờ gán tài xế",
+    "messageLabel": "Tin nhắn",
+    "send": "Gửi tin nhắn",
+    "quick": {
+      "ready": "Đơn đã sẵn sàng",
+      "fiveMinutes": "Cần thêm 5 phút",
+      "backGate": "Vui lòng đến cổng sau",
+      "thanks": "Cảm ơn!"
+    }
   }
 }

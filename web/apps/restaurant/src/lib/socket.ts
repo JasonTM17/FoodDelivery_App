@@ -1,36 +1,44 @@
 'use client';
 
-import { io, Socket } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
+import type { RestaurantOrderChatMessage } from '@foodflow/api-client';
+import type { Order, OrderStatus } from './types';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+const EVENTS_SOCKET_URL = SOCKET_URL.endsWith('/events') ? SOCKET_URL : `${SOCKET_URL}/events`;
 
-let socket: Socket | null = null;
+let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
-export function getSocket(): Socket {
+export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   if (!socket) {
-    socket = io(SOCKET_URL, {
+    socket = io(EVENTS_SOCKET_URL, {
       autoConnect: false,
       transports: ['websocket', 'polling'],
-    });
+    }) as Socket<ServerToClientEvents, ClientToServerEvents>;
   }
   return socket;
 }
 
-export function connectToRestaurant(restaurantId: string): Socket {
+export function connectToRestaurant(restaurantId: string): Socket<ServerToClientEvents, ClientToServerEvents> {
   const s = getSocket();
-
-  if (s.connected) {
-    s.emit('join:restaurant', restaurantId);
-    return s;
-  }
-
-  s.connect();
-
-  s.on('connect', () => {
-    s.emit('join:restaurant', restaurantId);
-  });
-
+  if (!s.connected) s.connect();
+  s.emit('restaurant:subscribe', { restaurantId });
   return s;
+}
+
+export function leaveRestaurant(restaurantId: string): void {
+  socket?.emit('restaurant:unsubscribe', { restaurantId });
+}
+
+export function connectToOrder(orderId: string): Socket<ServerToClientEvents, ClientToServerEvents> {
+  const s = getSocket();
+  if (!s.connected) s.connect();
+  s.emit('order:subscribe', { orderId });
+  return s;
+}
+
+export function leaveOrder(orderId: string): void {
+  socket?.emit('order:unsubscribe', { orderId });
 }
 
 export function disconnectSocket(): void {
@@ -65,12 +73,17 @@ export function playNewOrderSound(): void {
   }
 }
 
+export type OrderChatMessageEvent = RestaurantOrderChatMessage;
+
 export interface ServerToClientEvents {
-  'new-order': (order: import('./types').Order) => void;
-  'order-update': (order: import('./types').Order) => void;
+  'restaurant:new_order': (order: Partial<Order> & { orderId?: string }) => void;
+  'order:status:changed': (event: { orderId: string; status: OrderStatus; timestamp: string }) => void;
+  'order:message_created': (message: OrderChatMessageEvent) => void;
 }
 
 export interface ClientToServerEvents {
-  'join:restaurant': (restaurantId: string) => void;
-  'leave:restaurant': (restaurantId: string) => void;
+  'restaurant:subscribe': (payload: { restaurantId: string }) => void;
+  'restaurant:unsubscribe': (payload: { restaurantId: string }) => void;
+  'order:subscribe': (payload: { orderId: string }) => void;
+  'order:unsubscribe': (payload: { orderId: string }) => void;
 }

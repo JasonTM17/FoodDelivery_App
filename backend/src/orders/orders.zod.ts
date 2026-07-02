@@ -34,3 +34,9 @@ export const updateOrderStatusSchema = z.object({
 })
 
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>
+
+export const createOrderChatMessageSchema = z.object({
+  content: z.string().trim().min(1, 'Message content is required').max(1000, 'Message content is too long'),
+})
+
+export type CreateOrderChatMessageInput = z.infer<typeof createOrderChatMessageSchema>

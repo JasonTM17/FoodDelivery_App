@@ -34,6 +34,20 @@
   "orders": {
     "title": "注文",
     "description": "入ってきた注文を管理・処理する",
+    "queueTitle": "注文キュー",
+    "loading": "読み込み中...",
+    "orderCount": "{count} 件の注文",
+    "loadError": "注文を読み込めませんでした",
+    "refresh": "更新",
+    "retry": "再試行",
+    "soundOn": "通知音をオン",
+    "soundOff": "通知音をオフ",
+    "emptyColumn": "注文はまだありません",
+    "columns": {
+      "pending": "新規",
+      "preparing": "準備中",
+      "ready": "準備完了"
+    },
     "newOrder": "新規注文",
     "accept": "承認",
     "reject": "拒否",
@@ -333,5 +347,27 @@
     "shareColumn": "構成比",
     "noData": "データなし",
     "noCategories": "カテゴリー別売上はまだありません"
+  },
+  "orderChat": {
+    "title": "ドライバーとチャット",
+    "titleWithDriver": "ドライバーとチャット: {driverName}",
+    "connected": "接続済み",
+    "reconnecting": "再接続中...",
+    "loading": "ドライバーチャットを読み込み中",
+    "empty": "まだメッセージはありません。ドライバー割り当て後に最初の更新を送信できます。",
+    "driverMissing": "ドライバーはまだ割り当てられていません。配車後にチャットが有効になります。",
+    "loadError": "ドライバーチャットを読み込めませんでした。",
+    "sendError": "このメッセージを送信できませんでした。",
+    "retry": "再試行",
+    "placeholder": "メッセージを入力...",
+    "disabledPlaceholder": "ドライバー割り当て待ち",
+    "messageLabel": "メッセージ",
+    "send": "メッセージを送信",
+    "quick": {
+      "ready": "注文は準備完了です",
+      "fiveMinutes": "あと5分必要です",
+      "backGate": "裏口へお越しください",
+      "thanks": "ありがとうございます!"
+    }
   }
 }

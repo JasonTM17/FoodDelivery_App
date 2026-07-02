@@ -1,20 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ShoppingBag, Bell, BellRing, RotateCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { OrderQueueCard } from './order-queue-card';
 import { api, getStoredRestaurant } from '@/lib/api';
-import { connectToRestaurant, disconnectSocket, playNewOrderSound } from '@/lib/socket';
+import { connectToRestaurant, leaveRestaurant, playNewOrderSound } from '@/lib/socket';
 import type { Order } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 type ColumnId = 'pending' | 'preparing' | 'ready';
-
-const COLUMNS = [
-  { id: 'pending' as ColumnId, label: 'Mới', color: 'text-red-600', bgColor: 'bg-red-50', dot: 'bg-red-500' },
-  { id: 'preparing' as ColumnId, label: 'Đang chuẩn bị', color: 'text-amber-600', bgColor: 'bg-amber-50', dot: 'bg-amber-500' },
-  { id: 'ready' as ColumnId, label: 'Sẵn sàng', color: 'text-green-600', bgColor: 'bg-green-50', dot: 'bg-green-500' },
-];
 
 const STATUS_MAP: Record<string, ColumnId> = {
   paid: 'pending',
@@ -30,6 +25,7 @@ function initSound(): boolean {
 }
 
 export function OrderKanbanBoard() {
+  const t = useTranslations('orders');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,19 +33,25 @@ export function OrderKanbanBoard() {
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const restaurant = getStoredRestaurant();
 
+  const columns = useMemo(() => [
+    { id: 'pending' as ColumnId, label: t('columns.pending'), color: 'text-red-600', bgColor: 'bg-red-50', dot: 'bg-red-500' },
+    { id: 'preparing' as ColumnId, label: t('columns.preparing'), color: 'text-amber-600', bgColor: 'bg-amber-50', dot: 'bg-amber-500' },
+    { id: 'ready' as ColumnId, label: t('columns.ready'), color: 'text-green-600', bgColor: 'bg-green-50', dot: 'bg-green-500' },
+  ], [t]);
+
   const fetchOrders = useCallback(async () => {
     try {
       const data = await api.get<{ orders: Order[] }>('/restaurant/orders');
       setAllOrders(data.orders);
       setError('');
     } catch (err: unknown) {
-      setError((err as { message?: string }).message || 'Không thể tải đơn hàng');
+      setError((err as { message?: string }).message || t('loadError'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => { void fetchOrders(); }, [fetchOrders]);
 
   const toggleSound = () => {
     setSoundEnabled((prev) => {
@@ -61,29 +63,46 @@ export function OrderKanbanBoard() {
 
   useEffect(() => {
     if (!restaurant?.id) return;
-    const socket = connectToRestaurant(restaurant.id);
+    const restaurantId = restaurant.id;
+    const socket = connectToRestaurant(restaurantId);
 
-    const handleNew = (order: Order) => {
-      setAllOrders((prev) => [order, ...prev]);
+    const resubscribe = () => {
+      socket.emit('restaurant:subscribe', { restaurantId });
+    };
+
+    const handleNew = (payload: Partial<Order> & { orderId?: string }) => {
+      const orderId = payload.id ?? payload.orderId;
       if (soundEnabled) playNewOrderSound();
-      setNewOrderIds((prev) => new Set(prev).add(order.id));
-      setTimeout(() => {
-        setNewOrderIds((prev) => { const n = new Set(prev); n.delete(order.id); return n; });
-      }, 5000);
+      if (orderId) {
+        setNewOrderIds((prev) => new Set(prev).add(orderId));
+        setTimeout(() => {
+          setNewOrderIds((prev) => {
+            const next = new Set(prev);
+            next.delete(orderId);
+            return next;
+          });
+        }, 5000);
+      }
+      void fetchOrders();
     };
 
-    const handleUpdate = (order: Order) => {
-      setAllOrders((prev) => prev.map((o) => (o.id === order.id ? order : o)));
+    const handleUpdate = (event: { orderId: string; status: Order['status']; timestamp: string }) => {
+      setAllOrders((prev) => prev.map((order) => (
+        order.id === event.orderId ? { ...order, status: event.status, updatedAt: event.timestamp } : order
+      )));
     };
 
-    socket.on('new-order', handleNew);
-    socket.on('order-update', handleUpdate);
+    socket.on('connect', resubscribe);
+    socket.on('restaurant:new_order', handleNew);
+    socket.on('order:status:changed', handleUpdate);
+
     return () => {
-      socket.off('new-order', handleNew);
-      socket.off('order-update', handleUpdate);
-      disconnectSocket();
+      socket.off('connect', resubscribe);
+      socket.off('restaurant:new_order', handleNew);
+      socket.off('order:status:changed', handleUpdate);
+      leaveRestaurant(restaurantId);
     };
-  }, [restaurant?.id, soundEnabled]);
+  }, [fetchOrders, restaurant?.id, soundEnabled]);
 
   return (
     <div>
@@ -93,9 +112,9 @@ export function OrderKanbanBoard() {
             <ShoppingBag className="h-5 w-5 text-brand-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Quản lý đơn hàng</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('queueTitle')}</h1>
             <p className="text-sm text-gray-500">
-              {isLoading ? 'Đang tải...' : `${allOrders.length} đơn hàng`}
+              {isLoading ? t('loading') : t('orderCount', { count: allOrders.length })}
             </p>
           </div>
         </div>
@@ -103,13 +122,14 @@ export function OrderKanbanBoard() {
           <button
             onClick={toggleSound}
             className={cn('btn-ghost p-2 rounded-lg', soundEnabled ? 'text-brand-600' : 'text-gray-400')}
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            title={soundEnabled ? t('soundOff') : t('soundOn')}
+            aria-label={soundEnabled ? t('soundOff') : t('soundOn')}
           >
             {soundEnabled ? <BellRing className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
           </button>
           <button onClick={fetchOrders} className="btn-secondary">
             <RotateCw className="h-4 w-4 mr-1.5" />
-            Làm mới
+            {t('refresh')}
           </button>
         </div>
       </div>
@@ -117,13 +137,13 @@ export function OrderKanbanBoard() {
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
           <p className="text-sm text-red-700">{error}</p>
-          <button onClick={fetchOrders} className="text-sm text-red-600 underline mt-1">Thử lại</button>
+          <button onClick={fetchOrders} className="text-sm text-red-600 underline mt-1">{t('retry')}</button>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {COLUMNS.map((col) => {
-          const orders = allOrders.filter((o) => STATUS_MAP[o.status] === col.id);
+        {columns.map((col) => {
+          const orders = allOrders.filter((order) => STATUS_MAP[order.status] === col.id);
           return (
             <div key={col.id} className={cn('rounded-xl border border-gray-200', col.bgColor)}>
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -147,7 +167,7 @@ export function OrderKanbanBoard() {
                 ) : orders.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingBag className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-400">Chưa có đơn hàng</p>
+                    <p className="text-sm text-gray-400">{t('emptyColumn')}</p>
                   </div>
                 ) : (
                   orders.map((order) => (

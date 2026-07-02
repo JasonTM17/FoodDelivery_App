@@ -51,3 +51,8 @@ export class CreateReviewDto {
   @IsOptional()
   comment?: string
 }
+
+export class CreateOrderChatMessageDto {
+  @IsString()
+  content: string
+}

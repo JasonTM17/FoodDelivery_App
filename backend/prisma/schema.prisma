@@ -95,6 +95,7 @@ enum TicketPriority {
 enum ChatSenderType {
   customer
   driver
+  restaurant
   ai
   system
 }
@@ -102,6 +103,7 @@ enum ChatSenderType {
 enum ChatSessionType {
   ai_support
   driver_customer
+  restaurant_driver
 }
 
 enum PromotionType {

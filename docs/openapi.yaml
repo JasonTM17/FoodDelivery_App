@@ -596,6 +596,7 @@ components:
           - { name: "Phở bò tái chín", quantity: 2, unitPrice: 65000, options: ["Size Lớn"], lineTotal: 130000 }
         restaurant: { id: "33333333-3333-4333-8333-333333333333", name: "Phở 24" }
         deliveryAddress:
+
           id: "11111111-1111-4111-8111-111111111111"
           label: "Nhà riêng"
           street: "123 Nguyễn Huệ"
@@ -612,6 +613,34 @@ components:
           - { status: "paid", timestamp: "2026-06-09T11:00:05Z" }
           - { status: "restaurant_accepted", timestamp: "2026-06-09T11:02:00Z" }
           - { status: "preparing", timestamp: "2026-06-09T11:05:00Z" }
+
+    RestaurantOrderChatMessage:
+      type: object
+      description: Persisted order-room message used by restaurant staff and assigned driver.
+      properties:
+        id: { type: string, format: uuid }
+        senderType: { type: string, enum: [customer, driver, restaurant, ai, system] }
+        senderId: { type: string, format: uuid, nullable: true }
+        content: { type: string, minLength: 1, maxLength: 1000 }
+        createdAt: { type: string, format: date-time }
+      required: [id, senderType, content, createdAt]
+
+    RestaurantOrderChatMessagesPayload:
+      type: object
+      properties:
+        messages:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantOrderChatMessage" }
+        canReply:
+          type: boolean
+          description: False until a driver is assigned to the order.
+      required: [messages, canReply]
+
+    CreateRestaurantOrderChatMessageRequest:
+      type: object
+      properties:
+        content: { type: string, minLength: 1, maxLength: 1000 }
+      required: [content]
 
     CancelOrderRequest:
       type: object
@@ -2190,6 +2219,60 @@ paths:
       responses:
         "200": { description: "Status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
         "400": { description: "Invalid transition", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/orders/{orderId}/messages:
+    get:
+      tags: [orders]
+      summary: Get restaurant-driver order chat messages
+      description: Returns persisted chat messages after verifying the order belongs to the current restaurant.
+      operationId: orders_getRestaurantOrderMessages
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Order chat messages"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantOrderChatMessagesPayload" }
+        "404": { description: "Order not found for restaurant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    post:
+      tags: [orders]
+      summary: Create a restaurant-driver order chat message
+      description: Persists a restaurant message and broadcasts `/events` `order:message_created` to subscribers. Returns a problem detail when no driver is assigned.
+      operationId: orders_createRestaurantOrderMessage
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRestaurantOrderChatMessageRequest" }
+      responses:
+        "201":
+          description: "Message created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantOrderChatMessage" }
+        "400": { description: "Driver not assigned or invalid content", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Order not found for restaurant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /restaurant/promotions/targeting-preview:
     get:

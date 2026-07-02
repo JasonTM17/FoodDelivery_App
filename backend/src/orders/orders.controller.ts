@@ -5,16 +5,20 @@ import { Roles } from '../auth/roles.decorator'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { OrdersService } from './orders.service'
-import { PlaceOrderDto, CancelOrderDto, CreateReviewDto, UpdateOrderStatusDto } from './orders.dto'
+import { PlaceOrderDto, CancelOrderDto, CreateReviewDto, UpdateOrderStatusDto, CreateOrderChatMessageDto } from './orders.dto'
+import { OrderChatService } from './order-chat.service'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
-import { placeOrderSchema, cancelOrderSchema, createReviewSchema, updateOrderStatusSchema } from './orders.zod'
+import { placeOrderSchema, cancelOrderSchema, createReviewSchema, updateOrderStatusSchema, createOrderChatMessageSchema } from './orders.zod'
 import { IdempotencyInterceptor } from './idempotency.interceptor'
 
 @ApiTags('orders')
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly orderChatService: OrderChatService,
+  ) {}
 
   @Post('orders')
   @Roles('customer')
@@ -68,6 +72,23 @@ export class OrdersController {
   @Roles('restaurant')
   getRestaurantOrderDetail(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.ordersService.getRestaurantOrderDetail(id, user.sub)
+  }
+
+  @Get('restaurant/orders/:id/messages')
+  @Roles('restaurant')
+  getRestaurantOrderMessages(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.orderChatService.getRestaurantOrderMessages(id, user.sub)
+  }
+
+  @Post('restaurant/orders/:id/messages')
+  @Roles('restaurant')
+  @UsePipes(new ZodValidationPipe(createOrderChatMessageSchema))
+  createRestaurantOrderMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: CreateOrderChatMessageDto,
+  ) {
+    return this.orderChatService.createRestaurantOrderMessage(id, user.sub, dto)
   }
 
   @Patch('restaurant/orders/:id/status')
