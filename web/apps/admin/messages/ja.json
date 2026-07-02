@@ -178,6 +178,31 @@
     "create": "プロモーション作成"
   },
   "logs": {
+    "actorFilter": "管理者フィルター",
+    "actorPlaceholder": "管理者ID、メール、または名前",
+    "actionFilter": "操作フィルター",
+    "actionPlaceholder": "操作",
+    "dateFrom": "開始日",
+    "dateTo": "終了日",
+    "search": "検索",
+    "exporting": "エクスポート中...",
+    "exportError": "監査ログをエクスポートできませんでした。",
+    "loadError": "監査ログを読み込めませんでした",
+    "loadErrorDescription": "接続を確認して再試行してください。",
+    "retry": "再試行",
+    "emptyTitle": "監査ログが見つかりません",
+    "emptyDescription": "フィルターまたは日付範囲を変更してください。",
+    "previousPage": "前のページ",
+    "nextPage": "次のページ",
+    "page": "{page} / {totalPages}ページ",
+    "columns": {
+      "timestamp": "日時",
+      "admin": "管理者",
+      "action": "操作",
+      "target": "対象",
+      "id": "ID",
+      "ip": "IP"
+    },
     "title": "監査ログ",
     "description": "管理者の活動履歴",
     "exportCsv": "CSVエクスポート"

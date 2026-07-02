@@ -178,6 +178,31 @@
     "create": "Create promotion"
   },
   "logs": {
+    "actorFilter": "Admin filter",
+    "actorPlaceholder": "Admin ID, email, or name",
+    "actionFilter": "Action filter",
+    "actionPlaceholder": "Action",
+    "dateFrom": "Start date",
+    "dateTo": "End date",
+    "search": "Search",
+    "exporting": "Exporting...",
+    "exportError": "Could not export audit logs.",
+    "loadError": "Could not load audit logs",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Retry",
+    "emptyTitle": "No audit logs found",
+    "emptyDescription": "Change the filters or select a different date range.",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page {page} of {totalPages}",
+    "columns": {
+      "timestamp": "Time",
+      "admin": "Admin",
+      "action": "Action",
+      "target": "Target",
+      "id": "ID",
+      "ip": "IP"
+    },
     "title": "Audit Logs",
     "description": "Admin activity history",
     "exportCsv": "Export CSV"

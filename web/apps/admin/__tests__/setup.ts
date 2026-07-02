@@ -19,6 +19,7 @@ vi.mock('next/navigation', () => ({
 // Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'vi',
   getTranslations: () => async (key: string) => key,
 }));
 
@@ -48,7 +49,8 @@ vi.mock('@/lib/api', () => ({
   apiPut: vi.fn().mockResolvedValue(null),
   apiPatch: vi.fn().mockResolvedValue(null),
   apiDelete: vi.fn().mockResolvedValue(null),
-  getAuditLogs: vi.fn().mockResolvedValue({ logs: [], total: 0 }),
+  apiGetEnvelope: vi.fn().mockResolvedValue({ data: [], meta: { page: 1, limit: 20, total: 0 } }),
+  apiDownload: vi.fn().mockResolvedValue(new Blob()),
 }));
 
 // Mock @tanstack/react-query

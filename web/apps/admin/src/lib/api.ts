@@ -81,20 +81,3 @@ export function apiDelete<T>(path: string, options?: ApiOptions): Promise<T> {
 export function apiDownload(path: string, options?: ApiOptions): Promise<Blob> {
   return client.requestBlob(path, { ...options, method: 'GET' });
 }
-
-export interface AuditLogFilter {
-  actor?: string;
-  action?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  limit?: number;
-}
-
-export async function getAuditLogs(
-  filter?: AuditLogFilter,
-): Promise<{ logs: Array<Record<string, unknown>>; total?: number }> {
-  return apiGet('/admin/audit-logs', {
-    params: filter ? { ...filter } : undefined,
-  });
-}

@@ -178,6 +178,31 @@
     "create": "Tạo khuyến mãi"
   },
   "logs": {
+    "actorFilter": "Lọc quản trị viên",
+    "actorPlaceholder": "ID, email hoặc tên quản trị viên",
+    "actionFilter": "Lọc hành động",
+    "actionPlaceholder": "Hành động",
+    "dateFrom": "Từ ngày",
+    "dateTo": "Đến ngày",
+    "search": "Tìm kiếm",
+    "exporting": "Đang xuất...",
+    "exportError": "Không thể xuất nhật ký kiểm toán.",
+    "loadError": "Không tải được nhật ký kiểm toán",
+    "loadErrorDescription": "Kiểm tra kết nối và thử lại.",
+    "retry": "Thử lại",
+    "emptyTitle": "Không tìm thấy nhật ký",
+    "emptyDescription": "Thay đổi bộ lọc hoặc chọn khoảng thời gian khác.",
+    "previousPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "page": "Trang {page} / {totalPages}",
+    "columns": {
+      "timestamp": "Thời gian",
+      "admin": "Quản trị viên",
+      "action": "Hành động",
+      "target": "Đối tượng",
+      "id": "ID",
+      "ip": "IP"
+    },
     "title": "Audit Logs",
     "description": "Lịch sử hoạt động của admin",
     "exportCsv": "Xuất CSV"
