@@ -41,6 +41,6 @@ describe('TicketSlaBadge', () => {
   it('shows overdue badge with destructive variant when overdue', () => {
     render(<TicketSlaBadge sla={{ percentRemaining: 0, overdue: true }} />);
     const badge = screen.getByTestId('sla-badge');
-    expect(badge).toHaveClass('bg-red-500');
+    expect(badge).toHaveClass('bg-destructive');
   });
 });

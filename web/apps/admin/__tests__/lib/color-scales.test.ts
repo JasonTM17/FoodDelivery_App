@@ -16,10 +16,10 @@ describe('heatmapColorScale', () => {
 
   it('returns correct bands at boundaries', () => {
     // Each band: 0, <0.2, <0.4, <0.6, <0.8, >=0.8
-    expect(heatmapColorScale(1, 100)).toBe('#F1F5F9'); // 0.01 is still less than 0.2
+    expect(heatmapColorScale(1, 100)).toBe('#BBF7D0'); // any non-zero value enters a green band
     // Wait, intensity=0.01, so it's <0.2 after the ===0 check
     expect(heatmapColorScale(19, 100)).toBe('#BBF7D0'); // 0.19 < 0.2
-    expect(heatmapColorScale(20, 100)).toBe('#BBF7D0'); // 0.2 - boundary
+    expect(heatmapColorScale(20, 100)).toBe('#86EFAC'); // 0.2 - second band
     expect(heatmapColorScale(39, 100)).toBe('#86EFAC'); // 0.39 < 0.4
     expect(heatmapColorScale(59, 100)).toBe('#4ADE80'); // 0.59 < 0.6
     expect(heatmapColorScale(79, 100)).toBe('#22C55E'); // 0.79 < 0.8
