@@ -1,19 +1,19 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
+import { DollarSign, TrendingUp } from 'lucide-react';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import { apiGet } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@foodflow/ui/empty-state';
-import { TrendingUp, DollarSign } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { RestaurantFinanceRevenueHistory, type RevenueHistoryRow } from './restaurant-finance-revenue-history';
 
 interface FinanceData {
-  revenueHistory: { date: string; revenue: number }[];
+  revenueHistory: RevenueHistoryRow[];
   payouts: { id: string; amount: number; status: string; period: string; createdAt: string }[];
   totalRevenue: number;
   pendingPayout: number;
@@ -27,7 +27,10 @@ const payoutStatusColors: Record<string, string> = {
   failed: 'bg-red-100 text-red-800',
 };
 
+const localizedPayoutStatuses = new Set(['pending', 'processing', 'completed', 'failed']);
+
 export default function RestaurantFinanceTab({ restaurantId }: { restaurantId: string }) {
+  const t = useTranslations('restaurantFinanceTab');
   const { data, isLoading } = useQuery<FinanceData>({
     queryKey: ['restaurant-finance', restaurantId],
     queryFn: () => apiGet<FinanceData>(`/admin/restaurants/${restaurantId}/finance`),
@@ -44,103 +47,100 @@ export default function RestaurantFinanceTab({ restaurantId }: { restaurantId: s
 
   if (!data) return null;
 
+  const statusLabel = (status: string) => {
+    return localizedPayoutStatuses.has(status) ? t(`statuses.${status}`) : status;
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tổng doanh thu</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold">{formatCurrency(data.totalRevenue)}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Chờ thanh toán</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-orange-500" />
-              <span className="text-2xl font-bold">{formatCurrency(data.pendingPayout)}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Kỳ thanh toán tiếp theo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-xl font-bold">{formatDate(data.nextPayoutDate)}</span>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title={t('totalRevenue')}
+          icon={<DollarSign className="h-5 w-5 text-green-500" />}
+          value={formatCurrency(data.totalRevenue)}
+        />
+        <MetricCard
+          title={t('pendingPayout')}
+          icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
+          value={formatCurrency(data.pendingPayout)}
+        />
+        <MetricCard title={t('nextPayoutDate')} value={formatDate(data.nextPayoutDate)} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Doanh thu 30 ngày</CardTitle>
+          <CardTitle className="text-base">{t('revenueHistoryTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.revenueHistory?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={data.revenueHistory}>
-                <defs>
-                  <linearGradient id="financeRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22C55E" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#22C55E" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(v: number) => [formatCurrency(v), 'Doanh thu']} />
-                <Area type="monotone" dataKey="revenue" stroke="#22C55E" fill="url(#financeRev)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <RestaurantFinanceRevenueHistory rows={data.revenueHistory} />
           ) : (
-            <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">Chưa có dữ liệu doanh thu</div>
+            <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+              {t('emptyRevenueHistory')}
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Lịch sử thanh toán</CardTitle>
+          <CardTitle className="text-base">{t('payoutHistoryTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {data.payouts?.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mã</TableHead>
-                  <TableHead>Số tiền</TableHead>
-                  <TableHead>Kỳ</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ngày</TableHead>
+                  <TableHead>{t('payoutColumns.id')}</TableHead>
+                  <TableHead>{t('payoutColumns.amount')}</TableHead>
+                  <TableHead>{t('payoutColumns.period')}</TableHead>
+                  <TableHead>{t('payoutColumns.status')}</TableHead>
+                  <TableHead>{t('payoutColumns.date')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.payouts.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono text-xs">{p.id.slice(0, 12)}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(p.amount)}</TableCell>
-                    <TableCell>{p.period}</TableCell>
+                {data.payouts.map((payout) => (
+                  <TableRow key={payout.id}>
+                    <TableCell className="font-mono text-xs">{payout.id.slice(0, 12)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
+                    <TableCell>{payout.period}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={payoutStatusColors[p.status] || ''}>{p.status}</Badge>
+                      <Badge variant="outline" className={payoutStatusColors[payout.status] || ''}>
+                        {statusLabel(payout.status)}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDate(p.createdAt)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(payout.createdAt)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <EmptyState icon={DollarSign} title="Chưa có thanh toán" description="Chưa có đợt thanh toán nào" />
+            <EmptyState
+              icon={DollarSign}
+              title={t('emptyPayoutTitle')}
+              description={t('emptyPayoutDescription')}
+            />
           )}
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function MetricCard({ title, icon, value }: { title: string; icon?: ReactNode; value: string }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-2xl font-bold">{value}</span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

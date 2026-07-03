@@ -316,6 +316,35 @@
     "previousPage": "Previous",
     "nextPage": "Next"
   },
+  "restaurantFinanceTab": {
+    "totalRevenue": "Total revenue",
+    "pendingPayout": "Pending payout",
+    "nextPayoutDate": "Next payout period",
+    "revenueHistoryTitle": "30-day revenue",
+    "revenueLabel": "Revenue",
+    "emptyRevenueHistory": "No revenue data yet",
+    "revenueHistoryTableCaption": "Revenue history data behind the chart",
+    "revenueColumns": {
+      "date": "Date",
+      "revenue": "Revenue"
+    },
+    "payoutHistoryTitle": "Payout history",
+    "payoutColumns": {
+      "id": "ID",
+      "amount": "Amount",
+      "period": "Period",
+      "status": "Status",
+      "date": "Date"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "emptyPayoutTitle": "No payouts yet",
+    "emptyPayoutDescription": "No payout batch has been created yet."
+  },
   "users": {
     "title": "User Management",
     "description": "List of users in the system",

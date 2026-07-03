@@ -316,6 +316,35 @@
     "previousPage": "Trước",
     "nextPage": "Sau"
   },
+  "restaurantFinanceTab": {
+    "totalRevenue": "Tổng doanh thu",
+    "pendingPayout": "Chờ thanh toán",
+    "nextPayoutDate": "Kỳ thanh toán tiếp theo",
+    "revenueHistoryTitle": "Doanh thu 30 ngày",
+    "revenueLabel": "Doanh thu",
+    "emptyRevenueHistory": "Chưa có dữ liệu doanh thu",
+    "revenueHistoryTableCaption": "Dữ liệu doanh thu phía sau biểu đồ",
+    "revenueColumns": {
+      "date": "Ngày",
+      "revenue": "Doanh thu"
+    },
+    "payoutHistoryTitle": "Lịch sử thanh toán",
+    "payoutColumns": {
+      "id": "Mã",
+      "amount": "Số tiền",
+      "period": "Kỳ",
+      "status": "Trạng thái",
+      "date": "Ngày"
+    },
+    "statuses": {
+      "pending": "Đang chờ",
+      "processing": "Đang xử lý",
+      "completed": "Hoàn tất",
+      "failed": "Thất bại"
+    },
+    "emptyPayoutTitle": "Chưa có thanh toán",
+    "emptyPayoutDescription": "Chưa có đợt thanh toán nào được tạo."
+  },
   "users": {
     "title": "Quản lý người dùng",
     "description": "Danh sách người dùng trong hệ thống",

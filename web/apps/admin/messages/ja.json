@@ -316,6 +316,35 @@
     "previousPage": "前へ",
     "nextPage": "次へ"
   },
+  "restaurantFinanceTab": {
+    "totalRevenue": "総売上",
+    "pendingPayout": "未払い精算",
+    "nextPayoutDate": "次回精算期間",
+    "revenueHistoryTitle": "30日間の売上",
+    "revenueLabel": "売上",
+    "emptyRevenueHistory": "売上データはまだありません",
+    "revenueHistoryTableCaption": "チャートの元となる売上履歴データ",
+    "revenueColumns": {
+      "date": "日付",
+      "revenue": "売上"
+    },
+    "payoutHistoryTitle": "精算履歴",
+    "payoutColumns": {
+      "id": "ID",
+      "amount": "金額",
+      "period": "期間",
+      "status": "ステータス",
+      "date": "日付"
+    },
+    "statuses": {
+      "pending": "保留中",
+      "processing": "処理中",
+      "completed": "完了",
+      "failed": "失敗"
+    },
+    "emptyPayoutTitle": "精算はまだありません",
+    "emptyPayoutDescription": "精算バッチはまだ作成されていません。"
+  },
   "users": {
     "title": "ユーザー管理",
     "description": "システム内のユーザー一覧",
