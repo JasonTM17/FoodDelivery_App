@@ -19,17 +19,17 @@ git diff --stat HEAD...<branch>
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `origin/codex/batch4-integration` | `d165abd` | Active integration branch. | Keep and continue focused commits here. |
-| `origin/batch4-integration` | `032a6c0` | Ancestor of `codex/batch4-integration`; no files differ with `HEAD...origin/batch4-integration`. | Superseded by `codex/batch4-integration`; do not raw-merge. Safe cleanup only after backup and explicit approval. |
-| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; no files differ with `HEAD...origin/master`. | Historical remote baseline; keep until release/PR policy decides otherwise. |
+| `origin/codex/batch4-integration` | `79cf9c1` | Active integration branch; `HeadUnique=0`, `PatchUnique=0` after push. | Keep and continue focused commits here. |
+| `origin/batch4-integration` | `032a6c0` | Ancestor of `codex/batch4-integration`; `HeadUnique=0`, `PatchUnique=0`; no files differ with `HEAD...origin/batch4-integration`. | Superseded by `codex/batch4-integration`; do not raw-merge. Safe cleanup only after backup and explicit approval. |
+| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HeadUnique=0`, `PatchUnique=0`; no files differ with `HEAD...origin/master`. | Historical remote baseline; keep until release/PR policy decides otherwise. |
 
 ## Local heads
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `d165abd` | Current working branch, tracking `origin/codex/batch4-integration`. | Active. |
-| `batch4-integration` | `032a6c0` | Ancestor of current branch; same commit as `origin/batch4-integration`. | Superseded by current branch. |
-| `master` | `4fb2799` | Ancestor of current branch; no files differ with `HEAD...master`. | Local historical branch. Do not use as Batch 4 target. |
+| `codex/batch4-integration` | `79cf9c1` | Current working branch, tracking `origin/codex/batch4-integration`; worktree clean after push. | Active. |
+| `batch4-integration` | `032a6c0` | Ancestor of current branch; same commit as `origin/batch4-integration`; `HeadUnique=0`, `PatchUnique=0`. | Superseded by current branch. |
+| `master` | `4fb2799` | Ancestor of current branch; `HeadUnique=0`, `PatchUnique=0`; no files differ with `HEAD...master`. Checked out in another worktree, so Batch 4 work did not switch or mutate it. | Local historical branch. Do not use as Batch 4 target. |
 
 ## Missing branch refs
 
@@ -47,4 +47,4 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Current conclusion
 
-No branch merge is required from the branch refs currently available. Batch 4 integration already contains all commits reachable from the live remote/local branch heads listed above. Mobile Violet/Indigo reconciliation remains pending because no such branch refs are available in `origin` at this audit point.
+No branch merge is required from the branch refs currently available. Batch 4 integration already contains all commits reachable from the live remote/local branch heads listed above as of `79cf9c1`. Mobile Violet/Indigo reconciliation remains pending because no such branch refs are available in `origin` at this audit point.
