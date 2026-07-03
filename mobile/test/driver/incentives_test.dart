@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:foodflow_customer/driver/providers/incentives_provider.dart';
 import 'package:foodflow_customer/driver/screens/incentives_screen.dart';
 import 'package:foodflow_customer/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -10,17 +11,56 @@ import 'package:go_router/go_router.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
+const _testIncentives = DriverIncentives(
+  active: [
+    DriverIncentive(
+      id: 'active-1',
+      title: 'Giao 20 đơn trong tuần',
+      rewardAmount: 120000,
+      progress: 12,
+      target: 20,
+      endsAt: '2026-07-10T00:00:00.000Z',
+      completed: false,
+    ),
+    DriverIncentive(
+      id: 'active-2',
+      title: 'Giờ cao điểm tối nay',
+      rewardAmount: 50000,
+      progress: 5,
+      target: 4,
+      endsAt: '2026-07-03T23:00:00.000Z',
+      completed: false,
+    ),
+  ],
+  completed: [
+    DriverIncentive(
+      id: 'completed-1',
+      title: 'Giao 50 đơn tháng 5',
+      rewardAmount: 300000,
+      progress: 50,
+      target: 50,
+      endsAt: '2026-05-31T23:59:59.000Z',
+      completed: true,
+    ),
+  ],
+);
+
 Widget _wrap() {
   final router = GoRouter(
     initialLocation: '/',
     routes: [GoRoute(path: '/', builder: (_, __) => const IncentivesScreen())],
   );
   return ProviderScope(
+    overrides: [
+      driverIncentivesProvider.overrideWith((ref) async => _testIncentives),
+    ],
     child: MaterialApp.router(
       routerConfig: router,
+      locale: const Locale('vi'),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,

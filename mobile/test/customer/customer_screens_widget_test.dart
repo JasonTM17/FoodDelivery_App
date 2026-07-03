@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:foodflow_customer/customer/screens/login_screen.dart';
 import 'package:foodflow_customer/customer/screens/notifications_screen.dart';
 import 'package:foodflow_customer/customer/screens/cart_screen.dart';
-import 'package:foodflow_customer/customer/screens/profile_screen.dart';
+import 'package:foodflow_customer/l10n/app_localizations.dart';
 import 'package:foodflow_customer/shared/providers/auth_provider.dart';
-import 'package:foodflow_customer/shared/providers/cart_provider.dart';
 import 'package:foodflow_customer/customer/providers/notification_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -17,7 +17,12 @@ import 'package:foodflow_customer/customer/providers/notification_provider.dart'
 Widget _wrap(Widget child, {List<Override>? overrides}) {
   return ProviderScope(
     overrides: overrides ?? const [],
-    child: MaterialApp(home: child),
+    child: MaterialApp(
+      locale: const Locale('vi'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: child,
+    ),
   );
 }
 
@@ -25,7 +30,8 @@ Widget _wrap(Widget child, {List<Override>? overrides}) {
 class _FakeAuthNotifier extends AuthNotifier {
   final AuthState preset;
   _FakeAuthNotifier(this.preset) {
-    state = preset; // StateNotifier.state setter is protected, accessible to subclass
+    state =
+        preset; // StateNotifier.state setter is protected, accessible to subclass
   }
 
   @override
@@ -69,7 +75,9 @@ class _FakeNotifNotifier extends NotificationNotifier {
 
 void main() {
   group('LoginScreen', () {
-    testWidgets('renders email, password fields and submit button', (tester) async {
+    testWidgets('renders email, password fields and submit button', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const LoginScreen()));
       await tester.pump();
 
@@ -77,7 +85,9 @@ void main() {
       expect(find.text('Đăng nhập'), findsWidgets);
     });
 
-    testWidgets('shows validation error when fields are empty on submit', (tester) async {
+    testWidgets('shows validation error when fields are empty on submit', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const LoginScreen()));
       await tester.pump();
 
@@ -90,14 +100,17 @@ void main() {
       expect(find.text('Vui lòng nhập email'), findsOneWidget);
     });
 
-    testWidgets('displays auth error banner from provider state', (tester) async {
+    testWidgets('displays auth error banner from provider state', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const LoginScreen(),
           overrides: [
-            authProvider.overrideWith((ref) => _FakeAuthNotifier(
-                  const AuthState(error: 'Sai mật khẩu'),
-                )),
+            authProvider.overrideWith(
+              (ref) =>
+                  _FakeAuthNotifier(const AuthState(error: 'Sai mật khẩu')),
+            ),
           ],
         ),
       );
@@ -107,12 +120,25 @@ void main() {
     });
 
     testWidgets('register link navigates away', (tester) async {
+      final router = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
+          GoRoute(
+            path: '/register',
+            builder: (context, state) =>
+                const Scaffold(body: Text('RegisterPage')),
+          ),
+        ],
+      );
+
       await tester.pumpWidget(
-        MaterialApp(
-          routes: {
-            '/register': (_) => const Scaffold(body: Text('RegisterPage')),
-          },
-          home: ProviderScope(child: const LoginScreen()),
+        ProviderScope(
+          child: MaterialApp.router(
+            locale: const Locale('vi'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
         ),
       );
       await tester.pump();
@@ -134,9 +160,10 @@ void main() {
         _wrap(
           const NotificationsScreen(),
           overrides: [
-            notificationProvider.overrideWith((ref) => _FakeNotifNotifier(
-                  const NotificationState(isLoading: true),
-                )),
+            notificationProvider.overrideWith(
+              (ref) =>
+                  _FakeNotifNotifier(const NotificationState(isLoading: true)),
+            ),
           ],
         ),
       );
@@ -151,9 +178,9 @@ void main() {
         _wrap(
           const NotificationsScreen(),
           overrides: [
-            notificationProvider.overrideWith((ref) => _FakeNotifNotifier(
-                  const NotificationState(),
-                )),
+            notificationProvider.overrideWith(
+              (ref) => _FakeNotifNotifier(const NotificationState()),
+            ),
           ],
         ),
       );
@@ -177,9 +204,10 @@ void main() {
         _wrap(
           const NotificationsScreen(),
           overrides: [
-            notificationProvider.overrideWith((ref) => _FakeNotifNotifier(
-                  NotificationState(notifications: [notif]),
-                )),
+            notificationProvider.overrideWith(
+              (ref) =>
+                  _FakeNotifNotifier(NotificationState(notifications: [notif])),
+            ),
           ],
         ),
       );

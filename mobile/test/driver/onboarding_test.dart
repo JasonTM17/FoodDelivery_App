@@ -12,28 +12,33 @@ import 'package:go_router/go_router.dart';
 // ---------------------------------------------------------------------------
 
 GoRouter _vehicleRouter() => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => const OnboardingVehicleScreen()),
-        GoRoute(path: '/onboarding-documents', builder: (_, __) => const Scaffold()),
-      ],
-    );
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => const OnboardingVehicleScreen()),
+    GoRoute(
+      path: '/onboarding-documents',
+      builder: (_, __) => const Scaffold(),
+    ),
+  ],
+);
 
 GoRouter _agreementRouter() => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => const OnboardingAgreementScreen()),
-        GoRoute(path: '/kyc', builder: (_, __) => const Scaffold()),
-      ],
-    );
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => const OnboardingAgreementScreen()),
+    GoRoute(path: '/kyc', builder: (_, __) => const Scaffold()),
+  ],
+);
 
 Widget _wrap(GoRouter router) {
   return ProviderScope(
     child: MaterialApp.router(
       routerConfig: router,
+      locale: const Locale('vi'),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
@@ -88,10 +93,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Enter plate number
-      await tester.enterText(
-        find.byType(TextFormField),
-        '51A-12345',
-      );
+      await tester.enterText(find.byType(TextFormField), '51A-12345');
       await tester.tap(find.text('Tiếp theo'));
       await tester.pumpAndSettle();
 
@@ -113,7 +115,9 @@ void main() {
       expect(find.byType(SingleChildScrollView), findsWidgets);
     });
 
-    testWidgets('submit button disabled when checkbox unchecked', (tester) async {
+    testWidgets('submit button disabled when checkbox unchecked', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(_agreementRouter()));
       await tester.pumpAndSettle();
 
@@ -121,7 +125,9 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    testWidgets('submit button enabled after checking agreement', (tester) async {
+    testWidgets('submit button enabled after checking agreement', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(_agreementRouter()));
       await tester.pumpAndSettle();
 

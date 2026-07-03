@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/driver/screens/home_screen.dart';
+import 'package:foodflow_customer/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 // ---------------------------------------------------------------------------
@@ -15,7 +17,6 @@ class _FakeDriverNotifier extends DriverNotifier {
 
   _FakeDriverNotifier(this._initial);
 
-  @override
   void initState() {
     state = _initial;
   }
@@ -45,21 +46,32 @@ class _FakeDriverNotifier extends DriverNotifier {
 // ---------------------------------------------------------------------------
 
 GoRouter _router() => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/delivery-flow', builder: (_, __) => const Scaffold()),
-        GoRoute(path: '/notifications', builder: (_, __) => const Scaffold()),
-      ],
-    );
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+    GoRoute(path: '/delivery-flow', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/notifications', builder: (_, __) => const Scaffold()),
+  ],
+);
 
 Widget _buildHome(DriverState state) {
   return ProviderScope(
     overrides: [
-      driverProvider
-          .overrideWith((ref) => _FakeDriverNotifier(state)..state = state),
+      driverProvider.overrideWith(
+        (ref) => _FakeDriverNotifier(state)..state = state,
+      ),
     ],
-    child: MaterialApp.router(routerConfig: _router()),
+    child: MaterialApp.router(
+      routerConfig: _router(),
+      locale: const Locale('vi'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+    ),
   );
 }
 
@@ -71,30 +83,34 @@ void main() {
   group('HomeScreen — empty state', () {
     testWidgets('renders without error', (tester) async {
       await tester.pumpWidget(
-          _buildHome(const DriverState(isAuthenticated: true)));
+        _buildHome(const DriverState(isAuthenticated: true)),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('shows FoodFlow Driver app bar title', (tester) async {
       await tester.pumpWidget(
-          _buildHome(const DriverState(isAuthenticated: true)));
+        _buildHome(const DriverState(isAuthenticated: true)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('FoodFlow Driver'), findsOneWidget);
     });
 
     testWidgets('shows Hôm nay section header', (tester) async {
       await tester.pumpWidget(
-          _buildHome(const DriverState(isAuthenticated: true)));
+        _buildHome(const DriverState(isAuthenticated: true)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Hôm nay'), findsOneWidget);
     });
 
-    testWidgets('shows empty-orders message when pendingOrders is empty',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        const DriverState(isAuthenticated: true, pendingOrders: []),
-      ));
+    testWidgets('shows empty-orders message when pendingOrders is empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(const DriverState(isAuthenticated: true, pendingOrders: [])),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Chưa có đơn hàng nào'), findsOneWidget);
     });
@@ -103,14 +119,16 @@ void main() {
   group('HomeScreen — online/offline toggle', () {
     testWidgets('shows "Đang trực tuyến" when isOnline=true', (tester) async {
       await tester.pumpWidget(
-          _buildHome(const DriverState(isAuthenticated: true, isOnline: true)));
+        _buildHome(const DriverState(isAuthenticated: true, isOnline: true)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Đang trực tuyến'), findsOneWidget);
     });
 
     testWidgets('shows "Đang ngoại tuyến" when isOnline=false', (tester) async {
-      await tester.pumpWidget(_buildHome(
-          const DriverState(isAuthenticated: true, isOnline: false)));
+      await tester.pumpWidget(
+        _buildHome(const DriverState(isAuthenticated: true, isOnline: false)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Đang ngoại tuyến'), findsOneWidget);
     });

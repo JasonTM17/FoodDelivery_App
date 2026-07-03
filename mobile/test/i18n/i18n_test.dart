@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,17 @@ import 'package:foodflow_customer/shared/providers/locale_provider.dart';
 
 // NOTE: These tests require `flutter gen-l10n` to be run first.
 // Run: cd mobile && flutter pub get && flutter gen-l10n
+
+Future<void> _pumpLocaleFrame(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 16));
+}
+
+void _setLocaleForWidgetTest(WidgetRef ref, Locale locale) {
+  // LocaleNotifier updates state synchronously before persisting to storage.
+  // Widget tests only need the render update, not the platform storage write.
+  unawaited(ref.read(localeProvider.notifier).setLocale(locale));
+}
 
 void main() {
   group('locale_provider state', () {
@@ -21,7 +34,9 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      await container.read(localeProvider.notifier).setLocale(const Locale('en'));
+      await container
+          .read(localeProvider.notifier)
+          .setLocale(const Locale('en'));
 
       expect(container.read(localeProvider).languageCode, equals('en'));
     });
@@ -30,14 +45,18 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      await container.read(localeProvider.notifier).setLocale(const Locale('ja'));
+      await container
+          .read(localeProvider.notifier)
+          .setLocale(const Locale('ja'));
 
       expect(container.read(localeProvider).languageCode, equals('ja'));
     });
   });
 
   group('rendered strings change on locale switch', () {
-    testWidgets('defaults to Vietnamese — loginTitle is Đăng nhập', (tester) async {
+    testWidgets('defaults to Vietnamese — loginTitle is Đăng nhập', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: Consumer(
@@ -50,7 +69,7 @@ void main() {
                 home: Scaffold(
                   body: Builder(
                     builder: (ctx) => Text(
-                      AppLocalizations.of(ctx)!.loginTitle,
+                      AppLocalizations.of(ctx).loginTitle,
                       key: const Key('login_title'),
                     ),
                   ),
@@ -60,12 +79,14 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
 
       expect(find.text('Đăng nhập'), findsOneWidget);
     });
 
-    testWidgets('switching to English updates loginTitle to Login', (tester) async {
+    testWidgets('switching to English updates loginTitle to Login', (
+      tester,
+    ) async {
       late WidgetRef capturedRef;
 
       await tester.pumpWidget(
@@ -81,7 +102,7 @@ void main() {
                 home: Scaffold(
                   body: Builder(
                     builder: (ctx) => Text(
-                      AppLocalizations.of(ctx)!.loginTitle,
+                      AppLocalizations.of(ctx).loginTitle,
                       key: const Key('login_title'),
                     ),
                   ),
@@ -91,22 +112,22 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
 
       // Initial locale is Vietnamese
       expect(find.text('Đăng nhập'), findsOneWidget);
 
       // Switch locale to English
-      await capturedRef
-          .read(localeProvider.notifier)
-          .setLocale(const Locale('en'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
 
       expect(find.text('Login'), findsOneWidget);
       expect(find.text('Đăng nhập'), findsNothing);
     });
 
-    testWidgets('switching to Japanese updates loginTitle to ログイン', (tester) async {
+    testWidgets('switching to Japanese updates loginTitle to ログイン', (
+      tester,
+    ) async {
       late WidgetRef capturedRef;
 
       await tester.pumpWidget(
@@ -122,7 +143,7 @@ void main() {
                 home: Scaffold(
                   body: Builder(
                     builder: (ctx) => Text(
-                      AppLocalizations.of(ctx)!.loginTitle,
+                      AppLocalizations.of(ctx).loginTitle,
                       key: const Key('login_title'),
                     ),
                   ),
@@ -132,37 +153,16 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
 
-      await capturedRef
-          .read(localeProvider.notifier)
-          .setLocale(const Locale('ja'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
 
       expect(find.text('ログイン'), findsOneWidget);
     });
   });
 
   group('batch-2 keys — cart/checkout/review/driver_nav', () {
-    Widget _buildLocaleApp(WidgetRef Function(WidgetRef) capture, Widget Function(BuildContext) body) {
-      late WidgetRef capturedRef;
-      return ProviderScope(
-        child: Consumer(
-          builder: (context, ref, _) {
-            capturedRef = ref;
-            capture(ref);
-            final locale = ref.watch(localeProvider);
-            return MaterialApp(
-              locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(body: Builder(builder: body)),
-            );
-          },
-        ),
-      );
-    }
-
     testWidgets('cartTitle switches across all 3 locales', (tester) async {
       late WidgetRef capturedRef;
 
@@ -178,7 +178,7 @@ void main() {
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: Builder(
-                    builder: (ctx) => Text(AppLocalizations.of(ctx)!.cartTitle),
+                    builder: (ctx) => Text(AppLocalizations.of(ctx).cartTitle),
                   ),
                 ),
               );
@@ -186,15 +186,15 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
       expect(find.text('Giỏ hàng'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('en'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('Cart'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('ja'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('カート'), findsOneWidget);
     });
 
@@ -213,7 +213,8 @@ void main() {
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: Builder(
-                    builder: (ctx) => Text(AppLocalizations.of(ctx)!.reviewTitle),
+                    builder: (ctx) =>
+                        Text(AppLocalizations.of(ctx).reviewTitle),
                   ),
                 ),
               );
@@ -221,15 +222,15 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
       expect(find.text('Đánh giá đơn hàng'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('en'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('Rate your order'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('ja'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('注文を評価する'), findsOneWidget);
     });
 
@@ -248,7 +249,8 @@ void main() {
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: Builder(
-                    builder: (ctx) => Text(AppLocalizations.of(ctx)!.driverNavTitle),
+                    builder: (ctx) =>
+                        Text(AppLocalizations.of(ctx).driverNavTitle),
                   ),
                 ),
               );
@@ -256,21 +258,23 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
       expect(find.text('Giao hàng'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('en'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('Delivery'), findsOneWidget);
 
-      await capturedRef.read(localeProvider.notifier).setLocale(const Locale('ja'));
-      await tester.pumpAndSettle();
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
       expect(find.text('配達'), findsOneWidget);
     });
   });
 
   group('placeholder keys', () {
-    testWidgets('cartPromoApplied renders with code placeholder', (tester) async {
+    testWidgets('cartPromoApplied renders with code placeholder', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: Consumer(
@@ -283,7 +287,7 @@ void main() {
                 home: Scaffold(
                   body: Builder(
                     builder: (ctx) => Text(
-                      AppLocalizations.of(ctx)!.cartPromoApplied('SAVE20'),
+                      AppLocalizations.of(ctx).cartPromoApplied('SAVE20'),
                     ),
                   ),
                 ),
@@ -292,11 +296,13 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
       expect(find.text('Đã áp dụng mã SAVE20'), findsOneWidget);
     });
 
-    testWidgets('orderHistoryTabActive renders with count placeholder', (tester) async {
+    testWidgets('orderHistoryTabActive renders with count placeholder', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: Consumer(
@@ -308,9 +314,8 @@ void main() {
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: Builder(
-                    builder: (ctx) => Text(
-                      AppLocalizations.of(ctx)!.orderHistoryTabActive(3),
-                    ),
+                    builder: (ctx) =>
+                        Text(AppLocalizations.of(ctx).orderHistoryTabActive(3)),
                   ),
                 ),
               );
@@ -318,7 +323,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpLocaleFrame(tester);
       expect(find.text('Đang hoạt động (3)'), findsOneWidget);
     });
   });

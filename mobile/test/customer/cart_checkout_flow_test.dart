@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:foodflow_customer/customer/screens/checkout_screen.dart';
 import 'package:foodflow_customer/customer/screens/review_screen.dart';
+import 'package:foodflow_customer/customer/providers/address_provider.dart';
 import 'package:foodflow_customer/customer/providers/notification_provider.dart';
+import 'package:foodflow_customer/l10n/app_localizations.dart';
 import 'package:foodflow_customer/shared/providers/cart_provider.dart';
 import 'package:foodflow_customer/shared/providers/order_provider.dart';
 
@@ -15,8 +17,23 @@ import 'package:foodflow_customer/shared/providers/order_provider.dart';
 Widget _wrap(Widget child, {List<Override>? overrides}) {
   return ProviderScope(
     overrides: overrides ?? const [],
-    child: MaterialApp(home: child),
+    child: MaterialApp(
+      locale: const Locale('vi'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: child,
+    ),
   );
+}
+
+class _NoopAddressNotifier extends AddressNotifier {
+  @override
+  Future<void> fetchAddresses() async {}
+}
+
+class _NoopOrderNotifier extends OrderNotifier {
+  @override
+  Future<void> fetchOrderDetail(String orderId) async {}
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +139,14 @@ void main() {
 
   group('CheckoutScreen', () {
     testWidgets('shows empty cart message when cart is empty', (tester) async {
-      await tester.pumpWidget(_wrap(const CheckoutScreen()));
+      await tester.pumpWidget(
+        _wrap(
+          const CheckoutScreen(),
+          overrides: [
+            addressProvider.overrideWith((ref) => _NoopAddressNotifier()),
+          ],
+        ),
+      );
       await tester.pump();
 
       expect(find.text('Giỏ hàng trống'), findsOneWidget);
@@ -136,7 +160,12 @@ void main() {
   group('ReviewScreen', () {
     testWidgets('renders rating bars and submit button', (tester) async {
       await tester.pumpWidget(
-        _wrap(const ReviewScreen(orderId: 'order-123')),
+        _wrap(
+          const ReviewScreen(orderId: 'order-123'),
+          overrides: [
+            orderProvider.overrideWith((ref) => _NoopOrderNotifier()),
+          ],
+        ),
       );
       await tester.pump();
 
