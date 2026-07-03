@@ -109,12 +109,14 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 
 ## WebSocket authentication and room authorization
 
-- The `/events` and `/tracking` Socket.IO namespaces require the current bearer access token in `handshake.auth.token` or the `Authorization` header.
+- The `/events`, `/tracking`, `/notifications`, and `/dispatch` Socket.IO namespaces require the current bearer access token in `handshake.auth.token` or the `Authorization` header.
 - Refresh tokens, expired tokens, invalid signatures, and inactive users are rejected before a room can be joined.
 - `/events` admin rooms require the database-backed `admin` role.
 - Restaurant rooms require an active restaurant profile for the requested tenant.
 - Order rooms require an admin or an order participant: the customer, assigned driver, or active restaurant staff member.
 - `/tracking` accepts driver location updates only from an authenticated `driver` account.
+- `/notifications` derives the user room from the verified token; clients cannot select another user's room.
+- `/dispatch` accepts only `driver` accounts, joins only `driver:<authenticated-user-id>`, and rejects offer responses whose driver ID differs from the authenticated user.
 - Production origins come from `CORS_ORIGINS`; local defaults cover ports 3000, 3002, and 3003.
 
 ## HMAC conventions

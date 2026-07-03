@@ -66,6 +66,8 @@ Realtime security regression では次も確認します。
 - Restaurant は別 tenant の room に join できない。
 - Customer、driver、restaurant staff は無関係な order room に join できない。
 - 認証済み driver account のみ GPS update を送信できる。
+- Notification client は別 user として subscribe または mutation できない。
+- Dispatch offer room と accept/reject は認証済み driver ID に紐付く。
 - Admin/Restaurant web client は reconnect 時に最新 access token を送信する。
 
 ## Accessibility and visual QA

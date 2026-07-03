@@ -94,12 +94,14 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 
 ## Xác thực WebSocket và phân quyền phòng
 
-- Các namespace Socket.IO `/events` và `/tracking` yêu cầu bearer access token hiện tại trong `handshake.auth.token` hoặc header `Authorization`.
+- Các namespace Socket.IO `/events`, `/tracking`, `/notifications` và `/dispatch` yêu cầu bearer access token hiện tại trong `handshake.auth.token` hoặc header `Authorization`.
 - Refresh token, token hết hạn, chữ ký sai và user đã bị vô hiệu hóa đều bị từ chối trước khi join phòng.
 - Phòng Admin trên `/events` yêu cầu role `admin` được đọc lại từ database.
 - Phòng nhà hàng yêu cầu restaurant profile đang active và thuộc đúng tenant được yêu cầu.
 - Phòng đơn hàng chỉ cho admin hoặc người tham gia đơn: khách hàng, tài xế được gán, hoặc nhân viên nhà hàng đang active.
 - `/tracking` chỉ nhận cập nhật vị trí từ tài khoản `driver` đã xác thực.
+- `/notifications` suy ra phòng user từ token đã verify; client không được tự chọn phòng của user khác.
+- `/dispatch` chỉ nhận tài khoản `driver`, chỉ join `driver:<authenticated-user-id>` và từ chối phản hồi offer có driver ID khác user đã xác thực.
 - Production origin lấy từ `CORS_ORIGINS`; mặc định local hỗ trợ các port 3000, 3002 và 3003.
 
 ## Quy ước HMAC

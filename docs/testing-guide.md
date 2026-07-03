@@ -84,6 +84,8 @@ Realtime security regression coverage must also verify:
 - Restaurants cannot join another tenant's room.
 - Customers, drivers, and restaurant staff cannot join unrelated order rooms.
 - Only authenticated drivers can publish GPS updates.
+- Notification clients cannot subscribe or mutate data as another user.
+- Dispatch offer rooms and accept/reject actions are bound to the authenticated driver ID.
 - Admin and Restaurant web clients send the latest access token during reconnect.
 
 ## Accessibility and Visual QA

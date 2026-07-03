@@ -8,9 +8,10 @@ import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
 import { RedisModule } from '../redis/redis.module'
+import { AuthModule } from '../auth/auth.module'
 
 @Module({
-  imports: [BullModule.registerQueue({ name: 'dispatch' }), RedisModule],
+  imports: [AuthModule, BullModule.registerQueue({ name: 'dispatch' }), RedisModule],
   providers: [
     DispatchService,
     DispatchProcessor,

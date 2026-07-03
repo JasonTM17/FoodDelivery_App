@@ -66,6 +66,8 @@ Regression bảo mật realtime cũng phải kiểm tra:
 - Nhà hàng không thể join phòng của tenant khác.
 - Khách hàng, tài xế và nhân viên nhà hàng không thể join phòng đơn hàng không liên quan.
 - Chỉ tài khoản driver đã xác thực mới được gửi cập nhật GPS.
+- Client notification không thể subscribe hoặc sửa dữ liệu dưới danh nghĩa user khác.
+- Phòng offer dispatch và thao tác accept/reject phải gắn với driver ID đã xác thực.
 - Web Admin và Restaurant gửi access token mới nhất khi reconnect.
 
 ## Accessibility và visual QA

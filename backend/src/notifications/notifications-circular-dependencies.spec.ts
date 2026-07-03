@@ -1,5 +1,5 @@
-import { JwtService } from '@nestjs/jwt'
 import { Test } from '@nestjs/testing'
+import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { PrismaService } from '../database/prisma.service'
 import { FcmChannel } from './channels/fcm.channel'
 import { InAppChannel } from './channels/in-app.channel'
@@ -16,7 +16,7 @@ describe('Notifications dependency graph', () => {
         NotificationsGateway,
         NotificationsService,
         InAppChannel,
-        { provide: JwtService, useValue: { verify: jest.fn() } },
+        { provide: WebSocketAuthService, useValue: { authenticate: jest.fn() } },
         { provide: PrismaService, useValue: {} },
         { provide: 'REDIS_CLIENT', useValue: {} },
         { provide: TemplateLoader, useValue: {} },

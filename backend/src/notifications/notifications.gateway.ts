@@ -8,10 +8,9 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { JwtService } from '@nestjs/jwt'
 import { forwardRef, Inject, Logger } from '@nestjs/common'
 import { NotificationsService } from './notifications.service'
-import { JwtPayload } from '../auth/jwt-payload.interface'
+import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
 
 @WebSocketGateway({
@@ -25,31 +24,20 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   private readonly logger = new Logger(NotificationsGateway.name)
 
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly socketAuth: WebSocketAuthService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     try {
-      const token =
-        client.handshake.auth?.token ??
-        client.handshake.headers?.authorization?.replace('Bearer ', '')
-
-      if (!token) {
-        this.logger.warn(`WebSocket connection rejected: no token (socket ${client.id})`)
-        client.disconnect(true)
-        return
-      }
-
-      const payload: JwtPayload = this.jwtService.verify(token)
-      client.data.user = { sub: payload.sub, role: payload.role }
+      const user = await this.socketAuth.authenticate(client)
 
       // Join user-specific notification room
-      const room = `user:${payload.sub}:notifications`
+      const room = `user:${user.sub}:notifications`
       client.join(room)
 
-      this.logger.log(`User ${payload.sub} connected to notifications (socket ${client.id})`)
+      this.logger.log(`User ${user.sub} connected to notifications (socket ${client.id})`)
     } catch {
       this.logger.warn(`WebSocket connection rejected: invalid token (socket ${client.id})`)
       client.disconnect(true)
