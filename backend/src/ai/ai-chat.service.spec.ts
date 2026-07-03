@@ -41,6 +41,7 @@ describe('AiChatService', () => {
     }[key] ?? defaultValue))
     i18n.t.mockImplementation((key: string) => ({
       'ai_templates.greeting': 'Hello from FoodFlow AI',
+      'ai_templates.thank_you': 'Always happy to help.',
       'ai_templates.fallback': 'Fallback reply',
       'ai_templates.service_unavailable': 'AI service unavailable',
     })[key] ?? key)
@@ -75,6 +76,26 @@ describe('AiChatService', () => {
       expect.objectContaining({ role: 'user', content: 'hello' }),
       expect.objectContaining({ role: 'assistant', content: 'Hello from FoodFlow AI' }),
     ]))
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('answers Vietnamese fast-path greetings from templates without calling providers', async () => {
+    const result = await service.createReply({ message: 'xin ch\u00e0o', sessionId: 'session-vi' }, user)
+
+    expect(result).toMatchObject({ action: 'answered', reply: 'Hello from FoodFlow AI', sessionId: 'session-vi' })
+    expect(memory.appendBatch).toHaveBeenCalledWith('session-vi', expect.arrayContaining([
+      expect.objectContaining({ role: 'user', content: 'xin ch\u00e0o' }),
+      expect.objectContaining({ role: 'assistant', content: 'Hello from FoodFlow AI' }),
+    ]))
+    expect(deepSeek.createReply).not.toHaveBeenCalled()
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('answers Vietnamese thank-you fast-path messages from templates without calling providers', async () => {
+    const result = await service.createReply({ message: 'c\u1ea3m \u01a1n b\u1ea1n', sessionId: 'session-thanks' }, user)
+
+    expect(result).toMatchObject({ action: 'answered', reply: 'Always happy to help.', sessionId: 'session-thanks' })
+    expect(deepSeek.createReply).not.toHaveBeenCalled()
     expect(global.fetch).not.toHaveBeenCalled()
   })
 

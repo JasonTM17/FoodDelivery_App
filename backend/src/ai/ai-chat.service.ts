@@ -10,10 +10,10 @@ import { SentimentDetectionService } from './sentiment-detection.service'
 type FastPathKey = 'greeting' | 'thank_you' | 'app_error_hint' | 'faq_hint'
 
 const FAST_PATH: [RegExp, FastPathKey][] = [
-  [/^(xin\s*chào|hello|hi\b|chào\s*bạn|hey\b)/i, 'greeting'],
-  [/cảm\s*ơn|thank\s*(you|u)\b/i, 'thank_you'],
-  [/app.*lỗi|ứng\s*dụng.*không\s*(mở|chạy|hoạt)/i, 'app_error_hint'],
-  [/faq|câu\s*hỏi\s*thường\s*gặp|hướng\s*dẫn\s*dùng/i, 'faq_hint'],
+  [/^(xin\s*ch\u00e0o|hello|hi\b|ch\u00e0o\s*b\u1ea1n|hey\b)/i, 'greeting'],
+  [/\bc\u1ea3m\s*\u01a1n\b|thank\s*(you|u)\b/i, 'thank_you'],
+  [/app.*l\u1ed7i|\u1ee9ng\s*d\u1ee5ng.*kh\u00f4ng\s*(m\u1edf|ch\u1ea1y|ho\u1ea1t)/i, 'app_error_hint'],
+  [/faq|c\u00e2u\s*h\u1ecfi\s*th\u01b0\u1eddng\s*g\u1eb7p|h\u01b0\u1edbng\s*d\u1eabn\s*d\u00f9ng/i, 'faq_hint'],
 ]
 
 export interface AiChatRequest {
@@ -49,7 +49,7 @@ export class AiChatService {
     }
 
     if (this.outputFilter.containsInjection(message)) {
-      this.logger.warn(`Injection in user message — userId: ${userId}`)
+      this.logger.warn(`Injection in user message -- userId: ${userId}`)
       throw new HttpException('INVALID_INPUT', HttpStatus.BAD_REQUEST)
     }
   }
