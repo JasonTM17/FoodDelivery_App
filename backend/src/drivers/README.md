@@ -12,6 +12,7 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `POST /driver/offline`
 - `GET /driver/earnings?period=day|week|month` — Earnings breakdown
 - `GET /driver/heatmap?lat=...&lng=...&radius=...&window=now|1h|3h|today` — Real demand heatmap near driver location
+- `GET /driver/incentives` — Driver incentive campaigns; returns empty arrays when no campaign source is configured
 - `POST /driver/kyc/upload` — Submit KYC documents
 - `GET /admin/drivers/pending-kyc` — Admin approval queue
 - `POST /admin/drivers/:id/approve-kyc`

@@ -435,6 +435,8 @@
     "placeholders": { "amount": { "type": "String" } }
   },
   "driver_incentives_empty": "No incentives available",
+  "driver_incentives_error": "Unable to load incentives",
+  "driver_incentives_retry": "Retry",
   "driver_incentives_expires": "Expires: {date}",
   "@driver_incentives_expires": {
     "placeholders": { "date": { "type": "String" } }

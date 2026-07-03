@@ -207,6 +207,9 @@ Get real demand heatmap points near the authenticated driver's location.
 Query: lat, lng, radius, window (now|1h|3h|today)
 ```
 
+### GET /driver/incentives
+Get active and completed driver incentive campaigns. Returns empty arrays when no campaign source is configured.
+
 ## Admin
 
 All admin endpoints require admin role.

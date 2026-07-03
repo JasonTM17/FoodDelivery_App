@@ -1142,6 +1142,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_incentives_empty => 'No incentives available';
 
   @override
+  String get driver_incentives_error => 'Unable to load incentives';
+
+  @override
+  String get driver_incentives_retry => 'Retry';
+
+  @override
   String driver_incentives_expires(String date) {
     return 'Expires: $date';
   }

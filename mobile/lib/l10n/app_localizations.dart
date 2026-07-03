@@ -2290,6 +2290,18 @@ abstract class AppLocalizations {
   /// **'Không có ưu đãi nào'**
   String get driver_incentives_empty;
 
+  /// No description provided for @driver_incentives_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải ưu đãi'**
+  String get driver_incentives_error;
+
+  /// No description provided for @driver_incentives_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driver_incentives_retry;
+
   /// No description provided for @driver_incentives_expires.
   ///
   /// In vi, this message translates to:

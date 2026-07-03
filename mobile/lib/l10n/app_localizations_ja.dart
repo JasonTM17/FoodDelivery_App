@@ -1130,6 +1130,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_incentives_empty => 'インセンティブはありません';
 
   @override
+  String get driver_incentives_error => 'インセンティブを読み込めません';
+
+  @override
+  String get driver_incentives_retry => '再試行';
+
+  @override
   String driver_incentives_expires(String date) {
     return '有効期限: $date';
   }

@@ -441,6 +441,8 @@
     "placeholders": { "amount": { "type": "String" } }
   },
   "driver_incentives_empty": "Không có ưu đãi nào",
+  "driver_incentives_error": "Không thể tải ưu đãi",
+  "driver_incentives_retry": "Thử lại",
   "driver_incentives_expires": "Hết hạn: {date}",
   "@driver_incentives_expires": {
     "placeholders": { "date": { "type": "String" } }

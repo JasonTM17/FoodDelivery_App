@@ -707,6 +707,35 @@ components:
           items: { $ref: "#/components/schemas/DriverHeatmapPoint" }
       required: [success, data]
 
+    DriverIncentive:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        rewardAmount: { type: integer, minimum: 0, description: "VND" }
+        progress: { type: integer, minimum: 0 }
+        target: { type: integer, minimum: 0 }
+        endsAt: { type: string, format: date-time }
+      required: [id, title, rewardAmount, progress, target, endsAt]
+
+    DriverIncentives:
+      type: object
+      properties:
+        active:
+          type: array
+          items: { $ref: "#/components/schemas/DriverIncentive" }
+        completed:
+          type: array
+          items: { $ref: "#/components/schemas/DriverIncentive" }
+      required: [active, completed]
+
+    DriverIncentivesResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverIncentives" }
+      required: [success, data]
+
     DriverTrip:
       type: object
       properties:
@@ -2682,6 +2711,16 @@ paths:
       responses:
         "200": { description: "Demand points", content: { application/json: { schema: { $ref: "#/components/schemas/DriverHeatmapResponse" } } } }
         "400": { description: "Invalid coordinates", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/incentives:
+    get:
+      tags: [drivers]
+      summary: Get driver incentives
+      description: Returns active and completed driver incentive campaigns. Empty arrays are valid when no campaign source is configured.
+      operationId: drivers_getIncentives
+      x-foo-actor: driver
+      responses:
+        "200": { description: "Driver incentives", content: { application/json: { schema: { $ref: "#/components/schemas/DriverIncentivesResponse" } } } }
 
   /driver/trips:
     get:

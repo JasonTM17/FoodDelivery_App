@@ -17,18 +17,8 @@ export interface IncentivesResponse {
 @Injectable()
 export class IncentivesService {
   getDriverIncentives(_driverId: string): IncentivesResponse {
-    const endsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     return {
-      active: [
-        {
-          id: 'incentive-001',
-          title: 'Weekend Rush Bonus',
-          rewardAmount: 100000,
-          progress: 3,
-          target: 10,
-          endsAt,
-        },
-      ],
+      active: [],
       completed: [],
     }
   }

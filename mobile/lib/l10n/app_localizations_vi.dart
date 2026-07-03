@@ -1146,6 +1146,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_incentives_empty => 'Không có ưu đãi nào';
 
   @override
+  String get driver_incentives_error => 'Không thể tải ưu đãi';
+
+  @override
+  String get driver_incentives_retry => 'Thử lại';
+
+  @override
   String driver_incentives_expires(String date) {
     return 'Hết hạn: $date';
   }
