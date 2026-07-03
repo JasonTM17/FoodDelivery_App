@@ -4,22 +4,39 @@ import { TrackingGateway } from './tracking.gateway'
 
 describe('TrackingGateway authorization', () => {
   const handleLocationUpdate = jest.fn()
+  const getDriverLocation = jest.fn()
+  const getOrFetchRoute = jest.fn()
+  const calculateETA = jest.fn()
+  const maybeEnqueueRecompute = jest.fn()
   const authenticate = jest.fn()
   const getUser = jest.fn()
   const canAccessOrder = jest.fn()
-  const gateway = new TrackingGateway(
-    {
-      handleLocationUpdate,
-      getDriverLocation: jest.fn(),
-    } as never,
-    {} as never,
-    {} as never,
-    { authenticate, getUser } as never,
-    { canAccessOrder } as never,
-  )
+  const orderFindUnique = jest.fn()
+  const queryRawUnsafe = jest.fn()
+  const notifyAdminDriverLocation = jest.fn()
+  const emitToRoom = jest.fn()
+  const to = jest.fn(() => ({ emit: emitToRoom }))
+  let gateway: TrackingGateway
 
   beforeEach(() => {
     jest.clearAllMocks()
+    gateway = new TrackingGateway(
+      {
+        handleLocationUpdate,
+        getDriverLocation,
+        getOrFetchRoute,
+        calculateETA,
+        maybeEnqueueRecompute,
+      } as never,
+      {
+        order: { findUnique: orderFindUnique },
+        $queryRawUnsafe: queryRawUnsafe,
+      } as never,
+      { notifyAdminDriverLocation } as never,
+      { authenticate, getUser } as never,
+      { canAccessOrder } as never,
+    )
+    gateway.server = { to } as never
   })
 
   it('disconnects unauthenticated clients', async () => {
@@ -54,6 +71,61 @@ describe('TrackingGateway authorization', () => {
       accuracy: 5,
     })
     expect(handleLocationUpdate).toHaveBeenCalledWith('driver-1', expect.any(Object))
+  })
+
+  it('marks routed ETA updates as non-degraded provider values', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue('order-1')
+    orderFindUnique.mockResolvedValue({ deliveryAddressId: 'address-1' })
+    queryRawUnsafe.mockResolvedValue([{ lat: 10.75, lng: 106.65 }])
+    getOrFetchRoute.mockResolvedValue({
+      polyline: 'encoded-route',
+      distanceMeters: 4_000,
+      durationSeconds: 600,
+      waypoints: [],
+      provider: 'google',
+    })
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 0,
+      speed: 20,
+      accuracy: 5,
+    })
+
+    expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
+      orderId: 'order-1',
+      etaMinutes: 10,
+      source: 'google',
+      degraded: false,
+    })
+  })
+
+  it('marks straight-line ETA updates as degraded when route providers fail', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue('order-1')
+    orderFindUnique.mockResolvedValue({ deliveryAddressId: 'address-1' })
+    queryRawUnsafe.mockResolvedValue([{ lat: 10.75, lng: 106.65 }])
+    getOrFetchRoute.mockResolvedValue(null)
+    calculateETA.mockReturnValue(18)
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 0,
+      speed: 20,
+      accuracy: 5,
+    })
+
+    expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
+      orderId: 'order-1',
+      etaMinutes: 18,
+      source: 'straight_line_estimate',
+      degraded: true,
+    })
   })
 
   it('checks order participation before joining tracking rooms', async () => {

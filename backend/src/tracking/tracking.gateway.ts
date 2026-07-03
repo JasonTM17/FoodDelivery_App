@@ -99,7 +99,8 @@ export class TrackingGateway implements OnGatewayConnection {
         const destLat = addr[0].lat
         const destLng = addr[0].lng
 
-        // Try route cache first; fetches + caches on miss. Falls back to haversine on API error.
+        // Try route cache first; fetches + caches on miss. If providers are unavailable,
+        // emit a clearly degraded straight-line estimate instead of pretending it is a routed ETA.
         const route = await this.trackingService.getOrFetchRoute(
           orderId, data.lat, data.lng, destLat, destLng,
         )
@@ -107,7 +108,12 @@ export class TrackingGateway implements OnGatewayConnection {
           ? Math.round(route.durationSeconds / 60)
           : this.trackingService.calculateETA(data.lat, data.lng, destLat, destLng)
 
-        this.server.to(room).emit('delivery:eta_updated', { orderId, etaMinutes })
+        this.server.to(room).emit('delivery:eta_updated', {
+          orderId,
+          etaMinutes,
+          source: route?.provider ?? 'straight_line_estimate',
+          degraded: !route,
+        })
 
         // Non-blocking: enqueue recompute when driver deviates >100m from cached polyline
         void this.trackingService.maybeEnqueueRecompute(orderId, data.lat, data.lng)

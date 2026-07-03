@@ -305,7 +305,7 @@ Connect to `ws://localhost:3001` with namespace:
 | `driver:location_changed` | `{ driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |
-| `delivery:eta_updated` | `{ orderId, etaMinutes }` |
+| `delivery:eta_updated` | `{ orderId, etaMinutes, source, degraded }` where `source` is `google`, `osrm`, or `straight_line_estimate`; `degraded=true` means no route provider result was available and the ETA is a straight-line estimate. |
 
 ## Error Format
 

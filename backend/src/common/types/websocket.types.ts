@@ -26,4 +26,6 @@ export interface WsOrderStatusChanged {
 export interface WsEtaUpdated {
   orderId: string
   etaMinutes: number
+  source: 'google' | 'osrm' | 'straight_line_estimate'
+  degraded: boolean
 }
