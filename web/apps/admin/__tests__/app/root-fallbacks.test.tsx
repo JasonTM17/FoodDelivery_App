@@ -17,10 +17,10 @@ describe('root fallback surfaces', () => {
   it('renders a safe 404 with an overview link', () => {
     render(<NotFound />);
 
-    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /go to overview/i })).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: 'title' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'goToOverview' })).toHaveAttribute(
       'href',
-      '/overview',
+      '/vi/overview',
     );
   });
 
@@ -29,10 +29,10 @@ describe('root fallback surfaces', () => {
 
     render(<RootError error={new Error('internal stack trace')} reset={reset} />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
+    expect(screen.getByRole('alert')).toHaveTextContent('title');
     expect(screen.queryByText('internal stack trace')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'retry' }));
 
     expect(reset).toHaveBeenCalledTimes(1);
   });

@@ -1397,6 +1397,27 @@
     "disconnected": "切断",
     "error": "接続エラー"
   },
+  "rootStates": {
+    "loading": {
+      "label": "管理ダッシュボードを読み込み中"
+    },
+    "error": {
+      "title": "エラーが発生しました",
+      "description": "ページを再読み込みするか、少し待ってからもう一度お試しください。",
+      "retry": "再試行"
+    },
+    "globalError": {
+      "title": "システムエラー",
+      "description": "重大なエラーが発生しました。ページを再読み込みし、問題が続く場合は管理者に連絡してください。",
+      "reload": "ページを再読み込み"
+    },
+    "notFound": {
+      "title": "ページが見つかりません",
+      "description": "要求されたページは存在しないか移動されました。URLを確認するか、概要ダッシュボードに戻ってください。",
+      "goBack": "戻る",
+      "goToOverview": "概要へ"
+    }
+  },
   "routeErrors": {
     "genericDescription": "?????????????????????????????????",
     "retry": "???",

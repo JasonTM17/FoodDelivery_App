@@ -1,12 +1,21 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { NextIntlClientProvider } from 'next-intl';
 import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
-import type { Locale } from '@foodflow/i18n';
+import { getSharedMessages, type Locale } from '@foodflow/i18n';
+import viMessages from '../../messages/vi.json';
+import enMessages from '../../messages/en.json';
+import jaMessages from '../../messages/ja.json';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] });
 
 const LOCALES = ['vi', 'en', 'ja'] as const;
+const appMessages = {
+  vi: viMessages,
+  en: enMessages,
+  ja: jaMessages,
+} as const;
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'),
@@ -36,10 +45,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookieStore = cookies();
   const raw = cookieStore.get('NEXT_LOCALE')?.value ?? 'vi';
   const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi';
+  const messages = {
+    ...getSharedMessages(locale),
+    ...appMessages[locale],
+  };
 
   return (
     <html lang={locale}>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

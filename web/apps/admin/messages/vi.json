@@ -1397,6 +1397,27 @@
     "disconnected": "Mất kết nối",
     "error": "Lỗi kết nối"
   },
+  "rootStates": {
+    "loading": {
+      "label": "Đang tải bảng quản trị"
+    },
+    "error": {
+      "title": "Đã xảy ra lỗi",
+      "description": "Hãy tải lại trang hoặc thử lại sau ít phút.",
+      "retry": "Thử lại"
+    },
+    "globalError": {
+      "title": "Lỗi hệ thống",
+      "description": "Đã xảy ra lỗi nghiêm trọng. Hãy tải lại trang hoặc liên hệ quản trị viên nếu sự cố tiếp diễn.",
+      "reload": "Tải lại trang"
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "description": "Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển. Kiểm tra URL hoặc quay về bảng tổng quan.",
+      "goBack": "Quay lại",
+      "goToOverview": "Về tổng quan"
+    }
+  },
   "routeErrors": {
     "genericDescription": "H?y t?i l?i trang ho?c th? l?i sau gi?y l?t.",
     "retry": "Th? l?i",

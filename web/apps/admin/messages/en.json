@@ -1397,6 +1397,27 @@
     "disconnected": "Disconnected",
     "error": "Connection error"
   },
+  "rootStates": {
+    "loading": {
+      "label": "Loading admin dashboard"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "description": "Refresh the page or try again in a moment.",
+      "retry": "Try again"
+    },
+    "globalError": {
+      "title": "System error",
+      "description": "A critical error occurred. Reload the page or contact an administrator if the issue continues.",
+      "reload": "Reload page"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you requested does not exist or has moved. Check the URL, or return to the overview dashboard.",
+      "goBack": "Go back",
+      "goToOverview": "Go to overview"
+    }
+  },
   "routeErrors": {
     "genericDescription": "Refresh the page or try again in a moment.",
     "retry": "Try again",
