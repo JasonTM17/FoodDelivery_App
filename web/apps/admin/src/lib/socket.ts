@@ -2,13 +2,27 @@
 
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
-
 let socket: Socket | null = null;
+
+export function resolveEventsSocketUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_WS_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
+
+  if (!configured) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('NEXT_PUBLIC_WS_URL is required for the admin realtime socket');
+    }
+    return 'http://localhost:3001/events';
+  }
+
+  const normalized = configured.replace(/\/+$/, '');
+  return normalized.endsWith('/events') ? normalized : `${normalized}/events`;
+}
 
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(`${SOCKET_URL}/events`, {
+    socket = io(resolveEventsSocketUrl(), {
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,

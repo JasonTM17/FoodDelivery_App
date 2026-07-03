@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const socketModule = vi.hoisted(() => {
   const socket = {
-    connected: false,
-    connect: vi.fn(),
     disconnect: vi.fn(),
-    emit: vi.fn(),
-    removeAllListeners: vi.fn(),
   };
   return {
     io: vi.fn((..._args: unknown[]) => socket),
@@ -16,7 +12,7 @@ const socketModule = vi.hoisted(() => {
 
 vi.mock('socket.io-client', () => ({ io: socketModule.io }));
 
-describe('restaurant realtime socket', () => {
+describe('admin realtime socket', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.unstubAllEnvs();
@@ -29,39 +25,33 @@ describe('restaurant realtime socket', () => {
   });
 
   it('uses the canonical NEXT_PUBLIC_WS_URL and appends the events namespace', async () => {
-    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'https://restaurant-realtime.foodflow.test');
+    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'https://realtime.foodflow.test');
 
     const { getSocket, disconnectSocket } = await import('@/lib/socket');
     getSocket();
 
     expect(socketModule.io).toHaveBeenCalledWith(
-      'https://restaurant-realtime.foodflow.test/events',
-      expect.objectContaining({ autoConnect: false }),
+      'https://realtime.foodflow.test/events',
+      expect.objectContaining({ autoConnect: true }),
     );
     disconnectSocket();
   });
 
-  it('keeps legacy NEXT_PUBLIC_SOCKET_URL compatibility without duplicating events', async () => {
-    vi.stubEnv('NEXT_PUBLIC_SOCKET_URL', 'https://legacy-realtime.foodflow.test/events');
+  it('reads the current admin token when the socket connects', async () => {
+    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'https://realtime.foodflow.test/events');
+    localStorage.setItem('admin_token', 'admin-access-token');
 
-    const { resolveEventsSocketUrl } = await import('@/lib/socket');
-
-    expect(resolveEventsSocketUrl()).toBe('https://legacy-realtime.foodflow.test/events');
-  });
-
-  it('reads the current restaurant access token when the socket connects', async () => {
-    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'https://restaurant-realtime.foodflow.test');
-    localStorage.setItem('restaurant_token', 'restaurant-access-token');
     const { getSocket, disconnectSocket } = await import('@/lib/socket');
-
     getSocket();
+
     const options = socketModule.io.mock.calls[0][1] as unknown as {
       auth: (callback: (auth: { token: string | null }) => void) => void;
     };
     const callback = vi.fn();
     options.auth(callback);
 
-    expect(callback).toHaveBeenCalledWith({ token: 'restaurant-access-token' });
+    expect(socketModule.io.mock.calls[0][0]).toBe('https://realtime.foodflow.test/events');
+    expect(callback).toHaveBeenCalledWith({ token: 'admin-access-token' });
     disconnectSocket();
   });
 

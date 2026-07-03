@@ -4,14 +4,27 @@ import { io, type Socket } from 'socket.io-client';
 import type { RestaurantOrderChatMessage } from '@foodflow/api-client';
 import type { Order, OrderStatus } from './types';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
-const EVENTS_SOCKET_URL = SOCKET_URL.endsWith('/events') ? SOCKET_URL : `${SOCKET_URL}/events`;
-
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+
+export function resolveEventsSocketUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_WS_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
+
+  if (!configured) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('NEXT_PUBLIC_WS_URL is required for the restaurant realtime socket');
+    }
+    return 'http://localhost:3001/events';
+  }
+
+  const normalized = configured.replace(/\/+$/, '');
+  return normalized.endsWith('/events') ? normalized : `${normalized}/events`;
+}
 
 export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   if (!socket) {
-    socket = io(EVENTS_SOCKET_URL, {
+    socket = io(resolveEventsSocketUrl(), {
       autoConnect: false,
       transports: ['websocket', 'polling'],
       auth: callback => {
