@@ -29,6 +29,7 @@ Key từng xuất hiện trong chat, screenshot, log, ticket hoặc Git history 
 
 - Ưu tiên fast-path cho câu hỏi static an toàn.
 - Dùng tool-grounded answer cho order, refund, restaurant, delivery hoặc claim theo user.
+- Gợi ý món kết hợp lịch sử đặt hàng của user đã xác thực với món đang khả dụng từ nhà hàng đang mở/đã duyệt; nếu rỗng phải nói chưa có gợi ý xác minh được, không bịa món.
 - Trả metadata `grounded` và `toolCalls` để client/test biết context tài khoản đã được xác minh chưa.
 - Escalate sang support cho trường hợp khách bực tức, safety, fraud, refund dispute hoặc lỗi giao hàng lặp lại.
 - Không bịa refund, ETA giao hàng, promotion eligibility, trạng thái nhà hàng, kết quả support hoặc admin notification.

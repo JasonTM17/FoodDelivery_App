@@ -55,6 +55,10 @@ describe('DeepSeekChatProviderService', () => {
         role: 'system',
         content: expect.stringContaining('Only state account-specific facts that appear in VERIFIED_CONTEXT.'),
       }),
+      expect.objectContaining({
+        role: 'system',
+        content: expect.stringContaining('If getRecommendedFoods returns an empty items list'),
+      }),
       { role: 'assistant', content: 'Hello' },
       { role: 'user', content: 'Previous question' },
       expect.objectContaining({ role: 'user', content: expect.stringContaining('Order ID provided by user: order-1') }),

@@ -29,6 +29,7 @@ Any key pasted into chat, screenshots, logs, tickets, or Git history must be rot
 
 - Prefer fast-path answers for safe static questions.
 - Use tool-grounded answers for order, refund, restaurant, delivery, or user-specific claims.
+- Food recommendations combine authenticated customer order history with currently available, open, approved menu items; empty results must be reported as unavailable instead of invented.
 - Return `grounded` and `toolCalls` metadata so clients and tests can tell whether account-specific context was verified.
 - Escalate to support for angry, safety, fraud, refund dispute, or repeated delivery failure cases.
 - Do not fabricate refunds, delivery ETAs, promotion eligibility, restaurant availability, support outcomes, or admin notifications.

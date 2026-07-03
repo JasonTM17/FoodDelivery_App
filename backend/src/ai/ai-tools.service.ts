@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, TicketIssueType, TicketPriority, TicketStatus } from '@prisma/client'
+import {
+  availableRecommendationWhere,
+  isAvailableRecommendedMenuItem,
+  mergeFoodRecommendations,
+  recommendedMenuItemSelect,
+} from './ai-food-recommendations'
 
 function maskPhone(phone: string | null | undefined): string | null {
   if (!phone) return null
@@ -121,23 +127,25 @@ export class AiToolsService {
   }
 
   async getRecommendedFoods(userId: string) {
-    const orders = await this.prisma.order.findMany({
-      where: { customerId: userId },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: { orderItems: { select: { menuItemId: true, nameSnapshot: true } } },
-    })
-    const seen = new Set<string>()
-    const items: Array<{ menuItemId: string; name: string }> = []
-    for (const o of orders) {
-      for (const item of o.orderItems) {
-        if (!seen.has(item.menuItemId)) {
-          seen.add(item.menuItemId)
-          items.push({ menuItemId: item.menuItemId, name: item.nameSnapshot })
-        }
-      }
-    }
-    return items.slice(0, 10)
+    const [orders, popularItems] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { customerId: userId },
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        select: { orderItems: { select: { menuItem: { select: recommendedMenuItemSelect } } } },
+      }),
+      this.prisma.menuItem.findMany({
+        where: availableRecommendationWhere(),
+        orderBy: [{ isPopular: 'desc' }, { updatedAt: 'desc' }],
+        take: 10,
+        select: recommendedMenuItemSelect,
+      }),
+    ])
+    const recentItems = orders
+      .flatMap(order => order.orderItems.map(item => item.menuItem))
+      .filter(isAvailableRecommendedMenuItem)
+
+    return mergeFoodRecommendations(recentItems, popularItems)
   }
 
   async notifyAdmin(ticketId: string, severity: string, userId: string) {
