@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config'
 import { AdminAiMonitorService } from './admin-ai-monitor.service'
 
 describe('AdminAiMonitorService', () => {
-  it('returns an explicit not-configured state instead of fake workflow data', () => {
+  it('returns an explicit not-configured state instead of fake AI telemetry', () => {
     const service = new AdminAiMonitorService({
       get: jest.fn().mockReturnValue(undefined),
     } as unknown as ConfigService)

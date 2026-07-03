@@ -16,7 +16,7 @@
 - Restaurant dashboard (live order queue, menu CRUD, revenue)
 - Customer mobile app (Flutter, 14 screens)
 - Driver mobile app (Flutter, 12 screens, dark theme)
-- AI Assistant (legacy workflow implementation, replaced by the direct LLM runtime in Batch 4)
+- AI Assistant (legacy automation implementation, replaced by the direct LLM runtime in Batch 4)
 - Docker Compose infrastructure for the application, data stores, queues, and observability
 - CI/CD (GitHub Actions)
 - Monitoring (Prometheus + Grafana + Redis Exporter)

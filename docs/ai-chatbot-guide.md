@@ -2,7 +2,7 @@
 
 Languages: [English](./ai-chatbot-guide.md) | [Tiếng Việt](./ai-chatbot-guide.vi.md) | [日本語](./ai-chatbot-guide.ja.md)
 
-FoodFlow uses an LLM-first chatbot path in Batch 4. The backend AI module owns the runtime; no external workflow engine or public AI-tool route is required.
+FoodFlow uses an LLM-first chatbot path in Batch 4. The backend AI module owns the runtime; no external automation runner or public AI-tool route is required.
 
 ## Runtime direction
 

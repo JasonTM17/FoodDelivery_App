@@ -2,7 +2,7 @@
 
 Ngôn ngữ: [English](./ai-chatbot-guide.md) | [Tiếng Việt](./ai-chatbot-guide.vi.md) | [日本語](./ai-chatbot-guide.ja.md)
 
-FoodFlow dùng hướng LLM-first cho chatbot trong Batch 4. Backend AI module sở hữu runtime; không cần workflow engine bên ngoài và không mở public AI-tool route.
+FoodFlow dùng hướng LLM-first cho chatbot trong Batch 4. Backend AI module sở hữu runtime; không cần automation runner bên ngoài và không mở public AI-tool route.
 
 ## Hướng runtime
 

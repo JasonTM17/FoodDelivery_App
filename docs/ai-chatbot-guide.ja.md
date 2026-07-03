@@ -2,7 +2,7 @@
 
 言語: [English](./ai-chatbot-guide.md) | [Tiếng Việt](./ai-chatbot-guide.vi.md) | [日本語](./ai-chatbot-guide.ja.md)
 
-FoodFlow は Batch 4 で LLM-first の chatbot path を使います。Runtime は backend AI module が持ち、外部 workflow engine や public AI-tool route は不要です。
+FoodFlow は Batch 4 で LLM-first の chatbot path を使います。Runtime は backend AI module が持ち、外部 automation runner や public AI-tool route は不要です。
 
 ## Runtime direction
 

@@ -3,7 +3,7 @@
 - 2026-07-03: Removed legacy `mock_wallet` from public order placement validation; clients must use `wallet`, which captures against the real wallet ledger.
 - 2026-07-03: Clarified `/admin/online-drivers` as a nationwide Vietnam map feed backed by Redis geo presence and DB profile/order enrichment.
 - 2026-07-03: Added grounded chatbot reply metadata (`language`, `grounded`, `toolCalls`) and documented that AI tools are internal customer-scoped service methods, not public `/ai/tools/*` routes.
-- 2026-07-03: Removed the legacy workflow-engine provider, automation webhooks, and synthetic run-detail contract. `/admin/ai-monitor` now reports DeepSeek configuration plus nullable real telemetry only.
+- 2026-07-03: Removed the legacy automation provider, automation webhooks, and synthetic run-detail contract. `/admin/ai-monitor` now reports DeepSeek configuration plus nullable real telemetry only.
 - 2026-07-02: Added the initial AI monitor degraded-state contract. Superseded by the DeepSeek-only contract on 2026-07-03.
 - 2026-07-02: Added restaurant profile image upload contract and aligned menu category editing with backend `PATCH` routes.
 - 2026-07-02: Added canonical admin export jobs, legacy report/export aliases, platform settings sections, and AI chatbot request/reply contracts. Export formats are normalized to `csv | xlsx | parquet`; statuses are `queued | running | completed | failed | cancelled`.
@@ -47,7 +47,7 @@ Authored the canonical OpenAPI 3.1 contract covering all 12 backend modules:
 - All list responses: `{ data: [], meta: PaginationMeta }` envelope
 - All errors: `ProblemDetail` schema (RFC 7807)
 - Actor annotations: `x-foo-actor` on every operation
-- Security: `bearerAuth` (JWT Ed25519); the initial service API-key scheme was removed with the legacy automation webhooks
+- Security: `bearerAuth` (JWT Ed25519); the initial service API-key scheme was removed with the legacy automation callbacks
 - Idempotency: `Idempotency-Key` header (UUID v4)
 - Inbound HMAC: SePay `x-sepay-signature`
 - Outbound HMAC: `X-Signature-SHA256` for configured generic webhooks

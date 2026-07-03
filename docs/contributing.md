@@ -343,7 +343,7 @@ Use kebab-case for descriptions: `feat/add-driver-earnings-summary`, `fix/order-
 ### AI Chatbot or Prompt Change
 
 1. Change prompts, templates, provider settings, or tool behavior in `backend/src/ai/`.
-2. Keep the runtime LLM-first; do not add an external workflow engine as a chatbot dependency.
+2. Keep the runtime LLM-first; do not add an external automation runner as a chatbot dependency.
 3. Add or update focused backend tests for the changed behavior.
 4. Document user-visible behavior in [AI chatbot guide](ai-chatbot-guide.md).
 
