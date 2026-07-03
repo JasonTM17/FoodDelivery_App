@@ -5,8 +5,7 @@ import { useRef } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/lib/auth-provider'
 import { AdminLayoutClient } from '@/components/layout/admin-layout-client'
-
-const publicPaths = ['/login']
+import { isAdminPublicPath } from '@/lib/public-routes'
 
 export function RootLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -18,10 +17,7 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
     })
   }
 
-  // Handle both bare paths (/login) and locale-prefixed paths (/vi/login, /en/login)
-  const isPublic = publicPaths.some(
-    (p) => pathname === p || ['vi', 'en', 'ja'].some((l) => pathname === `/${l}${p}`)
-  )
+  const isPublic = isAdminPublicPath(pathname)
 
   return (
     <AuthProvider>

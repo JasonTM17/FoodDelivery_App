@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from '@/navigation'
 import { clearAdminSession } from '@/lib/admin-session'
+import { isAdminPublicPath } from '@/lib/public-routes'
 
 interface AuthState {
   token: string | null
@@ -24,7 +25,6 @@ const AuthContext = createContext<AuthState>({
 
 const TOKEN_KEY = 'admin_token'
 const USER_KEY = 'admin_user'
-const PUBLIC_PATHS = ['/login']
 
 export function useAuth(): AuthState {
   return useContext(AuthContext)
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    if (!storedToken && !PUBLIC_PATHS.includes(pathname)) {
+    if (!storedToken && !isAdminPublicPath(pathname)) {
       router.replace('/login')
       return
     }
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthChecked(true)
   }, [pathname, router])
 
-  const isPublic = PUBLIC_PATHS.includes(pathname)
+  const isPublic = isAdminPublicPath(pathname)
 
   if (!isAuthChecked && !isPublic) {
     return null
