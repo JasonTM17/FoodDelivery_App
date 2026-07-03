@@ -4,6 +4,8 @@ Documentation languages: [English](../README.md) | [Tiếng Việt](readme.vi.md
 
 FoodFlow は、NestJS バックエンド、Next.js の Admin/Restaurant ダッシュボード、Flutter モバイルアプリ、PostgreSQL/PostGIS、Redis、Socket.IO、SePay、Google/OSRM ルーティング、AI サポートチャットを含むマルチクライアント型のフードデリバリープラットフォームです。
 
+FoodFlow は runtime で外部 workflow automation runner を使用しません。AI チャットとフード推薦は backend LLM adapter を通り、model provider が利用できない場合は明示的な degraded response を返します。
+
 ## アプリケーション
 
 | サーフェス | パス | Runtime | デフォルト URL |

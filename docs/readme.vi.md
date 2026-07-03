@@ -4,6 +4,8 @@ Ngôn ngữ tài liệu: [English](../README.md) | [Tiếng Việt](readme.vi.md
 
 FoodFlow là nền tảng giao đồ ăn đa ứng dụng gồm backend NestJS, dashboard Admin/Restaurant bằng Next.js, app mobile Flutter, PostgreSQL/PostGIS, Redis, Socket.IO, SePay, Google/OSRM routing và chatbot AI.
 
+FoodFlow không dùng workflow automation runner bên ngoài trong runtime. Chatbot và gợi ý món ăn đi qua backend LLM adapter, trả degraded state rõ ràng khi provider không khả dụng.
+
 ## Ứng dụng
 
 | Bề mặt | Đường dẫn | Runtime | URL mặc định |

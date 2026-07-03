@@ -14,6 +14,8 @@ Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.
 
 FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
 
+FoodFlow does not use an external workflow automation runner in runtime. AI chat and food recommendations run through the backend LLM adapter, with explicit degraded responses when the model provider is unavailable.
+
 ## Applications
 
 | Surface | Path | Runtime | Default URL |
