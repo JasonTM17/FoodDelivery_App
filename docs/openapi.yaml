@@ -98,17 +98,6 @@ components:
         meta: { description: "Optional pagination or aggregation metadata" }
       required: [success, data]
 
-    CollectionEnvelope:
-      type: object
-      properties:
-        success: { type: boolean, const: true }
-        data:
-          type: array
-          items: {}
-        meta:
-          $ref: "#/components/schemas/PaginationMeta"
-      required: [success, data, meta]
-
     ProblemDetail:
       type: object
       properties:
@@ -2271,6 +2260,7 @@ paths:
     post:
       tags: [orders]
       summary: Place a new order
+      description: Places an order from the authenticated customer's current cart using an idempotency key for duplicate protection.
       operationId: orders_place
       x-foo-actor: user
       parameters:
@@ -2287,6 +2277,7 @@ paths:
     get:
       tags: [orders]
       summary: Get customer's order history
+      description: Lists orders owned by the authenticated customer with optional status filtering and pagination.
       operationId: orders_getMyOrders
       x-foo-actor: user
       parameters:
@@ -2302,6 +2293,7 @@ paths:
     get:
       tags: [orders]
       summary: Get order detail
+      description: Returns one order when it belongs to the authenticated customer.
       operationId: orders_getDetail
       x-foo-actor: user
       parameters:
@@ -2317,6 +2309,7 @@ paths:
     post:
       tags: [orders]
       summary: Cancel an order
+      description: Cancels a customer-owned order only when the current order status still allows cancellation.
       operationId: orders_cancel
       x-foo-actor: user
       parameters:
@@ -2336,6 +2329,7 @@ paths:
     post:
       tags: [orders]
       summary: Submit a review for a completed order
+      description: Creates a review for a completed customer order that has not already been reviewed.
       operationId: orders_submitReview
       x-foo-actor: user
       parameters:
@@ -2578,6 +2572,7 @@ paths:
     patch:
       tags: [orders]
       summary: Update order status (driver)
+      description: Applies a validated driver-side order status transition for an assigned delivery order.
       operationId: orders_updateDriverStatus
       x-foo-actor: driver
       parameters:
@@ -2602,6 +2597,7 @@ paths:
     post:
       tags: [drivers]
       summary: Go online (start accepting orders)
+      description: Marks the authenticated driver online and records their latest service location.
       operationId: drivers_goOnline
       x-foo-actor: driver
       requestBody:
@@ -2616,6 +2612,7 @@ paths:
     post:
       tags: [drivers]
       summary: Go offline
+      description: Marks the authenticated driver offline so dispatch no longer offers new orders.
       operationId: drivers_goOffline
       x-foo-actor: driver
       responses:
@@ -2625,6 +2622,7 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver earnings summary
+      description: Returns earnings totals for the authenticated driver over the requested period.
       operationId: drivers_getEarnings
       x-foo-actor: driver
       parameters:
@@ -2638,6 +2636,7 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver trip history
+      description: Lists completed and historical trips for the authenticated driver with optional date filters.
       operationId: drivers_getTrips
       x-foo-actor: driver
       parameters:
@@ -2656,6 +2655,7 @@ paths:
     post:
       tags: [drivers]
       summary: Submit KYC documents
+      description: Submits driver KYC and vehicle information for platform review.
       operationId: drivers_submitKyc
       x-foo-actor: driver
       requestBody:
@@ -2685,6 +2685,7 @@ paths:
     get:
       tags: [drivers]
       summary: Check KYC verification status
+      description: Returns the authenticated driver's current KYC verification status and submitted vehicle details.
       operationId: drivers_kycStatus
       x-foo-actor: driver
       responses:
@@ -2694,6 +2695,7 @@ paths:
     post:
       tags: [drivers]
       summary: Request earnings withdrawal
+      description: Creates a withdrawal request against the authenticated driver's available earnings balance.
       operationId: drivers_requestWithdrawal
       x-foo-actor: driver
       parameters:
@@ -2709,6 +2711,7 @@ paths:
     get:
       tags: [drivers]
       summary: Get withdrawal history
+      description: Lists withdrawal requests created by the authenticated driver.
       operationId: drivers_getWithdrawals
       x-foo-actor: driver
       parameters:
@@ -2725,6 +2728,7 @@ paths:
     get:
       tags: [payments]
       summary: List payment intents (admin)
+      description: Lists payment intents for admin review with optional status filtering and pagination.
       operationId: payments_listIntents
       x-foo-actor: admin
       parameters:
@@ -2740,6 +2744,7 @@ paths:
     post:
       tags: [payments]
       summary: Refund a payment
+      description: Creates a refund for one payment intent after validating refund eligibility and amount.
       operationId: payments_refund
       x-foo-actor: admin
       parameters:
@@ -2767,6 +2772,7 @@ paths:
     post:
       tags: [payments]
       summary: SePay payment success webhook (inbound HMAC verified)
+      description: Processes an inbound SePay payment-success webhook after HMAC signature verification.
       operationId: webhooks_sepayPaymentSuccess
       x-foo-actor: service
       security: []
@@ -2793,6 +2799,7 @@ paths:
     post:
       tags: [promotions]
       summary: Validate a promotion code
+      description: Validates whether a promotion code can apply to the authenticated customer's order context.
       operationId: promotions_validate
       x-foo-actor: user
       requestBody:
@@ -2808,6 +2815,7 @@ paths:
     get:
       tags: [promotions]
       summary: Get promotion by code
+      description: Returns a promotion by code when it is visible and accessible to the authenticated user.
       operationId: promotions_getByCode
       x-foo-actor: user
       parameters:
@@ -2827,6 +2835,7 @@ paths:
     get:
       tags: [notifications]
       summary: Get user notifications
+      description: Lists notifications addressed to the authenticated user with pagination.
       operationId: notifications_list
       x-foo-actor: user
       parameters:
@@ -2839,6 +2848,7 @@ paths:
     patch:
       tags: [notifications]
       summary: Mark a notification as read
+      description: Marks one notification as read when it belongs to the authenticated user.
       operationId: notifications_markRead
       x-foo-actor: user
       parameters:
@@ -2853,6 +2863,7 @@ paths:
     patch:
       tags: [notifications]
       summary: Mark all notifications as read
+      description: Marks every unread notification for the authenticated user as read.
       operationId: notifications_markAllRead
       x-foo-actor: user
       responses:
@@ -2862,6 +2873,7 @@ paths:
     post:
       tags: [notifications]
       summary: Register FCM push token
+      description: Registers or updates an FCM push token for the authenticated user's device.
       operationId: notifications_registerFcmToken
       x-foo-actor: user
       requestBody:
@@ -2876,6 +2888,7 @@ paths:
     delete:
       tags: [notifications]
       summary: Unregister FCM push token
+      description: Removes one FCM push token from the authenticated user's registered devices.
       operationId: notifications_unregisterFcmToken
       x-foo-actor: user
       parameters:
@@ -2894,6 +2907,7 @@ paths:
     post:
       tags: [support]
       summary: Create a support ticket (user)
+      description: Creates a customer support ticket for the authenticated user.
       operationId: support_createTicket
       x-foo-actor: user
       requestBody:
@@ -2908,6 +2922,7 @@ paths:
     get:
       tags: [support]
       summary: Get ticket detail
+      description: Returns one support ticket when it belongs to the authenticated user.
       operationId: support_getTicket
       x-foo-actor: user
       parameters:
@@ -2923,6 +2938,7 @@ paths:
     post:
       tags: [support]
       summary: Add reply to a ticket
+      description: Adds a user reply to an existing support ticket owned by the authenticated user.
       operationId: support_addReply
       x-foo-actor: user
       parameters:
@@ -2942,6 +2958,7 @@ paths:
     post:
       tags: [support]
       summary: Submit CSAT (customer satisfaction) score
+      description: Records a customer satisfaction score for a resolved support ticket.
       operationId: support_submitCsat
       x-foo-actor: user
       parameters:
