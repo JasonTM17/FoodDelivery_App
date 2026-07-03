@@ -66,10 +66,10 @@ describe('AdminTrackingService', () => {
       'GEOSEARCH',
       'drivers:active',
       'FROMLONLAT',
-      '106.6297',
-      '10.8231',
+      '108',
+      '14',
       'BYRADIUS',
-      '50',
+      '1400',
       'km',
       'WITHCOORD',
       'ASC',
@@ -107,5 +107,37 @@ describe('AdminTrackingService', () => {
     prisma.order.findMany.mockResolvedValue([])
 
     await expect(service.getOnlineDrivers()).resolves.toEqual([])
+  })
+
+  it('filters Redis geo entries outside the Vietnam map bounds', async () => {
+    redis.call.mockResolvedValue([
+      ['driver:driver-1', ['106.7001', '10.8001']],
+      ['driver:driver-outside', ['120.0000', '24.0000']],
+    ])
+    redis.mget.mockResolvedValue(['1', 'online', ''])
+    prisma.driverProfile.findMany.mockResolvedValue([
+      {
+        userId: 'driver-1',
+        vehicleType: 'motorbike',
+        vehiclePlate: '59A1-12345',
+        isOnline: true,
+        rating: { toString: () => '4.8' },
+        user: { fullName: 'Driver One' },
+      },
+    ])
+    prisma.order.findMany.mockResolvedValue([])
+
+    const result = await service.getOnlineDrivers()
+
+    expect(redis.mget).toHaveBeenCalledWith(
+      'driver:driver-1:alive',
+      'driver:driver-1:status',
+      'driver:driver-1:current_order',
+    )
+    expect(prisma.driverProfile.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: { in: ['driver-1'] }, user: { isActive: true } },
+    }))
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('driver-1')
   })
 })

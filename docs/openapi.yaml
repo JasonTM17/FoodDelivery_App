@@ -1344,7 +1344,7 @@ components:
 
     AdminDriverLocation:
       type: object
-      description: Live admin map location enriched from Redis driver presence and database-backed driver profile/order state.
+      description: Live nationwide Vietnam admin map location enriched from Redis driver presence and database-backed driver profile/order state.
       properties:
         id: { type: string, format: uuid, description: Driver user ID, example: 4d2b9fb7-8aa4-49f5-96f9-77d931f8f5a1 }
         driverId: { type: string, format: uuid, description: Driver user ID, example: 4d2b9fb7-8aa4-49f5-96f9-77d931f8f5a1 }
@@ -3147,7 +3147,7 @@ paths:
     get:
       tags: [drivers]
       summary: List live online driver map positions
-      description: Returns Redis-backed active driver coordinates enriched with database-backed driver identity, vehicle profile and active order state for the admin map.
+      description: Returns Redis-backed active driver coordinates across Vietnam, filtered to the Vietnam map bounds and enriched with database-backed driver identity, vehicle profile and active order state for the admin map.
       operationId: admin_listOnlineDriverLocations
       x-foo-actor: admin
       responses:

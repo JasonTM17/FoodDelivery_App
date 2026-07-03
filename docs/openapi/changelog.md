@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-03: Clarified `/admin/online-drivers` as a nationwide Vietnam map feed backed by Redis geo presence and DB profile/order enrichment.
 - 2026-07-03: Added grounded chatbot reply metadata (`language`, `grounded`, `toolCalls`) and documented that AI tools are internal customer-scoped service methods, not public `/ai/tools/*` routes.
 - 2026-07-03: Removed the legacy workflow-engine provider, automation webhooks, and synthetic run-detail contract. `/admin/ai-monitor` now reports DeepSeek configuration plus nullable real telemetry only.
 - 2026-07-02: Added the initial AI monitor degraded-state contract. Superseded by the DeepSeek-only contract on 2026-07-03.

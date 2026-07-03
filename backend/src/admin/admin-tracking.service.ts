@@ -3,7 +3,9 @@ import { OrderStatus } from '@prisma/client'
 import Redis from 'ioredis'
 import { PrismaService } from '../database/prisma.service'
 
-const DEFAULT_CENTER = { lng: 106.6297, lat: 10.8231 }
+const VIETNAM_CENTER = { lng: 108.0, lat: 14.0 }
+const VIETNAM_RADIUS_KM = 1_400
+const VIETNAM_BOUNDS = { north: 23.5, south: 3.8, west: 102.0, east: 117.5 }
 const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.driver_assigned,
   OrderStatus.driver_arriving_restaurant,
@@ -51,14 +53,14 @@ export class AdminTrackingService {
       'GEOSEARCH',
       'drivers:active',
       'FROMLONLAT',
-      String(DEFAULT_CENTER.lng),
-      String(DEFAULT_CENTER.lat),
+      String(VIETNAM_CENTER.lng),
+      String(VIETNAM_CENTER.lat),
       'BYRADIUS',
-      '50',
+      String(VIETNAM_RADIUS_KM),
       'km',
       'WITHCOORD',
       'ASC',
-    ))
+    )).filter(isWithinVietnamBounds)
     if (geoMembers.length === 0) return []
 
     const driverIds = geoMembers.map(member => member.driverId)
@@ -171,4 +173,11 @@ function resolveMapStatus(
   if (redisStatus === 'busy') return 'busy'
   if (redisStatus === 'free') return 'free'
   return isOnline ? 'online' : 'online'
+}
+
+function isWithinVietnamBounds(member: GeoMember): boolean {
+  return member.lat >= VIETNAM_BOUNDS.south
+    && member.lat <= VIETNAM_BOUNDS.north
+    && member.lng >= VIETNAM_BOUNDS.west
+    && member.lng <= VIETNAM_BOUNDS.east
 }
