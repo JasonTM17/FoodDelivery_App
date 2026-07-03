@@ -263,7 +263,32 @@
   },
   "restaurantDetail": {
     "title": "Chi tiết nhà hàng",
-    "description": "Thông tin chi tiết nhà hàng"
+    "description": "Thông tin chi tiết nhà hàng",
+    "notFound": "Không tìm thấy nhà hàng",
+    "back": "Quay lại",
+    "retry": "Thử lại",
+    "errorTitle": "Lỗi tải chi tiết nhà hàng",
+    "statusActive": "Đang mở",
+    "statusDisabled": "Đã khóa",
+    "activationLabel": "Kích hoạt",
+    "toggleStatus": "Chuyển trạng thái nhà hàng {name}",
+    "informationTitle": "Thông tin nhà hàng",
+    "recentOrdersTitle": "Đơn hàng gần đây",
+    "recentOrdersDescription": "Những đơn hàng gần nhất của nhà hàng",
+    "columns": {
+      "orderCode": "Mã đơn",
+      "customer": "Khách hàng",
+      "status": "Trạng thái",
+      "total": "Tổng tiền",
+      "date": "Ngày"
+    },
+    "emptyRecentOrders": "Chưa có đơn hàng nào",
+    "ownerTitle": "Thông tin chủ sở hữu",
+    "statisticsTitle": "Thống kê",
+    "rating": "Đánh giá",
+    "totalOrders": "Tổng đơn hàng",
+    "revenue": "Doanh thu",
+    "createdAt": "Ngày tạo"
   },
   "users": {
     "title": "Quản lý người dùng",

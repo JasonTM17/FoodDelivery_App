@@ -263,7 +263,32 @@
   },
   "restaurantDetail": {
     "title": "レストラン詳細",
-    "description": "レストランの詳細情報"
+    "description": "レストランの詳細情報",
+    "notFound": "レストランが見つかりません",
+    "back": "戻る",
+    "retry": "再試行",
+    "errorTitle": "レストラン詳細を読み込めませんでした",
+    "statusActive": "営業中",
+    "statusDisabled": "ロック済み",
+    "activationLabel": "有効",
+    "toggleStatus": "{name}の状態を切り替え",
+    "informationTitle": "レストラン情報",
+    "recentOrdersTitle": "最近の注文",
+    "recentOrdersDescription": "このレストランの最新注文",
+    "columns": {
+      "orderCode": "注文コード",
+      "customer": "顧客",
+      "status": "ステータス",
+      "total": "合計",
+      "date": "日付"
+    },
+    "emptyRecentOrders": "注文はまだありません",
+    "ownerTitle": "オーナー情報",
+    "statisticsTitle": "統計",
+    "rating": "評価",
+    "totalOrders": "総注文数",
+    "revenue": "売上",
+    "createdAt": "作成日"
   },
   "users": {
     "title": "ユーザー管理",

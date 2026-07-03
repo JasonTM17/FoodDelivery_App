@@ -263,7 +263,32 @@
   },
   "restaurantDetail": {
     "title": "Restaurant Detail",
-    "description": "Detailed restaurant information"
+    "description": "Detailed restaurant information",
+    "notFound": "Restaurant not found",
+    "back": "Back",
+    "retry": "Try again",
+    "errorTitle": "Failed to load restaurant detail",
+    "statusActive": "Open",
+    "statusDisabled": "Locked",
+    "activationLabel": "Active",
+    "toggleStatus": "Toggle status for {name}",
+    "informationTitle": "Restaurant information",
+    "recentOrdersTitle": "Recent orders",
+    "recentOrdersDescription": "Latest orders from this restaurant",
+    "columns": {
+      "orderCode": "Order code",
+      "customer": "Customer",
+      "status": "Status",
+      "total": "Total",
+      "date": "Date"
+    },
+    "emptyRecentOrders": "No orders yet",
+    "ownerTitle": "Owner information",
+    "statisticsTitle": "Statistics",
+    "rating": "Rating",
+    "totalOrders": "Total orders",
+    "revenue": "Revenue",
+    "createdAt": "Created at"
   },
   "users": {
     "title": "User Management",
