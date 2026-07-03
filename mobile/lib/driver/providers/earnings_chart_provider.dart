@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../shared/api/api_client.dart';
 
 class DailyEarning {
   final DateTime date;
@@ -10,6 +11,14 @@ class DailyEarning {
     required this.amount,
     required this.tripCount,
   });
+
+  factory DailyEarning.fromJson(Map<String, dynamic> json) {
+    return DailyEarning(
+      date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime(1970),
+      amount: _readInt(json['amount']),
+      tripCount: _readInt(json['tripCount']),
+    );
+  }
 }
 
 class EarningsSummary {
@@ -26,6 +35,20 @@ class EarningsSummary {
     required this.avgPerTrip,
     required this.byDay,
   });
+
+  factory EarningsSummary.fromJson(Map<String, dynamic> json) {
+    final days = (json['byDay'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(DailyEarning.fromJson)
+        .toList(growable: false);
+    return EarningsSummary(
+      period: json['period'] as String? ?? '7d',
+      totalVnd: _readInt(json['totalVnd']),
+      tripCount: _readInt(json['tripCount']),
+      avgPerTrip: _readInt(json['avgPerTrip']),
+      byDay: days,
+    );
+  }
 }
 
 enum EarningsPeriod { sevenDays, thirtyDays, ninetyDays }
@@ -59,34 +82,54 @@ class EarningsChartState {
 }
 
 class EarningsChartNotifier extends StateNotifier<EarningsChartState> {
-  EarningsChartNotifier() : super(const EarningsChartState());
+  final ApiClient _api;
+
+  EarningsChartNotifier({ApiClient? api})
+    : _api = api ?? ApiClient.instance,
+      super(const EarningsChartState());
 
   Future<void> load(EarningsPeriod period) async {
-    state = state.copyWith(isLoading: true, error: null, selectedPeriod: period);
-    // TODO: Replace with real API GET /driver/earnings/summary?period=...
-    await Future.delayed(const Duration(milliseconds: 500));
-    final now = DateTime.now();
-    final days = period == EarningsPeriod.sevenDays ? 7 : period == EarningsPeriod.thirtyDays ? 30 : 90;
-    final rng = DateTime(now.year, now.month, now.day).hashCode;
-    final byDay = List.generate(days, (i) {
-      final date = now.subtract(Duration(days: days - 1 - i));
-      final amount = 200000 + ((rng + i) % 5) * 80000;
-      return DailyEarning(date: date, amount: amount, tripCount: 3 + ((rng + i) % 8));
-    });
-    final totalVnd = byDay.fold<int>(0, (sum, d) => sum + d.amount);
     state = state.copyWith(
-      isLoading: false,
-      summary: EarningsSummary(
-        period: period.name,
-        totalVnd: totalVnd,
-        tripCount: byDay.fold<int>(0, (s, d) => s + d.tripCount),
-        avgPerTrip: totalVnd ~/ byDay.fold<int>(0, (s, d) => s + d.tripCount).clamp(1, 9999),
-        byDay: byDay,
-      ),
+      isLoading: true,
+      error: null,
+      selectedPeriod: period,
     );
+    try {
+      final response = await _api.get<Map<String, dynamic>>(
+        '/driver/earnings/summary',
+        queryParameters: {'period': period.apiValue},
+      );
+      state = state.copyWith(
+        isLoading: false,
+        summary: EarningsSummary.fromJson(response.data ?? const {}),
+        error: null,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'DRIVER_EARNINGS_SUMMARY_UNAVAILABLE',
+      );
+    }
   }
 }
 
-final earningsChartProvider = StateNotifierProvider<EarningsChartNotifier, EarningsChartState>((ref) {
-  return EarningsChartNotifier();
-});
+final earningsChartProvider =
+    StateNotifierProvider<EarningsChartNotifier, EarningsChartState>((ref) {
+      return EarningsChartNotifier();
+    });
+
+extension EarningsPeriodApiValue on EarningsPeriod {
+  String get apiValue {
+    return switch (this) {
+      EarningsPeriod.sevenDays => '7d',
+      EarningsPeriod.thirtyDays => '30d',
+      EarningsPeriod.ninetyDays => '90d',
+    };
+  }
+}
+
+int _readInt(dynamic value) {
+  if (value is num) return value.round();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}

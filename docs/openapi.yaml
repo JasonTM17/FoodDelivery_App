@@ -682,6 +682,33 @@ components:
         totalDeliveries: 156
         rating: 4.8
 
+    DriverDailyEarning:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        amount: { type: integer, description: "Net driver payout ledger amount in VND" }
+        tripCount: { type: integer, minimum: 0 }
+      required: [date, amount, tripCount]
+
+    DriverEarningsSummary:
+      type: object
+      properties:
+        period: { type: string, enum: [7d, 30d, 90d] }
+        totalVnd: { type: integer, description: "Net driver payout ledger amount in VND" }
+        tripCount: { type: integer, minimum: 0 }
+        avgPerTrip: { type: integer, description: "VND" }
+        byDay:
+          type: array
+          items: { $ref: "#/components/schemas/DriverDailyEarning" }
+      required: [period, totalVnd, tripCount, avgPerTrip, byDay]
+
+    DriverEarningsSummaryResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverEarningsSummary" }
+      required: [success, data]
+
     DriverHeatmapPoint:
       type: object
       properties:
@@ -2685,6 +2712,20 @@ paths:
           schema: { type: string, enum: [today, week, month], default: today }
       responses:
         "200": { description: "Earnings", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarnings" } } } }
+
+  /driver/earnings/summary:
+    get:
+      tags: [drivers]
+      summary: Get chart-ready driver earnings summary
+      description: Returns continuous day buckets from driver payout ledger data. Days without trips are returned with zero amounts.
+      operationId: drivers_getEarningsSummary
+      x-foo-actor: driver
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, enum: [7d, 30d, 90d], default: 7d }
+      responses:
+        "200": { description: "Earnings summary", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarningsSummaryResponse" } } } }
 
   /driver/heatmap:
     get:

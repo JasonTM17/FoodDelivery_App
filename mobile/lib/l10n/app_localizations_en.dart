@@ -707,6 +707,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverEarningsEmpty => 'No earnings data yet';
 
   @override
+  String get driverEarningsChartError => 'Unable to load earnings chart';
+
+  @override
+  String get driverEarningsChartRetry => 'Retry';
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override

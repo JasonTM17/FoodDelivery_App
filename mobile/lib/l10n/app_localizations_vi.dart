@@ -708,6 +708,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverEarningsEmpty => 'Chưa có dữ liệu thu nhập';
 
   @override
+  String get driverEarningsChartError => 'Không thể tải biểu đồ thu nhập';
+
+  @override
+  String get driverEarningsChartRetry => 'Thử lại';
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override

@@ -69,4 +69,49 @@ describe('DriversService', () => {
       ])
     })
   })
+
+  describe('getEarningsSummary', () => {
+    it('builds a continuous 7 day summary from driver payout ledger rows', async () => {
+      const today = dateKey(new Date())
+      const yesterday = dateKey(addDays(new Date(), -1))
+      mockPrisma.$queryRaw.mockResolvedValueOnce([
+        { date: yesterday, amount: 40000, tripCount: 2 },
+        { date: today, amount: 30000, tripCount: 1 },
+      ])
+
+      const summary = await service.getEarningsSummary('d1', '7d')
+
+      expect(mockPrisma.$queryRaw).toHaveBeenCalled()
+      expect(summary.period).toBe('7d')
+      expect(summary.byDay).toHaveLength(7)
+      expect(summary.totalVnd).toBe(70000)
+      expect(summary.tripCount).toBe(3)
+      expect(summary.avgPerTrip).toBe(23333)
+      expect(summary.byDay.at(-2)).toEqual({ date: yesterday, amount: 40000, tripCount: 2 })
+      expect(summary.byDay.at(-1)).toEqual({ date: today, amount: 30000, tripCount: 1 })
+    })
+
+    it('normalizes unsupported periods and returns zero days when ledger is empty', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+
+      const summary = await service.getEarningsSummary('d1', 'unsupported')
+
+      expect(summary.period).toBe('7d')
+      expect(summary.byDay).toHaveLength(7)
+      expect(summary.totalVnd).toBe(0)
+      expect(summary.tripCount).toBe(0)
+      expect(summary.avgPerTrip).toBe(0)
+    })
+  })
 })
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+}
+
+function dateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

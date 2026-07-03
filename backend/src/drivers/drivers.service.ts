@@ -18,6 +18,20 @@ export interface DriverHeatmapPoint {
   avgPayout: number
 }
 
+export interface DriverDailyEarning {
+  date: string
+  amount: number
+  tripCount: number
+}
+
+export interface DriverEarningsSummary {
+  period: '7d' | '30d' | '90d'
+  totalVnd: number
+  tripCount: number
+  avgPerTrip: number
+  byDay: DriverDailyEarning[]
+}
+
 @Injectable()
 export class DriversService {
   constructor(
@@ -90,6 +104,51 @@ export class DriversService {
     }
   }
 
+  async getEarningsSummary(driverId: string, period: string | undefined): Promise<DriverEarningsSummary> {
+    const normalizedPeriod = normalizeEarningsPeriod(period)
+    const days = earningsPeriodDays(normalizedPeriod)
+    const end = startOfToday()
+    const start = addDays(end, -(days - 1))
+    const rows = await this.prisma.$queryRaw<Array<{
+      date: string
+      amount: number
+      tripCount: number
+    }>>(Prisma.sql`
+      SELECT
+        DATE(pl.created_at)::text AS "date",
+        COALESCE(SUM(pl.amount)::float8, 0) AS "amount",
+        COUNT(DISTINCT CASE WHEN pl.amount > 0 THEN pl.order_id END)::int AS "tripCount"
+      FROM payout_ledger pl
+      WHERE pl.recipient_type = 'driver'
+        AND pl.recipient_id = CAST(${driverId} AS uuid)
+        AND pl.created_at >= ${start}
+        AND pl.created_at < ${addDays(end, 1)}
+      GROUP BY DATE(pl.created_at)
+      ORDER BY DATE(pl.created_at)
+    `)
+    const byDate = new Map(rows.map(row => [
+      row.date,
+      {
+        amount: Math.round(Number(row.amount)),
+        tripCount: Number(row.tripCount),
+      },
+    ]))
+    const byDay = Array.from({ length: days }, (_, index) => {
+      const date = dateKey(addDays(start, index))
+      const day = byDate.get(date) ?? { amount: 0, tripCount: 0 }
+      return { date, amount: day.amount, tripCount: day.tripCount }
+    })
+    const totalVnd = byDay.reduce((sum, day) => sum + day.amount, 0)
+    const tripCount = byDay.reduce((sum, day) => sum + day.tripCount, 0)
+    return {
+      period: normalizedPeriod,
+      totalVnd,
+      tripCount,
+      avgPerTrip: tripCount > 0 ? Math.round(totalVnd / tripCount) : 0,
+      byDay,
+    }
+  }
+
   async getHeatmap(query: DriverHeatmapQuery): Promise<DriverHeatmapPoint[]> {
     const lat = query.lat
     const lng = query.lng
@@ -154,4 +213,32 @@ function demandLevel(orderCount: number): 0 | 1 | 2 {
   if (orderCount >= 10) return 2
   if (orderCount >= 4) return 1
   return 0
+}
+
+function normalizeEarningsPeriod(period: string | undefined): '7d' | '30d' | '90d' {
+  if (period === '30d' || period === 'thirtyDays') return '30d'
+  if (period === '90d' || period === 'ninetyDays') return '90d'
+  return '7d'
+}
+
+function earningsPeriodDays(period: '7d' | '30d' | '90d'): number {
+  if (period === '90d') return 90
+  if (period === '30d') return 30
+  return 7
+}
+
+function startOfToday(): Date {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+}
+
+function dateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+  return `${year}-${month}-${day}`
 }

@@ -201,6 +201,12 @@ Get earnings summary.
 Query: period (today|week|month)
 ```
 
+### GET /driver/earnings/summary
+Get chart-ready driver earnings from payout ledger data.
+```
+Query: period (7d|30d|90d)
+```
+
 ### GET /driver/heatmap
 Get real demand heatmap points near the authenticated driver's location.
 ```

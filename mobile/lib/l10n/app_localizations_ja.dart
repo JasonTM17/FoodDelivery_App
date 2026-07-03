@@ -702,6 +702,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverEarningsEmpty => '収益データはまだありません';
 
   @override
+  String get driverEarningsChartError => '収益チャートを読み込めません';
+
+  @override
+  String get driverEarningsChartRetry => '再試行';
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override

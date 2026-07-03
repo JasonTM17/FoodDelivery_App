@@ -32,6 +32,11 @@ export class DriversController {
     return this.driversService.getEarnings(user.sub, period as 'today' | 'week' | 'month')
   }
 
+  @Get('earnings/summary')
+  getEarningsSummary(@CurrentUser() user: JwtPayload, @Query('period') period?: string) {
+    return this.driversService.getEarningsSummary(user.sub, period)
+  }
+
   @Get('heatmap')
   getHeatmap(
     @Query('lat') lat: string,

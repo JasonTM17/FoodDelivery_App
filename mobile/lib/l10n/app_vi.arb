@@ -269,6 +269,8 @@
   "driverEarningsAverage": "Trung bình/đơn",
   "driverEarningsHistory": "Lịch sử giao hàng",
   "driverEarningsEmpty": "Chưa có dữ liệu thu nhập",
+  "driverEarningsChartError": "Không thể tải biểu đồ thu nhập",
+  "driverEarningsChartRetry": "Thử lại",
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",

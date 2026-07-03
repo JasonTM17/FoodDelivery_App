@@ -1462,6 +1462,18 @@ abstract class AppLocalizations {
   /// **'Chưa có dữ liệu thu nhập'**
   String get driverEarningsEmpty;
 
+  /// No description provided for @driverEarningsChartError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải biểu đồ thu nhập'**
+  String get driverEarningsChartError;
+
+  /// No description provided for @driverEarningsChartRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driverEarningsChartRetry;
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:

@@ -263,6 +263,8 @@
   "driverEarningsAverage": "1件あたり平均",
   "driverEarningsHistory": "配達履歴",
   "driverEarningsEmpty": "収益データはまだありません",
+  "driverEarningsChartError": "収益チャートを読み込めません",
+  "driverEarningsChartRetry": "再試行",
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",

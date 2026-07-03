@@ -263,6 +263,8 @@
   "driverEarningsAverage": "Avg per order",
   "driverEarningsHistory": "Delivery history",
   "driverEarningsEmpty": "No earnings data yet",
+  "driverEarningsChartError": "Unable to load earnings chart",
+  "driverEarningsChartRetry": "Retry",
 
   "driverKycTitle": "KYC Verification",
   "driverKycUploadTitle": "Upload documents",
