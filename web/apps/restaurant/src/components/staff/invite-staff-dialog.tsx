@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Mail, Send, ShieldCheck } from 'lucide-react';
 import type { StaffRole } from '@/lib/types';
@@ -20,6 +20,44 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
   const [role, setRole] = useState<StaffRole>('viewer');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    emailInputRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !sending) {
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [onClose, open, sending]);
 
   if (!open) return null;
 
@@ -58,25 +96,32 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" data-testid="invite-staff-dialog">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" data-testid="invite-staff-dialog">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+      >
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100">
             <Mail className="h-5 w-5 text-brand-600" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{t('invite.title')}</h2>
+            <h2 id={titleId} className="text-lg font-bold text-gray-900">{t('invite.title')}</h2>
             <p className="text-xs text-gray-500">{t('invite.description')}</p>
           </div>
         </div>
 
-        {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+        {error ? <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
 
         <div className="space-y-4">
           <div>
             <label className="label">{t('invite.email')}</label>
             <div className="flex gap-2">
               <input
+                ref={emailInputRef}
                 type="email"
                 value={emailInput}
                 onChange={event => setEmailInput(event.target.value)}
@@ -86,7 +131,7 @@ export function InviteStaffDialog({ open, onClose, onSend }: InviteStaffDialogPr
                     addEmail();
                   }
                 }}
-                placeholder="staff@example.com"
+                placeholder={t('invite.emailPlaceholder')}
                 className="input-field flex-1"
               />
               <button type="button" onClick={addEmail} className="btn-secondary text-sm">{t('invite.add')}</button>

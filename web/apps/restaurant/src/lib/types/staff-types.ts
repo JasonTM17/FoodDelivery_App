@@ -1,5 +1,7 @@
 export type StaffRole = 'owner' | 'manager' | 'kitchen' | 'cashier' | 'viewer';
 export type StaffCapability = 'orders' | 'menu' | 'reports' | 'settings' | 'staff' | 'promotions';
+export type StaffShiftStatus = 'scheduled' | 'completed' | 'cancelled';
+export type StaffInviteStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
 
 export interface StaffMember {
   id: string;
@@ -12,13 +14,33 @@ export interface StaffMember {
   joinedAt?: string;
   isActive?: boolean;
   permissions: StaffCapability[];
-  schedule?: StaffShift[];
 }
 
 export interface StaffShift {
-  day: number;
-  startHour: number;
-  endHour: number;
+  id: string;
+  restaurantProfileId: string;
+  startsAt: string;
+  endsAt: string;
+  status: StaffShiftStatus;
+  note?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StaffInvite {
+  id: string;
+  email: string;
+  role: StaffRole;
+  permissions: StaffCapability[];
+  status: StaffInviteStatus;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface StaffOverview {
+  staff: StaffMember[];
+  invites: StaffInvite[];
+  shifts: StaffShift[];
 }
 
 export interface StaffInvitePayload {

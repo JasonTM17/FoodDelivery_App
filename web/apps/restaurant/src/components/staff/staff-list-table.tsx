@@ -10,6 +10,7 @@ interface StaffListTableProps {
   staff: StaffMember[];
   onInvite?: () => void;
   onEdit?: (id: string) => void;
+  selectedId?: string;
 }
 
 const roleIcons: Record<StaffRole, ReactNode> = {
@@ -28,7 +29,7 @@ const dateLocales: Record<string, string> = {
 
 const EMPTY_VALUE = '\u2014';
 
-export function StaffListTable({ staff, onInvite, onEdit }: StaffListTableProps) {
+export function StaffListTable({ staff, onInvite, onEdit, selectedId }: StaffListTableProps) {
   const t = useTranslations('staff');
   const locale = useLocale();
   const dateLocale = dateLocales[locale] ?? 'vi-VN';
@@ -57,10 +58,23 @@ export function StaffListTable({ staff, onInvite, onEdit }: StaffListTableProps)
             </tr>
           </thead>
           <tbody>
+            {staff.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
+                  {t('table.empty')}
+                </td>
+              </tr>
+            ) : null}
             {staff.map((member) => {
               const activityDate = member.lastActive ?? member.joinedAt;
               return (
-              <tr key={member.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
+              <tr
+                key={member.id}
+                className={cn(
+                  'border-b border-gray-100 transition-colors hover:bg-gray-50',
+                  selectedId === member.id && 'bg-brand-50',
+                )}
+              >
                 <td className="px-2 py-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
@@ -105,7 +119,13 @@ export function StaffListTable({ staff, onInvite, onEdit }: StaffListTableProps)
                   {activityDate ? new Date(activityDate).toLocaleDateString(dateLocale) : EMPTY_VALUE}
                 </td>
                 <td className="px-2 py-3 text-right">
-                  <button type="button" onClick={() => onEdit?.(member.id)} className="btn-ghost p-1" aria-label={t('table.actions')}>
+                  <button
+                    type="button"
+                    onClick={() => onEdit?.(member.id)}
+                    className="btn-ghost p-1"
+                    aria-label={t('table.editMember', { name: member.name })}
+                    aria-pressed={selectedId === member.id}
+                  >
                     <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </td>
