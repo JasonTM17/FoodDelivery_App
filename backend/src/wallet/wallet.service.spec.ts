@@ -67,14 +67,11 @@ describe('WalletService', () => {
       expect(snap.transactions).toHaveLength(0)
     })
 
-    it('handles db error gracefully', async () => {
+    it('propagates db errors instead of returning a fake empty wallet', async () => {
       mockPrisma.walletTransaction.aggregate.mockRejectedValue(new Error('db down'))
       mockPrisma.walletTransaction.findMany.mockRejectedValue(new Error('db down'))
 
-      const snap = await service.getSnapshot(userId)
-
-      expect(snap.balance).toBe(0)
-      expect(snap.transactions).toHaveLength(0)
+      await expect(service.getSnapshot(userId)).rejects.toThrow('db down')
     })
 
     it('includes refId when present', async () => {

@@ -35,44 +35,36 @@ export class LoyaltyService {
   }
 
   private async computeTotalPoints(userId: string): Promise<number> {
-    try {
-      const [credits, debits] = await Promise.all([
-        this.prisma.loyaltyTransaction.aggregate({
-          where: { userId, type: 'credit' },
-          _sum: { points: true },
-        }),
-        this.prisma.loyaltyTransaction.aggregate({
-          where: { userId, type: 'debit' },
-          _sum: { points: true },
-        }),
-      ])
-      const creditTotal = credits._sum.points ?? 0
-      const debitTotal = debits._sum.points ?? 0
-      return creditTotal - debitTotal
-    } catch {
-      return 0
-    }
+    const [credits, debits] = await Promise.all([
+      this.prisma.loyaltyTransaction.aggregate({
+        where: { userId, type: 'credit' },
+        _sum: { points: true },
+      }),
+      this.prisma.loyaltyTransaction.aggregate({
+        where: { userId, type: 'debit' },
+        _sum: { points: true },
+      }),
+    ])
+    const creditTotal = credits._sum.points ?? 0
+    const debitTotal = debits._sum.points ?? 0
+    return creditTotal - debitTotal
   }
 
   private async fetchRecentTransactions(
     userId: string,
   ): Promise<LoyaltyTransaction[]> {
-    try {
-      const rows = await this.prisma.loyaltyTransaction.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-      })
-      return rows.map((r) => ({
-        id: r.id,
-        points: r.points,
-        type: r.type,
-        description: r.description,
-        createdAt: r.createdAt.toISOString(),
-      }))
-    } catch {
-      return []
-    }
+    const rows = await this.prisma.loyaltyTransaction.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+    return rows.map((r) => ({
+      id: r.id,
+      points: r.points,
+      type: r.type,
+      description: r.description,
+      createdAt: r.createdAt.toISOString(),
+    }))
   }
 
   private classifyTier(points: number): {

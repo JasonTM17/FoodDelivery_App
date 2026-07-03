@@ -26,34 +26,26 @@ export class WalletService {
   }
 
   private async computeBalance(userId: string): Promise<number> {
-    try {
-      const result = await this.prisma.walletTransaction.aggregate({
-        where: { userId },
-        _sum: { amountDelta: true },
-      })
-      return result._sum.amountDelta ?? 0
-    } catch {
-      return 0
-    }
+    const result = await this.prisma.walletTransaction.aggregate({
+      where: { userId },
+      _sum: { amountDelta: true },
+    })
+    return result._sum.amountDelta ?? 0
   }
 
   private async fetchRecentTransactions(userId: string): Promise<WalletTransaction[]> {
-    try {
-      const rows = await this.prisma.walletTransaction.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-      })
-      return rows.map((r) => ({
-        id: r.id,
-        amountDelta: r.amountDelta,
-        type: r.type,
-        reason: r.reason,
-        ...(r.refId ? { refId: r.refId } : {}),
-        createdAt: r.createdAt.toISOString(),
-      }))
-    } catch {
-      return []
-    }
+    const rows = await this.prisma.walletTransaction.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+    return rows.map((r) => ({
+      id: r.id,
+      amountDelta: r.amountDelta,
+      type: r.type,
+      reason: r.reason,
+      ...(r.refId ? { refId: r.refId } : {}),
+      createdAt: r.createdAt.toISOString(),
+    }))
   }
 }
