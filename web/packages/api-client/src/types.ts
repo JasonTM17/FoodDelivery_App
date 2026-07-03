@@ -165,6 +165,61 @@ export interface AdminDriverLocation {
   lastSeenAt: string;
 }
 
+export type RestaurantInsightSuggestionType = 'pricing' | 'menu_mix' | 'marketing' | 'operations';
+export type RestaurantInsightSuggestionParams = Record<string, string | number | boolean | null | undefined>;
+
+export interface RestaurantInsightSuggestion {
+  id: string;
+  type: RestaurantInsightSuggestionType;
+  title?: string;
+  description?: string;
+  predictedImpact?: string;
+  titleKey?: string;
+  descriptionKey?: string;
+  predictedImpactKey?: string;
+  params?: RestaurantInsightSuggestionParams;
+  actionable: boolean;
+}
+
+export interface RestaurantPeakHour {
+  day: number;
+  hour: number;
+  orderCount: number;
+}
+
+export interface RestaurantBestSeller {
+  itemId: string;
+  name: string;
+  orderCount: number;
+  revenueShare: number;
+  trendVsLastWeek: number;
+}
+
+export interface RestaurantSlowMover {
+  itemId: string;
+  name: string;
+  ordersInPeriod: number;
+  period: number;
+  pctDecline: number;
+  recommendation: 'bundle' | 'discount' | 'remove';
+}
+
+export interface RestaurantRevenueForecastPoint {
+  date: string;
+  predicted: number;
+  actual?: number;
+  lower?: number;
+  upper?: number;
+}
+
+export interface RestaurantInsights {
+  suggestions: RestaurantInsightSuggestion[];
+  peakHours: RestaurantPeakHour[];
+  bestSellers: RestaurantBestSeller[];
+  slowMovers: RestaurantSlowMover[];
+  forecast: RestaurantRevenueForecastPoint[];
+}
+
 export type RestaurantOrderChatSenderType = 'customer' | 'driver' | 'restaurant' | 'ai' | 'system';
 
 export interface RestaurantOrderChatMessage {

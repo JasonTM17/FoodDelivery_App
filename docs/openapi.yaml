@@ -852,6 +852,105 @@ components:
             required: [date, count, revenueAttributed, discountGiven]
       required: [usageCount, revenueAttributed, discountGiven, redemptionRate, roi, usageTimeline]
 
+    RestaurantInsightSuggestionParams:
+      type: object
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          - type: "null"
+
+    RestaurantInsightSuggestion:
+      type: object
+      description: Recommendation payload. New runtime responses prefer i18n keys plus params; legacy text fields remain optional for one compatibility cycle.
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [pricing, menu_mix, marketing, operations] }
+        title: { type: string }
+        description: { type: string }
+        predictedImpact: { type: string }
+        titleKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
+        descriptionKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
+        predictedImpactKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
+        params: { $ref: "#/components/schemas/RestaurantInsightSuggestionParams" }
+        actionable: { type: boolean }
+      required: [id, type, actionable]
+      example:
+        id: "menu-availability"
+        type: "menu_mix"
+        titleKey: "catalog.menuAvailability.title"
+        descriptionKey: "catalog.menuAvailability.description"
+        predictedImpactKey: "catalog.menuAvailability.impact"
+        params: { count: 2 }
+        actionable: true
+
+    RestaurantPeakHour:
+      type: object
+      properties:
+        day: { type: integer, minimum: 0, maximum: 6, description: "JavaScript day index, Sunday = 0" }
+        hour: { type: integer, minimum: 0, maximum: 23 }
+        orderCount: { type: integer, minimum: 0 }
+      required: [day, hour, orderCount]
+
+    RestaurantBestSeller:
+      type: object
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        orderCount: { type: integer, minimum: 0 }
+        revenueShare: { type: number, minimum: 0 }
+        trendVsLastWeek: { type: number }
+      required: [itemId, name, orderCount, revenueShare, trendVsLastWeek]
+
+    RestaurantSlowMover:
+      type: object
+      properties:
+        itemId: { type: string, format: uuid }
+        name: { type: string }
+        ordersInPeriod: { type: integer, minimum: 0 }
+        period: { type: integer, minimum: 1 }
+        pctDecline: { type: number, minimum: 0 }
+        recommendation: { type: string, enum: [bundle, discount, remove] }
+      required: [itemId, name, ordersInPeriod, period, pctDecline, recommendation]
+
+    RestaurantRevenueForecastPoint:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        predicted: { type: number, minimum: 0 }
+        actual: { type: number, minimum: 0 }
+        lower: { type: number, minimum: 0 }
+        upper: { type: number, minimum: 0 }
+      required: [date, predicted]
+
+    RestaurantInsights:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantInsightSuggestion" }
+        peakHours:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantPeakHour" }
+        bestSellers:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantBestSeller" }
+        slowMovers:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantSlowMover" }
+        forecast:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantRevenueForecastPoint" }
+      required: [suggestions, peakHours, bestSellers, slowMovers, forecast]
+
+    RestaurantInsightsEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/RestaurantInsights" }
+      required: [success, data]
+
     RestaurantPromotionListEnvelope:
       type: object
       properties:
@@ -2307,6 +2406,25 @@ paths:
                       data: { $ref: "#/components/schemas/RestaurantOrderChatMessage" }
         "400": { description: "Driver not assigned or invalid content", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "Order not found for restaurant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/insights:
+    get:
+      tags: [analytics]
+      summary: Get restaurant menu and operations insights
+      description: Returns tenant-scoped insights calculated from real completed orders and menu item state. Suggestion copy is represented by i18n keys plus params so web clients render the active locale.
+      operationId: restaurant_getInsights
+      x-foo-actor: restaurant_owner
+      responses:
+        "200":
+          description: Tenant-scoped restaurant insights
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestaurantInsightsEnvelope" }
+        "403":
+          description: The authenticated user cannot access a restaurant tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
 
   /restaurant/promotions:
     get:
