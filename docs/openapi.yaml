@@ -867,6 +867,31 @@ components:
           required: [deleted]
       required: [success, data]
 
+    DriverTipReport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tripId: { type: string, format: uuid }
+        amount: { type: integer, minimum: 1000, maximum: 500000, description: "Cash tip amount reported by driver in VND" }
+        currency: { type: string, enum: [VND] }
+        status: { type: string, enum: [reported] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, tripId, amount, currency, status, createdAt, updatedAt]
+
+    DriverTipReportRequest:
+      type: object
+      properties:
+        amount: { type: integer, minimum: 1000, maximum: 500000 }
+      required: [amount]
+
+    DriverTipReportResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverTipReport" }
+      required: [success, data]
+
     DriverIncentive:
       type: object
       properties:
@@ -2888,6 +2913,29 @@ paths:
       responses:
         "200": { description: "Deleted", content: { application/json: { schema: { $ref: "#/components/schemas/DeleteDriverBankAccountResponse" } } } }
         "404": { description: "Bank account not found for driver", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/trips/{tripId}/tip-report:
+    post:
+      tags: [drivers]
+      summary: Report cash tip for a completed trip
+      description: Stores a driver-reported cash tip for audit/reconciliation only. This does not automatically change payout ledger settlement.
+      operationId: drivers_reportTripCashTip
+      x-foo-actor: driver
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Order UUID or order code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverTipReportRequest" }
+      responses:
+        "201": { description: "Tip report saved", content: { application/json: { schema: { $ref: "#/components/schemas/DriverTipReportResponse" } } } }
+        "400": { description: "Trip not completed or invalid amount", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Trip not found for driver", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/earnings:
     get:

@@ -235,6 +235,7 @@ model User {
   createdStaffInvites   StaffInvite[]             @relation("StaffInviteCreator")
   reviewedKycSubmissions DriverKycSubmission[]     @relation("KycReviewer")
   driverBankAccounts    DriverBankAccount[]
+  driverTipReports      DriverTipReport[]
   promotionUsages       PromotionUsage[]
   cart                  Cart?
   notificationSettings  NotificationSetting[]
@@ -550,6 +551,7 @@ model Order {
   paymentIntent   PaymentIntent?
   payoutLedgers   PayoutLedger[]
   deliveryTask    DeliveryTask?
+  driverTipReports DriverTipReport[]
   reviews         Review[]
   supportTickets  AiSupportTicket[]
   promotionUsages PromotionUsage[]
@@ -1043,6 +1045,24 @@ model PayoutLedger {
   @@index([orderId])
   @@index([recipientType, recipientId, status])
   @@map("payout_ledger")
+}
+
+model DriverTipReport {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  driverId  String   @map("driver_id") @db.Uuid
+  amount    Int
+  currency  String   @default("VND") @db.VarChar(3)
+  status    String   @default("reported") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver User  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, driverId])
+  @@index([driverId, createdAt(sort: Desc)])
+  @@map("driver_tip_reports")
 }
 
 enum LoyaltyTxnType {

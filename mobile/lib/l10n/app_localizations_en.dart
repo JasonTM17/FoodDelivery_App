@@ -1326,6 +1326,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_bank_retry => 'Retry';
 
   @override
+  String get driver_tip_title => 'Tip adjustment';
+
+  @override
+  String get driver_tip_header_title => 'Customer added a cash tip?';
+
+  @override
+  String get driver_tip_order_prefix => 'Order from';
+
+  @override
+  String get driver_tip_customer_prefix => 'Customer';
+
+  @override
+  String get driver_tip_picker_title => 'Choose tip amount';
+
+  @override
+  String get driver_tip_custom_title => 'Or enter another amount';
+
+  @override
+  String get driver_tip_custom_hint => 'Enter amount (VND)';
+
+  @override
+  String get driver_tip_skip => 'Skip';
+
+  @override
+  String get driver_tip_confirm => 'Confirm';
+
+  @override
+  String get driver_tip_success_snackbar => 'Tip report saved';
+
+  @override
+  String get driver_tip_success_message =>
+      'Tip report saved for audit. Payout settlement is not changed automatically.';
+
+  @override
   String get driver_support_title => 'Driver Support';
 
   @override

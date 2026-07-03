@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../shared/api/api_client.dart';
 
 enum OfferDecision { accept, decline, timeout }
 
@@ -47,16 +50,20 @@ class TipState {
     this.error,
   });
 
+  int get effectiveAmount => customAmount ?? suggestedAmount ?? 0;
+
   TipState copyWith({
     int? suggestedAmount,
+    bool clearSuggestedAmount = false,
     int? customAmount,
+    bool clearCustomAmount = false,
     bool? isSubmitting,
     bool? isSubmitted,
     String? error,
   }) {
     return TipState(
-      suggestedAmount: suggestedAmount ?? this.suggestedAmount,
-      customAmount: customAmount,
+      suggestedAmount: clearSuggestedAmount ? null : suggestedAmount ?? this.suggestedAmount,
+      customAmount: clearCustomAmount ? null : customAmount ?? this.customAmount,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isSubmitted: isSubmitted ?? this.isSubmitted,
       error: error,
@@ -65,25 +72,47 @@ class TipState {
 }
 
 class TipNotifier extends StateNotifier<TipState> {
-  TipNotifier() : super(const TipState());
+  final ApiClient _api;
+
+  TipNotifier({ApiClient? apiClient})
+      : _api = apiClient ?? ApiClient.instance,
+        super(const TipState());
 
   void selectAmount(int amount) {
-    state = state.copyWith(suggestedAmount: amount, customAmount: null);
+    state = state.copyWith(
+      suggestedAmount: amount,
+      clearCustomAmount: true,
+      isSubmitted: false,
+      error: null,
+    );
   }
 
   void setCustomAmount(int amount) {
-    state = state.copyWith(customAmount: amount, suggestedAmount: null);
+    state = state.copyWith(
+      customAmount: amount,
+      clearSuggestedAmount: true,
+      isSubmitted: false,
+      error: null,
+    );
   }
 
-  int get effectiveAmount => state.customAmount ?? state.suggestedAmount ?? 0;
+  int get effectiveAmount => state.effectiveAmount;
 
   Future<bool> submitTip(String tripId) async {
-    if (effectiveAmount <= 0) return false;
-    state = state.copyWith(isSubmitting: true, error: null);
-    // TODO: Replace with real API POST /trips/{id}/tip
-    await Future.delayed(const Duration(milliseconds: 400));
-    state = state.copyWith(isSubmitting: false, isSubmitted: true);
-    return true;
+    final amount = effectiveAmount;
+    if (amount <= 0) return false;
+    state = state.copyWith(isSubmitting: true, isSubmitted: false, error: null);
+    try {
+      await _api.post<dynamic>(
+        '/driver/trips/$tripId/tip-report',
+        data: {'amount': amount},
+      );
+      state = state.copyWith(isSubmitting: false, isSubmitted: true);
+      return true;
+    } catch (error) {
+      state = state.copyWith(isSubmitting: false, error: _errorMessage(error));
+      return false;
+    }
   }
 
   void reset() {
@@ -94,3 +123,13 @@ class TipNotifier extends StateNotifier<TipState> {
 final tipProvider = StateNotifierProvider<TipNotifier, TipState>((ref) {
   return TipNotifier();
 });
+
+String _errorMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['detail'] is String) return data['detail'] as String;
+    if (data is Map && data['message'] is String) return data['message'] as String;
+    if (error.message != null && error.message!.isNotEmpty) return error.message!;
+  }
+  return error.toString();
+}

@@ -1311,6 +1311,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_bank_retry => '再試行';
 
   @override
+  String get driver_tip_title => 'チップ調整';
+
+  @override
+  String get driver_tip_header_title => 'お客様から現金チップを受け取りましたか？';
+
+  @override
+  String get driver_tip_order_prefix => '注文元';
+
+  @override
+  String get driver_tip_customer_prefix => '顧客';
+
+  @override
+  String get driver_tip_picker_title => 'チップ金額を選択';
+
+  @override
+  String get driver_tip_custom_title => 'または別の金額を入力';
+
+  @override
+  String get driver_tip_custom_hint => '金額を入力（VND）';
+
+  @override
+  String get driver_tip_skip => 'スキップ';
+
+  @override
+  String get driver_tip_confirm => '確認';
+
+  @override
+  String get driver_tip_success_snackbar => 'チップ報告を保存しました';
+
+  @override
+  String get driver_tip_success_message => 'チップ報告は照合用に保存されました。支払い精算は自動変更されません。';
+
+  @override
   String get driver_support_title => 'ドライバーサポート';
 
   @override

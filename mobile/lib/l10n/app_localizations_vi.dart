@@ -1331,6 +1331,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_bank_retry => 'Thử lại';
 
   @override
+  String get driver_tip_title => 'Điều chỉnh tip';
+
+  @override
+  String get driver_tip_header_title => 'Khách hàng tip thêm bằng tiền mặt?';
+
+  @override
+  String get driver_tip_order_prefix => 'Đơn từ';
+
+  @override
+  String get driver_tip_customer_prefix => 'Khách';
+
+  @override
+  String get driver_tip_picker_title => 'Chọn số tiền tip';
+
+  @override
+  String get driver_tip_custom_title => 'Hoặc nhập số tiền khác';
+
+  @override
+  String get driver_tip_custom_hint => 'Nhập số tiền (VNĐ)';
+
+  @override
+  String get driver_tip_skip => 'Bỏ qua';
+
+  @override
+  String get driver_tip_confirm => 'Xác nhận';
+
+  @override
+  String get driver_tip_success_snackbar => 'Đã lưu báo cáo tip';
+
+  @override
+  String get driver_tip_success_message =>
+      'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.';
+
+  @override
   String get driver_support_title => 'Hỗ trợ tài xế';
 
   @override

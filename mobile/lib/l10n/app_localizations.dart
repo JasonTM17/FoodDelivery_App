@@ -2632,6 +2632,72 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get driver_bank_retry;
 
+  /// No description provided for @driver_tip_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều chỉnh tip'**
+  String get driver_tip_title;
+
+  /// No description provided for @driver_tip_header_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khách hàng tip thêm bằng tiền mặt?'**
+  String get driver_tip_header_title;
+
+  /// No description provided for @driver_tip_order_prefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn từ'**
+  String get driver_tip_order_prefix;
+
+  /// No description provided for @driver_tip_customer_prefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khách'**
+  String get driver_tip_customer_prefix;
+
+  /// No description provided for @driver_tip_picker_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn số tiền tip'**
+  String get driver_tip_picker_title;
+
+  /// No description provided for @driver_tip_custom_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoặc nhập số tiền khác'**
+  String get driver_tip_custom_title;
+
+  /// No description provided for @driver_tip_custom_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số tiền (VNĐ)'**
+  String get driver_tip_custom_hint;
+
+  /// No description provided for @driver_tip_skip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get driver_tip_skip;
+
+  /// No description provided for @driver_tip_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get driver_tip_confirm;
+
+  /// No description provided for @driver_tip_success_snackbar.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu báo cáo tip'**
+  String get driver_tip_success_snackbar;
+
+  /// No description provided for @driver_tip_success_message.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.'**
+  String get driver_tip_success_message;
+
   /// No description provided for @driver_support_title.
   ///
   /// In vi, this message translates to:

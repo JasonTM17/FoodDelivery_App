@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/tip_provider.dart';
 import '../widgets/tip_amount_picker.dart';
-
 
 class TipAdjustmentScreen extends ConsumerStatefulWidget {
   final String tripId;
@@ -18,13 +19,13 @@ class TipAdjustmentScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TipAdjustmentScreen> createState() =>
-      _TipAdjustmentScreenState();
+  ConsumerState<TipAdjustmentScreen> createState() => _TipAdjustmentScreenState();
 }
 
 class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tipState = ref.watch(tipProvider);
 
     return Scaffold(
@@ -32,9 +33,9 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
-        title: const Text(
-          'Điều chỉnh Tip',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driver_tip_title,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: SafeArea(
@@ -43,11 +44,15 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _TipHeader(
+                title: l10n.driver_tip_header_title,
+                restaurantName: widget.restaurantName,
+                customerName: widget.customerName,
+              ),
               const SizedBox(height: 24),
               const TipAmountPicker(),
               const SizedBox(height: 32),
-              _buildActions(),
+              _buildActions(l10n),
               if (tipState.isSubmitting) ...[
                 const SizedBox(height: 16),
                 const LinearProgressIndicator(
@@ -55,8 +60,22 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
                   backgroundColor: Color(0xFF374151),
                 ),
               ],
-              if (tipState.isSubmitted)
-                _buildSuccessState(),
+              if (tipState.error != null) ...[
+                const SizedBox(height: 16),
+                _TipStatusCard(
+                  icon: Icons.error_outline,
+                  color: const Color(0xFFF87171),
+                  message: tipState.error!,
+                ),
+              ],
+              if (tipState.isSubmitted) ...[
+                const SizedBox(height: 16),
+                _TipStatusCard(
+                  icon: Icons.check_circle,
+                  color: AppColors.primary,
+                  message: l10n.driver_tip_success_message,
+                ),
+              ],
             ],
           ),
         ),
@@ -64,7 +83,60 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildActions(AppLocalizations l10n) {
+    final tipState = ref.watch(tipProvider);
+    final effective = ref.read(tipProvider.notifier).effectiveAmount;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: tipState.isSubmitting ? null : () => Navigator.of(context).pop(false),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF6B7280),
+              side: const BorderSide(color: Color(0xFF374151)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: Text(l10n.driver_tip_skip),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: (tipState.isSubmitting || effective <= 0)
+                ? null
+                : () async {
+                    final success = await ref.read(tipProvider.notifier).submitTip(widget.tripId);
+                    if (mounted && success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.driver_tip_success_snackbar)),
+                      );
+                    }
+                  },
+            child: effective > 0
+                ? Text('${l10n.driver_tip_confirm} ${effective.toStringAsFixed(0)}đ')
+                : Text(l10n.driver_tip_confirm),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TipHeader extends StatelessWidget {
+  final String title;
+  final String restaurantName;
+  final String customerName;
+
+  const _TipHeader({
+    required this.title,
+    required this.restaurantName,
+    required this.customerName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -81,16 +153,12 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
               color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(
-              Icons.card_giftcard,
-              color: Color(0xFFF59E0B),
-              size: 32,
-            ),
+            child: const Icon(Icons.card_giftcard, color: Color(0xFFF59E0B), size: 32),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Khách hàng tip thêm?',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -98,79 +166,45 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Đơn từ ${widget.restaurantName} - Khách: ${widget.customerName}',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF6B7280),
-            ),
+            '${l10n.driver_tip_order_prefix} $restaurantName · ${l10n.driver_tip_customer_prefix} $customerName',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
             textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildActions() {
-    final tipState = ref.watch(tipProvider);
-    final tipNotifier = ref.read(tipProvider.notifier);
-    final effective = tipNotifier.effectiveAmount;
+class _TipStatusCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String message;
 
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: tipState.isSubmitting
-                ? null
-                : () => Navigator.of(context).pop(false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF6B7280),
-              side: const BorderSide(color: Color(0xFF374151)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: const Text('Bỏ qua'),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: (tipState.isSubmitting || effective <= 0)
-                ? null
-                : () async {
-                    final success = await ref
-                        .read(tipProvider.notifier)
-                        .submitTip(widget.tripId);
-                    if (mounted && success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã gửi tip thành công!')),
-                      );
-                    }
-                  },
-            child: effective > 0
-                ? Text('Xác nhận ${effective.toStringAsFixed(0)}đ')
-                : const Text('Xác nhận'),
-          ),
-        ),
-      ],
-    );
-  }
+  const _TipStatusCard({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
 
-  Widget _buildSuccessState() {
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.check_circle, color: AppColors.primary),
-          SizedBox(width: 10),
+          Icon(icon, color: color),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Tip đã được gửi thành công! Cảm ơn bạn.',
+              message,
               style: TextStyle(
-                color: AppColors.primary,
+                color: color,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
