@@ -47,6 +47,7 @@ jobs:
           pnpm db:big-seed
         env:
           DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Start backend
         run: docker compose up -d backend

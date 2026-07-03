@@ -115,7 +115,7 @@ Start from:
 Important production rules:
 
 - Rotate any key pasted into chat, logs, screenshots, tickets, or git history.
-- Keep `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, database passwords, Vercel tokens, and Supabase service keys only in secret managers or ignored local env files.
+- Keep `DATABASE_URL`, `DIRECT_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, database passwords, Vercel tokens, and Supabase service keys only in secret managers or ignored local env files.
 - Restrict browser-exposed Google Maps keys by HTTP referrer.
 - Keep backend Google Maps keys server-only.
 - SePay intents require both `SEPAY_API_KEY` and `SEPAY_ACCOUNT_NUMBER`; incomplete provider responses are rejected.
@@ -155,7 +155,7 @@ Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe ser
 Deployment is intentionally gated:
 
 1. Merge tested Batch 4 integration through a PR.
-2. Provision Supabase database/realtime only with rotated production secrets.
+2. Provision Supabase database/realtime only with rotated production secrets; backend Prisma uses pooled `DATABASE_URL` at runtime and direct/session `DIRECT_URL` for migrations.
 3. Deploy Admin and Restaurant to Vercel after web builds and E2E pass.
 4. Deploy backend with health checks, migrations, Redis, MinIO/storage, SePay webhook secrets, and CORS locked to production domains.
 5. Verify production health, realtime orders, maps, chatbot, exports, notifications, and tenant isolation.

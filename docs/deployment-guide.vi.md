@@ -33,7 +33,7 @@ curl http://localhost:3002/api/healthz
 | Khu vực | Secret cần có |
 |---|---|
 | Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
-| Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
+| Database/cache | `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, passwords |
 | Storage | MinIO/S3 access key và secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` hoặc key của LLM provider được cấu hình |
@@ -45,8 +45,9 @@ Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history ph
 ## Supabase
 
 1. Tạo Supabase project.
-2. Lưu Postgres connection string vào backend `DATABASE_URL`.
-3. Chạy migration trên staging trước:
+2. Lưu Supabase Postgres pooled transaction-mode URL vào backend `DATABASE_URL`.
+3. Lưu Supabase Postgres direct/session-mode URL vào backend `DIRECT_URL`; Prisma dùng biến này cho migration qua `directUrl`.
+4. Chạy migration trên staging trước:
 
    ```bash
    cd backend
@@ -54,8 +55,15 @@ Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history ph
    pnpm prisma migrate deploy
    ```
 
-4. Chỉ bật realtime cho bảng cần realtime. Chạy tenant isolation E2E trước khi mở production data.
-5. Supabase service-role key chỉ được lưu server-side, không đưa vào web/mobile.
+5. Chỉ bật realtime cho bảng cần realtime. Chạy tenant isolation E2E trước khi mở production data.
+6. Supabase service-role key chỉ được lưu server-side, không đưa vào web/mobile.
+
+Mẫu env:
+
+```bash
+DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+```
 
 ## Vercel
 

@@ -51,7 +51,7 @@ flutter run -t lib/main_driver.dart
 
 - `.env`、トークン、秘密鍵、DB 認証情報、service-role key を commit しないこと。
 - チャット、ログ、スクリーンショット、チケット、git history に出たキーは production 前に必ず rotate すること。
-- `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, Supabase/Vercel tokens は secret manager または ignored local env に置くこと。
+- `DATABASE_URL`, `DIRECT_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, Supabase/Vercel tokens は secret manager または ignored local env に置くこと。
 - Google Maps browser key は HTTP referrer で制限し、backend Maps key は server-side のみで使うこと。
 - SePay intent には `SEPAY_API_KEY` と `SEPAY_ACCOUNT_NUMBER` が必要です。QR/ref が欠けた response は reject します。
 
@@ -83,7 +83,7 @@ Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、vi
 ## デプロイ
 
 1. テスト済み PR で merge する。
-2. rotate 済み secret で Supabase database/realtime を provision する。
+2. rotate 済み secret で Supabase database/realtime を provision する。backend Prisma は runtime に pooled `DATABASE_URL`、migration に direct/session `DIRECT_URL` を使う。
 3. build と E2E が通った後、Admin/Restaurant を Vercel に deploy する。
 4. backend は migration、Redis、storage、SePay webhook、production CORS、health checks を有効にして deploy する。
 5. production health、realtime、map、chatbot、export、notification、tenant isolation を確認する。

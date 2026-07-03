@@ -51,7 +51,7 @@ flutter run -t lib/main_driver.dart
 
 - Không commit `.env`, token, private key, database credential hoặc service-role key.
 - Key đã paste vào chat/log/screenshot/ticket/git history phải rotate trước production.
-- `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secret, Supabase/Vercel tokens phải nằm trong secret manager hoặc file ignored.
+- `DATABASE_URL`, `DIRECT_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secret, Supabase/Vercel tokens phải nằm trong secret manager hoặc file ignored.
 - Google Maps browser key phải restrict bằng HTTP referrer; backend Maps key chỉ dùng server-side.
 - SePay intent cần `SEPAY_API_KEY` và `SEPAY_ACCOUNT_NUMBER`; response thiếu QR/ref bị reject.
 
@@ -83,7 +83,7 @@ Batch 4 chỉ được coi là xong khi backend, web, Playwright Chromium/Firefo
 ## Deploy
 
 1. Merge qua PR đã test.
-2. Provision Supabase database/realtime bằng secret đã rotate.
+2. Provision Supabase database/realtime bằng secret đã rotate; backend Prisma dùng pooled `DATABASE_URL` khi runtime và direct/session `DIRECT_URL` cho migration.
 3. Deploy Admin/Restaurant lên Vercel sau khi build và E2E pass.
 4. Deploy backend với migration, Redis, storage, SePay webhook, CORS production và health checks.
 5. Xác minh production health, realtime, map, chatbot, export, notification và tenant isolation.

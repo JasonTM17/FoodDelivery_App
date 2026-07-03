@@ -35,7 +35,7 @@ Use provider secret managers, not committed files:
 | Area | Required secrets |
 |---|---|
 | Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
-| Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
+| Database/cache | `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, passwords |
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
@@ -49,8 +49,9 @@ Any key pasted into chat, logs, screenshots, tickets, or git history must be rot
 Supabase is used only after backend contracts and migrations are green.
 
 1. Create a Supabase project.
-2. Store the Supabase Postgres connection string as the backend `DATABASE_URL`.
-3. Run Prisma validation and migrations against a staging database first:
+2. Store the Supabase pooled transaction-mode Postgres URL as backend `DATABASE_URL`.
+3. Store the Supabase direct/session-mode Postgres URL as backend `DIRECT_URL`; Prisma uses it for migrations through `directUrl`.
+4. Run Prisma validation and migrations against a staging database first:
 
    ```bash
    cd backend
@@ -58,8 +59,15 @@ Supabase is used only after backend contracts and migrations are green.
    pnpm prisma migrate deploy
    ```
 
-4. Enable realtime only for tables that require live updates. Keep tenant isolation checks enabled in E2E before exposing production data.
-5. Store Supabase service keys only in backend/server secret stores. Never expose service-role keys to web or mobile clients.
+5. Enable realtime only for tables that require live updates. Keep tenant isolation checks enabled in E2E before exposing production data.
+6. Store Supabase service keys only in backend/server secret stores. Never expose service-role keys to web or mobile clients.
+
+Example env shape:
+
+```bash
+DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+```
 
 ## Vercel Deployment
 

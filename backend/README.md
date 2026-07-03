@@ -26,6 +26,7 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | Name | Required | Default | Description |
 |------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DIRECT_URL` | Yes | — | Direct/session PostgreSQL connection for Prisma migrations; use the Supabase direct/session URL in production |
 | `REDIS_URL` | Yes | — | Redis connection string |
 | `JWT_SECRET` | Yes | — | HMAC-SHA256 signing key (min 32 chars) |
 | `JWT_REFRESH_SECRET` | Yes | — | Refresh token signing key |

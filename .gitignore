@@ -33,6 +33,7 @@ GEMINI.local.md
 .roo/
 .windsurf/
 .playwright-mcp/
+skills-lock.json
 
 # Local Codex/ClaudeKit workspaces and caches
 Food_Delivery-backups/

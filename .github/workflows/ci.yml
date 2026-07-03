@@ -34,6 +34,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DIRECT_URL: postgresql://test:test@localhost:5432/test
 
       - name: Type check
         run: pnpm typecheck
@@ -44,12 +47,14 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DIRECT_URL: postgresql://test:test@localhost:5432/test
 
       - name: Run tests with coverage
         run: pnpm test -- --coverage --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
         working-directory: backend
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DIRECT_URL: postgresql://test:test@localhost:5432/test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-64-chars-minimum-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           JWT_REFRESH_SECRET: test-refresh-secret-64-chars-minimum-xxxxxxxxxxxxxxxx

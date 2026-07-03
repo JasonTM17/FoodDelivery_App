@@ -33,7 +33,7 @@ curl http://localhost:3002/api/healthz
 | 領域 | 必須 secret |
 |---|---|
 | Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
-| Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
+| Database/cache | `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, passwords |
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` または設定済み LLM provider key |
@@ -45,8 +45,9 @@ curl http://localhost:3002/api/healthz
 ## Supabase
 
 1. Supabase project を作成する。
-2. Supabase Postgres connection string を backend `DATABASE_URL` に保存する。
-3. 先に staging DB で migration を検証する。
+2. Supabase Postgres pooled transaction-mode URL を backend `DATABASE_URL` に保存する。
+3. Supabase Postgres direct/session-mode URL を backend `DIRECT_URL` に保存する。Prisma は `directUrl` 経由で migration に使う。
+4. 先に staging DB で migration を検証する。
 
    ```bash
    cd backend
@@ -54,8 +55,15 @@ curl http://localhost:3002/api/healthz
    pnpm prisma migrate deploy
    ```
 
-4. Realtime は必要な table のみに有効化する。production data を公開する前に tenant isolation E2E を通す。
-5. Supabase service-role key は server-side secret store のみに保存し、web/mobile に出さない。
+5. Realtime は必要な table のみに有効化する。production data を公開する前に tenant isolation E2E を通す。
+6. Supabase service-role key は server-side secret store のみに保存し、web/mobile に出さない。
+
+Env 例:
+
+```bash
+DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+```
 
 ## Vercel
 

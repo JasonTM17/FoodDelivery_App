@@ -63,6 +63,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+      DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-secret-minimum-32-chars-xxxxxxxxxxxxxx
       JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
