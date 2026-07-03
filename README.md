@@ -169,6 +169,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [Deployment guide](docs/deployment-guide.md)
 - [Testing guide](docs/testing-guide.md)
 - [AI chatbot guide](docs/ai-chatbot-guide.md)
+- [Security audit guide](docs/security-audit-guide.md)
 - [Documentation localization policy](docs/documentation-localization.md)
 - [Code standards](docs/code-standards.md)
 - [Design guidelines](docs/design-guidelines.md)

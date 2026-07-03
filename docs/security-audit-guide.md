@@ -1,10 +1,14 @@
 # Security Audit Guide
 
+Languages: [English](./security-audit-guide.md) | [Tiếng Việt](./security-audit-guide.vi.md) | [日本語](./security-audit-guide.ja.md)
+
 ## Pre-Production Checklist
 
 - [ ] JWT secret is 64+ chars, generated via `openssl rand -hex 64`
 - [ ] Refresh token blocklist uses Redis (not in-memory)
 - [ ] LLM provider keys are stored only in secret managers or ignored env files
+- [ ] DeepSeek keys pasted into chat, screenshots, logs, or tickets are rotated before production
+- [ ] Local assistant files (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.codex/`) and local tool caches/worktrees are ignored
 - [ ] CORS origins restricted to production domains
 - [ ] Rate limiting enabled on all auth endpoints
 - [ ] Helmet security headers active
@@ -19,6 +23,7 @@
 ## Regular Audits
 
 - Run `pnpm audit` weekly for dependency vulnerabilities
+- Run a tracked-file secret scan before every PR and a staged-diff secret scan before every commit
 - Review admin audit logs monthly
 - Rotate JWT signing keys quarterly
 - Penetration test before major releases

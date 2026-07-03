@@ -34,6 +34,17 @@ GEMINI.local.md
 .windsurf/
 .playwright-mcp/
 
+# Local Codex/ClaudeKit workspaces and caches
+Food_Delivery-backups/
+Food_Delivery-tool-cache/
+Food_Delivery-tooling/
+Food_Delivery-worktrees/
+*-backups/
+*-tool-cache/
+*-tooling/
+*-worktrees/
+codex-clipboard-*.png
+
 # Private plans & notes
 plans/
 PLAN*.md
@@ -51,6 +62,9 @@ draft*.md
 
 # Release artifacts
 release-manifest.json
+*.bundle
+*.bak
+*.tmp
 
 # Generated visual artifacts at repo root
 # Approved images should live under app public/ folders or docs/screenshots/.
