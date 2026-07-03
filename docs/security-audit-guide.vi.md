@@ -9,6 +9,7 @@ Ngôn ngữ: [English](./security-audit-guide.md) | [Tiếng Việt](./security-
 - [ ] Key LLM chỉ nằm trong secret manager hoặc file env bị ignore.
 - [ ] Key DeepSeek từng paste vào chat, screenshot, log hoặc ticket phải rotate trước production.
 - [ ] File trợ lý local (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.codex/`) và cache/worktree local phải bị ignore.
+- [ ] Docker build context phải loại trừ file trợ lý local, dotenv, state CLI provider và credential/key artifact.
 - [ ] CORS origins chỉ cho phép domain production.
 - [ ] Rate limiting bật trên toàn bộ endpoint auth.
 - [ ] Helmet security headers đang hoạt động.

@@ -9,6 +9,7 @@ Languages: [English](./security-audit-guide.md) | [Tiếng Việt](./security-au
 - [ ] LLM provider keys are stored only in secret managers or ignored env files
 - [ ] DeepSeek keys pasted into chat, screenshots, logs, or tickets are rotated before production
 - [ ] Local assistant files (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.codex/`) and local tool caches/worktrees are ignored
+- [ ] Docker build contexts exclude local assistant files, dotenv files, provider CLI state, and credential/key artifacts
 - [ ] CORS origins restricted to production domains
 - [ ] Rate limiting enabled on all auth endpoints
 - [ ] Helmet security headers active

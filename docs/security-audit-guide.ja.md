@@ -9,6 +9,7 @@
 - [ ] LLM provider keys は secret manager または ignored env files のみに保存します。
 - [ ] Chat、screenshots、logs、tickets に貼られた DeepSeek key は production 前に rotate します。
 - [ ] Local assistant files (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.codex/`) と local tool caches/worktrees は ignore します。
+- [ ] Docker build contexts は local assistant files、dotenv files、provider CLI state、credential/key artifacts を除外します。
 - [ ] CORS origins は production domains に限定します。
 - [ ] Auth endpoints では rate limiting を有効にします。
 - [ ] Helmet security headers が有効です。
