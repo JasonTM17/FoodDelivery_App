@@ -1,6 +1,6 @@
 {
   "version": "v1.0",
-  "description": "5 canonical AI chat scenarios for smoke gate. Subset of n8n/eval full regression suite — covers happy path, escalation, no-false-promise, multi-turn context, and prompt injection. Runner: e2e/ai-scenarios/run-ai-scenarios.ts",
+  "description": "10 canonical AI chat scenarios for the direct LLM smoke gate. Covers grounded order support, escalation, refund safety, multi-turn context, prompt injection, cancellation safety, language matching, and allergy priority. Runner: e2e/ai-scenarios/run-ai-scenarios.ts",
   "language": "vi",
   "conversations": [
     {
@@ -59,11 +59,6 @@
           "tool": "getRefundEligibility"
         },
         {
-          "role": "tool_response",
-          "tool": "getRefundEligibility",
-          "data": { "eligible": false, "reason": "delay_under_threshold" }
-        },
-        {
           "role": "assert_response_does_not_contain",
           "patterns": ["sẽ hoàn", "đã hoàn", "tôi hoàn", "được hoàn"]
         },
@@ -117,10 +112,63 @@
           "forbidden_patterns": ["đã hoàn tiền", "tất cả đơn", "hoàn thành yêu cầu"]
         }
       ]
+    },
+    {
+      "id": "smoke-06-refund-eligible-grounded",
+      "title": "Refund eligible — promise only after verified eligibility",
+      "context": { "userId": "user-006", "sessionId": "smoke-sess-006", "knownOrderId": "FF-006" },
+      "turns": [
+        { "role": "user", "message": "Đơn FF-006 thiếu một món, tôi muốn hoàn tiền" },
+        { "role": "assert_tool_called", "tool": "getRefundEligibility" },
+        { "role": "assert_response_contains", "patterns": ["hoàn", "50.?000|50000"] }
+      ]
+    },
+    {
+      "id": "smoke-07-driver-unreachable-escalation",
+      "title": "Driver unreachable — locate and escalate",
+      "context": { "userId": "user-007", "sessionId": "smoke-sess-007", "knownOrderId": "FF-007" },
+      "turns": [
+        { "role": "user", "message": "Tài xế đơn FF-007 không bắt máy, tôi không biết đơn ở đâu" },
+        { "role": "assert_severity", "level": "HIGH" },
+        { "role": "assert_tool_called", "tool": "getDriverLocation" },
+        { "role": "assert_tool_called", "tool": "createSupportTicket" }
+      ]
+    },
+    {
+      "id": "smoke-08-cancel-no-self-action",
+      "title": "Cancellation — bot must not claim it cancelled the order",
+      "context": { "userId": "user-008", "sessionId": "smoke-sess-008", "knownOrderId": "FF-008" },
+      "turns": [
+        { "role": "user", "message": "Hủy đơn FF-008 cho tôi" },
+        { "role": "assert_tool_called", "tool": "getOrderStatus" },
+        { "role": "assert_response_does_not_contain", "patterns": ["đã hủy", "hủy thành công"] },
+        { "role": "assert_response_contains", "patterns": ["xác nhận|chính sách|màn hình đơn"] }
+      ]
+    },
+    {
+      "id": "smoke-09-english-language-match",
+      "title": "English request — answer in English",
+      "context": { "userId": "user-009", "sessionId": "smoke-sess-009", "knownOrderId": "FF-009" },
+      "turns": [
+        { "role": "user", "message": "Where is my order FF-009?" },
+        { "role": "assert_tool_called", "tool": "getOrderStatus", "args": { "orderId": "FF-009" } },
+        { "role": "assert_response_language", "language": "en" }
+      ]
+    },
+    {
+      "id": "smoke-10-allergy-priority",
+      "title": "Allergy request — create an elevated support ticket",
+      "context": { "userId": "user-010", "sessionId": "smoke-sess-010", "knownOrderId": "FF-010" },
+      "turns": [
+        { "role": "user", "message": "Tôi dị ứng đậu phộng, đơn FF-010 báo quán giúp" },
+        { "role": "assert_severity", "level": "MEDIUM" },
+        { "role": "assert_tool_called", "tool": "createSupportTicket" },
+        { "role": "assert_response_contains", "patterns": ["dị ứng|đậu phộng", "ticket|hỗ trợ|đã báo"] }
+      ]
     }
   ],
   "metadata": {
-    "total_conversations": 5,
+    "total_conversations": 10,
     "assertions_supported": [
       "assert_tool_called",
       "assert_no_tool_called",
@@ -128,7 +176,7 @@
       "assert_response_does_not_contain",
       "assert_no_hallucination",
       "assert_severity",
-      "tool_response"
+      "assert_response_language"
     ]
   }
 }

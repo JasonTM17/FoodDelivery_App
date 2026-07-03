@@ -6,6 +6,7 @@
  * AI endpoint, and validates assertions per turn.
  *
  * Usage:
+ *   AI_ACCESS_TOKEN=<seeded-customer-token> \
  *   pnpm tsx e2e/ai-scenarios/run-ai-scenarios.ts \
  *     --endpoint http://localhost:3001/api/ai/chat \
  *     --fixtures e2e/ai-scenarios/canonical-conversations.json
@@ -29,7 +30,6 @@ interface ConversationTurn {
   forbidden_patterns?: string[]
   level?: string
   language?: string
-  data?: Record<string, unknown>
 }
 
 interface Conversation {
@@ -62,7 +62,7 @@ interface AssertionResult {
 // CLI argument parsing
 // ---------------------------------------------------------------------------
 
-function parseArgs(argv: string[]): { endpoint: string; fixtures: string } {
+function parseArgs(argv: string[]): { endpoint: string; fixtures: string; accessToken: string } {
   const args: Record<string, string> = {}
   for (let i = 0; i < argv.length; i++) {
     const cur = argv[i]
@@ -83,6 +83,7 @@ function parseArgs(argv: string[]): { endpoint: string; fixtures: string } {
     fixtures:
       args.fixtures ??
       'e2e/ai-scenarios/canonical-conversations.json',
+    accessToken: args.token ?? process.env.AI_ACCESS_TOKEN ?? '',
   }
 }
 
@@ -94,12 +95,18 @@ async function callEndpoint(
   endpoint: string,
   message: string,
   context: Record<string, unknown>,
-  history: Array<{ role: string; message: string }>,
+  accessToken: string,
 ): Promise<BotResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  }
+  const sessionId = typeof context.sessionId === 'string' ? context.sessionId : undefined
+  const orderId = typeof context.knownOrderId === 'string' ? context.knownOrderId : undefined
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, context, history }),
+    headers,
+    body: JSON.stringify({ message, sessionId, orderId }),
     signal: AbortSignal.timeout(15_000),
   })
   if (!res.ok) {
@@ -107,14 +114,19 @@ async function callEndpoint(
     throw new Error(`AI endpoint ${res.status}: ${text.slice(0, 200)}`)
   }
   const json = (await res.json()) as Record<string, unknown>
+  const payload = isRecord(json.data) ? json.data : json
   return {
-    text: String(json.text ?? json.response ?? json.message ?? ''),
-    toolCalls: Array.isArray(json.toolCalls)
-      ? (json.toolCalls as Array<{ name: string; args: Record<string, unknown> }>)
+    text: String(payload.reply ?? payload.text ?? payload.response ?? payload.message ?? ''),
+    toolCalls: Array.isArray(payload.toolCalls)
+      ? (payload.toolCalls as Array<{ name: string; args: Record<string, unknown> }>)
       : [],
-    severity: typeof json.severity === 'string' ? json.severity : undefined,
-    language: typeof json.language === 'string' ? json.language : undefined,
+    severity: typeof payload.severity === 'string' ? payload.severity : undefined,
+    language: typeof payload.language === 'string' ? payload.language : undefined,
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 // ---------------------------------------------------------------------------
@@ -151,9 +163,9 @@ function assertToolCalled(
 async function runConversation(
   endpoint: string,
   conv: Conversation,
+  accessToken: string,
 ): Promise<AssertionResult[]> {
   const results: AssertionResult[] = []
-  const history: Array<{ role: string; message: string }> = []
   let lastResp: BotResponse | null = null
 
   for (let i = 0; i < conv.turns.length; i++) {
@@ -161,9 +173,7 @@ async function runConversation(
 
     if (turn.role === 'user' && turn.message) {
       try {
-        lastResp = await callEndpoint(endpoint, turn.message, conv.context, history)
-        history.push({ role: 'user', message: turn.message })
-        history.push({ role: 'assistant', message: lastResp.text })
+        lastResp = await callEndpoint(endpoint, turn.message, conv.context, accessToken)
       } catch (err) {
         results.push({
           conversationId: conv.id,
@@ -231,15 +241,26 @@ async function runConversation(
                 detail: `severity "${lastResp.severity}" expected "${turn.level}"`,
               }
         break
-      case 'tool_response':
-        // Stub — mock layer optional; just mark as pass
-        r = { ok: true, detail: 'tool_response stub (no mock layer)' }
+      case 'assert_response_language':
+        r =
+          lastResp.language === turn.language
+            ? { ok: true, detail: 'ok' }
+            : {
+                ok: false,
+                detail: `language "${lastResp.language}" expected "${turn.language}"`,
+              }
         break
       default:
         r = { ok: false, detail: `unknown assertion type: "${turn.role}"` }
     }
 
-    results.push({ conversationId: conv.id, turnIndex: i, assertion: turn.role, ...r })
+    results.push({
+      conversationId: conv.id,
+      turnIndex: i,
+      assertion: turn.role,
+      passed: r.ok,
+      detail: r.detail,
+    })
   }
 
   return results
@@ -250,7 +271,10 @@ async function runConversation(
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  const { endpoint, fixtures } = parseArgs(process.argv.slice(2))
+  const { endpoint, fixtures, accessToken } = parseArgs(process.argv.slice(2))
+  if (!accessToken) {
+    throw new Error('AI_ACCESS_TOKEN is required for the authenticated /ai/chat endpoint')
+  }
   const fixturesPath = resolve(process.cwd(), fixtures)
   const raw = readFileSync(fixturesPath, 'utf-8')
   const data = JSON.parse(raw) as Fixtures
@@ -262,7 +286,7 @@ async function main(): Promise<void> {
 
   for (const conv of data.conversations) {
     console.log(`\n  running ${conv.id}: ${conv.title}`)
-    const results = await runConversation(endpoint, conv)
+    const results = await runConversation(endpoint, conv, accessToken)
     allResults.push(...results)
     const fails = results.filter((r) => !r.passed)
     if (fails.length === 0) {
