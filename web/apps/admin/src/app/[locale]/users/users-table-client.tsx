@@ -99,7 +99,7 @@ export default function UsersTableClient() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('columns.user')}</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>{t('columns.email')}</TableHead>
                     <TableHead>{t('columns.phone')}</TableHead>
                     <TableHead>{t('columns.role')}</TableHead>
                     <TableHead>{t('columns.status')}</TableHead>

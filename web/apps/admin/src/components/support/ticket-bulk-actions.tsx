@@ -182,7 +182,7 @@ export default function TicketBulkActions({
 
             {selectedAction === 'add_tag' && (
               <div className="space-y-2">
-                <Label htmlFor="bulk-tag">Tag</Label>
+                <Label htmlFor="bulk-tag">{t('tagLabel')}</Label>
                 <Select value={actionValue} onValueChange={setActionValue}>
                   <SelectTrigger id="bulk-tag">
                     <SelectValue placeholder={t('tagPlaceholder')} />
@@ -191,8 +191,8 @@ export default function TicketBulkActions({
                     <SelectItem value="refund">{t('tags.refund')}</SelectItem>
                     <SelectItem value="delivery">{t('tags.delivery')}</SelectItem>
                     <SelectItem value="quality">{t('tags.quality')}</SelectItem>
-                    <SelectItem value="spam">Spam</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="spam">{t('tags.spam')}</SelectItem>
+                    <SelectItem value="vip">{t('tags.vip')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

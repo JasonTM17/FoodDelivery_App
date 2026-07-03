@@ -563,6 +563,7 @@
     },
     "columns": {
       "user": "User",
+      "email": "Email",
       "phone": "Phone",
       "role": "Role",
       "status": "Status",
@@ -959,6 +960,7 @@
     "noAssignees": "No assignees available",
     "priorityLabel": "New priority",
     "priorityPlaceholder": "Choose priority...",
+    "tagLabel": "Tag",
     "tagPlaceholder": "Choose tag...",
     "reasonLabel": "Reason (shown in log)",
     "reasonPlaceholder": "Enter bulk action reason...",
@@ -981,7 +983,9 @@
     "tags": {
       "refund": "Refund",
       "delivery": "Delivery",
-      "quality": "Quality"
+      "quality": "Quality",
+      "spam": "Spam",
+      "vip": "VIP"
     }
   },
   "csat": {

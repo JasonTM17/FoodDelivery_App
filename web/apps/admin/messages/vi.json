@@ -563,6 +563,7 @@
     },
     "columns": {
       "user": "Người dùng",
+      "email": "Email",
       "phone": "SĐT",
       "role": "Vai trò",
       "status": "Trạng thái",
@@ -959,6 +960,7 @@
     "noAssignees": "Không có người xử lý khả dụng",
     "priorityLabel": "Ưu tiên mới",
     "priorityPlaceholder": "Chọn mức ưu tiên...",
+    "tagLabel": "Tag",
     "tagPlaceholder": "Chọn tag...",
     "reasonLabel": "Lý do (hiển thị trong log)",
     "reasonPlaceholder": "Nhập lý do thao tác hàng loạt...",
@@ -981,7 +983,9 @@
     "tags": {
       "refund": "Hoàn tiền",
       "delivery": "Giao hàng",
-      "quality": "Chất lượng"
+      "quality": "Chất lượng",
+      "spam": "Spam",
+      "vip": "VIP"
     }
   },
   "csat": {

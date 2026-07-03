@@ -563,6 +563,7 @@
     },
     "columns": {
       "user": "ユーザー",
+      "email": "メール",
       "phone": "電話",
       "role": "ロール",
       "status": "ステータス",
@@ -959,6 +960,7 @@
     "noAssignees": "利用可能な担当者がいません",
     "priorityLabel": "新しい優先度",
     "priorityPlaceholder": "優先度を選択...",
+    "tagLabel": "タグ",
     "tagPlaceholder": "タグを選択...",
     "reasonLabel": "理由（ログに表示）",
     "reasonPlaceholder": "一括操作の理由を入力...",
@@ -981,7 +983,9 @@
     "tags": {
       "refund": "返金",
       "delivery": "配達",
-      "quality": "品質"
+      "quality": "品質",
+      "spam": "スパム",
+      "vip": "VIP"
     }
   },
   "csat": {
