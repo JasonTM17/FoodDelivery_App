@@ -1,12 +1,14 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
+import { Clock, Ticket } from 'lucide-react';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import { apiGet } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@foodflow/ui/empty-state';
-import { Ticket, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Voucher {
   id: string;
@@ -28,6 +30,7 @@ interface VouchersData {
 }
 
 export default function UserVouchersPanel({ userId }: { userId: string }) {
+  const t = useTranslations('userVouchersPanel');
   const { data, isLoading } = useQuery<VouchersData>({
     queryKey: ['user-vouchers', userId],
     queryFn: () => apiGet<VouchersData>(`/admin/users/${userId}/vouchers`),
@@ -43,83 +46,133 @@ export default function UserVouchersPanel({ userId }: { userId: string }) {
   }
 
   if (!data) {
-    return <EmptyState icon={Ticket} title="Không có voucher" description="Người dùng chưa có voucher nào" />;
+    return (
+      <EmptyState
+        icon={Ticket}
+        title={t('emptyTitle')}
+        description={t('emptyDescription')}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Tổng tiết kiệm:</span>
+        <span>{t('totalSaved')}</span>
         <span className="font-bold text-green-600">{formatCurrency(data.totalSaved)}</span>
       </div>
 
       {data.owned.length === 0 && data.used.length === 0 ? (
-        <EmptyState icon={Ticket} title="Không có voucher" description="Người dùng chưa nhận hoặc sử dụng voucher nào" />
+        <EmptyState
+          icon={Ticket}
+          title={t('emptyTitle')}
+          description={t('emptyAllDescription')}
+        />
       ) : (
         <>
           {data.owned.length > 0 && (
-            <div>
-              <h3 className="mb-3 text-sm font-semibold">Voucher đang có ({data.owned.length})</h3>
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.owned.map((v) => (
-                  <Card key={v.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold">{v.code}</span>
-                            <Badge variant="success" className="text-[10px]">Khả dụng</Badge>
-                          </div>
-                          <p className="mt-1 text-xs text-muted-foreground">{v.description}</p>
-                          <p className="mt-1 text-xs">
-                            Giảm {v.discountType === 'percentage' ? `${v.discountValue}%` : formatCurrency(v.discountValue)}
-                            {v.minOrder > 0 && ` cho đơn từ ${formatCurrency(v.minOrder)}`}
-                            {v.maxDiscount > 0 && ` · Tối đa ${formatCurrency(v.maxDiscount)}`}
-                          </p>
-                        </div>
-                      </div>
-                      {v.validUntil && (
-                        <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          HSD: {formatDate(v.validUntil)}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <VoucherSection title={t('ownedTitle', { count: data.owned.length })}>
+              {data.owned.map((voucher) => (
+                <VoucherCard key={voucher.id} voucher={voucher} state="owned" />
+              ))}
+            </VoucherSection>
           )}
 
           {data.used.length > 0 && (
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Đã sử dụng ({data.used.length})</h3>
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.used.map((v) => (
-                  <Card key={v.id} className="opacity-60">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold line-through">{v.code}</span>
-                            <Badge variant="secondary" className="text-[10px]">Đã dùng</Badge>
-                          </div>
-                          {v.orderCode && (
-                            <p className="mt-1 text-xs text-muted-foreground">Đơn: {v.orderCode}</p>
-                          )}
-                          {v.usedAt && (
-                            <p className="mt-1 text-[11px] text-muted-foreground">Dùng lúc: {formatDate(v.usedAt)}</p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <VoucherSection title={t('usedTitle', { count: data.used.length })} muted>
+              {data.used.map((voucher) => (
+                <VoucherCard key={voucher.id} voucher={voucher} state="used" />
+              ))}
+            </VoucherSection>
           )}
         </>
       )}
     </div>
+  );
+}
+
+function VoucherSection({
+  title,
+  children,
+  muted,
+}: {
+  title: string;
+  children: ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <div>
+      <h3 className={`mb-3 text-sm font-semibold ${muted ? 'text-muted-foreground' : ''}`}>
+        {title}
+      </h3>
+      <div className="grid gap-3 md:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+function VoucherCard({ voucher, state }: { voucher: Voucher; state: 'owned' | 'used' }) {
+  const t = useTranslations('userVouchersPanel');
+  const isUsed = state === 'used';
+
+  return (
+    <Card className={isUsed ? 'opacity-60' : undefined}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`font-mono font-bold ${isUsed ? 'line-through' : ''}`}>
+                {voucher.code}
+              </span>
+              <Badge variant={isUsed ? 'secondary' : 'success'} className="text-[10px]">
+                {isUsed ? t('usedBadge') : t('availableBadge')}
+              </Badge>
+            </div>
+
+            {!isUsed && (
+              <>
+                <p className="mt-1 text-xs text-muted-foreground">{voucher.description}</p>
+                <p className="mt-1 text-xs">
+                  <VoucherDiscountText voucher={voucher} />
+                </p>
+              </>
+            )}
+
+            {isUsed && voucher.orderCode && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('orderCode', { orderCode: voucher.orderCode })}
+              </p>
+            )}
+            {isUsed && voucher.usedAt && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t('usedAt', { date: formatDate(voucher.usedAt) })}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {!isUsed && voucher.validUntil && (
+          <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {t('validUntil', { date: formatDate(voucher.validUntil) })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VoucherDiscountText({ voucher }: { voucher: Voucher }) {
+  const t = useTranslations('userVouchersPanel');
+  const discount =
+    voucher.discountType === 'percentage'
+      ? t('percentageDiscount', { value: voucher.discountValue })
+      : formatCurrency(voucher.discountValue);
+
+  return (
+    <>
+      {t('discount', { discount })}
+      {voucher.minOrder > 0 && ` ${t('minOrder', { amount: formatCurrency(voucher.minOrder) })}`}
+      {voucher.maxDiscount > 0 && ` · ${t('maxDiscount', { amount: formatCurrency(voucher.maxDiscount) })}`}
+    </>
   );
 }

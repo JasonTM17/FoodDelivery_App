@@ -407,6 +407,23 @@
     "emptyTopupHistory": "チャージ履歴はまだありません",
     "emptyTransactions": "取引はまだありません"
   },
+  "userVouchersPanel": {
+    "emptyTitle": "クーポンはありません",
+    "emptyDescription": "このユーザーにはまだクーポンがありません。",
+    "emptyAllDescription": "このユーザーはまだクーポンを受け取っておらず、使用もしていません。",
+    "totalSaved": "総節約額:",
+    "ownedTitle": "利用可能なクーポン（{count}）",
+    "usedTitle": "使用済み（{count}）",
+    "availableBadge": "利用可能",
+    "usedBadge": "使用済み",
+    "discount": "{discount}割引",
+    "percentageDiscount": "{value}%",
+    "minOrder": "{amount}以上の注文",
+    "maxDiscount": "最大 {amount}",
+    "validUntil": "有効期限: {date}",
+    "orderCode": "注文: {orderCode}",
+    "usedAt": "使用日時: {date}"
+  },
   "drivers": {
     "title": "ドライバー管理",
     "description": "システム内のドライバー一覧",

@@ -407,6 +407,23 @@
     "emptyTopupHistory": "Chưa có lịch sử nạp tiền",
     "emptyTransactions": "Chưa có giao dịch"
   },
+  "userVouchersPanel": {
+    "emptyTitle": "Không có voucher",
+    "emptyDescription": "Người dùng chưa có voucher nào.",
+    "emptyAllDescription": "Người dùng chưa nhận hoặc sử dụng voucher nào.",
+    "totalSaved": "Tổng tiết kiệm:",
+    "ownedTitle": "Voucher đang có ({count})",
+    "usedTitle": "Đã sử dụng ({count})",
+    "availableBadge": "Khả dụng",
+    "usedBadge": "Đã dùng",
+    "discount": "Giảm {discount}",
+    "percentageDiscount": "{value}%",
+    "minOrder": "cho đơn từ {amount}",
+    "maxDiscount": "Tối đa {amount}",
+    "validUntil": "HSD: {date}",
+    "orderCode": "Đơn: {orderCode}",
+    "usedAt": "Dùng lúc: {date}"
+  },
   "drivers": {
     "title": "Quản lý tài xế",
     "description": "Danh sách tài xế trong hệ thống",

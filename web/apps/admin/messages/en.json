@@ -407,6 +407,23 @@
     "emptyTopupHistory": "No top-up history yet",
     "emptyTransactions": "No transactions yet"
   },
+  "userVouchersPanel": {
+    "emptyTitle": "No vouchers",
+    "emptyDescription": "This user has no vouchers yet.",
+    "emptyAllDescription": "This user has not received or used any vouchers yet.",
+    "totalSaved": "Total saved:",
+    "ownedTitle": "Available vouchers ({count})",
+    "usedTitle": "Used vouchers ({count})",
+    "availableBadge": "Available",
+    "usedBadge": "Used",
+    "discount": "Discount {discount}",
+    "percentageDiscount": "{value}%",
+    "minOrder": "for orders from {amount}",
+    "maxDiscount": "Max {amount}",
+    "validUntil": "Expires: {date}",
+    "orderCode": "Order: {orderCode}",
+    "usedAt": "Used at: {date}"
+  },
   "drivers": {
     "title": "Driver Management",
     "description": "List of drivers in the system",
