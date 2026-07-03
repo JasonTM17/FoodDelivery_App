@@ -89,7 +89,11 @@ export class OrderChatService {
     })
 
     const serialized = serializeMessage(message)
-    this.ordersGateway.broadcastToOrder(order.id, 'order:message_created', { ...serialized })
+    this.ordersGateway.broadcastToRestaurantDriverChat(
+      order.id,
+      'order:message_created',
+      { orderId: order.id, ...serialized },
+    )
     return serialized
   }
 

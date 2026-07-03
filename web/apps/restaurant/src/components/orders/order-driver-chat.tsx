@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCw, SendHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { RestaurantOrderChatMessagesPayload } from '@foodflow/api-client';
+import type { RestaurantOrderChatMessage, RestaurantOrderChatMessagesPayload } from '@foodflow/api-client';
 import { api } from '@/lib/api';
 import { connectToOrder, leaveOrder, type OrderChatMessageEvent } from '@/lib/socket';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ interface OrderDriverChatProps {
 export function OrderDriverChat({ orderId, driverName }: OrderDriverChatProps) {
   const t = useTranslations('orderChat');
   const quickReplies = [t('quick.ready'), t('quick.fiveMinutes'), t('quick.backGate'), t('quick.thanks')];
-  const [messages, setMessages] = useState<OrderChatMessageEvent[]>([]);
+  const [messages, setMessages] = useState<RestaurantOrderChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [canReply, setCanReply] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -55,6 +55,7 @@ export function OrderDriverChat({ orderId, driverName }: OrderDriverChatProps) {
     };
     const markDisconnected = () => setConnected(false);
     const handleMessage = (message: OrderChatMessageEvent) => {
+      if (message.orderId !== orderId) return;
       setMessages((prev) => prev.some((item) => item.id === message.id) ? prev : [...prev, message]);
     };
 
@@ -75,7 +76,7 @@ export function OrderDriverChat({ orderId, driverName }: OrderDriverChatProps) {
     if (!text.trim()) return;
     setIsSending(true);
     try {
-      const message = await api.post<OrderChatMessageEvent>(`/restaurant/orders/${orderId}/messages`, { content: text.trim() });
+      const message = await api.post<RestaurantOrderChatMessage>(`/restaurant/orders/${orderId}/messages`, { content: text.trim() });
       setMessages((prev) => prev.some((item) => item.id === message.id) ? prev : [...prev, message]);
       setInput('');
       setError('');

@@ -20,7 +20,6 @@ class SocketClient {
   static const String _trackingNamespace = '/tracking';
   static const String _dispatchNamespace = '/dispatch';
   static const String _notificationsNamespace = '/notifications';
-  static const String _chatNamespace = '/chat';
 
   final _buffer = <_BufferedEvent>[];
   DateTime? _lastLocationEmit;
@@ -28,8 +27,6 @@ class SocketClient {
   final _driverLocationController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _orderStatusController =
-      StreamController<Map<String, dynamic>>.broadcast();
-  final _chatMessageController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _etaController = StreamController<Map<String, dynamic>>.broadcast();
   final _authRefreshController = StreamController<void>.broadcast();
@@ -42,8 +39,6 @@ class SocketClient {
       _driverLocationController.stream;
   Stream<Map<String, dynamic>> get onOrderStatus =>
       _orderStatusController.stream;
-  Stream<Map<String, dynamic>> get onChatMessage =>
-      _chatMessageController.stream;
   Stream<Map<String, dynamic>> get onEtaUpdate => _etaController.stream;
   Stream<Map<String, dynamic>> get onNotification =>
       _notificationController.stream;
@@ -80,7 +75,6 @@ class SocketClient {
     _connectNamespace(_trackingNamespace, wsUrl, token);
     _connectNamespace(_dispatchNamespace, wsUrl, token);
     _connectNamespace(_notificationsNamespace, wsUrl, token);
-    _connectNamespace(_chatNamespace, wsUrl, token);
 
     _pipe(
       _trackingNamespace,
@@ -91,9 +85,6 @@ class SocketClient {
     _pipe(_trackingNamespace, 'delivery:eta_updated', _etaController);
     _pipe(_eventsNamespace, 'order:status:changed', _orderStatusController);
     _pipe(_eventsNamespace, 'order:status', _orderStatusController);
-    _pipe(_eventsNamespace, 'order:message_created', _chatMessageController);
-    _pipe(_chatNamespace, 'chat:message_new', _chatMessageController);
-    _pipe(_chatNamespace, 'chat:message', _chatMessageController);
     _pipe(_notificationsNamespace, 'notification:new', _notificationController);
     _pipe(_dispatchNamespace, 'driver:new_order', _driverOfferController);
     _pipe(_dispatchNamespace, 'driver:offer', _driverOfferController);
@@ -194,13 +185,6 @@ class SocketClient {
     _emitToNamespace(_trackingNamespace, 'order:unsubscribe', payload);
   }
 
-  void sendChatMessage(String orderId, String message) {
-    _emitToNamespace(_eventsNamespace, 'chat:send', {
-      'orderId': orderId,
-      'message': message,
-    });
-  }
-
   // Throttled to one ping per 250 ms — for driver location updates.
   void emitLocationPing(double lat, double lng) {
     final now = DateTime.now();
@@ -247,9 +231,6 @@ class SocketClient {
         event.startsWith('notifications:')) {
       return _notificationsNamespace;
     }
-    if (event.startsWith('chat:')) {
-      return _chatNamespace;
-    }
     return _eventsNamespace;
   }
 
@@ -262,7 +243,6 @@ class SocketClient {
   void dispose() {
     _driverLocationController.close();
     _orderStatusController.close();
-    _chatMessageController.close();
     _etaController.close();
     _authRefreshController.close();
     _notificationController.close();

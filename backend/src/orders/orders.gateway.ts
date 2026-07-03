@@ -47,6 +47,14 @@ export class OrdersGateway implements OnGatewayConnection {
     this.server.to(`order:${orderId}`).emit(event, data)
   }
 
+  broadcastToRestaurantDriverChat(
+    orderId: string,
+    event: string,
+    data: Record<string, unknown>,
+  ) {
+    this.server.to(this.restaurantDriverChatRoom(orderId)).emit(event, data)
+  }
+
   notifyAdmins(event: string, data: Record<string, unknown>) {
     this.server.to('admin:orders').emit(event, data)
   }
@@ -65,12 +73,16 @@ export class OrdersGateway implements OnGatewayConnection {
       return { success: false }
     }
     client.join(`order:${data.orderId}`)
+    if (user.role === UserRole.restaurant || user.role === UserRole.driver) {
+      client.join(this.restaurantDriverChatRoom(data.orderId))
+    }
     return { success: true }
   }
 
   @SubscribeMessage('order:unsubscribe')
   handleOrderUnsubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }) {
     client.leave(`order:${data.orderId}`)
+    client.leave(this.restaurantDriverChatRoom(data.orderId))
   }
 
   @SubscribeMessage('restaurant:subscribe')
@@ -119,5 +131,9 @@ export class OrdersGateway implements OnGatewayConnection {
   @SubscribeMessage('admin:unsubscribe_orders')
   handleAdminOrderUnsubscribe(@ConnectedSocket() client: Socket) {
     client.leave('admin:orders')
+  }
+
+  private restaurantDriverChatRoom(orderId: string): string {
+    return `order:${orderId}:restaurant-driver`
   }
 }

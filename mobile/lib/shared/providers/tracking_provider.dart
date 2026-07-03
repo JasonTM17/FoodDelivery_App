@@ -16,7 +16,6 @@ class TrackingState {
   final double? driverLongitude;
   final String? currentOrderId;
   final List<Map<String, dynamic>> driverLocations;
-  final List<Map<String, dynamic>> chatMessages;
   final int? etaMinutes;
   final String? etaSource;
   final bool etaDegraded;
@@ -27,7 +26,6 @@ class TrackingState {
     this.driverLongitude,
     this.currentOrderId,
     this.driverLocations = const [],
-    this.chatMessages = const [],
     this.etaMinutes,
     this.etaSource,
     this.etaDegraded = false,
@@ -39,7 +37,6 @@ class TrackingState {
     double? driverLongitude,
     String? currentOrderId,
     List<Map<String, dynamic>>? driverLocations,
-    List<Map<String, dynamic>>? chatMessages,
     int? etaMinutes,
     String? etaSource,
     bool? etaDegraded,
@@ -50,7 +47,6 @@ class TrackingState {
       driverLongitude: driverLongitude ?? this.driverLongitude,
       currentOrderId: currentOrderId ?? this.currentOrderId,
       driverLocations: driverLocations ?? this.driverLocations,
-      chatMessages: chatMessages ?? this.chatMessages,
       etaMinutes: etaMinutes ?? this.etaMinutes,
       etaSource: etaSource ?? this.etaSource,
       etaDegraded: etaDegraded ?? this.etaDegraded,
@@ -64,7 +60,6 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   StreamSubscription<Map<String, dynamic>>? _locationSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _statusSub;
-  StreamSubscription<Map<String, dynamic>>? _chatSub;
 
   TrackingNotifier(this._orderNotifier) : super(const TrackingState());
 
@@ -72,7 +67,6 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _locationSub?.cancel();
     _etaSub?.cancel();
     _statusSub?.cancel();
-    _chatSub?.cancel();
     state = TrackingState(currentOrderId: orderId);
 
     await _socketClient.connect();
@@ -123,12 +117,6 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         _orderNotifier.updateOrderStatus(orderId, status);
       }
     });
-
-    _chatSub = _socketClient.onChatMessage.listen((data) {
-      if (data['orderId'] != null && data['orderId'] != orderId) return;
-      final updatedMessages = [...state.chatMessages, data];
-      state = state.copyWith(chatMessages: updatedMessages);
-    });
   }
 
   void stopTracking() {
@@ -139,24 +127,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _locationSub?.cancel();
     _etaSub?.cancel();
     _statusSub?.cancel();
-    _chatSub?.cancel();
     state = const TrackingState();
-  }
-
-  void sendChatMessage(String message) {
-    final orderId = state.currentOrderId;
-    if (orderId != null) {
-      _socketClient.sendChatMessage(orderId, message);
-      final updatedMessages = [
-        ...state.chatMessages,
-        {
-          'from': 'customer',
-          'message': message,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
-      ];
-      state = state.copyWith(chatMessages: updatedMessages);
-    }
   }
 
   @override
@@ -164,7 +135,6 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _locationSub?.cancel();
     _etaSub?.cancel();
     _statusSub?.cancel();
-    _chatSub?.cancel();
     if (state.currentOrderId != null) {
       _socketClient.unsubscribeOrder(state.currentOrderId!);
     }

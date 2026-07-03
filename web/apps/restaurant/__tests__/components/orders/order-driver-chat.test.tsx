@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OrderDriverChat } from '@/components/orders/order-driver-chat';
@@ -127,5 +127,25 @@ describe('OrderDriverChat', () => {
     expect(await screen.findByText('Driver has not been assigned yet.')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Message' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled();
+  });
+
+  it('ignores realtime messages for a different order', async () => {
+    mocks.apiGet.mockResolvedValue({ canReply: true, messages: [] });
+    render(<OrderDriverChat orderId="order-1" />);
+
+    await screen.findByText('No messages yet.');
+    const onMessage = mocks.socketHandlers.get('order:message_created');
+    act(() => {
+      onMessage?.({
+        orderId: 'order-2',
+        id: 'message-other',
+        senderType: 'driver',
+        senderId: 'driver-2',
+        content: 'Wrong room',
+        createdAt: '2026-07-03T03:00:00.000Z',
+      });
+    });
+
+    expect(screen.queryByText('Wrong room')).not.toBeInTheDocument();
   });
 });

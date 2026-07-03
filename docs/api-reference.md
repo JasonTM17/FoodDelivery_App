@@ -166,7 +166,7 @@ Response envelope:
 ```
 
 ### POST /restaurant/orders/:id/messages
-Create a restaurant-driver order chat message and broadcast `/events` `order:message_created`.
+Create a restaurant-driver order chat message and broadcast `/events` `order:message_created` only to the authenticated restaurant and assigned-driver chat room.
 
 ```
 Body: { content }
@@ -303,7 +303,7 @@ Connect to `ws://localhost:3001` with namespace:
 |-------|---------|
 | `/events: restaurant:new_order` | `{ orderId, orderCode, total, items }` |
 | `/events: order:status:changed` | `{ orderId, status, timestamp }` |
-| `/events: order:message_created` | `{ id, senderType, senderId, content, createdAt }` |
+| `/events: order:message_created` | `{ orderId, id, senderType, senderId, content, createdAt }` (restaurant and assigned driver only) |
 | `driver:location_changed` | `{ orderId, driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |

@@ -58,6 +58,41 @@ describe('OrdersGateway realtime room authorization', () => {
     expect(client.join).not.toHaveBeenCalledWith('order:order-1')
     expect(client.join).toHaveBeenCalledWith('restaurant:restaurant-1')
   })
+
+  it('keeps restaurant-driver chat events out of customer order rooms', async () => {
+    const customer = makeClient()
+    getUser.mockReturnValue({ sub: 'customer-1', role: UserRole.customer })
+    canAccessOrder.mockResolvedValue(true)
+
+    await expect(gateway.handleOrderSubscribe(customer, { orderId: 'order-1' }))
+      .resolves.toEqual({ success: true })
+    expect(customer.join).toHaveBeenCalledWith('order:order-1')
+    expect(customer.join).not.toHaveBeenCalledWith('order:order-1:restaurant-driver')
+
+    const restaurant = makeClient()
+    getUser.mockReturnValue({ sub: 'restaurant-user', role: UserRole.restaurant })
+
+    await expect(gateway.handleOrderSubscribe(restaurant, { orderId: 'order-1' }))
+      .resolves.toEqual({ success: true })
+    expect(restaurant.join).toHaveBeenCalledWith('order:order-1')
+    expect(restaurant.join).toHaveBeenCalledWith('order:order-1:restaurant-driver')
+  })
+
+  it('broadcasts saved chat messages only to the participant chat room', () => {
+    const emit = jest.fn()
+    gateway.server = { to: jest.fn(() => ({ emit })) } as never
+
+    gateway.broadcastToRestaurantDriverChat('order-1', 'order:message_created', {
+      orderId: 'order-1',
+      id: 'message-1',
+    })
+
+    expect(gateway.server.to).toHaveBeenCalledWith('order:order-1:restaurant-driver')
+    expect(emit).toHaveBeenCalledWith('order:message_created', {
+      orderId: 'order-1',
+      id: 'message-1',
+    })
+  })
 })
 
 function makeClient(): Socket {

@@ -17,7 +17,7 @@ describe('OrderChatService', () => {
     chatSession: { findFirst: jest.Mock; create: jest.Mock }
     chatMessage: { create: jest.Mock }
   }
-  let mockGateway: { broadcastToOrder: jest.Mock }
+  let mockGateway: { broadcastToRestaurantDriverChat: jest.Mock }
 
   const orderId = 'order-1'
   const restaurantUserId = 'restaurant-user-1'
@@ -47,7 +47,7 @@ describe('OrderChatService', () => {
       chatSession: { findFirst: jest.fn().mockResolvedValue(null) },
       $transaction: jest.fn().mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
     }
-    mockGateway = { broadcastToOrder: jest.fn() }
+    mockGateway = { broadcastToRestaurantDriverChat: jest.fn() }
     service = new OrderChatService(
       mockPrisma as unknown as PrismaService,
       mockGateway as unknown as OrdersGateway,
@@ -120,7 +120,11 @@ describe('OrderChatService', () => {
         content: 'Ready now',
       },
     })
-    expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(orderId, 'order:message_created', result)
+    expect(mockGateway.broadcastToRestaurantDriverChat).toHaveBeenCalledWith(
+      orderId,
+      'order:message_created',
+      { orderId, ...result },
+    )
     expect(result).toEqual({
       id: 'message-1',
       senderType: ChatSenderType.restaurant,

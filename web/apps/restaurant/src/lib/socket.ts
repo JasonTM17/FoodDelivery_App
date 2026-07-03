@@ -98,7 +98,7 @@ export function playNewOrderSound(): void {
   }
 }
 
-export type OrderChatMessageEvent = RestaurantOrderChatMessage;
+export type OrderChatMessageEvent = RestaurantOrderChatMessage & { orderId: string };
 
 export interface ServerToClientEvents {
   'restaurant:new_order': (order: Partial<Order> & { orderId?: string }) => void;

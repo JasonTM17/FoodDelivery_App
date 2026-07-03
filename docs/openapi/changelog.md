@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-03: Isolated persisted restaurant-driver chat events from customer order rooms and added `orderId` to the realtime event payload.
 - 2026-07-03: Added customer-scoped `GET /orders/{orderId}/tracking`; its nullable GPS, ETA, and route fields are backed by Redis/cache/database telemetry without synthetic coordinates.
 - 2026-07-03: Added `GET /restaurant/insights` with tenant-scoped insight schemas and i18n-keyed suggestion payloads (`titleKey`, `descriptionKey`, `predictedImpactKey`, `params`).
 - 2026-07-03: Removed legacy `mock_wallet` from public order placement validation; clients must use `wallet`, which captures against the real wallet ledger.
