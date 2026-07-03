@@ -1,21 +1,22 @@
 'use client';
 
+import { AdminRouteErrorState } from '@/components/shared/admin-route-error-state';
+import { useTranslations } from 'next-intl';
+
 export default function LoginError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('routeErrors');
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100">
-      <p className="text-sm text-destructive">{error.message}</p>
-      <button
-        onClick={reset}
-        className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
-      >
-        Try again
-      </button>
-    </div>
+    <AdminRouteErrorState
+      title={t('login.title')}
+      description={t('genericDescription')}
+      retryLabel={t('retry')}
+      reset={reset}
+    />
   );
 }

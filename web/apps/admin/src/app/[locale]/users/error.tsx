@@ -1,23 +1,22 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { AdminRouteErrorState } from '@/components/shared/admin-route-error-state';
+import { useTranslations } from 'next-intl';
 
 export default function UsersError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('routeErrors');
+
   return (
-    <div className="flex h-64 flex-col items-center justify-center gap-4">
-      <AlertTriangle className="h-12 w-12 text-destructive" />
-      <div className="text-center">
-        <h2 className="text-lg font-semibold">Lỗi tải danh sách người dùng</h2>
-        <p className="text-sm text-muted-foreground">{error.message}</p>
-      </div>
-      <Button onClick={reset}>Thử lại</Button>
-    </div>
+    <AdminRouteErrorState
+      title={t('users.title')}
+      description={t('genericDescription')}
+      retryLabel={t('retry')}
+      reset={reset}
+    />
   );
 }

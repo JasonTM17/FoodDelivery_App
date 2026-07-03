@@ -1374,5 +1374,54 @@
     "reconnecting": "Reconnecting…",
     "disconnected": "Disconnected",
     "error": "Connection error"
+  },
+  "routeErrors": {
+    "genericDescription": "Refresh the page or try again in a moment.",
+    "retry": "Try again",
+    "backToOrders": "Back to orders",
+    "backToSettings": "Back to settings",
+    "aiMonitor": {
+      "title": "Unable to load AI Monitor"
+    },
+    "analytics": {
+      "title": "Unable to load analytics"
+    },
+    "drivers": {
+      "title": "Unable to load drivers"
+    },
+    "orderDetail": {
+      "title": "Unable to load order detail"
+    },
+    "orders": {
+      "title": "Unable to load orders"
+    },
+    "restaurants": {
+      "title": "Unable to load restaurants"
+    },
+    "settings": {
+      "title": "Unable to load system settings"
+    },
+    "settingsBranding": {
+      "title": "Unable to load branding settings"
+    },
+    "settingsCompliance": {
+      "title": "Unable to load compliance settings"
+    },
+    "settingsIntegrations": {
+      "title": "Unable to load integration settings"
+    },
+    "support": {
+      "title": "Unable to load support tickets"
+    },
+    "users": {
+      "title": "Unable to load users"
+    },
+    "backToRestaurants": "Back to restaurants",
+    "login": {
+      "title": "Unable to load sign in"
+    },
+    "restaurantDetail": {
+      "title": "Unable to load restaurant detail"
+    }
   }
 }

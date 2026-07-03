@@ -1374,5 +1374,54 @@
     "reconnecting": "Đang kết nối lại…",
     "disconnected": "Mất kết nối",
     "error": "Lỗi kết nối"
+  },
+  "routeErrors": {
+    "genericDescription": "H?y t?i l?i trang ho?c th? l?i sau gi?y l?t.",
+    "retry": "Th? l?i",
+    "backToOrders": "Quay l?i ??n h?ng",
+    "backToSettings": "Quay l?i c?i ??t",
+    "aiMonitor": {
+      "title": "Kh?ng t?i ???c AI Monitor"
+    },
+    "analytics": {
+      "title": "Kh?ng t?i ???c Analytics"
+    },
+    "drivers": {
+      "title": "Kh?ng t?i ???c danh s?ch t?i x?"
+    },
+    "orderDetail": {
+      "title": "Kh?ng t?i ???c chi ti?t ??n h?ng"
+    },
+    "orders": {
+      "title": "Kh?ng t?i ???c danh s?ch ??n h?ng"
+    },
+    "restaurants": {
+      "title": "Kh?ng t?i ???c danh s?ch nh? h?ng"
+    },
+    "settings": {
+      "title": "Kh?ng t?i ???c c?i ??t h? th?ng"
+    },
+    "settingsBranding": {
+      "title": "Kh?ng t?i ???c trang th??ng hi?u"
+    },
+    "settingsCompliance": {
+      "title": "Kh?ng t?i ???c trang tu?n th?"
+    },
+    "settingsIntegrations": {
+      "title": "Kh?ng t?i ???c trang t?ch h?p"
+    },
+    "support": {
+      "title": "Kh?ng t?i ???c y?u c?u h? tr?"
+    },
+    "users": {
+      "title": "Kh?ng t?i ???c danh s?ch ng??i d?ng"
+    },
+    "backToRestaurants": "Quay l?i nh? h?ng",
+    "login": {
+      "title": "Kh?ng t?i ???c trang ??ng nh?p"
+    },
+    "restaurantDetail": {
+      "title": "Kh?ng t?i ???c chi ti?t nh? h?ng"
+    }
   }
 }

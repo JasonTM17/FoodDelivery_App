@@ -1,29 +1,24 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
-import { Link } from '@/navigation';
+import { AdminRouteErrorState } from '@/components/shared/admin-route-error-state';
+import { useTranslations } from 'next-intl';
 
 export default function OrderDetailError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('routeErrors');
+
   return (
-    <div className="flex h-64 flex-col items-center justify-center gap-4">
-      <AlertTriangle className="h-12 w-12 text-destructive" />
-      <div className="text-center">
-        <h2 className="text-lg font-semibold">Lỗi tải chi tiết đơn hàng</h2>
-        <p className="text-sm text-muted-foreground">{error.message}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button onClick={reset}>Thử lại</Button>
-        <Button variant="outline" asChild>
-          <Link href="/orders">Quay lại</Link>
-        </Button>
-      </div>
-    </div>
+    <AdminRouteErrorState
+      title={t('orderDetail.title')}
+      description={t('genericDescription')}
+      retryLabel={t('retry')}
+      reset={reset}
+      backHref="/orders"
+      backLabel={t('backToOrders')}
+    />
   );
 }
