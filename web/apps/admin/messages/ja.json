@@ -1173,17 +1173,33 @@
     "kyc_idFront": "ID表面",
     "kyc_idBack": "ID裏面",
     "kyc_selfie": "セルフィー",
+    "kycLoading": "KYC申請を読み込んでいます",
+    "kycStatuses": {
+      "pending": "審査待ち",
+      "verified": "確認済み",
+      "rejected": "拒否済み"
+    },
+    "kycDocuments": {
+      "idFront": "ID表面",
+      "idBack": "ID裏面",
+      "selfie": "セルフィー"
+    },
+    "kycDocumentPreview": "{document}プレビュー",
     "kycRejectReason": "拒否理由",
     "kycRejectReasonPlaceholder": "拒否理由を入力してください...",
     "kycReject": "KYC拒否",
     "kycApprove": "KYC承認",
+    "kycReviewError": "KYCを審査できませんでした。もう一度お試しください。",
     "kycNoData": "KYC申請が見つかりません",
     "kycViewDocs": "KYC書類を確認",
     "refundHistory": "返金履歴",
     "refundAmount": "金額",
     "refundReason": "理由",
     "refundStatus": "ステータス",
-    "noRefunds": "返金はまだありません"
+    "noRefunds": "返金はまだありません",
+    "errorTitle": "ユーザー詳細を読み込めませんでした",
+    "errorDescription": "ユーザープロフィールは一時的に利用できません。",
+    "retry": "再試行"
   },
   "restaurantApprove": {
     "title": "レストラン承認",

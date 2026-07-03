@@ -1173,17 +1173,33 @@
     "kyc_idFront": "ID Front",
     "kyc_idBack": "ID Back",
     "kyc_selfie": "Selfie",
+    "kycLoading": "Loading KYC submission",
+    "kycStatuses": {
+      "pending": "Pending review",
+      "verified": "Verified",
+      "rejected": "Rejected"
+    },
+    "kycDocuments": {
+      "idFront": "ID Front",
+      "idBack": "ID Back",
+      "selfie": "Selfie"
+    },
+    "kycDocumentPreview": "{document} preview",
     "kycRejectReason": "Rejection Reason",
     "kycRejectReasonPlaceholder": "Enter reason for rejection...",
     "kycReject": "Reject KYC",
     "kycApprove": "Approve KYC",
+    "kycReviewError": "Could not review KYC. Please try again.",
     "kycNoData": "No KYC submission found",
     "kycViewDocs": "Review KYC Documents",
     "refundHistory": "Refund History",
     "refundAmount": "Amount",
     "refundReason": "Reason",
     "refundStatus": "Status",
-    "noRefunds": "No refunds yet"
+    "noRefunds": "No refunds yet",
+    "errorTitle": "Could not load user detail",
+    "errorDescription": "The user profile is temporarily unavailable.",
+    "retry": "Try again"
   },
   "restaurantApprove": {
     "title": "Restaurant Approval",

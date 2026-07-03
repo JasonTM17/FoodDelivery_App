@@ -1,22 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, Clock, FileText, XCircle } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api';
-import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle2, XCircle, Clock, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+
+type KycStatus = 'pending' | 'verified' | 'rejected';
 
 interface KycData {
-  status: 'pending' | 'verified' | 'rejected';
+  status: KycStatus;
   submittedAt: string;
   reviewedAt: string | null;
   rejectReason: string | null;
@@ -29,12 +35,33 @@ interface UserKycModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function KycStatusBadge({ status }: { status: string }) {
-  if (status === 'verified')
-    return <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"><CheckCircle2 className="mr-1 h-3 w-3" />Đã xác minh</Badge>;
-  if (status === 'rejected')
-    return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Bị từ chối</Badge>;
-  return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Chờ duyệt</Badge>;
+const documentKeys = ['idFront', 'idBack', 'selfie'] as const;
+
+function KycStatusBadge({ status, label }: { status: KycStatus; label: string }) {
+  if (status === 'verified') {
+    return (
+      <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
+        <CheckCircle2 className="mr-1 h-3 w-3" aria-hidden="true" />
+        {label}
+      </Badge>
+    );
+  }
+
+  if (status === 'rejected') {
+    return (
+      <Badge variant="destructive">
+        <XCircle className="mr-1 h-3 w-3" aria-hidden="true" />
+        {label}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="secondary">
+      <Clock className="mr-1 h-3 w-3" aria-hidden="true" />
+      {label}
+    </Badge>
+  );
 }
 
 export default function UserKycModal({ userId, open, onOpenChange }: UserKycModalProps) {
@@ -56,13 +83,13 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
     try {
       await apiPost(`/admin/users/${userId}/kyc/review`, {
         action,
-        ...(action === 'reject' && { reason: rejectReason }),
+        ...(action === 'reject' && { reason: rejectReason.trim() }),
       });
       queryClient.invalidateQueries({ queryKey: ['user-kyc', userId] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
       if (action === 'approve') onOpenChange(false);
-    } catch (err) {
-      setReviewError((err as { message?: string }).message || 'Không thể duyệt KYC');
+    } catch {
+      setReviewError(t('kycReviewError'));
     } finally {
       setLoading(false);
     }
@@ -73,38 +100,38 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4" aria-hidden="true" />
             {t('kycReview')}
           </DialogTitle>
           <DialogDescription>{t('kycReviewDesc')}</DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+          <div role="status" aria-label={t('kycLoading')} className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-24 animate-pulse rounded-lg bg-muted" />
             ))}
           </div>
         ) : kyc ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('kycStatus')}</span>
-              <KycStatusBadge status={kyc.status} />
+              <KycStatusBadge status={kyc.status} label={t(`kycStatuses.${kyc.status}`)} />
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {(['idFront', 'idBack', 'selfie'] as const).map((doc) => (
-                <div key={doc} className="space-y-1">
-                  <p className="text-xs text-muted-foreground">{t(`kyc_${doc}`)}</p>
+              {documentKeys.map((documentKey) => (
+                <div key={documentKey} className="space-y-1">
+                  <p className="text-xs text-muted-foreground">{t(`kycDocuments.${documentKey}`)}</p>
                   <div className="flex h-24 items-center justify-center rounded-lg bg-muted/50">
-                    {kyc.documents[doc] ? (
+                    {kyc.documents[documentKey] ? (
                       <div
                         role="img"
-                        aria-label={doc}
+                        aria-label={t('kycDocumentPreview', { document: t(`kycDocuments.${documentKey}`) })}
                         className="h-full w-full rounded-lg bg-cover bg-center"
-                        style={{ backgroundImage: `url(${JSON.stringify(kyc.documents[doc])})` }}
+                        style={{ backgroundImage: `url(${JSON.stringify(kyc.documents[documentKey])})` }}
                       />
                     ) : (
-                      <FileText className="h-6 w-6 text-muted-foreground" />
+                      <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                     )}
                   </div>
                 </div>
@@ -117,17 +144,18 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
               </>
             )}
             {reviewError && (
-              <p className="text-sm text-destructive">{reviewError}</p>
+              <p role="alert" className="text-sm text-destructive">{reviewError}</p>
             )}
             {kyc.status === 'pending' && (
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <Label>{t('kycRejectReason')}</Label>
+                  <Label htmlFor="kyc-reject-reason">{t('kycRejectReason')}</Label>
                   <Textarea
+                    id="kyc-reject-reason"
                     placeholder={t('kycRejectReasonPlaceholder')}
                     value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
+                    onChange={(event) => setRejectReason(event.target.value)}
                     rows={2}
                   />
                 </div>
@@ -137,10 +165,12 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
                     onClick={() => handleReview('reject')}
                     disabled={loading || !rejectReason.trim()}
                   >
-                    <XCircle className="mr-2 h-4 w-4" />{t('kycReject')}
+                    <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t('kycReject')}
                   </Button>
                   <Button onClick={() => handleReview('approve')} disabled={loading}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />{t('kycApprove')}
+                    <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t('kycApprove')}
                   </Button>
                 </DialogFooter>
               </>

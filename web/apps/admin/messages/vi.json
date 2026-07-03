@@ -1173,17 +1173,33 @@
     "kyc_idFront": "CMND mặt trước",
     "kyc_idBack": "CMND mặt sau",
     "kyc_selfie": "Ảnh selfie",
+    "kycLoading": "Đang tải hồ sơ KYC",
+    "kycStatuses": {
+      "pending": "Chờ duyệt",
+      "verified": "Đã xác minh",
+      "rejected": "Bị từ chối"
+    },
+    "kycDocuments": {
+      "idFront": "CMND mặt trước",
+      "idBack": "CMND mặt sau",
+      "selfie": "Ảnh selfie"
+    },
+    "kycDocumentPreview": "Xem trước {document}",
     "kycRejectReason": "Lý do từ chối",
     "kycRejectReasonPlaceholder": "Nhập lý do từ chối...",
     "kycReject": "Từ chối KYC",
     "kycApprove": "Phê duyệt KYC",
+    "kycReviewError": "Không thể duyệt KYC. Vui lòng thử lại.",
     "kycNoData": "Không tìm thấy hồ sơ KYC",
     "kycViewDocs": "Xem tài liệu KYC",
     "refundHistory": "Lịch sử hoàn tiền",
     "refundAmount": "Số tiền",
     "refundReason": "Lý do",
     "refundStatus": "Trạng thái",
-    "noRefunds": "Chưa có hoàn tiền nào"
+    "noRefunds": "Chưa có hoàn tiền nào",
+    "errorTitle": "Không thể tải chi tiết người dùng",
+    "errorDescription": "Hồ sơ người dùng đang tạm thời không khả dụng.",
+    "retry": "Thử lại"
   },
   "restaurantApprove": {
     "title": "Phê duyệt nhà hàng",
