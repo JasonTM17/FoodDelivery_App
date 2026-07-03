@@ -1690,6 +1690,18 @@ abstract class AppLocalizations {
   /// **'Chưa có lịch sử giao hàng'**
   String get driverHistoryEmpty;
 
+  /// No description provided for @driverHistoryLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải lịch sử giao hàng. Vui lòng thử lại.'**
+  String get driverHistoryLoadError;
+
+  /// No description provided for @driverHistoryRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driverHistoryRetry;
+
   /// No description provided for @driverHistoryDeliveryFee.
   ///
   /// In vi, this message translates to:
@@ -1779,6 +1791,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'ETA - Thời gian dự kiến'**
   String get driverNavEta;
+
+  /// No description provided for @driverNavEtaMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoảng {minutes} phút'**
+  String driverNavEtaMinutes(int minutes);
+
+  /// No description provided for @driverNavEtaUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ ETA từ tuyến đường'**
+  String get driverNavEtaUnavailable;
 
   /// No description provided for @driverNavCustomerAddress.
   ///

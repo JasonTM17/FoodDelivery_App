@@ -315,6 +315,8 @@
   "driverHistoryTitle": "Delivery history",
   "driverHistoryFilterDate": "Filter by date",
   "driverHistoryEmpty": "No delivery history",
+  "driverHistoryLoadError": "Unable to load delivery history. Please try again.",
+  "driverHistoryRetry": "Try again",
   "driverHistoryDeliveryFee": "Delivery fee",
 
   "locationPermissionTitle": "Allow location access",
@@ -332,6 +334,9 @@
   "driverNavItemsToPickup": "Items to pick up",
   "driverNavConfirmPickup": "CONFIRM PICKUP",
   "driverNavEta": "ETA - Estimated arrival",
+  "driverNavEtaMinutes": "About {minutes} min",
+  "@driverNavEtaMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "driverNavEtaUnavailable": "Waiting for route ETA",
   "driverNavCustomerAddress": "Customer address",
   "driverNavCallCustomer": "Call customer",
   "driverNavConfirmDelivery": "CONFIRM DELIVERY",

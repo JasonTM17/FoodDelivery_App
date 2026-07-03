@@ -45,6 +45,7 @@ describe('DispatchService', () => {
 
   const mockGateway = {
     sendNewOrderOffer: jest.fn(),
+    sendAssignedOrder: jest.fn(),
     registerOfferResponse: jest.fn(),
     broadcastToOrder: jest.fn(),
   }

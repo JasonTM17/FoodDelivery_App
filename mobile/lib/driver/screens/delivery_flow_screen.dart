@@ -56,14 +56,15 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   int _statusToStep(String status) {
     switch (status) {
-      case 'confirmed':
-      case 'pending':
+      case 'driver_assigned':
         return 0; // heading_to_restaurant
-      case 'preparing':
+      case 'driver_arriving_restaurant':
         return 1; // at_restaurant
+      case 'picked_up':
       case 'delivering':
         return 2; // heading_to_customer
       case 'delivered':
+      case 'completed':
         return 3; // complete
       default:
         return 0;
@@ -72,7 +73,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(driverProvider);
     final order = state.activeOrder;
 
@@ -88,7 +89,10 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           ),
           title: Text(
             l10n.driverNavTitle,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         body: Center(
@@ -113,7 +117,10 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         ),
         title: Text(
           l10n.driverNavTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: state.isLoading
@@ -136,10 +143,11 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
                   // Step-specific content
                   switch (order.status) {
-                    'pending' || 'confirmed' => _buildHeadingToRestaurant(order),
-                    'preparing' => _buildAtRestaurant(order),
+                    'driver_assigned' => _buildHeadingToRestaurant(order),
+                    'driver_arriving_restaurant' => _buildAtRestaurant(order),
+                    'picked_up' ||
                     'delivering' => _buildHeadingToCustomer(order),
-                    'delivered' => _buildComplete(order),
+                    'delivered' || 'completed' => _buildComplete(order),
                     _ => _buildHeadingToRestaurant(order),
                   },
                 ],
@@ -183,12 +191,12 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.restaurant,
           title: order.restaurantName,
-          subtitle: AppLocalizations.of(context)!.driverNavRestaurant,
-          trailing: order.restaurantLatitude != null
+          subtitle: AppLocalizations.of(context).driverNavRestaurant,
+          trailing: order.restaurantPhone != null
               ? TextButton(
                   onPressed: () => _callRestaurant(order),
                   child: Text(
-                    AppLocalizations.of(context)!.driverNavCallRestaurant,
+                    AppLocalizations.of(context).driverNavCallRestaurant,
                     style: const TextStyle(color: AppColors.primary),
                   ),
                 )
@@ -198,7 +206,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.location_on_outlined,
           title: order.deliveryAddress.address,
-          subtitle: AppLocalizations.of(context)!.driverNavDeliveryAddress,
+          subtitle: AppLocalizations.of(context).driverNavDeliveryAddress,
         ),
         const SizedBox(height: 24),
         SizedBox(
@@ -208,11 +216,11 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
             onPressed: () {
               ref
                   .read(driverProvider.notifier)
-                  .updateOrderStatus(order.id, 'preparing');
+                  .updateOrderStatus(order.id, 'driver_arriving_restaurant');
             },
             icon: const Icon(Icons.check_circle_outline),
             label: Text(
-              AppLocalizations.of(context)!.driverNavArrivedAtRestaurant,
+              AppLocalizations.of(context).driverNavArrivedAtRestaurant,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
@@ -237,13 +245,13 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.restaurant,
           title: order.restaurantName,
-          subtitle: AppLocalizations.of(context)!.driverNavPreparingFood,
+          subtitle: AppLocalizations.of(context).driverNavPreparingFood,
         ),
         const SizedBox(height: 16),
 
         // Order items
         Text(
-          AppLocalizations.of(context)!.driverNavItemsToPickup,
+          AppLocalizations.of(context).driverNavItemsToPickup,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -251,46 +259,48 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        ...order.items.map((item) => Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF374151),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${item.quantity}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+        ...order.items.map(
+          (item) => Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF374151),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
+                  child: Center(
                     child: Text(
-                      item.name,
+                      '${item.quantity}',
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Color(0xFFD1D5DB),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                ],
-              ),
-            )),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFD1D5DB),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
 
         if (order.note != null && order.note!.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -307,7 +317,11 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.note_outlined, size: 16, color: AppColors.warning),
+                const Icon(
+                  Icons.note_outlined,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -328,14 +342,10 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           width: double.infinity,
           height: 52,
           child: ElevatedButton.icon(
-            onPressed: () {
-              ref
-                  .read(driverProvider.notifier)
-                  .updateOrderStatus(order.id, 'delivering');
-            },
+            onPressed: () => _confirmPickup(order),
             icon: const Icon(Icons.shopping_bag_outlined),
             label: Text(
-              AppLocalizations.of(context)!.driverNavConfirmPickup,
+              AppLocalizations.of(context).driverNavConfirmPickup,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
@@ -354,8 +364,6 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
   // ---- Step 2: Heading to customer ----
 
   Widget _buildHeadingToCustomer(OrderModel order) {
-    final eta = DateTime.now().add(const Duration(minutes: 12));
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -373,9 +381,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -385,12 +391,19 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.driverNavEta,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    AppLocalizations.of(context).driverNavEta,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${eta.hour.toString().padLeft(2, '0')}:${eta.minute.toString().padLeft(2, '0')}',
+                    order.estimatedDeliveryTimeMinutes != null
+                        ? AppLocalizations.of(context).driverNavEtaMinutes(
+                            order.estimatedDeliveryTimeMinutes!,
+                          )
+                        : AppLocalizations.of(context).driverNavEtaUnavailable,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -408,13 +421,19 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         _buildInfoCard(
           icon: Icons.location_on,
           title: order.deliveryAddress.address,
-          subtitle: AppLocalizations.of(context)!.driverNavCustomerAddress,
-          trailing: TextButton.icon(
-            onPressed: () => _callCustomer(order),
-            icon: const Icon(Icons.phone, size: 18),
-            label: Text(AppLocalizations.of(context)!.driverNavCallCustomer),
-            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-          ),
+          subtitle: AppLocalizations.of(context).driverNavCustomerAddress,
+          trailing: order.customerPhone != null
+              ? TextButton.icon(
+                  onPressed: () => _callCustomer(order),
+                  icon: const Icon(Icons.phone, size: 18),
+                  label: Text(
+                    AppLocalizations.of(context).driverNavCallCustomer,
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
+                )
+              : null,
         ),
 
         const SizedBox(height: 24),
@@ -429,7 +448,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
             },
             icon: const Icon(Icons.check_circle),
             label: Text(
-              AppLocalizations.of(context)!.driverNavConfirmDelivery,
+              AppLocalizations.of(context).driverNavConfirmDelivery,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
@@ -463,9 +482,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
               end: Alignment.bottomCenter,
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
@@ -484,7 +501,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context)!.driverNavDeliverySuccess,
+                AppLocalizations.of(context).driverNavDeliverySuccess,
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -492,14 +509,20 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildEarningRow(AppLocalizations.of(context)!.driverHistoryDeliveryFee, order.deliveryFee),
+              _buildEarningRow(
+                AppLocalizations.of(context).driverHistoryDeliveryFee,
+                order.deliveryFee,
+              ),
               const SizedBox(height: 8),
-              _buildEarningRow(AppLocalizations.of(context)!.driverNavOrderTotal, order.total),
+              _buildEarningRow(
+                AppLocalizations.of(context).driverNavOrderTotal,
+                order.total,
+              ),
               const SizedBox(height: 8),
               const Divider(color: Color(0xFF374151)),
               const SizedBox(height: 8),
               _buildEarningRow(
-                AppLocalizations.of(context)!.driverNavYouEarned,
+                AppLocalizations.of(context).driverNavYouEarned,
                 order.deliveryFee,
                 isHighlight: true,
               ),
@@ -521,7 +544,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
               ),
             ),
             child: Text(
-              AppLocalizations.of(context)!.driverNavGoHome,
+              AppLocalizations.of(context).driverNavGoHome,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -590,7 +613,11 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     );
   }
 
-  Widget _buildEarningRow(String label, double amount, {bool isHighlight = false}) {
+  Widget _buildEarningRow(
+    String label,
+    double amount, {
+    bool isHighlight = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -616,7 +643,12 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   Future<void> _callCustomer(OrderModel order) async {
     try {
-      final uri = Uri.parse('tel:');
+      final phone = order.customerPhone;
+      if (phone == null) {
+        _showPhoneError();
+        return;
+      }
+      final uri = Uri(scheme: 'tel', path: phone);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
@@ -629,7 +661,12 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   Future<void> _callRestaurant(OrderModel order) async {
     try {
-      final uri = Uri.parse('tel:');
+      final phone = order.restaurantPhone;
+      if (phone == null) {
+        _showPhoneError();
+        return;
+      }
+      final uri = Uri(scheme: 'tel', path: phone);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
@@ -640,11 +677,18 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     }
   }
 
+  Future<void> _confirmPickup(OrderModel order) async {
+    final notifier = ref.read(driverProvider.notifier);
+    await notifier.updateOrderStatus(order.id, 'picked_up');
+    if (!mounted || ref.read(driverProvider).error != null) return;
+    await notifier.updateOrderStatus(order.id, 'delivering');
+  }
+
   void _showPhoneError() {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.driverNavPhoneError),
+          content: Text(AppLocalizations.of(context).driverNavPhoneError),
           backgroundColor: const Color(0xFF1E1E1E),
         ),
       );

@@ -45,6 +45,10 @@ export class DispatchGateway implements OnGatewayConnection {
     this.server.to(`driver:${driverId}`).emit('driver:new_order', data)
   }
 
+  sendAssignedOrder(driverId: string, data: { orderId: string }): void {
+    this.server.to(`driver:${driverId}`).emit('driver:order_assigned', data)
+  }
+
   registerOfferResponse(key: string, callback: OfferCallback): void {
     this.offerCallbacks.set(key, callback)
   }
@@ -71,12 +75,13 @@ export class DispatchGateway implements OnGatewayConnection {
   @SubscribeMessage('dispatch:accept')
   async handleAccept(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { orderId: string; driverId: string; offerToken: string },
+    @MessageBody() data: { orderId: string; offerToken: string },
   ): Promise<{ event: string; data: Record<string, unknown> }> {
-    if (!this.isAuthenticatedDriver(client, data.driverId)) {
+    const driverId = this.authenticatedDriverId(client)
+    if (!driverId) {
       return { event: 'error', data: { message: 'Unauthorized driver' } }
     }
-    const offerKey = `offer:${data.orderId}:${data.driverId}`
+    const offerKey = `offer:${data.orderId}:${driverId}`
     const storedToken = await this.redis.get(offerKey)
 
     if (!storedToken || storedToken !== data.offerToken) {
@@ -84,7 +89,7 @@ export class DispatchGateway implements OnGatewayConnection {
     }
 
     await this.redis.del(offerKey)
-    const resolved = this.resolveOffer(data.orderId, data.driverId, true)
+    const resolved = this.resolveOffer(data.orderId, driverId, true)
     if (!resolved) {
       return { event: 'error', data: { message: 'Offer already resolved' } }
     }
@@ -95,12 +100,13 @@ export class DispatchGateway implements OnGatewayConnection {
   @SubscribeMessage('dispatch:reject')
   async handleReject(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { orderId: string; driverId: string; offerToken: string },
+    @MessageBody() data: { orderId: string; offerToken: string },
   ): Promise<{ event: string; data: Record<string, unknown> }> {
-    if (!this.isAuthenticatedDriver(client, data.driverId)) {
+    const driverId = this.authenticatedDriverId(client)
+    if (!driverId) {
       return { event: 'error', data: { message: 'Unauthorized driver' } }
     }
-    const offerKey = `offer:${data.orderId}:${data.driverId}`
+    const offerKey = `offer:${data.orderId}:${driverId}`
     const storedToken = await this.redis.get(offerKey)
 
     if (!storedToken || storedToken !== data.offerToken) {
@@ -108,7 +114,7 @@ export class DispatchGateway implements OnGatewayConnection {
     }
 
     await this.redis.del(offerKey)
-    const resolved = this.resolveOffer(data.orderId, data.driverId, false)
+    const resolved = this.resolveOffer(data.orderId, driverId, false)
     if (!resolved) {
       return { event: 'error', data: { message: 'Offer already resolved' } }
     }
@@ -116,8 +122,8 @@ export class DispatchGateway implements OnGatewayConnection {
     return { event: 'dispatch:rejected', data: { orderId: data.orderId } }
   }
 
-  private isAuthenticatedDriver(client: Socket, driverId: string): boolean {
+  private authenticatedDriverId(client: Socket): string | null {
     const user = this.socketAuth.getUser(client)
-    return user?.role === UserRole.driver && user.sub === driverId
+    return user?.role === UserRole.driver ? user.sub : null
   }
 }

@@ -26,7 +26,7 @@ class _FakeDriverNotifier extends DriverNotifier {
   Future<void> fetchTodayStats() async {}
 
   @override
-  Future<void> fetchPendingOrders() async {}
+  Future<void> fetchRecentOrders() async {}
 
   @override
   Future<void> fetchActiveOrder() async {}
@@ -105,11 +105,11 @@ void main() {
       expect(find.text('Hôm nay'), findsOneWidget);
     });
 
-    testWidgets('shows empty-orders message when pendingOrders is empty', (
+    testWidgets('shows empty-orders message when recentOrders is empty', (
       tester,
     ) async {
       await tester.pumpWidget(
-        _buildHome(const DriverState(isAuthenticated: true, pendingOrders: [])),
+        _buildHome(const DriverState(isAuthenticated: true, recentOrders: [])),
       );
       await tester.pumpAndSettle();
       expect(find.text('Chưa có đơn hàng nào'), findsOneWidget);
@@ -139,8 +139,8 @@ void main() {
       final state = DriverState(
         isAuthenticated: true,
         todayStats: DriverTodayStats.fromJson({
-          'earnings': 120000,
-          'orderCount': 5,
+          'totalEarnings': 120000,
+          'totalOrders': 5,
           'onlineMinutes': 90,
           'rating': 4.8,
         }),
@@ -154,8 +154,8 @@ void main() {
       final state = DriverState(
         isAuthenticated: true,
         todayStats: DriverTodayStats.fromJson({
-          'earnings': 50000,
-          'orderCount': 3,
+          'totalEarnings': 50000,
+          'totalOrders': 3,
           'onlineMinutes': 45,
           'rating': 5.0,
         }),

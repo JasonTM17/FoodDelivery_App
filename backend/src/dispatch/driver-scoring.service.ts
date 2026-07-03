@@ -4,9 +4,9 @@ export interface DriverScoreInput {
   driverId: string
   distKm: number
   rating: number
-  acceptanceRate7d: number  // 0-1
-  completionRate7d: number  // 0-1
-  idleMinutes: number
+  acceptanceRate7d?: number  // 0-1 when measured
+  completionRate7d?: number  // 0-1 when measured
+  idleMinutes?: number
   totalDeliveries: number
 }
 
@@ -35,17 +35,23 @@ export class DriverScoringService {
 
     const distScore = Math.max(0, 1 - input.distKm / MAX_DIST_KM)
     const ratingScore = Math.max(0, Math.min(1, effectiveRating / 5.0))
-    const acceptScore = Math.max(0, Math.min(1, input.acceptanceRate7d))
-    const completionScore = Math.max(0, Math.min(1, input.completionRate7d))
-    const idleScore = Math.min(1, input.idleMinutes / MAX_IDLE_MIN)
+    let weightedScore = distScore * W_DIST + ratingScore * W_RATING
+    let totalWeight = W_DIST + W_RATING
 
-    return (
-      distScore * W_DIST +
-      ratingScore * W_RATING +
-      acceptScore * W_ACCEPT +
-      completionScore * W_COMPLETION +
-      idleScore * W_IDLE
-    )
+    if (input.acceptanceRate7d !== undefined) {
+      weightedScore += Math.max(0, Math.min(1, input.acceptanceRate7d)) * W_ACCEPT
+      totalWeight += W_ACCEPT
+    }
+    if (input.completionRate7d !== undefined) {
+      weightedScore += Math.max(0, Math.min(1, input.completionRate7d)) * W_COMPLETION
+      totalWeight += W_COMPLETION
+    }
+    if (input.idleMinutes !== undefined) {
+      weightedScore += Math.min(1, Math.max(0, input.idleMinutes) / MAX_IDLE_MIN) * W_IDLE
+      totalWeight += W_IDLE
+    }
+
+    return weightedScore / totalWeight
   }
 
   private effectiveRating(rawRating: number, totalDeliveries: number): number {

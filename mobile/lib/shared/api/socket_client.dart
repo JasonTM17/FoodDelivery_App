@@ -34,6 +34,8 @@ class SocketClient {
       StreamController<Map<String, dynamic>>.broadcast();
   final _driverOfferController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _driverOrderAssignedController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onDriverLocation =>
       _driverLocationController.stream;
@@ -46,6 +48,8 @@ class SocketClient {
   /// Fires when the server dispatches a new delivery offer to this driver.
   Stream<Map<String, dynamic>> get onDriverOffer =>
       _driverOfferController.stream;
+  Stream<Map<String, dynamic>> get onDriverOrderAssigned =>
+      _driverOrderAssignedController.stream;
 
   // Fires when server emits 'auth:refresh_required' — caller should refresh token
   // then call reconnectWithToken(newToken).
@@ -88,6 +92,11 @@ class SocketClient {
     _pipe(_notificationsNamespace, 'notification:new', _notificationController);
     _pipe(_dispatchNamespace, 'driver:new_order', _driverOfferController);
     _pipe(_dispatchNamespace, 'driver:offer', _driverOfferController);
+    _pipe(
+      _dispatchNamespace,
+      'driver:order_assigned',
+      _driverOrderAssignedController,
+    );
 
     for (final socket in _sockets.values) {
       socket.connect();
@@ -200,6 +209,18 @@ class SocketClient {
     });
   }
 
+  void respondToDispatchOffer({
+    required String orderId,
+    required String offerToken,
+    required bool accepted,
+  }) {
+    _emitToNamespace(
+      _dispatchNamespace,
+      accepted ? 'dispatch:accept' : 'dispatch:reject',
+      {'orderId': orderId, 'offerToken': offerToken},
+    );
+  }
+
   // General-purpose emit. Buffers up to 50 events while offline; flushed on reconnect.
   void emit(String event, dynamic data) {
     _emitToNamespace(_namespaceForEvent(event), event, data);
@@ -247,6 +268,7 @@ class SocketClient {
     _authRefreshController.close();
     _notificationController.close();
     _driverOfferController.close();
+    _driverOrderAssignedController.close();
     disconnect();
     _instance = null;
   }

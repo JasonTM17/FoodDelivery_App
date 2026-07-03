@@ -321,6 +321,8 @@
   "driverHistoryTitle": "Lịch sử giao hàng",
   "driverHistoryFilterDate": "Lọc theo ngày",
   "driverHistoryEmpty": "Chưa có lịch sử giao hàng",
+  "driverHistoryLoadError": "Không thể tải lịch sử giao hàng. Vui lòng thử lại.",
+  "driverHistoryRetry": "Thử lại",
   "driverHistoryDeliveryFee": "Phí giao hàng",
 
   "locationPermissionTitle": "Cho phép truy cập vị trí",
@@ -338,6 +340,9 @@
   "driverNavItemsToPickup": "Món cần lấy",
   "driverNavConfirmPickup": "XÁC NHẬN LẤY HÀNG",
   "driverNavEta": "ETA - Thời gian dự kiến",
+  "driverNavEtaMinutes": "Khoảng {minutes} phút",
+  "@driverNavEtaMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "driverNavEtaUnavailable": "Đang chờ ETA từ tuyến đường",
   "driverNavCustomerAddress": "Địa chỉ khách hàng",
   "driverNavCallCustomer": "Gọi khách",
   "driverNavConfirmDelivery": "ĐÃ GIAO HÀNG",

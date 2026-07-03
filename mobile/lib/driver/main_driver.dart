@@ -31,22 +31,10 @@ import 'screens/settings_screen.dart';
 final _router = GoRouter(
   initialLocation: '/login',
   routes: [
-    GoRoute(
-      path: '/login',
-      builder: (_, __) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (_, __) => const DriverShell(),
-    ),
-    GoRoute(
-      path: '/earnings',
-      builder: (_, __) => const EarningsScreen(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (_, __) => const ProfileScreen(),
-    ),
+    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+    GoRoute(path: '/home', builder: (_, __) => const DriverShell()),
+    GoRoute(path: '/earnings', builder: (_, __) => const EarningsScreen()),
+    GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     GoRoute(
       path: '/delivery-history',
       builder: (_, __) => const DeliveryHistoryScreen(),
@@ -55,14 +43,8 @@ final _router = GoRouter(
       path: '/delivery-flow',
       builder: (_, __) => const DeliveryFlowScreen(),
     ),
-    GoRoute(
-      path: '/register',
-      builder: (_, __) => const RegisterScreen(),
-    ),
-    GoRoute(
-      path: '/kyc',
-      builder: (_, __) => const KycVerificationScreen(),
-    ),
+    GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+    GoRoute(path: '/kyc', builder: (_, __) => const KycVerificationScreen()),
     GoRoute(
       path: '/pickup-confirmation',
       builder: (_, __) => const PickupConfirmationScreen(),
@@ -87,26 +69,14 @@ final _router = GoRouter(
       path: '/onboarding-agreement',
       builder: (_, __) => const OnboardingAgreementScreen(),
     ),
-    GoRoute(
-      path: '/incentives',
-      builder: (_, __) => const IncentivesScreen(),
-    ),
-    GoRoute(
-      path: '/heatmap',
-      builder: (_, __) => const HeatmapScreen(),
-    ),
+    GoRoute(path: '/incentives', builder: (_, __) => const IncentivesScreen()),
+    GoRoute(path: '/heatmap', builder: (_, __) => const HeatmapScreen()),
     GoRoute(
       path: '/bank-account',
       builder: (_, __) => const BankAccountScreen(),
     ),
-    GoRoute(
-      path: '/support',
-      builder: (_, __) => const SupportDriverScreen(),
-    ),
-    GoRoute(
-      path: '/settings',
-      builder: (_, __) => const SettingsScreen(),
-    ),
+    GoRoute(path: '/support', builder: (_, __) => const SupportDriverScreen()),
+    GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     GoRoute(
       path: '/offline-status',
       builder: (_, __) => const OfflineStatusScreen(),
@@ -220,10 +190,7 @@ class DriverApp extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -239,7 +206,10 @@ class DriverApp extends ConsumerWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF374151)),
@@ -264,9 +234,7 @@ class DriverApp extends ConsumerWidget {
       cardTheme: CardThemeData(
         elevation: 2,
         color: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -301,23 +269,25 @@ class DriverShell extends ConsumerStatefulWidget {
 class _DriverShellState extends ConsumerState<DriverShell> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    HomeScreen(),
-    EarningsScreen(),
-    ProfileScreen(),
-  ];
+  final _screens = const [HomeScreen(), EarningsScreen(), ProfileScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final notifier = ref.read(driverProvider.notifier);
+      await Future.wait([
+        notifier.fetchTodayStats(),
+        notifier.fetchRecentOrders(),
+        notifier.fetchActiveOrder(),
+      ]);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Refresh data when shell mounts
-    ref.read(driverProvider.notifier).fetchTodayStats();
-    ref.read(driverProvider.notifier).fetchPendingOrders();
-
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

@@ -10,7 +10,9 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `PATCH /driver/profile` — Update vehicle, bank account
 - `POST /driver/online` — Toggle online status
 - `POST /driver/offline`
-- `GET /driver/earnings?period=day|week|month` — Earnings breakdown
+- `GET /driver/orders/active` — Newest active order assigned to the authenticated driver, or `null`
+- `GET /driver/orders/history?fromDate=...&toDate=...&limit=...` — Terminal orders assigned to the authenticated driver
+- `GET /driver/earnings?period=today|week|month` — Payout ledger earnings breakdown
 - `GET /driver/earnings/summary?period=7d|30d|90d` — Chart-ready driver payout ledger summary
 - `GET /driver/bank-accounts` / `POST /driver/bank-accounts` / `PATCH /driver/bank-accounts/:id/default` / `DELETE /driver/bank-accounts/:id` — Driver payout bank accounts scoped to the authenticated driver
 - `POST /driver/onboarding/agreement` — Persist authenticated driver terms acceptance before KYC submission

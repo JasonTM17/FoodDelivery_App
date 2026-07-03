@@ -23,7 +23,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverProvider.notifier).fetchTodayStats();
-      ref.read(driverProvider.notifier).fetchPendingOrders();
+      ref.read(driverProvider.notifier).fetchRecentOrders();
       ref.read(driverProvider.notifier).fetchActiveOrder();
     });
   }
@@ -33,25 +33,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final state = ref.watch(driverProvider);
 
     // Show the dispatch offer dialog whenever a new offer arrives via WebSocket.
-    ref.listen<DispatchOffer?>(
-      driverProvider.select((s) => s.pendingOffer),
-      (prev, offer) {
-        if (offer == null) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => DispatchOfferDialog(
-            offer: offer,
-            onAccept: () {
-              ref.read(driverProvider.notifier).acceptOrder(offer.orderId);
-            },
-            onReject: () {
-              ref.read(driverProvider.notifier).dismissOffer();
-            },
-          ),
-        );
-      },
-    );
+    ref.listen<DispatchOffer?>(driverProvider.select((s) => s.pendingOffer), (
+      prev,
+      offer,
+    ) {
+      if (offer == null) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => DispatchOfferDialog(
+          offer: offer,
+          onAccept: () {
+            ref.read(driverProvider.notifier).acceptOrder(offer);
+          },
+          onReject: () {
+            ref.read(driverProvider.notifier).declineOrder(offer);
+          },
+        ),
+      );
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -67,7 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng thông báo đang phát triển')),
+                const SnackBar(
+                  content: Text('Tính năng thông báo đang phát triển'),
+                ),
               );
             },
           ),
@@ -76,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(driverProvider.notifier).fetchTodayStats();
-          await ref.read(driverProvider.notifier).fetchPendingOrders();
+          await ref.read(driverProvider.notifier).fetchRecentOrders();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -90,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Today stats
               Text(
-                AppLocalizations.of(context)!.driverDashboardToday,
+                AppLocalizations.of(context).driverDashboardToday,
                 style: AppTextStyles.headline4.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 12),
@@ -105,7 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Recent deliveries
               Text(
-                AppLocalizations.of(context)!.driverDashboardOrders,
+                AppLocalizations.of(context).driverDashboardOrders,
                 style: AppTextStyles.headline4.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 12),
@@ -118,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildTodayStats(DriverState state) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final stats = state.todayStats;
     return GridView.count(
       crossAxisCount: 2,
@@ -143,13 +145,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         DriverStatCard(
           icon: Icons.timer_outlined,
           label: l10n.driverStatOnline,
-          value: stats.onlineTimeText,
+          value: stats.onlineTimeText ?? '—',
           color: AppColors.accent,
         ),
         DriverStatCard(
           icon: Icons.star_outline,
           label: l10n.statsReviews,
-          value: stats.rating.toStringAsFixed(1),
+          value: stats.rating?.toStringAsFixed(1) ?? '—',
           color: AppColors.warning,
         ),
       ],
@@ -168,8 +170,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Column(
       children: [
-        if (state.pendingOrders.isNotEmpty) ...[
-          ...state.pendingOrders.take(5).map((order) => DeliveryOrderItem(order: order)),
+        if (state.recentOrders.isNotEmpty) ...[
+          ...state.recentOrders
+              .take(5)
+              .map((order) => DeliveryOrderItem(order: order)),
         ] else ...[
           Container(
             width: double.infinity,
@@ -183,7 +187,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  AppLocalizations.of(context)!.driverDashboardNoOrders,
+                  AppLocalizations.of(context).driverDashboardNoOrders,
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
@@ -196,5 +200,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
-
 }

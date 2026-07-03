@@ -38,13 +38,12 @@ describe('DispatchGateway authentication', () => {
     expect(client.join).not.toHaveBeenCalled()
   })
 
-  it('rejects spoofed driver IDs before reading offer tokens', async () => {
+  it('rejects non-driver clients before reading offer tokens', async () => {
     const client = makeClient()
-    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getUser.mockReturnValue({ sub: 'customer-1', role: UserRole.customer })
 
     await expect(gateway.handleAccept(client, {
       orderId: 'order-1',
-      driverId: 'driver-2',
       offerToken: 'offer-token',
     })).resolves.toEqual({
       event: 'error',
@@ -63,7 +62,6 @@ describe('DispatchGateway authentication', () => {
 
     await expect(gateway.handleAccept(client, {
       orderId: 'order-1',
-      driverId: 'driver-1',
       offerToken: 'offer-token',
     })).resolves.toEqual({
       event: 'dispatch:accepted',

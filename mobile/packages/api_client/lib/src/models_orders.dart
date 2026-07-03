@@ -134,6 +134,170 @@ class OrderResponse {
       );
 }
 
+class DriverOrderResponse {
+  final String id;
+  final String userId;
+  final String restaurantId;
+  final String restaurantName;
+  final String? restaurantLogoUrl;
+  final String? restaurantPhone;
+  final String customerName;
+  final String? customerPhone;
+  final List<DriverOrderItem> items;
+  final int subtotal;
+  final int deliveryFee;
+  final int discount;
+  final int total;
+  final String status;
+  final String? driverId;
+  final DriverOrderAddress deliveryAddress;
+  final String paymentMethod;
+  final String? note;
+  final String createdAt;
+  final String updatedAt;
+  final List<DriverOrderStatusHistory> statusHistory;
+  final double restaurantLatitude;
+  final double restaurantLongitude;
+  final int? estimatedDeliveryTimeMinutes;
+  final String? routePolyline;
+
+  const DriverOrderResponse({
+    required this.id,
+    required this.userId,
+    required this.restaurantId,
+    required this.restaurantName,
+    this.restaurantLogoUrl,
+    this.restaurantPhone,
+    required this.customerName,
+    this.customerPhone,
+    required this.items,
+    required this.subtotal,
+    required this.deliveryFee,
+    required this.discount,
+    required this.total,
+    required this.status,
+    this.driverId,
+    required this.deliveryAddress,
+    required this.paymentMethod,
+    this.note,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.statusHistory,
+    required this.restaurantLatitude,
+    required this.restaurantLongitude,
+    this.estimatedDeliveryTimeMinutes,
+    this.routePolyline,
+  });
+
+  factory DriverOrderResponse.fromJson(Map<String, dynamic> json) =>
+      DriverOrderResponse(
+        id: json['id'] as String,
+        userId: json['userId'] as String,
+        restaurantId: json['restaurantId'] as String,
+        restaurantName: json['restaurantName'] as String,
+        restaurantLogoUrl: json['restaurantLogoUrl'] as String?,
+        restaurantPhone: json['restaurantPhone'] as String?,
+        customerName: json['customerName'] as String,
+        customerPhone: json['customerPhone'] as String?,
+        items: (json['items'] as List<dynamic>)
+            .map((e) => DriverOrderItem.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        subtotal: (json['subtotal'] as num).toInt(),
+        deliveryFee: (json['deliveryFee'] as num).toInt(),
+        discount: (json['discount'] as num).toInt(),
+        total: (json['total'] as num).toInt(),
+        status: json['status'] as String,
+        driverId: json['driverId'] as String?,
+        deliveryAddress: DriverOrderAddress.fromJson(
+          json['deliveryAddress'] as Map<String, dynamic>,
+        ),
+        paymentMethod: json['paymentMethod'] as String,
+        note: json['note'] as String?,
+        createdAt: json['createdAt'] as String,
+        updatedAt: json['updatedAt'] as String,
+        statusHistory: (json['statusHistory'] as List<dynamic>)
+            .map(
+              (e) =>
+                  DriverOrderStatusHistory.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+        restaurantLatitude: (json['restaurantLatitude'] as num).toDouble(),
+        restaurantLongitude: (json['restaurantLongitude'] as num).toDouble(),
+        estimatedDeliveryTimeMinutes:
+            (json['estimatedDeliveryTimeMinutes'] as num?)?.toInt(),
+        routePolyline: json['routePolyline'] as String?,
+      );
+}
+
+class DriverOrderItem {
+  final String menuItemId;
+  final String name;
+  final int quantity;
+  final int unitPrice;
+  final int totalPrice;
+  final Object? selectedOptions;
+
+  const DriverOrderItem({
+    required this.menuItemId,
+    required this.name,
+    required this.quantity,
+    required this.unitPrice,
+    required this.totalPrice,
+    required this.selectedOptions,
+  });
+
+  factory DriverOrderItem.fromJson(Map<String, dynamic> json) =>
+      DriverOrderItem(
+        menuItemId: json['menuItemId'] as String,
+        name: json['name'] as String,
+        quantity: (json['quantity'] as num).toInt(),
+        unitPrice: (json['unitPrice'] as num).toInt(),
+        totalPrice: (json['totalPrice'] as num).toInt(),
+        selectedOptions: json['selectedOptions'],
+      );
+}
+
+class DriverOrderAddress {
+  final String label;
+  final String address;
+  final double latitude;
+  final double longitude;
+
+  const DriverOrderAddress({
+    required this.label,
+    required this.address,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  factory DriverOrderAddress.fromJson(Map<String, dynamic> json) =>
+      DriverOrderAddress(
+        label: json['label'] as String,
+        address: json['address'] as String,
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+      );
+}
+
+class DriverOrderStatusHistory {
+  final String status;
+  final String timestamp;
+  final String? note;
+
+  const DriverOrderStatusHistory({
+    required this.status,
+    required this.timestamp,
+    this.note,
+  });
+
+  factory DriverOrderStatusHistory.fromJson(Map<String, dynamic> json) =>
+      DriverOrderStatusHistory(
+        status: json['status'] as String,
+        timestamp: json['timestamp'] as String,
+        note: json['note'] as String?,
+      );
+}
+
 class OrderItemSnapshot {
   final String id;
   final String nameSnapshot;
@@ -187,34 +351,40 @@ class StatusHistoryEntry {
 
 class DispatchOffer {
   final String orderId;
-  final String orderCode;
+  final String offerToken;
   final String restaurantName;
-  final String pickupAddress;
-  final String dropoffAddress;
+  final String restaurantAddress;
+  final String deliveryAddress;
+  final int orderTotal;
   final int deliveryFee;
   final double distanceKm;
-  final int expiresInSeconds;
+  final int timeoutSeconds;
+  final double surgeMultiplier;
 
   const DispatchOffer({
     required this.orderId,
-    required this.orderCode,
+    required this.offerToken,
     required this.restaurantName,
-    required this.pickupAddress,
-    required this.dropoffAddress,
+    required this.restaurantAddress,
+    required this.deliveryAddress,
+    required this.orderTotal,
     required this.deliveryFee,
     required this.distanceKm,
-    required this.expiresInSeconds,
+    required this.timeoutSeconds,
+    required this.surgeMultiplier,
   });
 
   factory DispatchOffer.fromJson(Map<String, dynamic> json) => DispatchOffer(
         orderId: json['orderId'] as String,
-        orderCode: json['orderCode'] as String,
+        offerToken: json['offerToken'] as String,
         restaurantName: json['restaurantName'] as String,
-        pickupAddress: json['pickupAddress'] as String,
-        dropoffAddress: json['dropoffAddress'] as String,
-        deliveryFee: json['deliveryFee'] as int,
+        restaurantAddress: json['restaurantAddress'] as String,
+        deliveryAddress: json['deliveryAddress'] as String,
+        orderTotal: (json['orderTotal'] as num).toInt(),
+        deliveryFee: (json['deliveryFee'] as num).toInt(),
         distanceKm: (json['distanceKm'] as num).toDouble(),
-        expiresInSeconds: json['expiresInSeconds'] as int,
+        timeoutSeconds: (json['timeoutSeconds'] as num).toInt(),
+        surgeMultiplier: (json['surgeMultiplier'] as num).toDouble(),
       );
 }
 

@@ -88,13 +88,17 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
       return order.id;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Đặt hàng thất bại. Vui lòng thử lại.';
       state = state.copyWith(isPlacingOrder: false, error: message);
       return null;
     } catch (e) {
-      state = state.copyWith(isPlacingOrder: false, error: 'Có lỗi xảy ra khi đặt hàng.');
+      state = state.copyWith(
+        isPlacingOrder: false,
+        error: 'Có lỗi xảy ra khi đặt hàng.',
+      );
       return null;
     }
   }
@@ -129,10 +133,15 @@ class OrderNotifier extends StateNotifier<OrderState> {
         cancelledOrders: cancelled,
       );
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể tải danh sách đơn hàng.';
+      final message =
+          e.response?.data?['message'] as String? ??
+          'Không thể tải danh sách đơn hàng.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải đơn hàng.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải đơn hàng.',
+      );
     }
   }
 
@@ -142,7 +151,8 @@ class OrderNotifier extends StateNotifier<OrderState> {
       await fetchOrders();
       return true;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể hủy đơn hàng.';
+      final message =
+          e.response?.data?['message'] as String? ?? 'Không thể hủy đơn hàng.';
       state = state.copyWith(error: message);
       return false;
     } catch (e) {
@@ -151,17 +161,26 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
-  Future<bool> submitReview(String orderId, double foodRating, double deliveryRating, String comment) async {
+  Future<bool> submitReview(
+    String orderId,
+    double foodRating,
+    double deliveryRating,
+    String comment,
+  ) async {
     try {
-      await _api.post('/orders/$orderId/reviews', data: {
-        'foodRating': foodRating,
-        'deliveryRating': deliveryRating,
-        'comment': comment,
-      });
+      await _api.post(
+        '/orders/$orderId/reviews',
+        data: {
+          'foodRating': foodRating,
+          'deliveryRating': deliveryRating,
+          'comment': comment,
+        },
+      );
       await fetchOrders();
       return true;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể gửi đánh giá.';
+      final message =
+          e.response?.data?['message'] as String? ?? 'Không thể gửi đánh giá.';
       state = state.copyWith(error: message);
       return false;
     } catch (e) {
@@ -193,6 +212,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
           userId: currentTracking.userId,
           restaurantId: currentTracking.restaurantId,
           restaurantName: currentTracking.restaurantName,
+          restaurantLogoUrl: currentTracking.restaurantLogoUrl,
+          restaurantPhone: currentTracking.restaurantPhone,
+          customerName: currentTracking.customerName,
+          customerPhone: currentTracking.customerPhone,
           items: currentTracking.items,
           subtotal: currentTracking.subtotal,
           deliveryFee: currentTracking.deliveryFee,
@@ -210,6 +233,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
           driverLongitude: currentTracking.driverLongitude,
           restaurantLatitude: currentTracking.restaurantLatitude,
           restaurantLongitude: currentTracking.restaurantLongitude,
+          estimatedDeliveryTimeMinutes:
+              currentTracking.estimatedDeliveryTimeMinutes,
+          routePolyline: currentTracking.routePolyline,
         ),
       );
     }
@@ -224,6 +250,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
           userId: currentTracking.userId,
           restaurantId: currentTracking.restaurantId,
           restaurantName: currentTracking.restaurantName,
+          restaurantLogoUrl: currentTracking.restaurantLogoUrl,
+          restaurantPhone: currentTracking.restaurantPhone,
+          customerName: currentTracking.customerName,
+          customerPhone: currentTracking.customerPhone,
           items: currentTracking.items,
           subtotal: currentTracking.subtotal,
           deliveryFee: currentTracking.deliveryFee,
@@ -241,6 +271,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
           driverLongitude: lng,
           restaurantLatitude: currentTracking.restaurantLatitude,
           restaurantLongitude: currentTracking.restaurantLongitude,
+          estimatedDeliveryTimeMinutes:
+              currentTracking.estimatedDeliveryTimeMinutes,
+          routePolyline: currentTracking.routePolyline,
         ),
       );
     }

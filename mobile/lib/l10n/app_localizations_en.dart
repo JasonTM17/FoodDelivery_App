@@ -830,6 +830,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverHistoryEmpty => 'No delivery history';
 
   @override
+  String get driverHistoryLoadError =>
+      'Unable to load delivery history. Please try again.';
+
+  @override
+  String get driverHistoryRetry => 'Try again';
+
+  @override
   String get driverHistoryDeliveryFee => 'Delivery fee';
 
   @override
@@ -874,6 +881,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driverNavEta => 'ETA - Estimated arrival';
+
+  @override
+  String driverNavEtaMinutes(int minutes) {
+    return 'About $minutes min';
+  }
+
+  @override
+  String get driverNavEtaUnavailable => 'Waiting for route ETA';
 
   @override
   String get driverNavCustomerAddress => 'Customer address';

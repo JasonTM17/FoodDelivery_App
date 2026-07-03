@@ -29,7 +29,7 @@ export class DriversController {
 
   @Get('earnings')
   getEarnings(@CurrentUser() user: JwtPayload, @Query('period') period: string = 'today') {
-    return this.driversService.getEarnings(user.sub, period as 'today' | 'week' | 'month')
+    return this.driversService.getEarnings(user.sub, period)
   }
 
   @Get('earnings/summary')
@@ -40,6 +40,26 @@ export class DriversController {
   @Get('ratings')
   getRatings(@CurrentUser() user: JwtPayload, @Query('star') star?: string) {
     return this.driversService.getRatings(user.sub, star)
+  }
+
+  @Get('orders/active')
+  getActiveOrder(@CurrentUser() user: JwtPayload) {
+    return this.driversService.getActiveOrder(user.sub)
+  }
+
+  @Get('orders/history')
+  getOrderHistory(
+    @CurrentUser() user: JwtPayload,
+    @Query('fromDate') fromDate?: string,
+    @Query('toDate') toDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.driversService.getOrderHistory(
+      user.sub,
+      fromDate,
+      toDate,
+      limit ? Number(limit) : undefined,
+    )
   }
 
   @Get('trips/:tripId/route')

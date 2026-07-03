@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { DispatchGateway } from './dispatch.gateway'
 import { DriverScoringService } from './driver-scoring.service'
@@ -11,9 +11,9 @@ interface DriverCandidate {
   driverId: string
   distKm: number
   rating: number
-  acceptanceRate7d: number
-  completionRate7d: number
-  idleMinutes: number
+  acceptanceRate7d?: number
+  completionRate7d?: number
+  idleMinutes?: number
   totalDeliveries: number
   score: number
 }
@@ -67,12 +67,16 @@ export class DispatchService {
 
       if (await this.cooldown.isInCooldown(driverId)) continue
 
-      const rating = parseFloat(r[2]?.[1] as string ?? '4.0')
-      const acceptanceRate7d = parseFloat(r[4]?.[1] as string ?? '0.85')
-      const completionRate7d = parseFloat(r[5]?.[1] as string ?? '0.90')
+      const rating = parseFiniteNumber(r[2]?.[1])
+      const acceptanceRate7d = parseRate(r[4]?.[1])
+      const completionRate7d = parseRate(r[5]?.[1])
       const idleSince = r[6]?.[1] as string | null
-      const idleMinutes = idleSince ? (Date.now() - parseInt(idleSince, 10)) / 60000 : 30
-      const totalDeliveries = parseInt(r[7]?.[1] as string ?? '0', 10)
+      const idleSinceMs = idleSince ? Number(idleSince) : Number.NaN
+      const idleMinutes = Number.isFinite(idleSinceMs)
+        ? Math.max(0, (Date.now() - idleSinceMs) / 60000)
+        : undefined
+      const totalDeliveries = parseNonNegativeInteger(r[7]?.[1])
+      if (rating === undefined || totalDeliveries === undefined) continue
 
       const score = this.scoring.score({ driverId, distKm, rating, acceptanceRate7d, completionRate7d, idleMinutes, totalDeliveries })
       eligible.push({ driverId, distKm, rating, acceptanceRate7d, completionRate7d, idleMinutes, totalDeliveries, score })
@@ -146,15 +150,23 @@ export class DispatchService {
     const offerKey = `offer:${orderId}:${candidate.driverId}`
     await this.redis.setex(offerKey, 30, offerToken)
 
-    const order = await this.prisma.order.findUnique({
+    const order = await this.prisma.order.findUniqueOrThrow({
       where: { id: orderId },
-      select: { restaurant: { select: { name: true, addressLine: true } } },
+      select: {
+        total: true,
+        deliveryFee: true,
+        deliveryAddress: { select: { addressLine: true } },
+        restaurant: { select: { name: true, addressLine: true } },
+      },
     })
 
     this.dispatchGateway.sendNewOrderOffer(candidate.driverId, {
       orderId, offerToken,
-      restaurantName: order?.restaurant.name ?? '',
-      restaurantAddress: order?.restaurant.addressLine ?? '',
+      restaurantName: order.restaurant.name,
+      restaurantAddress: order.restaurant.addressLine,
+      deliveryAddress: order.deliveryAddress.addressLine,
+      orderTotal: Number(order.total),
+      deliveryFee: Number(order.deliveryFee),
       distanceKm: candidate.distKm,
       timeoutSeconds: 30,
       surgeMultiplier,
@@ -186,6 +198,8 @@ export class DispatchService {
        FROM restaurants r, addresses a WHERE r.id = $1::uuid AND a.id = $2::uuid`,
       order.restaurantId, order.deliveryAddressId,
     )
+    const location = coords[0]
+    if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
 
     await this.prisma.$transaction([
       this.prisma.order.update({ where: { id: orderId }, data: { driverId: candidate.driverId, status: 'driver_assigned' } }),
@@ -194,16 +208,33 @@ export class DispatchService {
         `INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
          VALUES ($1::uuid, $2::uuid, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326), ST_SetSRID(ST_MakePoint($5::float8, $6::float8), 4326), 'assigned', $7::numeric, NOW())`,
         orderId, candidate.driverId,
-        coords[0]?.restLng ?? 0, coords[0]?.restLat ?? 0,
-        coords[0]?.custLng ?? 0, coords[0]?.custLat ?? 0,
+        location.restLng, location.restLat,
+        location.custLng, location.custLat,
         candidate.rating.toString(),
       ),
     ])
 
     await pipeline.exec()
+    this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
     this.dispatchGateway.broadcastToOrder(orderId, 'driver:assigned', {
       driverId: candidate.driverId,
       etaMinutes: Math.round(candidate.distKm / 20 * 60),
     })
   }
+}
+
+function parseFiniteNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function parseRate(value: unknown): number | undefined {
+  const parsed = parseFiniteNumber(value)
+  return parsed !== undefined && parsed >= 0 && parsed <= 1 ? parsed : undefined
+}
+
+function parseNonNegativeInteger(value: unknown): number | undefined {
+  const parsed = parseFiniteNumber(value)
+  return parsed !== undefined && Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }

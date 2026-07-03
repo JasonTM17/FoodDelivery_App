@@ -185,22 +185,25 @@ Body: { lat, lng }
 ### POST /driver/offline
 Go offline.
 
-### GET /driver/orders/available
-Get pending orders near driver.
+### GET /driver/orders/active
+Get the authenticated driver's newest active assigned order, or `null` when the driver has no active assignment. Coordinates are read from PostGIS; missing location rows return `404 ORDER_LOCATION_NOT_FOUND`.
 
-### POST /driver/orders/:id/accept
-Accept dispatch offer.
+### GET /driver/orders/history
+Get terminal orders assigned to the authenticated driver.
 ```
-Body: { offerToken }
+Query: fromDate, toDate, limit
 ```
+
+Dispatch accept/reject is not a REST endpoint. Drivers respond to `/dispatch` WebSocket offers with `dispatch:accept` or `dispatch:reject`.
 
 ### PATCH /driver/orders/:id/status
 Update delivery status.
 
 ### GET /driver/earnings
-Get earnings summary.
+Get payout ledger earnings for the authenticated driver.
 ```
 Query: period (today|week|month)
+Response: { totalEarnings, totalOrders, averagePerOrder, entries[] }
 ```
 
 ### GET /driver/earnings/summary
@@ -295,6 +298,8 @@ Connect to `ws://localhost:3001` with namespace:
 | `/events: restaurant:unsubscribe` | `{ restaurantId }` |
 | `driver:go_online` | `{ lat, lng }` |
 | `driver:go_offline` | `{}` |
+| `/dispatch: dispatch:accept` | `{ orderId, offerToken }` |
+| `/dispatch: dispatch:reject` | `{ orderId, offerToken }` |
 | `/events: admin:subscribe_drivers` | `{}` |
 | `/events: admin:unsubscribe_drivers` | `{}` |
 
@@ -304,6 +309,8 @@ Connect to `ws://localhost:3001` with namespace:
 | `/events: restaurant:new_order` | `{ orderId, orderCode, total, items }` |
 | `/events: order:status:changed` | `{ orderId, status, timestamp }` |
 | `/events: order:message_created` | `{ orderId, id, senderType, senderId, content, createdAt }` (restaurant and assigned driver only) |
+| `/dispatch: driver:new_order` | `{ orderId, offerToken, restaurantName, restaurantAddress, deliveryAddress, orderTotal, deliveryFee, distanceKm, timeoutSeconds, surgeMultiplier }` |
+| `/dispatch: driver:order_assigned` | `{ orderId }` |
 | `driver:location_changed` | `{ orderId, driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |

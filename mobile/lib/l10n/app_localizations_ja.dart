@@ -824,6 +824,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverHistoryEmpty => '配達履歴はありません';
 
   @override
+  String get driverHistoryLoadError => '配達履歴を読み込めません。もう一度お試しください。';
+
+  @override
+  String get driverHistoryRetry => '再試行';
+
+  @override
   String get driverHistoryDeliveryFee => '配達料';
 
   @override
@@ -868,6 +874,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverNavEta => 'ETA - 到着予定時刻';
+
+  @override
+  String driverNavEtaMinutes(int minutes) {
+    return '約$minutes分';
+  }
+
+  @override
+  String get driverNavEtaUnavailable => 'ルートETAを待っています';
 
   @override
   String get driverNavCustomerAddress => 'お客様の住所';

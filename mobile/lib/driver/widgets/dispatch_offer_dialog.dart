@@ -24,17 +24,13 @@ class DispatchOfferDialog extends StatefulWidget {
 }
 
 class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
-  static const _timeoutSeconds = 30;
   late int _remaining;
   Timer? _ticker;
-  late final DateTime _deadline;
 
   @override
   void initState() {
     super.initState();
-    _deadline =
-        DateTime.now().add(const Duration(seconds: _timeoutSeconds));
-    _remaining = _timeoutSeconds;
+    _remaining = widget.offer.timeoutSeconds;
 
     // Pure-decrement ticker: Timer.periodic advances correctly in both
     // production and Flutter test environment (unlike DateTime.now() which
@@ -105,22 +101,29 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
             color: AppColors.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.delivery_dining,
-              color: AppColors.primary, size: 26),
+          child: const Icon(
+            Icons.delivery_dining,
+            color: AppColors.primary,
+            size: 26,
+          ),
         ),
         const SizedBox(width: 12),
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Đơn hàng mới!',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white)),
-              Text('Chấp nhận để bắt đầu giao hàng',
-                  style:
-                      TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+              Text(
+                'Đơn hàng mới!',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Chấp nhận để bắt đầu giao hàng',
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
             ],
           ),
         ),
@@ -138,23 +141,31 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
       ),
       child: Column(
         children: [
-          _infoRow(Icons.restaurant_outlined, widget.offer.restaurantName,
-              'Nhà hàng'),
+          _infoRow(
+            Icons.restaurant_outlined,
+            widget.offer.restaurantName,
+            'Nhà hàng',
+          ),
           const SizedBox(height: 12),
-          _infoRow(Icons.location_on_outlined,
-              widget.offer.deliveryAddress, 'Giao đến'),
+          _infoRow(
+            Icons.location_on_outlined,
+            widget.offer.deliveryAddress,
+            'Giao đến',
+          ),
           const Divider(color: Color(0xFF374151), height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _chip(
-                  '${widget.offer.distanceKm.toStringAsFixed(1)} km',
-                  Icons.straighten,
-                  AppColors.info),
+                '${widget.offer.distanceKm.toStringAsFixed(1)} km',
+                Icons.straighten,
+                AppColors.info,
+              ),
               _chip(
-                  '+${widget.offer.deliveryFee.toStringAsFixed(0)}đ',
-                  Icons.monetization_on,
-                  AppColors.primary),
+                '+${widget.offer.deliveryFee.toStringAsFixed(0)}đ',
+                Icons.monetization_on,
+                AppColors.primary,
+              ),
             ],
           ),
         ],
@@ -171,14 +182,18 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF6B7280))),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
         ),
@@ -191,15 +206,20 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 6),
-        Text(value,
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildCountdown() {
-    final progress = _remaining / _timeoutSeconds;
+    final progress = _remaining / widget.offer.timeoutSeconds;
     final color = _remaining > 10 ? AppColors.primary : AppColors.error;
     return Row(
       children: [
@@ -215,17 +235,22 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                 backgroundColor: color.withValues(alpha: 0.15),
                 strokeWidth: 4,
               ),
-              Text('$_remaining',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: color)),
+              Text(
+                '$_remaining',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
             ],
           ),
         ),
         const SizedBox(width: 14),
         Text(
-          _remaining > 10 ? 'Còn $_remaining giây để quyết định' : 'Sắp hết thời gian!',
+          _remaining > 10
+              ? 'Còn $_remaining giây để quyết định'
+              : 'Sắp hết thời gian!',
           style: TextStyle(fontSize: 13, color: color),
         ),
       ],
@@ -244,11 +269,13 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                 foregroundColor: const Color(0xFF6B7280),
                 side: const BorderSide(color: Color(0xFF374151)),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-              child: const Text('Từ chối',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600)),
+              child: const Text(
+                'Từ chối',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ),
@@ -263,11 +290,13 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-              child: const Text('Nhận đơn',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700)),
+              child: const Text(
+                'Nhận đơn',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         ),

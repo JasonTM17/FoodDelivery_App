@@ -18,28 +18,27 @@ class DriverEarnings {
   final List<DriverEarningEntry> entries;
 
   const DriverEarnings({
-    this.total = 0.0,
-    this.orderCount = 0,
-    this.averagePerOrder = 0.0,
-    this.entries = const [],
+    required this.total,
+    required this.orderCount,
+    required this.averagePerOrder,
+    required this.entries,
   });
 
   factory DriverEarnings.fromJson(Map<String, dynamic> json) {
-    final entriesList =
-        (json['entries'] as List<dynamic>?)
-            ?.map((e) => DriverEarningEntry.fromJson(e as Map<String, dynamic>))
-            .toList() ??
-        [];
-    final total = (json['total'] as num?)?.toDouble() ?? 0.0;
-    final count =
-        json['orderCount'] as int? ??
-        json['order_count'] as int? ??
-        entriesList.length;
+    final entries = json['entries'];
+    if (entries is! List<dynamic>) {
+      throw const FormatException('Invalid earnings field: entries');
+    }
     return DriverEarnings(
-      total: total,
-      orderCount: count,
-      averagePerOrder: count > 0 ? total / count : 0.0,
-      entries: entriesList,
+      total: _requiredDouble(json, 'totalEarnings'),
+      orderCount: _requiredNonNegativeInt(json, 'totalOrders'),
+      averagePerOrder: _requiredDouble(json, 'averagePerOrder'),
+      entries: entries
+          .map(
+            (entry) =>
+                DriverEarningEntry.fromJson(entry as Map<String, dynamic>),
+          )
+          .toList(growable: false),
     );
   }
 }
@@ -49,40 +48,23 @@ class DriverEarningEntry {
   final String orderCode;
   final String restaurantName;
   final double amount;
-  final double deliveryFee;
-  final double tip;
   final DateTime completedAt;
 
   DriverEarningEntry({
     required this.orderId,
     required this.orderCode,
     required this.restaurantName,
-    this.amount = 0.0,
-    this.deliveryFee = 0.0,
-    this.tip = 0.0,
+    required this.amount,
     required this.completedAt,
   });
 
   factory DriverEarningEntry.fromJson(Map<String, dynamic> json) {
     return DriverEarningEntry(
-      orderId: json['orderId'] as String? ?? json['order_id'] as String? ?? '',
-      orderCode:
-          json['orderCode'] as String? ?? json['order_code'] as String? ?? '',
-      restaurantName:
-          json['restaurantName'] as String? ??
-          json['restaurant_name'] as String? ??
-          '',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      deliveryFee:
-          (json['deliveryFee'] as num?)?.toDouble() ??
-          (json['delivery_fee'] as num?)?.toDouble() ??
-          0.0,
-      tip: (json['tip'] as num?)?.toDouble() ?? 0.0,
-      completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'] as String)
-          : json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'] as String)
-          : DateTime.now(),
+      orderId: _requiredString(json, 'orderId'),
+      orderCode: _requiredString(json, 'orderCode'),
+      restaurantName: _requiredString(json, 'restaurantName'),
+      amount: _requiredDouble(json, 'amount'),
+      completedAt: DateTime.parse(_requiredString(json, 'completedAt')),
     );
   }
 }
@@ -90,30 +72,31 @@ class DriverEarningEntry {
 class DriverTodayStats {
   final double earnings;
   final int orderCount;
-  final int onlineMinutes;
-  final double rating;
+  final int? onlineMinutes;
+  final double? rating;
 
   const DriverTodayStats({
     this.earnings = 0.0,
     this.orderCount = 0,
-    this.onlineMinutes = 0,
-    this.rating = 5.0,
+    this.onlineMinutes,
+    this.rating,
   });
 
   factory DriverTodayStats.fromJson(Map<String, dynamic> json) {
     return DriverTodayStats(
-      earnings: (json['earnings'] as num?)?.toDouble() ?? 0.0,
-      orderCount:
-          json['orderCount'] as int? ?? json['order_count'] as int? ?? 0,
+      earnings: _requiredDouble(json, 'totalEarnings'),
+      orderCount: _requiredNonNegativeInt(json, 'totalOrders'),
       onlineMinutes:
-          json['onlineMinutes'] as int? ?? json['online_minutes'] as int? ?? 0,
-      rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
+          json['onlineMinutes'] as int? ?? json['online_minutes'] as int?,
+      rating: (json['rating'] as num?)?.toDouble(),
     );
   }
 
-  String get onlineTimeText {
-    final h = onlineMinutes ~/ 60;
-    final m = onlineMinutes % 60;
+  String? get onlineTimeText {
+    final minutes = onlineMinutes;
+    if (minutes == null) return null;
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
     if (h > 0) return '${h}h ${m}p';
     return '${m}p';
   }
@@ -125,42 +108,74 @@ class DriverTodayStats {
 
 class DispatchOffer {
   final String orderId;
+  final String offerToken;
   final String restaurantName;
+  final String restaurantAddress;
   final String deliveryAddress;
   final double orderTotal;
   final double deliveryFee;
   final double distanceKm;
+  final int timeoutSeconds;
+  final double surgeMultiplier;
 
   const DispatchOffer({
     required this.orderId,
+    required this.offerToken,
     required this.restaurantName,
+    required this.restaurantAddress,
     required this.deliveryAddress,
     required this.orderTotal,
     required this.deliveryFee,
     required this.distanceKm,
+    required this.timeoutSeconds,
+    required this.surgeMultiplier,
   });
 
   factory DispatchOffer.fromJson(Map<String, dynamic> json) {
     return DispatchOffer(
-      orderId: json['orderId'] as String? ?? json['order_id'] as String? ?? '',
-      restaurantName:
-          json['restaurantName'] as String? ??
-          json['restaurant_name'] as String? ??
-          '',
-      deliveryAddress:
-          json['deliveryAddress'] as String? ??
-          json['delivery_address'] as String? ??
-          '',
-      orderTotal: (json['orderTotal'] as num?)?.toDouble() ?? 0.0,
-      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
-      distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
+      orderId: _requiredString(json, 'orderId'),
+      offerToken: _requiredString(json, 'offerToken'),
+      restaurantName: _requiredString(json, 'restaurantName'),
+      restaurantAddress: _requiredString(json, 'restaurantAddress'),
+      deliveryAddress: _requiredString(json, 'deliveryAddress'),
+      orderTotal: _requiredDouble(json, 'orderTotal'),
+      deliveryFee: _requiredDouble(json, 'deliveryFee'),
+      distanceKm: _requiredDouble(json, 'distanceKm'),
+      timeoutSeconds: _requiredInt(json, 'timeoutSeconds'),
+      surgeMultiplier: _requiredDouble(json, 'surgeMultiplier'),
     );
   }
+}
+
+String _requiredString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing required string field: $key');
+}
+
+double _requiredDouble(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is num && value.isFinite) return value.toDouble();
+  throw FormatException('Invalid numeric field: $key');
+}
+
+int _requiredInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is num && value.isFinite && value >= 1) return value.toInt();
+  throw FormatException('Invalid positive integer field: $key');
+}
+
+int _requiredNonNegativeInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is num && value.isFinite && value >= 0) return value.toInt();
+  throw FormatException('Invalid non-negative field: $key');
 }
 
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
+
+const _driverStateUnset = Object();
 
 class DriverState {
   final bool isLoading;
@@ -176,7 +191,7 @@ class DriverState {
   final String? vehicleType;
   final String? vehiclePlate;
   final DriverTodayStats todayStats;
-  final List<OrderModel> pendingOrders;
+  final List<OrderModel> recentOrders;
   final OrderModel? activeOrder;
   final DriverEarnings? earnings;
   final String? successMessage;
@@ -198,7 +213,7 @@ class DriverState {
     this.vehicleType,
     this.vehiclePlate,
     this.todayStats = const DriverTodayStats(),
-    this.pendingOrders = const [],
+    this.recentOrders = const [],
     this.activeOrder,
     this.earnings,
     this.successMessage,
@@ -221,8 +236,8 @@ class DriverState {
     String? vehicleType,
     String? vehiclePlate,
     DriverTodayStats? todayStats,
-    List<OrderModel>? pendingOrders,
-    OrderModel? activeOrder,
+    List<OrderModel>? recentOrders,
+    Object? activeOrder = _driverStateUnset,
     DriverEarnings? earnings,
     String? successMessage,
     double? currentLat,
@@ -243,8 +258,10 @@ class DriverState {
       vehicleType: vehicleType ?? this.vehicleType,
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
       todayStats: todayStats ?? this.todayStats,
-      pendingOrders: pendingOrders ?? this.pendingOrders,
-      activeOrder: activeOrder ?? this.activeOrder,
+      recentOrders: recentOrders ?? this.recentOrders,
+      activeOrder: identical(activeOrder, _driverStateUnset)
+          ? this.activeOrder
+          : activeOrder as OrderModel?,
       earnings: earnings ?? this.earnings,
       successMessage: successMessage,
       currentLat: currentLat ?? this.currentLat,
@@ -270,7 +287,7 @@ class DriverState {
     vehicleType: vehicleType,
     vehiclePlate: vehiclePlate,
     todayStats: todayStats,
-    pendingOrders: pendingOrders,
+    recentOrders: recentOrders,
     activeOrder: activeOrder,
     earnings: earnings,
     successMessage: successMessage,
@@ -295,6 +312,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   final SocketClient _socket = SocketClient.instance;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
+  StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
 
   DriverNotifier() : super(const DriverState());
 
@@ -336,31 +354,25 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> _fetchDriverProfile() async {
     try {
-      final response = await _api.get('/driver/profile');
+      final response = await _api.get('/users/me');
       final data = response.data as Map<String, dynamic>;
+      final profile = data['driverProfile'] as Map<String, dynamic>?;
       state = state.copyWith(
-        driverName: data['fullName'] as String? ?? data['full_name'] as String?,
+        driverName: data['fullName'] as String?,
         driverPhone: data['phone'] as String?,
-        driverAvatarUrl:
-            data['avatarUrl'] as String? ?? data['avatar_url'] as String?,
-        rating: (data['rating'] as num?)?.toDouble() ?? 5.0,
+        driverAvatarUrl: data['avatarUrl'] as String?,
+        rating: (profile?['rating'] as num?)?.toDouble() ?? state.rating,
         totalDeliveries:
-            data['totalDeliveries'] as int? ??
-            data['total_deliveries'] as int? ??
-            0,
+            profile?['totalDeliveries'] as int? ?? state.totalDeliveries,
         totalEarnings:
-            (data['totalEarnings'] as num?)?.toDouble() ??
-            (data['total_earnings'] as num?)?.toDouble() ??
-            0.0,
-        vehicleType:
-            data['vehicleType'] as String? ?? data['vehicle_type'] as String?,
-        vehiclePlate:
-            data['vehiclePlate'] as String? ?? data['vehicle_plate'] as String?,
-        isOnline:
-            data['isOnline'] as bool? ?? data['is_online'] as bool? ?? false,
+            (profile?['totalEarnings'] as num?)?.toDouble() ??
+            state.totalEarnings,
+        vehicleType: profile?['vehicleType'] as String?,
+        vehiclePlate: profile?['vehiclePlate'] as String?,
+        isOnline: profile?['isOnline'] as bool? ?? false,
       );
     } catch (_) {
-      // Profile fetch failed, continue with partial state
+      state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
     }
   }
 
@@ -379,10 +391,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<void> goOnline(double lat, double lng) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _api.patch(
-        '/driver/status',
-        data: {'isOnline': true, 'latitude': lat, 'longitude': lng},
-      );
+      await _api.post('/driver/online', data: {'lat': lat, 'lng': lng});
       state = state.copyWith(isLoading: false, isOnline: true);
       _startLocationUpdates(lat, lng);
     } on DioException catch (e) {
@@ -398,14 +407,15 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<void> goOffline() async {
     _stopLocationUpdates();
     _offerSub?.cancel();
+    _assignedOrderSub?.cancel();
     try {
-      await _api.patch('/driver/status', data: {'isOnline': false});
+      await _api.post('/driver/offline');
     } catch (_) {}
     state = state.copyWith(isOnline: false);
   }
 
   /// Goes online after acquiring real device GPS.
-  /// Falls back to last known position or HCM City center on timeout/denial.
+  /// Uses the last real device position when a fresh GPS read times out.
   Future<void> goOnlineWithGps() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -475,49 +485,31 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Orders
   // -----------------------------------------------------------------------
 
-  Future<void> acceptOrder(String orderId) async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      final response = await _api.post('/driver/orders/$orderId/accept');
-      final order = OrderModel.fromJson(response.data as Map<String, dynamic>);
-      state = state.copyWith(
-        isLoading: false,
-        activeOrder: order,
-        pendingOrders: state.pendingOrders
-            .where((o) => o.id != orderId)
-            .toList(),
-      );
-      _listenOrderStatus(orderId);
-      BackgroundLocationService.instance.setActiveOrderMode(true);
-    } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] as String? ?? 'Không thể nhận đơn';
-      state = state.copyWith(isLoading: false, error: msg);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
-    }
+  void acceptOrder(DispatchOffer offer) {
+    state = state.copyWith(isLoading: true, error: null).withOfferCleared();
+    _socket.respondToDispatchOffer(
+      orderId: offer.orderId,
+      offerToken: offer.offerToken,
+      accepted: true,
+    );
   }
 
-  Future<void> declineOrder(String orderId) async {
-    try {
-      await _api.post('/driver/orders/$orderId/decline');
-    } catch (_) {}
-    state = state.copyWith(
-      pendingOrders: state.pendingOrders.where((o) => o.id != orderId).toList(),
+  void declineOrder(DispatchOffer offer) {
+    _socket.respondToDispatchOffer(
+      orderId: offer.orderId,
+      offerToken: offer.offerToken,
+      accepted: false,
     );
+    state = state.withOfferCleared();
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.patch(
+      await _api.patch(
         '/driver/orders/$orderId/status',
         data: {'status': status},
       );
-      final updated = OrderModel.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      state = state.copyWith(isLoading: false, activeOrder: updated);
 
       if (status == 'delivered') {
         // Refresh stats & clear active order after a moment
@@ -527,6 +519,9 @@ class DriverNotifier extends StateNotifier<DriverState> {
           successMessage: 'Giao hàng thành công!',
         );
         BackgroundLocationService.instance.setActiveOrderMode(false);
+      } else {
+        await fetchActiveOrder();
+        state = state.copyWith(isLoading: false);
       }
     } on DioException catch (e) {
       final msg =
@@ -544,23 +539,32 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> fetchTodayStats() async {
     try {
-      final response = await _api.get('/driver/stats/today');
-      state = state.copyWith(
-        todayStats: DriverTodayStats.fromJson(
-          response.data as Map<String, dynamic>,
-        ),
+      final response = await _api.get(
+        '/driver/earnings',
+        queryParameters: {'period': 'today'},
       );
-    } catch (_) {}
+      final data = Map<String, dynamic>.from(
+        response.data as Map<String, dynamic>,
+      )..['rating'] = state.rating;
+      state = state.copyWith(todayStats: DriverTodayStats.fromJson(data));
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_TODAY_STATS_UNAVAILABLE');
+    }
   }
 
-  Future<void> fetchPendingOrders() async {
+  Future<void> fetchRecentOrders() async {
     try {
-      final response = await _api.get('/driver/orders/pending');
+      final response = await _api.get(
+        '/driver/orders/history',
+        queryParameters: {'limit': 5},
+      );
       final list = (response.data as List<dynamic>)
-          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-      state = state.copyWith(pendingOrders: list);
-    } catch (_) {}
+          .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
+          .toList(growable: false);
+      state = state.copyWith(recentOrders: list);
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_ORDER_HISTORY_UNAVAILABLE');
+    }
   }
 
   Future<void> fetchActiveOrder() async {
@@ -573,11 +577,18 @@ class DriverNotifier extends StateNotifier<DriverState> {
         );
         state = state.copyWith(activeOrder: order);
         _listenOrderStatus(order.id);
+        BackgroundLocationService.instance.setActiveOrderMode(true);
+      } else {
+        _orderStatusSub?.cancel();
+        state = state.copyWith(activeOrder: null);
+        BackgroundLocationService.instance.setActiveOrderMode(false);
       }
-    } catch (_) {}
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_ACTIVE_ORDER_UNAVAILABLE');
+    }
   }
 
-  Future<DriverEarnings> fetchEarnings(String period) async {
+  Future<void> fetchEarnings(String period) async {
     try {
       final response = await _api.get(
         '/driver/earnings',
@@ -587,9 +598,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
         response.data as Map<String, dynamic>,
       );
       state = state.copyWith(earnings: earnings);
-      return earnings;
-    } catch (e) {
-      return const DriverEarnings();
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_EARNINGS_UNAVAILABLE');
     }
   }
 
@@ -609,7 +619,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
           .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      state = state.copyWith(error: 'DRIVER_ORDER_HISTORY_UNAVAILABLE');
+      rethrow;
     }
   }
 
@@ -622,36 +633,19 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _socket.connect();
     _socket.subscribeOrder(orderId);
 
-    _orderStatusSub = _socket.onOrderStatus.listen((data) {
+    _orderStatusSub = _socket.onOrderStatus.listen((data) async {
       final id = data['orderId'] as String? ?? data['order_id'] as String?;
       final status = data['status'] as String?;
       if (id == orderId && status != null && state.activeOrder?.id == id) {
-        final updated = OrderModel(
-          id: state.activeOrder!.id,
-          userId: state.activeOrder!.userId,
-          restaurantId: state.activeOrder!.restaurantId,
-          restaurantName: state.activeOrder!.restaurantName,
-          items: state.activeOrder!.items,
-          subtotal: state.activeOrder!.subtotal,
-          deliveryFee: state.activeOrder!.deliveryFee,
-          discount: state.activeOrder!.discount,
-          total: state.activeOrder!.total,
-          status: status,
-          deliveryAddress: state.activeOrder!.deliveryAddress,
-          paymentMethod: state.activeOrder!.paymentMethod,
-          createdAt: state.activeOrder!.createdAt,
-          updatedAt: DateTime.now(),
-          restaurantLatitude: state.activeOrder!.restaurantLatitude,
-          restaurantLongitude: state.activeOrder!.restaurantLongitude,
-        );
-        state = state.copyWith(activeOrder: updated);
-
         if (status == 'delivered') {
-          fetchTodayStats();
+          await fetchTodayStats();
           state = state.copyWith(
             activeOrder: null,
             successMessage: 'Giao hàng thành công!',
           );
+          BackgroundLocationService.instance.setActiveOrderMode(false);
+        } else {
+          await fetchActiveOrder();
         }
       }
     });
@@ -665,12 +659,20 @@ class DriverNotifier extends StateNotifier<DriverState> {
   /// Call after going online so the driver receives real-time offer events.
   void startDispatchOfferListener() {
     _offerSub?.cancel();
+    _assignedOrderSub?.cancel();
     _socket.connect();
     _offerSub = _socket.onDriverOffer.listen((data) {
       try {
         final offer = DispatchOffer.fromJson(data);
         state = state.copyWith(pendingOffer: offer);
-      } catch (_) {}
+      } catch (_) {
+        state = state.copyWith(error: 'DISPATCH_OFFER_INVALID');
+      }
+    });
+    _assignedOrderSub = _socket.onDriverOrderAssigned.listen((data) async {
+      if (data['orderId'] is! String) return;
+      await fetchActiveOrder();
+      state = state.copyWith(isLoading: false);
     });
   }
 
@@ -695,6 +697,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   void dispose() {
     _orderStatusSub?.cancel();
     _offerSub?.cancel();
+    _assignedOrderSub?.cancel();
     BackgroundLocationService.instance.stop();
     super.dispose();
   }

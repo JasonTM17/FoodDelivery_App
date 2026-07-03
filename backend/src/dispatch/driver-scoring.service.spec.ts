@@ -30,6 +30,19 @@ describe('DriverScoringService', () => {
     it('higher-rated driver scores higher (all else equal)', () => {
       expect(svc.score(input({ rating: 5 }))).toBeGreaterThan(svc.score(input({ rating: 3 })))
     })
+
+    it('renormalizes measured factors instead of inventing missing rates or idle time', () => {
+      const score = svc.score(input({
+        distKm: 0,
+        rating: 5,
+        acceptanceRate7d: undefined,
+        completionRate7d: undefined,
+        idleMinutes: undefined,
+        totalDeliveries: 50,
+      }))
+
+      expect(score).toBeCloseTo(1, 5)
+    })
   })
 
   describe('distance component (40% weight)', () => {

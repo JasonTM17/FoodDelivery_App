@@ -691,21 +691,136 @@ components:
         lat: 10.7769
         lng: 106.7009
 
+    DriverEarningEntry:
+      type: object
+      description: One real payout ledger row joined to its completed order.
+      properties:
+        orderId: { type: string, format: uuid }
+        orderCode: { type: string }
+        restaurantName: { type: string }
+        amount: { type: integer, description: "Net driver payout ledger amount in VND" }
+        completedAt: { type: string, format: date-time }
+      required: [orderId, orderCode, restaurantName, amount, completedAt]
+
     DriverEarnings:
       type: object
+      description: Driver payout ledger totals for the requested `today`, `week`, or `month` period.
       properties:
-        today:         { type: integer, description: "VND earned today" }
-        week:          { type: integer, description: "VND earned this week" }
-        month:         { type: integer, description: "VND earned this month" }
-        totalDeliveries: { type: integer }
-        rating:        { type: number }
-      required: [today, week, month, totalDeliveries, rating]
+        totalEarnings: { type: integer, description: "Net driver payout ledger amount in VND" }
+        totalOrders: { type: integer, minimum: 0, description: "Distinct orders represented by the payout entries." }
+        averagePerOrder: { type: integer, description: "Rounded VND average per distinct order." }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/DriverEarningEntry" }
+      required: [totalEarnings, totalOrders, averagePerOrder, entries]
       example:
-        today: 350000
-        week: 2450000
-        month: 9800000
-        totalDeliveries: 156
-        rating: 4.8
+        totalEarnings: 350000
+        totalOrders: 7
+        averagePerOrder: 50000
+        entries:
+          - orderId: "66666666-6666-4666-8666-666666666666"
+            orderCode: "FF-20260703-0001"
+            restaurantName: "Pho 24"
+            amount: 50000
+            completedAt: "2026-07-03T08:30:00Z"
+
+    DriverOrderItem:
+      type: object
+      properties:
+        menuItemId: { type: string, format: uuid }
+        name: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        unitPrice: { type: integer, description: "VND" }
+        totalPrice: { type: integer, description: "VND" }
+        selectedOptions:
+          description: Original selected option JSON persisted on the order item.
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items: {}
+            - type: string
+            - type: number
+            - type: boolean
+            - type: "null"
+      required: [menuItemId, name, quantity, unitPrice, totalPrice, selectedOptions]
+
+    DriverOrderAddress:
+      type: object
+      properties:
+        label: { type: string }
+        address: { type: string }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+      required: [label, address, latitude, longitude]
+
+    DriverOrderStatusHistory:
+      type: object
+      properties:
+        status: { type: string }
+        timestamp: { type: string, format: date-time }
+        note: { type: [string, "null"] }
+      required: [status, timestamp, note]
+
+    DriverOrder:
+      type: object
+      description: Order snapshot scoped to the authenticated driver. Coordinates are read from PostGIS; missing location rows return `404 ORDER_LOCATION_NOT_FOUND` instead of synthetic coordinates.
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        restaurantId: { type: string, format: uuid }
+        restaurantName: { type: string }
+        restaurantLogoUrl: { type: [string, "null"] }
+        restaurantPhone: { type: [string, "null"] }
+        customerName: { type: string }
+        customerPhone: { type: [string, "null"] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DriverOrderItem" }
+        subtotal: { type: integer, description: "VND" }
+        deliveryFee: { type: integer, description: "VND" }
+        discount: { type: integer, description: "VND" }
+        total: { type: integer, description: "VND" }
+        status: { type: string, enum: [driver_assigned, driver_arriving_restaurant, picked_up, delivering, delivered, completed, cancelled, refunded] }
+        driverId: { type: [string, "null"], format: uuid }
+        deliveryAddress: { $ref: "#/components/schemas/DriverOrderAddress" }
+        paymentMethod: { type: string }
+        note: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        statusHistory:
+          type: array
+          items: { $ref: "#/components/schemas/DriverOrderStatusHistory" }
+        restaurantLatitude: { type: number, minimum: -90, maximum: 90 }
+        restaurantLongitude: { type: number, minimum: -180, maximum: 180 }
+        estimatedDeliveryTimeMinutes: { type: [integer, "null"], minimum: 1 }
+        routePolyline: { type: [string, "null"] }
+      required:
+        - id
+        - userId
+        - restaurantId
+        - restaurantName
+        - restaurantLogoUrl
+        - restaurantPhone
+        - customerName
+        - customerPhone
+        - items
+        - subtotal
+        - deliveryFee
+        - discount
+        - total
+        - status
+        - driverId
+        - deliveryAddress
+        - paymentMethod
+        - note
+        - createdAt
+        - updatedAt
+        - statusHistory
+        - restaurantLatitude
+        - restaurantLongitude
+        - estimatedDeliveryTimeMinutes
+        - routePolyline
 
     DriverDailyEarning:
       type: object
@@ -3186,6 +3301,51 @@ paths:
       responses:
         "200": { description: "Now offline", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean } } } } } }
 
+  /driver/orders/active:
+    get:
+      tags: [drivers]
+      summary: Get authenticated driver's active order
+      description: Returns the newest active order assigned to the authenticated driver, or `null` when no active assignment exists. Order and address coordinates come from PostGIS; missing location rows return `404 ORDER_LOCATION_NOT_FOUND`.
+      operationId: drivers_getActiveOrder
+      x-foo-actor: driver
+      responses:
+        "200":
+          description: Active order or null
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/DriverOrder"
+                  - type: "null"
+        "404": { description: "Order location not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/orders/history:
+    get:
+      tags: [drivers]
+      summary: List authenticated driver's completed order history
+      description: Returns terminal orders assigned to the authenticated driver. Empty arrays are valid; API failures must not be treated as empty history by clients.
+      operationId: drivers_getOrderHistory
+      x-foo-actor: driver
+      parameters:
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date-time }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Driver order history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DriverOrder" }
+        "404": { description: "Order location not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /driver/bank-accounts:
     get:
       tags: [drivers]
@@ -3269,8 +3429,8 @@ paths:
   /driver/earnings:
     get:
       tags: [drivers]
-      summary: Get driver earnings summary
-      description: Returns earnings totals for the authenticated driver over the requested period.
+      summary: Get driver payout ledger earnings
+      description: Returns payout ledger totals and entries for the authenticated driver over the requested `today`, `week`, or `month` period. Empty `entries` means no settled driver payout rows exist for the period.
       operationId: drivers_getEarnings
       x-foo-actor: driver
       parameters:
@@ -3279,6 +3439,7 @@ paths:
           schema: { type: string, enum: [today, week, month], default: today }
       responses:
         "200": { description: "Earnings", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarnings" } } } }
+        "400": { description: "Invalid earnings period", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/earnings/summary:
     get:

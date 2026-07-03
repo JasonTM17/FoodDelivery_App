@@ -315,6 +315,8 @@
   "driverHistoryTitle": "配達履歴",
   "driverHistoryFilterDate": "日付でフィルター",
   "driverHistoryEmpty": "配達履歴はありません",
+  "driverHistoryLoadError": "配達履歴を読み込めません。もう一度お試しください。",
+  "driverHistoryRetry": "再試行",
   "driverHistoryDeliveryFee": "配達料",
 
   "locationPermissionTitle": "位置情報へのアクセスを許可",
@@ -332,6 +334,9 @@
   "driverNavItemsToPickup": "受け取る商品",
   "driverNavConfirmPickup": "受け取り確認",
   "driverNavEta": "ETA - 到着予定時刻",
+  "driverNavEtaMinutes": "約{minutes}分",
+  "@driverNavEtaMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "driverNavEtaUnavailable": "ルートETAを待っています",
   "driverNavCustomerAddress": "お客様の住所",
   "driverNavCallCustomer": "お客様に電話",
   "driverNavConfirmDelivery": "配達完了",

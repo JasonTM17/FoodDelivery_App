@@ -34,6 +34,21 @@ export interface DriverEarningsSummary {
   byDay: DriverDailyEarning[]
 }
 
+export interface DriverEarningEntry {
+  orderId: string
+  orderCode: string
+  restaurantName: string
+  amount: number
+  completedAt: string
+}
+
+export interface DriverEarningsResponse {
+  totalEarnings: number
+  totalOrders: number
+  averagePerOrder: number
+  entries: DriverEarningEntry[]
+}
+
 export interface DriverRatingReview {
   id: string
   customerName: string
@@ -81,6 +96,65 @@ export interface DriverTripRouteResponse {
   payout: number
 }
 
+const driverOrderInclude = Prisma.validator<Prisma.OrderInclude>()({
+  restaurant: {
+    select: { name: true, logoUrl: true, addressLine: true, phone: true },
+  },
+  customer: { select: { fullName: true, phone: true } },
+  deliveryAddress: { select: { label: true, addressLine: true } },
+  orderItems: true,
+  statusHistory: { orderBy: { createdAt: 'asc' } },
+})
+
+type DriverOrderRecord = Prisma.OrderGetPayload<{ include: typeof driverOrderInclude }>
+
+interface DriverOrderLocationRow {
+  restaurantLat: number
+  restaurantLng: number
+  deliveryLat: number
+  deliveryLng: number
+}
+
+export interface DriverOrderResponse {
+  id: string
+  userId: string
+  restaurantId: string
+  restaurantName: string
+  restaurantLogoUrl: string | null
+  restaurantPhone: string | null
+  customerName: string
+  customerPhone: string | null
+  items: Array<{
+    menuItemId: string
+    name: string
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+    selectedOptions: Prisma.JsonValue
+  }>
+  subtotal: number
+  deliveryFee: number
+  discount: number
+  total: number
+  status: string
+  driverId: string | null
+  deliveryAddress: {
+    label: string
+    address: string
+    latitude: number
+    longitude: number
+  }
+  paymentMethod: string
+  note: string | null
+  createdAt: string
+  updatedAt: string
+  statusHistory: Array<{ status: string; timestamp: string; note: string | null }>
+  restaurantLatitude: number
+  restaurantLongitude: number
+  estimatedDeliveryTimeMinutes: number | null
+  routePolyline: string | null
+}
+
 @Injectable()
 export class DriversService {
   constructor(
@@ -88,7 +162,11 @@ export class DriversService {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
-  async goOnline(driverId: string, lat: number, lng: number): Promise<void> {
+  async goOnline(
+    driverId: string,
+    lat: number,
+    lng: number,
+  ): Promise<{ isOnline: true; lat: number; lng: number }> {
     const profile = await this.prisma.driverProfile.findUniqueOrThrow({ where: { userId: driverId } })
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
     const now = new Date().toISOString()
@@ -98,58 +176,115 @@ export class DriversService {
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
     await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, now)
     await this.redis.set(`driver:${driverId}:rating`, profile.rating.toString())
+    await this.redis.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
+    await this.redis.set(`driver:${driverId}:idle_since`, Date.now().toString())
     await this.redis.set(`driver:${driverId}:current_order`, '')
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },
       data: { isOnline: true, currentLat: lat, currentLng: lng },
     })
+
+    return { isOnline: true, lat, lng }
   }
 
-  async goOffline(driverId: string): Promise<void> {
+  async goOffline(driverId: string): Promise<{ isOnline: false }> {
     // ZREM is correct for geo keys — GEOADD stores members in a sorted set internally.
     // Redis does not have a separate GEO-removal command.
     await this.redis.zrem('drivers:active', `driver:${driverId}`)
     await this.redis.del(`driver:${driverId}:status`)
     await this.redis.del(`driver:${driverId}:alive`)
     await this.redis.del(`driver:${driverId}:last_seen_at`)
+    await this.redis.del(`driver:${driverId}:idle_since`)
     await this.redis.del(`driver:${driverId}:current_order`)
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },
       data: { isOnline: false },
     })
+
+    return { isOnline: false }
   }
 
-  async getEarnings(driverId: string, period: 'today' | 'week' | 'month'): Promise<{
-    totalEarnings: number; totalOrders: number; averagePerOrder: number;
-  }> {
-    const now = new Date()
-    let startDate: Date
-    if (period === 'today') {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    } else if (period === 'week') {
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    } else {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-    }
-
-    const payments = await this.prisma.payment.findMany({
+  async getActiveOrder(driverId: string): Promise<DriverOrderResponse | null> {
+    const order = await this.prisma.order.findFirst({
       where: {
-        status: 'completed',
-        paidAt: { gte: startDate },
-        order: { driverId },
+        driverId,
+        status: {
+          in: [
+            'driver_assigned',
+            'driver_arriving_restaurant',
+            'picked_up',
+            'delivering',
+          ],
+        },
       },
-      select: { amount: true },
+      orderBy: { updatedAt: 'desc' },
+      include: driverOrderInclude,
     })
+    return order ? this.serializeDriverOrder(order) : null
+  }
 
-    const totalEarnings = payments.reduce((sum, p) => sum + Number(p.amount), 0)
-    const totalOrders = payments.length
+  async getOrderHistory(
+    driverId: string,
+    fromDate?: string,
+    toDate?: string,
+    limit = 20,
+  ): Promise<DriverOrderResponse[]> {
+    const createdAt = dateRange(fromDate, toDate)
+    const orders = await this.prisma.order.findMany({
+      where: {
+        driverId,
+        status: { in: ['delivered', 'completed', 'cancelled', 'refunded'] },
+        ...(createdAt ? { createdAt } : {}),
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: Math.min(Math.max(limit, 1), 50),
+      include: driverOrderInclude,
+    })
+    return Promise.all(orders.map(order => this.serializeDriverOrder(order)))
+  }
+
+  async getEarnings(
+    driverId: string,
+    period: string,
+  ): Promise<DriverEarningsResponse> {
+    const normalizedPeriod = normalizeDriverEarningsPeriod(period)
+    const startDate = driverEarningsStart(normalizedPeriod)
+    const ledgers = await this.prisma.payoutLedger.findMany({
+      where: {
+        recipientType: 'driver',
+        recipientId: driverId,
+        createdAt: { gte: startDate },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        orderId: true,
+        amount: true,
+        createdAt: true,
+        order: {
+          select: {
+            orderCode: true,
+            restaurant: { select: { name: true } },
+            deliveryTask: { select: { deliveredAt: true } },
+          },
+        },
+      },
+    })
+    const totalEarnings = ledgers.reduce((sum, ledger) => sum + Number(ledger.amount), 0)
+    const totalOrders = new Set(ledgers.map(ledger => ledger.orderId)).size
 
     return {
       totalEarnings,
       totalOrders,
       averagePerOrder: totalOrders > 0 ? Math.round(totalEarnings / totalOrders) : 0,
+      entries: ledgers.map(ledger => ({
+        orderId: ledger.orderId,
+        orderCode: ledger.order.orderCode,
+        restaurantName: ledger.order.restaurant.name,
+        amount: Number(ledger.amount),
+        completedAt: (ledger.order.deliveryTask?.deliveredAt ?? ledger.createdAt).toISOString(),
+      })),
     }
   }
 
@@ -371,6 +506,86 @@ export class DriversService {
       demandLevel: demandLevel(Number(row.orderCount)),
     }))
   }
+
+  private async serializeDriverOrder(order: DriverOrderRecord): Promise<DriverOrderResponse> {
+    const locations = await this.prisma.$queryRaw<DriverOrderLocationRow[]>(Prisma.sql`
+      SELECT
+        ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+        ST_X(r.location::geometry)::float8 AS "restaurantLng",
+        ST_Y(a.location::geometry)::float8 AS "deliveryLat",
+        ST_X(a.location::geometry)::float8 AS "deliveryLng"
+      FROM orders o
+      JOIN restaurants r ON r.id = o.restaurant_id
+      JOIN addresses a ON a.id = o.delivery_address_id
+      WHERE o.id = CAST(${order.id} AS uuid)
+      LIMIT 1
+    `)
+    const location = locations[0]
+    if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
+
+    return {
+      id: order.id,
+      userId: order.customerId,
+      restaurantId: order.restaurantId,
+      restaurantName: order.restaurant.name,
+      restaurantLogoUrl: order.restaurant.logoUrl,
+      restaurantPhone: order.restaurant.phone,
+      customerName: order.customer.fullName,
+      customerPhone: order.customer.phone,
+      items: order.orderItems.map(item => ({
+        menuItemId: item.menuItemId,
+        name: item.nameSnapshot,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.unitPrice) * item.quantity,
+        selectedOptions: item.selectedOptions,
+      })),
+      subtotal: Number(order.subtotal),
+      deliveryFee: Number(order.deliveryFee),
+      discount: Number(order.promotionDiscount),
+      total: Number(order.total),
+      status: order.status,
+      driverId: order.driverId,
+      deliveryAddress: {
+        label: order.deliveryAddress.label,
+        address: order.deliveryAddress.addressLine,
+        latitude: Number(location.deliveryLat),
+        longitude: Number(location.deliveryLng),
+      },
+      paymentMethod: order.paymentMethod,
+      note: order.notes,
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      statusHistory: order.statusHistory.map(history => ({
+        status: history.status,
+        timestamp: history.createdAt.toISOString(),
+        note: history.note,
+      })),
+      restaurantLatitude: Number(location.restaurantLat),
+      restaurantLongitude: Number(location.restaurantLng),
+      estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes,
+      routePolyline: order.routePolyline,
+    }
+  }
+}
+
+function dateRange(
+  fromDate?: string,
+  toDate?: string,
+): Prisma.DateTimeFilter | undefined {
+  const from = parseDate(fromDate)
+  const to = parseDate(toDate)
+  if (!from && !to) return undefined
+  return {
+    ...(from ? { gte: from } : {}),
+    ...(to ? { lte: to } : {}),
+  }
+}
+
+function parseDate(value: string | undefined): Date | undefined {
+  if (!value) return undefined
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed
 }
 
 function isValidLatitude(value: number): boolean {
@@ -398,6 +613,18 @@ function normalizeEarningsPeriod(period: string | undefined): '7d' | '30d' | '90
   if (period === '30d' || period === 'thirtyDays') return '30d'
   if (period === '90d' || period === 'ninetyDays') return '90d'
   return '7d'
+}
+
+function normalizeDriverEarningsPeriod(period: string): 'today' | 'week' | 'month' {
+  if (period === 'today' || period === 'week' || period === 'month') return period
+  throw new BadRequestException('INVALID_EARNINGS_PERIOD')
+}
+
+function driverEarningsStart(period: 'today' | 'week' | 'month'): Date {
+  const now = new Date()
+  if (period === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1)
+  return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 }
 
 function earningsPeriodDays(period: '7d' | '30d' | '90d'): number {

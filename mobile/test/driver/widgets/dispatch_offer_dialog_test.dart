@@ -6,11 +6,15 @@ import 'package:foodflow_customer/driver/widgets/dispatch_offer_dialog.dart';
 
 const _testOffer = DispatchOffer(
   orderId: 'order-001',
+  offerToken: 'offer-token',
+  restaurantAddress: '1 Hai Ba Trung, District 1',
   restaurantName: 'Bún Bò Huế Ngon',
   deliveryAddress: '123 Lê Lợi, Q.1, TP.HCM',
   orderTotal: 85000,
   deliveryFee: 15000,
   distanceKm: 2.4,
+  timeoutSeconds: 30,
+  surgeMultiplier: 1.0,
 );
 
 Widget _buildDialog({VoidCallback? onAccept, VoidCallback? onReject}) {

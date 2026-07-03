@@ -1,48 +1,53 @@
 // ── Drivers ──
 
 class DriverEarningsResponse {
-  final String period;
   final int totalEarnings;
-  final int deliveryCount;
-  final int tips;
-  final List<EarningsBreakdown>? breakdown;
+  final int totalOrders;
+  final int averagePerOrder;
+  final List<DriverEarningEntry> entries;
 
   const DriverEarningsResponse({
-    required this.period,
     required this.totalEarnings,
-    required this.deliveryCount,
-    required this.tips,
-    this.breakdown,
+    required this.totalOrders,
+    required this.averagePerOrder,
+    required this.entries,
   });
 
   factory DriverEarningsResponse.fromJson(Map<String, dynamic> json) =>
       DriverEarningsResponse(
-        period: json['period'] as String,
-        totalEarnings: json['totalEarnings'] as int,
-        deliveryCount: json['deliveryCount'] as int,
-        tips: json['tips'] as int,
-        breakdown: (json['breakdown'] as List<dynamic>?)
-            ?.map((e) => EarningsBreakdown.fromJson(e as Map<String, dynamic>))
+        totalEarnings: (json['totalEarnings'] as num).toInt(),
+        totalOrders: (json['totalOrders'] as num).toInt(),
+        averagePerOrder: (json['averagePerOrder'] as num).toInt(),
+        entries: (json['entries'] as List<dynamic>)
+            .map(
+              (e) => DriverEarningEntry.fromJson(e as Map<String, dynamic>),
+            )
             .toList(),
       );
 }
 
-class EarningsBreakdown {
-  final String date;
-  final int earnings;
-  final int deliveries;
+class DriverEarningEntry {
+  final String orderId;
+  final String orderCode;
+  final String restaurantName;
+  final int amount;
+  final String completedAt;
 
-  const EarningsBreakdown({
-    required this.date,
-    required this.earnings,
-    required this.deliveries,
+  const DriverEarningEntry({
+    required this.orderId,
+    required this.orderCode,
+    required this.restaurantName,
+    required this.amount,
+    required this.completedAt,
   });
 
-  factory EarningsBreakdown.fromJson(Map<String, dynamic> json) =>
-      EarningsBreakdown(
-        date: json['date'] as String,
-        earnings: json['earnings'] as int,
-        deliveries: json['deliveries'] as int,
+  factory DriverEarningEntry.fromJson(Map<String, dynamic> json) =>
+      DriverEarningEntry(
+        orderId: json['orderId'] as String,
+        orderCode: json['orderCode'] as String,
+        restaurantName: json['restaurantName'] as String,
+        amount: (json['amount'] as num).toInt(),
+        completedAt: json['completedAt'] as String,
       );
 }
 
@@ -65,15 +70,16 @@ class DriverIncentive {
     required this.expiresAt,
   });
 
-  factory DriverIncentive.fromJson(Map<String, dynamic> json) => DriverIncentive(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    description: json['description'] as String,
-    targetDeliveries: json['targetDeliveries'] as int,
-    bonusAmount: json['bonusAmount'] as int,
-    progress: json['progress'] as int,
-    expiresAt: json['expiresAt'] as String,
-  );
+  factory DriverIncentive.fromJson(Map<String, dynamic> json) =>
+      DriverIncentive(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        description: json['description'] as String,
+        targetDeliveries: json['targetDeliveries'] as int,
+        bonusAmount: json['bonusAmount'] as int,
+        progress: json['progress'] as int,
+        expiresAt: json['expiresAt'] as String,
+      );
 }
 
 class DriverIncentivesResponse {
@@ -131,12 +137,12 @@ class WalletSnapshot {
   });
 
   factory WalletSnapshot.fromJson(Map<String, dynamic> json) => WalletSnapshot(
-    balance: json['balance'] as int,
-    pendingTopups: json['pendingTopups'] as int,
-    recentTransactions: (json['recentTransactions'] as List<dynamic>)
-        .map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+        balance: json['balance'] as int,
+        pendingTopups: json['pendingTopups'] as int,
+        recentTransactions: (json['recentTransactions'] as List<dynamic>)
+            .map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 }
 
 // ── Loyalty ──

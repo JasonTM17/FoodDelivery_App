@@ -10,7 +10,7 @@ Driver dispatch engine — match orders to drivers via Redis GEOADD nearby searc
 - `POST /admin/dispatch/cancel/:orderId` — Cancel dispatch + return order to queue
 - `GET /admin/dispatch/metrics` — Real-time queue stats, driver utilization, surge map
 - BullMQ queues: `dispatch`, `dispatch-retry`
-- WebSocket: `driver:offer:new`, `driver:offer:expired`
+- WebSocket `/dispatch`: server emits `driver:new_order` with `{ orderId, offerToken, restaurantName, restaurantAddress, deliveryAddress, orderTotal, deliveryFee, distanceKm, timeoutSeconds, surgeMultiplier }`; drivers reply with `dispatch:accept` / `dispatch:reject` using `{ orderId, offerToken }`; server emits `driver:order_assigned` after assignment is persisted.
 
 ## Env vars
 

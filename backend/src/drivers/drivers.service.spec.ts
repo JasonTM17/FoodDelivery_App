@@ -10,7 +10,8 @@ describe('DriversService', () => {
   }
   const mockPrisma = {
     driverProfile: { findUniqueOrThrow: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
-    order: { findFirst: jest.fn() },
+    order: { findFirst: jest.fn(), findMany: jest.fn() },
+    payoutLedger: { findMany: jest.fn() },
     payment: { findMany: jest.fn() },
     review: { findMany: jest.fn() },
     $queryRaw: jest.fn(),
@@ -30,21 +31,104 @@ describe('DriversService', () => {
 
   describe('goOnline', () => {
     it('throws if driver not verified', async () => {
-      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({ isVerified: false, rating: '4.0' })
+      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
+        isVerified: false,
+        rating: '4.0',
+        totalDeliveries: 0,
+      })
       await expect(service.goOnline('d1', 10.8, 106.7)).rejects.toThrow(BadRequestException)
     })
 
     it('adds driver to Redis GEO and sets status', async () => {
-      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({ isVerified: true, rating: '4.5' })
+      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
+        isVerified: true,
+        rating: '4.5',
+        totalDeliveries: 37,
+      })
       mockPrisma.driverProfile.update.mockResolvedValueOnce({})
-      await service.goOnline('d1', 10.8, 106.7)
+      await expect(service.goOnline('d1', 10.8, 106.7)).resolves.toEqual({
+        isOnline: true,
+        lat: 10.8,
+        lng: 106.7,
+      })
       expect(mockRedis.geoadd).toHaveBeenCalled()
       expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:status', 'online')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:rating', '4.5')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:total_deliveries', '37')
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        'driver:d1:idle_since',
+        expect.stringMatching(/^\d+$/),
+      )
       expect(mockRedis.setex).toHaveBeenCalledWith(
         'driver:d1:last_seen_at',
         35,
         expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       )
+    })
+  })
+
+  describe('getEarnings', () => {
+    it('returns real driver payout ledger totals and entries', async () => {
+      const completedAt = new Date('2026-07-03T08:30:00Z')
+      mockPrisma.payoutLedger.findMany.mockResolvedValueOnce([
+        {
+          orderId: 'order-1',
+          amount: 25000,
+          createdAt: new Date('2026-07-03T08:31:00Z'),
+          order: {
+            orderCode: 'FD0000000001',
+            restaurant: { name: 'FoodFlow Kitchen' },
+            deliveryTask: { deliveredAt: completedAt },
+          },
+        },
+        {
+          orderId: 'order-2',
+          amount: 15000,
+          createdAt: new Date('2026-07-03T08:00:00Z'),
+          order: {
+            orderCode: 'FD0000000002',
+            restaurant: { name: 'Noodle House' },
+            deliveryTask: null,
+          },
+        },
+      ])
+
+      const result = await service.getEarnings('driver-1', 'today')
+
+      expect(mockPrisma.payoutLedger.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          recipientType: 'driver',
+          recipientId: 'driver-1',
+        }),
+      }))
+      expect(result).toEqual({
+        totalEarnings: 40000,
+        totalOrders: 2,
+        averagePerOrder: 20000,
+        entries: [
+          {
+            orderId: 'order-1',
+            orderCode: 'FD0000000001',
+            restaurantName: 'FoodFlow Kitchen',
+            amount: 25000,
+            completedAt: completedAt.toISOString(),
+          },
+          {
+            orderId: 'order-2',
+            orderCode: 'FD0000000002',
+            restaurantName: 'Noodle House',
+            amount: 15000,
+            completedAt: '2026-07-03T08:00:00.000Z',
+          },
+        ],
+      })
+    })
+
+    it('rejects unsupported periods instead of coercing them to month', async () => {
+      await expect(service.getEarnings('driver-1', 'year')).rejects.toThrow(
+        new BadRequestException('INVALID_EARNINGS_PERIOD'),
+      )
+      expect(mockPrisma.payoutLedger.findMany).not.toHaveBeenCalled()
     })
   })
 
@@ -69,6 +153,80 @@ describe('DriversService', () => {
         { lat: 10.8, lng: 106.72, orderCount: 4, avgPayout: 22000, demandLevel: 1 },
         { lat: 10.81, lng: 106.73, orderCount: 1, avgPayout: 18000, demandLevel: 0 },
       ])
+    })
+  })
+
+  describe('driver orders', () => {
+    const order = {
+      id: 'order-1',
+      customerId: 'customer-1',
+      restaurantId: 'restaurant-1',
+      driverId: 'driver-1',
+      subtotal: 100000,
+      deliveryFee: 15000,
+      promotionDiscount: 5000,
+      total: 110000,
+      status: 'delivering',
+      paymentMethod: 'cash',
+      notes: 'Use the side gate',
+      createdAt: new Date('2026-07-03T08:00:00Z'),
+      updatedAt: new Date('2026-07-03T08:30:00Z'),
+      estimatedDeliveryTimeMinutes: 14,
+      routePolyline: 'encoded-route',
+      restaurant: {
+        name: 'FoodFlow Kitchen',
+        logoUrl: null,
+        addressLine: '1 Kitchen Street',
+        phone: '0900000001',
+      },
+      customer: { fullName: 'Customer One', phone: '0900000002' },
+      deliveryAddress: { label: 'Home', addressLine: '2 Customer Street' },
+      orderItems: [{
+        menuItemId: 'item-1',
+        nameSnapshot: 'Noodle Bowl',
+        quantity: 2,
+        unitPrice: 50000,
+        selectedOptions: [],
+      }],
+      statusHistory: [{
+        status: 'delivering',
+        createdAt: new Date('2026-07-03T08:20:00Z'),
+        note: null,
+      }],
+    }
+
+    it('returns only the authenticated driver active order with real coordinates', async () => {
+      mockPrisma.order.findFirst.mockResolvedValueOnce(order)
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{
+        restaurantLat: 10.77,
+        restaurantLng: 106.69,
+        deliveryLat: 10.79,
+        deliveryLng: 106.71,
+      }])
+
+      const result = await service.getActiveOrder('driver-1')
+
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ driverId: 'driver-1' }),
+      }))
+      expect(result).toMatchObject({
+        id: 'order-1',
+        customerPhone: '0900000002',
+        restaurantPhone: '0900000001',
+        estimatedDeliveryTimeMinutes: 14,
+        deliveryAddress: {
+          address: '2 Customer Street',
+          latitude: 10.79,
+          longitude: 106.71,
+        },
+      })
+    })
+
+    it('returns null instead of generated order data when no active order exists', async () => {
+      mockPrisma.order.findFirst.mockResolvedValueOnce(null)
+
+      await expect(service.getActiveOrder('driver-1')).resolves.toBeNull()
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
     })
   })
 

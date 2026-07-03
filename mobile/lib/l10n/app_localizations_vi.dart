@@ -833,6 +833,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverHistoryEmpty => 'Chưa có lịch sử giao hàng';
 
   @override
+  String get driverHistoryLoadError =>
+      'Không thể tải lịch sử giao hàng. Vui lòng thử lại.';
+
+  @override
+  String get driverHistoryRetry => 'Thử lại';
+
+  @override
   String get driverHistoryDeliveryFee => 'Phí giao hàng';
 
   @override
@@ -877,6 +884,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driverNavEta => 'ETA - Thời gian dự kiến';
+
+  @override
+  String driverNavEtaMinutes(int minutes) {
+    return 'Khoảng $minutes phút';
+  }
+
+  @override
+  String get driverNavEtaUnavailable => 'Đang chờ ETA từ tuyến đường';
 
   @override
   String get driverNavCustomerAddress => 'Địa chỉ khách hàng';
