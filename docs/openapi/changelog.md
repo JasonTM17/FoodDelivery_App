@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-03: Added customer-scoped `GET /orders/{orderId}/tracking`; its nullable GPS, ETA, and route fields are backed by Redis/cache/database telemetry without synthetic coordinates.
 - 2026-07-03: Added `GET /restaurant/insights` with tenant-scoped insight schemas and i18n-keyed suggestion payloads (`titleKey`, `descriptionKey`, `predictedImpactKey`, `params`).
 - 2026-07-03: Removed legacy `mock_wallet` from public order placement validation; clients must use `wallet`, which captures against the real wallet ledger.
 - 2026-07-03: Clarified `/admin/online-drivers` as a nationwide Vietnam map feed backed by Redis geo presence and DB profile/order enrichment.

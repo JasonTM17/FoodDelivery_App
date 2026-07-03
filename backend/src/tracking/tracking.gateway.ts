@@ -71,7 +71,7 @@ export class TrackingGateway implements OnGatewayConnection {
     this.lastBroadcast.set(room, now)
 
     this.server.to(room).emit('driver:location_changed', {
-      driverId, lat: data.lat, lng: data.lng,
+      orderId, driverId, lat: data.lat, lng: data.lng,
       bearing: data.bearing, timestamp: new Date().toISOString(),
     })
 

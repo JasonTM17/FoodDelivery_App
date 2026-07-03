@@ -101,6 +101,12 @@ describe('TrackingGateway authorization', () => {
       source: 'google',
       degraded: false,
     })
+    expect(emitToRoom).toHaveBeenCalledWith('driver:location_changed', expect.objectContaining({
+      orderId: 'order-1',
+      driverId: 'driver-1',
+      lat: 10.8,
+      lng: 106.7,
+    }))
   })
 
   it('marks straight-line ETA updates as degraded when route providers fail', async () => {

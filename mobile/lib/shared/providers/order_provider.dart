@@ -170,17 +170,6 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
-  Future<void> fetchTracking(String orderId) async {
-    try {
-      final response = await _api.get('/orders/$orderId/tracking');
-      final orderData = response.data as Map<String, dynamic>;
-      final order = OrderModel.fromJson(orderData);
-      state = state.copyWith(currentTrackingOrder: order);
-    } catch (e) {
-      // Silent fail for tracking refresh
-    }
-  }
-
   Future<void> fetchOrderDetail(String orderId) async {
     try {
       final response = await _api.get('/orders/$orderId');

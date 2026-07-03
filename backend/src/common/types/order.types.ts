@@ -20,6 +20,11 @@ export interface CreateOrderInput {
 export interface OrderTrackingData {
   orderId: string
   status: OrderStatus
-  driver?: { id: string; name: string; phone: string }
-  etaMinutes?: number
+  driverLocation: {
+    lat: number
+    lng: number
+    lastUpdated: string
+  } | null
+  etaMinutes: number | null
+  routePolyline: string | null
 }

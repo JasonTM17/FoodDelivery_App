@@ -345,18 +345,18 @@ export class OrdersService {
   }
 
   async getTracking(orderId: string, userId: string) {
-    const order = await this.prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      include: { driver: { select: { id: true, fullName: true, phone: true } }, deliveryTask: true },
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, customerId: userId },
+      select: {
+        id: true,
+        status: true,
+        driverId: true,
+        estimatedDeliveryTimeMinutes: true,
+        routePolyline: true,
+      },
     })
-    if (order.customerId !== userId) throw new NotFoundException('ORDER_NOT_FOUND')
-    return {
-      orderId: order.id,
-      status: order.status,
-      driver: order.driver,
-      deliveryTask: order.deliveryTask,
-      estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes,
-    }
+    if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
+    return order
   }
 
   async submitReview(orderId: string, userId: string, dto: CreateReviewDto) {

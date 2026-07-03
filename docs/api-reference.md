@@ -123,6 +123,8 @@ Get order detail with items, status history, payment.
 ### GET /orders/:id/tracking
 Get real-time driver location and ETA.
 
+The response combines the customer-owned order snapshot with the assigned driver's live Redis position. `driverLocation`, `etaMinutes`, and `routePolyline` are nullable when no real telemetry or route has been recorded; the API does not synthesize coordinates or ETA values.
+
 ### POST /orders/:id/cancel
 Cancel order if allowed by current status.
 
@@ -302,7 +304,7 @@ Connect to `ws://localhost:3001` with namespace:
 | `/events: restaurant:new_order` | `{ orderId, orderCode, total, items }` |
 | `/events: order:status:changed` | `{ orderId, status, timestamp }` |
 | `/events: order:message_created` | `{ id, senderType, senderId, content, createdAt }` |
-| `driver:location_changed` | `{ driverId, lat, lng, bearing, timestamp }` |
+| `driver:location_changed` | `{ orderId, driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
 | `driver:assigned` | `{ driverId, driverName, eta_minutes }` |
 | `delivery:eta_updated` | `{ orderId, etaMinutes, source, degraded }` where `source` is `google`, `osrm`, or `straight_line_estimate`; `degraded=true` means no route provider result was available and the ETA is a straight-line estimate. |

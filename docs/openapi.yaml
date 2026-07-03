@@ -599,6 +599,29 @@ components:
           - { status: "restaurant_accepted", timestamp: "2026-06-09T11:02:00Z" }
           - { status: "preparing", timestamp: "2026-06-09T11:05:00Z" }
 
+    OrderTrackingDriverLocation:
+      type: object
+      description: Last real GPS position recorded for the driver currently assigned to the order.
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+        lastUpdated: { type: string, format: date-time }
+      required: [lat, lng, lastUpdated]
+
+    OrderTrackingResponse:
+      type: object
+      description: Customer-scoped tracking snapshot. Nullable fields remain null until real telemetry exists.
+      properties:
+        orderId: { type: string, format: uuid }
+        status: { type: string, enum: [created, pending_payment, paid, restaurant_pending, restaurant_accepted, preparing, ready_for_pickup, driver_assigned, driver_arriving_restaurant, picked_up, delivering, delivered, completed, cancelled, refunded] }
+        driverLocation:
+          oneOf:
+            - $ref: "#/components/schemas/OrderTrackingDriverLocation"
+            - type: "null"
+        etaMinutes: { type: [integer, "null"], minimum: 1 }
+        routePolyline: { type: [string, "null"] }
+      required: [orderId, status, driverLocation, etaMinutes, routePolyline]
+
     RestaurantOrderChatMessage:
       type: object
       description: Persisted order-room message used by restaurant staff and assigned driver.
@@ -2831,6 +2854,24 @@ paths:
       responses:
         "200": { description: "Order detail", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
         "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /orders/{orderId}/tracking:
+    get:
+      tags: [orders]
+      summary: Get the current order tracking snapshot
+      description: Returns a customer-owned order's status plus real assigned-driver GPS, cached or persisted ETA, and route data. Telemetry fields remain null until recorded and are never replaced with synthetic coordinates.
+      operationId: orders_getTracking
+      x-foo-actor: user
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Current tracking snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/OrderTrackingResponse" } } } }
+        "401": { description: "Authentication required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Customer role required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Order not found for this customer", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /orders/{orderId}/cancel:
     post:

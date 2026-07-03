@@ -133,6 +133,10 @@ export class TrackingService implements OnModuleDestroy {
     return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp }
   }
 
+  getCachedRoute(orderId: string): Promise<RouteResult | null> {
+    return this.etaCache.getRoute(orderId)
+  }
+
   async findNearbyDriversPostGIS(
     lat: number, lng: number, radiusKm: number,
   ): Promise<Array<{ driverId: string; distKm: number; rating: number }>> {

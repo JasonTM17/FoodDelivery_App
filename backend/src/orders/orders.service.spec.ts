@@ -22,7 +22,7 @@ describe('OrdersService', () => {
     payment: { findUnique: jest.Mock; update: jest.Mock }
   }
   let mockPrisma: {
-    order: { findUniqueOrThrow: jest.Mock }
+    order: { findUniqueOrThrow: jest.Mock; findFirst: jest.Mock }
     $transaction: jest.Mock
   }
 
@@ -41,7 +41,7 @@ describe('OrdersService', () => {
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
     }
     mockPrisma = {
-      order: { findUniqueOrThrow: jest.fn() },
+      order: { findUniqueOrThrow: jest.fn(), findFirst: jest.fn() },
       $transaction: jest.fn().mockImplementation(
         (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       ),
@@ -69,6 +69,38 @@ describe('OrdersService', () => {
 
       expect(code).toHaveLength(12)
       expect(code).toMatch(/^FD260702.{4}$/)
+    })
+  })
+
+  describe('getTracking()', () => {
+    it('queries by both order and customer to preserve tenant isolation', async () => {
+      const snapshot = {
+        id: orderId,
+        status: 'delivering',
+        driverId: 'driver-1',
+        estimatedDeliveryTimeMinutes: 12,
+        routePolyline: 'encoded-route',
+      }
+      mockPrisma.order.findFirst.mockResolvedValue(snapshot)
+
+      await expect(service.getTracking(orderId, userId)).resolves.toBe(snapshot)
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith({
+        where: { id: orderId, customerId: userId },
+        select: {
+          id: true,
+          status: true,
+          driverId: true,
+          estimatedDeliveryTimeMinutes: true,
+          routePolyline: true,
+        },
+      })
+    })
+
+    it('does not disclose whether another customer order exists', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(null)
+
+      await expect(service.getTracking(orderId, 'other-customer'))
+        .rejects.toThrow(NotFoundException)
     })
   })
 
