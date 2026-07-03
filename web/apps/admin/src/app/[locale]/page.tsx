@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation';
 
 /**
- * Locale root — redirect to the main dashboard.
- * The overview route is not yet locale-prefixed, so we land there directly.
+ * Locale root redirects to the main dashboard while preserving the locale segment.
  */
-export default function LocaleRootPage() {
-  redirect('/overview');
+export default function LocaleRootPage({ params }: { params: { locale: string } }) {
+  redirect(`/${params.locale}/overview`);
 }

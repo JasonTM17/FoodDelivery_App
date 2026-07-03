@@ -1,9 +1,19 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { redirect } from 'next/navigation';
 import RootError from '@/app/error';
 import NotFound from '@/app/not-found';
+import LocaleRootPage from '@/app/[locale]/page';
 
 describe('root fallback surfaces', () => {
+  it('redirects locale root to the localized overview dashboard', () => {
+    vi.mocked(redirect).mockClear();
+
+    LocaleRootPage({ params: { locale: 'ja' } });
+
+    expect(redirect).toHaveBeenCalledWith('/ja/overview');
+  });
+
   it('renders a safe 404 with an overview link', () => {
     render(<NotFound />);
 
