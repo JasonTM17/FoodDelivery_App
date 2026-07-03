@@ -413,7 +413,53 @@
     "title": "System Settings",
     "description": "Configure the FoodFlow platform",
     "save": "Save settings",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "saveError": "Could not save settings",
+    "sections": {
+      "general": {
+        "title": "General",
+        "description": "General platform configuration",
+        "siteName": "Platform name",
+        "timezone": "Time zone",
+        "currency": "Currency",
+        "maintenanceMode": "Maintenance mode",
+        "maintenanceDescription": "Temporarily pause platform operations",
+        "registration": "New registration",
+        "registrationDescription": "Allow users to create new accounts"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "System notification settings",
+        "newOrder": "New order notifications",
+        "newOrderDescription": "Send when a new order is created",
+        "support": "Support notifications",
+        "supportDescription": "Send when a new support ticket is created",
+        "newDriver": "New driver notifications",
+        "newDriverDescription": "Send when a driver registers",
+        "dailyDigest": "Daily email digest",
+        "dailyDigestDescription": "Send the end-of-day summary report"
+      },
+      "security": {
+        "title": "Security",
+        "description": "System security configuration",
+        "maxSessionMinutes": "Maximum session length (minutes)",
+        "maxLoginFailures": "Maximum failed login attempts",
+        "twoFactor": "Two-factor authentication",
+        "twoFactorDescription": "Require 2FA for admins",
+        "loginAudit": "Login audit logging",
+        "loginAuditDescription": "Record every login attempt"
+      },
+      "data": {
+        "title": "Data",
+        "description": "Manage system data",
+        "autoDeleteLogs": "Auto-delete logs",
+        "autoDeleteLogsDescription": "Delete audit logs after 90 days",
+        "deleteOldOrders": "Delete old orders",
+        "deleteOldOrdersDescription": "Delete delivered orders after 365 days",
+        "exportData": "Export data",
+        "backup": "Backup"
+      }
+    }
   },
   "support": {
     "title": "Support",

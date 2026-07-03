@@ -413,7 +413,53 @@
     "title": "Cài đặt hệ thống",
     "description": "Cấu hình nền tảng FoodFlow",
     "save": "Lưu cài đặt",
-    "saving": "Đang lưu..."
+    "saving": "Đang lưu...",
+    "saveError": "Không thể lưu cài đặt",
+    "sections": {
+      "general": {
+        "title": "Chung",
+        "description": "Cấu hình chung của nền tảng",
+        "siteName": "Tên nền tảng",
+        "timezone": "Múi giờ",
+        "currency": "Đơn vị tiền tệ",
+        "maintenanceMode": "Chế độ bảo trì",
+        "maintenanceDescription": "Tạm ngưng hoạt động nền tảng",
+        "registration": "Đăng ký mới",
+        "registrationDescription": "Cho phép người dùng đăng ký mới"
+      },
+      "notifications": {
+        "title": "Thông báo",
+        "description": "Cấu hình thông báo hệ thống",
+        "newOrder": "Thông báo đơn mới",
+        "newOrderDescription": "Gửi khi có đơn hàng mới",
+        "support": "Thông báo hỗ trợ",
+        "supportDescription": "Gửi khi có ticket hỗ trợ mới",
+        "newDriver": "Thông báo tài xế mới",
+        "newDriverDescription": "Gửi khi có tài xế đăng ký mới",
+        "dailyDigest": "Email digest hàng ngày",
+        "dailyDigestDescription": "Gửi báo cáo tổng kết cuối ngày"
+      },
+      "security": {
+        "title": "Bảo mật",
+        "description": "Cấu hình bảo mật hệ thống",
+        "maxSessionMinutes": "Phiên đăng nhập tối đa (phút)",
+        "maxLoginFailures": "Số lần đăng nhập sai tối đa",
+        "twoFactor": "Xác thực 2 lớp",
+        "twoFactorDescription": "Bắt buộc 2FA cho admin",
+        "loginAudit": "Ghi log đăng nhập",
+        "loginAuditDescription": "Ghi lại mọi lần đăng nhập"
+      },
+      "data": {
+        "title": "Dữ liệu",
+        "description": "Quản lý dữ liệu hệ thống",
+        "autoDeleteLogs": "Tự động xóa log",
+        "autoDeleteLogsDescription": "Xóa audit log sau 90 ngày",
+        "deleteOldOrders": "Xóa đơn hàng cũ",
+        "deleteOldOrdersDescription": "Xóa đơn đã giao sau 365 ngày",
+        "exportData": "Xuất dữ liệu",
+        "backup": "Sao lưu"
+      }
+    }
   },
   "support": {
     "title": "Hỗ trợ",

@@ -413,7 +413,53 @@
     "title": "システム設定",
     "description": "FoodFlowプラットフォームの設定",
     "save": "設定を保存",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "saveError": "設定を保存できません",
+    "sections": {
+      "general": {
+        "title": "全般",
+        "description": "プラットフォームの基本設定",
+        "siteName": "プラットフォーム名",
+        "timezone": "タイムゾーン",
+        "currency": "通貨",
+        "maintenanceMode": "メンテナンスモード",
+        "maintenanceDescription": "プラットフォームの稼働を一時停止します",
+        "registration": "新規登録",
+        "registrationDescription": "ユーザーの新規登録を許可します"
+      },
+      "notifications": {
+        "title": "通知",
+        "description": "システム通知の設定",
+        "newOrder": "新規注文通知",
+        "newOrderDescription": "新しい注文が作成されたときに送信します",
+        "support": "サポート通知",
+        "supportDescription": "新しいサポートチケットが作成されたときに送信します",
+        "newDriver": "新規配達員通知",
+        "newDriverDescription": "配達員が登録したときに送信します",
+        "dailyDigest": "日次メールダイジェスト",
+        "dailyDigestDescription": "一日のサマリーレポートを送信します"
+      },
+      "security": {
+        "title": "セキュリティ",
+        "description": "システムセキュリティの設定",
+        "maxSessionMinutes": "最大セッション時間（分）",
+        "maxLoginFailures": "最大ログイン失敗回数",
+        "twoFactor": "二要素認証",
+        "twoFactorDescription": "管理者に2FAを必須にします",
+        "loginAudit": "ログイン監査ログ",
+        "loginAuditDescription": "すべてのログイン試行を記録します"
+      },
+      "data": {
+        "title": "データ",
+        "description": "システムデータの管理",
+        "autoDeleteLogs": "ログの自動削除",
+        "autoDeleteLogsDescription": "監査ログを90日後に削除します",
+        "deleteOldOrders": "古い注文を削除",
+        "deleteOldOrdersDescription": "配達済み注文を365日後に削除します",
+        "exportData": "データをエクスポート",
+        "backup": "バックアップ"
+      }
+    }
   },
   "support": {
     "title": "サポート",
