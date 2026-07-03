@@ -86,34 +86,6 @@ services:
       timeout: 10s
       retries: 3
 
-  n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
-    container_name: foodflow-n8n
-    restart: unless-stopped
-    ports:
-      - "5678:5678"
-    environment:
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_PORT: "5432"
-      DB_POSTGRESDB_DATABASE: foodflow
-      DB_POSTGRESDB_USER: foodflow
-      DB_POSTGRESDB_PASSWORD: foodflow_dev
-      N8N_ENCRYPTION_KEY: dev-n8n-encryption-key-minimum-32-chars
-      N8N_HOST: localhost
-      N8N_PROTOCOL: http
-      WEBHOOK_URL: http://localhost:5678/
-      N8N_RUNNERS_ENABLED: "true"
-      EXECUTIONS_DATA_PRUNE: "true"
-      EXECUTIONS_DATA_MAX_AGE: "168"
-      GENERIC_TIMEZONE: Asia/Ho_Chi_Minh
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./infra/n8n/workflows:/home/node/.n8n/workflows:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   admin:
     build:
       context: ./web
@@ -158,4 +130,3 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  n8n_data:

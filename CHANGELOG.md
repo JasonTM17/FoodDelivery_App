@@ -16,8 +16,8 @@
 - Restaurant dashboard (live order queue, menu CRUD, revenue)
 - Customer mobile app (Flutter, 14 screens)
 - Driver mobile app (Flutter, 12 screens, dark theme)
-- AI Assistant (N8N + Gemini, 5 workflows)
-- Docker Compose (10 services: postgres, redis, backend, worker, minio, n8n, bullboard, prometheus, redis-exporter, grafana)
+- AI Assistant (legacy workflow implementation, replaced by the direct LLM runtime in Batch 4)
+- Docker Compose infrastructure for the application, data stores, queues, and observability
 - CI/CD (GitHub Actions)
 - Monitoring (Prometheus + Grafana + Redis Exporter)
 - Nginx reverse proxy với WebSocket support

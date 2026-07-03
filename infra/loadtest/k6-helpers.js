@@ -15,9 +15,6 @@ import http from 'k6/http'
 /** Base API URL — override via K6_ENV_API_URL environment variable */
 export const BASE_URL = __ENV.API_URL || 'http://localhost:3001/api'
 
-/** n8n AI webhook — override via K6_ENV_AI_WEBHOOK */
-export const AI_WEBHOOK = __ENV.AI_WEBHOOK || 'http://localhost:5678/webhook/ai-support-chat'
-
 // ---------------------------------------------------------------------------
 // Seed credentials (must match pnpm db:big-seed output)
 // ---------------------------------------------------------------------------

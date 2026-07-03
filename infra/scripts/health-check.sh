@@ -18,7 +18,6 @@ check_service() {
 }
 
 check_service "Backend API" "http://localhost:3001/api/healthz"
-check_service "N8N" "http://localhost:5678/healthz"
 check_service "MinIO" "http://localhost:9000/minio/health/live"
 
 echo ""
