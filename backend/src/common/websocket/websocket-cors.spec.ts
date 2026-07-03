@@ -2,10 +2,13 @@ import { websocketCorsOrigins } from './websocket-cors'
 
 describe('websocketCorsOrigins', () => {
   const originalOrigins = process.env.CORS_ORIGINS
+  const originalNodeEnv = process.env.NODE_ENV
 
   afterEach(() => {
     if (originalOrigins === undefined) delete process.env.CORS_ORIGINS
     else process.env.CORS_ORIGINS = originalOrigins
+    if (originalNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = originalNodeEnv
   })
 
   it('supports every local FoodFlow web port by default', () => {
@@ -25,5 +28,12 @@ describe('websocketCorsOrigins', () => {
       'https://admin.example.com',
       'https://merchant.example.com',
     ])
+  })
+
+  it('fails closed when production websocket CORS origins are missing', () => {
+    delete process.env.CORS_ORIGINS
+    process.env.NODE_ENV = 'production'
+
+    expect(() => websocketCorsOrigins()).toThrow('CORS_ORIGINS is required in production')
   })
 })

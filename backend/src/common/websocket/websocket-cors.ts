@@ -1,12 +1,12 @@
-const DEFAULT_WEBSOCKET_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3002',
-  'http://localhost:3003',
-]
+import { resolveCorsOrigins } from '../config/cors-origins'
 
-export function websocketCorsOrigins(): string[] {
-  return (process.env.CORS_ORIGINS ?? DEFAULT_WEBSOCKET_ORIGINS.join(','))
-    .split(',')
-    .map(origin => origin.trim())
-    .filter(Boolean)
+type CorsEnv = {
+  CORS_ORIGINS?: string
+  NODE_ENV?: string
+}
+
+export function websocketCorsOrigins(
+  env: CorsEnv = process.env,
+): string[] {
+  return resolveCorsOrigins(env.CORS_ORIGINS, env.NODE_ENV)
 }
