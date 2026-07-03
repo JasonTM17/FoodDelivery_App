@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface User {
   id: string;
@@ -37,14 +38,8 @@ const roleVariants: Record<string, 'destructive' | 'default' | 'secondary' | 'ou
   customer: 'outline',
 };
 
-const roleLabels: Record<string, string> = {
-  admin: 'Admin',
-  restaurant_owner: 'Chủ nhà hàng',
-  driver: 'Tài xế',
-  customer: 'Khách hàng',
-};
-
 export default function UsersTableClient() {
+  const t = useTranslations('users');
   const queryClient = useQueryClient();
   const { page, filter: roleFilter, setFilter: setRoleFilter, prevPage, nextPage } =
     useTableFilters();
@@ -72,23 +67,23 @@ export default function UsersTableClient() {
       <div className="flex justify-end">
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Vai trò" />
+            <SelectValue placeholder={t('roleFilter')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="customer">Khách hàng</SelectItem>
-            <SelectItem value="driver">Tài xế</SelectItem>
-            <SelectItem value="restaurant_owner">Chủ nhà hàng</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="all">{t('roles.all')}</SelectItem>
+            <SelectItem value="customer">{t('roles.customer')}</SelectItem>
+            <SelectItem value="driver">{t('roles.driver')}</SelectItem>
+            <SelectItem value="restaurant_owner">{t('roles.restaurant_owner')}</SelectItem>
+            <SelectItem value="admin">{t('roles.admin')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Người dùng</CardTitle>
+          <CardTitle>{t('listTitle')}</CardTitle>
           <CardDescription>
-            {data ? `Tổng số: ${data.total} người dùng` : 'Đang tải...'}
+            {data ? t('count', { count: data.total }) : t('loading')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,13 +98,13 @@ export default function UsersTableClient() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Người dùng</TableHead>
+                    <TableHead>{t('columns.user')}</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>SĐT</TableHead>
-                    <TableHead>Vai trò</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Ngày tham gia</TableHead>
-                    <TableHead className="w-24">Khóa</TableHead>
+                    <TableHead>{t('columns.phone')}</TableHead>
+                    <TableHead>{t('columns.role')}</TableHead>
+                    <TableHead>{t('columns.status')}</TableHead>
+                    <TableHead>{t('columns.joinedAt')}</TableHead>
+                    <TableHead className="w-24">{t('columns.lock')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -120,12 +115,12 @@ export default function UsersTableClient() {
                       <TableCell>{user.phone || '—'}</TableCell>
                       <TableCell>
                         <Badge variant={roleVariants[user.role] || 'outline'}>
-                          {roleLabels[user.role] || user.role}
+                          {user.role in roleVariants ? t(`roles.${user.role}`) : user.role}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.status === 'active' ? 'success' : 'destructive'}>
-                          {user.status === 'active' ? 'Hoạt động' : 'Đã khóa'}
+                          {user.status === 'active' ? t('statusActive') : t('statusBanned')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -135,6 +130,7 @@ export default function UsersTableClient() {
                         <Switch
                           checked={user.status === 'active'}
                           onCheckedChange={() => toggleBan(user.id, user.status)}
+                          aria-label={t('toggleStatus', { name: user.name })}
                         />
                       </TableCell>
                     </TableRow>
@@ -143,11 +139,11 @@ export default function UsersTableClient() {
               </Table>
               <div className="flex items-center justify-between pt-4">
                 <p className="text-sm text-muted-foreground">
-                  Trang {data.page} / {data.totalPages}
+                  {t('page', { page: data.page, totalPages: data.totalPages })}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={prevPage} disabled={page <= 1}>
-                    <ChevronLeft className="h-4 w-4" />Trước
+                    <ChevronLeft className="h-4 w-4" />{t('previousPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -155,14 +151,14 @@ export default function UsersTableClient() {
                     onClick={() => nextPage(data.totalPages)}
                     disabled={page >= data.totalPages}
                   >
-                    Sau<ChevronRight className="h-4 w-4" />
+                    {t('nextPage')}<ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </>
           ) : (
             <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-              Không tìm thấy người dùng nào
+              {t('empty')}
             </div>
           )}
         </CardContent>

@@ -251,7 +251,33 @@
   },
   "users": {
     "title": "User Management",
-    "description": "List of users in the system"
+    "description": "List of users in the system",
+    "listTitle": "Users",
+    "count": "Total: {count} users",
+    "loading": "Loading...",
+    "roleFilter": "Role",
+    "roles": {
+      "all": "All",
+      "admin": "Admin",
+      "restaurant_owner": "Restaurant owner",
+      "driver": "Driver",
+      "customer": "Customer"
+    },
+    "columns": {
+      "user": "User",
+      "phone": "Phone",
+      "role": "Role",
+      "status": "Status",
+      "joinedAt": "Joined",
+      "lock": "Lock"
+    },
+    "statusActive": "Active",
+    "statusBanned": "Locked",
+    "toggleStatus": "Toggle account status for {name}",
+    "page": "Page {page} of {totalPages}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "empty": "No users found"
   },
   "drivers": {
     "title": "Driver Management",

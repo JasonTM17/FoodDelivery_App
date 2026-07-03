@@ -251,7 +251,33 @@
   },
   "users": {
     "title": "ユーザー管理",
-    "description": "システム内のユーザー一覧"
+    "description": "システム内のユーザー一覧",
+    "listTitle": "ユーザー",
+    "count": "合計: {count}ユーザー",
+    "loading": "読み込み中...",
+    "roleFilter": "ロール",
+    "roles": {
+      "all": "すべて",
+      "admin": "管理者",
+      "restaurant_owner": "レストランオーナー",
+      "driver": "配達員",
+      "customer": "顧客"
+    },
+    "columns": {
+      "user": "ユーザー",
+      "phone": "電話",
+      "role": "ロール",
+      "status": "ステータス",
+      "joinedAt": "参加日",
+      "lock": "ロック"
+    },
+    "statusActive": "有効",
+    "statusBanned": "ロック済み",
+    "toggleStatus": "{name}のアカウント状態を切り替え",
+    "page": "{page} / {totalPages} ページ",
+    "previousPage": "前へ",
+    "nextPage": "次へ",
+    "empty": "ユーザーが見つかりません"
   },
   "drivers": {
     "title": "ドライバー管理",

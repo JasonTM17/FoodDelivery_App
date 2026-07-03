@@ -251,7 +251,33 @@
   },
   "users": {
     "title": "Quản lý người dùng",
-    "description": "Danh sách người dùng trong hệ thống"
+    "description": "Danh sách người dùng trong hệ thống",
+    "listTitle": "Người dùng",
+    "count": "Tổng số: {count} người dùng",
+    "loading": "Đang tải...",
+    "roleFilter": "Vai trò",
+    "roles": {
+      "all": "Tất cả",
+      "admin": "Admin",
+      "restaurant_owner": "Chủ nhà hàng",
+      "driver": "Tài xế",
+      "customer": "Khách hàng"
+    },
+    "columns": {
+      "user": "Người dùng",
+      "phone": "SĐT",
+      "role": "Vai trò",
+      "status": "Trạng thái",
+      "joinedAt": "Ngày tham gia",
+      "lock": "Khóa"
+    },
+    "statusActive": "Hoạt động",
+    "statusBanned": "Đã khóa",
+    "toggleStatus": "Chuyển trạng thái tài khoản {name}",
+    "page": "Trang {page} / {totalPages}",
+    "previousPage": "Trước",
+    "nextPage": "Sau",
+    "empty": "Không tìm thấy người dùng nào"
   },
   "drivers": {
     "title": "Quản lý tài xế",
