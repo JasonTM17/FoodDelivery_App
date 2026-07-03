@@ -352,6 +352,7 @@ model Restaurant {
 
   profiles     RestaurantProfile[]
   openingHours RestaurantOpeningHour[]
+  holidayClosures RestaurantHolidayClosure[]
   categories   Category[]
   menuItems    MenuItem[]
   orders       Order[]
@@ -377,6 +378,21 @@ model RestaurantOpeningHour {
 
   @@index([restaurantId])
   @@map("restaurant_opening_hours")
+}
+
+model RestaurantHolidayClosure {
+  id           String   @id @default(uuid()) @db.Uuid
+  restaurantId String   @map("restaurant_id") @db.Uuid
+  date         DateTime @db.Date
+  reason       String?  @db.VarChar(200)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, date], map: "restaurant_holiday_closures_restaurant_date_key")
+  @@index([restaurantId, date], map: "restaurant_holiday_closures_restaurant_date_idx")
+  @@map("restaurant_holiday_closures")
 }
 
 model StaffInvite {

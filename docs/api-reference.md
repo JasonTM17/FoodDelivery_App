@@ -136,6 +136,21 @@ Body: { foodRating (1-5), deliveryRating (1-5), comment? }
 
 ## Restaurant Orders
 
+### GET /restaurant/profile
+Get the authenticated restaurant tenant profile, opening hours, persisted holiday closures, and membership metadata. Requires restaurant role.
+
+### PATCH /restaurant/profile
+Update editable restaurant profile fields. `openingHours` and `holidayClosures` are replace-list fields scoped to the authenticated restaurant tenant.
+
+```json
+{
+  "openingHours": [{ "dayOfWeek": 1, "openTime": "08:00", "closeTime": "22:00", "isClosed": false }],
+  "holidayClosures": [{ "date": "2026-02-10", "reason": "Tet holiday" }]
+}
+```
+
+Holiday closure dates use `YYYY-MM-DD`. Duplicate dates return `400 DUPLICATE_HOLIDAY_CLOSURE_DATE`; invalid calendar dates return `400 INVALID_HOLIDAY_CLOSURE_DATE`.
+
 ### GET /restaurant/orders
 Get restaurant's order queue. Requires restaurant role.
 

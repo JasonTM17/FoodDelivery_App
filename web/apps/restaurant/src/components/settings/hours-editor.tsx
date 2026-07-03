@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Clock, RefreshCw, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
-import type { DayHours, OpeningHours, Restaurant } from '@/lib/types';
+import type { DayHours, HolidayClosure, OpeningHours, Restaurant } from '@/lib/types';
 import { HolidayClosuresCard } from './holiday-closures-card';
 import {
   DEFAULT_HOURS,
@@ -24,13 +24,15 @@ export function HoursEditor() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [canRetryLoad, setCanRetryLoad] = useState(false);
+  const [holidayClosures, setHolidayClosures] = useState<HolidayClosure[]>([]);
 
   const loadHours = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
       const profile = await api.get<Restaurant>('/restaurant/profile');
-      setHours(fromOpeningHourPayload((profile as { openingHours?: unknown }).openingHours));
+      setHours(fromOpeningHourPayload(profile.openingHours));
+      setHolidayClosures(normalizeHolidayClosures(profile.holidayClosures));
       setCanRetryLoad(false);
     } catch (err: unknown) {
       setError((err as { message?: string }).message || t('loadError'));
@@ -62,7 +64,10 @@ export function HoursEditor() {
     setError('');
     setCanRetryLoad(false);
     try {
-      await api.patch('/restaurant/profile', { openingHours: toOpeningHourRows(hours) });
+      await api.patch('/restaurant/profile', {
+        openingHours: toOpeningHourRows(hours),
+        holidayClosures: toHolidayClosurePayload(holidayClosures),
+      });
       setSuccess(t('saveSuccess'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: unknown) {
@@ -105,7 +110,7 @@ export function HoursEditor() {
       {success && <HoursAlert tone="success" message={success} />}
 
       <WeeklyHoursCard hours={hours} onUpdateHour={updateHour} onCopyToAll={copyToAll} />
-      <HolidayClosuresCard />
+      <HolidayClosuresCard closures={holidayClosures} onChange={setHolidayClosures} />
       <WeeklyPreviewCard hours={hours} />
     </div>
   );
@@ -172,4 +177,23 @@ function HoursEditorSkeleton() {
       </div>
     </div>
   );
+}
+
+function normalizeHolidayClosures(value: Restaurant['holidayClosures']): HolidayClosure[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((closure): closure is HolidayClosure => typeof closure?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(closure.date))
+    .map((closure) => ({
+      id: closure.id,
+      date: closure.date,
+      reason: typeof closure.reason === 'string' && closure.reason.trim() ? closure.reason.trim() : null,
+    }))
+    .sort((first, second) => first.date.localeCompare(second.date));
+}
+
+function toHolidayClosurePayload(closures: HolidayClosure[]) {
+  return closures.map((closure) => {
+    const reason = closure.reason?.trim();
+    return reason ? { date: closure.date, reason } : { date: closure.date };
+  });
 }

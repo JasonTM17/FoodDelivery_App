@@ -5,6 +5,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -25,6 +26,17 @@ export class RestaurantOpeningHourDto {
 
   @IsBoolean()
   isClosed: boolean
+}
+
+export class RestaurantHolidayClosureDto {
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  date: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  reason?: string
 }
 
 export class UpdateRestaurantProfileDto {
@@ -76,4 +88,10 @@ export class UpdateRestaurantProfileDto {
   @ValidateNested({ each: true })
   @Type(() => RestaurantOpeningHourDto)
   openingHours?: RestaurantOpeningHourDto[]
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RestaurantHolidayClosureDto)
+  holidayClosures?: RestaurantHolidayClosureDto[]
 }

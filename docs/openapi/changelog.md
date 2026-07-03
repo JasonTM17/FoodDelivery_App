@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-03: Added `GET/PATCH /restaurant/profile` contract with tenant-scoped `openingHours` and persisted `holidayClosures` replace-list semantics.
 - 2026-07-03: Aligned driver dispatch/mobile contract: added `GET /driver/orders/active`, `GET /driver/orders/history`, payout-ledger `DriverEarnings.entries`, and documented `/dispatch` WebSocket accept/reject with `offerToken` instead of legacy REST accept endpoints.
 - 2026-07-03: Isolated persisted restaurant-driver chat events from customer order rooms and added `orderId` to the realtime event payload.
 - 2026-07-03: Added customer-scoped `GET /orders/{orderId}/tracking`; its nullable GPS, ETA, and route fields are backed by Redis/cache/database telemetry without synthetic coordinates.

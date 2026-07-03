@@ -19,8 +19,15 @@ export interface Restaurant {
   bankAccount?: string;
   bankName?: string;
   openingHours: OpeningHours;
+  holidayClosures?: HolidayClosure[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface HolidayClosure {
+  id?: string;
+  date: string;
+  reason?: string | null;
 }
 
 export interface OpeningHours {

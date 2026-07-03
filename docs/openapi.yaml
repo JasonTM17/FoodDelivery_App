@@ -36,6 +36,8 @@ tags:
     description: User profiles, address book, wallet
   - name: restaurants
     description: Restaurant discovery (nearby, search, detail, menu, reviews)
+  - name: restaurant-profile
+    description: Restaurant owner profile, opening hours, and special closure dates
   - name: menu
     description: Menu management (categories, items, options, availability) -- restaurant owner only
   - name: restaurant-staff
@@ -401,6 +403,23 @@ components:
         prepTimeAvg: 15
         minOrderAmount: 50000
 
+    RestaurantOpeningHour:
+      type: object
+      properties:
+        dayOfWeek: { type: integer, minimum: 0, maximum: 6, description: "0=Sunday, 6=Saturday" }
+        openTime:  { type: string, pattern: "^\\d{2}:\\d{2}$", description: "HH:mm" }
+        closeTime: { type: string, pattern: "^\\d{2}:\\d{2}$", description: "HH:mm" }
+        isClosed:  { type: boolean }
+      required: [dayOfWeek, openTime, closeTime, isClosed]
+
+    RestaurantHolidayClosure:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        date: { type: string, format: date, description: "Full-day closure date in YYYY-MM-DD format" }
+        reason: { type: string, nullable: true, maxLength: 200 }
+      required: [date]
+
     RestaurantDetail:
       allOf:
         - $ref: "#/components/schemas/RestaurantSummary"
@@ -413,13 +432,44 @@ components:
             phone:       { type: string }
             openingHours:
               type: array
-              items:
-                type: object
-                properties:
-                  dayOfWeek: { type: integer, description: "0=Sunday, 6=Saturday" }
-                  openTime:  { type: string, description: "HH:mm" }
-                  closeTime: { type: string, description: "HH:mm" }
-                  isClosed:  { type: boolean }
+              items: { $ref: "#/components/schemas/RestaurantOpeningHour" }
+
+    RestaurantProfile:
+      allOf:
+        - $ref: "#/components/schemas/RestaurantDetail"
+        - type: object
+          properties:
+            holidayClosures:
+              type: array
+              items: { $ref: "#/components/schemas/RestaurantHolidayClosure" }
+            membership:
+              type: object
+              properties:
+                id: { type: string, format: uuid }
+                role: { type: string }
+                permissions: { type: array, items: { type: string } }
+                onboardingCompletedAt: { type: string, format: date-time, nullable: true }
+              required: [id, role, permissions]
+
+    UpdateRestaurantProfileRequest:
+      type: object
+      properties:
+        name: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        phone: { type: string, maxLength: 20 }
+        addressLine: { type: string, maxLength: 300 }
+        cuisineTypes: { type: array, items: { type: string } }
+        logoUrl: { type: string, maxLength: 500 }
+        coverUrl: { type: string, maxLength: 500 }
+        minOrderAmount: { type: number, minimum: 0 }
+        isOpen: { type: boolean }
+        openingHours:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantOpeningHour" }
+        holidayClosures:
+          type: array
+          description: Replaces the authenticated restaurant's full special closure list when provided.
+          items: { $ref: "#/components/schemas/RestaurantHolidayClosure" }
 
     ImageUploadResult:
       type: object
@@ -2600,9 +2650,53 @@ paths:
   # MENU (restaurant owner)
   # ═══════════════════════════════════════════════
 
+  /restaurant/profile:
+    get:
+      tags: [restaurant-profile]
+      summary: Get restaurant owner profile
+      description: Returns the authenticated restaurant tenant profile, opening hours, persisted holiday closures, and membership metadata.
+      operationId: restaurant_profile_get
+      x-foo-actor: restaurant_owner
+      responses:
+        "200":
+          description: "Restaurant profile"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantProfile" }
+        "403": { description: "Restaurant profile unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    patch:
+      tags: [restaurant-profile]
+      summary: Update restaurant owner profile
+      description: Updates editable restaurant profile fields. When `openingHours` or `holidayClosures` are provided, the submitted arrays replace the existing tenant-scoped rows.
+      operationId: restaurant_profile_update
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRestaurantProfileRequest" }
+      responses:
+        "200":
+          description: "Updated restaurant profile"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantProfile" }
+        "400": { description: "Invalid opening hours or duplicate holiday closure date", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Restaurant profile unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /restaurant/profile/upload:
     post:
-      tags: [menu]
+      tags: [restaurant-profile]
       summary: Upload a restaurant profile image
       description: Uploads a logo or cover image for the authenticated restaurant tenant through the shared storage service.
       operationId: restaurant_profile_uploadImage

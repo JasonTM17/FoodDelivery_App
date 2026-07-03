@@ -11,6 +11,7 @@ NestJS API server for the FoodFlow food delivery platform. Provides REST API, We
 | Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password` |
 | Users | `GET/PATCH /api/users/profile`, `GET /api/users` (admin) |
 | Restaurants | `GET /api/restaurants`, `GET /api/restaurants/nearby`, `GET/POST/PATCH /api/restaurants/:id` |
+| Restaurant profile | `GET/PATCH /api/restaurant/profile` (opening hours + persisted holiday closures), `POST /api/restaurant/profile/upload` |
 | Menu | `GET/POST /api/restaurants/:id/categories`, `GET/POST/PATCH/DELETE /api/restaurants/:id/items`, `GET /api/items` |
 | Orders | `POST /api/orders`, `GET /api/orders`, `GET/PATCH /api/orders/:id`, `GET /api/orders/:id/timeline` |
 | Drivers | `GET /api/drivers/nearby`, `PATCH /api/drivers/location`, `GET /api/drivers/earnings` |

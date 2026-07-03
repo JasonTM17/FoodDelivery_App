@@ -831,12 +831,17 @@
       },
       "holidays": {
         "title": "Lịch nghỉ lễ",
-        "description": "Ngày nghỉ đặc biệt sẽ được bật khi backend có schema lưu trữ tương ứng.",
+        "description": "Thêm các ngày nghỉ đặc biệt cả ngày. Những ngày này được lưu cùng hồ sơ nhà hàng.",
         "dateLabel": "Ngày nghỉ",
         "reasonLabel": "Lý do nghỉ",
         "reasonPlaceholder": "Lý do",
         "add": "Thêm",
-        "degraded": "Backend hiện chưa hỗ trợ lưu lịch nghỉ lễ cho nhà hàng. Mục này được khoá để tránh lưu dữ liệu giả hoặc mất cấu hình."
+        "empty": "Chưa có ngày nghỉ đặc biệt.",
+        "listLabel": "Danh sách ngày nghỉ đặc biệt",
+        "duplicate": "Ngày này đã có trong danh sách nghỉ.",
+        "noReason": "Chưa nhập lý do",
+        "remove": "Xoá",
+        "removeWithDate": "Xoá ngày nghỉ {date}"
       },
       "preview": {
         "title": "Xem trước tuần này",

@@ -831,12 +831,17 @@
       },
       "holidays": {
         "title": "Holiday closures",
-        "description": "Special closure dates will unlock when the backend has a persistence schema for them.",
+        "description": "Add full-day special closures. These dates are saved with your restaurant profile.",
         "dateLabel": "Closure date",
         "reasonLabel": "Closure reason",
         "reasonPlaceholder": "Reason",
         "add": "Add",
-        "degraded": "The backend does not support restaurant holiday closures yet. This section is locked to avoid fake saves or lost configuration."
+        "empty": "No special closure dates yet.",
+        "listLabel": "Special closure dates",
+        "duplicate": "This date is already in the closure list.",
+        "noReason": "No reason provided",
+        "remove": "Remove",
+        "removeWithDate": "Remove closure on {date}"
       },
       "preview": {
         "title": "This week preview",
