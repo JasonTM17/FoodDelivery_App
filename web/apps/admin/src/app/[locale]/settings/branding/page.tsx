@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AdminSettingsSectionResponse } from '@foodflow/api-client';
 import { EmptyState } from '@foodflow/ui/empty-state';
@@ -26,34 +26,26 @@ interface BrandingForm {
   ogImageUrl: string;
 }
 
-const DEFAULT_BRANDING_FORM: BrandingForm = {
-  platformName: 'FoodFlow',
-  tagline: 'Fast food delivery, done well',
-  supportEmail: 'support@foodflow.vn',
-  contactPhone: '+84 900 000 000',
-  primaryColor: '#f97316',
-  successColor: '#22c55e',
-  logoUrl: '',
-  faviconUrl: '',
-  ogImageUrl: '',
-};
-
 export default function SettingsBrandingPage() {
   const t = useTranslations('settingsBranding');
-  const defaultTagline = t('defaultTagline');
   const query = useQuery<AdminSettingsSectionResponse>({
     queryKey: ['admin-settings', 'branding'],
     queryFn: () => apiGet('/admin/settings/branding'),
   });
-  const [form, setForm] = useState<BrandingForm>(DEFAULT_BRANDING_FORM);
+  const parsedForm = useMemo(() => {
+    if (query.data === undefined) return undefined;
+    return query.data?.settings ? toBrandingForm(query.data.settings) : null;
+  }, [query.data]);
+  const [form, setForm] = useState<BrandingForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    if (query.data?.settings) setForm(toBrandingForm(query.data.settings, defaultTagline));
-  }, [defaultTagline, query.data]);
+    if (parsedForm) setForm(parsedForm);
+  }, [parsedForm]);
 
   const handleSave = async () => {
+    if (!form) return;
     setSaving(true);
     setSaveError('');
     try {
@@ -77,22 +69,27 @@ export default function SettingsBrandingPage() {
   };
 
   const setField = <K extends keyof BrandingForm>(key: K, value: BrandingForm[K]) => {
-    setForm(current => ({ ...current, [key]: value }));
+    setForm(current => current ? { ...current, [key]: value } : current);
   };
 
   if (query.isLoading) return <BrandingSkeleton />;
 
-  if (query.isError) {
+  if (query.isError || parsedForm === null) {
     return (
       <EmptyState
         icon={XCircle}
-        title={t('saveError')}
-        description={t('description')}
-        actionLabel={t('save')}
-        onAction={() => void query.refetch()}
+        title={query.isError ? t('loadErrorTitle') : t('contractErrorTitle')}
+        description={query.isError ? t('loadErrorDescription') : t('contractErrorDescription')}
+        actionLabel={t('retry')}
+        onAction={() => {
+          setForm(null);
+          void query.refetch();
+        }}
       />
     );
   }
+
+  if (parsedForm === undefined || !form) return <BrandingSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -257,18 +254,22 @@ export default function SettingsBrandingPage() {
   );
 }
 
-function toBrandingForm(settings: Record<string, unknown>, defaultTagline: string): BrandingForm {
-  return {
-    platformName: readString(settings.platformName, DEFAULT_BRANDING_FORM.platformName),
-    tagline: readString(settings.tagline, defaultTagline),
-    supportEmail: readString(settings.supportEmail, DEFAULT_BRANDING_FORM.supportEmail),
-    contactPhone: readString(settings.contactPhone, DEFAULT_BRANDING_FORM.contactPhone),
-    primaryColor: readString(settings.primaryColor, DEFAULT_BRANDING_FORM.primaryColor),
-    successColor: readString(settings.successColor, DEFAULT_BRANDING_FORM.successColor),
-    logoUrl: readNullableString(settings.logoUrl),
-    faviconUrl: readNullableString(settings.faviconUrl),
-    ogImageUrl: readNullableString(settings.ogImageUrl),
-  };
+function toBrandingForm(settings: Record<string, unknown>): BrandingForm | null {
+  try {
+    return {
+      platformName: requireString(settings.platformName),
+      tagline: requireString(settings.tagline),
+      supportEmail: requireString(settings.supportEmail),
+      contactPhone: requireString(settings.contactPhone),
+      primaryColor: requireString(settings.primaryColor),
+      successColor: requireString(settings.successColor),
+      logoUrl: readNullableString(settings.logoUrl),
+      faviconUrl: readNullableString(settings.faviconUrl),
+      ogImageUrl: readNullableString(settings.ogImageUrl),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function BrandingSkeleton() {
@@ -284,12 +285,15 @@ function BrandingSkeleton() {
   );
 }
 
-function readString(value: unknown, fallback: string): string {
-  return typeof value === 'string' ? value : fallback;
+function requireString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  throw new Error('Settings field must be a string');
 }
 
 function readNullableString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  throw new Error('Settings field must be a nullable string');
 }
 
 function nullableUrl(value: string): string | null {

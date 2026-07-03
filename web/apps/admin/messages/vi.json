@@ -173,9 +173,9 @@
     "accountMenu": "Mở menu tài khoản",
     "switchLanguage": "Chuyển ngôn ngữ",
     "languages": {
-      "vi": "Ti?ng Vi?t",
-      "en": "Ti?ng Anh",
-      "ja": "Ti?ng Nh?t"
+      "vi": "Tiếng Việt",
+      "en": "Tiếng Anh",
+      "ja": "Tiếng Nhật"
     }
   },
   "sidebar": {
@@ -843,6 +843,12 @@
     "save": "Lưu cài đặt",
     "saving": "Đang lưu...",
     "saveError": "Không thể lưu cài đặt",
+    "validationError": "Nhập số dương cho tất cả cài đặt dạng số.",
+    "loadErrorTitle": "Không thể tải cài đặt",
+    "loadErrorDescription": "Kiểm tra kết nối backend rồi thử lại.",
+    "contractErrorTitle": "Phản hồi cài đặt chưa đầy đủ",
+    "contractErrorDescription": "Backend chưa trả đủ hợp đồng dữ liệu bắt buộc, nên trình duyệt không tự điền giá trị kinh doanh mặc định.",
+    "retry": "Thử lại",
     "sections": {
       "general": {
         "title": "Chung",
@@ -1251,7 +1257,7 @@
     "errorTitle": "Không thể tải chi tiết người dùng",
     "errorDescription": "Hồ sơ người dùng đang tạm thời không khả dụng.",
     "retry": "Thử lại",
-    "notFound": "Kh?ng t?m th?y ng??i d?ng"
+    "notFound": "Không tìm thấy người dùng"
   },
   "restaurantApprove": {
     "title": "Phê duyệt nhà hàng",
@@ -1374,8 +1380,13 @@
     "favicon": "Favicon",
     "ogImage": "Ảnh OG",
     "uploadHint": "Nhấp để tải lên",
-    "saveError": "Kh?ng th? l?u c?i ??t th??ng hi?u. Vui l?ng th? l?i.",
-    "defaultTagline": "Giao ?? ?n nhanh, tr?i nghi?m ch?n chu"
+    "saveError": "Không thể lưu cài đặt thương hiệu. Vui lòng thử lại.",
+    "loadErrorTitle": "Không thể tải cài đặt thương hiệu",
+    "loadErrorDescription": "Kiểm tra kết nối backend rồi thử lại.",
+    "contractErrorTitle": "Phản hồi thương hiệu chưa đầy đủ",
+    "contractErrorDescription": "Backend chưa trả đủ hợp đồng dữ liệu thương hiệu bắt buộc, nên trình duyệt không tự điền giá trị kinh doanh mặc định.",
+    "retry": "Thử lại",
+    "defaultTagline": "Giao đồ ăn nhanh, trải nghiệm chỉn chu"
   },
   "settingsCompliance": {
     "title": "Tuân thủ pháp lý",
@@ -1407,8 +1418,14 @@
     "vatNumber": "Mã số thuế",
     "vatEnabled": "VAT / Thuế",
     "vatEnabledDesc": "Áp dụng VAT vào giao dịch",
-    "saveError": "Kh?ng th? l?u c?i ??t tu?n th?. Vui l?ng th? l?i.",
-    "defaultJurisdiction": "Vi?t Nam"
+    "saveError": "Không thể lưu cài đặt tuân thủ. Vui lòng thử lại.",
+    "validationError": "Nhập số dương cho tất cả cài đặt lưu trữ dữ liệu.",
+    "loadErrorTitle": "Không thể tải cài đặt tuân thủ",
+    "loadErrorDescription": "Kiểm tra kết nối backend rồi thử lại.",
+    "contractErrorTitle": "Phản hồi tuân thủ chưa đầy đủ",
+    "contractErrorDescription": "Backend chưa trả đủ hợp đồng dữ liệu tuân thủ bắt buộc, nên trình duyệt không tự điền giá trị kinh doanh mặc định.",
+    "retry": "Thử lại",
+    "defaultJurisdiction": "Việt Nam"
   },
   "realtimeOrders": {
     "title": "Đơn hàng trực tiếp",
@@ -1448,52 +1465,52 @@
     }
   },
   "routeErrors": {
-    "genericDescription": "H?y t?i l?i trang ho?c th? l?i sau gi?y l?t.",
-    "retry": "Th? l?i",
-    "backToOrders": "Quay l?i ??n h?ng",
-    "backToSettings": "Quay l?i c?i ??t",
+    "genericDescription": "Hãy tải lại trang hoặc thử lại sau giây lát.",
+    "retry": "Thử lại",
+    "backToOrders": "Quay lại đơn hàng",
+    "backToSettings": "Quay lại cài đặt",
     "aiMonitor": {
-      "title": "Kh?ng t?i ???c AI Monitor"
+      "title": "Không tải được AI Monitor"
     },
     "analytics": {
-      "title": "Kh?ng t?i ???c Analytics"
+      "title": "Không tải được phân tích"
     },
     "drivers": {
-      "title": "Kh?ng t?i ???c danh s?ch t?i x?"
+      "title": "Không tải được danh sách tài xế"
     },
     "orderDetail": {
-      "title": "Kh?ng t?i ???c chi ti?t ??n h?ng"
+      "title": "Không tải được chi tiết đơn hàng"
     },
     "orders": {
-      "title": "Kh?ng t?i ???c danh s?ch ??n h?ng"
+      "title": "Không tải được danh sách đơn hàng"
     },
     "restaurants": {
-      "title": "Kh?ng t?i ???c danh s?ch nh? h?ng"
+      "title": "Không tải được danh sách nhà hàng"
     },
     "settings": {
-      "title": "Kh?ng t?i ???c c?i ??t h? th?ng"
+      "title": "Không tải được cài đặt hệ thống"
     },
     "settingsBranding": {
-      "title": "Kh?ng t?i ???c trang th??ng hi?u"
+      "title": "Không tải được trang thương hiệu"
     },
     "settingsCompliance": {
-      "title": "Kh?ng t?i ???c trang tu?n th?"
+      "title": "Không tải được trang tuân thủ"
     },
     "settingsIntegrations": {
-      "title": "Kh?ng t?i ???c trang t?ch h?p"
+      "title": "Không tải được trang tích hợp"
     },
     "support": {
-      "title": "Kh?ng t?i ???c y?u c?u h? tr?"
+      "title": "Không tải được yêu cầu hỗ trợ"
     },
     "users": {
-      "title": "Kh?ng t?i ???c danh s?ch ng??i d?ng"
+      "title": "Không tải được danh sách người dùng"
     },
-    "backToRestaurants": "Quay l?i nh? h?ng",
+    "backToRestaurants": "Quay lại nhà hàng",
     "login": {
-      "title": "Kh?ng t?i ???c trang ??ng nh?p"
+      "title": "Không tải được trang đăng nhập"
     },
     "restaurantDetail": {
-      "title": "Kh?ng t?i ???c chi ti?t nh? h?ng"
+      "title": "Không tải được chi tiết nhà hàng"
     }
   }
 }

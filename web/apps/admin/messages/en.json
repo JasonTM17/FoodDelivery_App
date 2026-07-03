@@ -843,6 +843,12 @@
     "save": "Save settings",
     "saving": "Saving...",
     "saveError": "Could not save settings",
+    "validationError": "Enter positive numbers for all numeric settings.",
+    "loadErrorTitle": "Unable to load settings",
+    "loadErrorDescription": "Check the backend connection, then try again.",
+    "contractErrorTitle": "Settings response is incomplete",
+    "contractErrorDescription": "The backend did not return the required settings contract, so the browser did not fill any client-side business defaults.",
+    "retry": "Retry",
     "sections": {
       "general": {
         "title": "General",
@@ -1375,6 +1381,11 @@
     "ogImage": "OG Image",
     "uploadHint": "Click to upload",
     "saveError": "Unable to save branding settings. Please try again.",
+    "loadErrorTitle": "Unable to load branding settings",
+    "loadErrorDescription": "Check the backend connection, then try again.",
+    "contractErrorTitle": "Branding response is incomplete",
+    "contractErrorDescription": "The backend did not return the required branding contract, so the browser did not fill any client-side business defaults.",
+    "retry": "Retry",
     "defaultTagline": "Fast food delivery, done well"
   },
   "settingsCompliance": {
@@ -1408,6 +1419,12 @@
     "vatEnabled": "VAT / Tax",
     "vatEnabledDesc": "Apply VAT to transactions",
     "saveError": "Unable to save compliance settings. Please try again.",
+    "validationError": "Enter positive numbers for all retention settings.",
+    "loadErrorTitle": "Unable to load compliance settings",
+    "loadErrorDescription": "Check the backend connection, then try again.",
+    "contractErrorTitle": "Compliance response is incomplete",
+    "contractErrorDescription": "The backend did not return the required compliance contract, so the browser did not fill any client-side business defaults.",
+    "retry": "Retry",
     "defaultJurisdiction": "Vietnam"
   },
   "realtimeOrders": {

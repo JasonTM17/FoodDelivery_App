@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AdminSettingsSectionResponse } from '@foodflow/api-client';
 import { EmptyState } from '@foodflow/ui/empty-state';
@@ -33,40 +33,40 @@ interface ComplianceForm {
   exportRetentionHours: string;
 }
 
-const DEFAULT_COMPLIANCE_FORM: ComplianceForm = {
-  tosUrl: '',
-  privacyUrl: '',
-  cookiePolicyUrl: '',
-  auditLogRetentionDays: '365',
-  orderRetentionDays: '365',
-  userDataRetentionDays: '730',
-  consentBannerEnabled: true,
-  dataExportRequestsEnabled: true,
-  deletionRequestsEnabled: true,
-  jurisdiction: 'Vietnam',
-  vatNumber: '',
-  vatEnabled: true,
-  kycReviewRequired: true,
-  supportSlaBusinessHours: 'ICT Mon-Sat 08:00-20:00',
-  exportRetentionHours: '24',
-};
-
 export default function SettingsCompliancePage() {
   const t = useTranslations('settingsCompliance');
-  const defaultJurisdiction = t('defaultJurisdiction');
   const query = useQuery<AdminSettingsSectionResponse>({
     queryKey: ['admin-settings', 'compliance'],
     queryFn: () => apiGet('/admin/settings/compliance'),
   });
-  const [form, setForm] = useState<ComplianceForm>(DEFAULT_COMPLIANCE_FORM);
+  const parsedForm = useMemo(() => {
+    if (query.data === undefined) return undefined;
+    return query.data?.settings ? toComplianceForm(query.data.settings) : null;
+  }, [query.data]);
+  const [form, setForm] = useState<ComplianceForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    if (query.data?.settings) setForm(toComplianceForm(query.data.settings, defaultJurisdiction));
-  }, [defaultJurisdiction, query.data]);
+    if (parsedForm) setForm(parsedForm);
+  }, [parsedForm]);
 
   const handleSave = async () => {
+    if (!form) return;
+    const auditRetentionDays = parsePositiveInteger(form.auditLogRetentionDays);
+    const orderRetentionDays = parsePositiveInteger(form.orderRetentionDays);
+    const userDataRetentionDays = parsePositiveInteger(form.userDataRetentionDays);
+    const exportRetentionHours = parsePositiveInteger(form.exportRetentionHours);
+    if (
+      auditRetentionDays == null ||
+      orderRetentionDays == null ||
+      userDataRetentionDays == null ||
+      exportRetentionHours == null
+    ) {
+      setSaveError(t('validationError'));
+      return;
+    }
+
     setSaving(true);
     setSaveError('');
     try {
@@ -74,22 +74,10 @@ export default function SettingsCompliancePage() {
         tosUrl: nullableUrl(form.tosUrl),
         privacyUrl: nullableUrl(form.privacyUrl),
         cookiePolicyUrl: nullableUrl(form.cookiePolicyUrl),
-        auditRetentionDays: toPositiveInteger(
-          form.auditLogRetentionDays,
-          DEFAULT_COMPLIANCE_FORM.auditLogRetentionDays,
-        ),
-        orderRetentionDays: toPositiveInteger(
-          form.orderRetentionDays,
-          DEFAULT_COMPLIANCE_FORM.orderRetentionDays,
-        ),
-        userDataRetentionDays: toPositiveInteger(
-          form.userDataRetentionDays,
-          DEFAULT_COMPLIANCE_FORM.userDataRetentionDays,
-        ),
-        exportRetentionHours: toPositiveInteger(
-          form.exportRetentionHours,
-          DEFAULT_COMPLIANCE_FORM.exportRetentionHours,
-        ),
+        auditRetentionDays,
+        orderRetentionDays,
+        userDataRetentionDays,
+        exportRetentionHours,
         consentBannerEnabled: form.consentBannerEnabled,
         dataExportRequestsEnabled: form.dataExportRequestsEnabled,
         deletionRequestsEnabled: form.deletionRequestsEnabled,
@@ -107,22 +95,27 @@ export default function SettingsCompliancePage() {
   };
 
   const setField = <K extends keyof ComplianceForm>(key: K, value: ComplianceForm[K]) => {
-    setForm(current => ({ ...current, [key]: value }));
+    setForm(current => current ? { ...current, [key]: value } : current);
   };
 
   if (query.isLoading) return <ComplianceSkeleton />;
 
-  if (query.isError) {
+  if (query.isError || parsedForm === null) {
     return (
       <EmptyState
         icon={XCircle}
-        title={t('saveError')}
-        description={t('description')}
-        actionLabel={t('save')}
-        onAction={() => void query.refetch()}
+        title={query.isError ? t('loadErrorTitle') : t('contractErrorTitle')}
+        description={query.isError ? t('loadErrorDescription') : t('contractErrorDescription')}
+        actionLabel={t('retry')}
+        onAction={() => {
+          setForm(null);
+          void query.refetch();
+        }}
       />
     );
   }
+
+  if (parsedForm === undefined || !form) return <ComplianceSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -330,48 +323,28 @@ export default function SettingsCompliancePage() {
   );
 }
 
-function toComplianceForm(settings: Record<string, unknown>, defaultJurisdiction: string): ComplianceForm {
-  return {
-    tosUrl: readNullableString(settings.tosUrl),
-    privacyUrl: readNullableString(settings.privacyUrl),
-    cookiePolicyUrl: readNullableString(settings.cookiePolicyUrl),
-    auditLogRetentionDays: readNumberString(
-      settings.auditRetentionDays,
-      DEFAULT_COMPLIANCE_FORM.auditLogRetentionDays,
-    ),
-    orderRetentionDays: readNumberString(
-      settings.orderRetentionDays,
-      DEFAULT_COMPLIANCE_FORM.orderRetentionDays,
-    ),
-    userDataRetentionDays: readNumberString(
-      settings.userDataRetentionDays,
-      DEFAULT_COMPLIANCE_FORM.userDataRetentionDays,
-    ),
-    consentBannerEnabled: readBoolean(
-      settings.consentBannerEnabled,
-      DEFAULT_COMPLIANCE_FORM.consentBannerEnabled,
-    ),
-    dataExportRequestsEnabled: readBoolean(
-      settings.dataExportRequestsEnabled,
-      DEFAULT_COMPLIANCE_FORM.dataExportRequestsEnabled,
-    ),
-    deletionRequestsEnabled: readBoolean(
-      settings.deletionRequestsEnabled,
-      DEFAULT_COMPLIANCE_FORM.deletionRequestsEnabled,
-    ),
-    jurisdiction: readString(settings.jurisdiction, defaultJurisdiction),
-    vatNumber: readNullableString(settings.vatNumber),
-    vatEnabled: readBoolean(settings.vatEnabled, DEFAULT_COMPLIANCE_FORM.vatEnabled),
-    kycReviewRequired: readBoolean(settings.kycReviewRequired, DEFAULT_COMPLIANCE_FORM.kycReviewRequired),
-    supportSlaBusinessHours: readString(
-      settings.supportSlaBusinessHours,
-      DEFAULT_COMPLIANCE_FORM.supportSlaBusinessHours,
-    ),
-    exportRetentionHours: readNumberString(
-      settings.exportRetentionHours,
-      DEFAULT_COMPLIANCE_FORM.exportRetentionHours,
-    ),
-  };
+function toComplianceForm(settings: Record<string, unknown>): ComplianceForm | null {
+  try {
+    return {
+      tosUrl: readNullableString(settings.tosUrl),
+      privacyUrl: readNullableString(settings.privacyUrl),
+      cookiePolicyUrl: readNullableString(settings.cookiePolicyUrl),
+      auditLogRetentionDays: requireNumberString(settings.auditRetentionDays),
+      orderRetentionDays: requireNumberString(settings.orderRetentionDays),
+      userDataRetentionDays: requireNumberString(settings.userDataRetentionDays),
+      consentBannerEnabled: requireBoolean(settings.consentBannerEnabled),
+      dataExportRequestsEnabled: requireBoolean(settings.dataExportRequestsEnabled),
+      deletionRequestsEnabled: requireBoolean(settings.deletionRequestsEnabled),
+      jurisdiction: requireString(settings.jurisdiction),
+      vatNumber: readNullableString(settings.vatNumber),
+      vatEnabled: requireBoolean(settings.vatEnabled),
+      kycReviewRequired: requireBoolean(settings.kycReviewRequired),
+      supportSlaBusinessHours: requireString(settings.supportSlaBusinessHours),
+      exportRetentionHours: requireNumberString(settings.exportRetentionHours),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function ComplianceSkeleton() {
@@ -387,26 +360,31 @@ function ComplianceSkeleton() {
   );
 }
 
-function readString(value: unknown, fallback: string): string {
-  return typeof value === 'string' ? value : fallback;
+function requireString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  throw new Error('Settings field must be a string');
 }
 
 function readNullableString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  throw new Error('Settings field must be a nullable string');
 }
 
-function readBoolean(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback;
+function requireBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  throw new Error('Settings field must be a boolean');
 }
 
-function readNumberString(value: unknown, fallback: string): string {
-  return typeof value === 'number' && Number.isFinite(value) ? String(value) : fallback;
+function requireNumberString(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  throw new Error('Settings field must be a finite number');
 }
 
-function toPositiveInteger(value: string, fallback: string): number {
+function parsePositiveInteger(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
   if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  return Number.parseInt(fallback, 10);
+  return null;
 }
 
 function nullableUrl(value: string): string | null {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AdminSettingsSectionResponse } from '@foodflow/api-client';
 import { EmptyState } from '@foodflow/ui/empty-state';
@@ -33,39 +33,33 @@ interface GeneralSettingsForm {
   deleteOldOrders: boolean;
 }
 
-const DEFAULT_GENERAL_FORM: GeneralSettingsForm = {
-  platformName: 'FoodFlow',
-  timezone: 'Asia/Bangkok',
-  currency: 'VND',
-  maintenanceMode: false,
-  registrationEnabled: true,
-  newOrderNotifications: true,
-  supportNotifications: true,
-  newDriverNotifications: false,
-  dailyDigestEnabled: true,
-  maxSessionMinutes: '480',
-  maxLoginFailures: '5',
-  requireAdminTwoFactor: true,
-  loginAuditEnabled: true,
-  autoDeleteLogs: true,
-  deleteOldOrders: false,
-};
-
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const query = useQuery<AdminSettingsSectionResponse>({
     queryKey: ['admin-settings', 'general'],
     queryFn: () => apiGet('/admin/settings/general'),
   });
-  const [form, setForm] = useState<GeneralSettingsForm>(DEFAULT_GENERAL_FORM);
+  const parsedForm = useMemo(() => {
+    if (query.data === undefined) return undefined;
+    return query.data?.settings ? toGeneralForm(query.data.settings) : null;
+  }, [query.data]);
+  const [form, setForm] = useState<GeneralSettingsForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    if (query.data?.settings) setForm(toGeneralForm(query.data.settings));
-  }, [query.data]);
+    if (parsedForm) setForm(parsedForm);
+  }, [parsedForm]);
 
   const handleSave = async () => {
+    if (!form) return;
+    const maxSessionMinutes = parsePositiveInteger(form.maxSessionMinutes);
+    const maxLoginFailures = parsePositiveInteger(form.maxLoginFailures);
+    if (maxSessionMinutes == null || maxLoginFailures == null) {
+      setSaveError(t('validationError'));
+      return;
+    }
+
     setSaving(true);
     setSaveError('');
     try {
@@ -83,8 +77,8 @@ export default function SettingsPage() {
           dailyDigest: form.dailyDigestEnabled,
         },
         security: {
-          maxSessionMinutes: toPositiveInteger(form.maxSessionMinutes, DEFAULT_GENERAL_FORM.maxSessionMinutes),
-          maxLoginFailures: toPositiveInteger(form.maxLoginFailures, DEFAULT_GENERAL_FORM.maxLoginFailures),
+          maxSessionMinutes,
+          maxLoginFailures,
           requireAdminTwoFactor: form.requireAdminTwoFactor,
           loginAuditEnabled: form.loginAuditEnabled,
         },
@@ -102,22 +96,27 @@ export default function SettingsPage() {
   };
 
   const setField = <K extends keyof GeneralSettingsForm>(key: K, value: GeneralSettingsForm[K]) => {
-    setForm(current => ({ ...current, [key]: value }));
+    setForm(current => current ? { ...current, [key]: value } : current);
   };
 
   if (query.isLoading) return <SettingsSkeleton />;
 
-  if (query.isError) {
+  if (query.isError || parsedForm === null) {
     return (
       <EmptyState
         icon={XCircle}
-        title={t('saveError')}
-        description={t('description')}
-        actionLabel={t('save')}
-        onAction={() => void query.refetch()}
+        title={query.isError ? t('loadErrorTitle') : t('contractErrorTitle')}
+        description={query.isError ? t('loadErrorDescription') : t('contractErrorDescription')}
+        actionLabel={t('retry')}
+        onAction={() => {
+          setForm(null);
+          void query.refetch();
+        }}
       />
     );
   }
+
+  if (parsedForm === undefined || !form) return <SettingsSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -341,37 +340,32 @@ export default function SettingsPage() {
   );
 }
 
-function toGeneralForm(settings: Record<string, unknown>): GeneralSettingsForm {
-  const notifications = asRecord(settings.notifications);
-  const security = asRecord(settings.security);
-  const dataRetention = asRecord(settings.dataRetention);
+function toGeneralForm(settings: Record<string, unknown>): GeneralSettingsForm | null {
+  try {
+    const notifications = requireRecord(settings.notifications);
+    const security = requireRecord(settings.security);
+    const dataRetention = requireRecord(settings.dataRetention);
 
-  return {
-    platformName: readString(settings.platformName, DEFAULT_GENERAL_FORM.platformName),
-    timezone: readString(settings.timezone, DEFAULT_GENERAL_FORM.timezone),
-    currency: readString(settings.currency, DEFAULT_GENERAL_FORM.currency),
-    maintenanceMode: readBoolean(settings.maintenanceMode, DEFAULT_GENERAL_FORM.maintenanceMode),
-    registrationEnabled: readBoolean(settings.registrationEnabled, DEFAULT_GENERAL_FORM.registrationEnabled),
-    newOrderNotifications: readBoolean(notifications.newOrder, DEFAULT_GENERAL_FORM.newOrderNotifications),
-    supportNotifications: readBoolean(notifications.support, DEFAULT_GENERAL_FORM.supportNotifications),
-    newDriverNotifications: readBoolean(notifications.newDriver, DEFAULT_GENERAL_FORM.newDriverNotifications),
-    dailyDigestEnabled: readBoolean(notifications.dailyDigest, DEFAULT_GENERAL_FORM.dailyDigestEnabled),
-    maxSessionMinutes: readNumberString(
-      security.maxSessionMinutes,
-      DEFAULT_GENERAL_FORM.maxSessionMinutes,
-    ),
-    maxLoginFailures: readNumberString(
-      security.maxLoginFailures,
-      DEFAULT_GENERAL_FORM.maxLoginFailures,
-    ),
-    requireAdminTwoFactor: readBoolean(
-      security.requireAdminTwoFactor,
-      DEFAULT_GENERAL_FORM.requireAdminTwoFactor,
-    ),
-    loginAuditEnabled: readBoolean(security.loginAuditEnabled, DEFAULT_GENERAL_FORM.loginAuditEnabled),
-    autoDeleteLogs: readBoolean(dataRetention.autoDeleteLogs, DEFAULT_GENERAL_FORM.autoDeleteLogs),
-    deleteOldOrders: readBoolean(dataRetention.deleteOldOrders, DEFAULT_GENERAL_FORM.deleteOldOrders),
-  };
+    return {
+      platformName: requireString(settings.platformName),
+      timezone: requireString(settings.timezone),
+      currency: requireString(settings.currency),
+      maintenanceMode: requireBoolean(settings.maintenanceMode),
+      registrationEnabled: requireBoolean(settings.registrationEnabled),
+      newOrderNotifications: requireBoolean(notifications.newOrder),
+      supportNotifications: requireBoolean(notifications.support),
+      newDriverNotifications: requireBoolean(notifications.newDriver),
+      dailyDigestEnabled: requireBoolean(notifications.dailyDigest),
+      maxSessionMinutes: requireNumberString(security.maxSessionMinutes),
+      maxLoginFailures: requireNumberString(security.maxLoginFailures),
+      requireAdminTwoFactor: requireBoolean(security.requireAdminTwoFactor),
+      loginAuditEnabled: requireBoolean(security.loginAuditEnabled),
+      autoDeleteLogs: requireBoolean(dataRetention.autoDeleteLogs),
+      deleteOldOrders: requireBoolean(dataRetention.deleteOldOrders),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function SettingsSkeleton() {
@@ -387,24 +381,30 @@ function SettingsSkeleton() {
   );
 }
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+function requireRecord(value: unknown): Record<string, unknown> {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  throw new Error('Settings field must be an object');
 }
 
-function readString(value: unknown, fallback: string): string {
-  return typeof value === 'string' ? value : fallback;
+function requireString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  throw new Error('Settings field must be a string');
 }
 
-function readBoolean(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback;
+function requireBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  throw new Error('Settings field must be a boolean');
 }
 
-function readNumberString(value: unknown, fallback: string): string {
-  return typeof value === 'number' && Number.isFinite(value) ? String(value) : fallback;
+function requireNumberString(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  throw new Error('Settings field must be a finite number');
 }
 
-function toPositiveInteger(value: string, fallback: string): number {
+function parsePositiveInteger(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
   if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  return Number.parseInt(fallback, 10);
+  return null;
 }

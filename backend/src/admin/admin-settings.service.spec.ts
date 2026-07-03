@@ -26,6 +26,40 @@ describe('AdminSettingsService', () => {
     expect(result.updatedAt).toBeNull()
   })
 
+  it('returns complete server-owned defaults for editable settings sections', async () => {
+    platformSetting.findUnique.mockResolvedValue(null)
+
+    const general = await service.getSection('general')
+    const branding = await service.getSection('branding')
+    const compliance = await service.getSection('compliance')
+
+    expect(general.settings.notifications).toEqual({
+      newOrder: true,
+      support: true,
+      newDriver: false,
+      dailyDigest: true,
+    })
+    expect(general.settings.security).toEqual({
+      maxSessionMinutes: 480,
+      maxLoginFailures: 5,
+      requireAdminTwoFactor: true,
+      loginAuditEnabled: true,
+    })
+    expect(branding.settings).toEqual(expect.objectContaining({
+      platformName: 'FoodFlow',
+      supportEmail: '',
+      contactPhone: '',
+      ogImageUrl: null,
+    }))
+    expect(compliance.settings).toEqual(expect.objectContaining({
+      orderRetentionDays: 365,
+      userDataRetentionDays: 730,
+      jurisdiction: 'Vietnam',
+      vatNumber: null,
+      vatEnabled: false,
+    }))
+  })
+
   it('merges updates into the stored section and tracks the admin user', async () => {
     platformSetting.findUnique.mockResolvedValue({
       key: 'general',

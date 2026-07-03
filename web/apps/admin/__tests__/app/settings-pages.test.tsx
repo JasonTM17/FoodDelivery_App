@@ -34,7 +34,12 @@ describe('admin settings pages', () => {
         maintenanceMode: false,
         registrationEnabled: true,
         notifications: { newOrder: true, support: true, newDriver: false, dailyDigest: true },
-        security: { maxSessionMinutes: 360, maxLoginFailures: 4 },
+        security: {
+          maxSessionMinutes: 360,
+          maxLoginFailures: 4,
+          requireAdminTwoFactor: true,
+          loginAuditEnabled: true,
+        },
         dataRetention: { autoDeleteLogs: true, deleteOldOrders: false },
       },
       updatedAt: null,
@@ -57,6 +62,54 @@ describe('admin settings pages', () => {
         security: expect.objectContaining({ maxSessionMinutes: 720 }),
       }),
     );
+  });
+
+  it('shows a contract error instead of filling client defaults when general settings are incomplete', async () => {
+    mockedApiGet.mockResolvedValue({
+      section: 'general',
+      settings: {
+        platformName: 'Partial Flow',
+        timezone: 'Asia/Bangkok',
+        currency: 'VND',
+      },
+      updatedAt: null,
+    });
+
+    renderWithClient(<SettingsPage />);
+
+    expect(await screen.findByText('contractErrorTitle')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Partial Flow')).not.toBeInTheDocument();
+    expect(mockedApiPatch).not.toHaveBeenCalled();
+  });
+
+  it('does not save invalid numeric settings as silent defaults', async () => {
+    mockedApiGet.mockResolvedValue({
+      section: 'general',
+      settings: {
+        platformName: 'Existing Flow',
+        timezone: 'Asia/Bangkok',
+        currency: 'vnd',
+        maintenanceMode: false,
+        registrationEnabled: true,
+        notifications: { newOrder: true, support: true, newDriver: false, dailyDigest: true },
+        security: {
+          maxSessionMinutes: 360,
+          maxLoginFailures: 4,
+          requireAdminTwoFactor: true,
+          loginAuditEnabled: true,
+        },
+        dataRetention: { autoDeleteLogs: true, deleteOldOrders: false },
+      },
+      updatedAt: null,
+    });
+
+    renderWithClient(<SettingsPage />);
+
+    fireEvent.change(await screen.findByDisplayValue('360'), { target: { value: '0' } });
+    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+
+    expect(await screen.findByText('validationError')).toBeInTheDocument();
+    expect(mockedApiPatch).not.toHaveBeenCalled();
   });
 
   it('loads and saves branding settings without fake upload inputs', async () => {

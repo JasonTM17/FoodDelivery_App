@@ -173,9 +173,9 @@
     "accountMenu": "アカウントメニューを開く",
     "switchLanguage": "言語を切り替える",
     "languages": {
-      "vi": "?????",
-      "en": "??",
-      "ja": "???"
+      "vi": "ベトナム語",
+      "en": "英語",
+      "ja": "日本語"
     }
   },
   "sidebar": {
@@ -843,6 +843,12 @@
     "save": "設定を保存",
     "saving": "保存中...",
     "saveError": "設定を保存できません",
+    "validationError": "数値設定には正の数を入力してください。",
+    "loadErrorTitle": "設定を読み込めません",
+    "loadErrorDescription": "バックエンド接続を確認してから再試行してください。",
+    "contractErrorTitle": "設定レスポンスが不完全です",
+    "contractErrorDescription": "バックエンドが必須の設定契約を返していないため、ブラウザ側でビジネス既定値を補完しません。",
+    "retry": "再試行",
     "sections": {
       "general": {
         "title": "全般",
@@ -1251,7 +1257,7 @@
     "errorTitle": "ユーザー詳細を読み込めませんでした",
     "errorDescription": "ユーザープロフィールは一時的に利用できません。",
     "retry": "再試行",
-    "notFound": "????????????"
+    "notFound": "ユーザーが見つかりません"
   },
   "restaurantApprove": {
     "title": "レストラン承認",
@@ -1374,8 +1380,13 @@
     "favicon": "ファビコン",
     "ogImage": "OG画像",
     "uploadHint": "クリックしてアップロード",
-    "saveError": "???????????????????????????",
-    "defaultTagline": "?????????????"
+    "saveError": "ブランド設定を保存できません。もう一度お試しください。",
+    "loadErrorTitle": "ブランド設定を読み込めません",
+    "loadErrorDescription": "バックエンド接続を確認してから再試行してください。",
+    "contractErrorTitle": "ブランドレスポンスが不完全です",
+    "contractErrorDescription": "バックエンドが必須のブランド設定契約を返していないため、ブラウザ側でビジネス既定値を補完しません。",
+    "retry": "再試行",
+    "defaultTagline": "丁寧で速いフードデリバリー"
   },
   "settingsCompliance": {
     "title": "コンプライアンス",
@@ -1407,8 +1418,14 @@
     "vatNumber": "VAT番号",
     "vatEnabled": "VAT・税金",
     "vatEnabledDesc": "取引にVATを適用する",
-    "saveError": "???????????????????????????????",
-    "defaultJurisdiction": "????"
+    "saveError": "コンプライアンス設定を保存できません。もう一度お試しください。",
+    "validationError": "データ保持設定には正の数を入力してください。",
+    "loadErrorTitle": "コンプライアンス設定を読み込めません",
+    "loadErrorDescription": "バックエンド接続を確認してから再試行してください。",
+    "contractErrorTitle": "コンプライアンスレスポンスが不完全です",
+    "contractErrorDescription": "バックエンドが必須のコンプライアンス設定契約を返していないため、ブラウザ側でビジネス既定値を補完しません。",
+    "retry": "再試行",
+    "defaultJurisdiction": "ベトナム"
   },
   "realtimeOrders": {
     "title": "ライブ注文",
@@ -1448,52 +1465,52 @@
     }
   },
   "routeErrors": {
-    "genericDescription": "?????????????????????????????????",
-    "retry": "???",
-    "backToOrders": "?????",
-    "backToSettings": "?????",
+    "genericDescription": "ページを再読み込みするか、しばらくしてからもう一度お試しください。",
+    "retry": "再試行",
+    "backToOrders": "注文に戻る",
+    "backToSettings": "設定に戻る",
     "aiMonitor": {
-      "title": "AI????????????"
+      "title": "AI Monitorを読み込めません"
     },
     "analytics": {
-      "title": "??????????"
+      "title": "分析を読み込めません"
     },
     "drivers": {
-      "title": "???????????????"
+      "title": "配達員一覧を読み込めません"
     },
     "orderDetail": {
-      "title": "????????????"
+      "title": "注文詳細を読み込めません"
     },
     "orders": {
-      "title": "????????????"
+      "title": "注文一覧を読み込めません"
     },
     "restaurants": {
-      "title": "???????????????"
+      "title": "レストラン一覧を読み込めません"
     },
     "settings": {
-      "title": "??????????????"
+      "title": "システム設定を読み込めません"
     },
     "settingsBranding": {
-      "title": "??????????????"
+      "title": "ブランド設定を読み込めません"
     },
     "settingsCompliance": {
-      "title": "??????????????????"
+      "title": "コンプライアンス設定を読み込めません"
     },
     "settingsIntegrations": {
-      "title": "????????????"
+      "title": "連携設定を読み込めません"
     },
     "support": {
-      "title": "????????????????"
+      "title": "サポートチケットを読み込めません"
     },
     "users": {
-      "title": "??????????????"
+      "title": "ユーザー一覧を読み込めません"
     },
-    "backToRestaurants": "????????",
+    "backToRestaurants": "レストランに戻る",
     "login": {
-      "title": "????????????"
+      "title": "サインインを読み込めません"
     },
     "restaurantDetail": {
-      "title": "???????????????"
+      "title": "レストラン詳細を読み込めません"
     }
   }
 }
