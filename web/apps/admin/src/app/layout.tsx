@@ -7,6 +7,7 @@ import { getSharedMessages, type Locale } from '@foodflow/i18n';
 import viMessages from '../../messages/vi.json';
 import enMessages from '../../messages/en.json';
 import jaMessages from '../../messages/ja.json';
+import { resolveAdminMetadataBase } from '@/lib/metadata-url';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] });
 
@@ -18,7 +19,7 @@ const appMessages = {
 } as const;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'),
+  metadataBase: resolveAdminMetadataBase(),
   title: {
     template: '%s | FoodFlow Admin',
     default: 'FoodFlow Admin',

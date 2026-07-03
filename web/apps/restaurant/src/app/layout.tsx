@@ -9,6 +9,7 @@ import viMessages from '../../messages/vi.json'
 import enMessages from '../../messages/en.json'
 import jaMessages from '../../messages/ja.json'
 import './globals.css'
+import { resolveRestaurantMetadataBase } from '@/lib/metadata-url'
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] })
 
@@ -16,7 +17,7 @@ const LOCALES = ['vi', 'en', 'ja'] as const
 const appMessages = { vi: viMessages, en: enMessages, ja: jaMessages }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_RESTAURANT_URL ?? 'http://localhost:3002'),
+  metadataBase: resolveRestaurantMetadataBase(),
   title: {
     template: '%s | FoodFlow Restaurant',
     default: 'FoodFlow Restaurant',
