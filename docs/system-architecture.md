@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-FoodFlow is a real-time food delivery platform with 4 client applications, a monolithic NestJS backend (designed for future microservice decomposition), and an AI automation layer.
+FoodFlow is a real-time food delivery platform with 4 client applications, a monolithic NestJS backend (designed for future microservice decomposition), and an LLM assistant layer backed by the backend provider adapter.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
