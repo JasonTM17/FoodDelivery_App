@@ -180,7 +180,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 
 ## Branch and integration policy
 
-- Use `codex/batch4-integration` as the clean integration branch.
+- Use `batch4-integration` as the clean integration branch. New work branches should not use the old `codex/` prefix.
 - Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
 - Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
 - Keep mobile reconciliation separate until web/backend Batch 4 is stable.
