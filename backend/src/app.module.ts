@@ -1,5 +1,5 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { BullModule } from '@nestjs/bullmq'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
@@ -42,10 +42,12 @@ import Redis from 'ioredis'
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],
-      inject: ['REDIS_CLIENT'],
-      useFactory: (redis: Redis) => ({
+      inject: ['REDIS_CLIENT', ConfigService],
+      useFactory: (redis: Redis, config: ConfigService) => ({
         throttlers: [{ ttl: 60000, limit: 100 }],
-        storage: new ThrottlerStorageRedis(redis),
+        storage: new ThrottlerStorageRedis(redis, {
+          allowInMemoryFallback: config.get<string>('THROTTLER_MEMORY_FALLBACK') === 'true',
+        }),
       }),
     }),
     BullModule.forRoot({ connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' } }),

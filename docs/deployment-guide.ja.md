@@ -82,6 +82,7 @@ Public env:
 - CORS は production dashboard/mobile origin のみに限定する。
 - SePay webhook URL と `SEPAY_WEBHOOK_SECRET` を設定する。
 - Socket.IO/realtime と rate limiting 用に Redis を設定する。
+- Production では `THROTTLER_MEMORY_FALLBACK=false` を維持し、Redis outage が rate limit を弱めず明示的に失敗するようにする。
 - Storage public URL を設定する。
 - `/api/healthz` を uptime check 用に公開する。
 

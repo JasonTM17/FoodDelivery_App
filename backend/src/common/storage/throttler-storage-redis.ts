@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ThrottlerStorage } from '@nestjs/throttler'
 import { randomUUID } from 'crypto'
 import Redis from 'ioredis'
@@ -11,12 +11,22 @@ interface ThrottlerStorageRecord {
   expiresAt?: number
 }
 
+interface ThrottlerStorageRedisOptions {
+  allowInMemoryFallback?: boolean
+}
+
 @Injectable()
 export class ThrottlerStorageRedis implements ThrottlerStorage {
   private readonly logger = new Logger(ThrottlerStorageRedis.name)
   private memoryFallback: Map<string, ThrottlerStorageRecord> = new Map()
+  private readonly allowInMemoryFallback: boolean
 
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    options: ThrottlerStorageRedisOptions = {},
+  ) {
+    this.allowInMemoryFallback = options.allowInMemoryFallback ?? false
+  }
 
   private async isRedisAvailable(): Promise<boolean> {
     try {
@@ -37,8 +47,12 @@ export class ThrottlerStorageRedis implements ThrottlerStorage {
     const redisAvailable = await this.isRedisAvailable()
 
     if (!redisAvailable) {
+      if (!this.allowInMemoryFallback) {
+        this.logger.error('Redis unavailable and in-memory rate limiter fallback is disabled')
+        throw new ServiceUnavailableException('RATE_LIMIT_REDIS_UNAVAILABLE')
+      }
       if (!this.memoryFallback.has(throttlerName)) {
-        this.logger.warn('Redis unavailable, using in-memory rate limiter fallback')
+        this.logger.warn('Redis unavailable, using explicitly enabled in-memory rate limiter fallback')
       }
       return this.incrementMemory(key, ttl, limit, blockDuration, throttlerName)
     }

@@ -15,6 +15,7 @@ export const envSchema = z.object({
   MINIO_BUCKET: z.string().default('foodflow'),
   MINIO_PUBLIC_URL: z.string().url().default('http://localhost:9000'),
   STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(5),
+  THROTTLER_MEMORY_FALLBACK: z.enum(['true', 'false']).default('false'),
   DEEPSEEK_API_KEY: z.string().optional(),
   DEEPSEEK_BASE_URL: z.string().url().optional(),
   DEEPSEEK_MODEL: z.string().min(1).optional(),

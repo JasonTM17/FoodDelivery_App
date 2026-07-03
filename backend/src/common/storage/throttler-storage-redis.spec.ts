@@ -36,7 +36,7 @@ describe('ThrottlerStorageRedis', () => {
 
   it('resets the in-memory fallback counter after the ttl window expires', async () => {
     const redis = { ping: jest.fn().mockRejectedValue(new Error('offline')) } as unknown as Redis
-    const storage = new ThrottlerStorageRedis(redis)
+    const storage = new ThrottlerStorageRedis(redis, { allowInMemoryFallback: true })
     const nowSpy = jest.spyOn(Date, 'now')
 
     nowSpy.mockReturnValue(1_000)
@@ -56,5 +56,14 @@ describe('ThrottlerStorageRedis', () => {
       totalHits: 1,
       isBlocked: false,
     })
+  })
+
+  it('fails closed by default when Redis is unavailable', async () => {
+    const redis = { ping: jest.fn().mockRejectedValue(new Error('offline')) } as unknown as Redis
+    const storage = new ThrottlerStorageRedis(redis)
+
+    await expect(storage.increment('::1', 1_000, 1, 1_000, 'default')).rejects.toThrow(
+      'RATE_LIMIT_REDIS_UNAVAILABLE',
+    )
   })
 })

@@ -82,6 +82,7 @@ Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` bằng HTTP referrer.
 - CORS chỉ cho production dashboard/mobile origins.
 - Cấu hình SePay webhook URL và `SEPAY_WEBHOOK_SECRET`.
 - Cấu hình Redis cho Socket.IO/realtime và rate limiting.
+- Giữ `THROTTLER_MEMORY_FALLBACK=false` ở production để Redis outage fail rõ ràng thay vì làm yếu rate limit.
 - Cấu hình storage public URL.
 - Expose `/api/healthz` cho uptime checks.
 

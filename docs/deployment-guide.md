@@ -92,6 +92,7 @@ Minimum production checklist:
 - Configure CORS to exact production dashboard/mobile origins.
 - Configure SePay webhook URL and `SEPAY_WEBHOOK_SECRET`.
 - Configure Redis for Socket.IO/realtime and rate limiting.
+- Keep `THROTTLER_MEMORY_FALLBACK=false` in production so Redis outages fail explicitly instead of weakening rate limits.
 - Configure object storage public URL for uploaded assets.
 - Expose `/api/healthz` for uptime checks.
 
