@@ -48,7 +48,7 @@ Authored the canonical OpenAPI 3.1 contract covering all 12 backend modules:
 - All list responses: `{ data: [], meta: PaginationMeta }` envelope
 - All errors: `ProblemDetail` schema (RFC 7807)
 - Actor annotations: `x-foo-actor` on every operation
-- Security: `bearerAuth` (JWT Ed25519); the initial service API-key scheme was removed with the legacy automation callbacks
+- Security: `bearerAuth` (JWT bearer token; signing algorithm follows the active JWT cutover phase); the initial service API-key scheme was removed with the legacy automation callbacks
 - Idempotency: `Idempotency-Key` header (UUID v4)
 - Inbound HMAC: SePay `x-sepay-signature`
 - Outbound HMAC: `X-Signature-SHA256` for configured generic webhooks

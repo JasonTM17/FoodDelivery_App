@@ -68,7 +68,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT Ed25519 access token. Obtain via `POST /auth/login`.
+      description: JWT bearer access token. Obtain via `POST /auth/login`; the signing algorithm follows the active JWT cutover phase.
   parameters:
     PageParam:
       name: page
@@ -214,7 +214,7 @@ components:
     AuthResult:
       type: object
       properties:
-        accessToken:  { type: string, description: "JWT Ed25519 access token (15 min TTL)" }
+        accessToken:  { type: string, description: "JWT access token (15 min TTL; algorithm follows the active backend cutover phase)" }
         refreshToken: { type: string, description: "Opaque rotating refresh token" }
         expiresAt:    { type: string, format: date-time }
         user:
