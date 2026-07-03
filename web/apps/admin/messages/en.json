@@ -346,6 +346,38 @@
     "nextPage": "Next",
     "empty": "No users found"
   },
+  "userWalletPanel": {
+    "emptyTitle": "No wallet data",
+    "emptyDescription": "This user has no wallet transactions yet.",
+    "currentBalance": "Current balance",
+    "frozenBalance": "Frozen balance",
+    "topupHistoryTitle": "Top-up history",
+    "recentTransactionsTitle": "Recent transactions",
+    "topupColumns": {
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "date": "Date"
+    },
+    "transactionColumns": {
+      "type": "Type",
+      "description": "Description",
+      "amount": "Amount",
+      "date": "Date"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "transactionTypes": {
+      "credit": "Credit",
+      "debit": "Debit"
+    },
+    "emptyTopupHistory": "No top-up history yet",
+    "emptyTransactions": "No transactions yet"
+  },
   "drivers": {
     "title": "Driver Management",
     "description": "List of drivers in the system",

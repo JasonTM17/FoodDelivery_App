@@ -346,6 +346,38 @@
     "nextPage": "次へ",
     "empty": "ユーザーが見つかりません"
   },
+  "userWalletPanel": {
+    "emptyTitle": "ウォレットデータはありません",
+    "emptyDescription": "このユーザーにはまだウォレット取引がありません。",
+    "currentBalance": "現在残高",
+    "frozenBalance": "凍結残高",
+    "topupHistoryTitle": "チャージ履歴",
+    "recentTransactionsTitle": "最近の取引",
+    "topupColumns": {
+      "amount": "金額",
+      "method": "方法",
+      "status": "ステータス",
+      "date": "日付"
+    },
+    "transactionColumns": {
+      "type": "種類",
+      "description": "説明",
+      "amount": "金額",
+      "date": "日付"
+    },
+    "statuses": {
+      "pending": "保留中",
+      "completed": "完了",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み"
+    },
+    "transactionTypes": {
+      "credit": "入金",
+      "debit": "出金"
+    },
+    "emptyTopupHistory": "チャージ履歴はまだありません",
+    "emptyTransactions": "取引はまだありません"
+  },
   "drivers": {
     "title": "ドライバー管理",
     "description": "システム内のドライバー一覧",

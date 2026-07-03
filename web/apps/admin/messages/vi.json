@@ -346,6 +346,38 @@
     "nextPage": "Sau",
     "empty": "Không tìm thấy người dùng nào"
   },
+  "userWalletPanel": {
+    "emptyTitle": "Không có dữ liệu ví",
+    "emptyDescription": "Người dùng chưa có giao dịch ví nào.",
+    "currentBalance": "Số dư hiện tại",
+    "frozenBalance": "Đang phong tỏa",
+    "topupHistoryTitle": "Lịch sử nạp tiền",
+    "recentTransactionsTitle": "Giao dịch gần đây",
+    "topupColumns": {
+      "amount": "Số tiền",
+      "method": "Phương thức",
+      "status": "Trạng thái",
+      "date": "Ngày"
+    },
+    "transactionColumns": {
+      "type": "Loại",
+      "description": "Mô tả",
+      "amount": "Số tiền",
+      "date": "Ngày"
+    },
+    "statuses": {
+      "pending": "Đang chờ",
+      "completed": "Hoàn tất",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy"
+    },
+    "transactionTypes": {
+      "credit": "Nhận",
+      "debit": "Chi"
+    },
+    "emptyTopupHistory": "Chưa có lịch sử nạp tiền",
+    "emptyTransactions": "Chưa có giao dịch"
+  },
   "drivers": {
     "title": "Quản lý tài xế",
     "description": "Danh sách tài xế trong hệ thống",
