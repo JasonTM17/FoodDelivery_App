@@ -1365,6 +1365,43 @@ class AppLocalizationsVi extends AppLocalizations {
       'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.';
 
   @override
+  String get driver_notifications_read_all => 'Đọc tất cả';
+
+  @override
+  String get driver_notifications_all => 'Tất cả';
+
+  @override
+  String get driver_notifications_orders => 'Đơn hàng';
+
+  @override
+  String get driver_notifications_rewards => 'Thưởng';
+
+  @override
+  String get driver_notifications_system => 'Hệ thống';
+
+  @override
+  String get driver_notifications_empty_title => 'Không có thông báo';
+
+  @override
+  String get driver_notifications_empty_subtitle =>
+      'Bạn chưa có thông báo tài xế nào.';
+
+  @override
+  String get driver_notifications_load_failed => 'Không thể tải thông báo';
+
+  @override
+  String get driver_notifications_now => 'vừa xong';
+
+  @override
+  String get driver_notifications_minute_suffix => ' phút';
+
+  @override
+  String get driver_notifications_hour_suffix => ' giờ';
+
+  @override
+  String get driver_notifications_day_suffix => ' ngày';
+
+  @override
   String get driver_support_title => 'Hỗ trợ tài xế';
 
   @override

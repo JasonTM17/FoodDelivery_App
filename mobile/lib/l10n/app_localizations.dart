@@ -2698,6 +2698,78 @@ abstract class AppLocalizations {
   /// **'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.'**
   String get driver_tip_success_message;
 
+  /// No description provided for @driver_notifications_read_all.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc tất cả'**
+  String get driver_notifications_read_all;
+
+  /// No description provided for @driver_notifications_all.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get driver_notifications_all;
+
+  /// No description provided for @driver_notifications_orders.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng'**
+  String get driver_notifications_orders;
+
+  /// No description provided for @driver_notifications_rewards.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thưởng'**
+  String get driver_notifications_rewards;
+
+  /// No description provided for @driver_notifications_system.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống'**
+  String get driver_notifications_system;
+
+  /// No description provided for @driver_notifications_empty_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có thông báo'**
+  String get driver_notifications_empty_title;
+
+  /// No description provided for @driver_notifications_empty_subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có thông báo tài xế nào.'**
+  String get driver_notifications_empty_subtitle;
+
+  /// No description provided for @driver_notifications_load_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông báo'**
+  String get driver_notifications_load_failed;
+
+  /// No description provided for @driver_notifications_now.
+  ///
+  /// In vi, this message translates to:
+  /// **'vừa xong'**
+  String get driver_notifications_now;
+
+  /// No description provided for @driver_notifications_minute_suffix.
+  ///
+  /// In vi, this message translates to:
+  /// **' phút'**
+  String get driver_notifications_minute_suffix;
+
+  /// No description provided for @driver_notifications_hour_suffix.
+  ///
+  /// In vi, this message translates to:
+  /// **' giờ'**
+  String get driver_notifications_hour_suffix;
+
+  /// No description provided for @driver_notifications_day_suffix.
+  ///
+  /// In vi, this message translates to:
+  /// **' ngày'**
+  String get driver_notifications_day_suffix;
+
   /// No description provided for @driver_support_title.
   ///
   /// In vi, this message translates to:

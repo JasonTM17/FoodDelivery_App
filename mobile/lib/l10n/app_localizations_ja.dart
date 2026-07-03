@@ -1344,6 +1344,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_tip_success_message => 'チップ報告は照合用に保存されました。支払い精算は自動変更されません。';
 
   @override
+  String get driver_notifications_read_all => 'すべて既読';
+
+  @override
+  String get driver_notifications_all => 'すべて';
+
+  @override
+  String get driver_notifications_orders => '注文';
+
+  @override
+  String get driver_notifications_rewards => '報酬';
+
+  @override
+  String get driver_notifications_system => 'システム';
+
+  @override
+  String get driver_notifications_empty_title => '通知はありません';
+
+  @override
+  String get driver_notifications_empty_subtitle => 'ドライバー通知はまだありません。';
+
+  @override
+  String get driver_notifications_load_failed => '通知を読み込めませんでした';
+
+  @override
+  String get driver_notifications_now => 'たった今';
+
+  @override
+  String get driver_notifications_minute_suffix => '分';
+
+  @override
+  String get driver_notifications_hour_suffix => '時間';
+
+  @override
+  String get driver_notifications_day_suffix => '日';
+
+  @override
   String get driver_support_title => 'ドライバーサポート';
 
   @override

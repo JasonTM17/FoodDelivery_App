@@ -1360,6 +1360,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip report saved for audit. Payout settlement is not changed automatically.';
 
   @override
+  String get driver_notifications_read_all => 'Read all';
+
+  @override
+  String get driver_notifications_all => 'All';
+
+  @override
+  String get driver_notifications_orders => 'Orders';
+
+  @override
+  String get driver_notifications_rewards => 'Rewards';
+
+  @override
+  String get driver_notifications_system => 'System';
+
+  @override
+  String get driver_notifications_empty_title => 'No notifications';
+
+  @override
+  String get driver_notifications_empty_subtitle =>
+      'You do not have driver notifications yet.';
+
+  @override
+  String get driver_notifications_load_failed => 'Could not load notifications';
+
+  @override
+  String get driver_notifications_now => 'now';
+
+  @override
+  String get driver_notifications_minute_suffix => 'm';
+
+  @override
+  String get driver_notifications_hour_suffix => 'h';
+
+  @override
+  String get driver_notifications_day_suffix => 'd';
+
+  @override
   String get driver_support_title => 'Driver Support';
 
   @override
