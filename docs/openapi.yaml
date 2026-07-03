@@ -15,7 +15,7 @@ info:
     - Errors use the shared `ProblemDetail` schema (RFC 7807) and are not success-wrapped.
     - Idempotency is supported via `Idempotency-Key` header (UUID v4).
     - Inbound HMAC: SePay webhooks are verified with `x-sepay-signature`.
-    - Outbound HMAC: outbound calls to n8n include `X-Signature-SHA256`.
+    - Outbound HMAC: generic outbound webhooks use `X-Signature-SHA256` when configured.
 
     **Versioning:** Path-based `/v1/`. Breaking changes bump the version path.
   version: "1.0.0"
@@ -69,12 +69,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT Ed25519 access token. Obtain via `POST /auth/login`.
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: x-api-key
-      description: API key for service-to-service calls (n8n webhooks)
-
   parameters:
     PageParam:
       name: page
@@ -1168,71 +1162,11 @@ components:
             status: { $ref: "#/components/schemas/AiMonitorStatus" }
             dashboardUrl: { type: string, nullable: true }
             degradedReason: { type: string, nullable: true }
-            provider: { type: string, enum: [deepseek, n8n] }
-            model: { type: string, nullable: true }
+            provider: { type: string, enum: [deepseek] }
+            model: { type: string }
           required: [status, dashboardUrl, degradedReason, provider, model]
-        workflows:
-          type: array
-          items: { $ref: "#/components/schemas/AdminAiMonitorWorkflow" }
-        executions:
-          type: array
-          items: { $ref: "#/components/schemas/AdminAiMonitorExecution" }
         stats: { $ref: "#/components/schemas/AdminAiMonitorStats" }
-      required: [instance, workflows, executions, stats]
-
-    AdminAiMonitorWorkflow:
-      type: object
-      properties:
-        id: { type: string }
-        name: { type: string }
-        status: { $ref: "#/components/schemas/AiMonitorStatus" }
-        lastRunAt: { type: string, format: date-time, nullable: true }
-        runs: { type: integer, nullable: true }
-      required: [id, name, status, lastRunAt, runs]
-
-    AdminAiMonitorExecution:
-      type: object
-      properties:
-        id: { type: string }
-        workflowName: { type: string }
-        trigger: { type: string, nullable: true }
-        durationMs: { type: integer, nullable: true }
-        status: { type: string, enum: [success, error, running] }
-        startedAt: { type: string, format: date-time, nullable: true }
-      required: [id, workflowName, trigger, durationMs, status, startedAt]
-
-    AdminAiMonitorRun:
-      type: object
-      properties:
-        id: { type: string }
-        workflowName: { type: string }
-        trigger: { type: string }
-        status: { type: string, enum: [success, error, running] }
-        startedAt: { type: string, format: date-time }
-        finishedAt: { type: string, format: date-time, nullable: true }
-        durationMs: { type: integer, nullable: true }
-        inputData:
-          type: object
-          additionalProperties: true
-          nullable: true
-        outputData:
-          type: object
-          additionalProperties: true
-          nullable: true
-        errorMessage: { type: string, nullable: true }
-        executionId: { type: string }
-      required:
-        - id
-        - workflowName
-        - trigger
-        - status
-        - startedAt
-        - finishedAt
-        - durationMs
-        - inputData
-        - outputData
-        - errorMessage
-        - executionId
+      required: [instance, stats]
 
     AdminAiMonitorStats:
       type: object
@@ -2546,32 +2480,6 @@ paths:
         "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean }, duplicate: { type: boolean } } } } } }
         "400": { description: "Bad request / invalid signature / unknown ref", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /webhooks/n8n/order-event:
-    post:
-      tags: [payments]
-      summary: n8n order event webhook (inbound)
-      operationId: webhooks_n8nOrderEvent
-      x-foo-actor: service
-      security:
-        - ApiKeyAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                orderId: { type: string, format: uuid }
-                event: { type: string }
-                userId: { type: string, format: uuid }
-              required: [orderId, event, userId]
-              example:
-                orderId: "66666666-6666-4666-8666-666666666666"
-                event: "delayed"
-                userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-      responses:
-        "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean } } } } } }
-
   # ═══════════════════════════════════════════════
   # PROMOTIONS
   # ═══════════════════════════════════════════════
@@ -3061,8 +2969,8 @@ paths:
   /admin/ai-monitor:
     get:
       tags: [ai]
-      summary: Get AI/N8N monitor overview
-      description: Returns real monitor state when configured; otherwise returns explicit degraded/not-configured state for DeepSeek or N8N with no fabricated workflow, cost, token, or execution metrics.
+      summary: Get AI chatbot monitor overview
+      description: Returns the DeepSeek configuration state and nullable real telemetry fields. Missing telemetry stays null rather than being fabricated.
       operationId: admin_aiMonitor_getOverview
       x-foo-actor: admin
       responses:
@@ -3077,33 +2985,11 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/AdminAiMonitorOverview" }
 
-  /admin/ai-monitor/runs/{runId}:
-    get:
-      tags: [ai]
-      summary: Get AI/N8N workflow run detail
-      description: Returns a workflow run only when real monitor telemetry is available; unknown runs return a problem detail instead of fabricated details.
-      operationId: admin_aiMonitor_getRun
-      x-foo-actor: admin
-      parameters:
-        - { name: runId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: "Workflow run detail when real monitor telemetry is available"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessEnvelope"
-                  - type: object
-                    properties:
-                      data: { $ref: "#/components/schemas/AdminAiMonitorRun" }
-        "404": { description: "Run not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
-
   /ai/chat:
     post:
       tags: [ai]
       summary: Create one chatbot reply
-      description: Runs the FoodFlow chatbot pipeline once. The runtime can use DeepSeek V4 Flash or the legacy N8N workflow and returns answered, escalated, or degraded state without streaming.
+      description: Runs the FoodFlow chatbot pipeline once through DeepSeek and returns answered, escalated, or degraded state without streaming.
       operationId: ai_chat_create
       x-foo-actor: user
       requestBody:

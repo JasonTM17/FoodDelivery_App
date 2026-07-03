@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -17,10 +17,5 @@ export class AdminAiMonitorController {
   @Get()
   overview() {
     return this.monitor.getOverview()
-  }
-
-  @Get('runs/:runId')
-  run(@Param('runId') runId: string) {
-    return this.monitor.getRun(runId)
   }
 }

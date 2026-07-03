@@ -112,43 +112,10 @@ export interface AdminAiMonitorOverview {
     status: AiMonitorStatus;
     dashboardUrl: string | null;
     degradedReason: string | null;
-    provider: 'deepseek' | 'n8n';
-    model: string | null;
+    provider: 'deepseek';
+    model: string;
   };
-  workflows: AdminAiMonitorWorkflow[];
-  executions: AdminAiMonitorExecution[];
   stats: AdminAiMonitorStats;
-}
-
-export interface AdminAiMonitorWorkflow {
-  id: string;
-  name: string;
-  status: AiMonitorStatus;
-  lastRunAt: string | null;
-  runs: number | null;
-}
-
-export interface AdminAiMonitorExecution {
-  id: string;
-  workflowName: string;
-  trigger: string | null;
-  durationMs: number | null;
-  status: 'success' | 'error' | 'running';
-  startedAt: string | null;
-}
-
-export interface AdminAiMonitorRun {
-  id: string;
-  workflowName: string;
-  trigger: string;
-  status: 'success' | 'error' | 'running';
-  startedAt: string;
-  finishedAt: string | null;
-  durationMs: number | null;
-  inputData: Record<string, unknown> | null;
-  outputData: Record<string, unknown> | null;
-  errorMessage: string | null;
-  executionId: string;
 }
 
 export interface AdminAiMonitorStats {

@@ -5,29 +5,10 @@ export interface AiMonitorOverview {
     status: AiMonitorStatus;
     dashboardUrl: string | null;
     degradedReason: string | null;
-    provider: 'deepseek' | 'n8n';
-    model: string | null;
+    provider: 'deepseek';
+    model: string;
   };
-  workflows: AiMonitorWorkflow[];
-  executions: AiMonitorExecution[];
   stats: AiMonitorStats;
-}
-
-export interface AiMonitorWorkflow {
-  id: string;
-  name: string;
-  status: AiMonitorStatus;
-  lastRunAt: string | null;
-  runs: number | null;
-}
-
-export interface AiMonitorExecution {
-  id: string;
-  workflowName: string;
-  trigger: string | null;
-  durationMs: number | null;
-  status: 'success' | 'error' | 'running';
-  startedAt: string | null;
 }
 
 export interface AiMonitorStats {
