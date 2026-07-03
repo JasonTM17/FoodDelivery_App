@@ -1142,7 +1142,14 @@
     "outputData": "Output Data",
     "summary": "Summary",
     "status": "Status",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "statusSuccess": "Success",
+    "statusError": "Error",
+    "statusRunning": "Running",
+    "notFound": "This run could not be found.",
+    "loadErrorTitle": "Unable to load run details",
+    "loadErrorDescription": "Refresh the page or return to AI Monitor and try again.",
+    "retry": "Try again"
   },
   "userDetail": {
     "title": "User Detail",

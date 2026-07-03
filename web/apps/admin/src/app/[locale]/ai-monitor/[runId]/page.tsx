@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Activity } from 'lucide-react';
+import { ArrowLeft, XCircle, Activity } from 'lucide-react';
 import { Link } from '@/navigation';
+import { AiMonitorRunStatusBadge } from './ai-monitor-run-status-badge';
 
 interface WorkflowRun {
   id: string;
@@ -24,14 +25,6 @@ interface WorkflowRun {
   outputData: Record<string, unknown> | null;
   errorMessage: string | null;
   executionId: string;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'success')
-    return <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"><CheckCircle2 className="mr-1 h-3 w-3" />Thành công</Badge>;
-  if (status === 'error')
-    return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Lỗi</Badge>;
-  return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Đang chạy</Badge>;
 }
 
 export default function AiMonitorRunDetailPage({
@@ -52,7 +45,7 @@ export default function AiMonitorRunDetailPage({
       <div className="space-y-6">
         <div className="h-8 w-72 animate-pulse rounded bg-muted" />
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 h-48 animate-pulse rounded-lg bg-muted" />
+          <div className="h-48 animate-pulse rounded-lg bg-muted lg:col-span-2" />
           <div className="h-48 animate-pulse rounded-lg bg-muted" />
         </div>
       </div>
@@ -62,8 +55,10 @@ export default function AiMonitorRunDetailPage({
   if (!run) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-destructive">Không tìm thấy lần chạy này</p>
-        <Button asChild><Link href="/ai-monitor">Quay lại</Link></Button>
+        <p className="text-destructive">{t('notFound')}</p>
+        <Button asChild>
+          <Link href="/ai-monitor">{t('back')}</Link>
+        </Button>
       </div>
     );
   }
@@ -89,7 +84,7 @@ export default function AiMonitorRunDetailPage({
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -120,7 +115,9 @@ export default function AiMonitorRunDetailPage({
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('duration')}</span>
-                <span>{run.durationMs != null ? `${(run.durationMs / 1000).toFixed(2)}s` : '—'}</span>
+                <span>
+                  {run.durationMs != null ? `${(run.durationMs / 1000).toFixed(2)}s` : '—'}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -176,7 +173,7 @@ export default function AiMonitorRunDetailPage({
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t('status')}</span>
-                <StatusBadge status={run.status} />
+                <AiMonitorRunStatusBadge status={run.status} />
               </div>
               <Separator />
               <div className="flex items-center justify-between text-sm">

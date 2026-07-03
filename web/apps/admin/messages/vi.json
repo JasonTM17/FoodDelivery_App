@@ -1142,7 +1142,14 @@
     "outputData": "Dữ liệu đầu ra",
     "summary": "Tóm tắt",
     "status": "Trạng thái",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "statusSuccess": "Thành công",
+    "statusError": "Lỗi",
+    "statusRunning": "Đang chạy",
+    "notFound": "Không tìm thấy lần chạy này.",
+    "loadErrorTitle": "Không tải được chi tiết lần chạy",
+    "loadErrorDescription": "Hãy tải lại trang hoặc quay về AI Monitor rồi thử lại.",
+    "retry": "Thử lại"
   },
   "userDetail": {
     "title": "Chi tiết người dùng",

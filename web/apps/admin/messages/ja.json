@@ -1142,7 +1142,14 @@
     "outputData": "出力データ",
     "summary": "サマリー",
     "status": "ステータス",
-    "workflow": "ワークフロー"
+    "workflow": "ワークフロー",
+    "statusSuccess": "成功",
+    "statusError": "エラー",
+    "statusRunning": "実行中",
+    "notFound": "この実行は見つかりません。",
+    "loadErrorTitle": "実行詳細を読み込めません",
+    "loadErrorDescription": "ページを再読み込みするか、AIモニターに戻ってからもう一度お試しください。",
+    "retry": "再試行"
   },
   "userDetail": {
     "title": "ユーザー詳細",
