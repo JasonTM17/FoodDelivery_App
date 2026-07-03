@@ -962,6 +962,7 @@
       "errorsTitle": "Please fix the following errors:",
       "basicTitle": "Basic information",
       "code": "Promotion code *",
+      "codePlaceholder": "E.g. WELCOME20",
       "name": "Promotion name *",
       "namePlaceholder": "E.g. Welcome 20%",
       "description": "Description",

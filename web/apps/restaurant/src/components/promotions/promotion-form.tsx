@@ -106,7 +106,7 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">{t('code')}</label>
-            <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="input-field font-mono" placeholder="VD: WELCOME20" />
+            <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="input-field font-mono" placeholder={t('codePlaceholder')} />
           </div>
           <div>
             <label className="label">{t('name')}</label>

@@ -962,6 +962,7 @@
       "errorsTitle": "次のエラーを修正してください:",
       "basicTitle": "基本情報",
       "code": "プロモコード *",
+      "codePlaceholder": "例: WELCOME20",
       "name": "プロモーション名 *",
       "namePlaceholder": "例: Welcome 20%",
       "description": "説明",

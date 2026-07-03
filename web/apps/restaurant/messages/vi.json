@@ -962,6 +962,7 @@
       "errorsTitle": "Vui lòng sửa các lỗi sau:",
       "basicTitle": "Thông tin cơ bản",
       "code": "Mã khuyến mãi *",
+      "codePlaceholder": "VD: WELCOME20",
       "name": "Tên khuyến mãi *",
       "namePlaceholder": "VD: Chào mừng 20%",
       "description": "Mô tả",
