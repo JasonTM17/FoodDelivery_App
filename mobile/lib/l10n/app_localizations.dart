@@ -2542,6 +2542,96 @@ abstract class AppLocalizations {
   /// **'Xác minh tài khoản'**
   String get driver_bank_verify;
 
+  /// No description provided for @driver_bank_add_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm tài khoản'**
+  String get driver_bank_add_title;
+
+  /// No description provided for @driver_bank_name_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn ngân hàng'**
+  String get driver_bank_name_required;
+
+  /// No description provided for @driver_bank_holder_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên chủ tài khoản'**
+  String get driver_bank_holder_label;
+
+  /// No description provided for @driver_bank_holder_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'NGUYEN VAN A'**
+  String get driver_bank_holder_hint;
+
+  /// No description provided for @driver_bank_holder_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên chủ tài khoản'**
+  String get driver_bank_holder_required;
+
+  /// No description provided for @driver_bank_linked_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản đã liên kết'**
+  String get driver_bank_linked_title;
+
+  /// No description provided for @driver_bank_default_badge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mặc định'**
+  String get driver_bank_default_badge;
+
+  /// No description provided for @driver_bank_add_button.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm tài khoản ngân hàng'**
+  String get driver_bank_add_button;
+
+  /// No description provided for @driver_bank_save_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật tài khoản. Vui lòng thử lại.'**
+  String get driver_bank_save_failed;
+
+  /// No description provided for @driver_bank_delete_tooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tài khoản ngân hàng'**
+  String get driver_bank_delete_tooltip;
+
+  /// No description provided for @driver_bank_delete_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tài khoản ngân hàng?'**
+  String get driver_bank_delete_title;
+
+  /// No description provided for @driver_bank_delete_message.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản nhận thanh toán này sẽ bị gỡ khỏi hồ sơ tài xế.'**
+  String get driver_bank_delete_message;
+
+  /// No description provided for @driver_bank_delete_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get driver_bank_delete_confirm;
+
+  /// No description provided for @driver_bank_cancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get driver_bank_cancel;
+
+  /// No description provided for @driver_bank_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driver_bank_retry;
+
   /// No description provided for @driver_support_title.
   ///
   /// In vi, this message translates to:

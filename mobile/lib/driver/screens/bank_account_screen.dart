@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/bank_account_provider.dart';
+import '../widgets/bank_account_form_sheet.dart';
 import '../widgets/bank_account_selector.dart';
-import '../../l10n/app_localizations.dart';
+import '../widgets/bank_account_status_widgets.dart';
 
 class BankAccountScreen extends ConsumerStatefulWidget {
   const BankAccountScreen({super.key});
@@ -13,12 +16,6 @@ class BankAccountScreen extends ConsumerStatefulWidget {
 }
 
 class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
-  final _accountController = TextEditingController();
-  final _holderNameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  String? _selectedBankCode;
-  bool _saving = false;
-
   @override
   void initState() {
     super.initState();
@@ -27,163 +24,72 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _accountController.dispose();
-    _holderNameController.dispose();
-    super.dispose();
-  }
+  Future<void> _showAddSheet() async {
+    final account = await showBankAccountFormSheet(context);
+    if (account == null || !mounted) return;
 
-  Future<void> _addAccount() async {
-    if (!_formKey.currentState!.validate() || _selectedBankCode == null) return;
-    setState(() => _saving = true);
-
-    final bank = vnBanks.firstWhere((b) => b.code == _selectedBankCode);
-    final newAccount = BankAccount(
-      id: 'ba${DateTime.now().millisecondsSinceEpoch}',
-      bankCode: bank.code,
-      bankName: bank.name,
-      accountNumber: _accountController.text.trim(),
-      accountHolderName: _holderNameController.text.trim(),
-    );
-    await ref.read(bankAccountsProvider.notifier).addAccount(newAccount);
-
-    if (mounted) {
-      setState(() {
-        _saving = false;
-        _accountController.clear();
-        _holderNameController.clear();
-        _selectedBankCode = null;
-        _formKey.currentState?.reset();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).driver_bank_saved)),
-      );
+    try {
+      await ref.read(bankAccountsProvider.notifier).addAccount(account);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context).driver_bank_saved);
+    } catch (_) {
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context).driver_bank_save_failed);
     }
   }
 
-  void _showAddSheet() {
+  Future<void> _setDefault(BankAccount account) async {
+    if (account.isDefault) return;
+    try {
+      await ref.read(bankAccountsProvider.notifier).setDefault(account.id);
+    } catch (_) {
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context).driver_bank_save_failed);
+    }
+  }
+
+  Future<void> _confirmDelete(BankAccount account) async {
     final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
+    final confirmed = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(l10n.driver_bank_delete_title, style: const TextStyle(color: Colors.white)),
+        content: Text(
+          l10n.driver_bank_delete_message,
+          style: const TextStyle(color: Color(0xFF9CA3AF)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.driver_bank_cancel),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.driver_bank_delete_confirm),
+          ),
+        ],
       ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF374151),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Thêm tài khoản',
-                  style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedBankCode,
-                  hint: Text(
-                    l10n.driver_bank_name_hint,
-                    style: const TextStyle(color: Color(0xFF6B7280)),
-                  ),
-                  dropdownColor: const Color(0xFF1E1E1E),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: l10n.driver_bank_name_label,
-                    labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                    filled: true,
-                    fillColor: const Color(0xFF1F2937),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF374151)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF374151)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                  ),
-                  items: vnBanks.map((b) => DropdownMenuItem(
-                    value: b.code,
-                    child: Text(b.name, style: const TextStyle(fontSize: 14)),
-                  )).toList(),
-                  onChanged: (v) => _selectedBankCode = v,
-                  validator: (v) => v == null ? l10n.driver_bank_account_required : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _holderNameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Tên chủ tài khoản',
-                    labelStyle: TextStyle(color: Color(0xFF6B7280)),
-                    hintText: 'NGUYEN VAN A',
-                    hintStyle: TextStyle(color: Color(0xFF374151)),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên chủ tài khoản' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _accountController,
-                  style: const TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.driver_bank_account_label,
-                    labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                    hintText: '001100223344',
-                    hintStyle: const TextStyle(color: Color(0xFF374151)),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l10n.driver_bank_account_required : null,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saving ? null : _addAccount,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Lưu tài khoản'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(bankAccountsProvider.notifier).deleteAccount(account.id);
+    } catch (_) {
+      if (!mounted) return;
+      _showSnack(l10n.driver_bank_save_failed);
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(bankAccountsProvider);
+    final isInitialLoading = state.isLoading && state.accounts.isEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -195,51 +101,38 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
-      body: state.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
+      body: isInitialLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : RefreshIndicator(
+              onRefresh: () => ref.read(bankAccountsProvider.notifier).load(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BankAccountInfoCard(subtitle: l10n.driver_bank_subtitle),
+                    if (state.error != null) ...[
+                      const SizedBox(height: 16),
+                      RetryableBankError(
+                        message: state.error!,
+                        retryLabel: l10n.driver_bank_retry,
+                        onRetry: () => ref.read(bankAccountsProvider.notifier).load(),
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    BankAccountSelector(
+                      accounts: state.accounts,
+                      onAddTap: _showAddSheet,
+                      onAccountTap: _setDefault,
+                      onDeleteTap: _confirmDelete,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.account_balance_wallet_outlined,
-                            color: AppColors.primary),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            l10n.driver_bank_subtitle,
-                            style: const TextStyle(
-                              color: Color(0xFF9CA3AF), fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  BankAccountSelector(
-                    accounts: state.accounts,
-                    onAddTap: _showAddSheet,
-                    onAccountTap: (account) {
-                      if (!account.isDefault) {
-                        ref.read(bankAccountsProvider.notifier).setDefault(account.id);
-                      }
-                    },
-                  ),
-                ],
+                    if (state.isLoading && state.accounts.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      const LinearProgressIndicator(color: AppColors.primary),
+                    ],
+                  ],
+                ),
               ),
             ),
     );

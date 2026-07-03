@@ -1,67 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BankAccount {
-  final String id;
-  final String bankCode;
-  final String bankName;
-  final String accountNumber;
-  final String accountHolderName;
-  final bool isDefault;
+import '../../shared/api/api_client.dart';
+import 'bank_account_models.dart';
 
-  const BankAccount({
-    required this.id,
-    required this.bankCode,
-    required this.bankName,
-    required this.accountNumber,
-    required this.accountHolderName,
-    this.isDefault = false,
-  });
-
-  BankAccount copyWith({
-    String? id,
-    String? bankCode,
-    String? bankName,
-    String? accountNumber,
-    String? accountHolderName,
-    bool? isDefault,
-  }) {
-    return BankAccount(
-      id: id ?? this.id,
-      bankCode: bankCode ?? this.bankCode,
-      bankName: bankName ?? this.bankName,
-      accountNumber: accountNumber ?? this.accountNumber,
-      accountHolderName: accountHolderName ?? this.accountHolderName,
-      isDefault: isDefault ?? this.isDefault,
-    );
-  }
-}
-
-class VnBank {
-  final String code;
-  final String name;
-  final String shortName;
-  final String logoUrl;
-
-  const VnBank({
-    required this.code,
-    required this.name,
-    required this.shortName,
-    required this.logoUrl,
-  });
-}
-
-const vnBanks = [
-  VnBank(code: 'vcb', name: 'Ngân hàng TMCP Ngoại thương Việt Nam', shortName: 'Vietcombank', logoUrl: ''),
-  VnBank(code: 'bidv', name: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam', shortName: 'BIDV', logoUrl: ''),
-  VnBank(code: 'tcb', name: 'Ngân hàng TMCP Kỹ Thương Việt Nam', shortName: 'Techcombank', logoUrl: ''),
-  VnBank(code: 'mbb', name: 'Ngân hàng TMCP Quân đội', shortName: 'MB Bank', logoUrl: ''),
-  VnBank(code: 'acb', name: 'Ngân hàng TMCP Á Châu', shortName: 'ACB', logoUrl: ''),
-  VnBank(code: 'vpb', name: 'Ngân hàng TMCP Việt Nam Thịnh Vượng', shortName: 'VPBank', logoUrl: ''),
-  VnBank(code: 'stb', name: 'Ngân hàng TMCP Sài Gòn Thương Tín', shortName: 'Sacombank', logoUrl: ''),
-  VnBank(code: 'shb', name: 'Ngân hàng TMCP Sài Gòn – Hà Nội', shortName: 'SHB', logoUrl: ''),
-  VnBank(code: 'tpb', name: 'Ngân hàng TMCP Tiên Phong', shortName: 'TPBank', logoUrl: ''),
-  VnBank(code: 'ctg', name: 'Ngân hàng TMCP Công Thương Việt Nam', shortName: 'VietinBank', logoUrl: ''),
-];
+export 'bank_account_models.dart';
 
 class BankAccountsState {
   final List<BankAccount> accounts;
@@ -88,45 +31,118 @@ class BankAccountsState {
 }
 
 class BankAccountsNotifier extends StateNotifier<BankAccountsState> {
-  BankAccountsNotifier() : super(const BankAccountsState());
+  final ApiClient _api;
+
+  BankAccountsNotifier({ApiClient? apiClient})
+      : _api = apiClient ?? ApiClient.instance,
+        super(const BankAccountsState());
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, error: null);
-    // TODO: Replace with real API GET /driver/bank-accounts
-    await Future.delayed(const Duration(milliseconds: 300));
-    state = state.copyWith(
-      isLoading: false,
-      accounts: [
-        const BankAccount(id: 'ba1', bankCode: 'vcb', bankName: 'Vietcombank',
-            accountNumber: '001100223344', accountHolderName: 'Nguyễn Văn A', isDefault: true),
-      ],
-    );
+    try {
+      final response = await _api.get<dynamic>('/driver/bank-accounts');
+      state = state.copyWith(
+        isLoading: false,
+        accounts: _parseAccountList(response.data),
+      );
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: _errorMessage(error));
+    }
   }
 
   Future<void> addAccount(BankAccount account) async {
-    state = state.copyWith(isLoading: true);
-    // TODO: Replace with real API POST /driver/bank-accounts
-    await Future.delayed(const Duration(milliseconds: 300));
-    state = state.copyWith(
-      isLoading: false,
-      accounts: [...state.accounts, account],
-    );
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await _api.post<dynamic>(
+        '/driver/bank-accounts',
+        data: account.toCreateJson(),
+      );
+      final created = BankAccount.fromJson(_asMap(response.data));
+      state = state.copyWith(
+        isLoading: false,
+        accounts: _upsertAccount(state.accounts, created),
+      );
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: _errorMessage(error));
+      rethrow;
+    }
   }
 
   Future<void> deleteAccount(String id) async {
-    // TODO: Replace with real API DELETE /driver/bank-accounts/{id}
-    state = state.copyWith(
-      accounts: state.accounts.where((a) => a.id != id).toList(),
-    );
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _api.delete<dynamic>('/driver/bank-accounts/$id');
+      final remaining = state.accounts.where((account) => account.id != id).toList();
+      state = state.copyWith(isLoading: false, accounts: _ensureDefault(remaining));
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: _errorMessage(error));
+      rethrow;
+    }
   }
 
   Future<void> setDefault(String id) async {
-    state = state.copyWith(
-      accounts: state.accounts.map((a) => a.copyWith(isDefault: a.id == id)).toList(),
-    );
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await _api.patch<dynamic>('/driver/bank-accounts/$id/default');
+      final selected = BankAccount.fromJson(_asMap(response.data));
+      state = state.copyWith(
+        isLoading: false,
+        accounts: state.accounts
+            .map((account) => account.copyWith(isDefault: account.id == selected.id))
+            .toList(),
+      );
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: _errorMessage(error));
+      rethrow;
+    }
   }
 }
 
 final bankAccountsProvider = StateNotifierProvider<BankAccountsNotifier, BankAccountsState>((ref) {
   return BankAccountsNotifier();
 });
+
+List<BankAccount> _parseAccountList(dynamic data) {
+  if (data is List) {
+    return data
+        .whereType<Map>()
+        .map((item) => BankAccount.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+  if (data is Map && data['data'] is List) {
+    return _parseAccountList(data['data']);
+  }
+  return const [];
+}
+
+Map<String, dynamic> _asMap(dynamic data) {
+  if (data is Map<String, dynamic>) return data;
+  if (data is Map) return Map<String, dynamic>.from(data);
+  return const {};
+}
+
+List<BankAccount> _upsertAccount(List<BankAccount> current, BankAccount account) {
+  final withoutAccount = current.where((item) => item.id != account.id).toList();
+  final normalized = account.isDefault
+      ? withoutAccount.map((item) => item.copyWith(isDefault: false)).toList()
+      : withoutAccount;
+  return [account, ...normalized];
+}
+
+List<BankAccount> _ensureDefault(List<BankAccount> accounts) {
+  if (accounts.isEmpty || accounts.any((account) => account.isDefault)) return accounts;
+  return [
+    accounts.first.copyWith(isDefault: true),
+    ...accounts.skip(1),
+  ];
+}
+
+String _errorMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['detail'] is String) return data['detail'] as String;
+    if (data is Map && data['message'] is String) return data['message'] as String;
+    if (error.message != null && error.message!.isNotEmpty) return error.message!;
+  }
+  return error.toString();
+}

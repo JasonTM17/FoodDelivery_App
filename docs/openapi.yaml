@@ -818,6 +818,55 @@ components:
           items: { $ref: "#/components/schemas/DriverHeatmapPoint" }
       required: [success, data]
 
+    DriverBankAccount:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        bankCode: { type: string, minLength: 2, maxLength: 32 }
+        bankName: { type: string, minLength: 2, maxLength: 160 }
+        accountNumber: { type: string, minLength: 4, maxLength: 32 }
+        accountHolderName: { type: string, minLength: 2, maxLength: 160 }
+        isDefault: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, bankCode, bankName, accountNumber, accountHolderName, isDefault, createdAt, updatedAt]
+
+    CreateDriverBankAccountRequest:
+      type: object
+      properties:
+        bankCode: { type: string, minLength: 2, maxLength: 32, pattern: "^[A-Za-z0-9_-]+$" }
+        bankName: { type: string, minLength: 2, maxLength: 160 }
+        accountNumber: { type: string, pattern: "^[0-9]{4,32}$" }
+        accountHolderName: { type: string, minLength: 2, maxLength: 160 }
+      required: [bankCode, bankName, accountNumber, accountHolderName]
+
+    DriverBankAccountsResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/DriverBankAccount" }
+      required: [success, data]
+
+    DriverBankAccountResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverBankAccount" }
+      required: [success, data]
+
+    DeleteDriverBankAccountResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            deleted: { type: boolean, const: true }
+          required: [deleted]
+      required: [success, data]
+
     DriverIncentive:
       type: object
       properties:
@@ -2782,6 +2831,63 @@ paths:
       x-foo-actor: driver
       responses:
         "200": { description: "Now offline", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean } } } } } }
+
+  /driver/bank-accounts:
+    get:
+      tags: [drivers]
+      summary: List driver bank accounts
+      description: Lists payout bank accounts owned by the authenticated driver. Empty arrays are valid.
+      operationId: drivers_listBankAccounts
+      x-foo-actor: driver
+      responses:
+        "200": { description: "Driver bank accounts", content: { application/json: { schema: { $ref: "#/components/schemas/DriverBankAccountsResponse" } } } }
+    post:
+      tags: [drivers]
+      summary: Create driver bank account
+      description: Adds a payout bank account for the authenticated driver. The first account becomes default.
+      operationId: drivers_createBankAccount
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateDriverBankAccountRequest" }
+      responses:
+        "201": { description: "Driver bank account created", content: { application/json: { schema: { $ref: "#/components/schemas/DriverBankAccountResponse" } } } }
+        "400": { description: "Duplicate or invalid bank account", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/bank-accounts/{accountId}/default:
+    patch:
+      tags: [drivers]
+      summary: Set default driver bank account
+      description: Marks one owned payout bank account as default and clears the previous default.
+      operationId: drivers_setDefaultBankAccount
+      x-foo-actor: driver
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Default bank account", content: { application/json: { schema: { $ref: "#/components/schemas/DriverBankAccountResponse" } } } }
+        "404": { description: "Bank account not found for driver", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /driver/bank-accounts/{accountId}:
+    delete:
+      tags: [drivers]
+      summary: Delete driver bank account
+      description: Deletes one owned payout bank account. If the deleted account was default, the newest remaining account becomes default.
+      operationId: drivers_deleteBankAccount
+      x-foo-actor: driver
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Deleted", content: { application/json: { schema: { $ref: "#/components/schemas/DeleteDriverBankAccountResponse" } } } }
+        "404": { description: "Bank account not found for driver", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/earnings:
     get:

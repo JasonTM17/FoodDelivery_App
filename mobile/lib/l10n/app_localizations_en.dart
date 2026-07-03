@@ -1279,6 +1279,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_bank_verify => 'Verify account';
 
   @override
+  String get driver_bank_add_title => 'Add bank account';
+
+  @override
+  String get driver_bank_name_required => 'Please select a bank';
+
+  @override
+  String get driver_bank_holder_label => 'Account holder';
+
+  @override
+  String get driver_bank_holder_hint => 'NGUYEN VAN A';
+
+  @override
+  String get driver_bank_holder_required => 'Please enter account holder name';
+
+  @override
+  String get driver_bank_linked_title => 'Linked accounts';
+
+  @override
+  String get driver_bank_default_badge => 'Default';
+
+  @override
+  String get driver_bank_add_button => 'Add bank account';
+
+  @override
+  String get driver_bank_save_failed =>
+      'Could not update bank account. Please try again.';
+
+  @override
+  String get driver_bank_delete_tooltip => 'Delete bank account';
+
+  @override
+  String get driver_bank_delete_title => 'Delete bank account?';
+
+  @override
+  String get driver_bank_delete_message =>
+      'This removes the payout account from your driver profile.';
+
+  @override
+  String get driver_bank_delete_confirm => 'Delete';
+
+  @override
+  String get driver_bank_cancel => 'Cancel';
+
+  @override
+  String get driver_bank_retry => 'Retry';
+
+  @override
   String get driver_support_title => 'Driver Support';
 
   @override

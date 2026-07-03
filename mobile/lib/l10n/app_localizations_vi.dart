@@ -1284,6 +1284,53 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_bank_verify => 'Xác minh tài khoản';
 
   @override
+  String get driver_bank_add_title => 'Thêm tài khoản';
+
+  @override
+  String get driver_bank_name_required => 'Vui lòng chọn ngân hàng';
+
+  @override
+  String get driver_bank_holder_label => 'Tên chủ tài khoản';
+
+  @override
+  String get driver_bank_holder_hint => 'NGUYEN VAN A';
+
+  @override
+  String get driver_bank_holder_required => 'Vui lòng nhập tên chủ tài khoản';
+
+  @override
+  String get driver_bank_linked_title => 'Tài khoản đã liên kết';
+
+  @override
+  String get driver_bank_default_badge => 'Mặc định';
+
+  @override
+  String get driver_bank_add_button => 'Thêm tài khoản ngân hàng';
+
+  @override
+  String get driver_bank_save_failed =>
+      'Không thể cập nhật tài khoản. Vui lòng thử lại.';
+
+  @override
+  String get driver_bank_delete_tooltip => 'Xóa tài khoản ngân hàng';
+
+  @override
+  String get driver_bank_delete_title => 'Xóa tài khoản ngân hàng?';
+
+  @override
+  String get driver_bank_delete_message =>
+      'Tài khoản nhận thanh toán này sẽ bị gỡ khỏi hồ sơ tài xế.';
+
+  @override
+  String get driver_bank_delete_confirm => 'Xóa';
+
+  @override
+  String get driver_bank_cancel => 'Hủy';
+
+  @override
+  String get driver_bank_retry => 'Thử lại';
+
+  @override
   String get driver_support_title => 'Hỗ trợ tài xế';
 
   @override

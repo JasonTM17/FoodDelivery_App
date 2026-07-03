@@ -1266,6 +1266,51 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_bank_verify => '口座を確認';
 
   @override
+  String get driver_bank_add_title => '銀行口座を追加';
+
+  @override
+  String get driver_bank_name_required => '銀行を選択してください';
+
+  @override
+  String get driver_bank_holder_label => '口座名義';
+
+  @override
+  String get driver_bank_holder_hint => 'NGUYEN VAN A';
+
+  @override
+  String get driver_bank_holder_required => '口座名義を入力してください';
+
+  @override
+  String get driver_bank_linked_title => '連携済み口座';
+
+  @override
+  String get driver_bank_default_badge => '既定';
+
+  @override
+  String get driver_bank_add_button => '銀行口座を追加';
+
+  @override
+  String get driver_bank_save_failed => '銀行口座を更新できませんでした。もう一度お試しください。';
+
+  @override
+  String get driver_bank_delete_tooltip => '銀行口座を削除';
+
+  @override
+  String get driver_bank_delete_title => '銀行口座を削除しますか？';
+
+  @override
+  String get driver_bank_delete_message => 'この受取口座は配達員プロフィールから削除されます。';
+
+  @override
+  String get driver_bank_delete_confirm => '削除';
+
+  @override
+  String get driver_bank_cancel => 'キャンセル';
+
+  @override
+  String get driver_bank_retry => '再試行';
+
+  @override
   String get driver_support_title => 'ドライバーサポート';
 
   @override

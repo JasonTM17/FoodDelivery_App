@@ -234,6 +234,7 @@ model User {
   updatedPlatformSettings PlatformSetting[]
   createdStaffInvites   StaffInvite[]             @relation("StaffInviteCreator")
   reviewedKycSubmissions DriverKycSubmission[]     @relation("KycReviewer")
+  driverBankAccounts    DriverBankAccount[]
   promotionUsages       PromotionUsage[]
   cart                  Cart?
   notificationSettings  NotificationSetting[]
@@ -280,6 +281,24 @@ model DriverProfile {
   kycSubmissions DriverKycSubmission[]
 
   @@map("driver_profiles")
+}
+
+model DriverBankAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  driverId          String   @map("driver_id") @db.Uuid
+  bankCode          String   @map("bank_code") @db.VarChar(32)
+  bankName          String   @map("bank_name") @db.VarChar(160)
+  accountNumber     String   @map("account_number") @db.VarChar(64)
+  accountHolderName String   @map("account_holder_name") @db.VarChar(160)
+  isDefault         Boolean  @default(false) @map("is_default")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  driver User @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, bankCode, accountNumber])
+  @@index([driverId, isDefault])
+  @@map("driver_bank_accounts")
 }
 
 model RestaurantProfile {
