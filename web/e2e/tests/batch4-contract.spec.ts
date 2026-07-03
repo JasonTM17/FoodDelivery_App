@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { ADMIN_URL, API_URL, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
 
@@ -141,7 +142,7 @@ test.describe('Batch 4 API contracts', () => {
 });
 
 test.describe('Batch 4 accessibility smoke', () => {
-  test('admin export jobs page exposes keyboard focus and semantic data region', async ({
+  test('admin export jobs page exposes keyboard focus and has no serious axe violations', async ({
     page,
     request,
   }) => {
@@ -172,5 +173,11 @@ test.describe('Batch 4 accessibility smoke', () => {
     await expect(
       page.getByRole('table').or(page.getByRole('combobox')).or(page.getByRole('button')).first(),
     ).toBeVisible();
+
+    const results = await new AxeBuilder({ page }).analyze();
+    const seriousOrCritical = results.violations.filter(
+      (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+    );
+    expect(seriousOrCritical).toEqual([]);
   });
 });

@@ -35,6 +35,9 @@ cd web && pnpm test:e2e
 
 # Desktop release gate only
 pnpm test:e2e --project=chromium --project=firefox
+
+# Accessibility gate (fails on axe serious/critical violations)
+pnpm test:e2e --grep "accessibility" --project=chromium --project=firefox
 ```
 
 ## Environment Variables
@@ -56,6 +59,7 @@ Override via shell: `ADMIN_URL=http://staging.example.com pnpm test:e2e`
 | `tests/restaurant-order-management.spec.ts` | Kanban board, accept/prepare/ready actions |
 | `tests/admin-dashboard.spec.ts` | KPI cards, driver map, orders table, filters |
 | `tests/realtime-tracking.spec.ts` | Status propagation, admin reflects live changes |
+| `tests/batch4-contract.spec.ts` | Batch 4 API contracts and axe serious/critical accessibility smoke |
 
 ## Debugging
 
