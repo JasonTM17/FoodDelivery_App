@@ -46,7 +46,7 @@ Use the [Feature Request template](https://github.com/JasonTM17/foodflow/issues/
 ## Community Resources
 
 - **API Docs**: Swagger UI at `http://localhost:3001/api/docs` when running locally
-- **N8N Workflows**: See `infra/n8n/workflows/` for AI assistant automation
+- **AI Chatbot**: LLM-first assistant lives in `backend/src/ai/`; configure provider keys through ignored env files or secret managers
 - **Database Schema**: `prisma studio` at `http://localhost:5555` after `pnpm db:studio` in `backend/`
 - **Bull Board**: Queue monitoring at `http://localhost:3004` when Docker Compose is running
 - **Grafana**: Metrics dashboards at `http://localhost:3005` (admin/admin)

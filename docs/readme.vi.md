@@ -12,7 +12,7 @@ FoodFlow là nền tảng giao đồ ăn đa ứng dụng gồm backend NestJS, 
 | Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
 | Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
 | App khách hàng/tài xế | `mobile/` | Flutter | Thiết bị/emulator |
-| Hạ tầng | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO, n8n | Container local |
+| Hạ tầng | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO | Container local |
 
 ## Năng lực chính
 
@@ -26,7 +26,7 @@ FoodFlow là nền tảng giao đồ ăn đa ứng dụng gồm backend NestJS, 
 ## Chạy local
 
 ```bash
-docker compose up -d postgres redis minio n8n
+docker compose up -d postgres redis minio
 
 cd backend
 pnpm install --frozen-lockfile

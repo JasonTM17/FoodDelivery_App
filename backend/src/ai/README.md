@@ -2,7 +2,7 @@
 
 ## Purpose
 
-AI customer-support assistant proxy. SSE streaming chat endpoint, conversation memory Redis (10 turns × 1h TTL), sentiment detection (regex + keyword Vietnamese), tool-call justification (keyword match before execution), output filter (strip injection patterns), pre-classification fast-path (~70% queries answered without LLM). Runtime chat can use direct DeepSeek V4 Flash or the legacy N8N workflow. N8N still owns the service-JWT tool endpoints.
+AI customer-support assistant proxy. SSE streaming chat endpoint, conversation memory Redis (10 turns × 1h TTL), sentiment detection (regex + keyword Vietnamese), tool-call justification (keyword match before execution), output filter (strip injection patterns), pre-classification fast-path (~70% queries answered without LLM), and direct LLM replies through the backend provider adapter. DeepSeek V4 Flash is the current default provider; missing model configuration returns a degraded state rather than a fabricated answer.
 
 ## API surface
 
@@ -21,7 +21,7 @@ AI customer-support assistant proxy. SSE streaming chat endpoint, conversation m
 
 | Name | Required | Default | Description |
 |---|---|---|---|
-| `AI_CHAT_PROVIDER` | no | auto | `deepseek` or `n8n`. Auto selects DeepSeek when `DEEPSEEK_API_KEY` exists, otherwise N8N |
+| `AI_CHAT_PROVIDER` | no | `deepseek` | Chatbot provider. Batch 4 keeps `deepseek` as the supported runtime provider |
 | `DEEPSEEK_API_KEY` | no | — | DeepSeek API key for direct chatbot replies. Store as secret, never commit |
 | `DEEPSEEK_BASE_URL` | no | `https://api.deepseek.com` | OpenAI-compatible DeepSeek base URL |
 | `DEEPSEEK_MODEL` | no | `deepseek-v4-flash` | Direct chatbot model |
@@ -29,7 +29,6 @@ AI customer-support assistant proxy. SSE streaming chat endpoint, conversation m
 | `DEEPSEEK_REASONING_EFFORT` | no | `high` | `high` or `max` when thinking is enabled |
 | `DEEPSEEK_MAX_OUTPUT_TOKENS` | no | `600` | Direct chatbot response cap |
 | `DEEPSEEK_TIMEOUT_MS` | no | `15000` | Direct chatbot upstream timeout |
-| `N8N_WEBHOOK_URL` | no | `http://n8n:5678/webhook/ai-support-chat` | Legacy workflow endpoint |
 | `AI_SERVICE_JWT_SECRET` | yes | — | Service-to-service JWT for tool endpoints |
 | `AI_CHAT_RATE_LIMIT_PER_MIN` | no | `10` | Per-user msg cap |
 | `AI_CHAT_DAILY_CAP` | no | `100` | Per-user daily msg cap |
@@ -39,13 +38,12 @@ AI customer-support assistant proxy. SSE streaming chat endpoint, conversation m
 
 ```bash
 npx jest ai
-# Eval (e2e): pnpm tsx infra/n8n/eval/run-eval.ts --webhook http://localhost:5678/webhook/ai-support-chat
+# E2E: run the seeded AI chatbot Playwright/API scenarios against the backend `/ai/stream` path.
 ```
 
 ## Runbook
 
 - **DeepSeek missing/down:** Backend emits `i18n.t('ai_templates.service_unavailable')` and marks the reply as `degraded`; it does not fabricate a successful answer.
-- **N8N down:** Legacy provider emits the same degraded response. Customer sees graceful message; ticket auto-created if severity HIGH.
 - **Hallucination report:** Inspect `ai_chat_audit` table. Tool-grounded mode requires tool call before reference đến order data — if missing, response was fabricated.
 - **Cost runaway:** Rate limiter `AI_CHAT_RATE_LIMIT_PER_MIN` + daily cap. Pre-classify hit-rate target ≥ 70% (see Prometheus `ai_classify_hit_total`).
-- **Prompt update:** Edit `infra/n8n/prompts/system-prompt.vi.md` → bump version footer → restart n8n container (bind mount auto-reloads).
+- **Prompt update:** Edit the backend AI prompt/templates and rerun the AI focused tests before deployment.

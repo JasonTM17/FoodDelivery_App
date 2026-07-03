@@ -131,6 +131,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Driver mobile app (Flutter, Riverpod)
 - Admin dashboard (Next.js App Router)
 - Restaurant dashboard (Next.js App Router)
-- AI assistant integration via n8n + Gemini (chat classify + support tickets)
+- AI assistant migrated toward an LLM-first backend adapter (chat classify + support tickets)
 - Docker Compose stack with Prometheus, Grafana, Loki monitoring
 - MinIO for food image + document storage

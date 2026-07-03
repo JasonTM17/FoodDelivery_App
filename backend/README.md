@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-NestJS API server for the FoodFlow food delivery platform. Provides REST API, WebSocket realtime tracking, BullMQ job processing, and JWT authentication with RBAC (customer, driver, restaurant, admin). Called by the Flutter mobile apps, Next.js web dashboards, and N8N AI workflows. Calls PostgreSQL+PostGIS for spatial queries, Redis for caching/sessions/job queues, and MinIO for object storage.
+NestJS API server for the FoodFlow food delivery platform. Provides REST API, WebSocket realtime tracking, BullMQ job processing, JWT authentication with RBAC (customer, driver, restaurant, admin), and an LLM-first AI chatbot adapter. Called by the Flutter mobile apps and Next.js web dashboards. Calls PostgreSQL+PostGIS for spatial queries, Redis for caching/sessions/job queues, and MinIO for object storage.
 
 ## 2. API Surface
 
@@ -35,16 +35,13 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `MINIO_SECRET_KEY` | Yes | `minioadmin` | MinIO secret key |
 | `MINIO_BUCKET` | Yes | `foodflow` | Bucket name |
 | `MINIO_PUBLIC_URL` | Yes | `http://localhost:9000` | Public-facing MinIO URL |
-| `N8N_WEBHOOK_URL` | Yes | — | N8N webhook base URL |
-| `N8N_API_KEY` | Yes | — | API key for N8N webhook auth |
 | `GOOGLE_MAPS_API_KEY` | No | — | Google Maps Geocoding API key |
-| `AI_CHAT_PROVIDER` | No | `n8n` unless `DEEPSEEK_API_KEY` is set | Chatbot provider: `deepseek` or `n8n` |
+| `AI_CHAT_PROVIDER` | No | `deepseek` | Chatbot provider: `deepseek` |
 | `DEEPSEEK_API_KEY` | No | — | DeepSeek API key for direct chatbot replies. Keep in secret manager / ignored `.env`, never commit |
 | `DEEPSEEK_BASE_URL` | No | `https://api.deepseek.com` | DeepSeek OpenAI-compatible base URL |
 | `DEEPSEEK_MODEL` | No | `deepseek-v4-flash` | DeepSeek model for chatbot replies |
 | `DEEPSEEK_THINKING` | No | `disabled` | Set `enabled` only if the chat flow can handle slower reasoning responses |
 | `DEEPSEEK_DAILY_BUDGET_USD` | No | — | Optional AI monitor budget display |
-| `GEMINI_API_KEY` | No | — | Legacy Gemini/N8N workflow key, not used by direct DeepSeek provider |
 | `PORT` | No | `3001` | Server port |
 | `NODE_ENV` | No | `development` | Environment (`development`, `production`, `test`) |
 | `CORS_ORIGINS` | No | `http://localhost:3000,...` | Comma-separated allowed origins |

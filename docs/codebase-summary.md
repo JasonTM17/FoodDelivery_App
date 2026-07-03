@@ -12,7 +12,7 @@ Food_Delivery/
 │   └── apps/
 │       ├── admin/    Admin dashboard
 │       └── restaurant/ Restaurant portal
-├── infra/            Docker Compose, n8n workflows, nginx config
+├── infra/            Docker Compose, nginx, observability, deployment support
 ├── packages/
 │   └── i18n/         Shared web translation messages (@foodflow/i18n)
 ├── docs/             Project docs and ADRs
@@ -41,7 +41,7 @@ Modular monolith. One process, one Docker image, logically separated by feature 
 | `reviews` | Aggregation, moderation, photo upload, reply thread |
 | `notifications` | FCM/WebSocket fan-out, locale-aware templates |
 | `chat` | WebSocket chat between customer and support |
-| `ai` | n8n webhook bridge, chat classify, AI templates |
+| `ai` | LLM chatbot adapter, chat classify, AI templates |
 | `i18n` | nestjs-i18n module, vi/en/ja locale files |
 | `admin` | Admin REST endpoints, audit logs, promotions, dispatch heatmap, restaurant KPI |
 | `drivers` | Driver profiles, location history, KYC, IncentivesController (GET /driver/incentives) |
@@ -90,7 +90,6 @@ Both apps use:
 | `postgres` | `postgis/postgis:16-3.4` | Primary database + GIS |
 | `redis` | `redis:7-alpine` | GEO, PubSub, BullMQ broker |
 | `minio` | `minio/minio` | Object storage |
-| `n8n` | `n8nio/n8n` | Workflow automation + AI |
 | `prometheus` | `prom/prometheus` | Metrics scraping |
 | `grafana` | `grafana/grafana` | Dashboards |
 | `loki` | `grafana/loki` | Log aggregation |

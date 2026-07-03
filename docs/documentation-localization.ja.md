@@ -1,22 +1,22 @@
 # Documentation Localization Policy
 
-Languages: [English](./documentation-localization.md) | [Tiếng Việt](./documentation-localization.vi.md) | [日本語](./documentation-localization.ja.md)
+言語: [English](./documentation-localization.md) | [Tiếng Việt](./documentation-localization.vi.md) | [日本語](./documentation-localization.ja.md)
 
-FoodFlow documentation is maintained in three languages:
+FoodFlow documentation は 3 言語で管理します。
 
 | Locale | File convention | Audience |
 |---|---|---|
-| English | `*.md` | Default source, engineering and deployment operations |
-| Vietnamese | `*.vi.md` | Product owner, local operations, Vietnamese contributors |
+| English | `*.md` | Default source、engineering、deployment operations |
+| Vietnamese | `*.vi.md` | Product owner、local operations、Vietnamese contributors |
 | Japanese | `*.ja.md` | Japanese stakeholders and reviewers |
 
 ## Rules
 
-- Every new high-level user-facing or operator-facing guide must ship with English, Vietnamese, and Japanese versions.
-- English is the source document for command accuracy and code references.
-- Vietnamese and Japanese files should preserve commands, paths, env var names, endpoint names, and code identifiers exactly.
-- If a translation cannot be completed in the same commit, add the missing locale to the PR checklist and do not mark docs complete.
-- Do not translate secrets, env var names, route paths, file paths, commit hashes, package names, or CLI flags.
+- High-level user-facing または operator-facing guide は English、Vietnamese、Japanese を同時に提供します。
+- English は commands と code references の正確性を保つ source document です。
+- Vietnamese/Japanese files では commands、paths、env var names、endpoint names、code identifiers をそのまま保持します。
+- 同じ commit で翻訳を完了できない場合、足りない locale を PR checklist に追加し、docs complete としません。
+- Secrets、env var names、route paths、file paths、commit hashes、package names、CLI flags は翻訳しません。
 
 ## Current localized docs
 

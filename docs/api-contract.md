@@ -1,71 +1,36 @@
 # API Contract
 
-## Versioning Policy
+Languages: [English](./api-contract.md) | [Tiếng Việt](./api-contract.vi.md) | [日本語](./api-contract.ja.md)
 
-Path-based versioning: `/v1/`, `/v2/`, etc. Breaking changes increment the version path signal. Non-breaking changes (new optional fields, new endpoints, new enum values) are additive within the same version.
+This document defines the web/admin/restaurant API contract used by Batch 4. It does not change legacy customer or mobile contracts unless an endpoint is explicitly versioned or aliased.
 
-### What constitutes a breaking change?
+## Versioning policy
 
-- Removing or renaming a field (request or response)
-- Changing a field type (e.g., string → integer)
-- Making an optional field required
-- Removing an endpoint
-- Changing an enum value
-- Changing authentication requirements
-- Narrowing a pattern constraint
-- Changing pagination semantics
+- Public versioned paths use `/v1`, `/v2`, and later version prefixes.
+- Batch 4 web endpoints may also expose compatibility aliases for one cycle when an older Admin or Restaurant route already exists.
+- Breaking changes require a new version or a documented compatibility alias.
+- Additive changes can stay in the same version.
 
-### What is NOT a breaking change?
+Breaking changes include:
 
-- Adding a new endpoint
-- Adding an optional request field
-- Adding an optional response field
-- Adding a new enum value
-- Relaxing a pattern constraint
-- Changing error message text (not code)
+- Removing or renaming a request or response field.
+- Changing a field type.
+- Making an optional field required.
+- Removing an endpoint or enum value.
+- Changing authentication or authorization requirements.
+- Changing pagination semantics.
 
-## HMAC Conventions
+Non-breaking changes include:
 
-### Inbound HMAC (SePay Webhook)
+- Adding a new endpoint.
+- Adding optional request or response fields.
+- Adding enum values.
+- Relaxing validation constraints.
+- Changing human-readable error text while keeping the same `code`.
 
-| Field | Value |
-|-------|-------|
-| Header | `x-sepay-signature` |
-| Algorithm | HMAC-SHA256 |
-| Input | Raw request body (`JSON.stringify(body)`) |
-| Secret | `SEPAY_WEBHOOK_SECRET` env var |
-| Verification | Timing-safe compare via `crypto.timingSafeEqual` |
-| Replay protection | Redis dedup key per `transaction_ref`, TTL 24h |
+## Success envelope
 
-**Verification flow:**
-1. Read `x-sepay-signature` header
-2. HMAC-SHA256 the raw body against the shared secret
-3. Compare: `crypto.timingSafeEqual(Buffer.from(sigHeader), Buffer.from(expected))`
-4. If mismatch → 400 `{"code": "WEBHOOK_INVALID_SIGNATURE"}`
-5. Check dedup key in Redis → if exists return 200 with `{received: true, duplicate: true}`
-6. Process payment, set dedup key with 24h TTL
-
-### Outbound HMAC (n8n / Third-Party)
-
-| Field | Value |
-|-------|-------|
-| Header | `X-Signature-SHA256` |
-| Algorithm | HMAC-SHA256 |
-| Input | Raw request body |
-| Secret | `WEBHOOK_SECRET` env var (per-target) |
-
-Every outbound call from app → n8n (or any third-party workflow tool) must include an HMAC signature. The receiver verifies with timing-safe compare before processing.
-
-### API Key Auth (n8n → App)
-
-| Header | `x-api-key` |
-| Secret | `N8N_API_KEY` env var |
-
-Used by n8n webhook endpoints (e.g., `POST /webhooks/n8n/order-event`). Guarded by `ApiKeyGuard` on the backend.
-
-## Success Envelope
-
-All successful web/admin/restaurant responses use a stable envelope:
+Successful web/admin/restaurant responses use one shape:
 
 ```json
 {
@@ -75,21 +40,24 @@ All successful web/admin/restaurant responses use a stable envelope:
 }
 ```
 
-`meta` is optional for single-resource responses. Collection endpoints put the array in `data` and pagination or aggregation context in `meta`:
+`meta` is optional for single-resource responses. Collection endpoints put the collection in `data` and pagination or aggregate context in `meta`.
 
 ```json
 {
   "success": true,
   "data": [],
-  "meta": { "total": 0, "page": 1, "limit": 20, "hasMore": false }
+  "meta": {
+    "total": 0,
+    "page": 1,
+    "limit": 20,
+    "hasMore": false
+  }
 }
 ```
 
-The customer/mobile contract is not changed by Batch 4 compatibility work unless a versioned endpoint explicitly opts in.
+## Error format
 
-## Problem Detail Error Format
-
-All error responses follow RFC 7807 Problem Details and are not wrapped in the success envelope:
+Errors use RFC 7807 Problem Details. They are not wrapped in the success envelope.
 
 ```json
 {
@@ -102,47 +70,106 @@ All error responses follow RFC 7807 Problem Details and are not wrapped in the s
 }
 ```
 
-Error codes are stable and documented in the OpenAPI spec. Clients should branch on `code`, not `message` text.
+Clients must branch on `code`, not translated text.
 
-Common error codes:
-- `AUTH_INVALID_CREDENTIALS` — wrong email/password
-- `AUTH_ACCOUNT_LOCKED` — too many failed attempts
-- `VALIDATION_INVALID_EMAIL` — malformed email
-- `ORDER_CANNOT_CANCEL` — order is too far along the flow
-- `PAYMENT_INSUFFICIENT_BALANCE` — wallet balance too low
-- `PROMOTION_EXPIRED` — code passed its expiry
-- `PROMOTION_LIMIT_REACHED` — usage cap hit
-- `DUPLICATE_REQUEST` — idempotency key reused
-- `NOT_FOUND` — resource not found
-- `FORBIDDEN` — insufficient role
+Common codes:
+
+| Code | Meaning |
+|---|---|
+| `AUTH_INVALID_CREDENTIALS` | Email/password is wrong. |
+| `AUTH_ACCOUNT_LOCKED` | Account is temporarily locked. |
+| `VALIDATION_INVALID_EMAIL` | Email format is invalid. |
+| `ORDER_CANNOT_CANCEL` | Order is too far through the flow to cancel. |
+| `PAYMENT_INSUFFICIENT_BALANCE` | Wallet balance is too low. |
+| `PROMOTION_EXPIRED` | Promotion is past its expiry. |
+| `PROMOTION_LIMIT_REACHED` | Promotion usage cap is reached. |
+| `DUPLICATE_REQUEST` | Idempotency key was reused. |
+| `NOT_FOUND` | Resource does not exist or is not visible to the actor. |
+| `FORBIDDEN` | Actor lacks the required permission. |
+
+## Pagination
+
+Collection endpoints use:
+
+- `data`: array of resources.
+- `meta.total`: total matching resources when available.
+- `meta.page`: one-based page index.
+- `meta.limit`: requested page size.
+- `meta.hasMore`: true when the server can provide another page.
+
+Cursor-based endpoints may add cursor fields under `meta`, but the collection still remains in `data`.
+
+## Authentication and refresh
+
+- Web dashboards use bearer access tokens in Batch 4.
+- Refresh requests must use the current access token and must not retry with a stale `Authorization` header.
+- Refresh loops are blocked by the web API client.
+- When a session expires, redirects keep the current locale.
+- Moving web auth to httpOnly cookies is tracked separately and is not part of Batch 4.
+
+## HMAC conventions
+
+### Inbound SePay webhook
+
+| Field | Value |
+|---|---|
+| Header | `x-sepay-signature` |
+| Algorithm | HMAC-SHA256 |
+| Input | Raw request body |
+| Secret | `SEPAY_WEBHOOK_SECRET` |
+| Replay protection | Redis deduplication key per transaction reference, TTL 24h |
+
+Verification flow:
+
+1. Read `x-sepay-signature`.
+2. Compute HMAC-SHA256 over the raw body.
+3. Compare with timing-safe equality.
+4. Reject mismatch with `WEBHOOK_INVALID_SIGNATURE`.
+5. Deduplicate already-processed transaction references.
+6. Process and persist the payment result.
+
+### Outbound service webhooks
+
+| Field | Value |
+|---|---|
+| Header | `X-Signature-SHA256` |
+| Algorithm | HMAC-SHA256 |
+| Input | Raw request body |
+| Secret | `WEBHOOK_SECRET` or target-specific secret |
+
+LLM tools and other internal service receivers must verify the signature before processing.
+
+### API key callbacks
+
+Service callbacks to the backend use:
+
+| Header | Secret |
+|---|---|
+| `x-api-key` | `SERVICE_API_KEY` or an endpoint-specific service key |
 
 ## Idempotency
 
-For `POST /orders`, `POST /users/wallet/topup`, and `POST /driver/withdrawals`:
+Mutation endpoints that can create money movement or duplicate operational work accept:
 
-- Client sends `Idempotency-Key: <UUID v4>` header
-- Server caches response for 24h (Redis key: `idem:<key>`)
-- Replayed request returns cached response with `409` status
-- If the original request is still in-flight, subsequent requests with the same key receive `409`
+```http
+Idempotency-Key: <UUID v4>
+```
 
-## Conventions Applied
+The server stores a 24-hour replay guard. Replayed in-flight or already-processed requests return a stable duplicate response rather than running the mutation twice.
 
-| Convention | Rule |
-|------------|------|
-| Monetary values | `type: integer`, description: "VND" |
-| Datetimes | `type: string, format: date-time` |
-| Successful responses | `{ success: true, data, meta? }` |
-| List endpoints | `{ success: true, data: [], meta: { total, page, limit, hasMore } }` |
-| Actor extension | `x-foo-actor` on every operation: `public`, `user`, `driver`, `restaurant_owner`, `admin`, `service` |
-| Security | `bearerAuth` for user/role endpoints; `ApiKeyAuth` for service-to-service |
+## OpenAPI source
 
-## OpenAPI Changelog
+- Canonical spec: [openapi.yaml](./openapi.yaml)
+- Changelog: [openapi/changelog.md](./openapi/changelog.md)
+- Web client package: `web/packages/api-client`
 
-See [docs/openapi/changelog.md](./openapi/changelog.md).
+The OpenAPI contract must describe every web-used Admin and Restaurant endpoint before the endpoint is considered complete.
 
-## CI Gate
+## CI gate
 
-The `openapi/validate` GitHub Actions workflow runs on every PR that touches the spec or backend controllers. It:
-1. Runs Spectral lint (`pnpm openapi:lint`)
-2. Verifies the spec is valid YAML
-3. Required check on `main` branch
+The OpenAPI validation workflow runs when the spec, backend controllers, or generated API client change. It verifies:
+
+1. Spectral lint.
+2. YAML validity.
+3. Generated API client typecheck.
+4. Contract tests for high-risk behavior when a route changes.

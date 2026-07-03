@@ -11,7 +11,7 @@ Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ
 Chạy service nền cho dev host-run:
 
 ```bash
-docker compose up -d postgres redis minio n8n
+docker compose up -d postgres redis minio
 ```
 
 Chạy full stack container:
@@ -36,7 +36,7 @@ curl http://localhost:3002/api/healthz
 | Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
 | Storage | MinIO/S3 access key và secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
-| AI | `DEEPSEEK_API_KEY`, optional legacy `GEMINI_API_KEY` / `N8N_API_KEY` |
+| AI | `DEEPSEEK_API_KEY` hoặc key của LLM provider được cấu hình |
 | Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLI | Vercel token, Supabase access token |
 

@@ -1,99 +1,104 @@
 # FoodFlow Code Standards
 
-## General
+Languages: [English](./code-standards.md) | [Tiếng Việt](./code-standards.vi.md) | [日本語](./code-standards.ja.md)
 
-- Kebab-case filenames with descriptive names
-- Files under 200 lines (split when exceeding)
-- No AI references in code or commits
-- Vietnamese UI text, English code identifiers
+These standards keep FoodFlow maintainable across backend, web, mobile, infrastructure, and documentation work.
 
-## Backend (NestJS)
+## General rules
 
-```
-module/
-├── module.module.ts    # NestJS module definition
-├── module.controller.ts # HTTP endpoints
-├── module.service.ts   # Business logic
-├── module.dto.ts       # Zod/class-validator DTOs
-└── module.gateway.ts   # WebSocket (if needed)
-```
+- Prefer KISS, YAGNI, then DRY.
+- Keep changes scoped to the accepted task.
+- Use descriptive names and avoid clever one-off abstractions.
+- Consider splitting code files above 200 lines when there is a clear feature or component boundary.
+- Do not add runtime mock data, fake analytics, random business values, or fallback success paths.
+- Do not commit secrets, dotenv files, private keys, local tool state, screenshots from ad-hoc testing, or AI assistant private files.
+- Use conventional commits without AI attribution.
+- Keep user-facing copy in localization files, not inline in components.
 
-- Use Prisma for 95% of queries, `$queryRaw` for PostGIS
-- All endpoints validate input before processing
-- RBAC guards on all protected routes
-- Error responses in `{ success: false, error: { code, message } }` format
+## Repository hygiene
 
-## Frontend (Next.js)
+- Source code, docs, tests, and deploy configuration belong in the repository.
+- Local assistant state belongs outside Git and is ignored by `.gitignore`.
+- Approved visual assets belong under app `public/` folders or documented `docs/screenshots/` paths.
+- Generated Playwright screenshots, login-logo experiments, temporary maps, logs, and cache folders must stay untracked.
+- Large caches and backup folders outside the repo must be removed only after their purpose is verified and a backup exists.
 
-- App Router with per-segment `loading.tsx`, `error.tsx`
-- shadcn/ui components for consistency
-- TanStack Query for server state
-- `use client` only where interactivity needed
+## Backend: NestJS and Prisma
 
-## Mobile (Flutter)
+Typical module layout:
 
-- Riverpod for state management
-- Every screen handles loading, empty, error states
-- Shared widgets in `lib/shared/widgets/`
-- API calls through `ApiClient` singleton
-- WebSocket through `SocketClient` singleton
-
-## i18n Patterns
-
-### Backend (nestjs-i18n)
-
-- Never hardcode user-facing strings in service/controller files — use `i18n.t('namespace.key', { lang })`
-- For async processors (BullMQ), use `fallbackT(key, args)` when `I18nService` is not injectable
-- Always pass locale explicitly into job data; do **not** infer from request context in processors
-- Locale files live in `backend/src/i18n/locales/{vi|en|ja}/{namespace}.json`
-- Key parity across all three locales is enforced by `i18n-locale.spec.ts`
-
-```typescript
-// Correct — explicit lang from request or job data
-const msg = await this.i18n.t('errors.order_cannot_cancel', { lang: req.i18nLang })
-
-// Correct — async context without I18nService
-const msg = fallbackT('notifications.order_update_title')
+```text
+feature/
+  feature.module.ts
+  feature.controller.ts
+  feature.service.ts
+  dto/
+  entities-or-types/
+  feature.gateway.ts
 ```
 
-### Mobile (Flutter)
+Rules:
 
-- Use `AppLocalizations.of(context)!.<key>` — never hardcode Vietnamese strings in widgets
-- ARB canonical file is `app_vi.arb`; add new keys there first, then replicate to `en` and `ja`
-- Run `flutter gen-l10n` after adding keys to regenerate the generated `app_localizations.dart`
+- Validate external input at the controller boundary with DTOs, pipes, or explicit schemas.
+- Keep authorization checks close to protected operations.
+- Use Prisma for normal queries and `$queryRaw` only for PostGIS or query shapes Prisma cannot express safely.
+- Use transactions for money movement, status transitions, and multi-table invariants.
+- Return web errors as RFC 7807 Problem Details.
+- Keep customer/mobile compatibility unless the change is explicitly versioned.
+- Do not fabricate payment success; missing provider configuration must return a clear degraded or configuration error.
 
-```dart
-// Correct
-Text(AppLocalizations.of(context)!.orderAccepted)
+## Web: Next.js Admin and Restaurant
 
-// Wrong — hardcoded
-Text('Đơn hàng đã được chấp nhận')
-```
+- Stay on Next.js 14, React 18, ESLint 8, and pnpm 10 until a separate migration is approved.
+- Routes live under `app/[locale]`; non-locale routes are compatibility redirects only.
+- Use next-intl for `vi`, `en`, and `ja`.
+- Use `loading.tsx`, `error.tsx`, and `not-found.tsx` for new route segments.
+- Every server query needs loading, empty, retryable error, and permission-denied states.
+- Destructive actions need confirmation.
+- Optimistic updates are allowed only when rollback is safe.
+- Shared API access must go through `web/packages/api-client` or an approved wrapper.
 
-### Web (next-intl)
+## Mobile: Flutter
 
-- All routes live under `app/[locale]/` — never under `app/` directly
-- Use `useTranslations('namespace')` in Client Components, `getTranslations` in Server Components
-- Shared messages between admin and restaurant apps go in `packages/i18n/messages/`
-- Locale switcher uses next-intl router — do not manipulate `window.location` manually
+- Use generated localization from ARB files.
+- Keep API changes compatible with the mobile/customer contract during Batch 4.
+- Do not generate or commit a new mobile API client until the Batch 4 OpenAPI contract is stable.
+- Reconcile Violet and Indigo mobile work in separate branches after web/backend integration lands.
 
-```tsx
-// Server Component
-const t = await getTranslations('orders')
-return <h1>{t('title')}</h1>
+## i18n patterns
 
-// Client Component
-const t = useTranslations('orders')
-```
+Backend:
 
-### Adding a New Locale
+- Locale files live under `backend/src/i18n/locales/{vi|en|ja}`.
+- Async jobs must receive locale explicitly; do not infer it from request context.
+- Tests should enforce key parity across `vi`, `en`, and `ja`.
 
-See `docs/i18n-guide.md` — Adding a New Locale End-to-End section.
+Web:
 
-## Git
+- Use `useTranslations` in Client Components.
+- Use `getTranslations` in Server Components.
+- Locale-preserving navigation must be used for sidebar links, breadcrumbs, login redirects, and session-expired redirects.
 
-- Conventional Commits: `type(scope): subject`
-- Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore
-- Subject ≤72 chars, imperative mood
-- One logical change per commit
-- No `Co-Authored-By` or AI references
+Mobile:
+
+- Add ARB keys to the canonical locale first, then replicate to `en` and `ja`.
+- Run the Flutter localization generator after changing ARB files.
+
+## Testing expectations
+
+Run the narrowest useful test first, then broaden when contracts or shared behavior changed.
+
+Minimum gates before a Batch 4 PR:
+
+- Backend Prisma validation/generation, typecheck, lint, Jest, contract tests, and build.
+- Web API client generation/typecheck and OpenAPI validation.
+- Admin and Restaurant typecheck, ESLint with no warnings, Vitest, and production builds.
+- Playwright on Chromium and Firefox with seeded data.
+- Axe with no serious or critical violations.
+- Secret scan and artifact scan on the diff.
+
+## Documentation
+
+- Update docs when behavior, setup, architecture, security posture, commands, or public contracts change.
+- Keep important docs available in English, Vietnamese, and Japanese.
+- Document verified behavior only. If a feature is degraded or pending, say so directly.

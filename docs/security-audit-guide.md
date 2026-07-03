@@ -4,7 +4,7 @@
 
 - [ ] JWT secret is 64+ chars, generated via `openssl rand -hex 64`
 - [ ] Refresh token blocklist uses Redis (not in-memory)
-- [ ] N8N_ENCRYPTION_KEY is backed up securely
+- [ ] LLM provider keys are stored only in secret managers or ignored env files
 - [ ] CORS origins restricted to production domains
 - [ ] Rate limiting enabled on all auth endpoints
 - [ ] Helmet security headers active

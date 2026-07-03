@@ -8,7 +8,7 @@ Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.
   <img src="https://img.shields.io/badge/web-Next.js-black?logo=next.js" alt="Web">
   <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
   <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
-  <img src="https://img.shields.io/badge/ai-DeepSeek%2FN8N-18e46a" alt="AI">
+  <img src="https://img.shields.io/badge/ai-LLM%20Chatbot-18e46a" alt="AI">
   <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
 </p>
 
@@ -22,7 +22,7 @@ FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js
 | Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
 | Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
 | Customer and driver apps | `mobile/` | Flutter | Device/emulator |
-| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO, n8n | Local containers |
+| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO | Local containers |
 
 ## Core Capabilities
 
@@ -40,10 +40,10 @@ Flutter apps         Next.js dashboards          NestJS backend
 customer/driver  ->  admin/restaurant   ->  REST + WebSocket + queues
                                              |
                                              v
-                         PostgreSQL/PostGIS + Redis + MinIO + n8n
+                         PostgreSQL/PostGIS + Redis + MinIO
 ```
 
-Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat uses DeepSeek when configured, otherwise the legacy n8n workflow path returns an explicit degraded state instead of a fabricated answer.
+Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat is LLM-first through the backend provider adapter and returns an explicit degraded state when no model key is configured.
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ Use ignored `.env` files for real secrets. Never put production keys in committe
 
 ```bash
 # 1. Start shared services for host-run development
-docker compose up -d postgres redis minio n8n
+docker compose up -d postgres redis minio
 
 # 2. Backend
 cd backend
@@ -90,7 +90,6 @@ Useful local URLs:
 | Admin web | `http://localhost:3000` |
 | Restaurant web | `http://localhost:3002` |
 | MinIO console | `http://localhost:9001` |
-| n8n | `http://localhost:5678` |
 
 ## Docker Compose
 
@@ -169,17 +168,12 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [Architecture](docs/system-architecture.md)
 - [Deployment guide](docs/deployment-guide.md)
 - [Testing guide](docs/testing-guide.md)
+- [AI chatbot guide](docs/ai-chatbot-guide.md)
 - [Documentation localization policy](docs/documentation-localization.md)
 - [Code standards](docs/code-standards.md)
 - [Design guidelines](docs/design-guidelines.md)
 - [i18n guide](docs/i18n-guide.md)
 - [Roadmap](docs/project-roadmap.md)
-
-## Screenshots
-
-| n8n AI automation | Health check |
-|---|---|
-| ![N8N](docs/screenshots/n8n-setup-screen.png) | ![Health](docs/screenshots/n8n-health-check.png) |
 
 ## Branch and integration policy
 

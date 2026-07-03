@@ -12,7 +12,7 @@ FoodFlow は、NestJS バックエンド、Next.js の Admin/Restaurant ダッ�
 | Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
 | Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
 | Customer/driver apps | `mobile/` | Flutter | Device/emulator |
-| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO, n8n | Local containers |
+| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO | Local containers |
 
 ## 主な機能
 
@@ -26,7 +26,7 @@ FoodFlow は、NestJS バックエンド、Next.js の Admin/Restaurant ダッ�
 ## ローカル起動
 
 ```bash
-docker compose up -d postgres redis minio n8n
+docker compose up -d postgres redis minio
 
 cd backend
 pnpm install --frozen-lockfile

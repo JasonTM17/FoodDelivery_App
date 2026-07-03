@@ -32,7 +32,7 @@ FoodFlow takes security seriously. If you discover a vulnerability, please do **
 - `backend/` — NestJS API server, Prisma ORM, WebSocket (Socket.IO), BullMQ workers
 - `web/` — Next.js admin dashboard, restaurant dashboard
 - `mobile/` — Flutter customer app, driver app
-- `infra/` — Docker Compose, Nginx, N8N workflows
+- `infra/` — Docker Compose, Nginx, observability, and deployment support
 - Authentication and authorization flows (JWT, RBAC, refresh token rotation)
 - Rate limiting and brute-force protection
 - WebSocket room isolation and GPS tracking authorization

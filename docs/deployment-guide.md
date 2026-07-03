@@ -11,7 +11,7 @@ FoodFlow deploys only after the integration branch is clean, pushed, reviewed, a
 For host-run development:
 
 ```bash
-docker compose up -d postgres redis minio n8n
+docker compose up -d postgres redis minio
 ```
 
 For a full local container stack:
@@ -38,7 +38,7 @@ Use provider secret managers, not committed files:
 | Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
-| AI | `DEEPSEEK_API_KEY`, optional legacy `GEMINI_API_KEY` / `N8N_API_KEY` |
+| AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
 | Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLIs | Vercel token, Supabase access token |
 

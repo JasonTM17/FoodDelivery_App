@@ -39,7 +39,7 @@ cd foodflow
 # 2. Copy environment files
 cp backend/.env.example backend/.env
 
-# 3. Start infrastructure (PostgreSQL, Redis, MinIO, N8N, Prometheus, Grafana)
+# 3. Start infrastructure (PostgreSQL, Redis, MinIO, Prometheus, Grafana)
 docker compose up -d
 
 # 4. Install backend dependencies
@@ -90,7 +90,7 @@ foodflow/
 │   ├── docker-compose.yml
 │   ├── docker-compose.local.yml
 │   ├── nginx/             # Reverse proxy config
-│   └── n8n/workflows/     # AI assistant workflows
+│   └── observability/     # Prometheus, Grafana, logs, runbooks
 └── docs/                  # Project documentation
 ```
 
@@ -124,7 +124,6 @@ Services in the stack:
 | backend | 3001 | NestJS API server |
 | worker | — | BullMQ job processor (2 replicas) |
 | minio | 9000/9001 | Object storage (S3-compatible) |
-| n8n | 5678 | AI workflow automation |
 | bullboard | 3004 | BullMQ queue monitoring |
 | prometheus | 9090 | Metrics collection |
 | grafana | 3005 | Metrics visualization |
@@ -341,12 +340,12 @@ Use kebab-case for descriptions: `feat/add-driver-earnings-summary`, `fix/order-
 3. Use shared widgets from `mobile/lib/shared/widgets/`
 4. Wire up navigation in the appropriate `GoRouter` configuration
 
-### N8N Workflow (New Automation)
+### AI Chatbot or Prompt Change
 
-1. Design the workflow in the N8N UI at `http://localhost:5678`
-2. Export as JSON and save to `infra/n8n/workflows/`
-3. Follow the naming convention: `<trigger>_<action>.json`
-4. Document the workflow in the N8N Setup Guide (`docs/n8n-setup-guide.md`)
+1. Change prompts, templates, provider settings, or tool behavior in `backend/src/ai/`.
+2. Keep the runtime LLM-first; do not add an external workflow engine as a chatbot dependency.
+3. Add or update focused backend tests for the changed behavior.
+4. Document user-visible behavior in [AI chatbot guide](ai-chatbot-guide.md).
 
 ## Pull Request Checklist
 
