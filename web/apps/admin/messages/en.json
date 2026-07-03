@@ -1224,7 +1224,19 @@
     "approve": "Approve",
     "reject": "Reject",
     "rejectReason": "Rejection Reason",
-    "rejectReasonPlaceholder": "Enter reason for rejection..."
+    "rejectReasonPlaceholder": "Enter reason for rejection...",
+    "notFound": "Restaurant not found",
+    "retry": "Try again",
+    "errorTitle": "Unable to load restaurant approval",
+    "errorDescription": "Refresh the page or return to restaurants and try again.",
+    "approveError": "Unable to approve this restaurant. Please try again.",
+    "rejectError": "Unable to reject this restaurant. Please try again.",
+    "statusPending": "Pending review",
+    "statusActive": "Active",
+    "statusDisabled": "Disabled",
+    "statusRejected": "Rejected",
+    "statusDeleted": "Deleted",
+    "statusUnknown": "{status}"
   },
   "promotionDetail": {
     "notFound": "Promotion not found.",

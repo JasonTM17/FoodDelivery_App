@@ -1224,7 +1224,19 @@
     "approve": "承認",
     "reject": "拒否",
     "rejectReason": "拒否理由",
-    "rejectReasonPlaceholder": "拒否理由を入力してください..."
+    "rejectReasonPlaceholder": "拒否理由を入力してください...",
+    "notFound": "レストランが見つかりません",
+    "retry": "再試行",
+    "errorTitle": "レストラン承認を読み込めません",
+    "errorDescription": "ページを再読み込みするか、レストラン一覧に戻ってからもう一度お試しください。",
+    "approveError": "このレストランを承認できません。もう一度お試しください。",
+    "rejectError": "このレストランを拒否できません。もう一度お試しください。",
+    "statusPending": "審査待ち",
+    "statusActive": "有効",
+    "statusDisabled": "無効",
+    "statusRejected": "拒否済み",
+    "statusDeleted": "削除済み",
+    "statusUnknown": "{status}"
   },
   "promotionDetail": {
     "notFound": "プロモーションが見つかりません。",

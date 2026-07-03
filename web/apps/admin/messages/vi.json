@@ -1224,7 +1224,19 @@
     "approve": "Phê duyệt",
     "reject": "Từ chối",
     "rejectReason": "Lý do từ chối",
-    "rejectReasonPlaceholder": "Nhập lý do từ chối..."
+    "rejectReasonPlaceholder": "Nhập lý do từ chối...",
+    "notFound": "Không tìm thấy nhà hàng",
+    "retry": "Thử lại",
+    "errorTitle": "Không tải được trang phê duyệt nhà hàng",
+    "errorDescription": "Hãy tải lại trang hoặc quay về danh sách nhà hàng rồi thử lại.",
+    "approveError": "Không thể duyệt nhà hàng này. Vui lòng thử lại.",
+    "rejectError": "Không thể từ chối nhà hàng này. Vui lòng thử lại.",
+    "statusPending": "Chờ duyệt",
+    "statusActive": "Đang hoạt động",
+    "statusDisabled": "Đã khóa",
+    "statusRejected": "Đã từ chối",
+    "statusDeleted": "Đã xóa",
+    "statusUnknown": "{status}"
   },
   "promotionDetail": {
     "notFound": "Không tìm thấy khuyến mãi.",
