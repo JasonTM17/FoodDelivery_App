@@ -204,6 +204,31 @@
       "cancelled": "Cancelled",
       "pending": "Pending confirmation",
       "confirmed": "Confirmed"
+    },
+    "detail": {
+      "sheetTitle": "Order details",
+      "notFound": "Order not found",
+      "back": "Back",
+      "createdAt": "Created at {date}",
+      "statusUpdateError": "Could not update order status",
+      "customerInfo": "Customer information",
+      "restaurantInfo": "Restaurant information",
+      "driverInfo": "Driver information",
+      "nameLabel": "Name:",
+      "phoneLabel": "Phone:",
+      "addressLabel": "Address:",
+      "items": "Items",
+      "subtotal": "Subtotal",
+      "deliveryFee": "Delivery fee",
+      "discount": "Discount",
+      "total": "Total",
+      "note": "Note",
+      "updateStatus": "Update status",
+      "confirmOrder": "Confirm order",
+      "startPreparing": "Start preparing",
+      "startDelivery": "Start delivery",
+      "markDelivered": "Mark delivered",
+      "cancelOrder": "Cancel order"
     }
   },
   "orderDetail": {

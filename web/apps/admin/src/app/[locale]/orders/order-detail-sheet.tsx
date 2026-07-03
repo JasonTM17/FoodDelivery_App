@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useTranslations } from 'next-intl';
 
 export interface OrderDetail {
   id: string;
@@ -43,6 +44,8 @@ export default function OrderDetailSheet({
   onOpenChange,
   onStatusChange,
 }: OrderDetailSheetProps) {
+  const t = useTranslations('orders.detail');
+
   const updateStatus = async (status: string) => {
     if (!order) return;
     await apiPatch(`/admin/orders/${order.id}/status`, { status });
@@ -54,7 +57,7 @@ export default function OrderDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Chi tiết đơn hàng</SheetTitle>
+          <SheetTitle>{t('sheetTitle')}</SheetTitle>
           <SheetDescription>{order?.orderCode || ''}</SheetDescription>
         </SheetHeader>
 
@@ -68,28 +71,28 @@ export default function OrderDetailSheet({
             <Separator />
 
             <div className="space-y-3">
-              <h4 className="font-medium">Thông tin khách hàng</h4>
+              <h4 className="font-medium">{t('customerInfo')}</h4>
               <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-                <p><span className="text-muted-foreground">Tên:</span> {order.customer?.name}</p>
-                <p><span className="text-muted-foreground">SĐT:</span> {order.customer?.phone}</p>
-                <p><span className="text-muted-foreground">Địa chỉ:</span> {order.deliveryAddress}</p>
+                <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.customer?.name}</p>
+                <p><span className="text-muted-foreground">{t('phoneLabel')}</span> {order.customer?.phone}</p>
+                <p><span className="text-muted-foreground">{t('addressLabel')}</span> {order.deliveryAddress}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-medium">Thông tin nhà hàng</h4>
+              <h4 className="font-medium">{t('restaurantInfo')}</h4>
               <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-                <p><span className="text-muted-foreground">Tên:</span> {order.restaurant?.name}</p>
-                <p><span className="text-muted-foreground">Địa chỉ:</span> {order.restaurant?.address}</p>
+                <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.restaurant?.name}</p>
+                <p><span className="text-muted-foreground">{t('addressLabel')}</span> {order.restaurant?.address}</p>
               </div>
             </div>
 
             {order.driver && (
               <div className="space-y-3">
-                <h4 className="font-medium">Thông tin tài xế</h4>
+                <h4 className="font-medium">{t('driverInfo')}</h4>
                 <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-                  <p><span className="text-muted-foreground">Tên:</span> {order.driver.name}</p>
-                  <p><span className="text-muted-foreground">SĐT:</span> {order.driver.phone}</p>
+                  <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.driver.name}</p>
+                  <p><span className="text-muted-foreground">{t('phoneLabel')}</span> {order.driver.phone}</p>
                 </div>
               </div>
             )}
@@ -97,7 +100,7 @@ export default function OrderDetailSheet({
             <Separator />
 
             <div className="space-y-3">
-              <h4 className="font-medium">Món ăn</h4>
+              <h4 className="font-medium">{t('items')}</h4>
               <div className="space-y-2">
                 {(order.items || []).map((item, idx) => (
                   <div
@@ -118,21 +121,21 @@ export default function OrderDetailSheet({
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tạm tính</span>
+                <span className="text-muted-foreground">{t('subtotal')}</span>
                 <span>{formatCurrency(order.total + order.discount - order.deliveryFee)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Phí giao hàng</span>
+                <span className="text-muted-foreground">{t('deliveryFee')}</span>
                 <span>{formatCurrency(order.deliveryFee)}</span>
               </div>
               {order.discount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Giảm giá</span>
+                  <span className="text-muted-foreground">{t('discount')}</span>
                   <span className="text-green-600">-{formatCurrency(order.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2 font-bold">
-                <span>Tổng cộng</span>
+                <span>{t('total')}</span>
                 <span>{formatCurrency(order.total)}</span>
               </div>
             </div>
@@ -141,7 +144,7 @@ export default function OrderDetailSheet({
               <>
                 <Separator />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Ghi chú</h4>
+                  <h4 className="text-sm font-medium">{t('note')}</h4>
                   <p className="text-sm text-muted-foreground">{order.note}</p>
                 </div>
               </>
@@ -152,12 +155,12 @@ export default function OrderDetailSheet({
             <div className="flex gap-2">
               {order.status === 'pending' && (
                 <Button className="flex-1" onClick={() => updateStatus('confirmed')}>
-                  Xác nhận đơn
+                  {t('confirmOrder')}
                 </Button>
               )}
               {order.status === 'confirmed' && (
                 <Button className="flex-1" onClick={() => updateStatus('preparing')}>
-                  Bắt đầu chuẩn bị
+                  {t('startPreparing')}
                 </Button>
               )}
               {(order.status === 'pending' || order.status === 'confirmed') && (
@@ -166,7 +169,7 @@ export default function OrderDetailSheet({
                   className="flex-1"
                   onClick={() => updateStatus('cancelled')}
                 >
-                  Hủy đơn
+                  {t('cancelOrder')}
                 </Button>
               )}
             </div>

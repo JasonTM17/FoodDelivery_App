@@ -202,8 +202,33 @@
       "delivered": "Đã giao",
       "completed": "Hoàn tất",
       "cancelled": "Đã hủy",
-      "pending": "Ch? x?c nh?n",
-      "confirmed": "?? x?c nh?n"
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận"
+    },
+    "detail": {
+      "sheetTitle": "Chi tiết đơn hàng",
+      "notFound": "Không tìm thấy đơn hàng",
+      "back": "Quay lại",
+      "createdAt": "Tạo lúc {date}",
+      "statusUpdateError": "Không thể cập nhật trạng thái đơn hàng",
+      "customerInfo": "Thông tin khách hàng",
+      "restaurantInfo": "Thông tin nhà hàng",
+      "driverInfo": "Thông tin tài xế",
+      "nameLabel": "Tên:",
+      "phoneLabel": "SĐT:",
+      "addressLabel": "Địa chỉ:",
+      "items": "Món ăn",
+      "subtotal": "Tạm tính",
+      "deliveryFee": "Phí giao hàng",
+      "discount": "Giảm giá",
+      "total": "Tổng cộng",
+      "note": "Ghi chú",
+      "updateStatus": "Cập nhật trạng thái",
+      "confirmOrder": "Xác nhận đơn",
+      "startPreparing": "Bắt đầu chuẩn bị",
+      "startDelivery": "Bắt đầu giao hàng",
+      "markDelivered": "Đã giao thành công",
+      "cancelOrder": "Hủy đơn"
     }
   },
   "orderDetail": {
@@ -346,10 +371,10 @@
     "retry": "Thử lại",
     "permissionDenied": "Không có quyền truy cập",
     "permissionDeniedDescription": "Tài khoản của bạn không thể xem các job xuất dữ liệu.",
-    "processedRows": "{processed} d?ng",
-    "processedRowsWithTotal": "{processed} / {total} d?ng",
-    "estimatedRows": "D? ki?n: {count} d?ng",
-    "cancel": "H?y"
+    "processedRows": "{processed} dòng",
+    "processedRowsWithTotal": "{processed} / {total} dòng",
+    "estimatedRows": "Dự kiến: {count} dòng",
+    "cancel": "Hủy"
   },
   "reports": {
     "title": "Báo cáo & xuất dữ liệu",
@@ -465,57 +490,57 @@
     "title": "Hỗ trợ",
     "description": "Quản lý yêu cầu hỗ trợ từ khách hàng",
     "statuses": {
-      "open": "M?",
-      "in_progress": "?ang x? l?",
-      "waiting_customer": "Ch? kh?ch",
-      "resolved": "?? gi?i quy?t",
-      "closed": "?? ??ng"
+      "open": "Mở",
+      "in_progress": "Đang xử lý",
+      "waiting_customer": "Chờ khách",
+      "resolved": "Đã giải quyết",
+      "closed": "Đã đóng"
     },
     "priorities": {
-      "low": "Th?p",
-      "medium": "Trung b?nh",
-      "normal": "B?nh th??ng",
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "normal": "Bình thường",
       "high": "Cao",
-      "urgent": "Kh?n c?p",
-      "critical": "Kh?n c?p"
+      "urgent": "Khẩn cấp",
+      "critical": "Khẩn cấp"
     },
     "sla": {
-      "overdue": "Qu? h?n",
-      "remainingPercent": "{percent}% c?n l?i",
-      "expiringSoon": "S?p h?t h?n",
-      "almostOverdue": "G?n qu? h?n",
-      "overdueBy": "Qu? h?n {time}",
-      "remainingTime": "C?n {time}"
+      "overdue": "Quá hạn",
+      "remainingPercent": "{percent}% còn lại",
+      "expiringSoon": "Sắp hết hạn",
+      "almostOverdue": "Gần quá hạn",
+      "overdueBy": "Quá hạn {time}",
+      "remainingTime": "Còn {time}"
     },
-    "statusUpdateError": "Kh?ng th? c?p nh?t tr?ng th?i",
-    "mutationError": "Kh?ng th? c?p nh?t ticket",
-    "emptyColumn": "Kh?ng c? ticket",
-    "orderShort": "??n: #{id}",
-    "assigned": "?? nh?n",
-    "detailTitle": "Chi ti?t y?u c?u",
-    "userLabel": "Ng??i d?ng:",
-    "orderLabel": "??n h?ng:",
-    "createdAtLabel": "Ng?y t?o:",
-    "assigneeLabel": "Ng??i x? l?:",
-    "unassigned": "Ch?a ph?n c?ng",
-    "resolutionNotes": "Ghi ch? x? l?",
-    "resolutionPlaceholder": "Nh?p ghi ch? x? l?...",
-    "statusLabel": "Tr?ng th?i",
-    "claim": "Nh?n x? l?",
-    "cancel": "H?y",
-    "saveChanges": "L?u thay ??i",
+    "statusUpdateError": "Không thể cập nhật trạng thái",
+    "mutationError": "Không thể cập nhật ticket",
+    "emptyColumn": "Không có ticket",
+    "orderShort": "Đơn: #{id}",
+    "assigned": "Đã nhận",
+    "detailTitle": "Chi tiết yêu cầu",
+    "userLabel": "Người dùng:",
+    "orderLabel": "Đơn hàng:",
+    "createdAtLabel": "Ngày tạo:",
+    "assigneeLabel": "Người xử lý:",
+    "unassigned": "Chưa phân công",
+    "resolutionNotes": "Ghi chú xử lý",
+    "resolutionPlaceholder": "Nhập ghi chú xử lý...",
+    "statusLabel": "Trạng thái",
+    "claim": "Nhận xử lý",
+    "cancel": "Hủy",
+    "saveChanges": "Lưu thay đổi",
     "thread": {
-      "empty": "Ch?a c? tin nh?n n?o",
-      "agentRole": "(H? tr? vi?n)",
-      "customerRole": "(Kh?ch h?ng)",
-      "internalNote": "Ghi ch? n?i b?"
+      "empty": "Chưa có tin nhắn nào",
+      "agentRole": "(Hỗ trợ viên)",
+      "customerRole": "(Khách hàng)",
+      "internalNote": "Ghi chú nội bộ"
     },
     "internalNote": {
-      "saveError": "Kh?ng th? l?u ghi ch? n?i b?",
-      "visibility": "Ch? hi?n th? cho ??i h? tr?",
-      "placeholder": "Ghi ch? n?i b?...",
-      "saving": "?ang l?u...",
-      "submit": "Th?m ghi ch? n?i b?"
+      "saveError": "Không thể lưu ghi chú nội bộ",
+      "visibility": "Chỉ hiển thị cho đội hỗ trợ",
+      "placeholder": "Ghi chú nội bộ...",
+      "saving": "Đang lưu...",
+      "submit": "Thêm ghi chú nội bộ"
     }
   },
   "supportDetail": {
@@ -906,7 +931,7 @@
     "vatEnabledDesc": "Áp dụng VAT vào giao dịch"
   },
   "realtimeOrders": {
-    "title": "??n h?ng tr?c ti?p",
-    "empty": "Ch?a c? ??n h?ng m?i"
+    "title": "Đơn hàng trực tiếp",
+    "empty": "Chưa có đơn hàng mới"
   }
 }

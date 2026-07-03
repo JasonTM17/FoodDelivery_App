@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@/navigation';
+import { useTranslations } from 'next-intl';
 
 interface Order {
   id: string;
@@ -34,6 +35,7 @@ export default function OrderDetailPage({
   params: { id: string };
 }) {
   const { id } = params;
+  const t = useTranslations('orders.detail');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -49,7 +51,7 @@ export default function OrderDetailPage({
       await apiPatch(`/admin/orders/${id}/status`, { status });
       refetch();
     } catch (err) {
-      setActionError((err as { message?: string }).message || 'Không thể cập nhật trạng thái đơn hàng');
+      setActionError((err as { message?: string }).message || t('statusUpdateError'));
     } finally {
       setActionLoading(false);
     }
@@ -67,9 +69,9 @@ export default function OrderDetailPage({
   if (error || !order) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-destructive">Không tìm thấy đơn hàng</p>
+        <p className="text-destructive">{t('notFound')}</p>
         <Button asChild>
-          <Link href="/orders">Quay lại</Link>
+          <Link href="/orders">{t('back')}</Link>
         </Button>
       </div>
     );
@@ -86,7 +88,7 @@ export default function OrderDetailPage({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{order.orderCode}</h1>
           <p className="text-sm text-muted-foreground">
-            Tạo lúc {formatDate(order.createdAt)}
+            {t('createdAt', { date: formatDate(order.createdAt) })}
           </p>
         </div>
         <div className="ml-auto">
@@ -97,22 +99,22 @@ export default function OrderDetailPage({
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Thông tin khách hàng</CardTitle>
+            <CardTitle>{t('customerInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><span className="text-muted-foreground">Tên:</span> {order.customer?.name}</p>
-            <p><span className="text-muted-foreground">SĐT:</span> {order.customer?.phone}</p>
-            <p><span className="text-muted-foreground">Địa chỉ:</span> {order.deliveryAddress}</p>
+            <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.customer?.name}</p>
+            <p><span className="text-muted-foreground">{t('phoneLabel')}</span> {order.customer?.phone}</p>
+            <p><span className="text-muted-foreground">{t('addressLabel')}</span> {order.deliveryAddress}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Thông tin nhà hàng</CardTitle>
+            <CardTitle>{t('restaurantInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><span className="text-muted-foreground">Tên:</span> {order.restaurant?.name}</p>
-            <p><span className="text-muted-foreground">Địa chỉ:</span> {order.restaurant?.address}</p>
+            <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.restaurant?.name}</p>
+            <p><span className="text-muted-foreground">{t('addressLabel')}</span> {order.restaurant?.address}</p>
           </CardContent>
         </Card>
       </div>
@@ -120,18 +122,18 @@ export default function OrderDetailPage({
       {order.driver && (
         <Card>
           <CardHeader>
-            <CardTitle>Thông tin tài xế</CardTitle>
+            <CardTitle>{t('driverInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><span className="text-muted-foreground">Tên:</span> {order.driver.name}</p>
-            <p><span className="text-muted-foreground">SĐT:</span> {order.driver.phone}</p>
+            <p><span className="text-muted-foreground">{t('nameLabel')}</span> {order.driver.name}</p>
+            <p><span className="text-muted-foreground">{t('phoneLabel')}</span> {order.driver.phone}</p>
           </CardContent>
         </Card>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Món ăn</CardTitle>
+          <CardTitle>{t('items')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -153,17 +155,17 @@ export default function OrderDetailPage({
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Phí giao hàng</span>
+              <span className="text-muted-foreground">{t('deliveryFee')}</span>
               <span>{formatCurrency(order.deliveryFee)}</span>
             </div>
             {order.discount > 0 && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Giảm giá</span>
+                <span className="text-muted-foreground">{t('discount')}</span>
                 <span className="text-green-600">-{formatCurrency(order.discount)}</span>
               </div>
             )}
             <div className="flex justify-between border-t pt-2 text-base font-bold">
-              <span>Tổng cộng</span>
+              <span>{t('total')}</span>
               <span>{formatCurrency(order.total)}</span>
             </div>
           </div>
@@ -173,7 +175,7 @@ export default function OrderDetailPage({
       {order.note && (
         <Card>
           <CardHeader>
-            <CardTitle>Ghi chú</CardTitle>
+            <CardTitle>{t('note')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{order.note}</p>
@@ -183,7 +185,7 @@ export default function OrderDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Cập nhật trạng thái</CardTitle>
+          <CardTitle>{t('updateStatus')}</CardTitle>
         </CardHeader>
         <CardContent>
           {actionError && (
@@ -194,22 +196,22 @@ export default function OrderDetailPage({
           <div className="flex flex-wrap gap-2">
             {order.status === 'pending' && (
               <Button onClick={() => updateStatus('confirmed')} disabled={actionLoading}>
-                Xác nhận đơn
+                {t('confirmOrder')}
               </Button>
             )}
             {order.status === 'confirmed' && (
               <Button onClick={() => updateStatus('preparing')} disabled={actionLoading}>
-                Bắt đầu chuẩn bị
+                {t('startPreparing')}
               </Button>
             )}
             {order.status === 'preparing' && (
               <Button onClick={() => updateStatus('delivering')} disabled={actionLoading}>
-                Bắt đầu giao hàng
+                {t('startDelivery')}
               </Button>
             )}
             {order.status === 'delivering' && (
               <Button onClick={() => updateStatus('delivered')} disabled={actionLoading}>
-                Đã giao thành công
+                {t('markDelivered')}
               </Button>
             )}
             {['pending', 'confirmed'].includes(order.status) && (
@@ -218,7 +220,7 @@ export default function OrderDetailPage({
                 onClick={() => updateStatus('cancelled')}
                 disabled={actionLoading}
               >
-                Hủy đơn
+                {t('cancelOrder')}
               </Button>
             )}
           </div>

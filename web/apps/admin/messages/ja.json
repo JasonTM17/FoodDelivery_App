@@ -202,8 +202,33 @@
       "delivered": "配達済み",
       "completed": "完了",
       "cancelled": "キャンセル",
-      "pending": "????",
-      "confirmed": "????"
+      "pending": "確認待ち",
+      "confirmed": "確認済み"
+    },
+    "detail": {
+      "sheetTitle": "注文詳細",
+      "notFound": "注文が見つかりません",
+      "back": "戻る",
+      "createdAt": "{date}に作成",
+      "statusUpdateError": "注文ステータスを更新できません",
+      "customerInfo": "顧客情報",
+      "restaurantInfo": "レストラン情報",
+      "driverInfo": "配達員情報",
+      "nameLabel": "名前:",
+      "phoneLabel": "電話:",
+      "addressLabel": "住所:",
+      "items": "商品",
+      "subtotal": "小計",
+      "deliveryFee": "配達料",
+      "discount": "割引",
+      "total": "合計",
+      "note": "メモ",
+      "updateStatus": "ステータスを更新",
+      "confirmOrder": "注文を確認",
+      "startPreparing": "準備を開始",
+      "startDelivery": "配達を開始",
+      "markDelivered": "配達完了にする",
+      "cancelOrder": "注文をキャンセル"
     }
   },
   "orderDetail": {
@@ -346,10 +371,10 @@
     "retry": "再試行",
     "permissionDenied": "アクセス権限がありません",
     "permissionDeniedDescription": "このアカウントではエクスポートジョブを閲覧できません。",
-    "processedRows": "{processed}?",
-    "processedRowsWithTotal": "{processed} / {total}?",
-    "estimatedRows": "??: {count}?",
-    "cancel": "?????"
+    "processedRows": "{processed}行",
+    "processedRowsWithTotal": "{processed} / {total}行",
+    "estimatedRows": "推定: {count}行",
+    "cancel": "キャンセル"
   },
   "reports": {
     "title": "レポートとエクスポート",
@@ -465,57 +490,57 @@
     "title": "サポート",
     "description": "顧客サポートリクエストの管理",
     "statuses": {
-      "open": "???",
-      "in_progress": "???",
-      "waiting_customer": "????",
-      "resolved": "????",
-      "closed": "??????"
+      "open": "未対応",
+      "in_progress": "対応中",
+      "waiting_customer": "顧客待ち",
+      "resolved": "解決済み",
+      "closed": "クローズ済み"
     },
     "priorities": {
-      "low": "?",
-      "medium": "?",
-      "normal": "??",
-      "high": "?",
-      "urgent": "??",
-      "critical": "???"
+      "low": "低",
+      "medium": "中",
+      "normal": "通常",
+      "high": "高",
+      "urgent": "緊急",
+      "critical": "最優先"
     },
     "sla": {
-      "overdue": "????",
-      "remainingPercent": "??{percent}%",
-      "expiringSoon": "??????",
-      "almostOverdue": "????",
-      "overdueBy": "{time}??",
-      "remainingTime": "??{time}"
+      "overdue": "期限超過",
+      "remainingPercent": "残り{percent}%",
+      "expiringSoon": "まもなく期限",
+      "almostOverdue": "期限間近",
+      "overdueBy": "{time}超過",
+      "remainingTime": "残り{time}"
     },
-    "statusUpdateError": "?????????????",
-    "mutationError": "????????????",
-    "emptyColumn": "??????????",
-    "orderShort": "??: #{id}",
-    "assigned": "????",
-    "detailTitle": "???????",
-    "userLabel": "????:",
-    "orderLabel": "??:",
-    "createdAtLabel": "???:",
-    "assigneeLabel": "???:",
-    "unassigned": "?????",
-    "resolutionNotes": "????",
-    "resolutionPlaceholder": "???????...",
-    "statusLabel": "?????",
-    "claim": "????",
-    "cancel": "?????",
-    "saveChanges": "?????",
+    "statusUpdateError": "ステータスを更新できません",
+    "mutationError": "チケットを更新できません",
+    "emptyColumn": "チケットはありません",
+    "orderShort": "注文: #{id}",
+    "assigned": "担当済み",
+    "detailTitle": "リクエスト詳細",
+    "userLabel": "ユーザー:",
+    "orderLabel": "注文:",
+    "createdAtLabel": "作成日:",
+    "assigneeLabel": "担当者:",
+    "unassigned": "未割り当て",
+    "resolutionNotes": "対応メモ",
+    "resolutionPlaceholder": "対応メモを入力...",
+    "statusLabel": "ステータス",
+    "claim": "担当する",
+    "cancel": "キャンセル",
+    "saveChanges": "変更を保存",
     "thread": {
-      "empty": "?????????????",
-      "agentRole": "(??????)",
-      "customerRole": "(??)",
-      "internalNote": "????"
+      "empty": "メッセージはまだありません",
+      "agentRole": "(サポート担当)",
+      "customerRole": "(顧客)",
+      "internalNote": "内部メモ"
     },
     "internalNote": {
-      "saveError": "????????????",
-      "visibility": "????????????????",
-      "placeholder": "????...",
-      "saving": "???...",
-      "submit": "???????"
+      "saveError": "内部メモを保存できません",
+      "visibility": "サポートチームのみに表示されます",
+      "placeholder": "内部メモ...",
+      "saving": "保存中...",
+      "submit": "内部メモを追加"
     }
   },
   "supportDetail": {
@@ -906,7 +931,7 @@
     "vatEnabledDesc": "取引にVATを適用する"
   },
   "realtimeOrders": {
-    "title": "?????",
-    "empty": "???????????"
+    "title": "ライブ注文",
+    "empty": "新しい注文はありません"
   }
 }
