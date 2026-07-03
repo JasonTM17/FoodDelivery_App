@@ -36,7 +36,7 @@ function resolveDateFnsLocale(locale?: string) {
   return enUS;
 }
 
-export function formatTimeAgo(dateString: string, locale?: string, fallback = 'Unknown'): string {
+export function formatTimeAgo(dateString: string, locale?: string, fallback = '\u2014'): string {
   try {
     return formatDistanceToNow(parseISO(dateString), {
       addSuffix: true,
@@ -47,7 +47,7 @@ export function formatTimeAgo(dateString: string, locale?: string, fallback = 'U
   }
 }
 
-export function formatDateTime(dateString: string, fallback = 'Unknown'): string {
+export function formatDateTime(dateString: string, fallback = '\u2014'): string {
   try {
     return dateFormat(parseISO(dateString), 'HH:mm - dd/MM/yyyy');
   } catch {
@@ -55,7 +55,7 @@ export function formatDateTime(dateString: string, fallback = 'Unknown'): string
   }
 }
 
-export function formatTime(dateString: string, fallback = 'Unknown'): string {
+export function formatTime(dateString: string, fallback = '\u2014'): string {
   try {
     return dateFormat(parseISO(dateString), 'HH:mm');
   } catch {

@@ -9,6 +9,8 @@ interface DateRangePickerProps {
   presets?: { label: string; days: number }[];
 }
 
+const DATE_RANGE_SEPARATOR = '\u2013';
+
 export function DateRangePicker({
   value, onChange, presets,
 }: DateRangePickerProps) {
@@ -41,7 +43,7 @@ export function DateRangePicker({
           max={value.end || undefined}
           className="input-field w-36 text-sm"
         />
-        <span className="text-sm text-gray-400" aria-hidden="true">–</span>
+        <span className="text-sm text-gray-400" aria-hidden="true">{DATE_RANGE_SEPARATOR}</span>
         <input
           type="date"
           value={value.end}

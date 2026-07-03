@@ -19,6 +19,8 @@ const STATUS_MAP: Record<string, ColumnId> = {
   ready_for_pickup: 'ready',
 };
 
+const EMPTY_VALUE = '\u2014';
+
 function initSound(): boolean {
   if (typeof window === 'undefined') return true;
   return localStorage.getItem('order_sound_enabled') !== 'false';
@@ -152,7 +154,7 @@ export function OrderKanbanBoard() {
                   <h2 className="font-semibold text-gray-900">{col.label}</h2>
                 </div>
                 <span className={cn('inline-flex items-center justify-center min-w-6 h-6 rounded-full text-xs font-bold px-2', col.color)}>
-                  {isLoading ? '—' : orders.length}
+                  {isLoading ? EMPTY_VALUE : orders.length}
                 </span>
               </div>
               <div className="p-4 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin">

@@ -26,6 +26,8 @@ const dateLocales: Record<string, string> = {
   vi: 'vi-VN',
 };
 
+const EMPTY_VALUE = '\u2014';
+
 export function StaffListTable({ staff, onInvite, onEdit }: StaffListTableProps) {
   const t = useTranslations('staff');
   const locale = useLocale();
@@ -100,7 +102,7 @@ export function StaffListTable({ staff, onInvite, onEdit }: StaffListTableProps)
                   </span>
                 </td>
                 <td className="px-2 py-3 text-xs text-gray-500">
-                  {activityDate ? new Date(activityDate).toLocaleDateString(dateLocale) : '—'}
+                  {activityDate ? new Date(activityDate).toLocaleDateString(dateLocale) : EMPTY_VALUE}
                 </td>
                 <td className="px-2 py-3 text-right">
                   <button type="button" onClick={() => onEdit?.(member.id)} className="btn-ghost p-1" aria-label={t('table.actions')}>

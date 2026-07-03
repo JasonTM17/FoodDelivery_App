@@ -9,6 +9,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
   useTranslations: () => (key: string, values?: Record<string, string | number>) => {
     const messages: Record<string, string> = {
       title: 'Analytics',

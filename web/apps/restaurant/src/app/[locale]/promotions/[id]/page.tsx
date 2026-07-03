@@ -15,6 +15,8 @@ import { getPromotionStatusColor } from '@/lib/promotion-engine';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Promotion, PromotionStatus } from '@/lib/types';
 
+const EMPTY_VALUE = '\u2014';
+
 export default function PromotionDetailPage({
   params,
 }: {
@@ -76,11 +78,11 @@ export default function PromotionDetailPage({
   const formatValue = () => {
     switch (promo.type) {
       case 'percent': return `${promo.discountValue}%`;
-      case 'fixed': return formatCurrency(promo.discountValue);
+      case 'fixed': return formatCurrency(promo.discountValue, locale);
       case 'bogof':
         return promo.comboConfig
           ? t('buyGet', { buy: promo.comboConfig.buy, get: promo.comboConfig.get })
-          : '—';
+          : EMPTY_VALUE;
       case 'combo':
         return t('comboPrice');
     }

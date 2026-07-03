@@ -16,15 +16,10 @@ interface PromotionAnalyticsProps {
   };
 }
 
-const localeTags: Record<string, string> = {
-  en: 'en-US',
-  ja: 'ja-JP',
-  vi: 'vi-VN',
-};
-
 export function PromotionAnalytics({ promotion, analytics }: PromotionAnalyticsProps) {
   const t = useTranslations('promotions.analytics');
   const locale = useLocale();
+  const numberFormatter = new Intl.NumberFormat(locale);
   const usageCount = analytics?.usageCount ?? promotion.usageCount ?? 0;
 
   if (!analytics) {
@@ -32,7 +27,7 @@ export function PromotionAnalytics({ promotion, analytics }: PromotionAnalyticsP
       <div className="space-y-4" data-testid="promotion-analytics">
         <h2 className="text-base font-semibold text-gray-900">{t('title')}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label={t('usage')} value={usageCount.toLocaleString(localeTags[locale] ?? 'vi-VN')} icon={<Users className="h-4 w-4" />} />
+          <KpiCard label={t('usage')} value={numberFormatter.format(usageCount)} icon={<Users className="h-4 w-4" />} />
           <UnavailableMetric label={t('revenue')} />
           <UnavailableMetric label={t('conversion')} />
           <UnavailableMetric label={t('roi')} />
@@ -52,10 +47,10 @@ export function PromotionAnalytics({ promotion, analytics }: PromotionAnalyticsP
       <h2 className="text-base font-semibold text-gray-900">{t('title')}</h2>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label={t('usage')} value={analytics.usageCount.toLocaleString(localeTags[locale] ?? 'vi-VN')} icon={<Users className="h-4 w-4" />} />
-        <KpiCard label={t('revenue')} value={formatCurrency(analytics.revenueAttributed)} icon={<DollarSign className="h-4 w-4" />} />
-        <KpiCard label={t('conversion')} value={`${analytics.redemptionRate}%`} icon={<TrendingUp className="h-4 w-4" />} />
-        <KpiCard label={t('roi')} value={`${analytics.roi}%`} icon={<BarChart3 className="h-4 w-4" />} color={analytics.roi >= 100 ? 'text-green-600' : undefined} />
+        <KpiCard label={t('usage')} value={numberFormatter.format(analytics.usageCount)} icon={<Users className="h-4 w-4" />} />
+        <KpiCard label={t('revenue')} value={formatCurrency(analytics.revenueAttributed, locale)} icon={<DollarSign className="h-4 w-4" />} />
+        <KpiCard label={t('conversion')} value={`${numberFormatter.format(analytics.redemptionRate)}%`} icon={<TrendingUp className="h-4 w-4" />} />
+        <KpiCard label={t('roi')} value={`${numberFormatter.format(analytics.roi)}%`} icon={<BarChart3 className="h-4 w-4" />} color={analytics.roi >= 100 ? 'text-green-600' : undefined} />
       </div>
 
       <div className="rounded-lg border p-4">
@@ -68,7 +63,7 @@ export function PromotionAnalytics({ promotion, analytics }: PromotionAnalyticsP
                 <div
                   className="w-full rounded-t bg-brand-400 transition-colors hover:bg-brand-500"
                   style={{ height: `${height}%` }}
-                  title={`${point.date}: ${point.count}`}
+                  title={`${point.date}: ${numberFormatter.format(point.count)}`}
                 />
               </div>
             );
