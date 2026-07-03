@@ -96,6 +96,7 @@ Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、vi
 - [Testing guide](testing-guide.md)
 - [Security audit guide](security-audit-guide.ja.md)
 - [Documentation localization policy](documentation-localization.md)
+- [Design guidelines](design-guidelines.ja.md)
 - [i18n guide](i18n-guide.md)
 - [Roadmap](project-roadmap.md)
 

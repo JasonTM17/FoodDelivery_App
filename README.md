@@ -172,7 +172,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [Security audit guide](docs/security-audit-guide.md)
 - [Documentation localization policy](docs/documentation-localization.md)
 - [Code standards](docs/code-standards.md)
-- [Design guidelines](docs/design-guidelines.md)
+- [Design guidelines](docs/design-guidelines.md) ([VI](docs/design-guidelines.vi.md), [JA](docs/design-guidelines.ja.md))
 - [i18n guide](docs/i18n-guide.md)
 - [Roadmap](docs/project-roadmap.md)
 

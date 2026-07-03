@@ -1,5 +1,7 @@
 # FoodFlow Design Guidelines
 
+Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guidelines.vi.md) | [日本語](./design-guidelines.ja.md)
+
 ## Brand Colors
 
 | Token | Hex | Usage |
@@ -12,6 +14,15 @@
 | Text Muted | `#6B7280` | Secondary text, captions |
 | Sidebar BG | `#14532D` | Admin dark sidebar |
 | Destructive | `#EF4444` | Errors, delete actions, cancelled status |
+
+## Logo System
+
+- Mark: rounded square gradient with delivery route, bowl, leaf, and map pin.
+- Meaning: food ordering, freshness, delivery flow, and real-time map visibility.
+- Primary assets: `web/apps/admin/public/favicon.svg`, `web/apps/admin/public/foodflow-mark.svg`, `web/apps/restaurant/public/favicon.svg`, and `web/apps/restaurant/public/foodflow-mark.svg`.
+- Use the shared React component `FoodFlowLogo` from `@foodflow/ui/foodflow-logo` for sidebar, login, empty-state, and error-state UI.
+- Keep the mark on dark sidebar surfaces at 36-40px and on error/empty states at 64-80px.
+- Do not replace the vector mark with raster exports unless the target platform requires PNG.
 
 ## Typography
 

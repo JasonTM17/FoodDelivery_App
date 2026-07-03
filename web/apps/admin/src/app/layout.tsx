@@ -9,17 +9,26 @@ const inter = Inter({ subsets: ['latin', 'vietnamese'] });
 const LOCALES = ['vi', 'en', 'ja'] as const;
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'),
   title: {
     template: '%s | FoodFlow Admin',
     default: 'FoodFlow Admin',
   },
   description: 'FoodFlow delivery operations console for orders, restaurants, drivers, and users',
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/foodflow-mark.svg', type: 'image/svg+xml', sizes: 'any' },
+    ],
+  },
   openGraph: {
     title: 'FoodFlow Admin',
     description: 'FoodFlow delivery operations console',
     type: 'website',
+    images: [{ url: '/foodflow-mark.svg', width: 512, height: 512, alt: 'FoodFlow Admin mark' }],
   },
-  twitter: { card: 'summary', title: 'FoodFlow Admin' },
+  twitter: { card: 'summary', title: 'FoodFlow Admin', images: ['/foodflow-mark.svg'] },
   robots: { index: false, follow: false },
 };
 

@@ -1,0 +1,17 @@
+{
+  "name": "FoodFlow Restaurant",
+  "short_name": "FoodFlow",
+  "description": "FoodFlow merchant workspace for orders, menu, promotions, revenue, staff, insights, and customer replies.",
+  "start_url": "/vi",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#15803d",
+  "icons": [
+    {
+      "src": "/foodflow-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

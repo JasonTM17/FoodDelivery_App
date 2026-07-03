@@ -16,7 +16,26 @@ const LOCALES = ['vi', 'en', 'ja'] as const
 const appMessages = { vi: viMessages, en: enMessages, ja: jaMessages }
 
 export const metadata: Metadata = {
-  title: 'FoodFlow Restaurant',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_RESTAURANT_URL ?? 'http://localhost:3002'),
+  title: {
+    template: '%s | FoodFlow Restaurant',
+    default: 'FoodFlow Restaurant',
+  },
+  description: 'FoodFlow merchant workspace for orders, menu, promotions, revenue, staff, insights, and customer replies',
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/foodflow-mark.svg', type: 'image/svg+xml', sizes: 'any' },
+    ],
+  },
+  openGraph: {
+    title: 'FoodFlow Restaurant',
+    description: 'FoodFlow merchant workspace',
+    type: 'website',
+    images: [{ url: '/foodflow-mark.svg', width: 512, height: 512, alt: 'FoodFlow Restaurant mark' }],
+  },
+  twitter: { card: 'summary', title: 'FoodFlow Restaurant', images: ['/foodflow-mark.svg'] },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

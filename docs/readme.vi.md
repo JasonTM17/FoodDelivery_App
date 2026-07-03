@@ -96,6 +96,7 @@ Batch 4 chỉ được coi là xong khi backend, web, Playwright Chromium/Firefo
 - [Testing guide](testing-guide.md)
 - [Security audit guide](security-audit-guide.vi.md)
 - [Documentation localization policy](documentation-localization.md)
+- [Design guidelines](design-guidelines.vi.md)
 - [i18n guide](i18n-guide.md)
 - [Roadmap](project-roadmap.md)
 

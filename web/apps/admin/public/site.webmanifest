@@ -1,0 +1,17 @@
+{
+  "name": "FoodFlow Admin",
+  "short_name": "FoodFlow Admin",
+  "description": "FoodFlow operations console for restaurants, orders, drivers, support, exports, and AI monitor.",
+  "start_url": "/vi/overview",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#14532d",
+  "icons": [
+    {
+      "src": "/foodflow-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
