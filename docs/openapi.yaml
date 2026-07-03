@@ -709,6 +709,49 @@ components:
         data: { $ref: "#/components/schemas/DriverEarningsSummary" }
       required: [success, data]
 
+    DriverRatingReview:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customerName: { type: string }
+        customerAvatarUrl: { type: string, nullable: true }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, nullable: true }
+        date: { type: string, format: date-time }
+        orderId: { type: string, format: uuid }
+        orderCode: { type: string }
+      required: [id, customerName, customerAvatarUrl, rating, comment, date, orderId, orderCode]
+
+    DriverRatingStats:
+      type: object
+      properties:
+        average: { type: number, format: double, minimum: 0, maximum: 5 }
+        totalReviews: { type: integer, minimum: 0 }
+        distribution:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+          example: { "1": 0, "2": 0, "3": 0, "4": 1, "5": 2 }
+      required: [average, totalReviews, distribution]
+
+    DriverRatings:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items: { $ref: "#/components/schemas/DriverRatingReview" }
+        stats: { $ref: "#/components/schemas/DriverRatingStats" }
+        hasMore: { type: boolean }
+      required: [reviews, stats, hasMore]
+
+    DriverRatingsResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverRatings" }
+      required: [success, data]
+
     DriverHeatmapPoint:
       type: object
       properties:
@@ -2726,6 +2769,20 @@ paths:
           schema: { type: string, enum: [7d, 30d, 90d], default: 7d }
       responses:
         "200": { description: "Earnings summary", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarningsSummaryResponse" } } } }
+
+  /driver/ratings:
+    get:
+      tags: [drivers]
+      summary: Get driver rating history
+      description: Returns visible delivery reviews for the authenticated driver and derives rating stats from Review rows. Empty arrays are valid; no runtime sample reviews are generated.
+      operationId: drivers_getRatings
+      x-foo-actor: driver
+      parameters:
+        - name: star
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        "200": { description: "Rating history", content: { application/json: { schema: { $ref: "#/components/schemas/DriverRatingsResponse" } } } }
 
   /driver/heatmap:
     get:

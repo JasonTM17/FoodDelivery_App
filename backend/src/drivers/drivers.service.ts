@@ -32,6 +32,29 @@ export interface DriverEarningsSummary {
   byDay: DriverDailyEarning[]
 }
 
+export interface DriverRatingReview {
+  id: string
+  customerName: string
+  customerAvatarUrl: string | null
+  rating: number
+  comment: string | null
+  date: string
+  orderId: string
+  orderCode: string
+}
+
+export interface DriverRatingStats {
+  average: number
+  totalReviews: number
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>
+}
+
+export interface DriverRatingsResponse {
+  reviews: DriverRatingReview[]
+  stats: DriverRatingStats
+  hasMore: boolean
+}
+
 @Injectable()
 export class DriversService {
   constructor(
@@ -149,6 +172,53 @@ export class DriversService {
     }
   }
 
+  async getRatings(driverId: string, star?: string): Promise<DriverRatingsResponse> {
+    const starFilter = normalizeStarFilter(star)
+    const baseWhere: Prisma.ReviewWhereInput = {
+      driverId,
+      isHidden: false,
+      deliveryRating: { not: null },
+    }
+    const reviewsWhere: Prisma.ReviewWhereInput = {
+      ...baseWhere,
+      ...(starFilter ? { deliveryRating: starFilter } : {}),
+    }
+    const [statsRows, reviews] = await Promise.all([
+      this.prisma.review.findMany({
+        where: baseWhere,
+        select: { deliveryRating: true },
+      }),
+      this.prisma.review.findMany({
+        where: reviewsWhere,
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          deliveryRating: true,
+          comment: true,
+          createdAt: true,
+          order: { select: { id: true, orderCode: true } },
+          customer: { select: { fullName: true, avatarUrl: true } },
+        },
+      }),
+    ])
+
+    return {
+      reviews: reviews.map(review => ({
+        id: review.id,
+        customerName: review.customer.fullName,
+        customerAvatarUrl: review.customer.avatarUrl,
+        rating: review.deliveryRating ?? 0,
+        comment: review.comment,
+        date: review.createdAt.toISOString(),
+        orderId: review.order.id,
+        orderCode: review.order.orderCode,
+      })),
+      stats: ratingStats(statsRows.map(row => row.deliveryRating).filter((rating): rating is number => rating !== null)),
+      hasMore: reviews.length === 50,
+    }
+  }
+
   async getHeatmap(query: DriverHeatmapQuery): Promise<DriverHeatmapPoint[]> {
     const lat = query.lat
     const lng = query.lng
@@ -241,4 +311,22 @@ function dateKey(date: Date): string {
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
   const day = `${date.getDate()}`.padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function normalizeStarFilter(star: string | undefined): number | undefined {
+  const value = Number(star)
+  if (!Number.isInteger(value) || value < 1 || value > 5) return undefined
+  return value
+}
+
+function ratingStats(ratings: number[]): DriverRatingStats {
+  const distribution: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  for (const rating of ratings) {
+    if (rating >= 1 && rating <= 5) distribution[rating as 1 | 2 | 3 | 4 | 5] += 1
+  }
+  const totalReviews = ratings.length
+  const average = totalReviews === 0
+    ? 0
+    : Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / totalReviews) * 10) / 10
+  return { average, totalReviews, distribution }
 }

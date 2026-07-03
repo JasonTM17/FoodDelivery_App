@@ -1474,6 +1474,60 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get driverEarningsChartRetry;
 
+  /// No description provided for @driverRatingsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử đánh giá'**
+  String get driverRatingsTitle;
+
+  /// No description provided for @driverRatingsAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get driverRatingsAll;
+
+  /// No description provided for @driverRatingsStars.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} sao'**
+  String driverRatingsStars(int count);
+
+  /// No description provided for @driverRatingsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đánh giá nào'**
+  String get driverRatingsEmpty;
+
+  /// No description provided for @driverRatingsError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải đánh giá lúc này.'**
+  String get driverRatingsError;
+
+  /// No description provided for @driverRatingsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driverRatingsRetry;
+
+  /// No description provided for @driverRatingsOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐH: {code}'**
+  String driverRatingsOrder(String code);
+
+  /// No description provided for @driverRatingsToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverRatingsToday;
+
+  /// No description provided for @driverRatingsYesterday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua'**
+  String get driverRatingsYesterday;
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:

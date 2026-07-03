@@ -714,6 +714,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverEarningsChartRetry => 'Thử lại';
 
   @override
+  String get driverRatingsTitle => 'Lịch sử đánh giá';
+
+  @override
+  String get driverRatingsAll => 'Tất cả';
+
+  @override
+  String driverRatingsStars(int count) {
+    return '$count sao';
+  }
+
+  @override
+  String get driverRatingsEmpty => 'Chưa có đánh giá nào';
+
+  @override
+  String get driverRatingsError => 'Không thể tải đánh giá lúc này.';
+
+  @override
+  String get driverRatingsRetry => 'Thử lại';
+
+  @override
+  String driverRatingsOrder(String code) {
+    return 'ĐH: $code';
+  }
+
+  @override
+  String get driverRatingsToday => 'Hôm nay';
+
+  @override
+  String get driverRatingsYesterday => 'Hôm qua';
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override

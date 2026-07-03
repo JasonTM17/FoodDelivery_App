@@ -11,6 +11,7 @@ describe('DriversService', () => {
   const mockPrisma = {
     driverProfile: { findUniqueOrThrow: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     payment: { findMany: jest.fn() },
+    review: { findMany: jest.fn() },
     $queryRaw: jest.fn(),
   }
 
@@ -101,6 +102,72 @@ describe('DriversService', () => {
       expect(summary.totalVnd).toBe(0)
       expect(summary.tripCount).toBe(0)
       expect(summary.avgPerTrip).toBe(0)
+    })
+  })
+
+  describe('getRatings', () => {
+    it('returns driver reviews and derives distribution from real review rows', async () => {
+      const createdAt = new Date('2026-07-03T08:00:00Z')
+      mockPrisma.review.findMany
+        .mockResolvedValueOnce([{ deliveryRating: 5 }, { deliveryRating: 4 }, { deliveryRating: 5 }])
+        .mockResolvedValueOnce([
+          {
+            id: 'review-1',
+            deliveryRating: 5,
+            comment: 'Fast delivery',
+            createdAt,
+            order: { id: 'order-1', orderCode: 'FD0000000001' },
+            customer: { fullName: 'Customer One', avatarUrl: null },
+          },
+        ])
+
+      const result = await service.getRatings('d1', '5')
+
+      expect(mockPrisma.review.findMany).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: expect.objectContaining({ driverId: 'd1', deliveryRating: 5 }),
+        }),
+      )
+      expect(result.stats).toEqual({
+        average: 4.7,
+        totalReviews: 3,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 2 },
+      })
+      expect(result.reviews).toEqual([
+        {
+          id: 'review-1',
+          customerName: 'Customer One',
+          customerAvatarUrl: null,
+          rating: 5,
+          comment: 'Fast delivery',
+          date: createdAt.toISOString(),
+          orderId: 'order-1',
+          orderCode: 'FD0000000001',
+        },
+      ])
+    })
+
+    it('ignores invalid star filters and returns zero stats for empty reviews', async () => {
+      mockPrisma.review.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+
+      const result = await service.getRatings('d1', '9')
+
+      expect(mockPrisma.review.findMany).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: expect.not.objectContaining({ deliveryRating: 9 }),
+        }),
+      )
+      expect(result).toEqual({
+        reviews: [],
+        stats: {
+          average: 0,
+          totalReviews: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        },
+        hasMore: false,
+      })
     })
   })
 })

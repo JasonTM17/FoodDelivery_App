@@ -12,6 +12,7 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `POST /driver/offline`
 - `GET /driver/earnings?period=day|week|month` — Earnings breakdown
 - `GET /driver/earnings/summary?period=7d|30d|90d` — Chart-ready driver payout ledger summary
+- `GET /driver/ratings?star=1|2|3|4|5` — Visible delivery reviews and rating stats for the authenticated driver
 - `GET /driver/heatmap?lat=...&lng=...&radius=...&window=now|1h|3h|today` — Real demand heatmap near driver location
 - `GET /driver/incentives` — Driver incentive campaigns; returns empty arrays when no campaign source is configured
 - `POST /driver/kyc/upload` — Submit KYC documents

@@ -708,6 +708,37 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverEarningsChartRetry => '再試行';
 
   @override
+  String get driverRatingsTitle => '評価履歴';
+
+  @override
+  String get driverRatingsAll => 'すべて';
+
+  @override
+  String driverRatingsStars(int count) {
+    return '$countつ星';
+  }
+
+  @override
+  String get driverRatingsEmpty => '評価はまだありません';
+
+  @override
+  String get driverRatingsError => '現在、評価を読み込めません。';
+
+  @override
+  String get driverRatingsRetry => '再試行';
+
+  @override
+  String driverRatingsOrder(String code) {
+    return '注文: $code';
+  }
+
+  @override
+  String get driverRatingsToday => '今日';
+
+  @override
+  String get driverRatingsYesterday => '昨日';
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override

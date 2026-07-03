@@ -271,6 +271,21 @@
   "driverEarningsEmpty": "Chưa có dữ liệu thu nhập",
   "driverEarningsChartError": "Không thể tải biểu đồ thu nhập",
   "driverEarningsChartRetry": "Thử lại",
+  "driverRatingsTitle": "Lịch sử đánh giá",
+  "driverRatingsAll": "Tất cả",
+  "driverRatingsStars": "{count} sao",
+  "@driverRatingsStars": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsEmpty": "Chưa có đánh giá nào",
+  "driverRatingsError": "Không thể tải đánh giá lúc này.",
+  "driverRatingsRetry": "Thử lại",
+  "driverRatingsOrder": "ĐH: {code}",
+  "@driverRatingsOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverRatingsToday": "Hôm nay",
+  "driverRatingsYesterday": "Hôm qua",
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",

@@ -207,6 +207,12 @@ Get chart-ready driver earnings from payout ledger data.
 Query: period (7d|30d|90d)
 ```
 
+### GET /driver/ratings
+Get visible delivery reviews and rating distribution for the authenticated driver.
+```
+Query: star (1|2|3|4|5, optional)
+```
+
 ### GET /driver/heatmap
 Get real demand heatmap points near the authenticated driver's location.
 ```

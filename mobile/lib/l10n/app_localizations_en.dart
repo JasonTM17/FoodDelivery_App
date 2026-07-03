@@ -713,6 +713,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverEarningsChartRetry => 'Retry';
 
   @override
+  String get driverRatingsTitle => 'Rating history';
+
+  @override
+  String get driverRatingsAll => 'All';
+
+  @override
+  String driverRatingsStars(int count) {
+    return '$count stars';
+  }
+
+  @override
+  String get driverRatingsEmpty => 'No ratings yet';
+
+  @override
+  String get driverRatingsError => 'Unable to load ratings right now.';
+
+  @override
+  String get driverRatingsRetry => 'Retry';
+
+  @override
+  String driverRatingsOrder(String code) {
+    return 'Order: $code';
+  }
+
+  @override
+  String get driverRatingsToday => 'Today';
+
+  @override
+  String get driverRatingsYesterday => 'Yesterday';
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/api/api_client.dart';
+
 class DriverReview {
   final String id;
   final String customerName;
@@ -18,6 +20,22 @@ class DriverReview {
     required this.date,
     required this.orderId,
   });
+
+  factory DriverReview.fromJson(Map<String, dynamic> json) {
+    final orderCode = json['orderCode']?.toString();
+    final orderId = json['orderId']?.toString() ?? '';
+    return DriverReview(
+      id: json['id']?.toString() ?? '',
+      customerName: json['customerName']?.toString() ?? 'Customer',
+      customerAvatarUrl: json['customerAvatarUrl']?.toString(),
+      rating: _readInt(json['rating']).clamp(1, 5).toInt(),
+      comment: json['comment']?.toString(),
+      date:
+          DateTime.tryParse(json['date']?.toString() ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      orderId: orderCode?.isNotEmpty == true ? orderCode! : orderId,
+    );
+  }
 }
 
 class RatingStats {
@@ -30,6 +48,25 @@ class RatingStats {
     required this.totalReviews,
     required this.distribution,
   });
+
+  factory RatingStats.fromJson(Map<String, dynamic> json) {
+    final rawDistribution = json['distribution'];
+    final distribution = <int, int>{};
+    for (var star = 1; star <= 5; star += 1) {
+      if (rawDistribution is Map) {
+        distribution[star] = _readInt(
+          rawDistribution[star] ?? rawDistribution[star.toString()],
+        );
+      } else {
+        distribution[star] = 0;
+      }
+    }
+    return RatingStats(
+      average: _readDouble(json['average']),
+      totalReviews: _readInt(json['totalReviews']),
+      distribution: distribution,
+    );
+  }
 }
 
 class RatingHistoryState {
@@ -69,55 +106,75 @@ class RatingHistoryState {
 }
 
 class RatingHistoryNotifier extends StateNotifier<RatingHistoryState> {
-  RatingHistoryNotifier() : super(const RatingHistoryState());
+  RatingHistoryNotifier({ApiClient? api})
+    : _api = api ?? ApiClient.instance,
+      super(const RatingHistoryState());
+
+  final ApiClient _api;
 
   Future<void> loadReviews({int? starFilter}) async {
-    state = state.copyWith(isLoading: true, error: null, starFilter: starFilter);
-    // TODO: Replace with real API GET /driver/ratings?star=...
-    await Future.delayed(const Duration(milliseconds: 500));
     state = state.copyWith(
-      isLoading: false,
-      reviews: _sampleReviews(),
-      stats: _sampleStats(),
-      hasMore: false,
+      isLoading: true,
+      error: null,
+      starFilter: starFilter,
     );
+    try {
+      final response = await _api.get<Map<String, dynamic>>(
+        '/driver/ratings',
+        queryParameters: starFilter == null ? null : {'star': starFilter},
+      );
+      final data = response.data ?? {};
+      final rawReviews = data['reviews'];
+      final reviews = rawReviews is List
+          ? rawReviews
+                .whereType<Map>()
+                .map(
+                  (review) =>
+                      DriverReview.fromJson(Map<String, dynamic>.from(review)),
+                )
+                .toList(growable: false)
+          : <DriverReview>[];
+      final rawStats = data['stats'];
+      state = state.copyWith(
+        isLoading: false,
+        reviews: reviews,
+        stats: rawStats is Map
+            ? RatingStats.fromJson(Map<String, dynamic>.from(rawStats))
+            : const RatingStats(
+                average: 0,
+                totalReviews: 0,
+                distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+              ),
+        hasMore: data['hasMore'] == true,
+        starFilter: starFilter,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'DRIVER_RATINGS_UNAVAILABLE',
+        starFilter: starFilter,
+      );
+    }
   }
 
   void refresh() {
     loadReviews(starFilter: state.starFilter);
   }
-
-  RatingStats _sampleStats() {
-    return const RatingStats(
-      average: 4.8,
-      totalReviews: 156,
-      distribution: {5: 98, 4: 36, 3: 14, 2: 5, 1: 3},
-    );
-  }
-
-  List<DriverReview> _sampleReviews() {
-    return [
-      DriverReview(id: 'r1', customerName: 'Nguyễn Thị Hương', rating: 5,
-          comment: 'Giao hàng nhanh, đồ ăn còn nóng. Tài xế rất lịch sự.',
-          date: DateTime(2026, 6, 9), orderId: 'ORD-001'),
-      DriverReview(id: 'r2', customerName: 'Trần Văn Nam', rating: 4,
-          comment: 'Giao đúng giờ, đồ ăn ổn.',
-          date: DateTime(2026, 6, 9), orderId: 'ORD-002'),
-      DriverReview(id: 'r3', customerName: 'Lê Thị Mai', rating: 5,
-          date: DateTime(2026, 6, 8), orderId: 'ORD-003'),
-      DriverReview(id: 'r4', customerName: 'Phạm Minh Tuấn', rating: 4,
-          comment: 'Nên gọi trước khi tới.',
-          date: DateTime(2026, 6, 8), orderId: 'ORD-004'),
-      DriverReview(id: 'r5', customerName: 'Hoàng Thị Lan', rating: 5,
-          comment: 'Tài xế thân thiện, giao nhanh.',
-          date: DateTime(2026, 6, 7), orderId: 'ORD-005'),
-      DriverReview(id: 'r6', customerName: 'Đặng Văn Hải', rating: 3,
-          comment: 'Giao hơi chậm hơn dự kiến.',
-          date: DateTime(2026, 6, 7), orderId: 'ORD-006'),
-    ];
-  }
 }
 
-final ratingHistoryProvider = StateNotifierProvider<RatingHistoryNotifier, RatingHistoryState>((ref) {
-  return RatingHistoryNotifier();
-});
+final ratingHistoryProvider =
+    StateNotifierProvider<RatingHistoryNotifier, RatingHistoryState>((ref) {
+      return RatingHistoryNotifier();
+    });
+
+int _readInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+double _readDouble(Object? value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}

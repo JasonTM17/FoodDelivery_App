@@ -265,6 +265,21 @@
   "driverEarningsEmpty": "No earnings data yet",
   "driverEarningsChartError": "Unable to load earnings chart",
   "driverEarningsChartRetry": "Retry",
+  "driverRatingsTitle": "Rating history",
+  "driverRatingsAll": "All",
+  "driverRatingsStars": "{count} stars",
+  "@driverRatingsStars": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsEmpty": "No ratings yet",
+  "driverRatingsError": "Unable to load ratings right now.",
+  "driverRatingsRetry": "Retry",
+  "driverRatingsOrder": "Order: {code}",
+  "@driverRatingsOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverRatingsToday": "Today",
+  "driverRatingsYesterday": "Yesterday",
 
   "driverKycTitle": "KYC Verification",
   "driverKycUploadTitle": "Upload documents",

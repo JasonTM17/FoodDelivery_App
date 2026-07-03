@@ -265,6 +265,21 @@
   "driverEarningsEmpty": "収益データはまだありません",
   "driverEarningsChartError": "収益チャートを読み込めません",
   "driverEarningsChartRetry": "再試行",
+  "driverRatingsTitle": "評価履歴",
+  "driverRatingsAll": "すべて",
+  "driverRatingsStars": "{count}つ星",
+  "@driverRatingsStars": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsEmpty": "評価はまだありません",
+  "driverRatingsError": "現在、評価を読み込めません。",
+  "driverRatingsRetry": "再試行",
+  "driverRatingsOrder": "注文: {code}",
+  "@driverRatingsOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverRatingsToday": "今日",
+  "driverRatingsYesterday": "昨日",
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",
