@@ -77,6 +77,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - Do not raw-merge stale team branches.
 - Port only proven behavior from Amber, Steel, and audit branches with focused tests.
 - Defer Violet and Indigo mobile reconciliation to separate mobile branches after Batch 4 web/backend is stable.
+- Track the current branch audit in [branch-disposition.md](branch-disposition.md).
 - Keep generated screenshots, local caches, backup folders, and assistant private files out of Git.
 
 ## Required gates before deployment

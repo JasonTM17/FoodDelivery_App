@@ -177,6 +177,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [Design guidelines](docs/design-guidelines.md) ([VI](docs/design-guidelines.vi.md), [JA](docs/design-guidelines.ja.md))
 - [i18n guide](docs/i18n-guide.md)
 - [Roadmap](docs/project-roadmap.md)
+- [Branch disposition](docs/branch-disposition.md)
 
 ## Branch and integration policy
 
@@ -184,7 +185,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
 - Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
 - Keep mobile reconciliation separate until web/backend Batch 4 is stable.
-- Do not delete local or remote branches until backups and branch disposition are verified.
+- Do not delete local or remote branches until backups and [branch disposition](docs/branch-disposition.md) are verified.
 
 ## License
 
