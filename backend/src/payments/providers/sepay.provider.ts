@@ -12,17 +12,19 @@ export class SepayProvider {
   private readonly logger = new Logger(SepayProvider.name)
   private readonly apiKey: string | undefined
   private readonly baseUrl: string
+  private readonly accountNumber: string | undefined
 
   constructor() {
     this.apiKey = process.env.SEPAY_API_KEY
+    this.accountNumber = process.env.SEPAY_ACCOUNT_NUMBER
     this.baseUrl = process.env.SEPAY_BASE_URL ?? 'https://my.sepay.vn/userapi'
-    if (!this.apiKey) {
-      this.logger.warn('SEPAY_API_KEY not set — SePay payment intents are unavailable')
+    if (!this.apiKey || !this.accountNumber) {
+      this.logger.warn('SEPAY_API_KEY or SEPAY_ACCOUNT_NUMBER not set -- SePay payment intents are unavailable')
     }
   }
 
   async createPaymentIntent(orderId: string, amount: number): Promise<PaymentIntentResult> {
-    if (!this.apiKey) {
+    if (!this.apiKey || !this.accountNumber) {
       throw new ServiceUnavailableException('SEPAY_PROVIDER_NOT_CONFIGURED')
     }
 
@@ -37,7 +39,7 @@ export class SepayProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          account_number: process.env.SEPAY_ACCOUNT_NUMBER,
+          account_number: this.accountNumber,
           transaction_ref: transactionRef,
           amount_in: amount,
           description: `FoodFlow order ${orderId}`,
@@ -50,9 +52,13 @@ export class SepayProvider {
       }
 
       const data = (await res.json()) as { qr_code_url?: string; transaction_ref?: string }
+      if (!data.qr_code_url?.trim() || !data.transaction_ref?.trim()) {
+        throw new Error('SEPAY_INVALID_INTENT_RESPONSE')
+      }
+
       return {
-        qr_code_url: data.qr_code_url ?? `https://qr.sepay.vn/${transactionRef}`,
-        transaction_ref: data.transaction_ref ?? transactionRef,
+        qr_code_url: data.qr_code_url,
+        transaction_ref: data.transaction_ref,
         expires_at: expiresAt,
       }
     } catch (err) {
@@ -64,7 +70,7 @@ export class SepayProvider {
   verifyWebhookSignature(rawBody: string, signatureHeader: string): boolean {
     const secret = process.env.SEPAY_WEBHOOK_SECRET
     if (!secret) {
-      this.logger.error('SEPAY_WEBHOOK_SECRET not set — rejecting webhook')
+      this.logger.error('SEPAY_WEBHOOK_SECRET not set -- rejecting webhook')
       return false
     }
     const expected = createHmac('sha256', secret).update(rawBody).digest('hex')

@@ -20,8 +20,17 @@ describe('SepayProvider', () => {
         .rejects.toThrow(ServiceUnavailableException)
     })
 
+    it('throws explicit unavailable error when SEPAY_ACCOUNT_NUMBER is not set', async () => {
+      process.env.SEPAY_API_KEY = 'test-key-123'
+      provider = new SepayProvider()
+
+      await expect(provider.createPaymentIntent('order-abc-123', 100_000))
+        .rejects.toThrow(ServiceUnavailableException)
+    })
+
     it('calls SePay API and returns parsed response', async () => {
       process.env.SEPAY_API_KEY = 'test-key-123'
+      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
       provider = new SepayProvider()
 
       const mockFetch = jest.fn().mockResolvedValueOnce({
@@ -47,8 +56,9 @@ describe('SepayProvider', () => {
       expect(result.expires_at.getTime()).toBeGreaterThan(Date.now())
     })
 
-    it('falls back to generated ref when API omits transaction_ref', async () => {
+    it('throws instead of creating a fallback intent when API omits QR fields', async () => {
       process.env.SEPAY_API_KEY = 'test-key'
+      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
       provider = new SepayProvider()
 
       global.fetch = jest.fn().mockResolvedValueOnce({
@@ -56,12 +66,13 @@ describe('SepayProvider', () => {
         json: async () => ({}),
       }) as typeof fetch
 
-      const result = await provider.createPaymentIntent('order-1', 50_000)
-      expect(result.transaction_ref).toMatch(/^FF-/)
+      await expect(provider.createPaymentIntent('order-1', 50_000))
+        .rejects.toThrow('SEPAY_INVALID_INTENT_RESPONSE')
     })
 
     it('throws when API returns non-ok status', async () => {
       process.env.SEPAY_API_KEY = 'test-key'
+      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
       provider = new SepayProvider()
 
       global.fetch = jest.fn().mockResolvedValueOnce({
