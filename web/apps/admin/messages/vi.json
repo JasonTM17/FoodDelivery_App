@@ -871,6 +871,24 @@
     },
     "deltaCompared": "{value} so với kỳ trước",
     "charts": {
+      "revenue7dTitle": "Doanh thu 7 ngày",
+      "revenue7dDescription": "Biểu đồ doanh thu trong 7 ngày gần nhất",
+      "revenueLabel": "Doanh thu",
+      "dateLabelPrefix": "Ngày",
+      "emptyRevenue": "Chưa có dữ liệu doanh thu",
+      "revenueTableCaption": "Dữ liệu doanh thu 7 ngày phía sau biểu đồ",
+      "revenueColumns": {
+        "date": "Ngày",
+        "revenue": "Doanh thu"
+      },
+      "orderStatusTitle": "Trạng thái đơn hàng",
+      "orderStatusDescription": "Phân bố trạng thái đơn hàng hiện tại",
+      "emptyOrderStatus": "Chưa có dữ liệu đơn hàng",
+      "orderStatusTableCaption": "Dữ liệu phân bố trạng thái đơn hàng phía sau biểu đồ",
+      "orderStatusColumns": {
+        "status": "Trạng thái",
+        "count": "Số lượng"
+      },
       "funnelTitle": "Phễu đơn hàng",
       "topRestaurantsTitle": "Top nhà hàng",
       "retentionTitle": "Retention khách hàng",
@@ -880,6 +898,14 @@
         "delivery": "Đang giao",
         "completed": "Hoàn thành"
       }
+    },
+    "orderStatuses": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "preparing": "Đang chuẩn bị",
+      "delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "cancelled": "Đã hủy"
     },
     "empty": {
       "kpisTitle": "Chưa có KPI",

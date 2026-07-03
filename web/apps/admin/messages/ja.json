@@ -871,6 +871,24 @@
     },
     "deltaCompared": "前期間比 {value}",
     "charts": {
+      "revenue7dTitle": "7日間の売上",
+      "revenue7dDescription": "直近7日間の売上推移",
+      "revenueLabel": "売上",
+      "dateLabelPrefix": "日付",
+      "emptyRevenue": "売上データはまだありません",
+      "revenueTableCaption": "チャートの元となる7日間の売上データ",
+      "revenueColumns": {
+        "date": "日付",
+        "revenue": "売上"
+      },
+      "orderStatusTitle": "注文ステータス",
+      "orderStatusDescription": "現在の注文ステータス分布",
+      "emptyOrderStatus": "注文データはまだありません",
+      "orderStatusTableCaption": "チャートの元となる注文ステータス分布データ",
+      "orderStatusColumns": {
+        "status": "ステータス",
+        "count": "件数"
+      },
       "funnelTitle": "注文ファネル",
       "topRestaurantsTitle": "上位レストラン",
       "retentionTitle": "顧客リテンション",
@@ -880,6 +898,14 @@
         "delivery": "配達中",
         "completed": "完了"
       }
+    },
+    "orderStatuses": {
+      "pending": "確認待ち",
+      "confirmed": "確認済み",
+      "preparing": "準備中",
+      "delivering": "配達中",
+      "delivered": "配達済み",
+      "cancelled": "キャンセル済み"
     },
     "empty": {
       "kpisTitle": "KPIはまだありません",

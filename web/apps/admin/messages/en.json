@@ -871,6 +871,24 @@
     },
     "deltaCompared": "{value} vs previous period",
     "charts": {
+      "revenue7dTitle": "7-day revenue",
+      "revenue7dDescription": "Revenue trend for the last 7 days",
+      "revenueLabel": "Revenue",
+      "dateLabelPrefix": "Date",
+      "emptyRevenue": "No revenue data yet",
+      "revenueTableCaption": "7-day revenue data behind the chart",
+      "revenueColumns": {
+        "date": "Date",
+        "revenue": "Revenue"
+      },
+      "orderStatusTitle": "Order status",
+      "orderStatusDescription": "Current order status distribution",
+      "emptyOrderStatus": "No order data yet",
+      "orderStatusTableCaption": "Order status distribution data behind the chart",
+      "orderStatusColumns": {
+        "status": "Status",
+        "count": "Count"
+      },
       "funnelTitle": "Order funnel",
       "topRestaurantsTitle": "Top restaurants",
       "retentionTitle": "Customer retention",
@@ -880,6 +898,14 @@
         "delivery": "In delivery",
         "completed": "Completed"
       }
+    },
+    "orderStatuses": {
+      "pending": "Pending confirmation",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "delivering": "Delivering",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
     },
     "empty": {
       "kpisTitle": "No KPIs yet",

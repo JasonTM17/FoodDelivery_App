@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
@@ -18,9 +18,11 @@ interface RevenueDataPoint {
 
 interface RevenueChartProps {
   data: RevenueDataPoint[];
+  label: string;
+  labelPrefix: string;
 }
 
-export default function RevenueChart({ data }: RevenueChartProps) {
+export default function RevenueChart({ data, label, labelPrefix }: RevenueChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -42,8 +44,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => {
-            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+            if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+            if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
             return String(value);
           }}
         />
@@ -54,8 +56,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             borderRadius: '8px',
             fontSize: '13px',
           }}
-          formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
-          labelFormatter={(label) => `Ngày ${label}`}
+          formatter={(value: number) => [formatCurrency(value), label]}
+          labelFormatter={(value) => `${labelPrefix} ${value}`}
         />
         <Area
           type="monotone"
