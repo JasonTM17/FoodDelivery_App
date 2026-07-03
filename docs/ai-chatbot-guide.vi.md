@@ -8,6 +8,7 @@ FoodFlow dùng hướng LLM-first cho chatbot trong Batch 4. Backend AI module s
 
 - Provider: DeepSeek qua backend provider adapter, model mặc định `deepseek-v4-flash`.
 - Entry point: `POST /ai/chat` và `POST /ai/stream`, đều cần đăng nhập.
+- Chat trên mobile customer gọi trực tiếp `POST /ai/chat`; chat hỗ trợ chung không gửi `orderId`, còn chat theo đơn chỉ gửi order code hoặc UUID hợp lệ để backend grounding.
 - Tool nội bộ lấy dữ liệu thật về order, tài xế, nhà hàng, refund, gợi ý món và support ticket.
 - Tool call luôn scope theo `user.sub` đã xác thực; không tin riêng order ID do user nhập.
 - Thiếu hoặc lỗi cấu hình model trả `action: "degraded"` thay vì bịa câu trả lời thành công.

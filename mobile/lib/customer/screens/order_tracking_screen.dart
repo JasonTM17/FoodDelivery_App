@@ -229,7 +229,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                         ),
                                         Row(
                                           children: [
-                                            _buildActionButton(Icons.phone, AppLocalizations.of(context)!.trackingCallDriver, AppColors.primary, () {
+                                            _buildActionButton(Icons.phone, AppLocalizations.of(context).trackingCallDriver, AppColors.primary, () {
                                               if (order.driverPhone != null) {
                                                 // launch phone
                                               }
@@ -237,7 +237,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                             const SizedBox(width: 8),
                                             _buildActionButton(
                                               Icons.chat_outlined,
-                                              AppLocalizations.of(context)!.trackingMessageDriver,
+                                              AppLocalizations.of(context).helpChatSupport,
                                               AppColors.accent,
                                               () => context.push(Routes.chat, extra: widget.orderId),
                                             ),
@@ -259,7 +259,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                               OrderStatusBadge(status: order.status),
                               const SizedBox(width: 12),
                               Text(
-                                AppLocalizations.of(context)!.trackingOrderInProgress,
+                                AppLocalizations.of(context).trackingOrderInProgress,
                                 style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                               ),
                               const Spacer(),
@@ -279,7 +279,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   Widget _buildStatusTimeline(OrderModel order) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final steps = [
       {'label': l10n.trackingStepPending, 'status': 'pending', 'icon': Icons.receipt},
       {'label': l10n.trackingStepPreparing, 'status': 'preparing', 'icon': Icons.restaurant},
