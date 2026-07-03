@@ -5,7 +5,7 @@ describe('restaurant metadata base URL', () => {
   it('uses the configured public Restaurant URL', () => {
     expect(resolveRestaurantMetadataBase({
       NEXT_PUBLIC_RESTAURANT_URL: ' https://restaurant.foodflow.test ',
-      NODE_ENV: 'production',
+      VERCEL_ENV: 'production',
     }).toString()).toBe('https://restaurant.foodflow.test/')
   })
 
@@ -14,8 +14,15 @@ describe('restaurant metadata base URL', () => {
   })
 
   it('fails closed in production when the Restaurant URL is not configured', () => {
-    expect(() => resolveRestaurantMetadataBase({ NODE_ENV: 'production' })).toThrow(
+    expect(() => resolveRestaurantMetadataBase({ VERCEL_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_RESTAURANT_URL is required',
     )
+  })
+
+  it('rejects local Restaurant metadata URLs in production', () => {
+    expect(() => resolveRestaurantMetadataBase({
+      NEXT_PUBLIC_RESTAURANT_URL: 'http://localhost:3002',
+      VERCEL_ENV: 'production',
+    })).toThrow('NEXT_PUBLIC_RESTAURANT_URL must be a secure public URL')
   })
 })

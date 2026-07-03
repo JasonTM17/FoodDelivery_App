@@ -66,10 +66,19 @@ describe('restaurant realtime socket', () => {
   });
 
   it('fails closed in production when the websocket URL is not configured', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', 'production');
 
     const { resolveEventsSocketUrl } = await import('@/lib/socket');
 
     expect(() => resolveEventsSocketUrl()).toThrow('NEXT_PUBLIC_WS_URL is required');
+  });
+
+  it('rejects insecure localhost websocket URLs in production', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'ws://localhost:3001');
+
+    const { resolveEventsSocketUrl } = await import('@/lib/socket');
+
+    expect(() => resolveEventsSocketUrl()).toThrow('NEXT_PUBLIC_WS_URL must be a secure public URL');
   });
 });

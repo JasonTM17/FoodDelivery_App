@@ -1,6 +1,7 @@
 'use client';
 
 import { io, Socket } from 'socket.io-client';
+import { assertProductionPublicUrl, isProductionDeployment } from './public-env';
 
 let socket: Socket | null = null;
 
@@ -10,13 +11,18 @@ export function resolveEventsSocketUrl(): string {
     process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
 
   if (!configured) {
-    if (process.env.NODE_ENV === 'production') {
+    if (isProductionDeployment(process.env)) {
       throw new Error('NEXT_PUBLIC_WS_URL is required for the admin realtime socket');
     }
     return 'http://localhost:3001/events';
   }
 
-  const normalized = configured.replace(/\/+$/, '');
+  const normalized = assertProductionPublicUrl(
+    'NEXT_PUBLIC_WS_URL',
+    configured,
+    process.env,
+    ['https:', 'wss:'],
+  ).replace(/\/+$/, '');
   return normalized.endsWith('/events') ? normalized : `${normalized}/events`;
 }
 

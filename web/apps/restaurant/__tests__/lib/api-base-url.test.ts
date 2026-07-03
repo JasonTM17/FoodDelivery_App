@@ -5,7 +5,7 @@ describe('restaurant API base URL', () => {
   it('uses the configured public API URL', () => {
     expect(resolveApiBaseUrl({
       NEXT_PUBLIC_API_URL: ' https://api.foodflow.test/restaurant ',
-      NODE_ENV: 'production',
+      VERCEL_ENV: 'production',
     })).toBe('https://api.foodflow.test/restaurant');
   });
 
@@ -14,8 +14,15 @@ describe('restaurant API base URL', () => {
   });
 
   it('fails closed in production when the API URL is not configured', () => {
-    expect(() => resolveApiBaseUrl({ NODE_ENV: 'production' })).toThrow(
+    expect(() => resolveApiBaseUrl({ VERCEL_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_API_URL is required',
     );
+  });
+
+  it('rejects localhost API URLs in production', () => {
+    expect(() => resolveApiBaseUrl({
+      NEXT_PUBLIC_API_URL: 'http://localhost:3001/api',
+      VERCEL_ENV: 'production',
+    })).toThrow('NEXT_PUBLIC_API_URL must be a secure public URL');
   });
 });

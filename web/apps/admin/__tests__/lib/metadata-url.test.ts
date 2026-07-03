@@ -5,7 +5,7 @@ describe('admin metadata base URL', () => {
   it('uses the configured public Admin URL', () => {
     expect(resolveAdminMetadataBase({
       NEXT_PUBLIC_ADMIN_URL: ' https://admin.foodflow.test ',
-      NODE_ENV: 'production',
+      VERCEL_ENV: 'production',
     }).toString()).toBe('https://admin.foodflow.test/')
   })
 
@@ -14,8 +14,15 @@ describe('admin metadata base URL', () => {
   })
 
   it('fails closed in production when the Admin URL is not configured', () => {
-    expect(() => resolveAdminMetadataBase({ NODE_ENV: 'production' })).toThrow(
+    expect(() => resolveAdminMetadataBase({ VERCEL_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_ADMIN_URL is required',
     )
+  })
+
+  it('rejects local Admin metadata URLs in production', () => {
+    expect(() => resolveAdminMetadataBase({
+      NEXT_PUBLIC_ADMIN_URL: 'http://localhost:3000',
+      VERCEL_ENV: 'production',
+    })).toThrow('NEXT_PUBLIC_ADMIN_URL must be a secure public URL')
   })
 })

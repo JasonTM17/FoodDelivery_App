@@ -4,9 +4,9 @@ import { resolveGoogleMapsApiKey } from '@/lib/google-maps-key';
 describe('admin Google Maps key', () => {
   it('uses the configured public browser key', () => {
     expect(resolveGoogleMapsApiKey({
-      NEXT_PUBLIC_GOOGLE_MAPS_KEY: ' browser-key ',
-      NODE_ENV: 'production',
-    })).toBe('browser-key');
+      NEXT_PUBLIC_GOOGLE_MAPS_KEY: ' prod-google-maps-public-key ',
+      VERCEL_ENV: 'production',
+    })).toBe('prod-google-maps-public-key');
   });
 
   it('allows the missing-key guidance state outside production', () => {
@@ -14,8 +14,15 @@ describe('admin Google Maps key', () => {
   });
 
   it('fails closed in production when the browser key is not configured', () => {
-    expect(() => resolveGoogleMapsApiKey({ NODE_ENV: 'production' })).toThrow(
+    expect(() => resolveGoogleMapsApiKey({ VERCEL_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_GOOGLE_MAPS_KEY is required',
     );
+  });
+
+  it('rejects placeholder browser keys in production', () => {
+    expect(() => resolveGoogleMapsApiKey({
+      NEXT_PUBLIC_GOOGLE_MAPS_KEY: 'your-google-maps-browser-key',
+      VERCEL_ENV: 'production',
+    })).toThrow('NEXT_PUBLIC_GOOGLE_MAPS_KEY must be configured with a real production value');
   });
 });
