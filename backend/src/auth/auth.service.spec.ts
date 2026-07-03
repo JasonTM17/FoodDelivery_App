@@ -38,13 +38,14 @@ describe('AuthService', () => {
   }
 
   const mockConfigValues: Record<string, string | number> = {
+    NODE_ENV: 'test',
     PASSWORD_RESET_TOKEN_TTL_MINUTES: 60,
     PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.test/reset-password',
     JWT_SECRET: 'test-secret',
   }
 
   const mockConfig = {
-    get: jest.fn((key: string) => mockConfigValues[key] ?? 'test-secret'),
+    get: jest.fn((key: string) => mockConfigValues[key]),
   }
 
   const mockRefreshTokenStore = {
@@ -58,6 +59,13 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    Object.keys(mockConfigValues).forEach(key => delete mockConfigValues[key])
+    Object.assign(mockConfigValues, {
+      NODE_ENV: 'test',
+      PASSWORD_RESET_TOKEN_TTL_MINUTES: 60,
+      PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.test/reset-password',
+      JWT_SECRET: 'test-secret',
+    })
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma))
 
     const module: TestingModule = await Test.createTestingModule({
@@ -142,6 +150,21 @@ describe('AuthService', () => {
       const queuedBody = mockSmtpQueue.add.mock.calls[0][1].body
       expect(queuedBody).toContain('https://admin.foodflow.test/reset-password?token=')
       expect(queuedBody).not.toContain(storedHash)
+    })
+
+    it('does not enqueue a localhost password reset URL in production when the reset base URL is missing', async () => {
+      delete mockConfigValues.PASSWORD_RESET_URL_BASE
+      mockConfigValues.NODE_ENV = 'production'
+      mockUsersService.findByEmail.mockResolvedValueOnce({
+        id: 'user-1',
+        email: 'admin@foodflow.vn',
+        isActive: true,
+      })
+
+      await service.requestPasswordReset({ email: 'admin@foodflow.vn' })
+
+      expect(mockPrisma.passwordResetToken.create).toHaveBeenCalled()
+      expect(mockSmtpQueue.add).not.toHaveBeenCalled()
     })
   })
 

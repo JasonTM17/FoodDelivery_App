@@ -315,10 +315,21 @@ export class AuthService {
   }
 
   private buildPasswordResetUrl(token: string): string {
-    const baseUrl = this.config.get<string>('PASSWORD_RESET_URL_BASE')?.trim() || 'http://localhost:3000/reset-password'
+    const baseUrl = this.passwordResetUrlBase()
     const url = new URL(baseUrl)
     url.searchParams.set('token', token)
     return url.toString()
+  }
+
+  private passwordResetUrlBase(): string {
+    const configured = this.config.get<string>('PASSWORD_RESET_URL_BASE')?.trim()
+    if (configured) return configured
+
+    if (this.config.get<string>('NODE_ENV') !== 'production') {
+      return 'http://localhost:3000/reset-password'
+    }
+
+    throw new Error('PASSWORD_RESET_URL_BASE is required for password reset emails')
   }
 
   private async enqueuePasswordResetEmail(userId: string, token: string, ttlMinutes: number): Promise<void> {
