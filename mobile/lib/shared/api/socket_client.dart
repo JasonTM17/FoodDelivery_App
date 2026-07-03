@@ -3,24 +3,35 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class _BufferedEvent {
+  final String namespace;
   final String name;
   final dynamic data;
-  const _BufferedEvent(this.name, this.data);
+  const _BufferedEvent(this.namespace, this.name, this.data);
 }
 
 class SocketClient {
   static SocketClient? _instance;
-  io.Socket? _socket;
+  final _sockets = <String, io.Socket>{};
+  final _connectedNamespaces = <String>{};
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  bool _isConnected = false;
 
   static const int _maxBuffer = 50;
+  static const String _eventsNamespace = '/events';
+  static const String _trackingNamespace = '/tracking';
+  static const String _dispatchNamespace = '/dispatch';
+  static const String _notificationsNamespace = '/notifications';
+  static const String _chatNamespace = '/chat';
+
   final _buffer = <_BufferedEvent>[];
   DateTime? _lastLocationEmit;
 
-  final _driverLocationController = StreamController<Map<String, dynamic>>.broadcast();
-  final _orderStatusController = StreamController<Map<String, dynamic>>.broadcast();
-  final _chatMessageController = StreamController<Map<String, dynamic>>.broadcast();
+  final _driverLocationController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _orderStatusController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _chatMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _etaController = StreamController<Map<String, dynamic>>.broadcast();
   final _authRefreshController = StreamController<void>.broadcast();
   final _notificationController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -33,17 +44,19 @@ class SocketClient {
       _orderStatusController.stream;
   Stream<Map<String, dynamic>> get onChatMessage =>
       _chatMessageController.stream;
+  Stream<Map<String, dynamic>> get onEtaUpdate => _etaController.stream;
   Stream<Map<String, dynamic>> get onNotification =>
       _notificationController.stream;
 
   /// Fires when the server dispatches a new delivery offer to this driver.
-  Stream<Map<String, dynamic>> get onDriverOffer => _driverOfferController.stream;
+  Stream<Map<String, dynamic>> get onDriverOffer =>
+      _driverOfferController.stream;
 
   // Fires when server emits 'auth:refresh_required' — caller should refresh token
   // then call reconnectWithToken(newToken).
   Stream<void> get onAuthRefreshRequired => _authRefreshController.stream;
 
-  bool get isConnected => _isConnected;
+  bool get isConnected => _connectedNamespaces.isNotEmpty;
 
   SocketClient._();
 
@@ -53,17 +66,46 @@ class SocketClient {
   }
 
   Future<void> connect() async {
-    if (_isConnected) return;
+    if (_sockets.isNotEmpty) return;
 
     final token = await _storage.read(key: 'auth_token');
-    final stored = await _storage.read(key: 'API_BASE_URL') ?? 'http://10.0.2.2:3001';
+    final stored =
+        await _storage.read(key: 'API_BASE_URL') ?? 'http://10.0.2.2:3001';
     // Socket.io connects to the root — strip /api suffix if present.
     final wsUrl = stored.endsWith('/api')
         ? stored.substring(0, stored.length - 4)
         : stored;
 
-    _socket = io.io(
-      wsUrl,
+    _connectNamespace(_eventsNamespace, wsUrl, token);
+    _connectNamespace(_trackingNamespace, wsUrl, token);
+    _connectNamespace(_dispatchNamespace, wsUrl, token);
+    _connectNamespace(_notificationsNamespace, wsUrl, token);
+    _connectNamespace(_chatNamespace, wsUrl, token);
+
+    _pipe(
+      _trackingNamespace,
+      'driver:location_changed',
+      _driverLocationController,
+    );
+    _pipe(_trackingNamespace, 'driver:location', _driverLocationController);
+    _pipe(_trackingNamespace, 'delivery:eta_updated', _etaController);
+    _pipe(_eventsNamespace, 'order:status:changed', _orderStatusController);
+    _pipe(_eventsNamespace, 'order:status', _orderStatusController);
+    _pipe(_eventsNamespace, 'order:message_created', _chatMessageController);
+    _pipe(_chatNamespace, 'chat:message_new', _chatMessageController);
+    _pipe(_chatNamespace, 'chat:message', _chatMessageController);
+    _pipe(_notificationsNamespace, 'notification:new', _notificationController);
+    _pipe(_dispatchNamespace, 'driver:new_order', _driverOfferController);
+    _pipe(_dispatchNamespace, 'driver:offer', _driverOfferController);
+
+    for (final socket in _sockets.values) {
+      socket.connect();
+    }
+  }
+
+  void _connectNamespace(String namespace, String wsUrl, String? token) {
+    final socket = io.io(
+      '$wsUrl$namespace',
       io.OptionBuilder()
           .setTransports(['websocket'])
           .setAuth({'token': token ?? ''})
@@ -71,61 +113,57 @@ class SocketClient {
           .setReconnectionDelay(1000)
           .setReconnectionDelayMax(30000)
           .disableForceNew()
+          .disableAutoConnect()
           .build(),
     );
 
-    _socket!.onConnect((_) {
-      _isConnected = true;
-      _flushBuffer();
+    socket.onConnect((_) {
+      _connectedNamespaces.add(namespace);
+      _flushBuffer(namespace);
     });
 
-    _socket!.onDisconnect((_) => _isConnected = false);
+    socket.onDisconnect((_) => _connectedNamespaces.remove(namespace));
 
-    _socket!.onConnectError((data) {
+    socket.onConnectError((data) {
       // ignore: avoid_print
-      print('[Socket] Connect error: $data');
+      print('[Socket][$namespace] Connect error: $data');
     });
 
-    _socket!.onError((data) {
+    socket.onError((data) {
       // ignore: avoid_print
-      print('[Socket] Error: $data');
+      print('[Socket][$namespace] Error: $data');
     });
 
-    _socket!.onReconnect((_) {
-      _isConnected = true;
-      _flushBuffer();
+    socket.onReconnect((_) {
+      _connectedNamespaces.add(namespace);
+      _flushBuffer(namespace);
     });
 
-    _socket!.on('driver:location', (data) {
-      if (data is Map<String, dynamic>) _driverLocationController.add(data);
-    });
+    socket.on('auth:refresh_required', (_) => _authRefreshController.add(null));
 
-    _socket!.on('order:status', (data) {
-      if (data is Map<String, dynamic>) _orderStatusController.add(data);
-    });
-
-    _socket!.on('chat:message', (data) {
-      if (data is Map<String, dynamic>) _chatMessageController.add(data);
-    });
-
-    _socket!.on('notification:new', (data) {
-      if (data is Map<String, dynamic>) _notificationController.add(data);
-    });
-
-    _socket!.on('driver:offer', (data) {
-      if (data is Map<String, dynamic>) _driverOfferController.add(data);
-    });
-
-    _socket!.on('auth:refresh_required', (_) => _authRefreshController.add(null));
-
-    _socket!.connect();
+    _sockets[namespace] = socket;
   }
 
-  void _flushBuffer() {
+  void _pipe(
+    String namespace,
+    String event,
+    StreamController<Map<String, dynamic>> controller,
+  ) {
+    _sockets[namespace]?.on(event, (data) {
+      final payload = _asStringMap(data);
+      if (payload != null) controller.add(payload);
+    });
+  }
+
+  void _flushBuffer(String namespace) {
     final pending = List.of(_buffer);
     _buffer.clear();
     for (final event in pending) {
-      _socket?.emit(event.name, event.data);
+      if (event.namespace == namespace) {
+        _emitToNamespace(event.namespace, event.name, event.data);
+      } else {
+        _buffer.add(event);
+      }
     }
   }
 
@@ -137,49 +175,95 @@ class SocketClient {
   }
 
   void disconnect() {
-    _socket?.disconnect();
-    _socket = null;
-    _isConnected = false;
+    for (final socket in _sockets.values) {
+      socket.disconnect();
+    }
+    _sockets.clear();
+    _connectedNamespaces.clear();
   }
 
   void subscribeOrder(String orderId) {
-    emit('order:subscribe', {'orderId': orderId});
+    final payload = {'orderId': orderId};
+    _emitToNamespace(_eventsNamespace, 'order:subscribe', payload);
+    _emitToNamespace(_trackingNamespace, 'order:subscribe', payload);
   }
 
   void unsubscribeOrder(String orderId) {
-    emit('order:unsubscribe', {'orderId': orderId});
+    final payload = {'orderId': orderId};
+    _emitToNamespace(_eventsNamespace, 'order:unsubscribe', payload);
+    _emitToNamespace(_trackingNamespace, 'order:unsubscribe', payload);
   }
 
   void sendChatMessage(String orderId, String message) {
-    emit('chat:send', {'orderId': orderId, 'message': message});
+    _emitToNamespace(_eventsNamespace, 'chat:send', {
+      'orderId': orderId,
+      'message': message,
+    });
   }
 
   // Throttled to one ping per 250 ms — for driver location updates.
   void emitLocationPing(double lat, double lng) {
     final now = DateTime.now();
     if (_lastLocationEmit != null &&
-        now.difference(_lastLocationEmit!) < const Duration(milliseconds: 250)) {
+        now.difference(_lastLocationEmit!) <
+            const Duration(milliseconds: 250)) {
       return;
     }
     _lastLocationEmit = now;
-    emit('driver:location', {'latitude': lat, 'longitude': lng});
+    _emitToNamespace(_trackingNamespace, 'driver:location', {
+      'lat': lat,
+      'lng': lng,
+    });
   }
 
   // General-purpose emit. Buffers up to 50 events while offline; flushed on reconnect.
   void emit(String event, dynamic data) {
-    if (_isConnected && _socket != null) {
-      _socket!.emit(event, data);
+    _emitToNamespace(_namespaceForEvent(event), event, data);
+  }
+
+  void _emitToNamespace(String namespace, String event, dynamic data) {
+    final socket = _sockets[namespace];
+    if (_connectedNamespaces.contains(namespace) && socket != null) {
+      socket.emit(event, data);
     } else {
       if (_buffer.length < _maxBuffer) {
-        _buffer.add(_BufferedEvent(event, data));
+        _buffer.add(_BufferedEvent(namespace, event, data));
       }
     }
+  }
+
+  String _namespaceForEvent(String event) {
+    if (event == 'driver:location' ||
+        event.startsWith('tracking:') ||
+        event.startsWith('delivery:')) {
+      return _trackingNamespace;
+    }
+    if (event.startsWith('dispatch:') ||
+        event == 'driver:new_order' ||
+        event == 'driver:offer') {
+      return _dispatchNamespace;
+    }
+    if (event.startsWith('notification:') ||
+        event.startsWith('notifications:')) {
+      return _notificationsNamespace;
+    }
+    if (event.startsWith('chat:')) {
+      return _chatNamespace;
+    }
+    return _eventsNamespace;
+  }
+
+  Map<String, dynamic>? _asStringMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return null;
   }
 
   void dispose() {
     _driverLocationController.close();
     _orderStatusController.close();
     _chatMessageController.close();
+    _etaController.close();
     _authRefreshController.close();
     _notificationController.close();
     _driverOfferController.close();

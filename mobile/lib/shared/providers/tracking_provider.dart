@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/socket_client.dart';
 import 'order_provider.dart';
 
-final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>((ref) {
-  final orderNotifier = ref.read(orderProvider.notifier);
-  return TrackingNotifier(orderNotifier);
-});
+final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
+  (ref) {
+    final orderNotifier = ref.read(orderProvider.notifier);
+    return TrackingNotifier(orderNotifier);
+  },
+);
 
 class TrackingState {
   final bool isConnected;
@@ -15,6 +17,9 @@ class TrackingState {
   final String? currentOrderId;
   final List<Map<String, dynamic>> driverLocations;
   final List<Map<String, dynamic>> chatMessages;
+  final int? etaMinutes;
+  final String? etaSource;
+  final bool etaDegraded;
 
   const TrackingState({
     this.isConnected = false,
@@ -23,6 +28,9 @@ class TrackingState {
     this.currentOrderId,
     this.driverLocations = const [],
     this.chatMessages = const [],
+    this.etaMinutes,
+    this.etaSource,
+    this.etaDegraded = false,
   });
 
   TrackingState copyWith({
@@ -32,6 +40,9 @@ class TrackingState {
     String? currentOrderId,
     List<Map<String, dynamic>>? driverLocations,
     List<Map<String, dynamic>>? chatMessages,
+    int? etaMinutes,
+    String? etaSource,
+    bool? etaDegraded,
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
@@ -40,6 +51,9 @@ class TrackingState {
       currentOrderId: currentOrderId ?? this.currentOrderId,
       driverLocations: driverLocations ?? this.driverLocations,
       chatMessages: chatMessages ?? this.chatMessages,
+      etaMinutes: etaMinutes ?? this.etaMinutes,
+      etaSource: etaSource ?? this.etaSource,
+      etaDegraded: etaDegraded ?? this.etaDegraded,
     );
   }
 }
@@ -48,13 +62,18 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   final OrderNotifier _orderNotifier;
   final SocketClient _socketClient = SocketClient.instance;
   StreamSubscription<Map<String, dynamic>>? _locationSub;
+  StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _statusSub;
   StreamSubscription<Map<String, dynamic>>? _chatSub;
 
   TrackingNotifier(this._orderNotifier) : super(const TrackingState());
 
   Future<void> startTracking(String orderId) async {
-    state = state.copyWith(currentOrderId: orderId);
+    _locationSub?.cancel();
+    _etaSub?.cancel();
+    _statusSub?.cancel();
+    _chatSub?.cancel();
+    state = TrackingState(currentOrderId: orderId);
 
     await _socketClient.connect();
 
@@ -62,12 +81,16 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = state.copyWith(isConnected: _socketClient.isConnected);
 
     _locationSub = _socketClient.onDriverLocation.listen((data) {
-      final lat = (data['latitude'] as num?)?.toDouble();
-      final lng = (data['longitude'] as num?)?.toDouble();
+      final lat =
+          (data['lat'] as num?)?.toDouble() ??
+          (data['latitude'] as num?)?.toDouble();
+      final lng =
+          (data['lng'] as num?)?.toDouble() ??
+          (data['longitude'] as num?)?.toDouble();
       if (lat != null && lng != null) {
         final updatedLocations = [
           ...state.driverLocations,
-          {'latitude': lat, 'longitude': lng, 'timestamp': DateTime.now().toIso8601String()},
+          {'lat': lat, 'lng': lng, 'timestamp': data['timestamp']},
         ];
         // Keep last 50 locations
         if (updatedLocations.length > 50) {
@@ -82,7 +105,19 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       }
     });
 
+    _etaSub = _socketClient.onEtaUpdate.listen((data) {
+      if (data['orderId'] != orderId) return;
+      final eta = (data['etaMinutes'] as num?)?.toInt();
+      if (eta == null) return;
+      state = state.copyWith(
+        etaMinutes: eta,
+        etaSource: data['source'] as String?,
+        etaDegraded: data['degraded'] == true,
+      );
+    });
+
     _statusSub = _socketClient.onOrderStatus.listen((data) {
+      if (data['orderId'] != null && data['orderId'] != orderId) return;
       final status = data['status'] as String?;
       if (status != null) {
         _orderNotifier.updateOrderStatus(orderId, status);
@@ -90,6 +125,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     });
 
     _chatSub = _socketClient.onChatMessage.listen((data) {
+      if (data['orderId'] != null && data['orderId'] != orderId) return;
       final updatedMessages = [...state.chatMessages, data];
       state = state.copyWith(chatMessages: updatedMessages);
     });
@@ -101,6 +137,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       _socketClient.unsubscribeOrder(orderId);
     }
     _locationSub?.cancel();
+    _etaSub?.cancel();
     _statusSub?.cancel();
     _chatSub?.cancel();
     state = const TrackingState();
@@ -125,6 +162,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   @override
   void dispose() {
     _locationSub?.cancel();
+    _etaSub?.cancel();
     _statusSub?.cancel();
     _chatSub?.cancel();
     if (state.currentOrderId != null) {

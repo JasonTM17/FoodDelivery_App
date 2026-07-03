@@ -20,13 +20,13 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
   const OrderTrackingScreen({super.key, required this.orderId});
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() =>
+      _OrderTrackingScreenState();
 }
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
   bool _showBottomSheet = true;
-  int _etaMinutes = 25;
   Set<Polygon> _boundaryPolygons = {};
 
   static const CameraPosition _defaultCamera = CameraPosition(
@@ -73,7 +73,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
               _updateMapPins(order);
             },
             markers: _buildMarkers(order, trackingState),
-            polylines: _buildPolylines(order),
+            polylines: _buildPolylines(trackingState),
             polygons: _boundaryPolygons,
             minMaxZoomPreference: const MinMaxZoomPreference(
               VietnamMapConstants.minZoom,
@@ -94,7 +94,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                  ),
                 ],
               ),
               child: IconButton(
@@ -104,36 +107,47 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             ),
           ),
 
-          // Tracking info header
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.access_time, size: 16, color: AppColors.accent),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$_etaMinutes phút',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+          // Tracking info header; only show ETA after backend sends a real update.
+          if (trackingState.etaMinutes != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: AppColors.accent,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${trackingState.etaDegraded ? '~' : ''}${AppLocalizations.of(context).driverTripSummaryMinutes(trackingState.etaMinutes!)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
           // Bottom sheet
           if (order != null)
@@ -149,7 +163,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.shadowMedium,
@@ -193,18 +209,27 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                       children: [
                                         CircleAvatar(
                                           radius: 24,
-                                          backgroundColor: AppColors.primaryLight,
-                                          backgroundImage: order.driverAvatarUrl != null
-                                              ? NetworkImage(order.driverAvatarUrl!) as ImageProvider
+                                          backgroundColor:
+                                              AppColors.primaryLight,
+                                          backgroundImage:
+                                              order.driverAvatarUrl != null
+                                              ? NetworkImage(
+                                                      order.driverAvatarUrl!,
+                                                    )
+                                                    as ImageProvider
                                               : null,
                                           child: order.driverAvatarUrl == null
-                                              ? const Icon(Icons.person, color: AppColors.primary)
+                                              ? const Icon(
+                                                  Icons.person,
+                                                  color: AppColors.primary,
+                                                )
                                               : null,
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 order.driverName!,
@@ -216,11 +241,17 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                               if (order.driverRating != null)
                                                 Row(
                                                   children: [
-                                                    const Icon(Icons.star, size: 14, color: AppColors.accent),
+                                                    const Icon(
+                                                      Icons.star,
+                                                      size: 14,
+                                                      color: AppColors.accent,
+                                                    ),
                                                     const SizedBox(width: 2),
                                                     Text(
-                                                      order.driverRating!.toStringAsFixed(1),
-                                                      style: AppTextStyles.bodySmall,
+                                                      order.driverRating!
+                                                          .toStringAsFixed(1),
+                                                      style: AppTextStyles
+                                                          .bodySmall,
                                                     ),
                                                   ],
                                                 ),
@@ -229,17 +260,29 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                         ),
                                         Row(
                                           children: [
-                                            _buildActionButton(Icons.phone, AppLocalizations.of(context).trackingCallDriver, AppColors.primary, () {
-                                              if (order.driverPhone != null) {
-                                                // launch phone
-                                              }
-                                            }),
+                                            _buildActionButton(
+                                              Icons.phone,
+                                              AppLocalizations.of(
+                                                context,
+                                              ).trackingCallDriver,
+                                              AppColors.primary,
+                                              () {
+                                                if (order.driverPhone != null) {
+                                                  // launch phone
+                                                }
+                                              },
+                                            ),
                                             const SizedBox(width: 8),
                                             _buildActionButton(
                                               Icons.chat_outlined,
-                                              AppLocalizations.of(context).helpChatSupport,
+                                              AppLocalizations.of(
+                                                context,
+                                              ).helpChatSupport,
                                               AppColors.accent,
-                                              () => context.push(Routes.chat, extra: widget.orderId),
+                                              () => context.push(
+                                                Routes.chat,
+                                                extra: widget.orderId,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -259,8 +302,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                               OrderStatusBadge(status: order.status),
                               const SizedBox(width: 12),
                               Text(
-                                AppLocalizations.of(context).trackingOrderInProgress,
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                AppLocalizations.of(
+                                  context,
+                                ).trackingOrderInProgress,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const Spacer(),
                               const Icon(Icons.keyboard_arrow_up),
@@ -281,13 +328,35 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   Widget _buildStatusTimeline(OrderModel order) {
     final l10n = AppLocalizations.of(context);
     final steps = [
-      {'label': l10n.trackingStepPending, 'status': 'pending', 'icon': Icons.receipt},
-      {'label': l10n.trackingStepPreparing, 'status': 'preparing', 'icon': Icons.restaurant},
-      {'label': l10n.trackingStepDelivering, 'status': 'delivering', 'icon': Icons.delivery_dining},
-      {'label': l10n.trackingStepDelivered, 'status': 'delivered', 'icon': Icons.check_circle},
+      {
+        'label': l10n.trackingStepPending,
+        'status': 'pending',
+        'icon': Icons.receipt,
+      },
+      {
+        'label': l10n.trackingStepPreparing,
+        'status': 'preparing',
+        'icon': Icons.restaurant,
+      },
+      {
+        'label': l10n.trackingStepDelivering,
+        'status': 'delivering',
+        'icon': Icons.delivery_dining,
+      },
+      {
+        'label': l10n.trackingStepDelivered,
+        'status': 'delivered',
+        'icon': Icons.check_circle,
+      },
     ];
 
-    final statusOrder = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'];
+    final statusOrder = [
+      'pending',
+      'confirmed',
+      'preparing',
+      'delivering',
+      'delivered',
+    ];
     final currentIndex = statusOrder.indexOf(order.status);
 
     return Column(
@@ -304,7 +373,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         ...steps.asMap().entries.map((entry) {
           final index = entry.key;
           final step = entry.value;
-          final isCompleted = currentIndex >= statusOrder.indexOf(step['status'] as String);
+          final isCompleted =
+              currentIndex >= statusOrder.indexOf(step['status'] as String);
           final isCurrent = order.status == step['status'];
 
           return Row(
@@ -316,7 +386,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: isCompleted ? AppColors.primary : AppColors.surface,
+                      color: isCompleted
+                          ? AppColors.primary
+                          : AppColors.surface,
                       shape: BoxShape.circle,
                       border: isCurrent && !isCompleted
                           ? Border.all(color: AppColors.primary, width: 3)
@@ -344,7 +416,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
-                    color: isCompleted ? AppColors.textPrimary : AppColors.textHint,
+                    color: isCompleted
+                        ? AppColors.textPrimary
+                        : AppColors.textHint,
                   ),
                 ),
               ),
@@ -355,7 +429,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -387,58 +466,74 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final markers = <Marker>{};
 
     // Restaurant
-    if (order?.restaurantLatitude != null && order?.restaurantLongitude != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('restaurant'),
-        position: LatLng(order!.restaurantLatitude!, order.restaurantLongitude!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'Nhà hàng'),
-      ));
+    if (order?.restaurantLatitude != null &&
+        order?.restaurantLongitude != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('restaurant'),
+          position: LatLng(
+            order!.restaurantLatitude!,
+            order.restaurantLongitude!,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+          infoWindow: const InfoWindow(title: 'Nhà hàng'),
+        ),
+      );
     }
 
     // Driver
     final driverLat = tracking.driverLatitude ?? order?.driverLatitude;
     final driverLng = tracking.driverLongitude ?? order?.driverLongitude;
     if (driverLat != null && driverLng != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('driver'),
-        position: LatLng(driverLat, driverLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        infoWindow: InfoWindow(title: order?.driverName ?? 'Tài xế'),
-      ));
+      markers.add(
+        Marker(
+          markerId: const MarkerId('driver'),
+          position: LatLng(driverLat, driverLng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
+          infoWindow: InfoWindow(title: order?.driverName ?? 'Tài xế'),
+        ),
+      );
     }
 
     // Customer
     if (order != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('customer'),
-        position: LatLng(
-          order.deliveryAddress.latitude,
-          order.deliveryAddress.longitude,
+      markers.add(
+        Marker(
+          markerId: const MarkerId('customer'),
+          position: LatLng(
+            order.deliveryAddress.latitude,
+            order.deliveryAddress.longitude,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: const InfoWindow(title: 'Điểm đến'),
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(title: 'Điểm đến'),
-      ));
+      );
     }
 
     return markers;
   }
 
-  Set<Polyline> _buildPolylines(OrderModel? order) {
-    if (order == null) return {};
+  Set<Polyline> _buildPolylines(TrackingState tracking) {
+    if (tracking.driverLocations.length < 2) return {};
+    final points = tracking.driverLocations
+        .map((point) {
+          final lat = (point['lat'] as num?)?.toDouble();
+          final lng = (point['lng'] as num?)?.toDouble();
+          return lat != null && lng != null ? LatLng(lat, lng) : null;
+        })
+        .whereType<LatLng>()
+        .toList();
+    if (points.length < 2) return {};
     return {
       Polyline(
-        polylineId: const PolylineId('route'),
-        points: [
-          if (order.restaurantLatitude != null && order.restaurantLongitude != null)
-            LatLng(order.restaurantLatitude!, order.restaurantLongitude!),
-          if (order.driverLatitude != null && order.driverLongitude != null)
-            LatLng(order.driverLatitude!, order.driverLongitude!),
-          LatLng(order.deliveryAddress.latitude, order.deliveryAddress.longitude),
-        ],
+        polylineId: const PolylineId('driver-telemetry'),
+        points: points,
         color: AppColors.primary,
         width: 3,
-        patterns: [PatternItem.dash(10), PatternItem.gap(5)],
       ),
     };
   }
@@ -446,13 +541,16 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   Future<void> _updateMapPins(OrderModel? order) async {
     if (order == null) return;
     final controller = await _mapController.future;
-    if (order.deliveryAddress.latitude != 0 && order.deliveryAddress.longitude != 0) {
+    if (order.deliveryAddress.latitude != 0 &&
+        order.deliveryAddress.longitude != 0) {
       controller.animateCamera(
         CameraUpdate.newLatLngBounds(
           LatLngBounds(
             southwest: LatLng(
-              (order.restaurantLatitude ?? order.deliveryAddress.latitude) - 0.01,
-              (order.restaurantLongitude ?? order.deliveryAddress.longitude) - 0.01,
+              (order.restaurantLatitude ?? order.deliveryAddress.latitude) -
+                  0.01,
+              (order.restaurantLongitude ?? order.deliveryAddress.longitude) -
+                  0.01,
             ),
             northeast: LatLng(
               order.deliveryAddress.latitude + 0.01,
