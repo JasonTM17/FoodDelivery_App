@@ -106,7 +106,7 @@ Body: { code }
 Place order from cart. Requires customer role.
 ```
 Body: { addressId, paymentMethod (cash|wallet|sepay), promotionCode?, notes? }
-Note: legacy `mock_wallet` requests are accepted and normalized to `wallet` internally.
+Note: public requests must use `wallet`; the legacy database enum is not accepted as an API value.
 ```
 
 Order codes are generated as 12-character values using the `FDYYMMDDXXXX` pattern to match the database column width.

@@ -3,7 +3,6 @@ import { IsString, IsOptional, IsEnum, IsNumber, Min, IsUUID } from 'class-valid
 export enum PaymentMethodDto {
   cash = 'cash',
   wallet = 'wallet',
-  mock_wallet = 'mock_wallet',
   sepay = 'sepay',
 }
 

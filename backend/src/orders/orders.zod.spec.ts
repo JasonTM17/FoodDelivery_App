@@ -1,13 +1,20 @@
 import { placeOrderSchema } from './orders.zod'
 
 describe('placeOrderSchema', () => {
-  it('normalizes public wallet payment method to legacy Prisma value', () => {
+  it('accepts public wallet payment method without exposing the legacy database enum', () => {
     const parsed = placeOrderSchema.parse({
       addressId: '11111111-1111-4111-8111-111111111111',
       paymentMethod: 'wallet',
     })
 
-    expect(parsed.paymentMethod).toBe('mock_wallet')
+    expect(parsed.paymentMethod).toBe('wallet')
+  })
+
+  it('rejects legacy mock wallet as a public request value', () => {
+    expect(() => placeOrderSchema.parse({
+      addressId: '11111111-1111-4111-8111-111111111111',
+      paymentMethod: 'mock_wallet',
+    })).toThrow()
   })
 
   it('accepts sepay payment method', () => {

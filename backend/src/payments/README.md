@@ -16,7 +16,7 @@ Payment intent lifecycle, SePay VietQR provider integration, webhook handling vá
 ## Runtime behavior
 
 - `cash` releases the order to `restaurant_pending` with payment still pending; cash is collected after fulfillment.
-- `wallet` is accepted as public API value and normalized to legacy Prisma value `mock_wallet`; capture uses confirmed wallet balance and a debit `wallet_transactions` row.
+- `wallet` is the only public wallet API value; capture uses confirmed wallet balance and a debit `wallet_transactions` row. The legacy Prisma enum remains an internal storage detail until the dedicated payment enum migration.
 - `sepay` creates a real provider payment intent and keeps the order in `pending_payment` until the signed SePay webhook confirms payment.
 - Missing `SEPAY_API_KEY` or `SEPAY_WEBHOOK_SECRET` is a degraded configuration error. Runtime must not create mock intents, mock refunds, or accept unsigned SePay webhooks.
 

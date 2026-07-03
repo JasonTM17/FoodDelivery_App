@@ -2,8 +2,7 @@ import { z } from 'zod'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-const paymentMethodSchema = z.enum(['cash', 'wallet', 'mock_wallet', 'sepay'])
-  .transform(method => method === 'wallet' ? 'mock_wallet' : method)
+const paymentMethodSchema = z.enum(['cash', 'wallet', 'sepay'])
 
 export const placeOrderSchema = z.object({
   addressId: z.string().regex(uuidRegex, 'Invalid UUID format'),
