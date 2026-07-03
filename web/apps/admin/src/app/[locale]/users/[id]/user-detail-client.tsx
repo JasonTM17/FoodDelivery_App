@@ -12,10 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Mail, Phone, User, ShoppingBag, RotateCcw, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, User, ShoppingBag, RotateCcw } from 'lucide-react';
 import { Link } from '@/navigation';
 import OrderStatusBadge from '@/components/badges/order-status-badge';
 import UserKycModal from './user-kyc-modal';
+import { UserDetailLoadingState } from './user-detail-loading-state';
+import { UserDetailSummaryCards } from './user-detail-summary-cards';
 
 interface UserDetail {
   id: string;
@@ -40,10 +42,6 @@ interface RefundRecord {
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
-
-const KYC_BADGE: Record<string, string> = {
-  none: 'secondary', pending: 'secondary', verified: 'default', rejected: 'destructive',
-};
 
 export default function UserDetailClient({ userId }: { userId: string }) {
   const t = useTranslations('userDetail');
@@ -70,22 +68,16 @@ export default function UserDetailClient({ userId }: { userId: string }) {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 h-48 animate-pulse rounded-lg bg-muted" />
-          <div className="h-48 animate-pulse rounded-lg bg-muted" />
-        </div>
-      </div>
-    );
+    return <UserDetailLoadingState />;
   }
 
   if (!user) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-destructive">Không tìm thấy người dùng</p>
-        <Button asChild><Link href="/users">Quay lại</Link></Button>
+        <p className="text-destructive">{t('notFound')}</p>
+        <Button asChild>
+          <Link href="/users">{t('back')}</Link>
+        </Button>
       </div>
     );
   }
@@ -199,41 +191,7 @@ export default function UserDetailClient({ userId }: { userId: string }) {
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle className="text-base">{t('stats')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('statusLabel')}</span>
-                <Badge variant={user.status === 'active' ? 'default' : 'destructive'}>
-                  {user.status === 'active' ? t('statusActive') : t('statusBanned')}
-                </Badge>
-              </div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('totalOrders')}</span><span className="font-medium">{user.totalOrders}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('totalSpent')}</span><span className="font-medium">{formatCurrency(user.totalSpent ?? 0)}</span></div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <ShieldCheck className="h-4 w-4 text-primary" />{t('kycCard')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('kycStatus')}</span>
-                <Badge variant={(KYC_BADGE[user.kycStatus] ?? 'secondary') as 'default' | 'secondary' | 'destructive'}>
-                  {user.kycStatus}
-                </Badge>
-              </div>
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setKycOpen(true)}>
-                {t('kycViewDocs')}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <UserDetailSummaryCards user={user} onOpenKyc={() => setKycOpen(true)} />
       </div>
 
       <UserKycModal userId={userId} open={kycOpen} onOpenChange={setKycOpen} />

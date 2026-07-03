@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiGet } from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -84,7 +85,7 @@ export function RestaurantKpiCard({ restaurantId }: { restaurantId: string }) {
         <KpiStat
           icon={<TrendingUp className="h-4 w-4" />}
           label={t('kpiRevenue7d')}
-          value={`${totalRevenue.toLocaleString()}đ`}
+          value={formatCurrency(totalRevenue)}
         />
       </CardContent>
     </Card>

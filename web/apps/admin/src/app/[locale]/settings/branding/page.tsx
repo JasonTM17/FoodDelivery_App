@@ -21,8 +21,8 @@ export default function SettingsBrandingPage() {
     setSaveError('');
     try {
       await apiPatch('/admin/settings/branding', {});
-    } catch (err) {
-      setSaveError((err as { message?: string }).message || 'Không thể lưu branding');
+    } catch {
+      setSaveError(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -56,7 +56,7 @@ export default function SettingsBrandingPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="tagline">{t('tagline')}</Label>
-              <Input id="tagline" defaultValue="Đặt đồ ăn nhanh chóng" />
+              <Input id="tagline" defaultValue={t('defaultTagline')} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supportEmail">{t('supportEmail')}</Label>

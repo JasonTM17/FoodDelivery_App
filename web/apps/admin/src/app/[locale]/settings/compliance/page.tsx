@@ -22,8 +22,8 @@ export default function SettingsCompliancePage() {
     setSaveError('');
     try {
       await apiPatch('/admin/settings/compliance', {});
-    } catch (err) {
-      setSaveError((err as { message?: string }).message || 'Không thể lưu cài đặt tuân thủ');
+    } catch {
+      setSaveError(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -145,7 +145,7 @@ export default function SettingsCompliancePage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="jurisdiction">{t('jurisdiction')}</Label>
-              <Input id="jurisdiction" defaultValue="Vietnam" />
+              <Input id="jurisdiction" defaultValue={t('defaultJurisdiction')} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="vatNumber">{t('vatNumber')}</Label>

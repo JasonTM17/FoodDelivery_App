@@ -142,7 +142,12 @@
     "notifications": "通知",
     "openNavigation": "管理メニューを開く",
     "accountMenu": "アカウントメニューを開く",
-    "switchLanguage": "言語を切り替える"
+    "switchLanguage": "言語を切り替える",
+    "languages": {
+      "vi": "?????",
+      "en": "??",
+      "ja": "???"
+    }
   },
   "sidebar": {
     "brand": "FoodFlow",
@@ -1206,7 +1211,8 @@
     "noRefunds": "返金はまだありません",
     "errorTitle": "ユーザー詳細を読み込めませんでした",
     "errorDescription": "ユーザープロフィールは一時的に利用できません。",
-    "retry": "再試行"
+    "retry": "再試行",
+    "notFound": "????????????"
   },
   "restaurantApprove": {
     "title": "レストラン承認",
@@ -1303,7 +1309,9 @@
     "outboundWebhooksDesc": "セキュアなアウトバウンドWebhook配信",
     "webhookSecret": "Webhook署名シークレット",
     "enableOutboundWebhooks": "アウトバウンドWebhookを有効化",
-    "enableOutboundWebhooksDesc": "HMACでWebhookペイロードに署名"
+    "enableOutboundWebhooksDesc": "HMACでWebhookペイロードに署名",
+    "saveError": "?????????????????????????",
+    "configuredSecretPlaceholder": "?????????????????"
   },
   "settingsBranding": {
     "title": "ブランド設定",
@@ -1326,7 +1334,9 @@
     "logo": "ロゴ",
     "favicon": "ファビコン",
     "ogImage": "OG画像",
-    "uploadHint": "クリックしてアップロード"
+    "uploadHint": "クリックしてアップロード",
+    "saveError": "???????????????????????????",
+    "defaultTagline": "?????????????"
   },
   "settingsCompliance": {
     "title": "コンプライアンス",
@@ -1357,7 +1367,9 @@
     "jurisdiction": "管轄区域",
     "vatNumber": "VAT番号",
     "vatEnabled": "VAT・税金",
-    "vatEnabledDesc": "取引にVATを適用する"
+    "vatEnabledDesc": "取引にVATを適用する",
+    "saveError": "???????????????????????????????",
+    "defaultJurisdiction": "????"
   },
   "realtimeOrders": {
     "title": "ライブ注文",

@@ -12,9 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 
 const LOCALE_OPTIONS = [
-  { code: 'vi', label: 'VI', flag: '🇻🇳', name: 'Tiếng Việt' },
-  { code: 'en', label: 'EN', flag: '🇺🇸', name: 'English' },
-  { code: 'ja', label: 'JA', flag: '🇯🇵', name: '日本語' },
+  { code: 'vi', label: 'VI', flag: '🇻🇳' },
+  { code: 'en', label: 'EN', flag: '🇺🇸' },
+  { code: 'ja', label: 'JA', flag: '🇯🇵' },
 ] as const;
 
 type LocaleCode = (typeof LOCALE_OPTIONS)[number]['code'];
@@ -55,7 +55,7 @@ export function LocaleSwitcher() {
             className={current === option.code ? 'bg-accent font-medium' : ''}
           >
             <span className="mr-2" aria-hidden="true">{option.flag}</span>
-            {option.name}
+            {t(`languages.${option.code}`)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

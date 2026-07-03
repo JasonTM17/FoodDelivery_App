@@ -18,7 +18,7 @@ interface TagInputProps {
 export default function TagInput({
   value,
   onChange,
-  placeholder = 'Nhập tag...',
+  placeholder = 'Add tag...',
   className,
   maxTags = 20,
   suggestions = [],

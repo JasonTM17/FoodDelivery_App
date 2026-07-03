@@ -23,8 +23,8 @@ export default function SettingsIntegrationsPage() {
     setSaveError('');
     try {
       await apiPatch('/admin/settings/integrations', {});
-    } catch (err) {
-      setSaveError((err as { message?: string }).message || 'Không thể lưu tích hợp');
+    } catch {
+      setSaveError(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -48,14 +48,17 @@ export default function SettingsIntegrationsPage() {
             <CardTitle className="flex items-center gap-2 text-base">
               <CreditCard className="h-4 w-4 text-primary" />
               SePay
-              <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 ml-auto">● {t('connected')}</Badge>
+              <Badge className="ml-auto bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
+                <span aria-hidden="true">•</span>
+                {t('connected')}
+              </Badge>
             </CardTitle>
             <CardDescription>{t('sePayDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>{t('apiKey')}</Label>
-              <Input type="password" defaultValue="sk-sepay-**********************" readOnly />
+              <Input type="password" placeholder={t('configuredSecretPlaceholder')} readOnly />
             </div>
             <div className="space-y-2">
               <Label>{t('webhookUrl')}</Label>
@@ -79,7 +82,10 @@ export default function SettingsIntegrationsPage() {
             <CardTitle className="flex items-center gap-2 text-base">
               <Bot className="h-4 w-4 text-primary" />
               N8N Automation
-              <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 ml-auto">● {t('connected')}</Badge>
+              <Badge className="ml-auto bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
+                <span aria-hidden="true">•</span>
+                {t('connected')}
+              </Badge>
             </CardTitle>
             <CardDescription>{t('n8nDescription')}</CardDescription>
           </CardHeader>
@@ -90,7 +96,7 @@ export default function SettingsIntegrationsPage() {
             </div>
             <div className="space-y-2">
               <Label>{t('apiKey')}</Label>
-              <Input type="password" defaultValue="n8n-**********************" />
+              <Input type="password" placeholder={t('configuredSecretPlaceholder')} />
             </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -140,7 +146,7 @@ export default function SettingsIntegrationsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>{t('webhookSecret')}</Label>
-              <Input type="password" defaultValue="whsec-**********************" />
+              <Input type="password" placeholder={t('configuredSecretPlaceholder')} />
             </div>
             <Separator />
             <div className="flex items-center justify-between">

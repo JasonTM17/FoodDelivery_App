@@ -142,7 +142,12 @@
     "notifications": "Notifications",
     "openNavigation": "Open admin menu",
     "accountMenu": "Open account menu",
-    "switchLanguage": "Switch language"
+    "switchLanguage": "Switch language",
+    "languages": {
+      "vi": "Vietnamese",
+      "en": "English",
+      "ja": "Japanese"
+    }
   },
   "sidebar": {
     "brand": "FoodFlow",
@@ -1206,7 +1211,8 @@
     "noRefunds": "No refunds yet",
     "errorTitle": "Could not load user detail",
     "errorDescription": "The user profile is temporarily unavailable.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "notFound": "User not found"
   },
   "restaurantApprove": {
     "title": "Restaurant Approval",
@@ -1303,7 +1309,9 @@
     "outboundWebhooksDesc": "Secure outbound webhook delivery",
     "webhookSecret": "Webhook Signing Secret",
     "enableOutboundWebhooks": "Enable Outbound Webhooks",
-    "enableOutboundWebhooksDesc": "Sign outbound webhook payloads with HMAC"
+    "enableOutboundWebhooksDesc": "Sign outbound webhook payloads with HMAC",
+    "saveError": "Unable to save integrations. Please try again.",
+    "configuredSecretPlaceholder": "Configured in secret manager"
   },
   "settingsBranding": {
     "title": "Branding",
@@ -1326,7 +1334,9 @@
     "logo": "Logo",
     "favicon": "Favicon",
     "ogImage": "OG Image",
-    "uploadHint": "Click to upload"
+    "uploadHint": "Click to upload",
+    "saveError": "Unable to save branding settings. Please try again.",
+    "defaultTagline": "Fast food delivery, done well"
   },
   "settingsCompliance": {
     "title": "Compliance",
@@ -1357,7 +1367,9 @@
     "jurisdiction": "Jurisdiction",
     "vatNumber": "VAT Number",
     "vatEnabled": "VAT / Tax",
-    "vatEnabledDesc": "Apply VAT to transactions"
+    "vatEnabledDesc": "Apply VAT to transactions",
+    "saveError": "Unable to save compliance settings. Please try again.",
+    "defaultJurisdiction": "Vietnam"
   },
   "realtimeOrders": {
     "title": "Live orders",
