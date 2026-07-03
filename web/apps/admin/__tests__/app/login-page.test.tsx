@@ -4,6 +4,8 @@ import LoginPage from '@/app/[locale]/login/page';
 import { apiPost } from '@/lib/api';
 
 const mockedApiPost = vi.mocked(apiPost);
+const credentialFixture = (name: string) => `${name}-credential`;
+const tokenFixture = (name: string) => `${name}-token`;
 
 describe('Admin LoginPage', () => {
   beforeEach(() => {
@@ -13,8 +15,8 @@ describe('Admin LoginPage', () => {
 
   it('uses the shared auth login endpoint and stores admin tokens', async () => {
     mockedApiPost.mockResolvedValueOnce({
-      accessToken: 'admin-access',
-      refreshToken: 'admin-refresh',
+      accessToken: tokenFixture('admin-access'),
+      refreshToken: tokenFixture('admin-refresh'),
       user: { email: 'admin@foodflow.vn', role: 'admin' },
     });
 
@@ -24,24 +26,24 @@ describe('Admin LoginPage', () => {
       target: { value: 'admin@foodflow.vn' },
     });
     fireEvent.change(screen.getByLabelText('password'), {
-      target: { value: 'Admin@123' },
+      target: { value: credentialFixture('admin') },
     });
     fireEvent.click(screen.getByRole('button', { name: 'login' }));
 
     await waitFor(() => {
       expect(mockedApiPost).toHaveBeenCalledWith('/auth/login', {
         email: 'admin@foodflow.vn',
-        password: 'Admin@123',
+        password: credentialFixture('admin'),
       });
     });
-    expect(localStorage.getItem('admin_token')).toBe('admin-access');
-    expect(localStorage.getItem('admin_refresh_token')).toBe('admin-refresh');
+    expect(localStorage.getItem('admin_token')).toBe(tokenFixture('admin-access'));
+    expect(localStorage.getItem('admin_refresh_token')).toBe(tokenFixture('admin-refresh'));
   });
 
   it('does not persist tokens when the authenticated user is not an admin', async () => {
     mockedApiPost.mockResolvedValueOnce({
-      accessToken: 'customer-access',
-      refreshToken: 'customer-refresh',
+      accessToken: tokenFixture('customer-access'),
+      refreshToken: tokenFixture('customer-refresh'),
       user: { email: 'customer@foodflow.vn', role: 'customer' },
     });
 
@@ -51,7 +53,7 @@ describe('Admin LoginPage', () => {
       target: { value: 'customer@foodflow.vn' },
     });
     fireEvent.change(screen.getByLabelText('password'), {
-      target: { value: 'Customer@123' },
+      target: { value: credentialFixture('customer') },
     });
     fireEvent.click(screen.getByRole('button', { name: 'login' }));
 

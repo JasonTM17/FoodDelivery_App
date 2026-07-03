@@ -10,19 +10,29 @@
 Thumbs.db
 ehthumbs.db
 
-# Claude / AI assistants — private state
+# Claude / AI assistants - private state
 CLAUDE.md
+CLAUDE.MD
 AGENTS.md
+AGENTS.MD
 GEMINI.md
+GEMINI.MD
 CLAUDE.local.md
 AGENTS.local.md
 GEMINI.local.md
 .claude*
+.agents/
 .omc/
 .codex/
 .commandcode/
 .mcp.json
-.cursor/mcp.json
+.cursor/
+.continue/
+.aider*
+.cline/
+.roo/
+.windsurf/
+.playwright-mcp/
 
 # Private plans & notes
 plans/
@@ -48,7 +58,11 @@ release-manifest.json
 !.env.example
 !.env.production.example
 .envrc
+*.env
+*.env.*
+!*.env.example
 *.local.env
+.npmrc.local
 *.secret
 *.secrets
 secrets/
@@ -69,7 +83,7 @@ supabase/.branches/
 supabase/.temp/
 .supabase/
 
-# Logs (runtime log dirs only — not source-code page routes)
+# Logs (runtime log dirs only - not source-code page routes)
 *.log
 /logs/
 /backend/logs/
@@ -100,11 +114,22 @@ out/
 # Misc
 *.pem
 *.key
+*.pub
+*.p8
+*.p7b
+*.p7c
+*.p7s
 *.p12
 *.pfx
 *.jks
 *.crt
 *.csr
+*.cer
+*.der
+*.asc
+*.gpg
+*.age
+*.kdbx
 id_rsa
 id_ed25519
 credentials*.json
@@ -112,6 +137,11 @@ service-account*.json
 *service_account*.json
 firebase-adminsdk*.json
 google-credentials*.json
+playwright/.auth/
+storage-state*.json
+storageState*.json
+auth-state*.json
+session-state*.json
 *.sqlite
 *.sqlite3
 *.db

@@ -1,4 +1,20 @@
 {
+  "shared": {
+    "markdownEditor": {
+      "placeholder": "Nhập nội dung... (hỗ trợ Markdown)",
+      "preview": "Xem trước",
+      "toolbar": {
+        "bold": "In đậm",
+        "italic": "In nghiêng",
+        "underline": "Gạch chân",
+        "quote": "Trích dẫn",
+        "code": "Code",
+        "link": "Link",
+        "bulletList": "Danh sách",
+        "numberedList": "Danh sách số"
+      }
+    }
+  },
   "adminPromotionManagement": {
     "form": {
       "basicInfo": "Thông tin cơ bản",

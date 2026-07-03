@@ -1,4 +1,20 @@
 {
+  "shared": {
+    "markdownEditor": {
+      "placeholder": "Enter content... (Markdown supported)",
+      "preview": "Preview",
+      "toolbar": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "quote": "Quote",
+        "code": "Code",
+        "link": "Link",
+        "bulletList": "Bullet list",
+        "numberedList": "Numbered list"
+      }
+    }
+  },
   "adminPromotionManagement": {
     "form": {
       "basicInfo": "Basic information",
