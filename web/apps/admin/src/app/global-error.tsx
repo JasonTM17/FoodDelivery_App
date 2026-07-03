@@ -5,31 +5,26 @@ import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import { RefreshCw } from 'lucide-react';
 
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <html lang="vi">
+    <html lang="en">
       <body className="bg-background">
         <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
           <FoodFlowLogo showWordmark={false} markClassName="h-20 w-20" />
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Lỗi hệ thống</h1>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Đã xảy ra lỗi nghiêm trọng. Vui lòng thử tải lại trang hoặc liên hệ quản trị viên.
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">System error</h1>
+            <p className="max-w-md text-sm text-muted-foreground">
+              A critical error occurred. Reload the page or contact an administrator if the
+              issue continues.
             </p>
-            {error.message && (
-              <p className="text-xs text-muted-foreground/60 font-mono mt-1">
-                {error.message}
-              </p>
-            )}
           </div>
           <Button onClick={reset} size="lg">
             <RefreshCw className="mr-2 h-4 w-4" />
-            Tải lại trang
+            Reload page
           </Button>
         </div>
       </body>
