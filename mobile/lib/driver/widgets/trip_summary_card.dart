@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class TripSummaryCard extends StatelessWidget {
@@ -21,7 +23,9 @@ class TripSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final minutes = (durationSeconds / 60).ceil();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -32,9 +36,9 @@ class TripSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Chi tiết chuyến đi',
-            style: TextStyle(
+          Text(
+            l10n.driverTripDetailTitle,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -43,9 +47,27 @@ class TripSummaryCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildStat('Khoảng cách', '${distanceKm.toStringAsFixed(1)} km', Icons.route)),
-              Expanded(child: _buildStat('Thời gian', '$minutes phút', Icons.timer)),
-              Expanded(child: _buildStat('Tốc độ TB', '${avgSpeedKmh.toStringAsFixed(1)} km/h', Icons.speed)),
+              Expanded(
+                child: _buildStat(
+                  l10n.driverTripSummaryDistance,
+                  '${distanceKm.toStringAsFixed(1)} km',
+                  Icons.route,
+                ),
+              ),
+              Expanded(
+                child: _buildStat(
+                  l10n.driverTripSummaryDuration,
+                  l10n.driverTripSummaryMinutes(minutes),
+                  Icons.timer,
+                ),
+              ),
+              Expanded(
+                child: _buildStat(
+                  l10n.driverTripSummaryAvgSpeed,
+                  '${avgSpeedKmh.toStringAsFixed(1)} km/h',
+                  Icons.speed,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -57,15 +79,22 @@ class TripSummaryCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.monetization_on, color: AppColors.primary, size: 20),
+                const Icon(
+                  Icons.monetization_on,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
-                const Text(
-                  'Thu nhập',
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                Text(
+                  l10n.driverTripSummaryEarnings,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
                 const Spacer(),
                 Text(
-                  '${payout.toStringAsFixed(0)}đ',
+                  '${payout.toStringAsFixed(0)}₫',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -79,15 +108,23 @@ class TripSummaryCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                ...List.generate(5, (i) => Icon(
-                  i < rating! ? Icons.star : Icons.star_border,
-                  size: 16,
-                  color: i < rating! ? const Color(0xFFF59E0B) : const Color(0xFF4B5563),
-                )),
+                ...List.generate(
+                  5,
+                  (index) => Icon(
+                    index < rating! ? Icons.star : Icons.star_border,
+                    size: 16,
+                    color: index < rating!
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFF4B5563),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Đánh giá từ khách',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                Text(
+                  l10n.driverTripSummaryCustomerRating,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -99,11 +136,17 @@ class TripSummaryCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF3E0).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.card_giftcard, color: Color(0xFFF59E0B), size: 18),
+                  const Icon(
+                    Icons.card_giftcard,
+                    color: Color(0xFFF59E0B),
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(

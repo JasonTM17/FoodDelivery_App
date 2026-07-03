@@ -213,6 +213,9 @@ Get visible delivery reviews and rating distribution for the authenticated drive
 Query: star (1|2|3|4|5, optional)
 ```
 
+### GET /driver/trips/:tripId/route
+Get real telemetry or persisted route geometry for a trip owned by the authenticated driver. Returns empty arrays when no route data has been recorded.
+
 ### GET /driver/heatmap
 Get real demand heatmap points near the authenticated driver's location.
 ```

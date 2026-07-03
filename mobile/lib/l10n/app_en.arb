@@ -280,6 +280,24 @@
   },
   "driverRatingsToday": "Today",
   "driverRatingsYesterday": "Yesterday",
+  "driverTripDetailTitle": "Trip details",
+  "driverTripDetailSegments": "Route steps",
+  "driverTripDetailRetry": "Retry",
+  "driverTripDetailNoRoute": "No route data for this trip yet",
+  "driverTripDetailLoadError": "Unable to load trip route",
+  "driverTripDetailOrder": "Order: {code}",
+  "@driverTripDetailOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverTripSummaryDistance": "Distance",
+  "driverTripSummaryDuration": "Duration",
+  "driverTripSummaryAvgSpeed": "Avg speed",
+  "driverTripSummaryEarnings": "Earnings",
+  "driverTripSummaryCustomerRating": "Customer rating",
+  "driverTripSummaryMinutes": "{minutes} min",
+  "@driverTripSummaryMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
 
   "driverKycTitle": "KYC Verification",
   "driverKycUploadTitle": "Upload documents",

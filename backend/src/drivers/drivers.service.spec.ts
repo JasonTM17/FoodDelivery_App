@@ -10,6 +10,7 @@ describe('DriversService', () => {
   }
   const mockPrisma = {
     driverProfile: { findUniqueOrThrow: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+    order: { findFirst: jest.fn() },
     payment: { findMany: jest.fn() },
     review: { findMany: jest.fn() },
     $queryRaw: jest.fn(),
@@ -167,6 +168,78 @@ describe('DriversService', () => {
           distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         },
         hasMore: false,
+      })
+    })
+  })
+
+  describe('getTripRoute', () => {
+    it('returns telemetry route points and payout ledger amount for the authenticated driver', async () => {
+      const assignedAt = new Date('2026-07-03T08:00:00Z')
+      const deliveredAt = new Date('2026-07-03T08:10:00Z')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({
+        id: 'order-1',
+        orderCode: 'FD0000000001',
+        createdAt: assignedAt,
+        updatedAt: deliveredAt,
+        routePolyline: null,
+        routeWaypoints: null,
+        deliveryTask: {
+          assignedAt,
+          deliveredAt,
+          pickupDistanceKm: 1.2,
+          deliveryDistanceKm: 2.3,
+          durationInTraffic: 600,
+        },
+        payoutLedgers: [{ amount: 25000 }],
+      })
+      mockPrisma.$queryRaw.mockResolvedValueOnce([
+        { lat: 10.7769, lng: 106.7009, timestamp: assignedAt },
+        { lat: 10.7869, lng: 106.7109, timestamp: deliveredAt },
+      ])
+
+      const route = await service.getTripRoute('driver-1', 'FD0000000001')
+
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ driverId: 'driver-1' }),
+      }))
+      expect(route).toEqual({
+        tripId: 'order-1',
+        points: [
+          { lat: 10.7769, lng: 106.7009, timestamp: assignedAt.toISOString() },
+          { lat: 10.7869, lng: 106.7109, timestamp: deliveredAt.toISOString() },
+        ],
+        segments: [],
+        totalDistanceKm: 3.5,
+        totalDurationSeconds: 600,
+        avgSpeedKmh: 21,
+        payout: 25000,
+      })
+    })
+
+    it('returns an empty route instead of generated sample data when no telemetry or persisted route exists', async () => {
+      const createdAt = new Date('2026-07-03T08:00:00Z')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({
+        id: 'order-2',
+        orderCode: 'FD0000000002',
+        createdAt,
+        updatedAt: createdAt,
+        routePolyline: null,
+        routeWaypoints: null,
+        deliveryTask: null,
+        payoutLedgers: [],
+      })
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+
+      const route = await service.getTripRoute('driver-1', 'order-2')
+
+      expect(route).toEqual({
+        tripId: 'order-2',
+        points: [],
+        segments: [],
+        totalDistanceKm: 0,
+        totalDurationSeconds: 0,
+        avgSpeedKmh: 0,
+        payout: 0,
       })
     })
   })

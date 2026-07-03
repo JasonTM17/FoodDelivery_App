@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
+import { Controller, Post, Get, Query, Param, Body, UseGuards, UsePipes } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
@@ -40,6 +40,11 @@ export class DriversController {
   @Get('ratings')
   getRatings(@CurrentUser() user: JwtPayload, @Query('star') star?: string) {
     return this.driversService.getRatings(user.sub, star)
+  }
+
+  @Get('trips/:tripId/route')
+  getTripRoute(@CurrentUser() user: JwtPayload, @Param('tripId') tripId: string) {
+    return this.driversService.getTripRoute(user.sub, tripId)
   }
 
   @Get('heatmap')

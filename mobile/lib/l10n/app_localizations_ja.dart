@@ -739,6 +739,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverRatingsYesterday => '昨日';
 
   @override
+  String get driverTripDetailTitle => '配達詳細';
+
+  @override
+  String get driverTripDetailSegments => 'ルート手順';
+
+  @override
+  String get driverTripDetailRetry => '再試行';
+
+  @override
+  String get driverTripDetailNoRoute => 'この配達のルートデータはまだありません';
+
+  @override
+  String get driverTripDetailLoadError => '配達ルートを読み込めません';
+
+  @override
+  String driverTripDetailOrder(String code) {
+    return '注文: $code';
+  }
+
+  @override
+  String get driverTripSummaryDistance => '距離';
+
+  @override
+  String get driverTripSummaryDuration => '時間';
+
+  @override
+  String get driverTripSummaryAvgSpeed => '平均速度';
+
+  @override
+  String get driverTripSummaryEarnings => '収益';
+
+  @override
+  String get driverTripSummaryCustomerRating => '顧客評価';
+
+  @override
+  String driverTripSummaryMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override

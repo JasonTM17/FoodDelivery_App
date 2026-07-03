@@ -745,6 +745,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverRatingsYesterday => 'Hôm qua';
 
   @override
+  String get driverTripDetailTitle => 'Chi tiết chuyến đi';
+
+  @override
+  String get driverTripDetailSegments => 'Hướng dẫn từng chặng';
+
+  @override
+  String get driverTripDetailRetry => 'Thử lại';
+
+  @override
+  String get driverTripDetailNoRoute =>
+      'Chưa có dữ liệu lộ trình cho chuyến này';
+
+  @override
+  String get driverTripDetailLoadError => 'Không thể tải lộ trình chuyến đi';
+
+  @override
+  String driverTripDetailOrder(String code) {
+    return 'ĐH: $code';
+  }
+
+  @override
+  String get driverTripSummaryDistance => 'Khoảng cách';
+
+  @override
+  String get driverTripSummaryDuration => 'Thời gian';
+
+  @override
+  String get driverTripSummaryAvgSpeed => 'Tốc độ TB';
+
+  @override
+  String get driverTripSummaryEarnings => 'Thu nhập';
+
+  @override
+  String get driverTripSummaryCustomerRating => 'Đánh giá từ khách';
+
+  @override
+  String driverTripSummaryMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override

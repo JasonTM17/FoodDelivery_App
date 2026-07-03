@@ -286,6 +286,24 @@
   },
   "driverRatingsToday": "Hôm nay",
   "driverRatingsYesterday": "Hôm qua",
+  "driverTripDetailTitle": "Chi tiết chuyến đi",
+  "driverTripDetailSegments": "Hướng dẫn từng chặng",
+  "driverTripDetailRetry": "Thử lại",
+  "driverTripDetailNoRoute": "Chưa có dữ liệu lộ trình cho chuyến này",
+  "driverTripDetailLoadError": "Không thể tải lộ trình chuyến đi",
+  "driverTripDetailOrder": "ĐH: {code}",
+  "@driverTripDetailOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverTripSummaryDistance": "Khoảng cách",
+  "driverTripSummaryDuration": "Thời gian",
+  "driverTripSummaryAvgSpeed": "Tốc độ TB",
+  "driverTripSummaryEarnings": "Thu nhập",
+  "driverTripSummaryCustomerRating": "Đánh giá từ khách",
+  "driverTripSummaryMinutes": "{minutes} phút",
+  "@driverTripSummaryMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",

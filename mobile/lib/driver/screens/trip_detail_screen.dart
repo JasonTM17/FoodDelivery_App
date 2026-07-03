@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/trip_route_provider.dart';
 import '../widgets/route_replay_map.dart';
+import '../widgets/trip_detail_header_card.dart';
+import '../widgets/trip_route_segment_card.dart';
 import '../widgets/trip_summary_card.dart';
-
 
 class TripDetailScreen extends ConsumerStatefulWidget {
   final String tripId;
@@ -39,6 +42,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(tripRouteProvider);
 
     return Scaffold(
@@ -47,7 +51,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
         title: Text(
-          'Chi tiết chuyến đi',
+          l10n.driverTripDetailTitle,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
@@ -59,9 +63,13 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.restaurantName != null)
-              _buildHeader(),
-            const SizedBox(height: 16),
+            if (widget.restaurantName != null) ...[
+              TripDetailHeaderCard(
+                restaurantName: widget.restaurantName!,
+                tripId: widget.tripId,
+              ),
+              const SizedBox(height: 16),
+            ],
             if (state.isLoading)
               const Center(
                 child: Padding(
@@ -70,130 +78,62 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ),
               )
             else if (state.error != null)
-              _buildError(state.error!)
-            else if (state.route != null) ...[
-              RouteReplayMap(
-                points: state.route!.points
-                    .map((p) => RoutePointData(lat: p.lat, lng: p.lng))
-                    .toList(),
-                fromLat: widget.fromLat ?? state.route!.points.first.lat,
-                fromLng: widget.fromLng ?? state.route!.points.first.lng,
-                toLat: widget.toLat ?? state.route!.points.last.lat,
-                toLng: widget.toLng ?? state.route!.points.last.lng,
-              ),
-              const SizedBox(height: 16),
-              TripSummaryCard(
-                distanceKm: state.route!.totalDistanceKm,
-                durationSeconds: state.route!.totalDurationSeconds,
-                avgSpeedKmh: state.route!.avgSpeedKmh,
-                payout: state.route!.payout,
-                rating: 5,
-                tipNote: null,
-              ),
-              if (state.route!.segments.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                const Text(
-                  'Hướng dẫn từng chặng',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...state.route!.segments.map((seg) =>
-                    _buildSegment(seg.instruction, seg.distanceKm, seg.durationSeconds)),
-              ],
-            ] else
-              _buildEmptyState(),
+              _buildError(l10n)
+            else if (state.route == null || state.route!.points.isEmpty)
+              _buildEmptyState(l10n)
+            else
+              _buildRouteDetail(l10n, state.route!),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF374151)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.restaurant_outlined,
-                color: AppColors.primary, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.restaurantName!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'ĐH: ${widget.tripId.substring(0, 8).toUpperCase()}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildRouteDetail(AppLocalizations l10n, TripRouteDetail route) {
+    final firstPoint = route.points.first;
+    final lastPoint = route.points.last;
 
-  Widget _buildSegment(String instruction, double distanceKm, int durationSec) {
-    final minutes = (durationSec / 60).ceil();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF374151)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.turn_right, color: AppColors.primary, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              instruction,
-              style: const TextStyle(fontSize: 13, color: Color(0xFFD1D5DB)),
-            ),
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RouteReplayMap(
+          points: route.points
+              .map((point) => RoutePointData(lat: point.lat, lng: point.lng))
+              .toList(growable: false),
+          fromLat: widget.fromLat ?? firstPoint.lat,
+          fromLng: widget.fromLng ?? firstPoint.lng,
+          toLat: widget.toLat ?? lastPoint.lat,
+          toLng: widget.toLng ?? lastPoint.lng,
+        ),
+        const SizedBox(height: 16),
+        TripSummaryCard(
+          distanceKm: route.totalDistanceKm,
+          durationSeconds: route.totalDurationSeconds,
+          avgSpeedKmh: route.avgSpeedKmh,
+          payout: route.payout,
+          rating: null,
+          tipNote: null,
+        ),
+        if (route.segments.isNotEmpty) ...[
+          const SizedBox(height: 20),
           Text(
-            '${distanceKm.toStringAsFixed(1)}km · ${minutes}ph',
-            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+            l10n.driverTripDetailSegments,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...route.segments.map(
+            (segment) => TripRouteSegmentCard(segment: segment),
           ),
         ],
-      ),
+      ],
     );
   }
 
-  Widget _buildError(String error) {
+  Widget _buildError(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -206,33 +146,37 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              error,
+              l10n.driverTripDetailLoadError,
               style: const TextStyle(color: Color(0xFFEF4444), fontSize: 14),
             ),
           ),
           TextButton(
             onPressed: () =>
                 ref.read(tripRouteProvider.notifier).loadRoute(widget.tripId),
-            child: const Text('Thử lại'),
+            child: Text(l10n.driverTripDetailRetry),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.route, size: 56,
-                color: const Color(0xFF6B7280).withValues(alpha: 0.4)),
+            Icon(
+              Icons.route,
+              size: 56,
+              color: const Color(0xFF6B7280).withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
-            const Text(
-              'Không có dữ liệu lộ trình',
-              style: TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
+            Text(
+              l10n.driverTripDetailNoRoute,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
             ),
           ],
         ),

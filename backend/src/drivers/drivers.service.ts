@@ -1,6 +1,8 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common'
+import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
+import { decodePolyline } from '../common/utils/route.utils'
+import { haversineDistance } from '../common/utils/geo.utils'
 import Redis from 'ioredis'
 
 export interface DriverHeatmapQuery {
@@ -53,6 +55,30 @@ export interface DriverRatingsResponse {
   reviews: DriverRatingReview[]
   stats: DriverRatingStats
   hasMore: boolean
+}
+
+export interface DriverTripRoutePoint {
+  lat: number
+  lng: number
+  timestamp: string
+}
+
+export interface DriverTripRouteSegment {
+  distanceKm: number
+  durationSeconds: number
+  instruction: string
+  startIndex: number
+  endIndex: number
+}
+
+export interface DriverTripRouteResponse {
+  tripId: string
+  points: DriverTripRoutePoint[]
+  segments: DriverTripRouteSegment[]
+  totalDistanceKm: number
+  totalDurationSeconds: number
+  avgSpeedKmh: number
+  payout: number
 }
 
 @Injectable()
@@ -219,6 +245,89 @@ export class DriversService {
     }
   }
 
+  async getTripRoute(driverId: string, tripId: string): Promise<DriverTripRouteResponse> {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        driverId,
+        OR: [
+          ...(isUuid(tripId) ? [{ id: tripId }] : []),
+          { orderCode: tripId },
+        ],
+      },
+      select: {
+        id: true,
+        orderCode: true,
+        createdAt: true,
+        updatedAt: true,
+        routePolyline: true,
+        routeWaypoints: true,
+        deliveryTask: {
+          select: {
+            assignedAt: true,
+            deliveredAt: true,
+            pickupDistanceKm: true,
+            deliveryDistanceKm: true,
+            durationInTraffic: true,
+          },
+        },
+        payoutLedgers: {
+          where: {
+            recipientType: 'driver',
+            recipientId: driverId,
+          },
+          select: { amount: true },
+        },
+      },
+    })
+    if (!order) throw new NotFoundException('TRIP_ROUTE_NOT_FOUND')
+
+    const start = order.deliveryTask?.assignedAt ?? order.createdAt
+    const end = order.deliveryTask?.deliveredAt ?? order.updatedAt
+    const telemetryRows = await this.prisma.$queryRaw<Array<{
+      lat: number
+      lng: number
+      timestamp: Date
+    }>>(Prisma.sql`
+      SELECT
+        ST_Y(location::geometry)::float8 AS "lat",
+        ST_X(location::geometry)::float8 AS "lng",
+        recorded_at AS "timestamp"
+      FROM driver_location_history
+      WHERE driver_id = CAST(${driverId} AS uuid)
+        AND recorded_at >= ${start}
+        AND recorded_at <= ${end}
+      ORDER BY recorded_at ASC
+      LIMIT 1000
+    `)
+
+    const points = telemetryRows.length > 0
+      ? telemetryRows.map(row => ({
+        lat: Number(row.lat),
+        lng: Number(row.lng),
+        timestamp: row.timestamp.toISOString(),
+      }))
+      : persistedRoutePoints(order.routeWaypoints, order.routePolyline, start, end)
+
+    const distanceKm = routeDistanceKm(points)
+    const storedDistanceKm =
+      decimalToNumber(order.deliveryTask?.pickupDistanceKm) +
+      decimalToNumber(order.deliveryTask?.deliveryDistanceKm)
+    const totalDistanceKm = roundOneDecimal(storedDistanceKm > 0 ? storedDistanceKm : distanceKm)
+    const durationFromPoints = routeDurationSeconds(points)
+    const totalDurationSeconds = order.deliveryTask?.durationInTraffic ?? durationFromPoints
+    const payout = order.payoutLedgers.reduce((sum, ledger) => sum + Number(ledger.amount), 0)
+
+    return {
+      tripId: order.id,
+      points,
+      segments: [],
+      totalDistanceKm,
+      totalDurationSeconds,
+      avgSpeedKmh: totalDurationSeconds > 0 ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600)) : 0,
+      payout,
+    }
+  }
+
   async getHeatmap(query: DriverHeatmapQuery): Promise<DriverHeatmapPoint[]> {
     const lat = query.lat
     const lng = query.lng
@@ -329,4 +438,80 @@ function ratingStats(ratings: number[]): DriverRatingStats {
     ? 0
     : Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / totalReviews) * 10) / 10
   return { average, totalReviews, distribution }
+}
+
+function persistedRoutePoints(
+  routeWaypoints: Prisma.JsonValue | null,
+  routePolyline: string | null,
+  start: Date,
+  end: Date,
+): DriverTripRoutePoint[] {
+  const waypoints = parseWaypoints(routeWaypoints)
+  const geometryPoints = waypoints.length > 0
+    ? waypoints
+    : routePolyline
+      ? safeDecodePolyline(routePolyline)
+      : []
+  return geometryPoints.map((point, index) => ({
+    lat: point.lat,
+    lng: point.lng,
+    timestamp: interpolateTimestamp(start, end, index, geometryPoints.length),
+  }))
+}
+
+function parseWaypoints(value: Prisma.JsonValue | null): Array<{ lat: number; lng: number }> {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(point => {
+      if (!point || typeof point !== 'object' || Array.isArray(point)) return null
+      const lat = Number((point as Record<string, unknown>).lat)
+      const lng = Number((point as Record<string, unknown>).lng)
+      return isValidLatitude(lat) && isValidLongitude(lng) ? { lat, lng } : null
+    })
+    .filter((point): point is { lat: number; lng: number } => point !== null)
+}
+
+function safeDecodePolyline(polyline: string): Array<{ lat: number; lng: number }> {
+  try {
+    return decodePolyline(polyline).filter(point => isValidLatitude(point.lat) && isValidLongitude(point.lng))
+  } catch {
+    return []
+  }
+}
+
+function interpolateTimestamp(start: Date, end: Date, index: number, total: number): string {
+  if (total <= 1) return start.toISOString()
+  const spanMs = Math.max(0, end.getTime() - start.getTime())
+  return new Date(start.getTime() + spanMs * (index / (total - 1))).toISOString()
+}
+
+function routeDistanceKm(points: DriverTripRoutePoint[]): number {
+  let distance = 0
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1]
+    const current = points[index]
+    distance += haversineDistance(previous.lat, previous.lng, current.lat, current.lng)
+  }
+  return distance
+}
+
+function routeDurationSeconds(points: DriverTripRoutePoint[]): number {
+  if (points.length < 2) return 0
+  const first = Date.parse(points[0].timestamp)
+  const last = Date.parse(points[points.length - 1].timestamp)
+  if (!Number.isFinite(first) || !Number.isFinite(last) || last <= first) return 0
+  return Math.round((last - first) / 1000)
+}
+
+function decimalToNumber(value: unknown): number {
+  if (value == null) return 0
+  return Number(value)
+}
+
+function roundOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }

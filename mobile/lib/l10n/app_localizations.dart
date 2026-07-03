@@ -1528,6 +1528,78 @@ abstract class AppLocalizations {
   /// **'Hôm qua'**
   String get driverRatingsYesterday;
 
+  /// No description provided for @driverTripDetailTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết chuyến đi'**
+  String get driverTripDetailTitle;
+
+  /// No description provided for @driverTripDetailSegments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hướng dẫn từng chặng'**
+  String get driverTripDetailSegments;
+
+  /// No description provided for @driverTripDetailRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get driverTripDetailRetry;
+
+  /// No description provided for @driverTripDetailNoRoute.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu lộ trình cho chuyến này'**
+  String get driverTripDetailNoRoute;
+
+  /// No description provided for @driverTripDetailLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải lộ trình chuyến đi'**
+  String get driverTripDetailLoadError;
+
+  /// No description provided for @driverTripDetailOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐH: {code}'**
+  String driverTripDetailOrder(String code);
+
+  /// No description provided for @driverTripSummaryDistance.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoảng cách'**
+  String get driverTripSummaryDistance;
+
+  /// No description provided for @driverTripSummaryDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian'**
+  String get driverTripSummaryDuration;
+
+  /// No description provided for @driverTripSummaryAvgSpeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốc độ TB'**
+  String get driverTripSummaryAvgSpeed;
+
+  /// No description provided for @driverTripSummaryEarnings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập'**
+  String get driverTripSummaryEarnings;
+
+  /// No description provided for @driverTripSummaryCustomerRating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá từ khách'**
+  String get driverTripSummaryCustomerRating;
+
+  /// No description provided for @driverTripSummaryMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{minutes} phút'**
+  String driverTripSummaryMinutes(int minutes);
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:

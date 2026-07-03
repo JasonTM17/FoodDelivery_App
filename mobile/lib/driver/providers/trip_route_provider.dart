@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/api/api_client.dart';
+
 class RoutePoint {
   final double lat;
   final double lng;
@@ -10,6 +12,16 @@ class RoutePoint {
     required this.lng,
     required this.timestamp,
   });
+
+  factory RoutePoint.fromJson(Map<String, dynamic> json) {
+    return RoutePoint(
+      lat: _readDouble(json['lat']),
+      lng: _readDouble(json['lng']),
+      timestamp:
+          DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+    );
+  }
 }
 
 class RouteSegment {
@@ -26,6 +38,16 @@ class RouteSegment {
     required this.startIndex,
     required this.endIndex,
   });
+
+  factory RouteSegment.fromJson(Map<String, dynamic> json) {
+    return RouteSegment(
+      distanceKm: _readDouble(json['distanceKm']),
+      durationSeconds: _readInt(json['durationSeconds']),
+      instruction: json['instruction']?.toString() ?? '',
+      startIndex: _readInt(json['startIndex']),
+      endIndex: _readInt(json['endIndex']),
+    );
+  }
 }
 
 class TripRouteDetail {
@@ -46,6 +68,22 @@ class TripRouteDetail {
     this.avgSpeedKmh = 0,
     this.payout = 0,
   });
+
+  factory TripRouteDetail.fromJson(Map<String, dynamic> json) {
+    return TripRouteDetail(
+      tripId: json['tripId']?.toString() ?? '',
+      points: _readList(
+        json['points'],
+      ).map((point) => RoutePoint.fromJson(point)).toList(growable: false),
+      segments: _readList(json['segments'])
+          .map((segment) => RouteSegment.fromJson(segment))
+          .toList(growable: false),
+      totalDistanceKm: _readDouble(json['totalDistanceKm']),
+      totalDurationSeconds: _readInt(json['totalDurationSeconds']),
+      avgSpeedKmh: _readDouble(json['avgSpeedKmh']),
+      payout: _readDouble(json['payout']),
+    );
+  }
 }
 
 class TripRouteState {
@@ -81,25 +119,28 @@ class TripRouteState {
 }
 
 class TripRouteNotifier extends StateNotifier<TripRouteState> {
-  TripRouteNotifier() : super(const TripRouteState());
+  TripRouteNotifier({ApiClient? api})
+    : _api = api ?? ApiClient.instance,
+      super(const TripRouteState());
+
+  final ApiClient _api;
 
   Future<void> loadRoute(String tripId) async {
     state = state.copyWith(isLoading: true, error: null);
-    // TODO: Replace with real API GET /driver/trips/{tripId}/route
-    await Future.delayed(const Duration(milliseconds: 500));
-    final points = _samplePoints();
-    state = state.copyWith(
-      isLoading: false,
-      route: TripRouteDetail(
-        tripId: tripId,
-        points: points,
-        segments: _sampleSegments(),
-        totalDistanceKm: 3.5,
-        totalDurationSeconds: 720,
-        avgSpeedKmh: 17.5,
-        payout: 25000,
-      ),
-    );
+    try {
+      final response = await _api.get<Map<String, dynamic>>(
+        '/driver/trips/$tripId/route',
+      );
+      state = state.copyWith(
+        isLoading: false,
+        route: TripRouteDetail.fromJson(response.data ?? {}),
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'DRIVER_TRIP_ROUTE_UNAVAILABLE',
+      );
+    }
   }
 
   void startReplay() {
@@ -113,51 +154,29 @@ class TripRouteNotifier extends StateNotifier<TripRouteState> {
   void stopReplay() {
     state = state.copyWith(isReplaying: false, replayProgress: 0);
   }
-
-  List<RoutePoint> _samplePoints() {
-    final baseLat = 10.8231;
-    final baseLng = 106.6297;
-    final points = <RoutePoint>[];
-    final now = DateTime.now().subtract(const Duration(hours: 2));
-    for (int i = 0; i < 40; i++) {
-      final t = i / 39;
-      points.add(RoutePoint(
-        lat: baseLat + (0.002 + t * 0.008),
-        lng: baseLng + (0.001 + t * 0.006),
-        timestamp: now.add(Duration(seconds: (t * 720).round())),
-      ));
-    }
-    return points;
-  }
-
-  List<RouteSegment> _sampleSegments() {
-    return [
-      const RouteSegment(
-        distanceKm: 1.2,
-        durationSeconds: 240,
-        instruction: 'Rẽ phải vào Nguyễn Văn Linh',
-        startIndex: 0,
-        endIndex: 12,
-      ),
-      const RouteSegment(
-        distanceKm: 1.5,
-        durationSeconds: 300,
-        instruction: 'Đi thẳng trên Lê Văn Lương',
-        startIndex: 13,
-        endIndex: 28,
-      ),
-      const RouteSegment(
-        distanceKm: 0.8,
-        durationSeconds: 180,
-        instruction: 'Rẽ trái vào Trần Não',
-        startIndex: 29,
-        endIndex: 39,
-      ),
-    ];
-  }
 }
 
 final tripRouteProvider =
     StateNotifierProvider<TripRouteNotifier, TripRouteState>((ref) {
-  return TripRouteNotifier();
-});
+      return TripRouteNotifier();
+    });
+
+List<Map<String, dynamic>> _readList(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map((item) => Map<String, dynamic>.from(item))
+      .toList(growable: false);
+}
+
+int _readInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+double _readDouble(Object? value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}

@@ -744,6 +744,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverRatingsYesterday => 'Yesterday';
 
   @override
+  String get driverTripDetailTitle => 'Trip details';
+
+  @override
+  String get driverTripDetailSegments => 'Route steps';
+
+  @override
+  String get driverTripDetailRetry => 'Retry';
+
+  @override
+  String get driverTripDetailNoRoute => 'No route data for this trip yet';
+
+  @override
+  String get driverTripDetailLoadError => 'Unable to load trip route';
+
+  @override
+  String driverTripDetailOrder(String code) {
+    return 'Order: $code';
+  }
+
+  @override
+  String get driverTripSummaryDistance => 'Distance';
+
+  @override
+  String get driverTripSummaryDuration => 'Duration';
+
+  @override
+  String get driverTripSummaryAvgSpeed => 'Avg speed';
+
+  @override
+  String get driverTripSummaryEarnings => 'Earnings';
+
+  @override
+  String get driverTripSummaryCustomerRating => 'Customer rating';
+
+  @override
+  String driverTripSummaryMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override

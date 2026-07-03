@@ -280,6 +280,24 @@
   },
   "driverRatingsToday": "今日",
   "driverRatingsYesterday": "昨日",
+  "driverTripDetailTitle": "配達詳細",
+  "driverTripDetailSegments": "ルート手順",
+  "driverTripDetailRetry": "再試行",
+  "driverTripDetailNoRoute": "この配達のルートデータはまだありません",
+  "driverTripDetailLoadError": "配達ルートを読み込めません",
+  "driverTripDetailOrder": "注文: {code}",
+  "@driverTripDetailOrder": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "driverTripSummaryDistance": "距離",
+  "driverTripSummaryDuration": "時間",
+  "driverTripSummaryAvgSpeed": "平均速度",
+  "driverTripSummaryEarnings": "収益",
+  "driverTripSummaryCustomerRating": "顧客評価",
+  "driverTripSummaryMinutes": "{minutes}分",
+  "@driverTripSummaryMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",
