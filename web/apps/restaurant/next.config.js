@@ -5,6 +5,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 const shouldUseStandaloneOutput =
   process.env.NEXT_OUTPUT_STANDALONE === 'true' ||
   (process.env.NEXT_OUTPUT_STANDALONE !== 'false' && process.platform !== 'win32');
+const shouldEnableDevApiRewrite =
+  process.env.FOODFLOW_ENABLE_DEV_API_REWRITE === 'true' && process.env.NODE_ENV !== 'production';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -18,14 +20,18 @@ const nextConfig = {
       },
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
-      },
-    ];
-  },
+  ...(shouldEnableDevApiRewrite
+    ? {
+        async rewrites() {
+          return [
+            {
+              source: '/api/:path*',
+              destination: 'http://localhost:3001/api/:path*',
+            },
+          ];
+        },
+      }
+    : {}),
 };
 
 module.exports = withNextIntl(nextConfig);

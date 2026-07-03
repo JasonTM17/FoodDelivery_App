@@ -81,6 +81,8 @@ Public env:
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL` |
 
+Admin と Restaurant は production で `NEXT_PUBLIC_API_URL` または `NEXT_PUBLIC_WS_URL` が未設定の場合、明示的に失敗します。localhost の既定値は dev 専用です。`FOODFLOW_ENABLE_DEV_API_REWRITE` は local Restaurant dev proxy 専用なので、Vercel では有効化しないでください。
+
 `NEXT_PUBLIC_GOOGLE_MAPS_KEY` は HTTP referrer で制限してください。
 
 ## Backend

@@ -6,8 +6,9 @@ import {
   type PaginationMeta,
   type TokenPair,
 } from '@foodflow/api-client';
+import { resolveApiBaseUrl } from '@/lib/api-base-url';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = resolveApiBaseUrl();
 
 interface FetchOptions extends Omit<ApiRequestOptions, 'body'> {}
 

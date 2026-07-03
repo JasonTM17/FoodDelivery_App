@@ -5,8 +5,9 @@ import {
   type TokenPair,
 } from '@foodflow/api-client';
 import { clearAdminSession } from '@/lib/admin-session';
+import { resolveApiBaseUrl } from '@/lib/api-base-url';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE = resolveApiBaseUrl();
 
 interface ApiOptions extends Omit<ApiRequestOptions, 'body'> {}
 

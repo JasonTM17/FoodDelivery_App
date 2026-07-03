@@ -81,6 +81,8 @@ Public env:
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL` |
 
+Admin và Restaurant cố ý fail-closed ở production khi thiếu `NEXT_PUBLIC_API_URL` hoặc `NEXT_PUBLIC_WS_URL`. Giá trị localhost chỉ dành cho dev. Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel; biến này chỉ dùng proxy local cho Restaurant khi dev.
+
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` bằng HTTP referrer.
 
 ## Backend
