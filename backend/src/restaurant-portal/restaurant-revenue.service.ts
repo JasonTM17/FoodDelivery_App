@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { OrderStatus } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { RestaurantAccessService } from './restaurant-access.service'
+import { toPublicPaymentMethod } from '../orders/payment-methods'
 
 const REVENUE_STATUSES: OrderStatus[] = [OrderStatus.delivered, OrderStatus.completed]
 
@@ -45,7 +46,7 @@ export class RestaurantRevenueService {
       const hour = order.createdAt.getHours()
       const hourData = byHourMap.get(hour) ?? { vnd: 0, orderCount: 0 }
       hourData.vnd += Number(order.total); hourData.orderCount += 1; byHourMap.set(hour, hourData)
-      const payment = order.paymentMethod === 'mock_wallet' ? 'wallet' : order.paymentMethod
+      const payment = toPublicPaymentMethod(order.paymentMethod)
       paymentMap.set(payment, (paymentMap.get(payment) ?? 0) + Number(order.total))
       if (Number(order.promotionDiscount) > 0) promotionRevenue += Number(order.total)
 

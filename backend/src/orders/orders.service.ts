@@ -7,9 +7,10 @@ import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto } from './orders.dto'
-import { OrderStatus as PrismaOrderStatus, PaymentMethod as PrismaPaymentMethod, Prisma } from '@prisma/client'
+import { OrderStatus as PrismaOrderStatus, Prisma } from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
+import { normalizeOrderPaymentMethod } from './payment-methods'
 
 @Injectable()
 export class OrdersService {
@@ -149,7 +150,7 @@ export class OrdersService {
     }
 
     const total = subtotal + deliveryFee - promotionDiscount
-    const paymentMethod = normalizePaymentMethod(dto.paymentMethod)
+    const paymentMethod = normalizeOrderPaymentMethod(dto.paymentMethod)
 
     const order = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -423,13 +424,6 @@ function serializeRestaurantOrder(order: RestaurantOrderView) {
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   }
-}
-
-function normalizePaymentMethod(method: PlaceOrderDto['paymentMethod']): PrismaPaymentMethod {
-  if (method === 'wallet') {
-    return PrismaPaymentMethod.mock_wallet
-  }
-  return method as unknown as PrismaPaymentMethod
 }
 
 export function generateOrderCode(now = dayjs()) {

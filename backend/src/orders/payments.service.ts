@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service'
 import { PaymentIntentResult, SepayProvider } from '../payments/providers/sepay.provider'
 import { OrderStateMachine, OrderStatus } from './order-state-machine'
 import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
+import { isWalletPaymentMethod, toPublicPaymentMethod } from './payment-methods'
 
 interface OrderForPayment {
   id: string
@@ -51,7 +52,7 @@ export class PaymentsService {
       return { readyForRestaurant: true }
     }
 
-    if (method === PaymentMethod.mock_wallet) {
+    if (isWalletPaymentMethod(method)) {
       return this.captureWalletPayment(order, payment.id, amount)
     }
 
@@ -172,6 +173,6 @@ export class PaymentsService {
   }
 
   private generateTransactionId(method: PaymentMethod): string {
-    return `${method.toUpperCase()}-${crypto.randomUUID()}`
+    return `${toPublicPaymentMethod(method).toUpperCase()}-${crypto.randomUUID()}`
   }
 }
