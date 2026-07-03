@@ -800,6 +800,85 @@ components:
         isActive: true
         createdAt: "2026-06-01T00:00:00Z"
 
+    RestaurantPromotion:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        type: { type: string, enum: [percent, fixed, bogof, combo] }
+        discountValue: { type: number }
+        minOrderVnd: { type: number }
+        maxDiscountVnd: { type: number, nullable: true }
+        appliesTo: { type: string, enum: [all, category, items] }
+        categoryId: { type: string, format: uuid, nullable: true }
+        itemIds: { type: array, items: { type: string, format: uuid } }
+        target: { type: object, additionalProperties: true }
+        schedule:
+          type: object
+          properties:
+            validFrom: { type: string, format: date-time }
+            validUntil: { type: string, format: date-time }
+            recurring: { type: object, nullable: true, additionalProperties: true }
+          required: [validFrom, validUntil]
+        channels: { type: array, items: { type: string, enum: [in_app, push, email, sms] } }
+        stackable: { type: boolean }
+        maxUsage: { type: integer }
+        perUserLimit: { type: integer }
+        usageCount: { type: integer }
+        status: { type: string, enum: [draft, scheduled, active, paused, expired, archived] }
+        createdAt: { type: string, format: date-time }
+        createdBy: { type: string }
+      required: [id, code, name, type, discountValue, appliesTo, target, schedule, channels, stackable, perUserLimit, usageCount, status, createdAt, createdBy]
+
+    RestaurantPromotionAnalytics:
+      type: object
+      properties:
+        usageCount: { type: integer, minimum: 0 }
+        revenueAttributed: { type: number, minimum: 0, description: "VND from orders that redeemed the promotion" }
+        discountGiven: { type: number, minimum: 0, description: "VND discount cost from promotion usages" }
+        redemptionRate: { type: number, minimum: 0, description: "Usage count divided by finite usage limit, percent" }
+        roi: { type: number, description: "(revenueAttributed - discountGiven) / discountGiven, percent" }
+        usageTimeline:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              count: { type: integer, minimum: 0 }
+              revenueAttributed: { type: number, minimum: 0 }
+              discountGiven: { type: number, minimum: 0 }
+            required: [date, count, revenueAttributed, discountGiven]
+      required: [usageCount, revenueAttributed, discountGiven, redemptionRate, roi, usageTimeline]
+
+    RestaurantPromotionListEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            promotions:
+              type: array
+              items: { $ref: "#/components/schemas/RestaurantPromotion" }
+            total: { type: integer, minimum: 0 }
+            analytics: { $ref: "#/components/schemas/RestaurantPromotionAnalytics" }
+          required: [promotions, total, analytics]
+      required: [success, data]
+
+    RestaurantPromotionDetailEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            promotion: { $ref: "#/components/schemas/RestaurantPromotion" }
+            analytics: { $ref: "#/components/schemas/RestaurantPromotionAnalytics" }
+          required: [promotion, analytics]
+      required: [success, data]
+
     CreatePromotionRequest:
       type: object
       properties:
@@ -2228,6 +2307,57 @@ paths:
                       data: { $ref: "#/components/schemas/RestaurantOrderChatMessage" }
         "400": { description: "Driver not assigned or invalid content", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "Order not found for restaurant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/promotions:
+    get:
+      tags: [promotions]
+      summary: List restaurant promotions with aggregate analytics
+      description: Returns tenant-scoped promotions plus aggregate analytics calculated from confirmed promotion usages and order totals.
+      operationId: restaurant_listPromotions
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, scheduled, active, paused, expired, archived] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Tenant-scoped promotions and aggregate analytics from confirmed redemptions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestaurantPromotionListEnvelope" }
+
+  /restaurant/promotions/{promotionId}:
+    get:
+      tags: [promotions]
+      summary: Get restaurant promotion detail with real analytics
+      description: Returns one tenant-scoped promotion plus usage, attributed revenue, discount cost, redemption rate, ROI, and daily usage timeline.
+      operationId: restaurant_getPromotion
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Tenant-scoped promotion detail and analytics from confirmed redemptions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestaurantPromotionDetailEnvelope" }
+        "404":
+          description: Promotion not found for the authenticated restaurant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
 
   /restaurant/promotions/targeting-preview:
     get:

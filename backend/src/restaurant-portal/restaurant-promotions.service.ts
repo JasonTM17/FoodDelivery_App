@@ -17,6 +17,12 @@ import {
   unmapPromotionType,
 } from './restaurant-promotion.utils'
 import { settlePromotionNotificationBatches } from './restaurant-promotion-notification-batches'
+import {
+  buildPromotionAnalytics,
+  buildPromotionAnalyticsSummary,
+  promotionUsageAnalyticsSelect,
+} from './restaurant-promotion-analytics'
+
 @Injectable()
 export class RestaurantPromotionsService {
   constructor(
@@ -35,18 +41,25 @@ export class RestaurantPromotionsService {
         { code: { contains: params.search, mode: 'insensitive' } },
       ] } : {}),
     }
-    const [promotions, total] = await Promise.all([
+    const [promotions, total, analytics] = await Promise.all([
       this.prisma.promotion.findMany({
         where, include: { items: true }, orderBy: { createdAt: 'desc' },
         skip: (params.page - 1) * params.limit, take: params.limit,
       }),
       this.prisma.promotion.count({ where }),
+      this.getAnalyticsSummaryForRestaurant(restaurantId),
     ])
-    return { promotions: promotions.map(promotion => this.serialize(promotion)), total }
+    return { promotions: promotions.map(promotion => this.serialize(promotion)), total, analytics }
   }
+
   async get(userId: string, id: string) {
     const promotion = await this.findOwned(userId, id)
-    return { promotion: this.serialize(promotion) }
+    const usages = await this.prisma.promotionUsage.findMany({
+      where: { promotionId: promotion.id },
+      select: promotionUsageAnalyticsSelect,
+      orderBy: { usedAt: 'asc' },
+    })
+    return { promotion: this.serialize(promotion), analytics: buildPromotionAnalytics(usages, promotion.usageLimit) }
   }
 
   async create(userId: string, dto: CreateRestaurantPromotionDto) {
@@ -163,6 +176,17 @@ export class RestaurantPromotionsService {
   private findOwned(userId: string, id: string) {
     return this.access.getRestaurantId(userId).then(restaurantId =>
       this.prisma.promotion.findFirstOrThrow({ where: { id, restaurantId }, include: { items: true } }))
+  }
+
+  private async getAnalyticsSummaryForRestaurant(restaurantId: string) {
+    const promotions = await this.prisma.promotion.findMany({
+      where: { restaurantId },
+      select: {
+        usageLimit: true,
+        usages: { select: promotionUsageAnalyticsSelect },
+      },
+    })
+    return buildPromotionAnalyticsSummary(promotions)
   }
 
   private async assertNoOverlap(

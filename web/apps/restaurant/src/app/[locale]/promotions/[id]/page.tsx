@@ -10,10 +10,10 @@ import {
 import { PromotionAnalytics } from '@/components/promotions/promotion-analytics';
 import { PromotionDetailField } from '@/components/promotions/promotion-detail-field';
 import { PromotionDetailLimitsCard } from '@/components/promotions/promotion-detail-limits-card';
-import { fetchPromotion, updatePromotionStatus } from '@/lib/actions/promotion-actions';
+import { fetchPromotionDetail, updatePromotionStatus } from '@/lib/actions/promotion-actions';
 import { getPromotionStatusColor } from '@/lib/promotion-engine';
 import { formatCurrency, cn } from '@/lib/utils';
-import type { Promotion, PromotionStatus } from '@/lib/types';
+import type { Promotion, PromotionAnalyticsData, PromotionStatus } from '@/lib/types';
 
 const EMPTY_VALUE = '\u2014';
 
@@ -29,6 +29,7 @@ export default function PromotionDetailPage({
   const tTypes = useTranslations('promotions.types');
   const tAudience = useTranslations('promotions.audience');
   const [promo, setPromo] = useState<Promotion | null>(null);
+  const [analytics, setAnalytics] = useState<PromotionAnalyticsData | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -36,9 +37,12 @@ export default function PromotionDetailPage({
   useEffect(() => {
     let cancelled = false;
     params.then(({ id }) => {
-      fetchPromotion(id)
+      fetchPromotionDetail(id)
         .then((data) => {
-          if (!cancelled) setPromo(data);
+          if (!cancelled) {
+            setPromo(data.promotion);
+            setAnalytics(data.analytics);
+          }
         })
         .catch((err: unknown) => {
           if (!cancelled) setError((err as { message?: string }).message || t('loadError'));
@@ -186,10 +190,7 @@ export default function PromotionDetailPage({
 
       <PromotionDetailLimitsCard promo={promo} />
 
-      {/* Analytics */}
-      {promo.status === 'active' && (
-        <PromotionAnalytics promotion={promo} />
-      )}
+      <PromotionAnalytics promotion={promo} analytics={analytics} />
     </div>
   );
 }

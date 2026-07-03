@@ -6,8 +6,9 @@ import { Plus, Search, Tag } from 'lucide-react';
 import { PromotionBulkActions } from '@/components/promotions/promotion-bulk-actions';
 import { PromotionCard } from '@/components/promotions/promotion-card';
 import { api } from '@/lib/api';
-import type { Promotion, PromotionStatus } from '@/lib/types';
+import type { Promotion, PromotionAnalyticsData, PromotionStatus } from '@/lib/types';
 import { useRouter } from '@/navigation';
+import { fetchPromotions } from '@/lib/actions/promotion-actions';
 import { PromotionEmptyState, PromotionListSummary, PromotionPerformancePanel } from './promotion-list-summary';
 
 const statusFilters = ['all', 'active', 'scheduled', 'draft', 'paused', 'expired'] as const;
@@ -19,16 +20,19 @@ export default function PromotionsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [analytics, setAnalytics] = useState<PromotionAnalyticsData | undefined>();
   const [statusFilter, setStatusFilter] = useState<PromotionStatus | 'all'>('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api
-      .get<{ promotions: Promotion[] }>('/restaurant/promotions')
+    fetchPromotions()
       .then((data) => {
-        if (!cancelled) setPromos(data.promotions ?? []);
+        if (!cancelled) {
+          setPromos(data.promotions ?? []);
+          setAnalytics(data.analytics);
+        }
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message || t('listError'));
@@ -193,7 +197,7 @@ export default function PromotionsListPage() {
         </div>
       )}
 
-      <PromotionPerformancePanel activeCount={activeCount} totalUsage={totalUsage} />
+      <PromotionPerformancePanel activeCount={activeCount} totalUsage={totalUsage} analytics={analytics} />
     </div>
   );
 }

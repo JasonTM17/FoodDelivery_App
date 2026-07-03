@@ -919,7 +919,8 @@
       "conversion": "Tỉ lệ quy đổi",
       "roi": "ROI",
       "unavailable": "Chưa khả dụng",
-      "degradedDescription": "Backend hiện chưa trả revenue, conversion và ROI tổng hợp cho merchant promotions; chỉ hiển thị lượt dùng thật thay vì số giả."
+      "description": "Dựa trên lượt dùng khuyến mãi đã xác nhận, doanh thu đơn hàng được gán và chi phí giảm giá.",
+      "degradedDescription": "Analytics khuyến mãi tạm thời chưa khả dụng. Panel chỉ hiển thị lượt dùng đã xác nhận, không dùng số giả."
     },
     "analytics": {
       "title": "Hiệu quả khuyến mãi",
@@ -931,7 +932,7 @@
       "emptyTimeline": "Chưa có dữ liệu",
       "unavailable": "Chưa khả dụng",
       "degradedTitle": "Analytics chi tiết chưa khả dụng",
-      "degradedDescription": "Backend hiện chưa trả revenue, conversion, ROI hoặc timeline cho khuyến mãi này. Màn hình chỉ hiển thị usage thật thay vì dùng số 0 giả."
+      "degradedDescription": "Analytics chi tiết của khuyến mãi tạm thời chưa khả dụng. Lượt dùng vẫn lấy từ dữ liệu khuyến mãi đã xác nhận."
     },
     "status": {
       "all": "Tất cả",

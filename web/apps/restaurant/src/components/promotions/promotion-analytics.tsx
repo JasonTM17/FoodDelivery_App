@@ -2,18 +2,12 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { BarChart3, DollarSign, TrendingUp, Users } from 'lucide-react';
-import type { Promotion } from '@/lib/types';
+import type { Promotion, PromotionAnalyticsData } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 
 interface PromotionAnalyticsProps {
   promotion: Promotion;
-  analytics?: {
-    usageCount: number;
-    revenueAttributed: number;
-    redemptionRate: number;
-    roi: number;
-    usageTimeline: { date: string; count: number }[];
-  };
+  analytics?: PromotionAnalyticsData;
 }
 
 export function PromotionAnalytics({ promotion, analytics }: PromotionAnalyticsProps) {

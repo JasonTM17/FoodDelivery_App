@@ -51,3 +51,17 @@ export interface Promotion {
   createdAt: string;
   createdBy: string;
 }
+
+export interface PromotionAnalyticsData {
+  usageCount: number;
+  revenueAttributed: number;
+  discountGiven: number;
+  redemptionRate: number;
+  roi: number;
+  usageTimeline: Array<{
+    date: string;
+    count: number;
+    revenueAttributed: number;
+    discountGiven: number;
+  }>;
+}

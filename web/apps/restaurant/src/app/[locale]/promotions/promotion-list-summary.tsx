@@ -1,7 +1,9 @@
 'use client';
 
 import { BarChart3, Plus, Tag } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import type { PromotionAnalyticsData } from '@/lib/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface PromotionListSummaryProps {
   total: number;
@@ -13,6 +15,7 @@ interface PromotionListSummaryProps {
 interface PromotionPerformancePanelProps {
   activeCount: number;
   totalUsage: number;
+  analytics?: PromotionAnalyticsData;
 }
 
 interface PromotionEmptyStateProps {
@@ -41,10 +44,12 @@ export function PromotionListSummary({ total, active, draft, totalUsage }: Promo
   );
 }
 
-export function PromotionPerformancePanel({ activeCount, totalUsage }: PromotionPerformancePanelProps) {
+export function PromotionPerformancePanel({ activeCount, totalUsage, analytics }: PromotionPerformancePanelProps) {
   const t = useTranslations('promotions');
+  const locale = useLocale();
 
   if (activeCount === 0) return null;
+  const usageCount = analytics?.usageCount ?? totalUsage;
 
   return (
     <div className="card mt-6">
@@ -53,12 +58,26 @@ export function PromotionPerformancePanel({ activeCount, totalUsage }: Promotion
         {t('performance.title')}
       </h2>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard label={t('performance.usage')} value={String(totalUsage)} tone="default" />
-        <MetricCard label={t('performance.revenue')} value={t('performance.unavailable')} tone="muted" />
-        <MetricCard label={t('performance.conversion')} value={t('performance.unavailable')} tone="muted" />
-        <MetricCard label={t('performance.roi')} value={t('performance.unavailable')} tone="muted" />
+        <MetricCard label={t('performance.usage')} value={String(usageCount)} tone="default" />
+        <MetricCard
+          label={t('performance.revenue')}
+          value={analytics ? formatCurrency(analytics.revenueAttributed, locale) : t('performance.unavailable')}
+          tone={analytics ? 'default' : 'muted'}
+        />
+        <MetricCard
+          label={t('performance.conversion')}
+          value={analytics ? `${analytics.redemptionRate}%` : t('performance.unavailable')}
+          tone={analytics ? 'default' : 'muted'}
+        />
+        <MetricCard
+          label={t('performance.roi')}
+          value={analytics ? `${analytics.roi}%` : t('performance.unavailable')}
+          tone={analytics ? 'default' : 'muted'}
+        />
       </div>
-      <p className="mt-3 text-xs text-gray-500">{t('performance.degradedDescription')}</p>
+      <p className="mt-3 text-xs text-gray-500">
+        {analytics ? t('performance.description') : t('performance.degradedDescription')}
+      </p>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { api } from '@/lib/api';
 import { validatePromotion } from '@/lib/promotion-engine';
-import type { Promotion, PromotionStatus } from '@/lib/types';
+import type { Promotion, PromotionAnalyticsData, PromotionStatus } from '@/lib/types';
 
 export interface PromotionListResponse {
   promotions: Promotion[];
   total: number;
+  analytics?: PromotionAnalyticsData;
 }
 
 export async function fetchPromotions(params?: {
@@ -25,6 +26,13 @@ export async function fetchPromotions(params?: {
 export async function fetchPromotion(id: string): Promise<Promotion> {
   const data = await api.get<{ promotion: Promotion }>(`/restaurant/promotions/${id}`);
   return data.promotion;
+}
+
+export async function fetchPromotionDetail(id: string): Promise<{
+  promotion: Promotion;
+  analytics?: PromotionAnalyticsData;
+}> {
+  return api.get<{ promotion: Promotion; analytics?: PromotionAnalyticsData }>(`/restaurant/promotions/${id}`);
 }
 
 export async function createPromotion(data: Partial<Promotion>): Promise<Promotion> {

@@ -15,6 +15,8 @@ describe('RestaurantPromotionsService', () => {
   const findMany = jest.fn()
   const findFirstOrThrow = jest.fn()
   const findCustomers = jest.fn()
+  const findPromotionUsages = jest.fn()
+  const countPromotions = jest.fn()
   const create = jest.fn()
   const createNotification = jest.fn()
   const resolveCustomerIds = jest.fn()
@@ -28,12 +30,15 @@ describe('RestaurantPromotionsService', () => {
     findMany.mockResolvedValue([])
     findFirstOrThrow.mockResolvedValue(makePromotion())
     findCustomers.mockResolvedValue([])
+    findPromotionUsages.mockResolvedValue([])
+    countPromotions.mockResolvedValue(1)
     create.mockResolvedValue(makePromotion())
     resolveCustomerIds.mockResolvedValue([])
 
     service = new RestaurantPromotionsService(
       {
-        promotion: { findUnique, findMany, findFirstOrThrow, create },
+        promotion: { findUnique, findMany, findFirstOrThrow, create, count: countPromotions },
+        promotionUsage: { findMany: findPromotionUsages },
         user: { findMany: findCustomers },
       } as unknown as PrismaService,
       { getRestaurantId } as unknown as RestaurantAccessService,
@@ -131,6 +136,56 @@ describe('RestaurantPromotionsService', () => {
     expect(createNotification).toHaveBeenCalledTimes(101)
     expect(result).toEqual({ targeted: 101, sent: 101 })
   })
+
+  it('returns real analytics for an owned promotion detail', async () => {
+    findFirstOrThrow.mockResolvedValue(makePromotion({ usageLimit: 100 }))
+    findPromotionUsages.mockResolvedValue([
+      makeUsage({ usedAt: new Date('2026-06-05T06:00:00.000Z'), discountAmount: 10_000, order: { total: 100_000 } }),
+      makeUsage({ usedAt: new Date('2026-06-05T09:00:00.000Z'), discountAmount: 20_000, order: { total: 200_000 } }),
+    ])
+
+    const result = await service.get(userId, 'promotion-1')
+
+    expect(findFirstOrThrow).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'promotion-1', restaurantId },
+    }))
+    expect(findPromotionUsages).toHaveBeenCalledWith(expect.objectContaining({
+      where: { promotionId: 'promotion-1' },
+    }))
+    expect(result.analytics).toEqual({
+      usageCount: 2,
+      revenueAttributed: 300_000,
+      discountGiven: 30_000,
+      redemptionRate: 2,
+      roi: 900,
+      usageTimeline: [{ date: '2026-06-05', count: 2, revenueAttributed: 300_000, discountGiven: 30_000 }],
+    })
+  })
+
+  it('returns aggregate promotion analytics in the list response without fake metrics', async () => {
+    findMany
+      .mockResolvedValueOnce([makePromotion()])
+      .mockResolvedValueOnce([
+        {
+          usageLimit: 50,
+          usages: [makeUsage({ discountAmount: 5_000, order: { total: 50_000 } })],
+        },
+        {
+          usageLimit: 2_147_483_647,
+          usages: [makeUsage({ discountAmount: 15_000, order: { total: 150_000 } })],
+        },
+      ])
+
+    const result = await service.list(userId, { page: 1, limit: 20 })
+
+    expect(result.analytics).toMatchObject({
+      usageCount: 2,
+      revenueAttributed: 200_000,
+      discountGiven: 20_000,
+      redemptionRate: 4,
+      roi: 900,
+    })
+  })
 })
 
 function makeDto(overrides: Partial<CreateRestaurantPromotionDto> = {}): CreateRestaurantPromotionDto {
@@ -180,6 +235,15 @@ function makePromotion(overrides: Record<string, unknown> = {}) {
     channels: ['in_app'],
     items: [{ menuItemId: 'item-a', categoryId: null }],
     createdAt: new Date('2026-05-20T00:00:00.000Z'),
+    ...overrides,
+  }
+}
+
+function makeUsage(overrides: Record<string, unknown> = {}) {
+  return {
+    discountAmount: 10_000,
+    usedAt: new Date('2026-06-05T00:00:00.000Z'),
+    order: { total: 100_000 },
     ...overrides,
   }
 }
