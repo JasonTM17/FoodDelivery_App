@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
+import { Client } from 'minio'
 import { HealthController } from './health.controller'
 import { PrismaService } from '../database/prisma.service'
 
@@ -17,6 +18,7 @@ describe('HealthController', () => {
   let mockConfig: { get: jest.Mock }
 
   beforeEach(async () => {
+    jest.clearAllMocks()
     mockPrisma = { $queryRaw: jest.fn().mockResolvedValue([{ '1': 1 }]) }
     mockRedis = { ping: jest.fn().mockResolvedValue('PONG') }
     mockConfig = {
@@ -68,5 +70,21 @@ describe('HealthController', () => {
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
     await controller.check(res as unknown as Response)
     expect(res.status).toHaveBeenCalledWith(503)
+  })
+
+  it('returns degraded without constructing a localhost MinIO client when production storage env is missing', async () => {
+    mockConfig.get.mockImplementation((key: string) => {
+      if (key === 'NODE_ENV') return 'production'
+      if (key === 'MINIO_PORT') return 9000
+      if (key === 'MINIO_BUCKET') return 'foodflow'
+      return undefined
+    })
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.check(res as unknown as Response)
+
+    expect(Client).not.toHaveBeenCalled()
+    expect(res.status).toHaveBeenCalledWith(503)
+    expect(res.json.mock.calls[0][0].components.minio.status).toBe('down')
   })
 })

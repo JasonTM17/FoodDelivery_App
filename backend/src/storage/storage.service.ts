@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
 import { randomBytes } from 'crypto'
 import { extname } from 'path'
+import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
 
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -33,16 +34,10 @@ export class StorageService {
   private readonly maxFileSizeMb: number
 
   constructor(private readonly config: ConfigService) {
-    this.client = new Client({
-      endPoint: config.get<string>('MINIO_ENDPOINT') ?? 'localhost',
-      port: config.get<number>('MINIO_PORT') ?? 9000,
-      useSSL: false,
-      accessKey: config.get<string>('MINIO_ACCESS_KEY') ?? '',
-      secretKey: config.get<string>('MINIO_SECRET_KEY') ?? '',
-    })
-
-    this.bucket = config.get<string>('MINIO_BUCKET') ?? 'foodflow'
-    this.publicUrl = config.get<string>('MINIO_PUBLIC_URL') ?? 'http://localhost:9000'
+    const minio = resolveMinioRuntimeConfig(config, { requirePublicUrl: true })
+    this.client = new Client(minio.client)
+    this.bucket = minio.bucket
+    this.publicUrl = minio.publicUrl!
     this.maxFileSizeMb = this.numberConfig('STORAGE_MAX_UPLOAD_MB', DEFAULT_MAX_UPLOAD_MB, 1, 50)
     this.maxFileSizeBytes = this.maxFileSizeMb * 1024 * 1024
   }

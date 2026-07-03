@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
+import { resolveMinioRuntimeConfig } from '../../common/storage/minio-config'
 
 export interface HealthIndicatorResult {
   status: 'up' | 'down'
@@ -14,16 +15,9 @@ export class MinioHealthIndicator {
   async check(): Promise<HealthIndicatorResult> {
     const start = Date.now()
     try {
-      const client = new Client({
-        endPoint: this.config.get<string>('MINIO_ENDPOINT') ?? 'localhost',
-        port: this.config.get<number>('MINIO_PORT') ?? 9000,
-        useSSL: false,
-        accessKey: this.config.get<string>('MINIO_ACCESS_KEY') ?? '',
-        secretKey: this.config.get<string>('MINIO_SECRET_KEY') ?? '',
-      })
-
-      const bucket = this.config.get<string>('MINIO_BUCKET') ?? 'foodflow'
-      await client.bucketExists(bucket)
+      const minio = resolveMinioRuntimeConfig(this.config)
+      const client = new Client(minio.client)
+      await client.bucketExists(minio.bucket)
       return { status: 'up', latencyMs: Date.now() - start }
     } catch {
       return { status: 'down', latencyMs: Date.now() - start }

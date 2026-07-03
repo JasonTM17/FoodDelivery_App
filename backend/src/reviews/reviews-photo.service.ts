@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
 import { randomBytes } from 'crypto'
+import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
 
 const ALLOWED_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
 const MAX_PHOTOS_PER_REVIEW = 4
@@ -14,14 +15,9 @@ export class ReviewsPhotoService {
   private readonly bucket: string
 
   constructor(private readonly config: ConfigService) {
-    this.client = new Client({
-      endPoint: config.get<string>('MINIO_ENDPOINT') ?? 'localhost',
-      port: config.get<number>('MINIO_PORT') ?? 9000,
-      useSSL: false,
-      accessKey: config.get<string>('MINIO_ACCESS_KEY') ?? '',
-      secretKey: config.get<string>('MINIO_SECRET_KEY') ?? '',
-    })
-    this.bucket = config.get<string>('MINIO_BUCKET') ?? 'foodflow'
+    const minio = resolveMinioRuntimeConfig(config)
+    this.client = new Client(minio.client)
+    this.bucket = minio.bucket
   }
 
   async getUploadUrl(contentType: string): Promise<{ url: string; key: string }> {

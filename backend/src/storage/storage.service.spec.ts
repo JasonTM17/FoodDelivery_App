@@ -74,10 +74,19 @@ describe('StorageService', () => {
     await expect(service.uploadFile(file, 'avatars/user-1')).rejects.toThrow('File size exceeds the 1 MB limit')
     expect(mockMinioClient.putObject).not.toHaveBeenCalled()
   })
+
+  it('does not construct a local object storage client in production when credentials are missing', () => {
+    expect(() => new StorageService(makeConfig({
+      NODE_ENV: 'production',
+      MINIO_ACCESS_KEY: undefined,
+    }))).toThrow('MINIO_ACCESS_KEY is required in production')
+    expect(Client).not.toHaveBeenCalled()
+  })
 })
 
-function makeConfig(overrides: Record<string, string | number> = {}) {
-  const values: Record<string, string | number> = {
+function makeConfig(overrides: Record<string, string | number | undefined> = {}) {
+  const values: Record<string, string | number | undefined> = {
+    NODE_ENV: 'test',
     MINIO_ENDPOINT: 'localhost',
     MINIO_PORT: 9000,
     MINIO_ACCESS_KEY: 'minioadmin',
