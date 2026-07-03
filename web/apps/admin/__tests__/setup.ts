@@ -94,14 +94,14 @@ vi.mock('recharts', async () => {
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) =>
       React.createElement('div', { 'data-testid': 'responsive-container' }, children),
     AreaChart: ({ children }: { children: React.ReactNode }) =>
-      React.createElement('div', { 'data-testid': 'area-chart' }, children),
+      React.createElement('svg', { 'data-testid': 'area-chart' }, children),
     BarChart: ({ children }: { children: React.ReactNode }) =>
-      React.createElement('div', { 'data-testid': 'bar-chart' }, children),
+      React.createElement('svg', { 'data-testid': 'bar-chart' }, children),
     LineChart: ({ children }: { children: React.ReactNode }) =>
-      React.createElement('div', { 'data-testid': 'line-chart' }, children),
-    Area: () => React.createElement('div', { 'data-testid': 'area' }),
-    Bar: () => React.createElement('div', { 'data-testid': 'bar' }),
-    Line: () => React.createElement('div', { 'data-testid': 'line' }),
+      React.createElement('svg', { 'data-testid': 'line-chart' }, children),
+    Area: () => React.createElement('path', { 'data-testid': 'area' }),
+    Bar: () => React.createElement('g', { 'data-testid': 'bar' }),
+    Line: () => React.createElement('path', { 'data-testid': 'line' }),
     XAxis: () => null,
     YAxis: () => null,
     CartesianGrid: () => null,

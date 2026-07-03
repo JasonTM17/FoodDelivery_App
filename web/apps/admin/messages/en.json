@@ -179,7 +179,10 @@
     "heatmapTitle": "Order density by district",
     "heatmapPeriod": "Last 1 hour",
     "heatmapEmpty": "No data yet",
-    "heatmapError": "Failed to load heatmap"
+    "heatmapError": "Failed to load heatmap",
+    "errorTitle": "Could not load the overview",
+    "errorDescription": "The dashboard data is temporarily unavailable. Please try again.",
+    "retry": "Try again"
   },
   "orders": {
     "title": "Order Management",
@@ -313,6 +316,81 @@
     "totalOrders": "Total orders",
     "revenue": "Revenue",
     "createdAt": "Created at"
+  },
+  "overviewCharts": {
+    "sectionTitle": "Analytics",
+    "compare": "Compare previous period",
+    "comparing": "Comparing periods",
+    "loading": "Loading chart data",
+    "cards": {
+      "revenueTitle": "Revenue — last 30 days",
+      "revenueDescription": "Daily revenue trend",
+      "orderStatusTitle": "Orders by status",
+      "orderStatusDescription": "Daily order status distribution",
+      "driverOnlineTitle": "Online drivers by hour",
+      "driverOnlineDescription": "Active drivers throughout the day",
+      "topRestaurantsTitle": "Top 10 restaurants",
+      "topRestaurantsDescription": "Ranked by revenue"
+    },
+    "empty": {
+      "revenue": "No revenue data yet",
+      "orders": "No order status data yet",
+      "drivers": "No online driver data yet",
+      "restaurants": "No restaurant ranking data yet",
+      "heatmap": "No order density data yet"
+    },
+    "series": {
+      "revenue": "Revenue",
+      "previousRevenue": "Previous period",
+      "onlineDrivers": "Online drivers",
+      "avgPayout": "Average payout"
+    },
+    "statuses": {
+      "completed": "Completed",
+      "delivering": "Delivering",
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
+    "tables": {
+      "revenueCaption": "Revenue chart data",
+      "orderStatusCaption": "Order status chart data",
+      "driverCaption": "Online driver chart data",
+      "restaurantsCaption": "Top restaurant chart data",
+      "heatmapCaption": "Order density heatmap data",
+      "date": "Date",
+      "day": "Day",
+      "hour": "Hour",
+      "revenue": "Revenue",
+      "previousRevenue": "Previous revenue",
+      "onlineDrivers": "Online drivers",
+      "avgPayout": "Average payout",
+      "restaurant": "Restaurant",
+      "orders": "Orders",
+      "rating": "Rating"
+    },
+    "heatmap": {
+      "title": "Order density by hour and day",
+      "tooltip": "{day}, {hour}:00 — {count} orders",
+      "low": "Low",
+      "high": "High"
+    },
+    "days": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun"
+    },
+    "export": {
+      "button": "Export",
+      "csvEmpty": "No chart data is available to export.",
+      "csvFailed": "Could not export the chart data as CSV.",
+      "pngNotFound": "The chart image is not available.",
+      "pngFailed": "Could not export the chart as PNG."
+    }
   },
   "restaurantTabs": {
     "label": "Restaurant detail sections",
@@ -1248,6 +1326,18 @@
   },
   "realtimeOrders": {
     "title": "Live orders",
-    "empty": "No new orders yet"
+    "empty": "No new orders yet",
+    "fallbackPolling": "Realtime unavailable — using controlled polling fallback",
+    "errorTitle": "Could not load live orders",
+    "errorDescription": "The realtime stream and fallback request are both unavailable.",
+    "retry": "Retry",
+    "refresh": "Refresh orders"
+  },
+  "connectionStatus": {
+    "connecting": "Connecting",
+    "connected": "Connected",
+    "reconnecting": "Reconnecting…",
+    "disconnected": "Disconnected",
+    "error": "Connection error"
   }
 }

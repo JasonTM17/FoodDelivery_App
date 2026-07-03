@@ -1,15 +1,7 @@
 'use client';
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+import { useTranslations } from 'next-intl';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
 interface TopRestaurant {
@@ -26,14 +18,16 @@ interface TopRestaurantsBarProps {
 }
 
 export default function TopRestaurantsBar({ data, loading }: TopRestaurantsBarProps) {
+  const t = useTranslations('overviewCharts');
+
   if (loading) {
-    return <div className="h-80 animate-pulse rounded-lg bg-muted" />;
+    return <div role="status" aria-label={t('loading')} className="h-80 animate-pulse rounded-lg bg-muted" />;
   }
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return (
       <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
-        Chưa có dữ liệu nhà hàng
+        {t('empty.restaurants')}
       </div>
     );
   }
@@ -48,7 +42,7 @@ export default function TopRestaurantsBar({ data, loading }: TopRestaurantsBarPr
           <XAxis
             type="number"
             tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-            tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+            tickFormatter={(value) => `${(value / 1_000_000).toFixed(0)}M`}
           />
           <YAxis
             type="category"
@@ -65,18 +59,37 @@ export default function TopRestaurantsBar({ data, loading }: TopRestaurantsBarPr
               borderRadius: '8px',
               fontSize: '13px',
             }}
-            formatter={(value: number, name: string) => {
-              if (name === 'revenue') return [formatCurrency(value), 'Doanh thu'];
-              return [value, name];
-            }}
+            formatter={(value: number) => [formatCurrency(value), t('series.revenue')]}
           />
-          <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
-            {reversed.map((entry) => (
-              <Cell key={entry.id} fill="#22C55E" opacity={0.8} />
+          <Bar dataKey="revenue" name={t('series.revenue')} radius={[0, 4, 4, 0]}>
+            {reversed.map((restaurant) => (
+              <Cell key={restaurant.id} fill="#22C55E" opacity={0.8} />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+
+      <table className="sr-only">
+        <caption>{t('tables.restaurantsCaption')}</caption>
+        <thead>
+          <tr>
+            <th>{t('tables.restaurant')}</th>
+            <th>{t('tables.revenue')}</th>
+            <th>{t('tables.orders')}</th>
+            <th>{t('tables.rating')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((restaurant) => (
+            <tr key={restaurant.id}>
+              <td>{restaurant.name}</td>
+              <td>{formatCurrency(restaurant.revenue)}</td>
+              <td>{restaurant.orderCount}</td>
+              <td>{restaurant.rating}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

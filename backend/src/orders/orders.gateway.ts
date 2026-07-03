@@ -65,4 +65,9 @@ export class OrdersGateway {
   handleAdminOrderSubscribe(@ConnectedSocket() client: Socket) {
     client.join('admin:orders')
   }
+
+  @SubscribeMessage('admin:unsubscribe_orders')
+  handleAdminOrderUnsubscribe(@ConnectedSocket() client: Socket) {
+    client.leave('admin:orders')
+  }
 }

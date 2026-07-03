@@ -1,17 +1,18 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import { format, parseISO } from 'date-fns';
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
 
 interface RevenuePoint {
   date: string;
@@ -26,17 +27,35 @@ interface RevenueAreaChartProps {
 }
 
 export default function RevenueAreaChart({ data, comparePeriod, loading }: RevenueAreaChartProps) {
+  const t = useTranslations('overviewCharts');
+
   if (loading) {
-    return <div className="h-80 animate-pulse rounded-lg bg-muted" />;
+    return <div role="status" aria-label={t('loading')} className="h-80 animate-pulse rounded-lg bg-muted" />;
   }
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return (
       <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
-        Chưa có dữ liệu doanh thu
+        {t('empty.revenue')}
       </div>
     );
   }
+
+  const formatShortDate = (value: string) => {
+    try {
+      return format(parseISO(value), 'dd/MM');
+    } catch {
+      return value;
+    }
+  };
+
+  const formatLongDate = (value: string) => {
+    try {
+      return format(parseISO(value), 'dd/MM/yyyy');
+    } catch {
+      return value;
+    }
+  };
 
   return (
     <div data-testid="revenue-chart">
@@ -54,15 +73,13 @@ export default function RevenueAreaChart({ data, comparePeriod, loading }: Reven
             tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => {
-              try { return format(parseISO(v), 'dd/MM'); } catch { return v; }
-            }}
+            tickFormatter={formatShortDate}
           />
           <YAxis
             tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+            tickFormatter={(value) => `${(value / 1_000_000).toFixed(0)}M`}
           />
           <Tooltip
             contentStyle={{
@@ -72,12 +89,13 @@ export default function RevenueAreaChart({ data, comparePeriod, loading }: Reven
               fontSize: '13px',
             }}
             formatter={(value: number, name: string) => {
-              const label = name === 'revenue' ? 'Doanh thu' : 'Kỳ trước';
-              return [formatCurrency(value), label];
+              const isCurrentRevenue = name === 'revenue' || name === t('series.revenue');
+              return [
+                formatCurrency(value),
+                isCurrentRevenue ? t('series.revenue') : t('series.previousRevenue'),
+              ];
             }}
-            labelFormatter={(label) => {
-              try { return format(parseISO(label), 'dd/MM/yyyy'); } catch { return label; }
-            }}
+            labelFormatter={formatLongDate}
           />
           {comparePeriod && <Legend />}
           <Area
@@ -87,7 +105,7 @@ export default function RevenueAreaChart({ data, comparePeriod, loading }: Reven
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#revenueGrad)"
-            name="Doanh thu"
+            name={t('series.revenue')}
           />
           {comparePeriod && (
             <Area
@@ -97,11 +115,31 @@ export default function RevenueAreaChart({ data, comparePeriod, loading }: Reven
               strokeWidth={1.5}
               strokeDasharray="5 5"
               fill="transparent"
-              name="Kỳ trước"
+              name={t('series.previousRevenue')}
             />
           )}
         </AreaChart>
       </ResponsiveContainer>
+
+      <table className="sr-only">
+        <caption>{t('tables.revenueCaption')}</caption>
+        <thead>
+          <tr>
+            <th>{t('tables.date')}</th>
+            <th>{t('tables.revenue')}</th>
+            {comparePeriod && <th>{t('tables.previousRevenue')}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((point) => (
+            <tr key={point.date}>
+              <td>{point.date}</td>
+              <td>{formatCurrency(point.revenue)}</td>
+              {comparePeriod && <td>{point.prevRevenue == null ? '—' : formatCurrency(point.prevRevenue)}</td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

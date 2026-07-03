@@ -179,7 +179,10 @@
     "heatmapTitle": "Mật độ đơn theo khu vực",
     "heatmapPeriod": "1 giờ gần nhất",
     "heatmapEmpty": "Chưa có dữ liệu",
-    "heatmapError": "Không tải được mật độ đơn"
+    "heatmapError": "Không tải được mật độ đơn",
+    "errorTitle": "Không thể tải trang tổng quan",
+    "errorDescription": "Dữ liệu bảng điều khiển đang tạm thời không khả dụng. Vui lòng thử lại.",
+    "retry": "Thử lại"
   },
   "orders": {
     "title": "Quản lý đơn hàng",
@@ -313,6 +316,81 @@
     "totalOrders": "Tổng đơn hàng",
     "revenue": "Doanh thu",
     "createdAt": "Ngày tạo"
+  },
+  "overviewCharts": {
+    "sectionTitle": "Phân tích",
+    "compare": "So sánh kỳ trước",
+    "comparing": "Đang so sánh",
+    "loading": "Đang tải dữ liệu biểu đồ",
+    "cards": {
+      "revenueTitle": "Doanh thu 30 ngày gần nhất",
+      "revenueDescription": "Xu hướng doanh thu theo ngày",
+      "orderStatusTitle": "Đơn hàng theo trạng thái",
+      "orderStatusDescription": "Phân bố trạng thái đơn theo ngày",
+      "driverOnlineTitle": "Tài xế trực tuyến theo giờ",
+      "driverOnlineDescription": "Số tài xế hoạt động trong ngày",
+      "topRestaurantsTitle": "10 nhà hàng hàng đầu",
+      "topRestaurantsDescription": "Xếp hạng theo doanh thu"
+    },
+    "empty": {
+      "revenue": "Chưa có dữ liệu doanh thu",
+      "orders": "Chưa có dữ liệu trạng thái đơn hàng",
+      "drivers": "Chưa có dữ liệu tài xế trực tuyến",
+      "restaurants": "Chưa có dữ liệu xếp hạng nhà hàng",
+      "heatmap": "Chưa có dữ liệu mật độ đơn hàng"
+    },
+    "series": {
+      "revenue": "Doanh thu",
+      "previousRevenue": "Kỳ trước",
+      "onlineDrivers": "Tài xế trực tuyến",
+      "avgPayout": "Thanh toán trung bình"
+    },
+    "statuses": {
+      "completed": "Đã hoàn thành",
+      "delivering": "Đang giao",
+      "confirmed": "Đã xác nhận",
+      "pending": "Chờ xác nhận",
+      "cancelled": "Đã hủy"
+    },
+    "tables": {
+      "revenueCaption": "Dữ liệu biểu đồ doanh thu",
+      "orderStatusCaption": "Dữ liệu biểu đồ trạng thái đơn hàng",
+      "driverCaption": "Dữ liệu biểu đồ tài xế trực tuyến",
+      "restaurantsCaption": "Dữ liệu biểu đồ nhà hàng hàng đầu",
+      "heatmapCaption": "Dữ liệu bản đồ nhiệt mật độ đơn hàng",
+      "date": "Ngày",
+      "day": "Thứ",
+      "hour": "Giờ",
+      "revenue": "Doanh thu",
+      "previousRevenue": "Doanh thu kỳ trước",
+      "onlineDrivers": "Tài xế trực tuyến",
+      "avgPayout": "Thanh toán trung bình",
+      "restaurant": "Nhà hàng",
+      "orders": "Đơn hàng",
+      "rating": "Đánh giá"
+    },
+    "heatmap": {
+      "title": "Mật độ đơn hàng theo giờ và ngày",
+      "tooltip": "{day}, {hour}:00 — {count} đơn",
+      "low": "Ít",
+      "high": "Nhiều"
+    },
+    "days": {
+      "monday": "T2",
+      "tuesday": "T3",
+      "wednesday": "T4",
+      "thursday": "T5",
+      "friday": "T6",
+      "saturday": "T7",
+      "sunday": "CN"
+    },
+    "export": {
+      "button": "Xuất",
+      "csvEmpty": "Không có dữ liệu biểu đồ để xuất.",
+      "csvFailed": "Không thể xuất dữ liệu biểu đồ dưới dạng CSV.",
+      "pngNotFound": "Không tìm thấy hình ảnh biểu đồ.",
+      "pngFailed": "Không thể xuất biểu đồ dưới dạng PNG."
+    }
   },
   "restaurantTabs": {
     "label": "Các mục chi tiết nhà hàng",
@@ -1248,6 +1326,18 @@
   },
   "realtimeOrders": {
     "title": "Đơn hàng trực tiếp",
-    "empty": "Chưa có đơn hàng mới"
+    "empty": "Chưa có đơn hàng mới",
+    "fallbackPolling": "Realtime không khả dụng — đang dùng polling dự phòng có kiểm soát",
+    "errorTitle": "Không thể tải đơn hàng trực tiếp",
+    "errorDescription": "Luồng realtime và yêu cầu dự phòng đều đang không khả dụng.",
+    "retry": "Thử lại",
+    "refresh": "Làm mới đơn hàng"
+  },
+  "connectionStatus": {
+    "connecting": "Đang kết nối",
+    "connected": "Đã kết nối",
+    "reconnecting": "Đang kết nối lại…",
+    "disconnected": "Mất kết nối",
+    "error": "Lỗi kết nối"
   }
 }

@@ -1,15 +1,17 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ReferenceArea,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceArea,
 } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 
 interface DriverOnlinePoint {
   hour: number;
@@ -23,17 +25,21 @@ interface DriverOnlineLineChartProps {
 }
 
 export default function DriverOnlineLineChart({ data, loading }: DriverOnlineLineChartProps) {
+  const t = useTranslations('overviewCharts');
+
   if (loading) {
-    return <div className="h-80 animate-pulse rounded-lg bg-muted" />;
+    return <div role="status" aria-label={t('loading')} className="h-80 animate-pulse rounded-lg bg-muted" />;
   }
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return (
       <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
-        Chưa có dữ liệu tài xế online
+        {t('empty.drivers')}
       </div>
     );
   }
+
+  const hasPayout = data.some((point) => point.avgPayout != null);
 
   return (
     <div data-testid="driver-online-chart">
@@ -45,7 +51,7 @@ export default function DriverOnlineLineChart({ data, loading }: DriverOnlineLin
             tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(h) => `${h}h`}
+            tickFormatter={(hour) => `${hour}h`}
           />
           <YAxis
             tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
@@ -60,7 +66,11 @@ export default function DriverOnlineLineChart({ data, loading }: DriverOnlineLin
               fontSize: '13px',
             }}
             formatter={(value: number, name: string) => {
-              return name === 'count' ? [value, 'Tài xế online'] : [value, 'TB thanh toán'];
+              const isDriverCount = name === 'count' || name === t('series.onlineDrivers');
+              return [
+                isDriverCount ? value : formatCurrency(value),
+                isDriverCount ? t('series.onlineDrivers') : t('series.avgPayout'),
+              ];
             }}
             labelFormatter={(hour: number) => `${hour}h:00`}
           />
@@ -72,9 +82,9 @@ export default function DriverOnlineLineChart({ data, loading }: DriverOnlineLin
             stroke="#22C55E"
             strokeWidth={2}
             dot={false}
-            name="Tài xế online"
+            name={t('series.onlineDrivers')}
           />
-          {data[0]?.avgPayout != null && (
+          {hasPayout && (
             <Line
               type="monotone"
               dataKey="avgPayout"
@@ -82,11 +92,31 @@ export default function DriverOnlineLineChart({ data, loading }: DriverOnlineLin
               strokeWidth={1.5}
               strokeDasharray="5 5"
               dot={false}
-              name="TB thanh toán"
+              name={t('series.avgPayout')}
             />
           )}
         </LineChart>
       </ResponsiveContainer>
+
+      <table className="sr-only">
+        <caption>{t('tables.driverCaption')}</caption>
+        <thead>
+          <tr>
+            <th>{t('tables.hour')}</th>
+            <th>{t('tables.onlineDrivers')}</th>
+            {hasPayout && <th>{t('tables.avgPayout')}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((point) => (
+            <tr key={point.hour}>
+              <td>{point.hour}:00</td>
+              <td>{point.count}</td>
+              {hasPayout && <td>{point.avgPayout == null ? '—' : formatCurrency(point.avgPayout)}</td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

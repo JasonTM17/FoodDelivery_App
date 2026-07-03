@@ -1,15 +1,7 @@
 'use client';
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { useTranslations } from 'next-intl';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface OrderStatusPoint {
   date: string;
@@ -26,22 +18,24 @@ interface OrderStatusStackedBarProps {
 }
 
 const barConfig = [
-  { key: 'completed', label: 'Đã giao', color: '#22C55E' },
-  { key: 'delivering', label: 'Đang giao', color: '#3B82F6' },
-  { key: 'confirmed', label: 'Đã xác nhận', color: '#F59E0B' },
-  { key: 'pending', label: 'Chờ xác nhận', color: '#94A3B8' },
-  { key: 'cancelled', label: 'Đã hủy', color: '#EF4444' },
-];
+  { key: 'completed', color: '#22C55E' },
+  { key: 'delivering', color: '#3B82F6' },
+  { key: 'confirmed', color: '#F59E0B' },
+  { key: 'pending', color: '#94A3B8' },
+  { key: 'cancelled', color: '#EF4444' },
+] as const;
 
 export default function OrderStatusStackedBar({ data, loading }: OrderStatusStackedBarProps) {
+  const t = useTranslations('overviewCharts');
+
   if (loading) {
-    return <div className="h-80 animate-pulse rounded-lg bg-muted" />;
+    return <div role="status" aria-label={t('loading')} className="h-80 animate-pulse rounded-lg bg-muted" />;
   }
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return (
       <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
-        Chưa có dữ liệu đơn hàng
+        {t('empty.orders')}
       </div>
     );
   }
@@ -72,10 +66,34 @@ export default function OrderStatusStackedBar({ data, loading }: OrderStatusStac
           />
           <Legend />
           {barConfig.map((bar) => (
-            <Bar key={bar.key} dataKey={bar.key} stackId="a" fill={bar.color} name={bar.label} />
+            <Bar
+              key={bar.key}
+              dataKey={bar.key}
+              stackId="orders"
+              fill={bar.color}
+              name={t(`statuses.${bar.key}`)}
+            />
           ))}
         </BarChart>
       </ResponsiveContainer>
+
+      <table className="sr-only">
+        <caption>{t('tables.orderStatusCaption')}</caption>
+        <thead>
+          <tr>
+            <th>{t('tables.date')}</th>
+            {barConfig.map((bar) => <th key={bar.key}>{t(`statuses.${bar.key}`)}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((point) => (
+            <tr key={point.date}>
+              <td>{point.date}</td>
+              {barConfig.map((bar) => <td key={bar.key}>{point[bar.key]}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

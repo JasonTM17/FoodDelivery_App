@@ -1,95 +1,114 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { useChartData } from '@/hooks/use-chart-data';
 import { usePeriodComparison } from '@/hooks/use-period-comparison';
-import RevenueAreaChart from '@/components/charts/revenue-area-chart';
-import OrderStatusStackedBar from '@/components/charts/order-status-stacked-bar';
-import DriverOnlineLineChart from '@/components/charts/driver-online-line-chart';
-import TopRestaurantsBar from '@/components/charts/top-restaurants-bar';
 import ChartExportMenu from '@/components/charts/chart-export-menu';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DriverOnlineLineChart from '@/components/charts/driver-online-line-chart';
+import OrderStatusStackedBar from '@/components/charts/order-status-stacked-bar';
+import RevenueAreaChart from '@/components/charts/revenue-area-chart';
+import TopRestaurantsBar from '@/components/charts/top-restaurants-bar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function OverviewChartsClient() {
+  const t = useTranslations('overviewCharts');
   const { data } = useChartData({ period: '30d' });
   const { compareEnabled, setCompareEnabled } = usePeriodComparison();
 
-  if (!data) {
-    return (
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="h-80 animate-pulse rounded-lg bg-muted" />
-        <div className="h-80 animate-pulse rounded-lg bg-muted" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Phân tích</h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={compareEnabled ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCompareEnabled(!compareEnabled)}
-          >
-            {compareEnabled ? 'Đang so sánh' : 'So sánh kỳ trước'}
-          </Button>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">{t('sectionTitle')}</h2>
+        <Button
+          variant={compareEnabled ? 'default' : 'outline'}
+          size="sm"
+          aria-pressed={compareEnabled}
+          onClick={() => setCompareEnabled(!compareEnabled)}
+        >
+          {compareEnabled ? t('comparing') : t('compare')}
+        </Button>
       </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Doanh thu 30 ngày</CardTitle>
-              <CardDescription>Biểu đồ doanh thu hàng ngày</CardDescription>
-            </div>
-            <ChartExportMenu chartName="revenue" csvData={data.revenue as unknown as Record<string, unknown>[]} />
-          </CardHeader>
-          <CardContent>
-            <RevenueAreaChart data={data.revenue} comparePeriod={compareEnabled} />
-          </CardContent>
-        </Card>
+        <ChartCard
+          title={t('cards.revenueTitle')}
+          description={t('cards.revenueDescription')}
+          exportMenu={
+            <ChartExportMenu
+              chartName="revenue"
+              csvData={data.revenue as unknown as Record<string, unknown>[]}
+            />
+          }
+        >
+          <RevenueAreaChart data={data.revenue} comparePeriod={compareEnabled} />
+        </ChartCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Đơn hàng theo trạng thái</CardTitle>
-              <CardDescription>Phân bố trạng thái đơn hàng</CardDescription>
-            </div>
-            <ChartExportMenu chartName="order-status" csvData={data.orderStatus as unknown as Record<string, unknown>[]} />
-          </CardHeader>
-          <CardContent>
-            <OrderStatusStackedBar data={data.orderStatus} />
-          </CardContent>
-        </Card>
+        <ChartCard
+          title={t('cards.orderStatusTitle')}
+          description={t('cards.orderStatusDescription')}
+          exportMenu={
+            <ChartExportMenu
+              chartName="order-status"
+              csvData={data.orderStatus as unknown as Record<string, unknown>[]}
+            />
+          }
+        >
+          <OrderStatusStackedBar data={data.orderStatus} />
+        </ChartCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Tài xế online theo giờ</CardTitle>
-              <CardDescription>Số tài xế hoạt động mỗi giờ</CardDescription>
-            </div>
-            <ChartExportMenu chartName="driver-online" csvData={data.driverOnline as unknown as Record<string, unknown>[]} />
-          </CardHeader>
-          <CardContent>
-            <DriverOnlineLineChart data={data.driverOnline} />
-          </CardContent>
-        </Card>
+        <ChartCard
+          title={t('cards.driverOnlineTitle')}
+          description={t('cards.driverOnlineDescription')}
+          exportMenu={
+            <ChartExportMenu
+              chartName="driver-online"
+              csvData={data.driverOnline as unknown as Record<string, unknown>[]}
+            />
+          }
+        >
+          <DriverOnlineLineChart data={data.driverOnline} />
+        </ChartCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Top 10 nhà hàng</CardTitle>
-              <CardDescription>Theo doanh thu</CardDescription>
-            </div>
-            <ChartExportMenu chartName="top-restaurants" csvData={data.topRestaurants as unknown as Record<string, unknown>[]} />
-          </CardHeader>
-          <CardContent>
-            <TopRestaurantsBar data={data.topRestaurants} />
-          </CardContent>
-        </Card>
+        <ChartCard
+          title={t('cards.topRestaurantsTitle')}
+          description={t('cards.topRestaurantsDescription')}
+          exportMenu={
+            <ChartExportMenu
+              chartName="top-restaurants"
+              csvData={data.topRestaurants as unknown as Record<string, unknown>[]}
+            />
+          }
+        >
+          <TopRestaurantsBar data={data.topRestaurants} />
+        </ChartCard>
       </div>
     </div>
+  );
+}
+
+function ChartCard({
+  title,
+  description,
+  exportMenu,
+  children,
+}: {
+  title: string;
+  description: string;
+  exportMenu: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        {exportMenu}
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }

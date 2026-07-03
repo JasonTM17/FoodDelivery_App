@@ -179,7 +179,10 @@
     "heatmapTitle": "地区別注文密度",
     "heatmapPeriod": "過去1時間",
     "heatmapEmpty": "データなし",
-    "heatmapError": "ヒートマップの読み込みに失敗"
+    "heatmapError": "ヒートマップの読み込みに失敗",
+    "errorTitle": "概要を読み込めませんでした",
+    "errorDescription": "ダッシュボードデータは一時的に利用できません。もう一度お試しください。",
+    "retry": "再試行"
   },
   "orders": {
     "title": "注文管理",
@@ -313,6 +316,81 @@
     "totalOrders": "総注文数",
     "revenue": "売上",
     "createdAt": "作成日"
+  },
+  "overviewCharts": {
+    "sectionTitle": "分析",
+    "compare": "前期間と比較",
+    "comparing": "期間を比較中",
+    "loading": "グラフデータを読み込んでいます",
+    "cards": {
+      "revenueTitle": "過去30日間の売上",
+      "revenueDescription": "日別の売上推移",
+      "orderStatusTitle": "ステータス別注文",
+      "orderStatusDescription": "日別の注文ステータス分布",
+      "driverOnlineTitle": "時間帯別オンラインドライバー",
+      "driverOnlineDescription": "1日のアクティブドライバー数",
+      "topRestaurantsTitle": "上位10レストラン",
+      "topRestaurantsDescription": "売上順ランキング"
+    },
+    "empty": {
+      "revenue": "売上データはまだありません",
+      "orders": "注文ステータスデータはまだありません",
+      "drivers": "オンラインドライバーデータはまだありません",
+      "restaurants": "レストランランキングデータはまだありません",
+      "heatmap": "注文密度データはまだありません"
+    },
+    "series": {
+      "revenue": "売上",
+      "previousRevenue": "前期間",
+      "onlineDrivers": "オンラインドライバー",
+      "avgPayout": "平均支払額"
+    },
+    "statuses": {
+      "completed": "完了",
+      "delivering": "配達中",
+      "confirmed": "確認済み",
+      "pending": "確認待ち",
+      "cancelled": "キャンセル"
+    },
+    "tables": {
+      "revenueCaption": "売上グラフのデータ",
+      "orderStatusCaption": "注文ステータスグラフのデータ",
+      "driverCaption": "オンラインドライバーグラフのデータ",
+      "restaurantsCaption": "上位レストラングラフのデータ",
+      "heatmapCaption": "注文密度ヒートマップのデータ",
+      "date": "日付",
+      "day": "曜日",
+      "hour": "時刻",
+      "revenue": "売上",
+      "previousRevenue": "前期間の売上",
+      "onlineDrivers": "オンラインドライバー",
+      "avgPayout": "平均支払額",
+      "restaurant": "レストラン",
+      "orders": "注文数",
+      "rating": "評価"
+    },
+    "heatmap": {
+      "title": "曜日・時間帯別の注文密度",
+      "tooltip": "{day} {hour}:00 — {count}件",
+      "low": "少",
+      "high": "多"
+    },
+    "days": {
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土",
+      "sunday": "日"
+    },
+    "export": {
+      "button": "エクスポート",
+      "csvEmpty": "エクスポートできるグラフデータがありません。",
+      "csvFailed": "グラフデータをCSV形式でエクスポートできませんでした。",
+      "pngNotFound": "グラフ画像が見つかりません。",
+      "pngFailed": "グラフをPNG形式でエクスポートできませんでした。"
+    }
   },
   "restaurantTabs": {
     "label": "レストラン詳細セクション",
@@ -1248,6 +1326,18 @@
   },
   "realtimeOrders": {
     "title": "ライブ注文",
-    "empty": "新しい注文はありません"
+    "empty": "新しい注文はありません",
+    "fallbackPolling": "Realtimeを利用できないため、制御されたポーリングに切り替えています",
+    "errorTitle": "ライブ注文を読み込めませんでした",
+    "errorDescription": "Realtimeストリームとフォールバック取得の両方が利用できません。",
+    "retry": "再試行",
+    "refresh": "注文を更新"
+  },
+  "connectionStatus": {
+    "connecting": "接続中",
+    "connected": "接続済み",
+    "reconnecting": "再接続中…",
+    "disconnected": "切断",
+    "error": "接続エラー"
   }
 }

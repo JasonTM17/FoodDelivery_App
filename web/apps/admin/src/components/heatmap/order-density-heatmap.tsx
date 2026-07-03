@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface HeatmapCell {
-  day: number;  // 0=Monday ... 6=Sunday
-  hour: number; // 0-23
+  day: number;
+  hour: number;
   count: number;
 }
 
@@ -15,35 +16,56 @@ interface OrderDensityHeatmapProps {
   loading?: boolean;
 }
 
-const DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-const HOUR_LABELS = ['0h', '3h', '6h', '9h', '12h', '15h', '18h', '21h'];
+const heatmapColors = ['#F1F5F9', '#BBF7D0', '#86EFAC', '#4ADE80', '#22C55E', '#15803D'];
+const dayKeys = [
+  'days.monday',
+  'days.tuesday',
+  'days.wednesday',
+  'days.thursday',
+  'days.friday',
+  'days.saturday',
+  'days.sunday',
+] as const;
 
 function colorScale(value: number, max: number): string {
   const intensity = max > 0 ? value / max : 0;
-  if (intensity === 0) return '#F1F5F9';
-  if (intensity < 0.2) return '#BBF7D0';
-  if (intensity < 0.4) return '#86EFAC';
-  if (intensity < 0.6) return '#4ADE80';
-  if (intensity < 0.8) return '#22C55E';
-  return '#15803D';
+  if (intensity === 0) return heatmapColors[0];
+  if (intensity < 0.2) return heatmapColors[1];
+  if (intensity < 0.4) return heatmapColors[2];
+  if (intensity < 0.6) return heatmapColors[3];
+  if (intensity < 0.8) return heatmapColors[4];
+  return heatmapColors[5];
 }
 
 export default function OrderDensityHeatmap({ cells, max: maxProp, loading }: OrderDensityHeatmapProps) {
-  const [tooltip, setTooltip] = useState<{ day: number; hour: number; count: number } | null>(null);
-
-  const max = maxProp ?? Math.max(1, ...cells.map((c) => c.count));
-
+  const t = useTranslations('overviewCharts');
+  const [tooltip, setTooltip] = useState<HeatmapCell | null>(null);
+  const dayLabels = dayKeys.map((key) => t(key));
+  const max = maxProp ?? Math.max(1, ...cells.map((cell) => cell.count));
   const cellMap = useMemo(() => {
     const map = new Map<string, number>();
-    cells.forEach((c) => map.set(`${c.day}-${c.hour}`, c.count));
+    cells.forEach((cell) => map.set(`${cell.day}-${cell.hour}`, cell.count));
     return map;
   }, [cells]);
 
   if (loading) {
     return (
       <Card>
-        <CardHeader><CardTitle className="text-base">Mật độ đơn hàng</CardTitle></CardHeader>
-        <CardContent><div className="h-64 animate-pulse rounded-lg bg-muted" /></CardContent>
+        <CardHeader><CardTitle className="text-base">{t('heatmap.title')}</CardTitle></CardHeader>
+        <CardContent>
+          <div role="status" aria-label={t('loading')} className="h-64 animate-pulse rounded-lg bg-muted" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!cells.length) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">{t('heatmap.title')}</CardTitle></CardHeader>
+        <CardContent className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+          {t('empty.heatmap')}
+        </CardContent>
       </Card>
     );
   }
@@ -51,48 +73,57 @@ export default function OrderDensityHeatmap({ cells, max: maxProp, loading }: Or
   return (
     <Card data-testid="order-density-heatmap">
       <CardHeader>
-        <CardTitle className="text-base">Mật độ đơn hàng (Giờ × Ngày)</CardTitle>
+        <CardTitle className="text-base">{t('heatmap.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative">
           <div className="flex">
             <div className="w-10" />
-            <div className="flex flex-1 justify-between px-0">
-              {HOUR_LABELS.map((label) => (
-                <span key={label} className="text-[10px] text-muted-foreground">{label}</span>
+            <div className="flex flex-1 justify-between">
+              {[0, 3, 6, 9, 12, 15, 18, 21].map((hour) => (
+                <span key={hour} className="text-[10px] text-muted-foreground">{hour}h</span>
               ))}
             </div>
           </div>
 
-          <svg viewBox="0 0 800 280" className="w-full h-auto" data-testid="heatmap-grid">
+          <svg viewBox="0 0 800 280" className="h-auto w-full" data-testid="heatmap-grid">
             {Array.from({ length: 7 }).map((_, day) =>
-              Array.from({ length: 24 }).map((_, hour) => {
-                const count = cellMap.get(`${day}-${hour}`) || 0;
-                const x = hour * 32 + 2;
-                const y = day * 38 + 2;
+              Array.from({ length: 24 }).map((__, hour) => {
+                const cell = { day, hour, count: cellMap.get(`${day}-${hour}`) ?? 0 };
+                const label = t('heatmap.tooltip', {
+                  day: dayLabels[day],
+                  hour,
+                  count: cell.count,
+                });
+
                 return (
                   <rect
                     key={`${day}-${hour}`}
                     data-testid={`heatmap-cell-${day}-${hour}`}
-                    x={x}
-                    y={y}
+                    role="img"
+                    tabIndex={0}
+                    aria-label={label}
+                    x={hour * 32 + 2}
+                    y={day * 38 + 2}
                     width={28}
                     height={34}
-                    fill={colorScale(count, max)}
+                    fill={colorScale(cell.count, max)}
                     rx={4}
-                    className="cursor-pointer transition-opacity hover:opacity-80"
-                    onMouseEnter={() => setTooltip({ day, hour, count })}
+                    className="cursor-pointer transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary"
+                    onMouseEnter={() => setTooltip(cell)}
                     onMouseLeave={() => setTooltip(null)}
+                    onFocus={() => setTooltip(cell)}
+                    onBlur={() => setTooltip(null)}
                   />
                 );
-              })
+              }),
             )}
 
-            {DAY_LABELS.map((label, i) => (
+            {dayLabels.map((label, index) => (
               <text
-                key={label}
+                key={dayKeys[index]}
                 x={2}
-                y={i * 38 + 24}
+                y={index * 38 + 24}
                 className="fill-muted-foreground text-[10px]"
                 fontSize={10}
               >
@@ -102,19 +133,43 @@ export default function OrderDensityHeatmap({ cells, max: maxProp, loading }: Or
           </svg>
 
           {tooltip && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md border bg-card px-3 py-1.5 text-sm shadow-lg">
-              {DAY_LABELS[tooltip.day]}, {tooltip.hour}h: {tooltip.count} đơn
+            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md border bg-card px-3 py-1.5 text-sm shadow-lg">
+              {t('heatmap.tooltip', {
+                day: dayLabels[tooltip.day],
+                hour: tooltip.hour,
+                count: tooltip.count,
+              })}
             </div>
           )}
 
           <div className="mt-2 flex items-center justify-end gap-2">
-            <span className="text-xs text-muted-foreground">Ít</span>
-            {['#F1F5F9', '#BBF7D0', '#86EFAC', '#4ADE80', '#22C55E', '#15803D'].map((color) => (
-              <div key={color} className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
+            <span className="text-xs text-muted-foreground">{t('heatmap.low')}</span>
+            {heatmapColors.map((color) => (
+              <span key={color} className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} aria-hidden="true" />
             ))}
-            <span className="text-xs text-muted-foreground">Nhiều</span>
+            <span className="text-xs text-muted-foreground">{t('heatmap.high')}</span>
           </div>
         </div>
+
+        <table className="sr-only">
+          <caption>{t('tables.heatmapCaption')}</caption>
+          <thead>
+            <tr>
+              <th>{t('tables.day')}</th>
+              <th>{t('tables.hour')}</th>
+              <th>{t('tables.orders')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cells.map((cell, index) => (
+              <tr key={`${cell.day}-${cell.hour}-${index}`}>
+                <td>{dayLabels[cell.day] ?? cell.day}</td>
+                <td>{cell.hour}:00</td>
+                <td>{cell.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </CardContent>
     </Card>
   );
