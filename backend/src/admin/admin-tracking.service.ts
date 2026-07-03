@@ -25,6 +25,7 @@ interface RedisDriverState {
   alive: boolean
   status: string | null
   orderId: string | null
+  lastSeenAt: string | null
 }
 
 export interface AdminDriverLocation {
@@ -93,11 +94,9 @@ export class AdminTrackingService {
         .filter(order => order.driverId)
         .map(order => [order.driverId as string, order]),
     )
-    const now = new Date().toISOString()
-
     return geoMembers.flatMap((member): AdminDriverLocation[] => {
       const redisState = redisStates.get(member.driverId)
-      if (!redisState?.alive) return []
+      if (!redisState?.alive || !redisState.lastSeenAt) return []
 
       const profile = profileByDriver.get(member.driverId)
       if (!profile) return []
@@ -116,7 +115,7 @@ export class AdminTrackingService {
         currentOrder,
         vehicleType: profile.vehicleType,
         vehiclePlate: profile.vehiclePlate,
-        lastSeenAt: now,
+        lastSeenAt: redisState.lastSeenAt,
       }]
     })
   }
@@ -126,16 +125,18 @@ export class AdminTrackingService {
       `driver:${driverId}:alive`,
       `driver:${driverId}:status`,
       `driver:${driverId}:current_order`,
+      `driver:${driverId}:last_seen_at`,
     ])
     const values = await this.redis.mget(...keys)
     const states = new Map<string, RedisDriverState>()
 
     driverIds.forEach((driverId, index) => {
-      const offset = index * 3
+      const offset = index * 4
       states.set(driverId, {
         alive: values[offset] === '1',
         status: values[offset + 1] || null,
         orderId: values[offset + 2] || null,
+        lastSeenAt: values[offset + 3] || null,
       })
     })
 

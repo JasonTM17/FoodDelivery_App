@@ -1006,6 +1006,10 @@
     "empty": "現在オンラインの配達員はいません。",
     "retry": "再試行",
     "refresh": "更新",
+    "fallbackPolling": "Realtimeを利用できないため15秒ごとにポーリングしています",
+    "lastUpdated": "{time} 更新",
+    "lastSeen": "最終確認",
+    "mapRegionLabel": "ベトナム境界レイヤー付きライブドライバーマップ",
     "order": "注文",
     "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
     "missingKeyDescription": "ライブ地図を表示するには、admin環境に公開Google Mapsキーを追加してください。",
@@ -1014,7 +1018,8 @@
     "info": {
       "rating": "評価",
       "status": "状態",
-      "vehicle": "車両"
+      "vehicle": "車両",
+      "lastSeen": "最終確認"
     },
     "connection": {
       "connecting": "接続中",

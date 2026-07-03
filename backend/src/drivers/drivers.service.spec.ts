@@ -36,6 +36,11 @@ describe('DriversService', () => {
       await service.goOnline('d1', 10.8, 106.7)
       expect(mockRedis.geoadd).toHaveBeenCalled()
       expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:status', 'online')
+      expect(mockRedis.setex).toHaveBeenCalledWith(
+        'driver:d1:last_seen_at',
+        35,
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      )
     })
   })
 })

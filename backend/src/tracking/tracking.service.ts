@@ -54,10 +54,12 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   async handleLocationUpdate(driverId: string, data: LocationData): Promise<string | null> {
+    const recordedAt = new Date()
     await this.redis.geoadd('drivers:active', data.lng, data.lat, `driver:${driverId}`)
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
+    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt.toISOString())
 
-    this.batchBuffer.push({ driverId, lng: data.lng, lat: data.lat, recordedAt: new Date() })
+    this.batchBuffer.push({ driverId, lng: data.lng, lat: data.lat, recordedAt })
 
     const orderId = await this.redis.get(`driver:${driverId}:current_order`)
     return orderId || null
@@ -121,10 +123,14 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   async getDriverLocation(driverId: string): Promise<{ lat: number; lng: number; timestamp: string } | null> {
-    const pos = await this.redis.geopos('drivers:active', `driver:${driverId}`)
+    const [pos, timestamp] = await Promise.all([
+      this.redis.geopos('drivers:active', `driver:${driverId}`),
+      this.redis.get(`driver:${driverId}:last_seen_at`),
+    ])
     if (!pos || !pos[0]) return null
+    if (!timestamp) return null
     const [lng, lat] = pos[0]
-    return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp: new Date().toISOString() }
+    return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp }
   }
 
   async findNearbyDriversPostGIS(

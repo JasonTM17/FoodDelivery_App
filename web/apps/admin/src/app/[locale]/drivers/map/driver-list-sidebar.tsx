@@ -25,7 +25,9 @@ interface DriverListSidebarProps {
     activeCount: string;
     empty: string;
     retry: string;
+    lastSeen: string;
   };
+  formatTimestamp: (value: string) => string;
   onSelect: (driver: DriverLocation) => void;
   onRetry: () => void;
 }
@@ -37,6 +39,7 @@ export default function DriverListSidebar({
   selectedDriverId,
   statusLabels,
   copy,
+  formatTimestamp,
   onSelect,
   onRetry,
 }: DriverListSidebarProps) {
@@ -106,6 +109,9 @@ export default function DriverListSidebar({
                       </span>
                       <span>{statusLabels[driver.status]}</span>
                     </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {copy.lastSeen}: {formatTimestamp(driver.lastSeenAt)}
+                    </p>
                   </div>
                 </Button>
               ))

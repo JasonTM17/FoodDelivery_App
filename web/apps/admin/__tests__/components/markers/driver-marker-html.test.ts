@@ -15,6 +15,7 @@ describe('buildDriverInfoWindowHtml', () => {
         status: 'Status',
         order: 'Order',
         vehicle: 'Vehicle',
+        lastSeen: 'Last seen',
       },
     );
 

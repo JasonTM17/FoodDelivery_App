@@ -61,7 +61,12 @@ describe('TrackingService', () => {
         lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
       })
       expect(mockRedis.geoadd).toHaveBeenCalled()
-      expect(mockRedis.setex).toHaveBeenCalled()
+      expect(mockRedis.setex).toHaveBeenCalledWith('driver:d1:alive', 35, '1')
+      expect(mockRedis.setex).toHaveBeenCalledWith(
+        'driver:d1:last_seen_at',
+        35,
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      )
       expect(orderId).toBe('order-123')
     })
 
@@ -71,6 +76,26 @@ describe('TrackingService', () => {
         lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
       })
       expect(orderId).toBeNull()
+    })
+  })
+
+  describe('getDriverLocation', () => {
+    it('returns coordinates with the real Redis last-seen timestamp', async () => {
+      mockRedis.geopos.mockResolvedValueOnce([['106.7001', '10.8001']])
+      mockRedis.get.mockResolvedValueOnce('2026-07-03T01:00:00.000Z')
+
+      await expect(service.getDriverLocation('d1')).resolves.toEqual({
+        lat: 10.8001,
+        lng: 106.7001,
+        timestamp: '2026-07-03T01:00:00.000Z',
+      })
+    })
+
+    it('does not fabricate a timestamp when Redis has no last-seen value', async () => {
+      mockRedis.geopos.mockResolvedValueOnce([['106.7001', '10.8001']])
+      mockRedis.get.mockResolvedValueOnce(null)
+
+      await expect(service.getDriverLocation('d1')).resolves.toBeNull()
     })
   })
 

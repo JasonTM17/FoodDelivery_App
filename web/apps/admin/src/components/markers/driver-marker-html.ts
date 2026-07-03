@@ -5,6 +5,7 @@ export interface DriverMarkerCopy {
   status: string;
   order: string;
   vehicle: string;
+  lastSeen: string;
 }
 
 export function buildDriverInfoWindowHtml(
@@ -16,6 +17,7 @@ export function buildDriverInfoWindowHtml(
     [copy.rating, driver.rating.toFixed(1)],
     [copy.status, statusLabel],
     driver.vehicleType ? [copy.vehicle, driver.vehicleType] : null,
+    [copy.lastSeen, new Date(driver.lastSeenAt).toLocaleTimeString()],
     driver.currentOrder ? [copy.order, driver.currentOrder] : null,
   ].filter((row): row is [string, string] => Boolean(row));
 

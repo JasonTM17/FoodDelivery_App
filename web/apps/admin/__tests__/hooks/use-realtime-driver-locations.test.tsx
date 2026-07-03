@@ -8,6 +8,7 @@ type SocketListener = (...args: unknown[]) => void;
 
 const socketMock = vi.hoisted(() => {
   const listeners = new Map<string, Set<SocketListener>>();
+  const managerListeners = new Map<string, Set<SocketListener>>();
   const socket = {
     connected: true,
     emit: vi.fn(),
@@ -20,15 +21,32 @@ const socketMock = vi.hoisted(() => {
       listeners.get(event)?.delete(listener);
       return socket;
     }),
+    io: {
+      on: vi.fn((event: string, listener: SocketListener) => {
+        if (!managerListeners.has(event)) managerListeners.set(event, new Set());
+        managerListeners.get(event)?.add(listener);
+        return socket.io;
+      }),
+      off: vi.fn((event: string, listener: SocketListener) => {
+        managerListeners.get(event)?.delete(listener);
+        return socket.io;
+      }),
+    },
     trigger(event: string, ...args: unknown[]) {
       listeners.get(event)?.forEach((listener) => listener(...args));
+    },
+    triggerManager(event: string, ...args: unknown[]) {
+      managerListeners.get(event)?.forEach((listener) => listener(...args));
     },
     reset() {
       socket.connected = true;
       socket.emit.mockClear();
       socket.on.mockClear();
       socket.off.mockClear();
+      socket.io.on.mockClear();
+      socket.io.off.mockClear();
       listeners.clear();
+      managerListeners.clear();
     },
   };
   return socket;
@@ -42,6 +60,7 @@ const mockedApiGet = vi.mocked(apiGet);
 
 describe('useRealtimeDriverLocations', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     socketMock.reset();
     mockedApiGet.mockReset();
   });
@@ -59,6 +78,7 @@ describe('useRealtimeDriverLocations', () => {
     expect(mockedApiGet).toHaveBeenCalledWith('/admin/online-drivers');
     expect(socketMock.emit).toHaveBeenCalledWith('admin:subscribe_drivers');
     expect(result.current.connectionStatus).toBe('connected');
+    expect(result.current.isFallbackPolling).toBe(false);
     expect(result.current.drivers).toEqual([location]);
 
     unmount();
@@ -92,6 +112,36 @@ describe('useRealtimeDriverLocations', () => {
       lng: 106.8,
       currentOrder: 'ORD-1',
       status: 'delivering',
+      lastSeenAt: '2026-07-02T09:00:00.000Z',
+    });
+    expect(result.current.lastUpdatedAt).toBe('2026-07-02T09:00:00.000Z');
+  });
+
+  it('uses controlled polling when the websocket disconnects', async () => {
+    mockedApiGet
+      .mockResolvedValueOnce([makeLocation()])
+      .mockResolvedValueOnce([makeLocation({ lat: 10.9, lastSeenAt: '2026-07-02T09:00:00.000Z' })]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.connectionStatus).toBe('connected');
+    });
+
+    vi.useFakeTimers();
+    act(() => {
+      socketMock.trigger('disconnect');
+    });
+
+    expect(result.current.connectionStatus).toBe('disconnected');
+    expect(result.current.isFallbackPolling).toBe(true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+
+    expect(mockedApiGet).toHaveBeenCalledTimes(2);
+    expect(result.current.drivers[0]).toMatchObject({
+      lat: 10.9,
       lastSeenAt: '2026-07-02T09:00:00.000Z',
     });
   });

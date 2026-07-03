@@ -12,10 +12,12 @@ export class DriversService {
   async goOnline(driverId: string, lat: number, lng: number): Promise<void> {
     const profile = await this.prisma.driverProfile.findUniqueOrThrow({ where: { userId: driverId } })
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
+    const now = new Date().toISOString()
 
     await this.redis.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
     await this.redis.set(`driver:${driverId}:status`, 'online')
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
+    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, now)
     await this.redis.set(`driver:${driverId}:rating`, profile.rating.toString())
     await this.redis.set(`driver:${driverId}:current_order`, '')
 
@@ -31,6 +33,7 @@ export class DriversService {
     await this.redis.zrem('drivers:active', `driver:${driverId}`)
     await this.redis.del(`driver:${driverId}:status`)
     await this.redis.del(`driver:${driverId}:alive`)
+    await this.redis.del(`driver:${driverId}:last_seen_at`)
     await this.redis.del(`driver:${driverId}:current_order`)
 
     await this.prisma.driverProfile.update({

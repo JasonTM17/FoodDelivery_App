@@ -35,8 +35,8 @@ describe('AdminTrackingService', () => {
       ['driver:driver-2', ['106.7002', '10.8002']],
     ])
     redis.mget.mockResolvedValue([
-      '1', 'online', '',
-      '1', 'busy', 'order-2',
+      '1', 'online', '', '2026-07-03T01:00:00.000Z',
+      '1', 'busy', 'order-2', '2026-07-03T01:00:05.000Z',
     ])
     prisma.driverProfile.findMany.mockResolvedValue([
       {
@@ -82,6 +82,7 @@ describe('AdminTrackingService', () => {
       lng: 106.7001,
       status: 'online',
       vehicleType: 'motorbike',
+      lastSeenAt: '2026-07-03T01:00:00.000Z',
     })
     expect(result[1]).toMatchObject({
       id: 'driver-2',
@@ -114,7 +115,7 @@ describe('AdminTrackingService', () => {
       ['driver:driver-1', ['106.7001', '10.8001']],
       ['driver:driver-outside', ['120.0000', '24.0000']],
     ])
-    redis.mget.mockResolvedValue(['1', 'online', ''])
+    redis.mget.mockResolvedValue(['1', 'online', '', '2026-07-03T01:00:00.000Z'])
     prisma.driverProfile.findMany.mockResolvedValue([
       {
         userId: 'driver-1',
@@ -133,11 +134,30 @@ describe('AdminTrackingService', () => {
       'driver:driver-1:alive',
       'driver:driver-1:status',
       'driver:driver-1:current_order',
+      'driver:driver-1:last_seen_at',
     )
     expect(prisma.driverProfile.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { userId: { in: ['driver-1'] }, user: { isActive: true } },
     }))
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('driver-1')
+  })
+
+  it('drops Redis geo entries that have no real last-seen timestamp', async () => {
+    redis.call.mockResolvedValue([['driver:driver-1', ['106.7001', '10.8001']]])
+    redis.mget.mockResolvedValue(['1', 'online', '', null])
+    prisma.driverProfile.findMany.mockResolvedValue([
+      {
+        userId: 'driver-1',
+        vehicleType: 'motorbike',
+        vehiclePlate: '59A1-12345',
+        isOnline: true,
+        rating: { toString: () => '4.8' },
+        user: { fullName: 'Driver One' },
+      },
+    ])
+    prisma.order.findMany.mockResolvedValue([])
+
+    await expect(service.getOnlineDrivers()).resolves.toEqual([])
   })
 })

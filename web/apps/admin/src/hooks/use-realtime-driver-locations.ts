@@ -22,8 +22,12 @@ export interface DriverLocationsState {
   isLoading: boolean;
   error: string | null;
   connectionStatus: DriverMapConnectionStatus;
+  isFallbackPolling: boolean;
+  lastUpdatedAt: string | null;
   refetch: () => Promise<void>;
 }
+
+const fallbackPollingIntervalMs = 15_000;
 
 export function useRealtimeDriverLocations(): DriverLocationsState {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
@@ -31,17 +35,19 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<DriverMapConnectionStatus>('connecting');
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
-  const loadDrivers = useCallback(async () => {
+  const loadDrivers = useCallback(async (options: { background?: boolean } = {}) => {
     setError(null);
-    setIsLoading(true);
+    if (!options.background) setIsLoading(true);
     try {
       const locations = await apiGet<DriverLocation[]>('/admin/online-drivers');
       setDrivers(locations);
+      setLastUpdatedAt(new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'DRIVER_MAP_LOAD_FAILED');
     } finally {
-      setIsLoading(false);
+      if (!options.background) setIsLoading(false);
     }
   }, []);
 
@@ -54,7 +60,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
       (driver) => driver.id === update.driverId || driver.driverId === update.driverId,
     );
     if (!existingDriver) {
-      void loadDrivers();
+      void loadDrivers({ background: true });
       return;
     }
 
@@ -75,6 +81,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
       };
       return next;
     });
+    setLastUpdatedAt(update.timestamp ?? new Date().toISOString());
   }, [loadDrivers]);
 
   useEffect(() => {
@@ -88,21 +95,40 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
       socket.emit('admin:subscribe_drivers');
     };
     const disconnect = () => setConnectionStatus('disconnected');
+    const reconnecting = () => setConnectionStatus('connecting');
 
     if (socket.connected) subscribe();
     else setConnectionStatus('connecting');
 
     socket.on('connect', subscribe);
     socket.on('disconnect', disconnect);
+    socket.io.on('reconnect_attempt', reconnecting);
     socket.on('admin:driver_location_changed', applyLocationUpdate);
 
     return () => {
       socket.emit('admin:unsubscribe_drivers');
       socket.off('connect', subscribe);
       socket.off('disconnect', disconnect);
+      socket.io.off('reconnect_attempt', reconnecting);
       socket.off('admin:driver_location_changed', applyLocationUpdate);
     };
   }, [applyLocationUpdate]);
 
-  return { drivers, isLoading, error, connectionStatus, refetch: loadDrivers };
+  useEffect(() => {
+    if (connectionStatus === 'connected') return undefined;
+    const interval = window.setInterval(() => {
+      void loadDrivers({ background: true });
+    }, fallbackPollingIntervalMs);
+    return () => window.clearInterval(interval);
+  }, [connectionStatus, loadDrivers]);
+
+  return {
+    drivers,
+    isLoading,
+    error,
+    connectionStatus,
+    isFallbackPolling: connectionStatus !== 'connected',
+    lastUpdatedAt,
+    refetch: () => loadDrivers(),
+  };
 }
