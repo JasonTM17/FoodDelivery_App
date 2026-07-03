@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 @Injectable()
@@ -8,8 +8,8 @@ export class WebhooksService {
   signPayload(payload: string): string {
     const secret = process.env.WEBHOOK_SECRET
     if (!secret) {
-      this.logger.warn('WEBHOOK_SECRET not set, webhook signing is disabled')
-      return ''
+      this.logger.error('WEBHOOK_SECRET not set -- refusing to send unsigned webhook')
+      throw new ServiceUnavailableException('WEBHOOK_SECRET_NOT_CONFIGURED')
     }
     return createHmac('sha256', secret).update(payload).digest('hex')
   }
@@ -17,8 +17,8 @@ export class WebhooksService {
   verifySignature(payload: string, signature: string): boolean {
     const secret = process.env.WEBHOOK_SECRET
     if (!secret) {
-      this.logger.warn('WEBHOOK_SECRET not set, skipping signature verification')
-      return true
+      this.logger.error('WEBHOOK_SECRET not set -- rejecting unsigned webhook')
+      return false
     }
     const expected = createHmac('sha256', secret).update(payload).digest('hex')
     try {

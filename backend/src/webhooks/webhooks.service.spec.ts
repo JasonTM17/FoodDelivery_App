@@ -18,9 +18,9 @@ describe('WebhooksService', () => {
   })
 
   describe('signPayload', () => {
-    it('returns empty string when WEBHOOK_SECRET is not set', () => {
+    it('throws when WEBHOOK_SECRET is not set', () => {
       delete process.env.WEBHOOK_SECRET
-      expect(service.signPayload('any-payload')).toBe('')
+      expect(() => service.signPayload('any-payload')).toThrow('WEBHOOK_SECRET_NOT_CONFIGURED')
     })
 
     it('returns a 64-char hex HMAC-SHA256 when secret is set', () => {
@@ -49,9 +49,9 @@ describe('WebhooksService', () => {
   })
 
   describe('verifySignature', () => {
-    it('returns true (passthrough) when WEBHOOK_SECRET is not configured', () => {
+    it('returns false when WEBHOOK_SECRET is not configured', () => {
       delete process.env.WEBHOOK_SECRET
-      expect(service.verifySignature('payload', 'any-signature')).toBe(true)
+      expect(service.verifySignature('payload', 'any-signature')).toBe(false)
     })
 
     it('returns true for a valid matching signature', () => {
@@ -109,11 +109,12 @@ describe('WebhooksService', () => {
       expect(opts.headers['X-Signature-SHA256']).toMatch(/^[0-9a-f]{64}$/)
     })
 
-    it('does not include X-Signature-SHA256 when no secret configured', async () => {
+    it('does not send unsigned webhooks when no secret is configured', async () => {
       delete process.env.WEBHOOK_SECRET
-      await service.post('http://example.com/hook', { event: 'test' })
-      const opts = (global.fetch as jest.Mock).mock.calls[0][1]
-      expect(opts.headers['X-Signature-SHA256']).toBeUndefined()
+      await expect(service.post('http://example.com/hook', { event: 'test' })).rejects.toThrow(
+        'WEBHOOK_SECRET_NOT_CONFIGURED',
+      )
+      expect(global.fetch).not.toHaveBeenCalled()
     })
 
     it('resolves without throwing when fetch rejects (network error)', async () => {
