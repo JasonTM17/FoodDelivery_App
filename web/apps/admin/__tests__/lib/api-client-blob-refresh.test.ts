@@ -61,4 +61,37 @@ describe('FoodFlowApiClient blob authentication', () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
+
+  it('rejects legacy raw refresh token payloads during blob retry', async () => {
+    const clearTokens = vi.fn();
+    const setTokens = vi.fn();
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const authorization = new Headers(init?.headers).get('Authorization');
+
+      if (url.endsWith('/auth/refresh')) {
+        return Response.json({ accessToken: 'raw-fresh-token' });
+      }
+      if (authorization === 'Bearer expired-token') {
+        return Response.json({ title: 'Unauthorized', status: 401 }, { status: 401 });
+      }
+      return new Response('audit,csv', { status: 200, headers: { 'Content-Type': 'text/csv' } });
+    });
+    const client = new FoodFlowApiClient({
+      baseUrl: 'https://api.foodflow.test',
+      getAccessToken: () => 'expired-token',
+      getRefreshToken: () => 'refresh-token',
+      setTokens,
+      clearTokens,
+      fetcher: fetcher as typeof fetch,
+    });
+
+    await expect(client.requestBlob('/admin/audit-logs/export')).rejects.toMatchObject({
+      code: 'AUTH_SESSION_EXPIRED',
+      status: 401,
+    });
+    expect(setTokens).not.toHaveBeenCalled();
+    expect(clearTokens).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
 });

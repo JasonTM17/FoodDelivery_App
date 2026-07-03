@@ -136,11 +136,26 @@ export class FoodFlowApiClient {
     if (!response.ok) throw await this.toError(response);
     if (response.status === 204) return { data: undefined as T };
 
-    const value: unknown = await response.json();
+    let value: unknown;
+    try {
+      value = await response.json();
+    } catch {
+      throw new ApiClientError({
+        title: 'Invalid API response body',
+        detail: 'Expected a JSON FoodFlow API success envelope.',
+        status: response.status,
+        code: 'API_CONTRACT_INVALID_JSON',
+      });
+    }
+
     if (isEnvelope<T>(value)) return { data: value.data, meta: value.meta };
 
-    // Temporary compatibility for endpoints not yet migrated to the global envelope.
-    return { data: value as T };
+    throw new ApiClientError({
+      title: 'Invalid API response envelope',
+      detail: 'Expected FoodFlow API success envelope with success=true and data.',
+      status: response.status,
+      code: 'API_CONTRACT_INVALID_ENVELOPE',
+    });
   }
 
   private async toError(response: Response): Promise<ApiClientError> {
@@ -199,8 +214,7 @@ export class FoodFlowApiClient {
       });
       if (!response.ok) return false;
 
-      const value: unknown = await response.json();
-      const tokens = isEnvelope<TokenPair>(value) ? value.data : (value as TokenPair);
+      const { data: tokens } = await this.parseEnvelope<TokenPair>(response);
       if (!tokens?.accessToken) return false;
       this.options.setTokens(tokens);
       return true;

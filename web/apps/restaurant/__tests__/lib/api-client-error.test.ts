@@ -18,6 +18,17 @@ function createClient(body: unknown, status = 400) {
 }
 
 describe('FoodFlowApiClient error parsing', () => {
+  it('rejects successful responses that do not use the canonical success envelope', async () => {
+    const client = createClient({ id: 'legacy-raw-payload' }, 200);
+
+    await expect(client.request('/legacy-endpoint', { requireAuth: false })).rejects.toMatchObject({
+      name: 'ApiClientError',
+      status: 200,
+      code: 'API_CONTRACT_INVALID_ENVELOPE',
+      message: 'Expected FoodFlow API success envelope with success=true and data.',
+    } as Partial<ApiClientError>);
+  });
+
   it('preserves RFC 7807 problem details', async () => {
     const client = createClient({
       type: 'about:blank',
