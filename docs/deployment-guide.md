@@ -1,45 +1,127 @@
 # FoodFlow Deployment Guide
 
-## Local Development
+Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi.md) | [日本語](deployment-guide.ja.md)
+
+## Deployment Principle
+
+FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
+
+## Local Docker Stack
+
+For host-run development:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
-cd backend && pnpm install && pnpm prisma generate && pnpm prisma migrate dev && pnpm db:seed && pnpm start:dev
-cd web && pnpm install && pnpm dev
-cd mobile && flutter pub get && flutter run
+docker compose up -d postgres redis minio n8n
 ```
 
-## VPS Deployment (Coolify/Dokploy)
+For a full local container stack:
 
-1. Point domain to VPS IP
-2. Clone repo, copy .env.example to .env with production values
-3. Generate strong secrets: `openssl rand -hex 64` for JWT_SECRET, N8N_ENCRYPTION_KEY
-4. `docker compose up -d`
-5. Set up SSL via Nginx + Let's Encrypt
-
-## Environment Variables
-
-All required vars documented in `.env.example`. Production must override:
-- `JWT_SECRET`, `JWT_REFRESH_SECRET` — 64-char hex
-- `N8N_ENCRYPTION_KEY` — used to encrypt N8N credentials
-- `MINIO_SECRET_KEY` — min 8 chars
-- `POSTGRES_PASSWORD` — strong password
-- `GOOGLE_MAPS_API_KEY` — backend Google Directions/Geocoding key
-- `NEXT_PUBLIC_GOOGLE_MAPS_KEY` — admin web browser key for the live driver map; restrict by HTTP referrer
-- `DEEPSEEK_API_KEY` — DeepSeek chatbot provider key; keep only in the deployment secret store
-- `DEEPSEEK_MODEL` — default `deepseek-v4-flash` unless the provider contract changes
-- `GEMINI_API_KEY` — Google AI Studio for legacy N8N/Gemini workflows
-
-## Docker Hub
-
-Images pushed automatically on push to main:
 ```bash
-docker pull nguyenson1710/foodflow-backend:latest
+docker compose up -d --build
 ```
 
-## Monitoring
+Health checks:
 
-- Grafana: http://localhost:3100 (admin / foodflow_admin)
-- Prometheus: http://localhost:9090
-- Bull Board: http://localhost:3080
-- N8N: http://localhost:5678
+```bash
+curl http://localhost:3001/api/healthz
+curl http://localhost:3000/api/healthz
+curl http://localhost:3002/api/healthz
+```
+
+## Required Secret Stores
+
+Use provider secret managers, not committed files:
+
+| Area | Required secrets |
+|---|---|
+| Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
+| Database/cache | `DATABASE_URL`, `REDIS_URL`, passwords |
+| Storage | MinIO/S3 access key and secret key |
+| SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
+| AI | `DEEPSEEK_API_KEY`, optional legacy `GEMINI_API_KEY` / `N8N_API_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Deploy CLIs | Vercel token, Supabase access token |
+
+Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
+
+## Supabase Deployment
+
+Supabase is used only after backend contracts and migrations are green.
+
+1. Create a Supabase project.
+2. Store the Supabase Postgres connection string as the backend `DATABASE_URL`.
+3. Run Prisma validation and migrations against a staging database first:
+
+   ```bash
+   cd backend
+   pnpm prisma validate
+   pnpm prisma migrate deploy
+   ```
+
+4. Enable realtime only for tables that require live updates. Keep tenant isolation checks enabled in E2E before exposing production data.
+5. Store Supabase service keys only in backend/server secret stores. Never expose service-role keys to web or mobile clients.
+
+## Vercel Deployment
+
+Deploy web only after `pnpm --filter foodflow-admin build` and `pnpm --filter restaurant build` pass.
+
+Recommended project mapping:
+
+| Vercel project | Root directory | Build command |
+|---|---|---|
+| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
+| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+
+Required public env:
+
+| App | Variable |
+|---|---|
+| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL` |
+
+Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.
+
+## Backend Deployment
+
+The backend can run via Docker, VPS, or a managed container platform.
+
+Minimum production checklist:
+
+- Run `pnpm prisma migrate deploy` before serving traffic.
+- Set `NODE_ENV=production`.
+- Configure CORS to exact production dashboard/mobile origins.
+- Configure SePay webhook URL and `SEPAY_WEBHOOK_SECRET`.
+- Configure Redis for Socket.IO/realtime and rate limiting.
+- Configure object storage public URL for uploaded assets.
+- Expose `/api/healthz` for uptime checks.
+
+## Keep-Alive and Monitoring
+
+Keep-alive should monitor health, not hide broken runtime behavior.
+
+Recommended checks:
+
+- Backend: `GET /api/healthz`
+- Admin: `GET /api/healthz`
+- Restaurant: `GET /api/healthz`
+- Synthetic flows after release: login, restaurant order queue, admin exports, AI degraded/configured state, driver map loading
+
+Alert on repeated failures. Do not use keep-alive to mask failed migrations, missing secrets, or broken realtime connections.
+
+## Pre-Deploy Gates
+
+- `pnpm install --frozen-lockfile` in a clean environment for backend and web.
+- Backend: Prisma validate/migrate checks, typecheck, lint, Jest, build.
+- Web: API client generation/typecheck, Spectral/OpenAPI lint, Admin and Restaurant typecheck/lint/Vitest/build.
+- E2E: Playwright Chromium and Firefox with seeded backend/database.
+- Accessibility: no axe serious/critical issues.
+- Visual: approved Stitch baseline comparison.
+- Security: full tracked-file secret scan and staged diff secret scan.
+- Tenant isolation: restaurants cannot read or mutate other restaurants' data.
+
+## Rollback
+
+1. Stop traffic to the bad release.
+2. Roll back app containers or Vercel deployments.
+3. Do not roll back database migrations destructively unless an explicit reversible migration exists and data impact is reviewed.
+4. Preserve logs, deployment IDs, and commit hashes for incident review.

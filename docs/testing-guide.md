@@ -1,77 +1,109 @@
 # FoodFlow Testing Guide
 
-## Backend (NestJS + Jest)
+Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
-### Run tests
+## Backend
+
 ```bash
 cd backend
-pnpm test              # Unit tests
-pnpm test -- --coverage # With coverage
-pnpm test:e2e          # E2E tests
+pnpm prisma validate
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
 ```
 
-### Coverage targets
-| Module | Line | Branch |
-|--------|------|--------|
-| Auth | ≥90% | ≥85% |
-| Orders (state machine) | 100% | 100% |
-| Dispatch | ≥80% | ≥75% |
-| Tracking | ≥80% | ≥75% |
-| Overall | ≥80% | ≥70% |
+Focused examples:
 
-### Test structure
-```
-src/
-├── auth/auth.service.spec.ts         # Unit: login, register
-├── orders/order-state-machine.spec.ts # Unit: all transitions
-├── dispatch/dispatch.service.spec.ts  # Unit: GEOSEARCH, sorting
-├── tracking/tracking.service.spec.ts  # Unit: ETA, GPS
-└── cart/cart.service.spec.ts         # Unit: cart operations
+```bash
+pnpm test -- sepay.provider.spec.ts payments.service.spec.ts
+pnpm test -- ai-chat.service.spec.ts deepseek-chat-provider.service.spec.ts ai-chat.controller.spec.ts
+pnpm test -- restaurant-revenue.service.spec.ts
 ```
 
-## Web (Next.js + Playwright)
+Backend tests must prove real behavior: no runtime mock payments, no fabricated AI answers, no random business values, and tenant-scoped queries for restaurant/admin surfaces.
+
+## Web
 
 ```bash
 cd web
-pnpm test:e2e
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
 ```
 
-### Batch 4 local E2E baseline
-
-The Batch 4 web/backend gate runs Playwright against real local services:
-
-- Backend API: `http://localhost:3001/api`
-- Admin web: `http://localhost:3000`
-- Restaurant web: `http://localhost:3002`
-- Database/Redis/MinIO from Docker Compose seed data
-
-Useful focused commands:
+Focused dashboard checks:
 
 ```bash
-cd web
-pnpm test:e2e -- --project=chromium tests/batch4-contract.spec.ts
-pnpm test:e2e -- --project=chromium
-pnpm test:e2e -- --project=firefox
+pnpm --filter foodflow-admin typecheck
+pnpm --filter foodflow-admin lint
+pnpm --filter foodflow-admin test
+pnpm --filter foodflow-admin build
+
+pnpm --filter restaurant typecheck
+pnpm --filter restaurant lint
+pnpm --filter restaurant test
+pnpm --filter restaurant build
 ```
 
-Before running Firefox locally, install browsers once:
+## Playwright E2E
+
+Install browsers once:
 
 ```bash
 cd web
 pnpm test:e2e:install
 ```
 
-Verified Batch 4 coverage includes API contract checks, login/RBAC, localized admin navigation, customer cart-to-order checkout, order tracking, restaurant order status transitions, and realtime fallback behavior.
+Run seeded E2E against real local services:
 
-## Mobile (Flutter)
+```bash
+pnpm test:e2e -- --project=chromium
+pnpm test:e2e -- --project=firefox
+```
+
+Batch 4 E2E coverage should include:
+
+- Login and RBAC
+- Locale redirects and `/:locale` navigation
+- Admin order feed/WebSocket and controlled polling fallback
+- Promotion CRUD and overlap validation
+- Support queue/detail/messages/macros/CSAT
+- Export job create/progress/download
+- Restaurant menu/category/item/option CRUD and reorder
+- Revenue, staff, insights, benchmark
+- Notifications
+- Tenant isolation
+
+## Accessibility and Visual QA
+
+- Run axe checks and require zero serious/critical issues.
+- Validate keyboard navigation, visible focus, dialog focus trap, and chart/table alternatives.
+- Compare Admin and Restaurant screens against approved Stitch references.
+- Check desktop 1440/1280, tablet, and mobile responsive layouts.
+
+## Mobile
+
+Mobile is reconciled after web/backend Batch 4 stabilizes.
 
 ```bash
 cd mobile
+flutter pub get
+flutter analyze
 flutter test
 ```
 
-## Load Testing (k6)
+Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
+
+## Security Checks
+
+Before every commit:
 
 ```bash
-k6 run tests/load/location-updates.js
+git diff --check
+git diff --cached --check
 ```
+
+Run staged and tracked-file secret scans. Ignore placeholders in `.env.example`, but block real tokens, private keys, database credentials, and service-role secrets.

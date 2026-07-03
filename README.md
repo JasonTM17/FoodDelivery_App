@@ -1,4 +1,6 @@
-# FoodFlow — Nền tảng Giao đồ ăn Realtime
+# FoodFlow - Realtime Food Delivery Platform
+
+Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.md) | [日本語](docs/readme.ja.md)
 
 <p align="center">
   <img src="https://img.shields.io/badge/backend-NestJS-ea2845?logo=nestjs" alt="Backend">
@@ -7,93 +9,186 @@
   <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
   <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
   <img src="https://img.shields.io/badge/ai-DeepSeek%2FN8N-18e46a" alt="AI">
-  <img src="https://img.shields.io/docker/v/nguyenson1710/foodflow-backend?label=backend&logo=docker" alt="Docker">
   <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
 </p>
 
-Hệ thống giao đồ ăn thời gian thực gồm 4 ứng dụng: Customer App, Driver App, Restaurant Dashboard, Admin Dashboard. Hỗ trợ realtime GPS tracking, AI assistant, và driver dispatch tự động.
+FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
 
-## Tính năng
+## Applications
 
-- **Khách hàng**: Tìm nhà hàng gần (PostGIS), đặt món, theo dõi tài xế realtime trên bản đồ, chat AI
-- **Tài xế**: Nhận đơn, GPS background, navigation, xem thu nhập
-- **Nhà hàng**: Nhận đơn realtime, quản lý menu, xem doanh thu
-- **Admin**: Dashboard KPI, bản đồ tài xế realtime, quản lý user/nhà hàng/khuyến mãi, audit log
-- **AI Assistant**: Chat hỗ trợ khách (DeepSeek trực tiếp hoặc legacy N8N + Gemini), phát hiện đơn trễ, báo cáo hàng ngày
-- **Realtime**: WebSocket GPS tracking, Socket.IO Redis adapter, throttled broadcast
+| Surface | Path | Runtime | Default URL |
+|---|---|---|---|
+| Backend API | `backend/` | NestJS, Prisma, Socket.IO | `http://localhost:3001/api` |
+| Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
+| Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
+| Customer and driver apps | `mobile/` | Flutter | Device/emulator |
+| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO, n8n | Local containers |
 
-## Kiến trúc
+## Core Capabilities
 
+- Customer ordering, wallet/COD/SePay payments, realtime delivery tracking, AI support.
+- Driver availability, location updates, dispatch, route guidance, earnings.
+- Restaurant order kanban, menu/categories/options, reviews, revenue, promotions, staff and insights.
+- Admin KPI dashboard, live driver map, restaurants/users/orders/promotions/support/audit/export management.
+- Web contract: successful web responses use `{ success: true, data, meta? }`; errors use RFC 7807 Problem Details.
+- Locale strategy: Admin and Restaurant web routes live under `/:locale` with `vi`, `en`, and `ja`.
+
+## Architecture
+
+```text
+Flutter apps         Next.js dashboards          NestJS backend
+customer/driver  ->  admin/restaurant   ->  REST + WebSocket + queues
+                                             |
+                                             v
+                         PostgreSQL/PostGIS + Redis + MinIO + n8n
 ```
-mobile/ (Flutter)    web/ (Next.js)       backend/ (NestJS)     infra/ (Docker, N8N, Nginx)
-  ├── customer         ├── admin             ├── auth             ├── docker-compose.yml
-  └── driver           └── restaurant        ├── orders           ├── nginx/nginx.conf
-                                              ├── dispatch        └── n8n/workflows/
-                                              ├── tracking
-                                              ├── restaurants
-                                              └── drivers
-```
 
-## Quick Start
+Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat uses DeepSeek when configured, otherwise the legacy n8n workflow path returns an explicit degraded state instead of a fabricated answer.
+
+## Prerequisites
+
+- Node.js 20+ or 22+ compatible with the checked-in lockfiles
+- pnpm 10
+- Docker Desktop or Docker Engine
+- Flutter SDK for mobile work
+- Google Maps, SePay, DeepSeek, Supabase, and Vercel credentials only when enabling those integrations
+
+## Quick Start: local development
+
+Use ignored `.env` files for real secrets. Never put production keys in committed files.
 
 ```bash
-# 1. Cơ sở hạ tầng
-docker compose up -d
+# 1. Start shared services for host-run development
+docker compose up -d postgres redis minio n8n
 
 # 2. Backend
 cd backend
-pnpm install && pnpm prisma generate
-pnpm prisma migrate dev --name init
-pnpm db:seed        # Dữ liệu mẫu nhỏ
-# pnpm db:big-seed  # Dữ liệu lớn (50 nhà hàng, 100 khách, 500 đơn)
+pnpm install --frozen-lockfile
+pnpm prisma generate
+pnpm prisma migrate dev
+pnpm db:seed
+pnpm start:dev
 
-pnpm start:dev       # http://localhost:3001/api
+# 3. Web dashboards
+cd ../web
+pnpm install --frozen-lockfile
+pnpm dev
 
-# 3. Web Dashboard
-cd web && pnpm install && pnpm dev
-# Admin:  http://localhost:3000
-# Restaurant: http://localhost:3002
-
-# 4. Mobile App
-cd mobile && flutter pub get
+# 4. Mobile
+cd ../mobile
+flutter pub get
 flutter run -t lib/main_customer.dart
 flutter run -t lib/main_driver.dart
 ```
 
-## Docker Hub
+Useful local URLs:
+
+| Service | URL |
+|---|---|
+| Backend API | `http://localhost:3001/api` |
+| Backend health | `http://localhost:3001/api/healthz` |
+| Admin web | `http://localhost:3000` |
+| Restaurant web | `http://localhost:3002` |
+| MinIO console | `http://localhost:9001` |
+| n8n | `http://localhost:5678` |
+
+## Docker Compose
+
+Run the full stack locally:
 
 ```bash
-docker pull nguyenson1710/foodflow-backend:latest
-docker pull nguyenson1710/foodflow-postgres:latest
+docker compose up -d --build
 ```
 
-## Tài khoản test
+Production-style compose uses `docker-compose.prod.yml`. Do not deploy the development defaults as-is; override all secrets, passwords, CORS origins, public URLs, and provider keys in the target secret store.
 
-| Vai trò | Email | Mật khẩu |
-|---------|-------|----------|
-| Admin | admin@foodflow.vn | Admin@123 |
-| Khách hàng | customer1@foodflow.vn | Customer@123 |
-| Tài xế | driver1@foodflow.vn | Driver@123 |
-| Nhà hàng | restaurant1@foodflow.vn | Partner@123 |
+## Environment and secrets
+
+Start from:
+
+- Root: `.env.example`
+- Backend: `backend/.env.example`
+- Admin web: `web/apps/admin/.env.example`
+- Restaurant web: `web/apps/restaurant/.env.example`
+
+Important production rules:
+
+- Rotate any key pasted into chat, logs, screenshots, tickets, or git history.
+- Keep `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, database passwords, Vercel tokens, and Supabase service keys only in secret managers or ignored local env files.
+- Restrict browser-exposed Google Maps keys by HTTP referrer.
+- Keep backend Google Maps keys server-only.
+- SePay intents require both `SEPAY_API_KEY` and `SEPAY_ACCOUNT_NUMBER`; incomplete provider responses are rejected.
+
+## Test Gates
+
+Run narrow checks first, then broaden:
+
+```bash
+# Backend
+cd backend
+pnpm prisma validate
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+
+# Web monorepo
+cd ../web
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm test:e2e -- --project=chromium
+pnpm test:e2e -- --project=firefox
+
+# Mobile
+cd ../mobile
+flutter test
+flutter analyze
+```
+
+Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe serious/critical, visual regression, tenant isolation, frozen install, and secret scans are all green.
+
+## Deployment Path
+
+Deployment is intentionally gated:
+
+1. Merge tested Batch 4 integration through a PR.
+2. Provision Supabase database/realtime only with rotated production secrets.
+3. Deploy Admin and Restaurant to Vercel after web builds and E2E pass.
+4. Deploy backend with health checks, migrations, Redis, MinIO/storage, SePay webhook secrets, and CORS locked to production domains.
+5. Verify production health, realtime orders, maps, chatbot, exports, notifications, and tenant isolation.
+6. Enable keep-alive or external monitors only after health endpoints are stable.
+
+No deploy should happen from a dirty worktree or with unverified secrets.
+
+## Documentation
+
+- [API contract](docs/api-contract.md)
+- [API reference](docs/api-reference.md)
+- [Architecture](docs/system-architecture.md)
+- [Deployment guide](docs/deployment-guide.md)
+- [Testing guide](docs/testing-guide.md)
+- [Documentation localization policy](docs/documentation-localization.md)
+- [Code standards](docs/code-standards.md)
+- [Design guidelines](docs/design-guidelines.md)
+- [i18n guide](docs/i18n-guide.md)
+- [Roadmap](docs/project-roadmap.md)
 
 ## Screenshots
 
-| N8N AI Automation | Health Check |
-|-------------------|-------------|
+| n8n AI automation | Health check |
+|---|---|
 | ![N8N](docs/screenshots/n8n-setup-screen.png) | ![Health](docs/screenshots/n8n-health-check.png) |
 
-## Tài liệu
+## Branch and integration policy
 
-- [Kiến trúc hệ thống](docs/system-architecture.md)
-- [API Reference](docs/api-reference.md)
-- [Deployment Guide](docs/deployment-guide.md)
-- [Code Standards](docs/code-standards.md)
-- [Design Guidelines](docs/design-guidelines.md)
-- [Testing Guide](docs/testing-guide.md)
-- [N8N Setup Guide](docs/n8n-setup-guide.md)
-- [Roadmap](docs/project-roadmap.md)
-- [Kế hoạch phát triển](plans/260604-foodflow-system-design/plan.md)
+- Use `codex/batch4-integration` as the clean integration branch.
+- Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
+- Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
+- Keep mobile reconciliation separate until web/backend Batch 4 is stable.
+- Do not delete local or remote branches until backups and branch disposition are verified.
 
 ## License
 
-MIT © 2026 Nguyen Tien Son
+MIT (see [LICENSE](LICENSE)).

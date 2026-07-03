@@ -1,124 +1,99 @@
 # FoodFlow Web
 
-## 1. Purpose
+## Purpose
 
-Next.js Turborepo containing two dashboard applications for the FoodFlow platform. The **admin dashboard** provides KPI charts, realtime driver map, user/restaurant/promotion management, support kanban, and audit logs. The **restaurant dashboard** provides live order queue, menu CRUD, and revenue analytics. Both apps consume the NestJS backend API and share a common shadcn/ui component library.
+`web/` is a pnpm 10 Turborepo for the FoodFlow dashboards:
 
-## 2. API Surface
+- `apps/admin`: platform operations, live driver map, restaurants, users, orders, promotions, support, audit logs, exports, settings, and AI monitor.
+- `apps/restaurant`: merchant order queue, menu, categories, reviews, revenue, promotions, staff, profile, operating hours, insights, and notifications.
+- `packages/api-client`: shared web API client and generated/contract types.
+- `packages/ui` and `packages/i18n`: shared UI and localization utilities.
 
-These dashboards are frontend-only consumers. They call the backend REST API and connect to the WebSocket gateway:
+Both dashboards use Next.js 14, React 18, next-intl locale routes, and the NestJS backend API.
 
-| Dashboard | Port | URL | Primary Users |
-|-----------|------|-----|---------------|
-| Admin | 3000 | `http://localhost:3000` | Platform administrators |
-| Restaurant | 3002 | `http://localhost:3002` | Restaurant owners/staff |
+## Runtime URLs
 
-### External API Dependencies
+| Dashboard | Port | Local URL |
+|---|---:|---|
+| Admin | 3000 | `http://localhost:3000` |
+| Restaurant | 3002 | `http://localhost:3002` |
+| Backend API | 3001 | `http://localhost:3001/api` |
+| WebSocket | 3001 | `ws://localhost:3001` |
 
-- **Backend API**: `http://localhost:3001/api` — all data operations
-- **WebSocket**: `ws://localhost:3001` — realtime order updates, driver tracking
-- **Google Maps**: embedded map component in admin dashboard
+## Environment Variables
 
-## 3. Env Vars
+Each app uses an ignored `.env.local` copied from its example file.
 
-Each app has its own `.env.local`:
+### Admin
 
-### Admin (`web/apps/admin/.env.local`)
+| Name | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
+| `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
+| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Only for live map | Browser Google Maps key. Restrict by HTTP referrer. |
 
-| Name | Required | Default | Description |
-|------|----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | `http://localhost:3001/api` | Backend API base URL |
-| `NEXT_PUBLIC_WS_URL` | Yes | `ws://localhost:3001` | WebSocket gateway URL |
-| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | No | — | Google Maps API key |
+### Restaurant
 
-### Restaurant (`web/apps/restaurant/.env.local`)
+| Name | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
+| `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
 
-| Name | Required | Default | Description |
-|------|----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | `http://localhost:3001/api` | Backend API base URL |
-| `NEXT_PUBLIC_WS_URL` | Yes | `ws://localhost:3001` | WebSocket gateway URL |
-
-## 4. Run Locally
-
-```bash
-# Prerequisites: Node.js 20+, pnpm 10+, backend running on :3001
-
-# 1. Install dependencies
-pnpm install
-
-# 2. Create env files
-cp apps/admin/.env.example apps/admin/.env.local    # if template exists
-cp apps/restaurant/.env.example apps/restaurant/.env.local
-
-# 3. Start both dashboards (Turborepo parallel dev)
-pnpm dev
-# Admin:      http://localhost:3000
-# Restaurant: http://localhost:3002
-
-# 4. Build for production
-pnpm build
-
-# 5. Start production server
-pnpm start
-```
-
-## 5. Test
-
-```bash
-# Type check across the monorepo
-pnpm typecheck
-
-# Lint
-pnpm lint
-
-# Unit tests (when configured per app)
-cd apps/admin && npx next test
-cd apps/restaurant && npx next test
-
-# Build (catches type errors, dead code, bundle issues)
-pnpm build
-```
-
-Coverage thresholds: lines >= 80%, branches >= 70%.
-
-## 6. Runbook
-
-### Adding a New shadcn/ui Component
+## Run Locally
 
 ```bash
 cd web
-pnpm ui:add button          # Adds to packages/ui
-```
-
-Components are imported as `import { Button } from '@foodflow/ui'` in both apps.
-
-### Debugging API Connection Issues
-
-1. Verify backend is running: `curl http://localhost:3001/api/health`
-2. Check `NEXT_PUBLIC_API_URL` in `.env.local`
-3. Check CORS origins in backend `.env` include `http://localhost:3000` and `http://localhost:3002`
-
-### Clearing Next.js Cache
-
-```bash
-rm -rf apps/admin/.next apps/restaurant/.next
+pnpm install --frozen-lockfile
+Copy-Item apps/admin/.env.example apps/admin/.env.local
+Copy-Item apps/restaurant/.env.example apps/restaurant/.env.local
 pnpm dev
 ```
 
-### Adding a New Dashboard App
+On macOS/Linux, replace `Copy-Item` with `cp`.
 
-1. `mkdir -p apps/<name>/app`
-2. Create `package.json` with Next.js scripts
-3. Add `apps/<name>` to `turbo.json` pipeline
-4. Create `error.tsx`, `loading.tsx`, and `page.tsx`
-
-### Per-Segment Error/Loading Boundaries
-
-Every route segment must have sibling `error.tsx` and `loading.tsx`. Audit:
+## Build and Test
 
 ```bash
-for d in apps/*/app/*/; do
-  test -f "${d}error.tsx" || echo "MISSING error.tsx: $d"
-  test -f "${d}loading.tsx" || echo "MISSING loading.tsx: $d"
-done
+cd web
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm test:e2e -- --project=chromium
+pnpm test:e2e -- --project=firefox
 ```
+
+Install Playwright browsers once:
+
+```bash
+pnpm test:e2e:install
+```
+
+Focused app checks:
+
+```bash
+pnpm --filter foodflow-admin typecheck
+pnpm --filter foodflow-admin lint
+pnpm --filter foodflow-admin test
+pnpm --filter foodflow-admin build
+
+pnpm --filter restaurant typecheck
+pnpm --filter restaurant lint
+pnpm --filter restaurant test
+pnpm --filter restaurant build
+```
+
+## Web Contract
+
+- Success envelope: `{ success: true, data, meta? }`
+- Errors: RFC 7807 Problem Details with stable `code`
+- Pagination: collection in `data`, page context in `meta`
+- Locale routes: `/:locale/...` for `vi`, `en`, `ja`
+- Non-locale routes should redirect rather than duplicate page logic
+
+## Operational Notes
+
+- Do not add runtime mock data, fake chart values, or fabricated connection states.
+- Query UIs need loading, empty, retryable error, and permission-denied states.
+- Admin order feed should use WebSocket `/events`; polling is only a controlled fallback.
+- Keep generated API client changes in `web/packages/api-client`, not a root package.
