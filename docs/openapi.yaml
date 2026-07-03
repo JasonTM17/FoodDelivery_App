@@ -2059,6 +2059,7 @@ paths:
     get:
       tags: [menu]
       summary: Get my restaurant's full menu
+      description: Returns the authenticated restaurant tenant's menu categories and menu items.
       operationId: menu_getMenu
       x-foo-actor: restaurant_owner
       responses:
@@ -2068,6 +2069,7 @@ paths:
     post:
       tags: [menu]
       summary: Create a menu category
+      description: Creates a menu category owned by the authenticated restaurant tenant.
       operationId: menu_createCategory
       x-foo-actor: restaurant_owner
       requestBody:
@@ -2090,6 +2092,7 @@ paths:
     patch:
       tags: [menu]
       summary: Update a menu category
+      description: Updates category metadata after verifying the category belongs to the authenticated restaurant.
       operationId: menu_updateCategory
       x-foo-actor: restaurant_owner
       parameters:
@@ -2112,6 +2115,7 @@ paths:
     delete:
       tags: [menu]
       summary: Delete a menu category
+      description: Deletes a tenant-owned menu category when backend validation allows removal.
       operationId: menu_deleteCategory
       x-foo-actor: restaurant_owner
       parameters:
@@ -2127,6 +2131,7 @@ paths:
     post:
       tags: [menu]
       summary: Create a menu item
+      description: Creates a menu item, options, and pricing under a tenant-owned category.
       operationId: menu_createItem
       x-foo-actor: restaurant_owner
       requestBody:
@@ -2179,6 +2184,7 @@ paths:
     patch:
       tags: [menu]
       summary: Update a menu item
+      description: Updates a tenant-owned menu item and rejects changes for items outside the restaurant.
       operationId: menu_updateItem
       x-foo-actor: restaurant_owner
       parameters:
@@ -2206,6 +2212,7 @@ paths:
     delete:
       tags: [menu]
       summary: Delete a menu item
+      description: Deletes a tenant-owned menu item when backend validation allows removal.
       operationId: menu_deleteItem
       x-foo-actor: restaurant_owner
       parameters:
@@ -2221,6 +2228,7 @@ paths:
     patch:
       tags: [menu]
       summary: Toggle item availability
+      description: Toggles availability for a tenant-owned menu item without changing other menu fields.
       operationId: menu_toggleItem
       x-foo-actor: restaurant_owner
       parameters:
@@ -2324,6 +2332,7 @@ paths:
     get:
       tags: [orders]
       summary: Get restaurant's incoming orders
+      description: Lists orders scoped to the authenticated restaurant, optionally filtered by order status.
       operationId: orders_getRestaurantOrders
       x-foo-actor: restaurant_owner
       parameters:
@@ -2337,6 +2346,7 @@ paths:
     patch:
       tags: [orders]
       summary: Update order status (restaurant)
+      description: Applies a validated restaurant-side order status transition for an order owned by the current tenant.
       operationId: orders_updateRestaurantStatus
       x-foo-actor: restaurant_owner
       parameters:
@@ -2481,6 +2491,7 @@ paths:
     get:
       tags: [promotions]
       summary: Preview a promotion audience from successful restaurant orders
+      description: Calculates audience reach from tenant-scoped successful order history without using hard-coded reach estimates.
       operationId: restaurant_previewPromotionTargeting
       x-foo-actor: restaurant_owner
       parameters:
@@ -2514,6 +2525,7 @@ paths:
     post:
       tags: [promotions]
       summary: Broadcast a promotion to its tenant-scoped target audience
+      description: Resolves the promotion's tenant-scoped audience and creates notifications for active customers.
       operationId: restaurant_broadcastPromotion
       x-foo-actor: restaurant_owner
       parameters:
