@@ -12,7 +12,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## Integration branch に landed
 
-- `codex/batch4-integration` の clean integration worktree。
+- `batch4-integration` の clean integration worktree。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。
@@ -93,7 +93,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## Gates が green になった後の deploy plan
 
-1. `codex/batch4-integration` を push。
+1. `batch4-integration` を push。
 2. `master` 向け draft PR を開く。
 3. Branch disposition、test matrix、rejected changes、known degraded states を添付。
 4. Required checks 通過後、merge commit で merge。

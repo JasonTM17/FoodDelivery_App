@@ -12,7 +12,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Landed in the integration branch
 
-- Clean integration worktree on `codex/batch4-integration`.
+- Clean integration worktree on `batch4-integration`.
 - Web response contract documented as `{ success: true, data, meta? }`.
 - Error contract documented as RFC 7807 Problem Details.
 - OpenAPI validation workflow and Spectral rules added.
@@ -93,7 +93,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Deployment plan after green gates
 
-1. Push `codex/batch4-integration`.
+1. Push `batch4-integration`.
 2. Open a draft PR into `master`.
 3. Attach branch disposition, test matrix, rejected changes, and known degraded states.
 4. After required checks pass, merge with a merge commit.

@@ -104,7 +104,7 @@ Batch 4 chỉ được coi là xong khi backend, web, Playwright Chromium/Firefo
 
 ## Chính sách branch
 
-- Dùng `batch4-integration` làm integration branch sạch. Nhánh mới không dùng prefix cũ `codex/`.
+- Dùng `batch4-integration` làm integration branch sạch. Nhánh mới không dùng prefix riêng của công cụ.
 - Không raw-merge branch cũ kéo routes cũ, mock runtime, package manager sai hoặc generated mobile client sai contract.
 - Salvage theo từng hunk, có focused test và conventional commit nhỏ.
 - Mobile reconciliation tách riêng sau khi web/backend Batch 4 ổn định.

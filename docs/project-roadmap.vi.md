@@ -12,7 +12,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Đã landing trong integration branch
 
-- Clean integration worktree trên `codex/batch4-integration`.
+- Clean integration worktree trên `batch4-integration`.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.
@@ -93,7 +93,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Kế hoạch deploy sau khi gate xanh
 
-1. Push `codex/batch4-integration`.
+1. Push `batch4-integration`.
 2. Mở draft PR vào `master`.
 3. Đính kèm branch disposition, test matrix, rejected changes và known degraded states.
 4. Sau required checks xanh, merge bằng merge commit.

@@ -104,7 +104,7 @@ Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、vi
 
 ## ブランチ方針
 
-- `batch4-integration` を clean integration branch として使う。新しい作業ブランチでは古い `codex/` prefix を使わない。
+- `batch4-integration` を clean integration branch として使う。新しい作業ブランチではツール固有の prefix を使わない。
 - 古い routes、runtime mock、誤った package manager、誤った generated mobile client を含む stale branch は raw-merge しない。
 - 必要な変更だけを hunk-by-hunk で salvage し、focused test と小さな conventional commit を付ける。
 - Mobile reconciliation は web/backend Batch 4 が安定した後に分離して行う。
