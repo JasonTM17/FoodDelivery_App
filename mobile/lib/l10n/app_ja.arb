@@ -455,6 +455,8 @@
   "driver_onboarding_agreement_accept": "同意して続ける",
   "driver_onboarding_agreement_submit": "申請を送信",
   "driver_onboarding_agreement_note": "申請は24〜48時間以内に審査されます。承認されたら通知が届きます。",
+  "driver_onboarding_agreement_terms": "1. FoodFlow 配達パートナーサービス\n\nFoodFlow の配達パートナーとして登録することで、承認された稼働エリアで配達サービスを提供することに同意します。\n\n2. 要件\n\n• 有効な運転免許証と必要な車両書類を維持すること。\n• 登録プロフィールに一致する安全で保険加入済みの車両を使用すること。\n• プロとしての対応、適切な評価、交通法規の遵守を維持すること。\n• 顧客、店舗、注文情報を機密として扱うこと。\n\n3. 報酬と精算\n\n報酬は完了した注文、距離、インセンティブ、承認済み調整に基づいて計算されます。週次精算は FoodFlow に保存された銀行口座へ支払われます。\n\n4. 行動基準\n\n配達パートナーは顧客、店舗、サポート担当者に対して礼儀正しく行動する必要があります。不正、乱用、危険な配達、虚偽報告はアカウント停止または終了の対象になります。\n\n5. 終了\n\nFoodFlow は、本規約、安全規則、法的要件に違反した場合、アクセスを一時停止または終了できます。",
+  "driver_onboarding_agreement_failed": "規約への同意を保存できませんでした。もう一度お試しください。",
   "driver_incentives_title": "インセンティブ",
   "driver_incentives_active": "進行中",
   "driver_incentives_completed": "完了",

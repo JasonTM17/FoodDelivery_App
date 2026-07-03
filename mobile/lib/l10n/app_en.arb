@@ -455,6 +455,8 @@
   "driver_onboarding_agreement_accept": "Agree and continue",
   "driver_onboarding_agreement_submit": "SUBMIT APPLICATION",
   "driver_onboarding_agreement_note": "Application reviewed in 24-48h. You will be notified when approved.",
+  "driver_onboarding_agreement_terms": "1. FoodFlow driver service\n\nBy registering as a FoodFlow driver, you agree to provide delivery services in your approved operating area.\n\n2. Requirements\n\n• Keep a valid driver license and required vehicle documents.\n• Use a safe, insured vehicle that matches your registered profile.\n• Maintain a professional rating and follow traffic laws.\n• Keep customer, restaurant, and order data confidential.\n\n3. Earnings and settlement\n\nEarnings are calculated from completed orders, distance, incentives, and approved adjustments. Weekly settlement is paid to the bank account saved in FoodFlow.\n\n4. Conduct standards\n\nDrivers must behave professionally with customers, restaurants, and support agents. Fraud, abuse, unsafe delivery, or false reporting can suspend or terminate the account.\n\n5. Termination\n\nFoodFlow may suspend or terminate driver access when these terms, safety rules, or legal requirements are violated.",
+  "driver_onboarding_agreement_failed": "Could not save agreement. Please try again.",
   "driver_incentives_title": "Incentives",
   "driver_incentives_active": "Active",
   "driver_incentives_completed": "Completed",

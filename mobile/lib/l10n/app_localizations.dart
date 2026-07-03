@@ -2392,6 +2392,18 @@ abstract class AppLocalizations {
   /// **'Hồ sơ xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.'**
   String get driver_onboarding_agreement_note;
 
+  /// No description provided for @driver_onboarding_agreement_terms.
+  ///
+  /// In vi, this message translates to:
+  /// **'1. Dịch vụ tài xế FoodFlow\n\nKhi đăng ký làm tài xế FoodFlow, bạn đồng ý cung cấp dịch vụ giao hàng trong khu vực hoạt động đã được duyệt.\n\n2. Yêu cầu\n\n• Có giấy phép lái xe và giấy tờ phương tiện hợp lệ.\n• Sử dụng phương tiện an toàn, được bảo hiểm và đúng hồ sơ đăng ký.\n• Duy trì thái độ chuyên nghiệp, điểm đánh giá phù hợp và tuân thủ luật giao thông.\n• Bảo mật thông tin khách hàng, nhà hàng và đơn hàng.\n\n3. Thu nhập và thanh toán\n\nThu nhập được tính từ đơn hoàn thành, khoảng cách, ưu đãi và điều chỉnh đã được duyệt. Thanh toán hàng tuần qua tài khoản ngân hàng đã lưu trên FoodFlow.\n\n4. Hành vi và tiêu chuẩn\n\nTài xế phải lịch sự với khách hàng, nhà hàng và bộ phận hỗ trợ. Gian lận, lạm dụng, giao hàng không an toàn hoặc báo cáo sai có thể khiến tài khoản bị tạm ngưng hoặc chấm dứt.\n\n5. Chấm dứt\n\nFoodFlow có quyền tạm ngưng hoặc chấm dứt quyền truy cập nếu bạn vi phạm điều khoản, quy tắc an toàn hoặc yêu cầu pháp lý.'**
+  String get driver_onboarding_agreement_terms;
+
+  /// No description provided for @driver_onboarding_agreement_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu xác nhận điều khoản. Vui lòng thử lại.'**
+  String get driver_onboarding_agreement_failed;
+
   /// No description provided for @driver_incentives_title.
   ///
   /// In vi, this message translates to:

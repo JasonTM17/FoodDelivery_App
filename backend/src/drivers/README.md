@@ -13,6 +13,7 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `GET /driver/earnings?period=day|week|month` — Earnings breakdown
 - `GET /driver/earnings/summary?period=7d|30d|90d` — Chart-ready driver payout ledger summary
 - `GET /driver/bank-accounts` / `POST /driver/bank-accounts` / `PATCH /driver/bank-accounts/:id/default` / `DELETE /driver/bank-accounts/:id` — Driver payout bank accounts scoped to the authenticated driver
+- `POST /driver/onboarding/agreement` — Persist authenticated driver terms acceptance before KYC submission
 - `POST /driver/trips/:tripId/tip-report` — Driver-reported cash tip audit record for completed trips; does not mutate payout ledger settlement
 - `GET /driver/ratings?star=1|2|3|4|5` — Visible delivery reviews and rating stats for the authenticated driver
 - `GET /driver/trips/:tripId/route` — Real telemetry or persisted route geometry for the authenticated driver's trip

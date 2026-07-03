@@ -921,6 +921,28 @@ components:
         data: { $ref: "#/components/schemas/DriverIncentives" }
       required: [success, data]
 
+    DriverAgreementAcceptance:
+      type: object
+      properties:
+        termsAcceptedAt: { type: string, format: date-time }
+        termsVersion: { type: string, minLength: 4, maxLength: 32 }
+      required: [termsAcceptedAt, termsVersion]
+
+    AcceptDriverAgreementRequest:
+      type: object
+      properties:
+        termsVersion: { type: string, minLength: 4, maxLength: 32 }
+      required: [termsVersion]
+      example:
+        termsVersion: "driver-terms-2026-07"
+
+    DriverAgreementAcceptanceResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/DriverAgreementAcceptance" }
+      required: [success, data]
+
     DriverTrip:
       type: object
       properties:
@@ -3050,6 +3072,23 @@ paths:
           schema: { type: string, format: date-time }
       responses:
         "200": { description: "Trip history", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedDriverTrips" } } } }
+
+  /driver/onboarding/agreement:
+    post:
+      tags: [drivers]
+      summary: Accept driver onboarding terms
+      description: Persists the authenticated driver's terms version and acceptance timestamp before KYC submission.
+      operationId: drivers_acceptOnboardingAgreement
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AcceptDriverAgreementRequest" }
+      responses:
+        "201": { description: "Agreement accepted", content: { application/json: { schema: { $ref: "#/components/schemas/DriverAgreementAcceptanceResponse" } } } }
+        "400": { description: "Invalid terms version", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/kyc:
     post:

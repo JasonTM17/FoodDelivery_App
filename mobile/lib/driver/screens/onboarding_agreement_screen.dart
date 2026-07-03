@@ -1,35 +1,51 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../shared/theme/app_colors.dart';
+
 import '../../l10n/app_localizations.dart';
+import '../../shared/api/api_client.dart';
+import '../../shared/theme/app_colors.dart';
+
+const _driverTermsVersion = 'driver-terms-2026-07';
 
 class OnboardingAgreementScreen extends ConsumerStatefulWidget {
   const OnboardingAgreementScreen({super.key});
 
   @override
-  ConsumerState<OnboardingAgreementScreen> createState() =>
-      _OnboardingAgreementScreenState();
+  ConsumerState<OnboardingAgreementScreen> createState() => _OnboardingAgreementScreenState();
 }
 
-class _OnboardingAgreementScreenState
-    extends ConsumerState<OnboardingAgreementScreen> {
+class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementScreen> {
   bool _agreed = false;
   bool _submitting = false;
+  String? _error;
 
   Future<void> _submit() async {
     if (!_agreed || _submitting) return;
-    setState(() => _submitting = true);
-    // Simulates submission delay; replace with real API call when available
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    context.go('/kyc');
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    try {
+      await ApiClient.instance.post<dynamic>(
+        '/driver/onboarding/agreement',
+        data: {'termsVersion': _driverTermsVersion},
+      );
+      if (!mounted) return;
+      context.go('/kyc');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = _errorMessage(error));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -58,10 +74,10 @@ class _OnboardingAgreementScreenState
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF374151)),
                 ),
-                child: const SingleChildScrollView(
+                child: SingleChildScrollView(
                   child: Text(
-                    _termsText,
-                    style: TextStyle(
+                    l10n.driver_onboarding_agreement_terms,
+                    style: const TextStyle(
                       color: Color(0xFF9CA3AF),
                       fontSize: 13,
                       height: 1.7,
@@ -72,12 +88,12 @@ class _OnboardingAgreementScreenState
             ),
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: () => setState(() => _agreed = !_agreed),
+              onTap: _submitting ? null : () => setState(() => _agreed = !_agreed),
               child: Row(
                 children: [
                   Checkbox(
                     value: _agreed,
-                    onChanged: (v) => setState(() => _agreed = v ?? false),
+                    onChanged: _submitting ? null : (value) => setState(() => _agreed = value ?? false),
                     activeColor: AppColors.primary,
                     side: const BorderSide(color: Color(0xFF6B7280)),
                   ),
@@ -91,26 +107,11 @@ class _OnboardingAgreementScreenState
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: AppColors.primary, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.driver_onboarding_agreement_note,
-                      style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _AgreementNote(text: l10n.driver_onboarding_agreement_note),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              _AgreementError(message: l10n.driver_onboarding_agreement_failed, detail: _error!),
+            ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -120,10 +121,7 @@ class _OnboardingAgreementScreenState
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : Text(l10n.driver_onboarding_agreement_submit),
               ),
@@ -135,27 +133,66 @@ class _OnboardingAgreementScreenState
   }
 }
 
-const _termsText = '''
-1. Tài xế FoodFlow
+class _AgreementNote extends StatelessWidget {
+  final String text;
 
-Khi đăng ký làm tài xế FoodFlow, bạn đồng ý cung cấp dịch vụ giao hàng cho khách hàng trong khu vực hoạt động đã đăng ký.
+  const _AgreementNote({required this.text});
 
-2. Yêu cầu
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.primary, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-• Có giấy phép lái xe hợp lệ
-• Phương tiện đảm bảo an toàn và được bảo hiểm đầy đủ
-• Duy trì điểm đánh giá từ 4.0 trở lên
-• Tuân thủ quy định giao thông và pháp luật Việt Nam
+class _AgreementError extends StatelessWidget {
+  final String message;
+  final String detail;
 
-3. Thu nhập và thanh toán
+  const _AgreementError({required this.message, required this.detail});
 
-Thu nhập được tính dựa trên số đơn hoàn thành và khoảng cách giao hàng. Thanh toán thực hiện hàng tuần vào thứ Hai qua tài khoản ngân hàng đã đăng ký.
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B1111),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF7F1D1D)),
+      ),
+      child: Text(
+        '$message\n$detail',
+        style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 12, height: 1.4),
+      ),
+    );
+  }
+}
 
-4. Hành vi và tiêu chuẩn
-
-Tài xế phải duy trì thái độ chuyên nghiệp, lịch sự với khách hàng và nhà hàng. Mọi hành vi gian lận, lừa đảo sẽ dẫn đến chấm dứt hợp đồng ngay lập tức.
-
-5. Chấm dứt hợp đồng
-
-FoodFlow có quyền tạm ngừng hoặc chấm dứt tài khoản tài xế nếu vi phạm bất kỳ điều khoản nào trong thoả thuận này.
-''';
+String _errorMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['detail'] is String) return data['detail'] as String;
+    if (data is Map && data['message'] is String) return data['message'] as String;
+    if (error.message != null && error.message!.isNotEmpty) return error.message!;
+  }
+  return error.toString();
+}
