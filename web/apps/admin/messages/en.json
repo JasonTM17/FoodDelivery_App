@@ -290,6 +290,32 @@
     "revenue": "Revenue",
     "createdAt": "Created at"
   },
+  "restaurantOrdersTab": {
+    "searchPlaceholder": "Search orders...",
+    "statusFilter": "Order status",
+    "statuses": {
+      "all": "All statuses",
+      "pending": "Pending confirmation",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "delivering": "Delivering",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "emptyTitle": "No orders",
+    "emptyDescription": "This restaurant has no matching orders yet.",
+    "columns": {
+      "orderCode": "Order code",
+      "customer": "Customer",
+      "driver": "Driver",
+      "status": "Status",
+      "total": "Total",
+      "date": "Date"
+    },
+    "page": "Page {page} of {totalPages}",
+    "previousPage": "Previous",
+    "nextPage": "Next"
+  },
   "users": {
     "title": "User Management",
     "description": "List of users in the system",

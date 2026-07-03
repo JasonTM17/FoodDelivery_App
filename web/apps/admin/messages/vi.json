@@ -290,6 +290,32 @@
     "revenue": "Doanh thu",
     "createdAt": "Ngày tạo"
   },
+  "restaurantOrdersTab": {
+    "searchPlaceholder": "Tìm đơn hàng...",
+    "statusFilter": "Trạng thái đơn hàng",
+    "statuses": {
+      "all": "Tất cả trạng thái",
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "preparing": "Đang chuẩn bị",
+      "delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "cancelled": "Đã hủy"
+    },
+    "emptyTitle": "Không có đơn hàng",
+    "emptyDescription": "Nhà hàng chưa có đơn hàng nào phù hợp.",
+    "columns": {
+      "orderCode": "Mã đơn",
+      "customer": "Khách hàng",
+      "driver": "Tài xế",
+      "status": "Trạng thái",
+      "total": "Tổng tiền",
+      "date": "Ngày"
+    },
+    "page": "Trang {page} / {totalPages}",
+    "previousPage": "Trước",
+    "nextPage": "Sau"
+  },
   "users": {
     "title": "Quản lý người dùng",
     "description": "Danh sách người dùng trong hệ thống",

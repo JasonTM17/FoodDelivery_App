@@ -290,6 +290,32 @@
     "revenue": "売上",
     "createdAt": "作成日"
   },
+  "restaurantOrdersTab": {
+    "searchPlaceholder": "注文を検索...",
+    "statusFilter": "注文ステータス",
+    "statuses": {
+      "all": "すべてのステータス",
+      "pending": "確認待ち",
+      "confirmed": "確認済み",
+      "preparing": "準備中",
+      "delivering": "配達中",
+      "delivered": "配達済み",
+      "cancelled": "キャンセル済み"
+    },
+    "emptyTitle": "注文はありません",
+    "emptyDescription": "このレストランに一致する注文はまだありません。",
+    "columns": {
+      "orderCode": "注文コード",
+      "customer": "顧客",
+      "driver": "配達員",
+      "status": "ステータス",
+      "total": "合計",
+      "date": "日付"
+    },
+    "page": "{page} / {totalPages} ページ",
+    "previousPage": "前へ",
+    "nextPage": "次へ"
+  },
   "users": {
     "title": "ユーザー管理",
     "description": "システム内のユーザー一覧",
