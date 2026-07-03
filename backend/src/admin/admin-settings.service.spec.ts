@@ -21,6 +21,7 @@ describe('AdminSettingsService', () => {
 
     expect(result.section).toBe('integrations')
     expect(result.settings.sepayConfigured).toBe(false)
+    expect(result.settings.outboundWebhooksConfigured).toBe(false)
     expect(result.settings.degradedReason).toContain('not configured')
     expect(result.updatedAt).toBeNull()
   })

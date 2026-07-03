@@ -34,7 +34,7 @@ const DEFAULT_SETTINGS: Record<AdminSettingsSection, AdminSettingsValue> = {
   integrations: {
     sepayConfigured: false,
     notificationProviderConfigured: false,
-    aiMonitorConfigured: false,
+    outboundWebhooksConfigured: false,
     degradedReason: 'Integration settings are not configured in PlatformSetting yet.',
   },
 }
