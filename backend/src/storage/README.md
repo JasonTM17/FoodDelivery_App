@@ -2,7 +2,7 @@
 
 ## Purpose
 
-MinIO S3-compatible object storage abstraction. Direct upload via FormData (validated server-side: size, MIME, virus scan stub) and presigned URL flow for large files. Generates public CDN URLs for served images.
+MinIO S3-compatible object storage abstraction. Direct upload via FormData validates size, allowed image MIME type, and image magic bytes before upload. Generates public CDN URLs for served images.
 
 ## API surface
 
@@ -20,7 +20,7 @@ MinIO S3-compatible object storage abstraction. Direct upload via FormData (vali
 | `MINIO_SECRET_KEY` | yes | — | Service credentials |
 | `MINIO_BUCKET` | yes | `foodflow` | Default bucket |
 | `MINIO_PUBLIC_URL` | yes | — | CDN base URL for served files |
-| `STORAGE_MAX_UPLOAD_MB` | no | `10` | Max single file size |
+| `STORAGE_MAX_UPLOAD_MB` | no | `5` | Max single file size, capped at 50 MB |
 
 ## Test
 
@@ -30,7 +30,7 @@ npx jest storage
 
 ## Runbook
 
-- **MIME mismatch:** Server validates magic bytes against declared MIME. Reject + 400 nếu spoof attempt.
+- **MIME mismatch:** Server validates magic bytes against declared MIME. Rejects spoof attempts with 400.
 - **Bucket policy drift:** Apply via `pnpm scripts:storage-init` — sets read-only public, write-only via service account.
 - **Orphan files:** Cleanup cron lists files với key not referenced by any DB row, deletes after 30-day TTL.
 - **Presigned URL leak:** TTL `5 min` mặc định; if customer device clock skew, regenerate.
