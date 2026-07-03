@@ -14,6 +14,20 @@ const productionEnv = {
   MINIO_SECRET_KEY: 'c'.repeat(64),
   MINIO_PUBLIC_URL: 'https://cdn.foodflow.vn',
   THROTTLER_MEMORY_FALLBACK: 'false',
+  GOOGLE_MAPS_API_KEY: 'prod-google-maps-browser-key',
+  DEEPSEEK_API_KEY: 'prod-deepseek-api-key',
+  SEPAY_API_KEY: 'prod-sepay-api-key',
+  SEPAY_ACCOUNT_NUMBER: '1234567890',
+  SEPAY_WEBHOOK_SECRET: 'prod-sepay-webhook-secret',
+  WEBHOOK_SECRET: 'prod-generic-webhook-secret',
+  SMTP_HOST: 'smtp.foodflow.vn',
+  SMTP_USER: 'smtp-foodflow-user',
+  SMTP_PASS: 'smtp-foodflow-password',
+  SMTP_FROM: 'noreply@foodflow.vn',
+  FCM_SERVER_KEY: 'prod-fcm-server-key',
+  TWILIO_ACCOUNT_SID: 'prod-twilio-account-sid',
+  TWILIO_AUTH_TOKEN: 'prod-twilio-auth-token',
+  TWILIO_FROM_NUMBER: '+84900000000',
 }
 
 describe('validateEnv', () => {
@@ -48,8 +62,10 @@ describe('validateEnv', () => {
         ...productionEnv,
         DATABASE_URL: 'postgresql://foodflow:foodflow_dev@localhost:5432/foodflow',
         JWT_SECRET: 'dev-secret',
+        DEEPSEEK_API_KEY: 'your-deepseek-api-key',
+        SEPAY_WEBHOOK_SECRET: 'your-sepay-webhook-secret',
         THROTTLER_MEMORY_FALLBACK: 'true',
       }),
-    ).toThrow(/local development default|THROTTLER_MEMORY_FALLBACK/)
+    ).toThrow(/local development default|your-deepseek-api-key|your-sepay-webhook-secret|THROTTLER_MEMORY_FALLBACK/)
   })
 })
