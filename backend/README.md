@@ -36,7 +36,6 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `MINIO_BUCKET` | Yes | `foodflow` | Bucket name |
 | `MINIO_PUBLIC_URL` | Yes | `http://localhost:9000` | Public-facing MinIO URL |
 | `GOOGLE_MAPS_API_KEY` | No | — | Google Maps Geocoding API key |
-| `AI_CHAT_PROVIDER` | No | `deepseek` | Chatbot provider: `deepseek` |
 | `DEEPSEEK_API_KEY` | No | — | DeepSeek API key for direct chatbot replies. Keep in secret manager / ignored `.env`, never commit |
 | `DEEPSEEK_BASE_URL` | No | `https://api.deepseek.com` | DeepSeek OpenAI-compatible base URL |
 | `DEEPSEEK_MODEL` | No | `deepseek-v4-flash` | DeepSeek model for chatbot replies |

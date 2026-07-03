@@ -21,7 +21,6 @@ AI customer-support assistant proxy. SSE streaming chat endpoint, conversation m
 
 | Name | Required | Default | Description |
 |---|---|---|---|
-| `AI_CHAT_PROVIDER` | no | `deepseek` | Chatbot provider. Batch 4 keeps `deepseek` as the supported runtime provider |
 | `DEEPSEEK_API_KEY` | no | — | DeepSeek API key for direct chatbot replies. Store as secret, never commit |
 | `DEEPSEEK_BASE_URL` | no | `https://api.deepseek.com` | OpenAI-compatible DeepSeek base URL |
 | `DEEPSEEK_MODEL` | no | `deepseek-v4-flash` | Direct chatbot model |

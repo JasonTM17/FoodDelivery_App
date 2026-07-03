@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { I18nService } from 'nestjs-i18n'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
 import { ConversationMemoryService } from './conversation-memory.service'
@@ -39,7 +38,6 @@ export class AiChatService {
     private readonly sentiment: SentimentDetectionService,
     private readonly outputFilter: OutputFilterService,
     private readonly deepSeek: DeepSeekChatProviderService,
-    private readonly config: ConfigService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -78,9 +76,15 @@ export class AiChatService {
     })
 
     try {
-      const data = await this.fetchProviderReply({ message, sessionId, orderId, userId: user.sub, sentimentLabel, history })
-      const rawReply = data.reply ?? this.translate('ai_templates.fallback')
-      const reply = this.outputFilter.filter(rawReply)
+      const data = await this.deepSeek.createReply({
+        message,
+        sessionId,
+        orderId,
+        userId: user.sub,
+        sentimentLabel,
+        history,
+      })
+      const reply = this.outputFilter.filter(data.reply)
 
       await this.safeAppend(sessionId, {
         role: 'assistant',
@@ -107,59 +111,6 @@ export class AiChatService {
 
   private matchFastPath(message: string): FastPathKey | undefined {
     return FAST_PATH.find(([pattern]) => pattern.test(message))?.[1]
-  }
-
-  private async fetchProviderReply(input: {
-    message: string
-    sessionId: string
-    orderId?: string
-    userId: string
-    sentimentLabel: string
-    history: unknown[]
-  }) {
-    const provider = this.chatProvider()
-    if (provider === 'deepseek') {
-      return this.deepSeek.createReply(input)
-    }
-
-    return this.fetchN8nReply(input)
-  }
-
-  private chatProvider(): 'deepseek' | 'n8n' {
-    const configured = this.config.get<string>('AI_CHAT_PROVIDER')?.trim().toLowerCase()
-    if (configured === 'deepseek' || configured === 'n8n') return configured
-    if (this.config.get<string>('DEEPSEEK_API_KEY')?.trim()) return 'deepseek'
-    return 'n8n'
-  }
-
-  private async fetchN8nReply({
-    message,
-    sessionId,
-    orderId,
-    userId,
-    sentimentLabel,
-    history,
-  }: {
-    message: string
-    sessionId: string
-    orderId?: string
-    userId: string
-    sentimentLabel: string
-    history: unknown[]
-  }) {
-    const n8nUrl = this.config.get<string>('N8N_WEBHOOK_URL', 'http://n8n:5678/webhook/ai-support-chat')
-    const response = await fetch(n8nUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, message, sessionId, orderId, sentiment: sentimentLabel, history }),
-      signal: AbortSignal.timeout(15_000),
-    })
-
-    if (!response.ok) {
-      throw new Error(`N8N_ERROR_${response.status}`)
-    }
-
-    return response.json() as Promise<{ reply?: string; escalated?: boolean; severity?: string }>
   }
 
   private translate(key: string): string {
@@ -193,7 +144,7 @@ export class AiChatService {
 
   private safeErrorCode(err: unknown): string {
     const message = err instanceof Error ? err.message : 'UNKNOWN'
-    if (/^(DEEPSEEK|N8N|MESSAGE|INVALID)[A-Z0-9_:-]*$/.test(message)) return message
+    if (/^(DEEPSEEK|MESSAGE|INVALID)[A-Z0-9_:-]*$/.test(message)) return message
     return 'UPSTREAM_UNAVAILABLE'
   }
 }

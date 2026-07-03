@@ -11,7 +11,7 @@ export interface AiProviderInput {
 }
 
 export interface AiProviderReply {
-  reply?: string
+  reply: string
   escalated?: boolean
   severity?: string
 }
