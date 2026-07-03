@@ -19,7 +19,7 @@ describe('RestaurantRevenueService', () => {
         id: 'order-1',
         createdAt: new Date('2026-06-05T06:00:00.000Z'),
         total: 300_000,
-        paymentMethod: 'mock_wallet',
+        paymentMethod: 'wallet',
         promotionDiscount: 0,
         orderItems: [
           {

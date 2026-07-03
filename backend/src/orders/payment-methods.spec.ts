@@ -7,10 +7,10 @@ import {
 import { PaymentMethodDto } from './orders.dto'
 
 describe('payment method mapping', () => {
-  it('keeps public wallet separate from the legacy database enum', () => {
-    expect(normalizeOrderPaymentMethod(PaymentMethodDto.wallet)).toBe(PrismaPaymentMethod.mock_wallet)
-    expect(toPublicPaymentMethod(PrismaPaymentMethod.mock_wallet)).toBe('wallet')
-    expect(isWalletPaymentMethod(PrismaPaymentMethod.mock_wallet)).toBe(true)
+  it('stores wallet payments with the public database enum value', () => {
+    expect(normalizeOrderPaymentMethod(PaymentMethodDto.wallet)).toBe(PrismaPaymentMethod.wallet)
+    expect(toPublicPaymentMethod(PrismaPaymentMethod.wallet)).toBe('wallet')
+    expect(isWalletPaymentMethod(PrismaPaymentMethod.wallet)).toBe(true)
   })
 
   it('passes through non-wallet payment methods', () => {

@@ -82,7 +82,7 @@ describe('PaymentsService', () => {
   it('captures wallet payment only when confirmed balance is enough', async () => {
     mockWalletCapture.capture.mockResolvedValue({ success: true })
 
-    const result = await service.processPayment('order-1', 50_000, 'mock_wallet')
+    const result = await service.processPayment('order-1', 50_000, 'wallet')
 
     expect(result).toEqual({ readyForRestaurant: true })
     expect(mockWalletCapture.capture).toHaveBeenCalledWith({
@@ -98,7 +98,7 @@ describe('PaymentsService', () => {
       failureCode: 'INSUFFICIENT_WALLET_BALANCE',
     })
 
-    const result = await service.processPayment('order-1', 50_000, 'mock_wallet')
+    const result = await service.processPayment('order-1', 50_000, 'wallet')
 
     expect(result).toEqual({
       readyForRestaurant: false,

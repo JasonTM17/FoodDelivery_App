@@ -31,14 +31,14 @@ describe('PaymentsService', () => {
   })
 
   it('captures wallet payments through wallet ledger and uses public transaction naming', async () => {
-    const result = await service.processPayment('order-1', 50_000, PaymentMethod.mock_wallet)
+    const result = await service.processPayment('order-1', 50_000, PaymentMethod.wallet)
 
     expect(result).toEqual({ readyForRestaurant: true })
     expect(prisma.payment.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         orderId: 'order-1',
         amount: 50_000,
-        method: PaymentMethod.mock_wallet,
+        method: PaymentMethod.wallet,
         status: PaymentStatus.pending,
         transactionId: expect.stringMatching(/^WALLET-/),
       }),

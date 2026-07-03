@@ -37,7 +37,7 @@ enum OrderStatus {
 
 enum PaymentMethod {
   cash
-  mock_wallet
+  wallet
   sepay
 }
 

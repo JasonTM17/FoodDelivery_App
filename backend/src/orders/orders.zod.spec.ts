@@ -1,7 +1,7 @@
 import { placeOrderSchema } from './orders.zod'
 
 describe('placeOrderSchema', () => {
-  it('accepts public wallet payment method without exposing the legacy database enum', () => {
+  it('accepts the public wallet payment method', () => {
     const parsed = placeOrderSchema.parse({
       addressId: '11111111-1111-4111-8111-111111111111',
       paymentMethod: 'wallet',
@@ -10,7 +10,7 @@ describe('placeOrderSchema', () => {
     expect(parsed.paymentMethod).toBe('wallet')
   })
 
-  it('rejects legacy mock wallet as a public request value', () => {
+  it('rejects the obsolete wallet storage value as a public request value', () => {
     expect(() => placeOrderSchema.parse({
       addressId: '11111111-1111-4111-8111-111111111111',
       paymentMethod: 'mock_wallet',
