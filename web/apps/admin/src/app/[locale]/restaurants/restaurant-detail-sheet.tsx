@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import { Star, Store } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -11,12 +13,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Star, Store } from 'lucide-react';
 
 export interface RestaurantDetail {
   id: string;
   name: string;
-  owner: { name: string; email: string; phone: string };
+  owner?: { name?: string; email?: string; phone?: string };
   cuisine: string;
   rating: number;
   totalOrders: number;
@@ -38,11 +39,13 @@ export default function RestaurantDetailSheet({
   onOpenChange,
   onStatusChange,
 }: RestaurantDetailSheetProps) {
+  const t = useTranslations('restaurantDetail');
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Chi tiết nhà hàng</SheetTitle>
+          <SheetTitle>{t('title')}</SheetTitle>
           <SheetDescription>{restaurant?.name || ''}</SheetDescription>
         </SheetHeader>
         {restaurant && (
@@ -53,59 +56,74 @@ export default function RestaurantDetailSheet({
                 <span className="text-lg font-semibold">{restaurant.name}</span>
               </div>
               <Badge variant={restaurant.status === 'active' ? 'success' : 'secondary'}>
-                {restaurant.status === 'active' ? 'Đang mở' : 'Đã khóa'}
+                {restaurant.status === 'active' ? t('statusActive') : t('statusDisabled')}
               </Badge>
             </div>
 
             <Separator />
 
             <div className="space-y-3 text-sm">
-              <h4 className="font-medium">Thông tin chủ sở hữu</h4>
-              <div className="rounded-lg bg-muted/50 p-3 space-y-1">
-                <p><span className="text-muted-foreground">Tên:</span> {restaurant.owner?.name}</p>
-                <p><span className="text-muted-foreground">Email:</span> {restaurant.owner?.email}</p>
-                <p><span className="text-muted-foreground">SĐT:</span> {restaurant.owner?.phone}</p>
+              <h4 className="font-medium">{t('ownerTitle')}</h4>
+              <div className="space-y-1 rounded-lg bg-muted/50 p-3">
+                <p>
+                  <span className="text-muted-foreground">{t('ownerFields.name')}:</span>{' '}
+                  {restaurant.owner?.name ?? '—'}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">{t('ownerFields.email')}:</span>{' '}
+                  {restaurant.owner?.email ?? '—'}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">{t('ownerFields.phone')}:</span>{' '}
+                  {restaurant.owner?.phone ?? '—'}
+                </p>
               </div>
             </div>
 
             <div className="space-y-2 text-sm">
+              <DetailRow label={t('cuisine')} value={restaurant.cuisine} />
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Ẩm thực</span>
-                <span>{restaurant.cuisine}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Đánh giá</span>
+                <span className="text-muted-foreground">{t('rating')}</span>
                 <div className="flex items-center gap-1">
                   <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                   {restaurant.rating.toFixed(1)}
                 </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tổng đơn hàng</span>
-                <span>{restaurant.totalOrders}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Địa chỉ</span>
-                <span className="text-right max-w-[200px]">{restaurant.address}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ngày tạo</span>
-                <span>{formatDate(restaurant.createdAt)}</span>
-              </div>
+              <DetailRow label={t('totalOrders')} value={restaurant.totalOrders} />
+              <DetailRow label={t('address')} value={restaurant.address} alignRight />
+              <DetailRow label={t('createdAt')} value={formatDate(restaurant.createdAt)} />
             </div>
 
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Kích hoạt nhà hàng</span>
+              <span className="text-sm font-medium">{t('activationLabel')}</span>
               <Switch
                 checked={restaurant.status === 'active'}
                 onCheckedChange={() => onStatusChange(restaurant.id, restaurant.status)}
+                aria-label={t('toggleStatus', { name: restaurant.name })}
               />
             </div>
           </div>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  alignRight,
+}: {
+  label: string;
+  value: string | number;
+  alignRight?: boolean;
+}) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={alignRight ? 'max-w-[200px] text-right' : undefined}>{value}</span>
+    </div>
   );
 }

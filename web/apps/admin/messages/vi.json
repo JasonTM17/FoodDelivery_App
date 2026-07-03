@@ -254,6 +254,23 @@
   "restaurants": {
     "title": "Quản lý nhà hàng",
     "description": "Danh sách nhà hàng đối tác",
+    "listTitle": "Nhà hàng",
+    "count": "Tổng số: {count} nhà hàng",
+    "loading": "Đang tải...",
+    "columns": {
+      "restaurant": "Nhà hàng",
+      "owner": "Chủ sở hữu",
+      "cuisine": "Ẩm thực",
+      "rating": "Đánh giá",
+      "totalOrders": "Tổng đơn",
+      "status": "Trạng thái",
+      "activation": "Kích hoạt"
+    },
+    "statusActive": "Đang mở",
+    "statusDisabled": "Đã khóa",
+    "toggleStatus": "Chuyển trạng thái nhà hàng {name}",
+    "viewRestaurant": "Xem {name}",
+    "empty": "Chưa có nhà hàng nào",
     "kpiTitle": "Hiệu suất 7 ngày",
     "kpiPrepTime": "Thời gian chuẩn bị TB",
     "kpiFulfillment": "Tỷ lệ hoàn thành",
@@ -284,11 +301,45 @@
     },
     "emptyRecentOrders": "Chưa có đơn hàng nào",
     "ownerTitle": "Thông tin chủ sở hữu",
+    "ownerFields": {
+      "name": "Tên",
+      "email": "Email",
+      "phone": "SĐT"
+    },
+    "cuisine": "Ẩm thực",
+    "address": "Địa chỉ",
     "statisticsTitle": "Thống kê",
     "rating": "Đánh giá",
     "totalOrders": "Tổng đơn hàng",
     "revenue": "Doanh thu",
     "createdAt": "Ngày tạo"
+  },
+  "restaurantStatusToggle": {
+    "pause": "Tạm dừng",
+    "activateAgain": "Kích hoạt lại",
+    "delete": "Xóa",
+    "reasonLabel": "Lý do (tùy chọn)",
+    "reasonPlaceholder": "Nhập lý do...",
+    "cancel": "Hủy",
+    "processing": "Đang xử lý...",
+    "updateError": "Không thể cập nhật trạng thái nhà hàng",
+    "confirm": {
+      "pause": {
+        "title": "Tạm dừng {name}?",
+        "description": "Nhà hàng sẽ không nhận đơn hàng mới và bị ẩn khỏi tìm kiếm.",
+        "action": "Tạm dừng"
+      },
+      "activate": {
+        "title": "Kích hoạt lại {name}?",
+        "description": "Nhà hàng sẽ xuất hiện trở lại và nhận đơn hàng mới.",
+        "action": "Kích hoạt"
+      },
+      "delete": {
+        "title": "Xóa {name}?",
+        "description": "Hành động này không thể hoàn tác. Dữ liệu liên quan sẽ bị ẩn.",
+        "action": "Xóa"
+      }
+    }
   },
   "restaurantOrdersTab": {
     "searchPlaceholder": "Tìm đơn hàng...",

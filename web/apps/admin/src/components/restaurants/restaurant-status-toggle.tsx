@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
+import { Pause, Play, Trash2, type LucideIcon } from 'lucide-react';
 import { apiPatch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +15,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Pause, Play, Trash2 } from 'lucide-react';
 
 interface RestaurantStatusToggleProps {
   restaurantId: string;
@@ -21,21 +22,31 @@ interface RestaurantStatusToggleProps {
   restaurantName: string;
 }
 
+type RestaurantStatusAction = 'pause' | 'activate' | 'delete';
+
+const actionIcons: Record<RestaurantStatusAction, LucideIcon> = {
+  pause: Pause,
+  activate: Play,
+  delete: Trash2,
+};
+
 export default function RestaurantStatusToggle({
   restaurantId,
   currentStatus,
   restaurantName,
 }: RestaurantStatusToggleProps) {
+  const t = useTranslations('restaurantStatusToggle');
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [action, setAction] = useState<'pause' | 'activate' | 'delete'>('pause');
+  const [action, setAction] = useState<RestaurantStatusAction>('pause');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const openConfirm = (a: 'pause' | 'activate' | 'delete') => {
-    setAction(a);
+  const openConfirm = (nextAction: RestaurantStatusAction) => {
+    setAction(nextAction);
     setReason('');
+    setActionError('');
     setConfirmOpen(true);
   };
 
@@ -43,50 +54,41 @@ export default function RestaurantStatusToggle({
     setLoading(true);
     setActionError('');
     try {
-      if (action === 'delete') {
-        await apiPatch(`/admin/restaurants/${restaurantId}/status`, {
-          status: 'deleted',
-          reason,
-        });
-      } else {
-        const newStatus = action === 'activate' ? 'active' : 'disabled';
-        await apiPatch(`/admin/restaurants/${restaurantId}/status`, {
-          status: newStatus,
-          reason,
-        });
-      }
+      const status = action === 'delete' ? 'deleted' : action === 'activate' ? 'active' : 'disabled';
+      await apiPatch(`/admin/restaurants/${restaurantId}/status`, { status, reason });
       queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
       setConfirmOpen(false);
     } catch (err) {
-      setActionError((err as { message?: string }).message || 'Không thể cập nhật trạng thái nhà hàng');
+      setActionError((err as { message?: string }).message || t('updateError'));
     } finally {
       setLoading(false);
     }
   };
 
-  const actionLabels: Record<string, { title: string; desc: string; icon: typeof Pause }> = {
-    pause: { title: `Tạm dừng ${restaurantName}?`, desc: 'Nhà hàng sẽ không nhận đơn hàng mới và bị ẩn khỏi tìm kiếm.', icon: Pause },
-    activate: { title: `Kích hoạt lại ${restaurantName}?`, desc: 'Nhà hàng sẽ xuất hiện trở lại và nhận đơn hàng mới.', icon: Play },
-    delete: { title: `Xóa ${restaurantName}?`, desc: 'Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan sẽ bị ẩn.', icon: Trash2 },
-  };
-
-  const labels = actionLabels[action];
-  const Icon = labels.icon;
+  const Icon = actionIcons[action];
 
   return (
     <>
       <div className="flex items-center gap-2">
         {currentStatus === 'active' ? (
           <Button variant="outline" size="sm" onClick={() => openConfirm('pause')}>
-            <Pause className="mr-1.5 h-4 w-4" /> Tạm dừng
+            <Pause className="mr-1.5 h-4 w-4" />
+            {t('pause')}
           </Button>
         ) : (
           <Button variant="outline" size="sm" onClick={() => openConfirm('activate')}>
-            <Play className="mr-1.5 h-4 w-4" /> Kích hoạt lại
+            <Play className="mr-1.5 h-4 w-4" />
+            {t('activateAgain')}
           </Button>
         )}
-        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => openConfirm('delete')}>
-          <Trash2 className="mr-1.5 h-4 w-4" /> Xóa
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-destructive hover:text-destructive"
+          onClick={() => openConfirm('delete')}
+        >
+          <Trash2 className="mr-1.5 h-4 w-4" />
+          {t('delete')}
         </Button>
       </div>
 
@@ -95,14 +97,17 @@ export default function RestaurantStatusToggle({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Icon className="h-5 w-5 text-destructive" />
-              {labels.title}
+              {t(`confirm.${action}.title`, { name: restaurantName })}
             </DialogTitle>
-            <DialogDescription>{labels.desc}</DialogDescription>
+            <DialogDescription>{t(`confirm.${action}.description`)}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Lý do (tùy chọn)</label>
+            <label className="text-sm font-medium" htmlFor="restaurant-status-reason">
+              {t('reasonLabel')}
+            </label>
             <Textarea
-              placeholder="Nhập lý do..."
+              id="restaurant-status-reason"
+              placeholder={t('reasonPlaceholder')}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
@@ -110,9 +115,15 @@ export default function RestaurantStatusToggle({
           </div>
           {actionError && <p className="text-sm text-destructive">{actionError}</p>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Hủy</Button>
-            <Button variant={action === 'delete' ? 'destructive' : 'default'} onClick={executeAction} disabled={loading}>
-              {loading ? 'Đang xử lý...' : action === 'pause' ? 'Tạm dừng' : action === 'activate' ? 'Kích hoạt' : 'Xóa'}
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant={action === 'delete' ? 'destructive' : 'default'}
+              onClick={executeAction}
+              disabled={loading}
+            >
+              {loading ? t('processing') : t(`confirm.${action}.action`)}
             </Button>
           </DialogFooter>
         </DialogContent>

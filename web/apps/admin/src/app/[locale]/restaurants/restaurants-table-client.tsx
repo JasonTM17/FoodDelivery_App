@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Eye, Star, Store } from 'lucide-react';
 import { apiGet, apiPatch } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Star, Store, Eye } from 'lucide-react';
 import RestaurantDetailSheet, { type RestaurantDetail } from './restaurant-detail-sheet';
 
 interface RestaurantsResponse {
@@ -17,6 +18,7 @@ interface RestaurantsResponse {
 }
 
 export default function RestaurantsTableClient() {
+  const t = useTranslations('restaurants');
   const queryClient = useQueryClient();
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function RestaurantsTableClient() {
       const restaurant = await apiGet<RestaurantDetail>(`/admin/restaurants/${restaurantId}`);
       setSelectedRestaurant(restaurant);
     } catch {
-      const found = data?.restaurants.find((r) => r.id === restaurantId);
+      const found = data?.restaurants.find((restaurant) => restaurant.id === restaurantId);
       if (found) setSelectedRestaurant(found);
     }
     setSheetOpen(true);
@@ -42,7 +44,7 @@ export default function RestaurantsTableClient() {
     await apiPatch(`/admin/restaurants/${restaurantId}/status`, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['restaurants'] });
     if (selectedRestaurant?.id === restaurantId) {
-      setSelectedRestaurant((prev) => prev ? { ...prev, status: newStatus } : null);
+      setSelectedRestaurant((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
   };
 
@@ -50,29 +52,29 @@ export default function RestaurantsTableClient() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Nhà hàng</CardTitle>
+          <CardTitle>{t('listTitle')}</CardTitle>
           <CardDescription>
-            {data ? `Tổng số: ${data.total} nhà hàng` : 'Đang tải...'}
+            {data ? t('count', { count: data.total }) : t('loading')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded bg-muted" />
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-12 animate-pulse rounded bg-muted" />
               ))}
             </div>
           ) : data && data.restaurants.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nhà hàng</TableHead>
-                  <TableHead>Chủ sở hữu</TableHead>
-                  <TableHead>Ẩm thực</TableHead>
-                  <TableHead>Đánh giá</TableHead>
-                  <TableHead>Tổng đơn</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="w-24">Kích hoạt</TableHead>
+                  <TableHead>{t('columns.restaurant')}</TableHead>
+                  <TableHead>{t('columns.owner')}</TableHead>
+                  <TableHead>{t('columns.cuisine')}</TableHead>
+                  <TableHead>{t('columns.rating')}</TableHead>
+                  <TableHead>{t('columns.totalOrders')}</TableHead>
+                  <TableHead>{t('columns.status')}</TableHead>
+                  <TableHead className="w-24">{t('columns.activation')}</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
@@ -98,13 +100,14 @@ export default function RestaurantsTableClient() {
                     <TableCell>{restaurant.totalOrders}</TableCell>
                     <TableCell>
                       <Badge variant={restaurant.status === 'active' ? 'success' : 'secondary'}>
-                        {restaurant.status === 'active' ? 'Đang mở' : 'Đã khóa'}
+                        {restaurant.status === 'active' ? t('statusActive') : t('statusDisabled')}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Switch
                         checked={restaurant.status === 'active'}
                         onCheckedChange={() => toggleStatus(restaurant.id, restaurant.status)}
+                        aria-label={t('toggleStatus', { name: restaurant.name })}
                       />
                     </TableCell>
                     <TableCell>
@@ -112,6 +115,7 @@ export default function RestaurantsTableClient() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleViewRestaurant(restaurant.id)}
+                        aria-label={t('viewRestaurant', { name: restaurant.name })}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -122,7 +126,7 @@ export default function RestaurantsTableClient() {
             </Table>
           ) : (
             <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-              Chưa có nhà hàng nào
+              {t('empty')}
             </div>
           )}
         </CardContent>

@@ -254,6 +254,23 @@
   "restaurants": {
     "title": "Restaurant Management",
     "description": "List of partner restaurants",
+    "listTitle": "Restaurants",
+    "count": "{count, plural, =0 {No restaurants} one {# restaurant} other {# restaurants}}",
+    "loading": "Loading...",
+    "columns": {
+      "restaurant": "Restaurant",
+      "owner": "Owner",
+      "cuisine": "Cuisine",
+      "rating": "Rating",
+      "totalOrders": "Total orders",
+      "status": "Status",
+      "activation": "Active"
+    },
+    "statusActive": "Open",
+    "statusDisabled": "Locked",
+    "toggleStatus": "Toggle status for {name}",
+    "viewRestaurant": "View {name}",
+    "empty": "No restaurants yet",
     "kpiTitle": "7-day performance",
     "kpiPrepTime": "Avg prep time",
     "kpiFulfillment": "Fulfillment rate",
@@ -284,11 +301,45 @@
     },
     "emptyRecentOrders": "No orders yet",
     "ownerTitle": "Owner information",
+    "ownerFields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "cuisine": "Cuisine",
+    "address": "Address",
     "statisticsTitle": "Statistics",
     "rating": "Rating",
     "totalOrders": "Total orders",
     "revenue": "Revenue",
     "createdAt": "Created at"
+  },
+  "restaurantStatusToggle": {
+    "pause": "Pause",
+    "activateAgain": "Activate again",
+    "delete": "Delete",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "Enter a reason...",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "updateError": "Could not update restaurant status",
+    "confirm": {
+      "pause": {
+        "title": "Pause {name}?",
+        "description": "The restaurant will stop receiving new orders and will be hidden from search.",
+        "action": "Pause"
+      },
+      "activate": {
+        "title": "Activate {name} again?",
+        "description": "The restaurant will reappear and receive new orders.",
+        "action": "Activate"
+      },
+      "delete": {
+        "title": "Delete {name}?",
+        "description": "This action cannot be undone. Related data will be hidden.",
+        "action": "Delete"
+      }
+    }
   },
   "restaurantOrdersTab": {
     "searchPlaceholder": "Search orders...",

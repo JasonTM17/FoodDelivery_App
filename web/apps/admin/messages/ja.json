@@ -254,6 +254,23 @@
   "restaurants": {
     "title": "レストラン管理",
     "description": "パートナーレストランの一覧",
+    "listTitle": "レストラン",
+    "count": "合計 {count} 店",
+    "loading": "読み込み中...",
+    "columns": {
+      "restaurant": "レストラン",
+      "owner": "オーナー",
+      "cuisine": "料理ジャンル",
+      "rating": "評価",
+      "totalOrders": "総注文数",
+      "status": "ステータス",
+      "activation": "有効"
+    },
+    "statusActive": "営業中",
+    "statusDisabled": "ロック済み",
+    "toggleStatus": "{name}の状態を切り替え",
+    "viewRestaurant": "{name}を表示",
+    "empty": "レストランはまだありません",
     "kpiTitle": "7日間のパフォーマンス",
     "kpiPrepTime": "平均準備時間",
     "kpiFulfillment": "完了率",
@@ -284,11 +301,45 @@
     },
     "emptyRecentOrders": "注文はまだありません",
     "ownerTitle": "オーナー情報",
+    "ownerFields": {
+      "name": "名前",
+      "email": "メール",
+      "phone": "電話"
+    },
+    "cuisine": "料理ジャンル",
+    "address": "住所",
     "statisticsTitle": "統計",
     "rating": "評価",
     "totalOrders": "総注文数",
     "revenue": "売上",
     "createdAt": "作成日"
+  },
+  "restaurantStatusToggle": {
+    "pause": "一時停止",
+    "activateAgain": "再有効化",
+    "delete": "削除",
+    "reasonLabel": "理由（任意）",
+    "reasonPlaceholder": "理由を入力...",
+    "cancel": "キャンセル",
+    "processing": "処理中...",
+    "updateError": "レストラン状態を更新できませんでした",
+    "confirm": {
+      "pause": {
+        "title": "{name}を一時停止しますか？",
+        "description": "このレストランは新規注文を受け付けず、検索から非表示になります。",
+        "action": "一時停止"
+      },
+      "activate": {
+        "title": "{name}を再有効化しますか？",
+        "description": "このレストランは再表示され、新規注文を受け付けます。",
+        "action": "有効化"
+      },
+      "delete": {
+        "title": "{name}を削除しますか？",
+        "description": "この操作は元に戻せません。関連データは非表示になります。",
+        "action": "削除"
+      }
+    }
   },
   "restaurantOrdersTab": {
     "searchPlaceholder": "注文を検索...",
