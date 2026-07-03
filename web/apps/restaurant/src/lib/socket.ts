@@ -14,6 +14,12 @@ export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> 
     socket = io(EVENTS_SOCKET_URL, {
       autoConnect: false,
       transports: ['websocket', 'polling'],
+      auth: callback => {
+        const token = typeof window !== 'undefined'
+          ? localStorage.getItem('restaurant_token')
+          : null;
+        callback({ token });
+      },
     }) as Socket<ServerToClientEvents, ClientToServerEvents>;
   }
   return socket;
