@@ -9,14 +9,6 @@ const shouldUseStandaloneOutput =
 const nextConfig = {
   ...(shouldUseStandaloneOutput ? { output: 'standalone' } : {}),
   transpilePackages: ['@vis.gl/react-google-maps', '@foodflow/i18n', '@foodflow/ui'],
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-  },
 };
 
 export default withNextIntl(nextConfig);

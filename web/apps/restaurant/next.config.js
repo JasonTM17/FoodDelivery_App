@@ -12,14 +12,6 @@ const shouldEnableDevApiRewrite =
 const nextConfig = {
   ...(shouldUseStandaloneOutput ? { output: 'standalone' } : {}),
   transpilePackages: ['@foodflow/i18n', '@foodflow/ui'],
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-  },
   ...(shouldEnableDevApiRewrite
     ? {
         async rewrites() {
