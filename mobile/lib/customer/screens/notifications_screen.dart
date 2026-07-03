@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -9,14 +8,14 @@ import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/notification_tile.dart';
-import '../../l10n/app_localizations.dart';
 import '../router/route_names.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
@@ -91,7 +90,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               'Đọc tất cả',
               style: TextStyle(
                 fontSize: 12,
-                color: state.unreadCount > 0 ? AppColors.primary : AppColors.textHint,
+                color: state.unreadCount > 0
+                    ? AppColors.primary
+                    : AppColors.textHint,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -99,8 +100,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+          ),
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
@@ -114,12 +121,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   Widget _buildBody(NotificationState state) {
     if (state.isLoading && state.notifications.isEmpty) {
-      return const LoadingShimmer(type: ShimmerType.order, itemCount: 5);
+      return const SingleChildScrollView(
+        child: LoadingShimmer(type: ShimmerType.order, itemCount: 5),
+      );
     }
     if (state.error != null && state.notifications.isEmpty) {
       return ErrorState(
         message: state.error!,
-        onRetry: () => ref.read(notificationProvider.notifier).fetchNotifications(),
+        onRetry: () =>
+            ref.read(notificationProvider.notifier).fetchNotifications(),
       );
     }
     return TabBarView(
@@ -138,11 +148,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       );
     }
     return RefreshIndicator(
-      onRefresh: () => ref.read(notificationProvider.notifier).fetchNotifications(),
+      onRefresh: () =>
+          ref.read(notificationProvider.notifier).fetchNotifications(),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.divider),
+        separatorBuilder: (_, __) =>
+            const Divider(height: 1, color: AppColors.divider),
         itemBuilder: (_, i) => NotificationTile(
           notification: items[i],
           onTap: () => _handleTap(items[i]),
