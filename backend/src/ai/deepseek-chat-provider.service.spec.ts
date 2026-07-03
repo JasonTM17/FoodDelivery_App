@@ -35,6 +35,7 @@ describe('DeepSeekChatProviderService', () => {
         { role: 'tool', content: 'ignored tool turn' },
         { role: 'user', content: 'Previous question' },
       ],
+      grounding: [{ tool: 'getOrderStatus', data: { status: 'preparing' } }],
     })
     const [, options] = (global.fetch as jest.Mock).mock.calls[0]
     const body = JSON.parse(options.body)
@@ -50,11 +51,16 @@ describe('DeepSeekChatProviderService', () => {
     })
     expect(JSON.stringify(body)).not.toContain('test-key')
     expect(body.messages).toEqual(expect.arrayContaining([
-      expect.objectContaining({ role: 'system' }),
+      expect.objectContaining({
+        role: 'system',
+        content: expect.stringContaining('Only state account-specific facts that appear in VERIFIED_CONTEXT.'),
+      }),
       { role: 'assistant', content: 'Hello' },
       { role: 'user', content: 'Previous question' },
       expect.objectContaining({ role: 'user', content: expect.stringContaining('Order ID provided by user: order-1') }),
     ]))
+    expect(body.messages.at(-1).content).toContain('VERIFIED_CONTEXT=')
+    expect(body.messages.at(-1).content).toContain('"getOrderStatus"')
     expect(result).toEqual({ reply: 'Your order is being checked.', escalated: false, severity: undefined })
   })
 

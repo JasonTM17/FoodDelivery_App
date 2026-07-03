@@ -196,4 +196,17 @@ export interface AiChatReply {
   action: 'answered' | 'escalated' | 'degraded';
   escalated?: boolean;
   severity?: string;
+  language: 'vi' | 'en' | 'ja';
+  grounded?: boolean;
+  toolCalls?: Array<{
+    name:
+      | 'getOrderStatus'
+      | 'getDriverLocation'
+      | 'getRestaurantStatus'
+      | 'getRefundEligibility'
+      | 'createSupportTicket'
+      | 'getRecommendedFoods'
+      | 'notifyAdmin';
+    args: Record<string, unknown>;
+  }>;
 }

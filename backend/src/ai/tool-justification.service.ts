@@ -1,16 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-type ToolName =
+export type AiToolName =
   | 'getOrderStatus'
   | 'getDriverLocation'
   | 'getRestaurantStatus'
   | 'getRefundEligibility'
   | 'createSupportTicket'
-  | 'getNearbyRestaurants'
   | 'getRecommendedFoods'
   | 'notifyAdmin'
 
-const TOOL_REQUIRED_KEYWORDS: Record<ToolName, RegExp> = {
+const TOOL_REQUIRED_KEYWORDS: Record<AiToolName, RegExp> = {
   getOrderStatus:
     /đơn|order|mã\s*đơn|tình\s*trạng|trạng\s*thái|đang\s*ở\s*đâu|tới\s*chưa|giao\s*chưa|bao\s*giờ\s*tới/i,
   getDriverLocation:
@@ -20,9 +19,7 @@ const TOOL_REQUIRED_KEYWORDS: Record<ToolName, RegExp> = {
   getRefundEligibility:
     /hoàn\s*tiền|refund|trả\s*lại\s*tiền|huỷ\s*hoàn|tiền\s*lại|lấy\s*lại\s*tiền|đòi\s*tiền/i,
   createSupportTicket:
-    /khiếu\s*nại|báo\s*cáo|hỗ\s*trợ|vấn\s*đề|sự\s*cố|bị\s*lỗi|tạo\s*ticket|issue|complaint|problem/i,
-  getNearbyRestaurants:
-    /gần\s*đây|near|nhà\s*hàng\s*gần|quán\s*gần|đặt\s*món|tìm\s*quán|xung\s*quanh/i,
+    /khiếu\s*nại|báo\s*cáo|hỗ\s*trợ|vấn\s*đề|sự\s*cố|bị\s*lỗi|tạo\s*ticket|issue|complaint|problem|unreachable|charged|dị\s*ứng|allerg|không\s*bắt\s*máy|bị\s*trừ\s*tiền|thiếu\s*món|sai\s*món/i,
   getRecommendedFoods:
     /gợi\s*ý|recommend|nên\s*đặt|món\s*ngon|ăn\s*gì|đề\s*xuất|suggest|gợi\s*món/i,
   notifyAdmin:
@@ -52,7 +49,7 @@ export class ToolJustificationService {
       }
     }
 
-    const pattern = TOOL_REQUIRED_KEYWORDS[toolName as ToolName]
+    const pattern = TOOL_REQUIRED_KEYWORDS[toolName as AiToolName]
     if (!pattern) {
       this.logger.warn(`Unknown tool attempted: ${toolName}`)
       return false

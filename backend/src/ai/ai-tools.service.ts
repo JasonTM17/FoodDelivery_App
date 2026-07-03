@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { TicketIssueType, TicketPriority } from '@prisma/client'
+import { Prisma, TicketIssueType, TicketPriority, TicketStatus } from '@prisma/client'
 
 function maskPhone(phone: string | null | undefined): string | null {
   if (!phone) return null
@@ -11,9 +11,9 @@ function maskPhone(phone: string | null | undefined): string | null {
 export class AiToolsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getOrderStatus(orderId: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+  async getOrderStatus(orderReference: string, customerId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: customerOrderWhere(orderReference, customerId),
       select: {
         id: true, orderCode: true, status: true, total: true,
         createdAt: true, updatedAt: true,
@@ -24,30 +24,30 @@ export class AiToolsService {
     return order
   }
 
-  async getDriverLocation(orderId: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+  async getDriverLocation(orderReference: string, customerId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: customerOrderWhere(orderReference, customerId),
       select: { driverId: true },
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
     if (!order.driverId) return { available: false }
 
-    const rows = await this.prisma.$queryRawUnsafe<Array<{ lat: number; lng: number; recorded_at: string }>>(
-      `SELECT ST_Y(location::geometry)::float8 AS lat,
-              ST_X(location::geometry)::float8 AS lng,
-              recorded_at
-       FROM driver_location_history
-       WHERE driver_id = $1
-       ORDER BY recorded_at DESC LIMIT 1`,
-      order.driverId,
-    )
+    const rows = await this.prisma.$queryRaw<Array<{ lat: number; lng: number; recorded_at: string }>>(Prisma.sql`
+      SELECT ST_Y(location::geometry)::float8 AS lat,
+             ST_X(location::geometry)::float8 AS lng,
+             recorded_at
+      FROM driver_location_history
+      WHERE driver_id = CAST(${order.driverId} AS uuid)
+      ORDER BY recorded_at DESC
+      LIMIT 1
+    `)
     if (!rows.length) return { available: false }
     return { available: true, lat: rows[0].lat, lng: rows[0].lng, recordedAt: rows[0].recorded_at }
   }
 
-  async getRestaurantStatus(orderId: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+  async getRestaurantStatus(orderReference: string, customerId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: customerOrderWhere(orderReference, customerId),
       select: {
         restaurant: {
           select: { id: true, name: true, isOpen: true, isActive: true, phone: true, prepTimeAvgMinutes: true },
@@ -58,43 +58,65 @@ export class AiToolsService {
     return { ...order.restaurant, phone: maskPhone(order.restaurant.phone) }
   }
 
-  async getRefundEligibility(orderId: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      select: { status: true, total: true, paymentMethod: true, createdAt: true },
+  async getRefundEligibility(orderReference: string, customerId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: customerOrderWhere(orderReference, customerId),
+      select: { id: true, status: true, total: true, paymentMethod: true, createdAt: true },
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
     const refundableStatuses = ['created', 'confirmed', 'preparing'] as const
     const eligible = (refundableStatuses as readonly string[]).includes(order.status)
-    return { orderId, eligible, status: order.status, amount: order.total, paymentMethod: order.paymentMethod }
+    return {
+      orderId: order.id,
+      eligible,
+      status: order.status,
+      amount: order.total,
+      paymentMethod: order.paymentMethod,
+    }
   }
 
-  async createSupportTicket(userId: string, orderId: string, issueType: string, summary: string) {
+  async createSupportTicket(
+    userId: string,
+    orderReference: string | undefined,
+    issueType: string,
+    summary: string,
+    priority: TicketPriority,
+  ) {
     const validTypes = Object.values(TicketIssueType)
     const resolvedType: TicketIssueType = validTypes.includes(issueType as TicketIssueType)
       ? (issueType as TicketIssueType)
       : TicketIssueType.other
+    const order = orderReference
+      ? await this.prisma.order.findFirst({
+        where: customerOrderWhere(orderReference, userId),
+        select: { id: true },
+      })
+      : null
+    if (orderReference && !order) throw new NotFoundException('ORDER_NOT_FOUND')
+
+    const normalizedSummary = summary.trim().slice(0, 1000)
+    const existing = await this.prisma.aiSupportTicket.findFirst({
+      where: {
+        userId,
+        orderId: order?.id ?? null,
+        issueType: resolvedType,
+        summary: normalizedSummary,
+        status: { in: [TicketStatus.open, TicketStatus.in_progress, TicketStatus.waiting_customer] },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, issueType: true, summary: true, status: true, priority: true, createdAt: true },
+    })
+    if (existing) return existing
+
     return this.prisma.aiSupportTicket.create({
       data: {
         userId,
-        orderId: orderId || undefined,
+        orderId: order?.id,
         issueType: resolvedType,
-        summary,
-        priority: TicketPriority.medium,
+        summary: normalizedSummary,
+        priority,
       },
       select: { id: true, issueType: true, summary: true, status: true, priority: true, createdAt: true },
-    })
-  }
-
-  async getNearbyRestaurants(lat: number, lng: number, cuisine?: string) {
-    return this.prisma.restaurant.findMany({
-      where: {
-        isActive: true,
-        isOpen: true,
-        ...(cuisine ? { cuisineTypes: { hasSome: [cuisine] } } : {}),
-      },
-      select: { id: true, name: true, cuisineTypes: true, rating: true, prepTimeAvgMinutes: true },
-      take: 10,
     })
   }
 
@@ -118,7 +140,7 @@ export class AiToolsService {
     return items.slice(0, 10)
   }
 
-  async notifyAdmin(ticketId: string, severity: string) {
+  async notifyAdmin(ticketId: string, severity: string, userId: string) {
     const priorityMap: Record<string, TicketPriority> = {
       low: TicketPriority.low,
       medium: TicketPriority.medium,
@@ -126,11 +148,24 @@ export class AiToolsService {
       critical: TicketPriority.critical,
     }
     const priority = priorityMap[severity] ?? TicketPriority.high
-    try {
-      await this.prisma.aiSupportTicket.update({ where: { id: ticketId }, data: { priority } })
-    } catch {
-      // ticket may not exist; notification still proceeds
-    }
+    const updated = await this.prisma.aiSupportTicket.updateMany({
+      where: { id: ticketId, userId },
+      data: { priority },
+    })
+    if (updated.count !== 1) throw new NotFoundException('SUPPORT_TICKET_NOT_FOUND')
     return { notified: true, ticketId, severity, timestamp: new Date().toISOString() }
   }
+}
+
+function customerOrderWhere(orderReference: string, customerId: string): Prisma.OrderWhereInput {
+  const reference = orderReference.trim()
+  const references: Prisma.OrderWhereInput[] = [
+    { orderCode: { equals: reference, mode: 'insensitive' } },
+  ]
+  if (isUuid(reference)) references.push({ id: reference })
+  return { customerId, OR: references }
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }

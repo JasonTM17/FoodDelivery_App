@@ -1,12 +1,14 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { I18nService } from 'nestjs-i18n'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
+import { AiGroundingService, AiToolCall } from './ai-grounding.service'
 import { ConversationMemoryService } from './conversation-memory.service'
 import { DeepSeekChatProviderService } from './deepseek-chat-provider.service'
 import { OutputFilterService } from './output-filter.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
 
 type FastPathKey = 'greeting' | 'thank_you' | 'app_error_hint' | 'faq_hint'
+type AiChatLanguage = 'vi' | 'en' | 'ja'
 
 const FAST_PATH: [RegExp, FastPathKey][] = [
   [/^(xin\s*ch\u00e0o|hello|hi\b|ch\u00e0o\s*b\u1ea1n|hey\b)/i, 'greeting'],
@@ -27,6 +29,9 @@ export interface AiChatReply {
   action: 'answered' | 'escalated' | 'degraded'
   escalated?: boolean
   severity?: string
+  language: AiChatLanguage
+  grounded?: boolean
+  toolCalls?: AiToolCall[]
 }
 
 @Injectable()
@@ -38,6 +43,7 @@ export class AiChatService {
     private readonly sentiment: SentimentDetectionService,
     private readonly outputFilter: OutputFilterService,
     private readonly deepSeek: DeepSeekChatProviderService,
+    private readonly grounding: AiGroundingService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -55,6 +61,7 @@ export class AiChatService {
   async createReply(body: AiChatRequest, user: JwtPayload): Promise<AiChatReply> {
     const { message, orderId } = body
     const sessionId = body.sessionId ?? user.sub
+    const language = detectLanguage(message)
     this.validateMessage(message, user.sub)
 
     const fastPathKey = this.matchFastPath(message.trim())
@@ -64,11 +71,15 @@ export class AiChatService {
         { role: 'user', content: message, timestamp: new Date().toISOString() },
         { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
       ])
-      return { reply, sessionId, action: 'answered' }
+      return { reply, sessionId, action: 'answered', language, grounded: false }
     }
 
     const sentimentLabel = this.sentiment.detect(message)
     const history = await this.safeGetHistory(sessionId)
+    let toolCalls: AiToolCall[] = []
+    let grounded = false
+    let groundingEscalated = false
+    let groundingSeverity: string | undefined
     await this.safeAppend(sessionId, {
       role: 'user',
       content: message,
@@ -76,6 +87,17 @@ export class AiChatService {
     })
 
     try {
+      const groundingResult = await this.grounding.collect({
+        message,
+        orderId,
+        userId: user.sub,
+        sentimentLabel,
+      })
+      toolCalls = groundingResult.toolCalls
+      grounded = groundingResult.entries.length > 0
+      groundingEscalated = groundingResult.escalated
+      groundingSeverity = groundingResult.severity
+
       const data = await this.deepSeek.createReply({
         message,
         sessionId,
@@ -83,8 +105,11 @@ export class AiChatService {
         userId: user.sub,
         sentimentLabel,
         history,
+        grounding: groundingResult.entries,
       })
       const reply = this.outputFilter.filter(data.reply)
+      const escalated = Boolean(data.escalated || groundingEscalated)
+      const severity = strongestSeverity(data.severity, groundingSeverity)
 
       await this.safeAppend(sessionId, {
         role: 'assistant',
@@ -95,9 +120,12 @@ export class AiChatService {
       return {
         reply,
         sessionId,
-        action: data.escalated ? 'escalated' : 'answered',
-        escalated: data.escalated,
-        severity: data.severity,
+        action: escalated ? 'escalated' : 'answered',
+        escalated,
+        severity,
+        language,
+        grounded,
+        toolCalls: toolCalls.length ? toolCalls : undefined,
       }
     } catch (err) {
       this.logger.error(`AI chat provider error: ${this.safeErrorCode(err)}`)
@@ -105,6 +133,11 @@ export class AiChatService {
         reply: this.translate('ai_templates.service_unavailable'),
         sessionId,
         action: 'degraded',
+        escalated: groundingEscalated || undefined,
+        severity: groundingSeverity,
+        language,
+        grounded,
+        toolCalls: toolCalls.length ? toolCalls : undefined,
       }
     }
   }
@@ -147,4 +180,21 @@ export class AiChatService {
     if (/^(DEEPSEEK|MESSAGE|INVALID)[A-Z0-9_:-]*$/.test(message)) return message
     return 'UPSTREAM_UNAVAILABLE'
   }
+}
+
+function detectLanguage(message: string): AiChatLanguage {
+  if (/[\u3040-\u30ff\u3400-\u9fff]/.test(message)) return 'ja'
+  if (isAscii(message) && /[a-z]/i.test(message)) return 'en'
+  return 'vi'
+}
+
+function isAscii(value: string): boolean {
+  return [...value].every(character => character.charCodeAt(0) <= 0x7f)
+}
+
+function strongestSeverity(...values: Array<string | undefined>): string | undefined {
+  const order = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+  return values
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => order.indexOf(b.toUpperCase()) - order.indexOf(a.toUpperCase()))[0]
 }

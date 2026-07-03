@@ -1198,7 +1198,7 @@ components:
       properties:
         message: { type: string, minLength: 1 }
         sessionId: { type: string }
-        orderId: { type: string, format: uuid }
+        orderId: { type: string, description: "Customer-scoped order UUID or order code reference." }
       required: [message]
 
     AiChatReply:
@@ -1209,7 +1209,28 @@ components:
         action: { type: string, enum: [answered, escalated, degraded] }
         escalated: { type: boolean }
         severity: { type: string }
-      required: [reply, sessionId, action]
+        language: { type: string, enum: [vi, en, ja] }
+        grounded: { type: boolean, description: "True when the reply used verified backend tool context." }
+        toolCalls:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                enum:
+                  - getOrderStatus
+                  - getDriverLocation
+                  - getRestaurantStatus
+                  - getRefundEligibility
+                  - createSupportTicket
+                  - getRecommendedFoods
+                  - notifyAdmin
+              args:
+                type: object
+                additionalProperties: true
+            required: [name, args]
+      required: [reply, sessionId, action, language]
 
     DashboardKpi:
       type: object
