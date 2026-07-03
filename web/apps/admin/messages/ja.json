@@ -136,6 +136,35 @@
     "accountLocked": "アカウントがロックされています",
     "lockMessage": "{count}回のログイン失敗後、アカウントがロックされました。15分後に再試行するか、管理者に連絡してください。"
   },
+  "forgotPassword": {
+    "title": "パスワードをリセット",
+    "description": "FoodFlowアカウントに登録されている管理者メールを入力してください。",
+    "emailPlaceholder": "admin@foodflow.com",
+    "submit": "リセット手順を送信",
+    "submitting": "手順を送信中...",
+    "successTitle": "受信箱を確認してください",
+    "successDescription": "アカウントが存在し、メール配信が設定されている場合、リセット手順が送信されます。",
+    "neutralNotice": "セキュリティのため、FoodFlowはメールアドレスの存在有無を明かしません。",
+    "backToLogin": "ログインに戻る",
+    "error": "パスワードリセットをリクエストできませんでした。もう一度お試しください。"
+  },
+  "resetPassword": {
+    "title": "新しいパスワードを作成",
+    "description": "FoodFlowメールに記載された安全なワンタイムリンクを使用してください。",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "パスワード確認",
+    "passwordPlaceholder": "8文字以上",
+    "confirmPlaceholder": "新しいパスワードを再入力",
+    "submit": "パスワードをリセット",
+    "submitting": "パスワードをリセット中...",
+    "successTitle": "パスワードを更新しました",
+    "successDescription": "管理者パスワードが変更されました。",
+    "successNotice": "新しいパスワードでログインできます。",
+    "backToLogin": "ログインに戻る",
+    "missingToken": "このリセットリンクは不足しているか無効です。新しいリセットメールをリクエストしてください。",
+    "passwordMismatch": "パスワードが一致しません。",
+    "error": "パスワードをリセットできませんでした。新しいリンクをリクエストして再試行してください。"
+  },
   "topbar": {
     "searchPlaceholder": "検索...",
     "adminRole": "管理者",

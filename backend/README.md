@@ -8,7 +8,7 @@ NestJS API server for the FoodFlow food delivery platform. Provides REST API, We
 
 | Resource | Endpoints |
 |----------|-----------|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password` |
 | Users | `GET/PATCH /api/users/profile`, `GET /api/users` (admin) |
 | Restaurants | `GET /api/restaurants`, `GET /api/restaurants/nearby`, `GET/POST/PATCH /api/restaurants/:id` |
 | Menu | `GET/POST /api/restaurants/:id/categories`, `GET/POST/PATCH/DELETE /api/restaurants/:id/items`, `GET /api/items` |
@@ -30,6 +30,8 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `REDIS_URL` | Yes | — | Redis connection string |
 | `JWT_SECRET` | Yes | — | HMAC-SHA256 signing key (min 32 chars) |
 | `JWT_REFRESH_SECRET` | Yes | — | Refresh token signing key |
+| `PASSWORD_RESET_URL_BASE` | No | `http://localhost:3000/reset-password` | Admin/web reset URL used when composing password reset email links |
+| `PASSWORD_RESET_TOKEN_TTL_MINUTES` | No | `60` | One-time password reset token lifetime |
 | `MINIO_ENDPOINT` | Yes | `localhost` | MinIO host |
 | `MINIO_PORT` | Yes | `9000` | MinIO API port |
 | `MINIO_ACCESS_KEY` | Yes | `minioadmin` | MinIO access key |
@@ -37,6 +39,8 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `MINIO_BUCKET` | Yes | `foodflow` | Bucket name |
 | `MINIO_PUBLIC_URL` | Yes | `http://localhost:9000` | Public-facing MinIO URL |
 | `GOOGLE_MAPS_API_KEY` | No | — | Google Maps Geocoding API key |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | No | — / `587` / `false` | SMTP worker transport for email delivery; password reset requests enqueue here when configured |
+| `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | No | — / — / `noreply@foodflow.vn` | SMTP credentials and sender address; keep credentials in secret manager / ignored `.env` |
 | `DEEPSEEK_API_KEY` | No | — | DeepSeek API key for direct chatbot replies. Keep in secret manager / ignored `.env`, never commit |
 | `DEEPSEEK_BASE_URL` | No | `https://api.deepseek.com` | DeepSeek OpenAI-compatible base URL |
 | `DEEPSEEK_MODEL` | No | `deepseek-v4-flash` | DeepSeek model for chatbot replies |

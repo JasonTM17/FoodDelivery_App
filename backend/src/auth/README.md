@@ -12,8 +12,8 @@ Authentication + authorization layer cho FoodFlow. Phát hành JWT access tokens
 - `POST /auth/logout` — Revoke current refresh token
 - `POST /auth/logout-all` — Revoke all refresh tokens for user
 - `GET /auth/profile` — Return current user from JWT
-- `POST /auth/forgot-password` — Send reset email
-- `POST /auth/reset-password` — Apply token-based reset
+- `POST /auth/forgot-password` — Create a one-time hashed reset token and enqueue reset instructions without disclosing whether the email exists
+- `POST /auth/reset-password` — Apply token-based reset, clear lockout counters, and mark the token used
 - Schemas: `auth.zod.ts`
 
 ## Env vars

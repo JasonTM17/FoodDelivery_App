@@ -45,3 +45,16 @@ export const logoutSchema = z.object({
 })
 
 export type LogoutInput = z.infer<typeof logoutSchema>
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email format'),
+})
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required').max(512, 'Reset token is invalid'),
+  password: passwordSchema,
+})
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

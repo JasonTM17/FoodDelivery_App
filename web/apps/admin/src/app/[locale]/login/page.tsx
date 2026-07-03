@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from '@/navigation';
+import { Link, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,9 +92,9 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">{tCommon('password')}</Label>
-                <a href="/forgot-password" className="text-xs text-primary hover:underline">
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
                   {t('forgotPassword')}
-                </a>
+                </Link>
               </div>
               <Input
                 id="password"

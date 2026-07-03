@@ -2,14 +2,21 @@ import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, UsePipes } fro
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import { AuthService, AuthResult } from './auth.service'
-import { RegisterDto, LoginDto, RefreshDto } from './auth.dto'
+import { RegisterDto, LoginDto, RefreshDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
 import { JwtAuthGuard } from './jwt-auth.guard'
 import { RolesGuard } from './roles.guard'
 import { Public } from './public.decorator'
 import { CurrentUser } from './current-user.decorator'
 import { SanitizedUser } from './auth.service'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
-import { registerSchema, loginSchema, refreshSchema, logoutSchema } from './auth.zod'
+import {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  logoutSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from './auth.zod'
 
 @ApiTags('auth')
 @Controller('auth')
@@ -47,6 +54,29 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() dto: RefreshDto): Promise<AuthResult> {
     return this.authService.refresh(dto)
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset instructions' })
+  @ApiResponse({ status: 200, description: 'Password reset request accepted' })
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @UsePipes(new ZodValidationPipe(forgotPasswordSchema))
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    return this.authService.requestPasswordReset(dto)
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with a one-time token' })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired reset token' })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UsePipes(new ZodValidationPipe(resetPasswordSchema))
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    return this.authService.resetPassword(dto)
   }
 
   @Post('logout')

@@ -136,6 +136,35 @@
     "accountLocked": "Tài khoản tạm khóa",
     "lockMessage": "Tài khoản tạm khóa sau {count} lần đăng nhập sai. Vui lòng thử lại sau 15 phút hoặc liên hệ quản trị viên."
   },
+  "forgotPassword": {
+    "title": "Đặt lại mật khẩu",
+    "description": "Nhập email quản trị gắn với tài khoản FoodFlow của bạn.",
+    "emailPlaceholder": "admin@foodflow.com",
+    "submit": "Gửi hướng dẫn đặt lại",
+    "submitting": "Đang gửi hướng dẫn...",
+    "successTitle": "Kiểm tra hộp thư",
+    "successDescription": "Nếu tài khoản tồn tại và kênh email đã được cấu hình, hướng dẫn đặt lại mật khẩu sẽ được gửi.",
+    "neutralNotice": "Vì lý do bảo mật, FoodFlow không tiết lộ email có tồn tại hay không.",
+    "backToLogin": "Quay lại đăng nhập",
+    "error": "Không thể yêu cầu đặt lại mật khẩu. Vui lòng thử lại."
+  },
+  "resetPassword": {
+    "title": "Tạo mật khẩu mới",
+    "description": "Dùng liên kết một lần an toàn trong email FoodFlow.",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "passwordPlaceholder": "Tối thiểu 8 ký tự",
+    "confirmPlaceholder": "Nhập lại mật khẩu mới",
+    "submit": "Đặt lại mật khẩu",
+    "submitting": "Đang đặt lại mật khẩu...",
+    "successTitle": "Đã cập nhật mật khẩu",
+    "successDescription": "Mật khẩu quản trị của bạn đã được thay đổi.",
+    "successNotice": "Bạn có thể đăng nhập bằng mật khẩu mới.",
+    "backToLogin": "Quay lại đăng nhập",
+    "missingToken": "Liên kết đặt lại thiếu hoặc không hợp lệ. Hãy yêu cầu email đặt lại mật khẩu mới.",
+    "passwordMismatch": "Hai mật khẩu không khớp.",
+    "error": "Không thể đặt lại mật khẩu. Vui lòng yêu cầu liên kết mới và thử lại."
+  },
   "topbar": {
     "searchPlaceholder": "Tìm kiếm...",
     "adminRole": "Quản trị viên",

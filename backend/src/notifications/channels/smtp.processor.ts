@@ -47,7 +47,7 @@ export class SmtpProcessor extends WorkerHost {
     const transporter = createTransport({
       host: smtpHost,
       port: this.config.get<number>('SMTP_PORT') ?? 587,
-      secure: this.config.get<boolean>('SMTP_SECURE') ?? false,
+      secure: this.resolveSmtpSecure(),
       auth: {
         user: this.config.get<string>('SMTP_USER'),
         pass: this.config.get<string>('SMTP_PASS'),
@@ -80,6 +80,11 @@ export class SmtpProcessor extends WorkerHost {
     } finally {
       transporter.close()
     }
+  }
+
+  private resolveSmtpSecure(): boolean {
+    const value = this.config.get<string | boolean>('SMTP_SECURE')
+    return value === true || value === 'true'
   }
 
   private renderHtml(name: string, subject: string, content: string): string {

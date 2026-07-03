@@ -40,6 +40,12 @@ describe('Admin LoginPage', () => {
     expect(localStorage.getItem('admin_refresh_token')).toBe(tokenFixture('admin-refresh'));
   });
 
+  it('links to the locale-aware password recovery route', () => {
+    render(<LoginPage />);
+
+    expect(screen.getByRole('link', { name: 'forgotPassword' })).toHaveAttribute('href', '/forgot-password');
+  });
+
   it('does not persist tokens when the authenticated user is not an admin', async () => {
     mockedApiPost.mockResolvedValueOnce({
       accessToken: tokenFixture('customer-access'),

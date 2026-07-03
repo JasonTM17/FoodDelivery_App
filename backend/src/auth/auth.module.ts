@@ -1,8 +1,10 @@
 import { Module, forwardRef } from '@nestjs/common'
+import { BullModule } from '@nestjs/bullmq'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import { ConfigService } from '@nestjs/config'
 import { UsersModule } from '../users/users.module'
+import { QUEUE_SMTP } from '../notifications/notifications.constants'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
@@ -22,6 +24,7 @@ import { WebSocketAuthService } from './websocket-auth.service'
         signOptions: { algorithm: 'HS256' },
       }),
     }),
+    BullModule.registerQueue({ name: QUEUE_SMTP }),
     forwardRef(() => UsersModule),
   ],
   controllers: [AuthController, JwksController],

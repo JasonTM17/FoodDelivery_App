@@ -136,6 +136,35 @@
     "accountLocked": "Account locked",
     "lockMessage": "Account locked after {count} failed login attempts. Please try again in 15 minutes or contact an administrator."
   },
+  "forgotPassword": {
+    "title": "Reset your password",
+    "description": "Enter the admin email associated with your FoodFlow account.",
+    "emailPlaceholder": "admin@foodflow.com",
+    "submit": "Send reset instructions",
+    "submitting": "Sending instructions...",
+    "successTitle": "Check your inbox",
+    "successDescription": "If this account exists and email delivery is configured, reset instructions are on the way.",
+    "neutralNotice": "For security, FoodFlow does not reveal whether an email address exists.",
+    "backToLogin": "Back to login",
+    "error": "Could not request a password reset. Please try again."
+  },
+  "resetPassword": {
+    "title": "Create a new password",
+    "description": "Use the secure one-time link from your FoodFlow email.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordPlaceholder": "At least 8 characters",
+    "confirmPlaceholder": "Re-enter your new password",
+    "submit": "Reset password",
+    "submitting": "Resetting password...",
+    "successTitle": "Password updated",
+    "successDescription": "Your admin password has been changed.",
+    "successNotice": "You can now sign in with your new password.",
+    "backToLogin": "Back to login",
+    "missingToken": "This reset link is missing or invalid. Request a new password reset email.",
+    "passwordMismatch": "Passwords do not match.",
+    "error": "Could not reset the password. Please request a new link and try again."
+  },
   "topbar": {
     "searchPlaceholder": "Search...",
     "adminRole": "Administrator",
