@@ -1,6 +1,6 @@
 'use client';
 
-import type { AiSuggestion, SuggestionType } from '@/lib/types';
+import type { AiSuggestion, AiSuggestionParams, SuggestionType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Lightbulb, TrendingUp, AlertTriangle, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -21,6 +21,15 @@ const TYPE_ICONS: Record<SuggestionType, React.ReactNode> = {
 
 export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: AiSuggestionCardProps) {
   const t = useTranslations('insights.suggestions');
+  const values = suggestion.params ?? {};
+  const title = getSuggestionText(t, suggestion.titleKey, suggestion.title, values);
+  const description = getSuggestionText(t, suggestion.descriptionKey, suggestion.description, values);
+  const predictedImpact = getSuggestionText(
+    t,
+    suggestion.predictedImpactKey,
+    suggestion.predictedImpact,
+    values,
+  );
 
   return (
     <div className="card space-y-3" data-testid="ai-suggestion-card">
@@ -39,10 +48,10 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400 uppercase">{t(`types.${suggestion.type}`)}</span>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 mt-0.5">{suggestion.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
-            {suggestion.predictedImpact && (
-              <p className="text-xs text-green-600 mt-1.5 font-medium">{suggestion.predictedImpact}</p>
+            <h3 className="text-sm font-semibold text-gray-900 mt-0.5">{title}</h3>
+            <p className="text-sm text-gray-600 mt-1">{description}</p>
+            {predictedImpact && (
+              <p className="text-xs text-green-600 mt-1.5 font-medium">{predictedImpact}</p>
             )}
           </div>
         </div>
@@ -73,4 +82,15 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
       )}
     </div>
   );
+}
+
+type SuggestionTranslator = ReturnType<typeof useTranslations>;
+
+function getSuggestionText(
+  t: SuggestionTranslator,
+  key: string | undefined,
+  fallback: string | undefined,
+  values: AiSuggestionParams,
+): string {
+  return key ? t(key, values) : fallback ?? '';
 }

@@ -1,11 +1,16 @@
 export type SuggestionType = 'pricing' | 'menu_mix' | 'marketing' | 'operations';
+export type AiSuggestionParams = Record<string, string | number | boolean | null | undefined>;
 
 export interface AiSuggestion {
   id: string;
   type: SuggestionType;
-  title: string;
-  description: string;
-  predictedImpact: string;
+  title?: string;
+  description?: string;
+  predictedImpact?: string;
+  titleKey?: string;
+  descriptionKey?: string;
+  predictedImpactKey?: string;
+  params?: AiSuggestionParams;
   actionable: boolean;
 }
 

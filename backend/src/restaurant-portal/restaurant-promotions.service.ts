@@ -162,7 +162,7 @@ export class RestaurantPromotionsService {
       customerId => this.notifications.create({
         userId: customerId,
         title: promotion.name,
-        body: promotion.description ?? `Mã ưu đãi ${promotion.code} đang có hiệu lực.`,
+        body: promotion.description ?? promotion.code,
         type: 'promotion.broadcast',
         payload: { promotionId: promotion.id, code: promotion.code },
       }),

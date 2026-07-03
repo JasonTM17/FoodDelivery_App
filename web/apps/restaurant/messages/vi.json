@@ -1168,6 +1168,18 @@
         "menu_mix": "Thực đơn",
         "marketing": "Marketing",
         "operations": "Vận hành"
+      },
+      "catalog": {
+        "menuAvailability": {
+          "title": "Rà soát món đang ẩn",
+          "description": "{count} món hiện không khả dụng.",
+          "impact": "Giảm đơn thất bại"
+        },
+        "deliveryTime": {
+          "title": "Giảm thời gian hoàn tất đơn",
+          "description": "Thời gian trung bình hiện là {minutes} phút.",
+          "impact": "Cải thiện trải nghiệm"
+        }
       }
     },
     "peakHours": {

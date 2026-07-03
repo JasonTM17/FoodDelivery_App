@@ -1168,6 +1168,18 @@
         "menu_mix": "Menu",
         "marketing": "Marketing",
         "operations": "Operations"
+      },
+      "catalog": {
+        "menuAvailability": {
+          "title": "Review hidden menu items",
+          "description": "{count} menu items are currently unavailable.",
+          "impact": "Reduce failed orders"
+        },
+        "deliveryTime": {
+          "title": "Reduce order completion time",
+          "description": "Average completion time is {minutes} minutes.",
+          "impact": "Improve customer experience"
+        }
       }
     },
     "peakHours": {

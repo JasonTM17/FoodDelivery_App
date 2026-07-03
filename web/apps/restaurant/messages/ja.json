@@ -1168,6 +1168,18 @@
         "menu_mix": "メニュー",
         "marketing": "マーケティング",
         "operations": "運用"
+      },
+      "catalog": {
+        "menuAvailability": {
+          "title": "非表示メニューを確認",
+          "description": "{count}件のメニューが現在利用できません。",
+          "impact": "注文失敗を減らす"
+        },
+        "deliveryTime": {
+          "title": "注文完了時間を短縮",
+          "description": "平均完了時間は{minutes}分です。",
+          "impact": "顧客体験を改善"
+        }
       }
     },
     "peakHours": {

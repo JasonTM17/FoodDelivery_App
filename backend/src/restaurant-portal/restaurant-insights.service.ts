@@ -120,12 +120,22 @@ export class RestaurantInsightsService {
     const avgDelivery = average(orders.map(order => order.actualDeliveryTimeMinutes).filter(isNumber))
     const suggestions = [
       ...(unavailableCount > 0 ? [{
-        id: 'menu-availability', type: 'menu_mix', title: 'Rà soát món đang ẩn',
-        description: `${unavailableCount} món hiện không khả dụng.`, predictedImpact: 'Giảm đơn thất bại', actionable: true,
+        id: 'menu-availability',
+        type: 'menu_mix',
+        titleKey: 'catalog.menuAvailability.title',
+        descriptionKey: 'catalog.menuAvailability.description',
+        predictedImpactKey: 'catalog.menuAvailability.impact',
+        params: { count: unavailableCount },
+        actionable: true,
       }] : []),
       ...(avgDelivery > 35 ? [{
-        id: 'delivery-time', type: 'operations', title: 'Giảm thời gian hoàn tất đơn',
-        description: `Thời gian trung bình hiện là ${Math.round(avgDelivery)} phút.`, predictedImpact: 'Cải thiện trải nghiệm', actionable: true,
+        id: 'delivery-time',
+        type: 'operations',
+        titleKey: 'catalog.deliveryTime.title',
+        descriptionKey: 'catalog.deliveryTime.description',
+        predictedImpactKey: 'catalog.deliveryTime.impact',
+        params: { minutes: Math.round(avgDelivery) },
+        actionable: true,
       }] : []),
     ]
     return { suggestions, peakHours, bestSellers: bestSellers.slice(0, 10), slowMovers, forecast }

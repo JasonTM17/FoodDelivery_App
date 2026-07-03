@@ -115,6 +115,18 @@ describe('RestaurantPromotionsService', () => {
     expect(result).toEqual({ targeted: 1, sent: 1 })
   })
 
+  it('uses the promotion code as the broadcast fallback body instead of runtime-localized copy', async () => {
+    findFirstOrThrow.mockResolvedValue(makePromotion({ description: null }))
+    resolveCustomerIds.mockResolvedValue(['customer-a'])
+    findCustomers.mockResolvedValue([{ id: 'customer-a' }])
+
+    await service.broadcast(userId, 'promotion-1')
+
+    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({
+      body: 'LUNCH10',
+    }))
+  })
+
   it('limits notification concurrency while preserving the broadcast result', async () => {
     const customers = Array.from({ length: 101 }, (_, index) => ({ id: `customer-${index}` }))
     let activeNotifications = 0
