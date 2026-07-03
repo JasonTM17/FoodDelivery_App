@@ -38,6 +38,8 @@ tags:
     description: Restaurant discovery (nearby, search, detail, menu, reviews)
   - name: menu
     description: Menu management (categories, items, options, availability) -- restaurant owner only
+  - name: restaurant-staff
+    description: Restaurant tenant staff invitations, permissions, and shift schedules
   - name: orders
     description: Order lifecycle (place, status transitions, cancel, refund, assign driver, tracking)
   - name: drivers
@@ -972,6 +974,166 @@ components:
         bankCode: "VCB"
         accountNumber: "0011001234567"
         accountName: "NGUYEN VAN B"
+
+    # ── Restaurant staff ──
+
+    StaffCapability:
+      type: string
+      enum: [orders, menu, reports, settings, staff, promotions]
+
+    RestaurantStaffMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        avatar: { type: string, format: uri, nullable: true }
+        role: { type: string, enum: [owner, manager, kitchen, cashier, viewer] }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/StaffCapability" }
+        isActive: { type: boolean }
+        joinedAt: { type: string, format: date-time }
+      required: [id, userId, name, email, role, permissions, isActive, joinedAt]
+
+    RestaurantStaffInvite:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { type: string, enum: [manager, kitchen, cashier, viewer] }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/StaffCapability" }
+        status: { type: string, enum: [pending, accepted, expired, revoked] }
+        expiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+      required: [id, email, role, permissions, status, expiresAt, createdAt]
+
+    CreatedRestaurantStaffInvite:
+      allOf:
+        - $ref: "#/components/schemas/RestaurantStaffInvite"
+        - type: object
+          properties:
+            token:
+              type: string
+              description: Returned once for delivery by an authorized invitation integration.
+              readOnly: true
+          required: [token]
+
+    RestaurantStaffShift:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        restaurantId: { type: string, format: uuid }
+        restaurantProfileId: { type: string, format: uuid }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        status: { type: string, enum: [scheduled, completed, cancelled] }
+        note: { type: string, maxLength: 300, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, restaurantId, restaurantProfileId, startsAt, endsAt, status, createdAt, updatedAt]
+
+    RestaurantStaffOverview:
+      type: object
+      properties:
+        staff:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantStaffMember" }
+        invites:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantStaffInvite" }
+        shifts:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantStaffShift" }
+      required: [staff, invites, shifts]
+
+    RestaurantStaffOverviewResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/RestaurantStaffOverview" }
+      required: [success, data]
+
+    RestaurantStaffMemberResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/RestaurantStaffMember" }
+      required: [success, data]
+
+    InviteRestaurantStaffRequest:
+      type: object
+      properties:
+        emails:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { type: string, format: email }
+        role: { type: string, enum: [manager, kitchen, cashier, viewer] }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/StaffCapability" }
+      required: [emails, role]
+
+    InviteRestaurantStaffResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            invites:
+              type: array
+              items: { $ref: "#/components/schemas/CreatedRestaurantStaffInvite" }
+          required: [invites]
+      required: [success, data]
+
+    UpdateRestaurantStaffRequest:
+      type: object
+      properties:
+        role: { type: string, enum: [manager, kitchen, cashier, viewer] }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/StaffCapability" }
+        isActive: { type: boolean }
+
+    CreateRestaurantStaffShiftRequest:
+      type: object
+      properties:
+        restaurantProfileId: { type: string, format: uuid }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        note: { type: string, maxLength: 300 }
+      required: [restaurantProfileId, startsAt, endsAt]
+
+    UpdateRestaurantStaffShiftRequest:
+      type: object
+      properties:
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        note: { type: string, maxLength: 300 }
+        status: { type: string, enum: [scheduled, completed, cancelled] }
+
+    RestaurantStaffShiftResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/RestaurantStaffShift" }
+      required: [success, data]
+
+    DeleteRestaurantStaffShiftResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            deleted: { type: boolean, const: true }
+          required: [deleted]
+      required: [success, data]
 
     # ── Payments ──
 
@@ -2328,6 +2490,110 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/ImageUploadResult" }
         "400": { description: "Missing or invalid image", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/staff:
+    get:
+      tags: [restaurant-staff]
+      summary: List restaurant staff, pending invitations, and shifts
+      description: Returns staff resources scoped to the authenticated restaurant tenant.
+      operationId: restaurantStaff_list
+      x-foo-actor: restaurant_owner
+      responses:
+        "200": { description: "Restaurant staff overview", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantStaffOverviewResponse" } } } }
+        "403": { description: "Restaurant profile unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/staff/invite:
+    post:
+      tags: [restaurant-staff]
+      summary: Create pending staff invitations
+      description: Creates tenant-scoped invitation records. It does not claim email delivery unless a delivery integration consumes the returned one-time token.
+      operationId: restaurantStaff_invite
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InviteRestaurantStaffRequest" }
+      responses:
+        "201": { description: "Pending invitations created", content: { application/json: { schema: { $ref: "#/components/schemas/InviteRestaurantStaffResponse" } } } }
+        "400": { description: "Invalid emails, role, or permissions", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Staff management permission required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/staff/{profileId}:
+    patch:
+      tags: [restaurant-staff]
+      summary: Update a restaurant staff member
+      description: Updates role, permissions, or active state within the authenticated restaurant tenant. Owner escalation is forbidden.
+      operationId: restaurantStaff_update
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRestaurantStaffRequest" }
+      responses:
+        "200": { description: "Updated staff member", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantStaffMemberResponse" } } } }
+        "403": { description: "Owner or manager boundary violation", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Staff member not found in tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/staff/shifts:
+    post:
+      tags: [restaurant-staff]
+      summary: Create a staff shift
+      description: Creates a non-overlapping shift for an active staff member in the authenticated restaurant tenant.
+      operationId: restaurantStaff_createShift
+      x-foo-actor: restaurant_owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRestaurantStaffShiftRequest" }
+      responses:
+        "201": { description: "Shift created", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantStaffShiftResponse" } } } }
+        "403": { description: "Staff management permission required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Staff member not found in tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Shift overlaps or ends before it starts", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/staff/shifts/{shiftId}:
+    patch:
+      tags: [restaurant-staff]
+      summary: Update a staff shift
+      description: Updates time, note, or status for a shift owned by the authenticated restaurant tenant.
+      operationId: restaurantStaff_updateShift
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRestaurantStaffShiftRequest" }
+      responses:
+        "200": { description: "Shift updated", content: { application/json: { schema: { $ref: "#/components/schemas/RestaurantStaffShiftResponse" } } } }
+        "404": { description: "Shift not found in tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Shift overlaps or ends before it starts", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+    delete:
+      tags: [restaurant-staff]
+      summary: Delete a staff shift
+      description: Deletes a shift only when it belongs to the authenticated restaurant tenant.
+      operationId: restaurantStaff_deleteShift
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Shift deleted", content: { application/json: { schema: { $ref: "#/components/schemas/DeleteRestaurantStaffShiftResponse" } } } }
+        "404": { description: "Shift not found in tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /restaurant/menu:
     get:

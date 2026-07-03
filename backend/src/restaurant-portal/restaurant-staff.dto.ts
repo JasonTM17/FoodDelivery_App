@@ -1,15 +1,28 @@
-import { IsArray, IsBoolean, IsIn, IsOptional, IsString } from 'class-validator'
+import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator'
 
-const STAFF_ROLES = ['owner', 'manager', 'kitchen', 'cashier', 'viewer'] as const
+const MANAGEABLE_STAFF_ROLES = ['manager', 'kitchen', 'cashier', 'viewer'] as const
 const CAPABILITIES = ['orders', 'menu', 'reports', 'settings', 'staff', 'promotions'] as const
 
 export class InviteStaffDto {
   @IsArray()
-  @IsString({ each: true })
+  @ArrayNotEmpty()
+  @ArrayMaxSize(20)
+  @IsEmail({}, { each: true })
   emails: string[]
 
-  @IsIn(STAFF_ROLES)
-  role: typeof STAFF_ROLES[number]
+  @IsIn(MANAGEABLE_STAFF_ROLES)
+  role: typeof MANAGEABLE_STAFF_ROLES[number]
 
   @IsOptional()
   @IsArray()
@@ -19,8 +32,8 @@ export class InviteStaffDto {
 
 export class UpdateStaffDto {
   @IsOptional()
-  @IsIn(STAFF_ROLES)
-  role?: typeof STAFF_ROLES[number]
+  @IsIn(MANAGEABLE_STAFF_ROLES)
+  role?: typeof MANAGEABLE_STAFF_ROLES[number]
 
   @IsOptional()
   @IsArray()
@@ -36,28 +49,30 @@ export class CreateShiftDto {
   @IsString()
   restaurantProfileId: string
 
-  @IsString()
+  @IsDateString()
   startsAt: string
 
-  @IsString()
+  @IsDateString()
   endsAt: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   note?: string
 }
 
 export class UpdateShiftDto {
   @IsOptional()
-  @IsString()
+  @IsDateString()
   startsAt?: string
 
   @IsOptional()
-  @IsString()
+  @IsDateString()
   endsAt?: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   note?: string
 
   @IsOptional()
