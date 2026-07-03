@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import DriverMarkers from '@/components/markers/driver-markers';
 import { useRealtimeDriverLocations, type DriverLocation } from '@/hooks/use-realtime-driver-locations';
+import { resolveGoogleMapsApiKey } from '@/lib/google-maps-key';
 import { Car, MapPin, Navigation, RefreshCw, Star, Wifi, WifiOff } from 'lucide-react';
 import DriverListSidebar from './driver-list-sidebar';
 
-const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+const GOOGLE_MAPS_KEY = resolveGoogleMapsApiKey();
 const VIETNAM_BOUNDS = { north: 23.5, south: 3.8, west: 102.0, east: 117.5 };
 const VIETNAM_CENTER = { lat: 14.0, lng: 108.0 };
 const VIETNAM_DEFAULT_ZOOM = 6;
