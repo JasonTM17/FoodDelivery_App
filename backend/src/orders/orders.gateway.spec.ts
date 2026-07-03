@@ -1,0 +1,70 @@
+import { UserRole } from '@prisma/client'
+import type { Socket } from 'socket.io'
+import { OrdersGateway } from './orders.gateway'
+
+describe('OrdersGateway realtime room authorization', () => {
+  const authenticate = jest.fn()
+  const getUser = jest.fn()
+  const canAccessOrder = jest.fn()
+  const canAccessRestaurant = jest.fn()
+  const gateway = new OrdersGateway(
+    { authenticate, getUser } as never,
+    { canAccessOrder, canAccessRestaurant } as never,
+  )
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('disconnects clients whose access token cannot be authenticated', async () => {
+    const client = makeClient()
+    authenticate.mockRejectedValue(new Error('invalid token'))
+
+    await gateway.handleConnection(client)
+
+    expect(client.disconnect).toHaveBeenCalledWith(true)
+  })
+
+  it('only lets admins subscribe to driver and order administration rooms', () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'restaurant-1', role: UserRole.restaurant })
+
+    expect(gateway.handleAdminSubscribe(client)).toEqual({ success: false })
+    expect(gateway.handleAdminOrderSubscribe(client)).toEqual({ success: false })
+    expect(client.join).not.toHaveBeenCalled()
+
+    getUser.mockReturnValue({ sub: 'admin-1', role: UserRole.admin })
+    expect(gateway.handleAdminSubscribe(client)).toEqual({ success: true })
+    expect(gateway.handleAdminOrderSubscribe(client)).toEqual({ success: true })
+    expect(client.join).toHaveBeenCalledWith('admin:drivers:all')
+    expect(client.join).toHaveBeenCalledWith('admin:orders')
+  })
+
+  it('checks order and restaurant tenant access before joining rooms', async () => {
+    const client = makeClient()
+    const user = { sub: 'restaurant-user', role: UserRole.restaurant }
+    getUser.mockReturnValue(user)
+    canAccessOrder.mockResolvedValue(false)
+    canAccessRestaurant.mockResolvedValue(true)
+
+    await expect(gateway.handleOrderSubscribe(client, { orderId: 'order-1' }))
+      .resolves.toEqual({ success: false })
+    await expect(gateway.handleRestaurantSubscribe(client, {
+      restaurantId: 'restaurant-1',
+    })).resolves.toEqual({ success: true })
+
+    expect(canAccessOrder).toHaveBeenCalledWith(user, 'order-1')
+    expect(canAccessRestaurant).toHaveBeenCalledWith(user, 'restaurant-1')
+    expect(client.join).not.toHaveBeenCalledWith('order:order-1')
+    expect(client.join).toHaveBeenCalledWith('restaurant:restaurant-1')
+  })
+})
+
+function makeClient(): Socket {
+  return {
+    join: jest.fn(),
+    leave: jest.fn(),
+    disconnect: jest.fn(),
+    data: {},
+  } as unknown as Socket
+}

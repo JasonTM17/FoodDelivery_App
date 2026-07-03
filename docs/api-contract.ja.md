@@ -105,6 +105,16 @@ Cursor-based endpoint は `meta` に cursor field を追加できますが、col
 - Session 期限切れ redirect は現在の locale を維持します。
 - Web auth の httpOnly cookie 化は別 scope であり、Batch 4 には含めません。
 
+## WebSocket 認証とルーム認可
+
+- Socket.IO の `/events` と `/tracking` namespace は `handshake.auth.token` または `Authorization` header に現在の bearer access token を必要とします。
+- Refresh token、期限切れ token、不正な署名、無効化された user は room join 前に拒否されます。
+- `/events` の Admin room は database で確認した `admin` role が必要です。
+- Restaurant room は要求された tenant に属する active restaurant profile が必要です。
+- Order room は admin または注文参加者（customer、担当 driver、active restaurant staff）のみ join できます。
+- `/tracking` の位置更新は認証済み `driver` account からのみ受け付けます。
+- Production origin は `CORS_ORIGINS` を使用し、local default は port 3000、3002、3003 を許可します。
+
 ## HMAC 規約
 
 ### Inbound SePay webhook

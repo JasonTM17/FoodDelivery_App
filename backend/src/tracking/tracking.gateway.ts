@@ -1,12 +1,23 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets'
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets'
+import { UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
 import { TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
 import { OrdersGateway } from '../orders/orders.gateway'
+import { WebSocketAuthService } from '../auth/websocket-auth.service'
+import { RealtimeRoomAccessService } from '../orders/realtime-room-access.service'
+import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
 
-@WebSocketGateway({ namespace: '/tracking', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
-export class TrackingGateway {
+@WebSocketGateway({ namespace: '/tracking', cors: { origin: websocketCorsOrigins() } })
+export class TrackingGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server
 
@@ -16,15 +27,26 @@ export class TrackingGateway {
     private readonly trackingService: TrackingService,
     private readonly prisma: PrismaService,
     private readonly ordersGateway: OrdersGateway,
+    private readonly socketAuth: WebSocketAuthService,
+    private readonly roomAccess: RealtimeRoomAccessService,
   ) {}
+
+  async handleConnection(client: Socket): Promise<void> {
+    try {
+      await this.socketAuth.authenticate(client)
+    } catch {
+      client.disconnect(true)
+    }
+  }
 
   @SubscribeMessage('driver:location')
   async handleLocationUpdate(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { lat: number; lng: number; bearing: number; speed: number; accuracy: number },
   ): Promise<void> {
-    const driverId = client.data?.user?.sub
-    if (!driverId) return
+    const user = this.socketAuth.getUser(client)
+    if (user?.role !== UserRole.driver) return
+    const driverId = user.sub
 
     if (!this.isInVietnamBbox(data.lat, data.lng)) {
       client.emit('driver:location_rejected', { reason: 'out_of_bbox' })
@@ -94,8 +116,16 @@ export class TrackingGateway {
   }
 
   @SubscribeMessage('order:subscribe')
-  handleOrderSubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }): void {
+  async handleOrderSubscribe(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { orderId: string },
+  ): Promise<{ success: boolean }> {
+    const user = this.socketAuth.getUser(client)
+    if (!user || !data?.orderId || !(await this.roomAccess.canAccessOrder(user, data.orderId))) {
+      return { success: false }
+    }
     client.join(`order:${data.orderId}`)
+    return { success: true }
   }
 
   @SubscribeMessage('order:unsubscribe')

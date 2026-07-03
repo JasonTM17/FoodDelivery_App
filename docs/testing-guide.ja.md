@@ -59,6 +59,15 @@ pnpm test:e2e -- --project=firefox
 
 Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。
 
+Realtime security regression では次も確認します。
+
+- Token なし、refresh token、期限切れ token、不正署名では Socket.IO に接続できない。
+- Admin 以外は Admin order/driver room に join できない。
+- Restaurant は別 tenant の room に join できない。
+- Customer、driver、restaurant staff は無関係な order room に join できない。
+- 認証済み driver account のみ GPS update を送信できる。
+- Admin/Restaurant web client は reconnect 時に最新 access token を送信する。
+
 ## Accessibility and visual QA
 
 - Axe serious/critical issue は 0。

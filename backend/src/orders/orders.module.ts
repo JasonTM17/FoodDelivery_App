@@ -13,9 +13,12 @@ import { CartModule } from '../cart/cart.module'
 import { PaymentsModule } from '../payments/payments.module'
 import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
 import { OrderChatService } from './order-chat.service'
+import { AuthModule } from '../auth/auth.module'
+import { RealtimeRoomAccessService } from './realtime-room-access.service'
 
 @Module({
   imports: [
+    AuthModule,
     forwardRef(() => CartModule),
     PaymentsModule,
     BullModule.registerQueue({ name: 'dispatch' }),
@@ -34,8 +37,9 @@ import { OrderChatService } from './order-chat.service'
     AutoTimeoutProcessor,
     PartialFulfillmentService,
     OrderChatService,
+    RealtimeRoomAccessService,
   ],
-  exports: [OrdersService, OrdersGateway],
+  exports: [OrdersService, OrdersGateway, RealtimeRoomAccessService],
 })
 export class OrdersModule {}
 

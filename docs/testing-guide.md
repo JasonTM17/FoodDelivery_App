@@ -77,6 +77,15 @@ Batch 4 E2E coverage should include:
 - Notifications
 - Tenant isolation
 
+Realtime security regression coverage must also verify:
+
+- Missing, refresh, expired, or invalid Socket.IO tokens cannot connect.
+- Non-admin users cannot join Admin order or driver rooms.
+- Restaurants cannot join another tenant's room.
+- Customers, drivers, and restaurant staff cannot join unrelated order rooms.
+- Only authenticated drivers can publish GPS updates.
+- Admin and Restaurant web clients send the latest access token during reconnect.
+
 ## Accessibility and Visual QA
 
 - Run axe checks and require zero serious/critical issues.

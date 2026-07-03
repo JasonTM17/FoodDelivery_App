@@ -2,10 +2,11 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody } from
 import { Inject } from '@nestjs/common'
 import { Server } from 'socket.io'
 import Redis from 'ioredis'
+import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
 
 type OfferCallback = (accepted: boolean) => void
 
-@WebSocketGateway({ namespace: '/dispatch', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
+@WebSocketGateway({ namespace: '/dispatch', cors: { origin: websocketCorsOrigins() } })
 export class DispatchGateway {
   @WebSocketServer()
   server: Server

@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './jwt-auth.guard'
 import { RefreshTokenStore } from './refresh-token.store'
 import { Ed25519Service } from './keys/ed25519.service'
 import { JwksController } from './keys/jwks.controller'
+import { WebSocketAuthService } from './websocket-auth.service'
 
 @Module({
   imports: [
@@ -24,7 +25,14 @@ import { JwksController } from './keys/jwks.controller'
     forwardRef(() => UsersModule),
   ],
   controllers: [AuthController, JwksController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshTokenStore, Ed25519Service],
-  exports: [AuthService, JwtAuthGuard, JwtModule, Ed25519Service],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RefreshTokenStore,
+    Ed25519Service,
+    WebSocketAuthService,
+  ],
+  exports: [AuthService, JwtAuthGuard, JwtModule, Ed25519Service, WebSocketAuthService],
 })
 export class AuthModule {}

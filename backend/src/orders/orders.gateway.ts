@@ -1,5 +1,16 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets'
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets'
+import { UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
+import { WebSocketAuthService } from '../auth/websocket-auth.service'
+import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+import { RealtimeRoomAccessService } from './realtime-room-access.service'
 
 export interface AdminDriverLocationChangedEvent {
   driverId: string
@@ -10,10 +21,23 @@ export interface AdminDriverLocationChangedEvent {
   timestamp: string
 }
 
-@WebSocketGateway({ namespace: '/events', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
-export class OrdersGateway {
+@WebSocketGateway({ namespace: '/events', cors: { origin: websocketCorsOrigins() } })
+export class OrdersGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server
+
+  constructor(
+    private readonly socketAuth: WebSocketAuthService,
+    private readonly roomAccess: RealtimeRoomAccessService,
+  ) {}
+
+  async handleConnection(client: Socket): Promise<void> {
+    try {
+      await this.socketAuth.authenticate(client)
+    } catch {
+      client.disconnect(true)
+    }
+  }
 
   notifyRestaurant(restaurantId: string, data: Record<string, unknown>) {
     this.server.to(`restaurant:${restaurantId}`).emit('restaurant:new_order', data)
@@ -32,8 +56,16 @@ export class OrdersGateway {
   }
 
   @SubscribeMessage('order:subscribe')
-  handleOrderSubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }) {
+  async handleOrderSubscribe(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { orderId: string },
+  ): Promise<{ success: boolean }> {
+    const user = this.socketAuth.getUser(client)
+    if (!user || !data?.orderId || !(await this.roomAccess.canAccessOrder(user, data.orderId))) {
+      return { success: false }
+    }
     client.join(`order:${data.orderId}`)
+    return { success: true }
   }
 
   @SubscribeMessage('order:unsubscribe')
@@ -42,8 +74,20 @@ export class OrdersGateway {
   }
 
   @SubscribeMessage('restaurant:subscribe')
-  handleRestaurantSubscribe(@ConnectedSocket() client: Socket, @MessageBody() data: { restaurantId: string }) {
+  async handleRestaurantSubscribe(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { restaurantId: string },
+  ): Promise<{ success: boolean }> {
+    const user = this.socketAuth.getUser(client)
+    if (
+      !user
+      || !data?.restaurantId
+      || !(await this.roomAccess.canAccessRestaurant(user, data.restaurantId))
+    ) {
+      return { success: false }
+    }
     client.join(`restaurant:${data.restaurantId}`)
+    return { success: true }
   }
 
   @SubscribeMessage('restaurant:unsubscribe')
@@ -52,8 +96,11 @@ export class OrdersGateway {
   }
 
   @SubscribeMessage('admin:subscribe_drivers')
-  handleAdminSubscribe(@ConnectedSocket() client: Socket) {
+  handleAdminSubscribe(@ConnectedSocket() client: Socket): { success: boolean } {
+    const user = this.socketAuth.getUser(client)
+    if (user?.role !== UserRole.admin) return { success: false }
     client.join('admin:drivers:all')
+    return { success: true }
   }
 
   @SubscribeMessage('admin:unsubscribe_drivers')
@@ -62,8 +109,11 @@ export class OrdersGateway {
   }
 
   @SubscribeMessage('admin:subscribe_orders')
-  handleAdminOrderSubscribe(@ConnectedSocket() client: Socket) {
+  handleAdminOrderSubscribe(@ConnectedSocket() client: Socket): { success: boolean } {
+    const user = this.socketAuth.getUser(client)
+    if (user?.role !== UserRole.admin) return { success: false }
     client.join('admin:orders')
+    return { success: true }
   }
 
   @SubscribeMessage('admin:unsubscribe_orders')

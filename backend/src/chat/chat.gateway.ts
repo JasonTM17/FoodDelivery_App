@@ -1,7 +1,8 @@
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
+import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
 
-@WebSocketGateway({ namespace: '/chat', cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] } })
+@WebSocketGateway({ namespace: '/chat', cors: { origin: websocketCorsOrigins() } })
 export class ChatGateway {
   @WebSocketServer()
   server: Server

@@ -92,6 +92,16 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 - Khi hết phiên, redirect phải giữ locale hiện tại.
 - Chuyển web auth sang httpOnly cookie là hạng mục riêng, không thuộc Batch 4.
 
+## Xác thực WebSocket và phân quyền phòng
+
+- Các namespace Socket.IO `/events` và `/tracking` yêu cầu bearer access token hiện tại trong `handshake.auth.token` hoặc header `Authorization`.
+- Refresh token, token hết hạn, chữ ký sai và user đã bị vô hiệu hóa đều bị từ chối trước khi join phòng.
+- Phòng Admin trên `/events` yêu cầu role `admin` được đọc lại từ database.
+- Phòng nhà hàng yêu cầu restaurant profile đang active và thuộc đúng tenant được yêu cầu.
+- Phòng đơn hàng chỉ cho admin hoặc người tham gia đơn: khách hàng, tài xế được gán, hoặc nhân viên nhà hàng đang active.
+- `/tracking` chỉ nhận cập nhật vị trí từ tài khoản `driver` đã xác thực.
+- Production origin lấy từ `CORS_ORIGINS`; mặc định local hỗ trợ các port 3000, 3002 và 3003.
+
 ## Quy ước HMAC
 
 ### Webhook SePay inbound

@@ -12,10 +12,11 @@ import { JwtService } from '@nestjs/jwt'
 import { forwardRef, Inject, Logger } from '@nestjs/common'
 import { NotificationsService } from './notifications.service'
 import { JwtPayload } from '../auth/jwt-payload.interface'
+import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
 
 @WebSocketGateway({
   namespace: '/notifications',
-  cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'] },
+  cors: { origin: websocketCorsOrigins() },
 })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

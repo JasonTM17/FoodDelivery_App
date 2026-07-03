@@ -59,6 +59,15 @@ pnpm test:e2e -- --project=firefox
 
 Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation.
 
+Regression bảo mật realtime cũng phải kiểm tra:
+
+- Socket.IO không cho kết nối khi thiếu token, dùng refresh token, token hết hạn hoặc chữ ký sai.
+- User không phải admin không thể join phòng đơn hàng hoặc tài xế của Admin.
+- Nhà hàng không thể join phòng của tenant khác.
+- Khách hàng, tài xế và nhân viên nhà hàng không thể join phòng đơn hàng không liên quan.
+- Chỉ tài khoản driver đã xác thực mới được gửi cập nhật GPS.
+- Web Admin và Restaurant gửi access token mới nhất khi reconnect.
+
 ## Accessibility và visual QA
 
 - Axe không có serious/critical issue.

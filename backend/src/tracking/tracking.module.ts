@@ -8,9 +8,11 @@ import { EtaCacheService } from './eta-cache.service'
 import { EtaRecomputeProcessor } from './eta-recompute.processor'
 import { RedisModule } from '../redis/redis.module'
 import { OrdersModule } from '../orders/orders.module'
+import { AuthModule } from '../auth/auth.module'
 
 @Module({
   imports: [
+    AuthModule,
     BullModule.registerQueue({ name: 'tracking-eta' }),
     RedisModule,
     OrdersModule,
