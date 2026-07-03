@@ -89,6 +89,7 @@ Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` bằng HTTP referrer.
 
 - Chạy `pnpm prisma migrate deploy` trước khi nhận traffic.
 - Set `NODE_ENV=production`.
+- Backend boot validation sẽ reject khi thiếu production infra secret hoặc còn dùng localhost default. Cấu hình `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, JWT secret dài 64+ ký tự, `PASSWORD_RESET_URL_BASE`, `CORS_ORIGINS` chính xác và MinIO/S3 trước khi start API hoặc workers.
 - CORS chỉ cho production dashboard/mobile origins.
 - Cấu hình SePay webhook URL và `SEPAY_WEBHOOK_SECRET`.
 - Cấu hình Redis cho Socket.IO/realtime và rate limiting.

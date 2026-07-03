@@ -35,11 +35,12 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
 import { ThrottlerStorageRedis } from './common/storage/throttler-storage-redis'
+import { validateEnv } from './config/env.validation'
 import Redis from 'ioredis'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],
       inject: ['REDIS_CLIENT', ConfigService],
@@ -50,7 +51,14 @@ import Redis from 'ioredis'
         }),
       }),
     }),
-    BullModule.forRoot({ connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' } }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const redisUrl = config.get<string>('REDIS_URL')
+        if (!redisUrl) throw new Error('REDIS_URL environment variable is not set')
+        return { connection: { url: redisUrl } }
+      },
+    }),
     PrismaModule,
     RedisModule,
     HealthModule,

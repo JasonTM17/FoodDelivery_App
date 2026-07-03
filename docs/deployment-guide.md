@@ -99,6 +99,7 @@ Minimum production checklist:
 
 - Run `pnpm prisma migrate deploy` before serving traffic.
 - Set `NODE_ENV=production`.
+- Backend boot validation rejects missing production infra secrets and localhost defaults. Configure `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, 64+ character JWT secrets, `PASSWORD_RESET_URL_BASE`, exact `CORS_ORIGINS`, and MinIO/S3 values before starting the API or workers.
 - Configure CORS to exact production dashboard/mobile origins.
 - Configure SePay webhook URL and `SEPAY_WEBHOOK_SECRET`.
 - Configure Redis for Socket.IO/realtime and rate limiting.

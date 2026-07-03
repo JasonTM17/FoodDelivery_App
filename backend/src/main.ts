@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { AppModule } from './app.module'
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter'
@@ -13,10 +14,13 @@ const DEFAULT_CORS_ORIGINS = [
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  const configService = app.get(ConfigService)
+  const redisUrl = configService.get<string>('REDIS_URL')
+  if (!redisUrl) throw new Error('REDIS_URL environment variable is not set')
 
   // Redis adapter for Socket.IO horizontal scaling
   const redisAdapter = new RedisIoAdapter(app)
-  await redisAdapter.connectToRedis()
+  await redisAdapter.connectToRedis(redisUrl)
   app.useWebSocketAdapter(redisAdapter)
 
   app.use(helmet())

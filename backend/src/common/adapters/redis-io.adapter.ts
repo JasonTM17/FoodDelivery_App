@@ -6,8 +6,7 @@ import { ServerOptions } from 'socket.io'
 export class RedisIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter> | undefined
 
-  async connectToRedis(): Promise<void> {
-    const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
+  async connectToRedis(redisUrl: string): Promise<void> {
     const pubClient = createClient({ url: redisUrl })
     const subClient = pubClient.duplicate()
 

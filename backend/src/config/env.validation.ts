@@ -1,10 +1,58 @@
 import { z } from 'zod'
 
+const LOCAL_DEFAULTS = {
+  DATABASE_URL: 'postgresql://foodflow:foodflow_dev@localhost:5432/foodflow',
+  DIRECT_URL: 'postgresql://foodflow:foodflow_dev@localhost:5432/foodflow',
+  REDIS_URL: 'redis://localhost:6379',
+  JWT_SECRET: 'local-development-jwt-secret-change-me-000000000000000000000000000000',
+  JWT_REFRESH_SECRET: 'local-development-refresh-secret-change-me-0000000000000000000000',
+  MINIO_ACCESS_KEY: 'minioadmin',
+  MINIO_SECRET_KEY: 'minioadmin',
+} as const
+
+const productionRequiredKeys = [
+  'DATABASE_URL',
+  'DIRECT_URL',
+  'REDIS_URL',
+  'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
+  'PASSWORD_RESET_URL_BASE',
+  'CORS_ORIGINS',
+  'MINIO_ENDPOINT',
+  'MINIO_ACCESS_KEY',
+  'MINIO_SECRET_KEY',
+  'MINIO_PUBLIC_URL',
+] as const
+
+const productionForbiddenValues: Partial<Record<(typeof productionRequiredKeys)[number], readonly string[]>> = {
+  DATABASE_URL: [LOCAL_DEFAULTS.DATABASE_URL],
+  DIRECT_URL: [LOCAL_DEFAULTS.DIRECT_URL],
+  REDIS_URL: [LOCAL_DEFAULTS.REDIS_URL],
+  JWT_SECRET: [LOCAL_DEFAULTS.JWT_SECRET, 'dev-secret'],
+  JWT_REFRESH_SECRET: [LOCAL_DEFAULTS.JWT_REFRESH_SECRET, 'dev-refresh-secret'],
+  PASSWORD_RESET_URL_BASE: ['http://localhost:3000/reset-password'],
+  CORS_ORIGINS: ['http://localhost:3000'],
+  MINIO_ENDPOINT: ['localhost'],
+  MINIO_ACCESS_KEY: ['minioadmin'],
+  MINIO_SECRET_KEY: ['minioadmin'],
+  MINIO_PUBLIC_URL: ['http://localhost:9000'],
+}
+
+const postgresUrl = z.string().url().startsWith('postgresql://')
+const redisUrl = z
+  .string()
+  .url()
+  .refine(
+    (value) => value.startsWith('redis://') || value.startsWith('rediss://'),
+    'Must start with redis:// or rediss://',
+  )
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
-  DATABASE_URL: z.string().url().startsWith('postgresql://'),
-  REDIS_URL: z.string().url().startsWith('redis://'),
+  DATABASE_URL: postgresUrl,
+  DIRECT_URL: postgresUrl,
+  REDIS_URL: redisUrl,
   JWT_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   PASSWORD_RESET_URL_BASE: z.string().url().optional(),
@@ -41,14 +89,74 @@ export const envSchema = z.object({
 
 export type EnvConfig = z.infer<typeof envSchema>
 
-export function validateEnv(config: Record<string, unknown>): EnvConfig {
-  const result = envSchema.safeParse(config)
-  if (!result.success) {
-    console.error('❌ Invalid environment variables:')
-    for (const issue of result.error.issues) {
-      console.error(`  - ${issue.path.join('.')}: ${issue.message}`)
+function resolveNodeEnv(config: Record<string, unknown>): string {
+  return typeof config.NODE_ENV === 'string' ? config.NODE_ENV : process.env.NODE_ENV ?? 'development'
+}
+
+function withNonProductionDefaults(config: Record<string, unknown>): Record<string, unknown> {
+  if (resolveNodeEnv(config) === 'production') return { ...config }
+  return { ...LOCAL_DEFAULTS, ...config }
+}
+
+function isBlank(value: unknown): boolean {
+  return typeof value !== 'string' || value.trim().length === 0
+}
+
+function collectProductionIssues(config: Record<string, unknown>): string[] {
+  if (resolveNodeEnv(config) !== 'production') return []
+
+  const issues: string[] = []
+  for (const key of productionRequiredKeys) {
+    const value = config[key]
+    if (isBlank(value)) {
+      issues.push(`${key}: is required in production`)
+      continue
     }
-    process.exit(1)
+
+    const normalizedValue = String(value).trim()
+    if (productionForbiddenValues[key]?.includes(normalizedValue)) {
+      issues.push(`${key}: must not use the local development default in production`)
+    }
   }
+
+  const jwtSecret = String(config.JWT_SECRET ?? '')
+  if (jwtSecret && jwtSecret.length < 64) {
+    issues.push('JWT_SECRET: must be at least 64 characters in production')
+  }
+
+  const refreshSecret = String(config.JWT_REFRESH_SECRET ?? '')
+  if (refreshSecret && refreshSecret.length < 64) {
+    issues.push('JWT_REFRESH_SECRET: must be at least 64 characters in production')
+  }
+
+  const corsOrigins = String(config.CORS_ORIGINS ?? '')
+  if (corsOrigins.includes('*') || corsOrigins.includes('localhost')) {
+    issues.push('CORS_ORIGINS: must list exact production origins only')
+  }
+
+  const passwordResetBase = String(config.PASSWORD_RESET_URL_BASE ?? '')
+  if (passwordResetBase.includes('localhost')) {
+    issues.push('PASSWORD_RESET_URL_BASE: must not point to localhost in production')
+  }
+
+  if (config.THROTTLER_MEMORY_FALLBACK === 'true') {
+    issues.push('THROTTLER_MEMORY_FALLBACK: must remain false in production')
+  }
+
+  return issues
+}
+
+export function validateEnv(config: Record<string, unknown>): EnvConfig {
+  const result = envSchema.safeParse(withNonProductionDefaults(config))
+  const parseIssues = result.success
+    ? []
+    : result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+  const productionIssues = collectProductionIssues(config)
+  const issues = [...parseIssues, ...productionIssues]
+
+  if (!result.success || productionIssues.length > 0) {
+    throw new Error(`Invalid environment variables:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
+  }
+
   return result.data
 }

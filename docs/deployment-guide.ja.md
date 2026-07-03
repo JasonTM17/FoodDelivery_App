@@ -87,6 +87,8 @@ Admin と Restaurant は production で `NEXT_PUBLIC_API_URL` または `NEXT_PU
 
 ## Backend
 
+Backend boot validation は production infra secret の不足や localhost default を拒否します。API/worker を起動する前に `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, 64文字以上の JWT secrets, `PASSWORD_RESET_URL_BASE`, 正確な `CORS_ORIGINS`, MinIO/S3 values を設定してください。
+
 - Traffic を受ける前に `pnpm prisma migrate deploy` を実行する。
 - `NODE_ENV=production` を設定する。
 - CORS は production dashboard/mobile origin のみに限定する。
