@@ -314,6 +314,74 @@
     "revenue": "Doanh thu",
     "createdAt": "Ngày tạo"
   },
+  "restaurantTabs": {
+    "label": "Các mục chi tiết nhà hàng",
+    "overview": "Tổng quan",
+    "menu": "Thực đơn",
+    "orders": "Đơn hàng",
+    "reviews": "Đánh giá",
+    "finance": "Tài chính"
+  },
+  "restaurantOverviewTab": {
+    "loading": "Đang tải tổng quan nhà hàng",
+    "loadErrorTitle": "Không thể tải tổng quan",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "retry": "Thử lại",
+    "emptyTitle": "Chưa có tổng quan",
+    "emptyDescription": "Nhà hàng này chưa có dữ liệu tổng quan.",
+    "notAvailable": "Chưa cập nhật",
+    "generalInfoTitle": "Thông tin chung",
+    "noDescription": "Chưa có mô tả",
+    "hoursTitle": "Giờ hoạt động",
+    "noHours": "Chưa cập nhật giờ hoạt động",
+    "ownerTitle": "Chủ sở hữu",
+    "ownerFields": {
+      "name": "Tên",
+      "email": "Email",
+      "phone": "Số điện thoại"
+    },
+    "metricsTitle": "Chỉ số hôm nay",
+    "todayOrders": "Đơn mới",
+    "revenue": "Doanh thu",
+    "avgPrepTime": "Thời gian chuẩn bị trung bình",
+    "completionRate": "Tỷ lệ hoàn thành",
+    "minutes": "{value} phút"
+  },
+  "restaurantMenuTab": {
+    "loading": "Đang tải thực đơn nhà hàng",
+    "loadErrorTitle": "Không thể tải thực đơn",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "retry": "Thử lại",
+    "emptyTitle": "Chưa có món ăn",
+    "emptyDescription": "Nhà hàng chưa thêm món ăn nào vào thực đơn.",
+    "updateError": "Không thể cập nhật trạng thái món ăn. Vui lòng thử lại.",
+    "columns": {
+      "name": "Tên món",
+      "price": "Giá",
+      "status": "Trạng thái",
+      "active": "Kích hoạt"
+    },
+    "available": "Còn bán",
+    "hidden": "Đã ẩn",
+    "toggleAvailability": "Chuyển trạng thái bán của {name}"
+  },
+  "restaurantReviewsTab": {
+    "loading": "Đang tải đánh giá nhà hàng",
+    "loadErrorTitle": "Không thể tải đánh giá",
+    "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
+    "retry": "Thử lại",
+    "overviewTitle": "Tổng quan đánh giá",
+    "totalReviews": "{count} đánh giá",
+    "ratingLabel": "Đánh giá {rating} trên 5",
+    "distributionLabel": "{stars} sao: {count} đánh giá",
+    "emptyTitle": "Chưa có đánh giá",
+    "emptyDescription": "Nhà hàng chưa nhận được đánh giá nào.",
+    "orderMeta": "Đơn {orderCode} — {date}",
+    "merchantReply": "Phản hồi từ nhà hàng:",
+    "previousPage": "Trước",
+    "nextPage": "Sau",
+    "page": "Trang {page}"
+  },
   "restaurantStatusToggle": {
     "pause": "Tạm dừng",
     "activateAgain": "Kích hoạt lại",

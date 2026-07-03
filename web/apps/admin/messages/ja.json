@@ -314,6 +314,74 @@
     "revenue": "売上",
     "createdAt": "作成日"
   },
+  "restaurantTabs": {
+    "label": "レストラン詳細セクション",
+    "overview": "概要",
+    "menu": "メニュー",
+    "orders": "注文",
+    "reviews": "レビュー",
+    "finance": "財務"
+  },
+  "restaurantOverviewTab": {
+    "loading": "レストラン概要を読み込んでいます",
+    "loadErrorTitle": "概要を読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "retry": "再試行",
+    "emptyTitle": "概要データがありません",
+    "emptyDescription": "このレストランの概要データはまだありません。",
+    "notAvailable": "未登録",
+    "generalInfoTitle": "基本情報",
+    "noDescription": "説明はまだありません",
+    "hoursTitle": "営業時間",
+    "noHours": "営業時間はまだ登録されていません",
+    "ownerTitle": "オーナー",
+    "ownerFields": {
+      "name": "名前",
+      "email": "メール",
+      "phone": "電話番号"
+    },
+    "metricsTitle": "本日の指標",
+    "todayOrders": "新規注文",
+    "revenue": "売上",
+    "avgPrepTime": "平均調理時間",
+    "completionRate": "完了率",
+    "minutes": "{value}分"
+  },
+  "restaurantMenuTab": {
+    "loading": "レストランメニューを読み込んでいます",
+    "loadErrorTitle": "メニューを読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "retry": "再試行",
+    "emptyTitle": "メニュー項目がありません",
+    "emptyDescription": "このレストランにはまだメニュー項目がありません。",
+    "updateError": "商品の提供状態を更新できませんでした。もう一度お試しください。",
+    "columns": {
+      "name": "商品名",
+      "price": "価格",
+      "status": "ステータス",
+      "active": "有効"
+    },
+    "available": "販売中",
+    "hidden": "非表示",
+    "toggleAvailability": "{name}の提供状態を切り替え"
+  },
+  "restaurantReviewsTab": {
+    "loading": "レストランのレビューを読み込んでいます",
+    "loadErrorTitle": "レビューを読み込めませんでした",
+    "loadErrorDescription": "接続を確認して、もう一度お試しください。",
+    "retry": "再試行",
+    "overviewTitle": "レビュー概要",
+    "totalReviews": "レビュー {count} 件",
+    "ratingLabel": "5点満点中{rating}点",
+    "distributionLabel": "{stars}つ星：{count}件",
+    "emptyTitle": "レビューがありません",
+    "emptyDescription": "このレストランにはまだレビューがありません。",
+    "orderMeta": "注文 {orderCode} — {date}",
+    "merchantReply": "レストランからの返信：",
+    "previousPage": "前へ",
+    "nextPage": "次へ",
+    "page": "{page}ページ"
+  },
   "restaurantStatusToggle": {
     "pause": "一時停止",
     "activateAgain": "再有効化",

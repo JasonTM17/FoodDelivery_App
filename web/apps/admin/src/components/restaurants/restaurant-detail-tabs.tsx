@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, lazy, Suspense } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { lazy, Suspense, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { ShoppingBag, Star, Store, TrendingUp, Utensils } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Store, Utensils, ShoppingBag, Star, TrendingUp } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const RestaurantOverviewTab = lazy(() => import('./restaurant-overview-tab'));
 const RestaurantMenuTab = lazy(() => import('./restaurant-menu-tab'));
@@ -32,46 +33,38 @@ interface RestaurantDetailTabsProps {
   };
 }
 
+const tabTriggerClassName =
+  'gap-1.5 whitespace-nowrap rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent';
+
 export default function RestaurantDetailTabs({ restaurant }: RestaurantDetailTabsProps) {
+  const t = useTranslations('restaurantTabs');
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="w-full justify-start gap-0 border-b bg-transparent p-0">
-        <TabsTrigger
-          value="overview"
-          className="gap-1.5 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-        >
-          <Store className="h-4 w-4" />
-          Tổng quan
+      <TabsList
+        aria-label={t('label')}
+        className="w-full justify-start gap-0 overflow-x-auto border-b bg-transparent p-0"
+      >
+        <TabsTrigger value="overview" className={tabTriggerClassName}>
+          <Store className="h-4 w-4" aria-hidden="true" />
+          {t('overview')}
         </TabsTrigger>
-        <TabsTrigger
-          value="menu"
-          className="gap-1.5 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-        >
-          <Utensils className="h-4 w-4" />
-          Menu
+        <TabsTrigger value="menu" className={tabTriggerClassName}>
+          <Utensils className="h-4 w-4" aria-hidden="true" />
+          {t('menu')}
         </TabsTrigger>
-        <TabsTrigger
-          value="orders"
-          className="gap-1.5 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-        >
-          <ShoppingBag className="h-4 w-4" />
-          Đơn hàng
+        <TabsTrigger value="orders" className={tabTriggerClassName}>
+          <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+          {t('orders')}
         </TabsTrigger>
-        <TabsTrigger
-          value="reviews"
-          className="gap-1.5 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-        >
-          <Star className="h-4 w-4" />
-          Đánh giá
+        <TabsTrigger value="reviews" className={tabTriggerClassName}>
+          <Star className="h-4 w-4" aria-hidden="true" />
+          {t('reviews')}
         </TabsTrigger>
-        <TabsTrigger
-          value="finance"
-          className="gap-1.5 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-        >
-          <TrendingUp className="h-4 w-4" />
-          Tài chính
+        <TabsTrigger value="finance" className={tabTriggerClassName}>
+          <TrendingUp className="h-4 w-4" aria-hidden="true" />
+          {t('finance')}
         </TabsTrigger>
       </TabsList>
 

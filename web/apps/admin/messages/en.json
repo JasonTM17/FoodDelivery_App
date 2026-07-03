@@ -314,6 +314,74 @@
     "revenue": "Revenue",
     "createdAt": "Created at"
   },
+  "restaurantTabs": {
+    "label": "Restaurant detail sections",
+    "overview": "Overview",
+    "menu": "Menu",
+    "orders": "Orders",
+    "reviews": "Reviews",
+    "finance": "Finance"
+  },
+  "restaurantOverviewTab": {
+    "loading": "Loading restaurant overview",
+    "loadErrorTitle": "Could not load the overview",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Try again",
+    "emptyTitle": "Overview unavailable",
+    "emptyDescription": "No overview data is available for this restaurant.",
+    "notAvailable": "Not available",
+    "generalInfoTitle": "General information",
+    "noDescription": "No description provided",
+    "hoursTitle": "Operating hours",
+    "noHours": "Operating hours have not been updated",
+    "ownerTitle": "Owner",
+    "ownerFields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "metricsTitle": "Today's metrics",
+    "todayOrders": "New orders",
+    "revenue": "Revenue",
+    "avgPrepTime": "Average preparation time",
+    "completionRate": "Completion rate",
+    "minutes": "{value} min"
+  },
+  "restaurantMenuTab": {
+    "loading": "Loading restaurant menu",
+    "loadErrorTitle": "Could not load the menu",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Try again",
+    "emptyTitle": "No menu items",
+    "emptyDescription": "This restaurant has not added any menu items.",
+    "updateError": "Could not update item availability. Please try again.",
+    "columns": {
+      "name": "Item",
+      "price": "Price",
+      "status": "Status",
+      "active": "Active"
+    },
+    "available": "Available",
+    "hidden": "Hidden",
+    "toggleAvailability": "Toggle availability for {name}"
+  },
+  "restaurantReviewsTab": {
+    "loading": "Loading restaurant reviews",
+    "loadErrorTitle": "Could not load reviews",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Try again",
+    "overviewTitle": "Review overview",
+    "totalReviews": "{count} reviews",
+    "ratingLabel": "Rating {rating} out of 5",
+    "distributionLabel": "{stars} stars: {count} reviews",
+    "emptyTitle": "No reviews",
+    "emptyDescription": "This restaurant has not received any reviews.",
+    "orderMeta": "Order {orderCode} — {date}",
+    "merchantReply": "Restaurant reply:",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "page": "Page {page}"
+  },
   "restaurantStatusToggle": {
     "pause": "Pause",
     "activateAgain": "Activate again",
