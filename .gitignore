@@ -52,6 +52,18 @@ draft*.md
 # Release artifacts
 release-manifest.json
 
+# Generated visual artifacts at repo root
+# Approved images should live under app public/ folders or docs/screenshots/.
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+/*.gif
+/*.svg
+/*playwright*.png
+/*screenshot*.png
+/*logo-login*.png
+
 # Environment & secrets
 .env
 .env.*
