@@ -682,6 +682,31 @@ components:
         totalDeliveries: 156
         rating: 4.8
 
+    DriverHeatmapPoint:
+      type: object
+      properties:
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+        demandLevel: { type: integer, minimum: 0, maximum: 2, description: "0 low, 1 medium, 2 high" }
+        orderCount: { type: integer, minimum: 0 }
+        avgPayout: { type: integer, description: "Average delivery fee in VND" }
+      required: [lat, lng, demandLevel, orderCount, avgPayout]
+      example:
+        lat: 10.7769
+        lng: 106.7009
+        demandLevel: 2
+        orderCount: 12
+        avgPayout: 32000
+
+    DriverHeatmapResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/DriverHeatmapPoint" }
+      required: [success, data]
+
     DriverTrip:
       type: object
       properties:
@@ -2631,6 +2656,32 @@ paths:
           schema: { type: string, enum: [today, week, month], default: today }
       responses:
         "200": { description: "Earnings", content: { application/json: { schema: { $ref: "#/components/schemas/DriverEarnings" } } } }
+
+  /driver/heatmap:
+    get:
+      tags: [drivers]
+      summary: Get nearby driver demand heatmap
+      description: Returns real order-density points near the authenticated driver's current map center. Empty arrays are valid; no runtime sample data is generated.
+      operationId: drivers_getHeatmap
+      x-foo-actor: driver
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: radius
+          in: query
+          schema: { type: number, minimum: 0.1, maximum: 25, default: 5 }
+        - name: window
+          in: query
+          schema: { type: string, enum: [now, 1h, 3h, today], default: now }
+      responses:
+        "200": { description: "Demand points", content: { application/json: { schema: { $ref: "#/components/schemas/DriverHeatmapResponse" } } } }
+        "400": { description: "Invalid coordinates", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/trips:
     get:

@@ -31,4 +31,19 @@ export class DriversController {
   getEarnings(@CurrentUser() user: JwtPayload, @Query('period') period: string = 'today') {
     return this.driversService.getEarnings(user.sub, period as 'today' | 'week' | 'month')
   }
+
+  @Get('heatmap')
+  getHeatmap(
+    @Query('lat') lat: string,
+    @Query('lng') lng: string,
+    @Query('radius') radius?: string,
+    @Query('window') window: string = 'now',
+  ) {
+    return this.driversService.getHeatmap({
+      lat: Number(lat),
+      lng: Number(lng),
+      radiusKm: radius ? Number(radius) : undefined,
+      window,
+    })
+  }
 }

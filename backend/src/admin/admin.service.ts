@@ -321,8 +321,6 @@ export class AdminService {
     }
   }
 
-  // ─── Stub: Dispatch heatmap ───
-
   getDispatchHeatmap(since: string) {
     const sinceDate = Number.isNaN(Date.parse(since))
       ? new Date(Date.now() - 24 * 60 * 60 * 1000)
@@ -346,8 +344,6 @@ export class AdminService {
       ORDER BY "orderCount" DESC
     `)
   }
-
-  // ─── Stub: Restaurant KPI ───
 
   async getRestaurantKpi(restaurantId: string, period: string) {
     const days = period === '30d' ? 30 : period === '14d' ? 14 : 7

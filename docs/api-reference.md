@@ -201,6 +201,12 @@ Get earnings summary.
 Query: period (today|week|month)
 ```
 
+### GET /driver/heatmap
+Get real demand heatmap points near the authenticated driver's location.
+```
+Query: lat, lng, radius, window (now|1h|3h|today)
+```
+
 ## Admin
 
 All admin endpoints require admin role.

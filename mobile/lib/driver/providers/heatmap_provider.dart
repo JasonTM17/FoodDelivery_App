@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:math';
+import '../../shared/api/api_client.dart';
 
 class HeatmapPoint {
   final double lat;
@@ -15,6 +15,16 @@ class HeatmapPoint {
     required this.orderCount,
     required this.avgPayout,
   });
+
+  factory HeatmapPoint.fromJson(Map<String, dynamic> json) {
+    return HeatmapPoint(
+      lat: _readDouble(json['lat']),
+      lng: _readDouble(json['lng']),
+      demandLevel: _readInt(json['demandLevel']).clamp(0, 2).toInt(),
+      orderCount: _readInt(json['orderCount']),
+      avgPayout: _readDouble(json['avgPayout']),
+    );
+  }
 }
 
 class HeatmapState {
@@ -46,7 +56,11 @@ class HeatmapState {
 }
 
 class HeatmapNotifier extends StateNotifier<HeatmapState> {
-  HeatmapNotifier() : super(const HeatmapState());
+  final ApiClient _api;
+
+  HeatmapNotifier({ApiClient? api})
+    : _api = api ?? ApiClient.instance,
+      super(const HeatmapState());
 
   Future<void> loadHeatmap(
     double lat,
@@ -54,39 +68,54 @@ class HeatmapNotifier extends StateNotifier<HeatmapState> {
     String window = 'now',
     double radiusKm = 5,
   }) async {
-    state = state.copyWith(isLoading: true, error: null, selectedWindow: window);
-    // TODO: replace with real API call GET /driver/heatmap?lat=...&lng=...&radius=...&window=...
-    await Future.delayed(const Duration(milliseconds: 500));
     state = state.copyWith(
-      isLoading: false,
-      points: _generateSampleData(lat, lng),
+      isLoading: true,
+      error: null,
+      selectedWindow: window,
     );
+    try {
+      final response = await _api.get<List<dynamic>>(
+        '/driver/heatmap',
+        queryParameters: {
+          'lat': lat,
+          'lng': lng,
+          'radius': radiusKm,
+          'window': window,
+        },
+      );
+      final points = (response.data ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(HeatmapPoint.fromJson)
+          .toList(growable: false);
+      state = state.copyWith(isLoading: false, points: points, error: null);
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        points: const [],
+        error: 'DRIVER_HEATMAP_UNAVAILABLE',
+      );
+    }
   }
 
   void setWindow(String window, double lat, double lng) {
     loadHeatmap(lat, lng, window: window);
   }
-
-  List<HeatmapPoint> _generateSampleData(double centerLat, double centerLng) {
-    final rng = Random(42);
-    final points = <HeatmapPoint>[];
-    for (int i = 0; i < 80; i++) {
-      final offsetLat = (rng.nextDouble() - 0.5) * 0.05;
-      final offsetLng = (rng.nextDouble() - 0.5) * 0.05;
-      final level = rng.nextInt(3);
-      points.add(HeatmapPoint(
-        lat: centerLat + offsetLat,
-        lng: centerLng + offsetLng,
-        demandLevel: level,
-        orderCount: level == 2 ? 15 + rng.nextInt(30) : level == 1 ? 5 + rng.nextInt(15) : rng.nextInt(5),
-        avgPayout: level == 2 ? 30000 + rng.nextDouble() * 20000 : 20000 + rng.nextDouble() * 15000,
-      ));
-    }
-    return points;
-  }
 }
 
-final heatmapProvider =
-    StateNotifierProvider<HeatmapNotifier, HeatmapState>((ref) {
+final heatmapProvider = StateNotifierProvider<HeatmapNotifier, HeatmapState>((
+  ref,
+) {
   return HeatmapNotifier();
 });
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
+}
+
+int _readInt(dynamic value) {
+  if (value is num) return value.round();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
