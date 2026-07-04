@@ -794,6 +794,8 @@
         "logo": "レストランロゴ",
         "uploadCover": "クリックしてカバー画像をアップロード",
         "uploadLogo": "クリックしてロゴをアップロード",
+        "coverPreviewLabel": "現在のカバー画像プレビュー",
+        "logoPreviewLabel": "現在のレストランロゴプレビュー",
         "logoHint": "正方形画像、最低200×200px。JPG、PNG、WebP対応。"
       },
       "saveBar": {

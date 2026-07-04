@@ -794,6 +794,8 @@
         "logo": "Logo nhà hàng",
         "uploadCover": "Nhấn để tải ảnh bìa",
         "uploadLogo": "Nhấn để tải logo",
+        "coverPreviewLabel": "Xem trước ảnh bìa hiện tại",
+        "logoPreviewLabel": "Xem trước logo nhà hàng hiện tại",
         "logoHint": "Ảnh vuông, tối thiểu 200×200px. Định dạng JPG, PNG, WebP."
       },
       "saveBar": {

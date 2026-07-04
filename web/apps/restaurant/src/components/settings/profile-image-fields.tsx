@@ -37,7 +37,7 @@ export function ProfileImageFields({
           {coverPreview ? (
             <div
               role="img"
-              aria-label="Cover"
+              aria-label={t('coverPreviewLabel')}
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${JSON.stringify(coverPreview)})` }}
             />
@@ -69,7 +69,7 @@ export function ProfileImageFields({
             {logoPreview ? (
               <div
                 role="img"
-                aria-label="Logo"
+                aria-label={t('logoPreviewLabel')}
                 className="h-full w-full bg-cover bg-center"
                 style={{ backgroundImage: `url(${JSON.stringify(logoPreview)})` }}
               />

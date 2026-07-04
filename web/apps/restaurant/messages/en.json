@@ -794,6 +794,8 @@
         "logo": "Restaurant logo",
         "uploadCover": "Click to upload cover image",
         "uploadLogo": "Click to upload logo",
+        "coverPreviewLabel": "Current cover image preview",
+        "logoPreviewLabel": "Current restaurant logo preview",
         "logoHint": "Square image, at least 200×200px. JPG, PNG, or WebP."
       },
       "saveBar": {
