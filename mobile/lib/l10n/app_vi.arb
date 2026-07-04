@@ -113,7 +113,6 @@
   "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
   "cancel": "Hủy",
   "commonRetry": "Thử lại",
-  "featureInDevelopment": "Tính năng đang phát triển",
 
   "driverProfileTitle": "Hồ sơ",
   "defaultDriver": "Tài xế",
@@ -480,7 +479,6 @@
   "@referralShareMessage": {
     "placeholders": { "code": { "type": "String" } }
   },
-  "referralQrCode": "Mã QR",
   "referralInviteCount": "Đã giới thiệu {count} người",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

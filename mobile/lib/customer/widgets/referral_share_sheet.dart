@@ -91,14 +91,6 @@ class ReferralShareSheet extends StatelessWidget {
                   l10n.referralShareCode,
                   () => Share.share(shareMessage),
                 ),
-                _buildShareButton(
-                  context,
-                  Icons.qr_code,
-                  l10n.referralQrCode,
-                  () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.featureInDevelopment)),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),

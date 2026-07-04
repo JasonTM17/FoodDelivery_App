@@ -107,7 +107,6 @@
   "logoutConfirm": "ログアウトしてもよろしいですか？",
   "cancel": "キャンセル",
   "commonRetry": "再試行",
-  "featureInDevelopment": "この機能は近日公開予定です",
 
   "driverProfileTitle": "プロフィール",
   "defaultDriver": "ドライバー",
@@ -474,7 +473,6 @@
   "@referralShareMessage": {
     "placeholders": { "code": { "type": "String" } }
   },
-  "referralQrCode": "QRコード",
   "referralInviteCount": "{count}人を招待済み",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

@@ -107,7 +107,6 @@
   "logoutConfirm": "Are you sure you want to logout?",
   "cancel": "Cancel",
   "commonRetry": "Retry",
-  "featureInDevelopment": "Feature coming soon",
 
   "driverProfileTitle": "Profile",
   "defaultDriver": "Driver",
@@ -474,7 +473,6 @@
   "@referralShareMessage": {
     "placeholders": { "code": { "type": "String" } }
   },
-  "referralQrCode": "QR code",
   "referralInviteCount": "Invited {count} friends",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

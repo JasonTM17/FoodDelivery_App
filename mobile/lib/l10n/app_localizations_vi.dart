@@ -315,9 +315,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonRetry => 'Thử lại';
 
   @override
-  String get featureInDevelopment => 'Tính năng đang phát triển';
-
-  @override
   String get driverProfileTitle => 'Hồ sơ';
 
   @override
@@ -1242,9 +1239,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String referralShareMessage(String code) {
     return 'Dùng mã $code để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!';
   }
-
-  @override
-  String get referralQrCode => 'Mã QR';
 
   @override
   String referralInviteCount(int count) {

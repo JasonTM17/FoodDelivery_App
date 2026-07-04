@@ -706,12 +706,6 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get commonRetry;
 
-  /// No description provided for @featureInDevelopment.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tính năng đang phát triển'**
-  String get featureInDevelopment;
-
   /// No description provided for @driverProfileTitle.
   ///
   /// In vi, this message translates to:
@@ -2451,12 +2445,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Dùng mã {code} để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!'**
   String referralShareMessage(String code);
-
-  /// No description provided for @referralQrCode.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mã QR'**
-  String get referralQrCode;
 
   /// No description provided for @referralInviteCount.
   ///

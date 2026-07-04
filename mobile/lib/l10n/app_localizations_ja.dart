@@ -314,9 +314,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonRetry => '再試行';
 
   @override
-  String get featureInDevelopment => 'この機能は近日公開予定です';
-
-  @override
   String get driverProfileTitle => 'プロフィール';
 
   @override
@@ -1220,9 +1217,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String referralShareMessage(String code) {
     return 'FoodFlowの初回注文で特典を受け取るにはコード $code を使ってください！';
   }
-
-  @override
-  String get referralQrCode => 'QRコード';
 
   @override
   String referralInviteCount(int count) {
