@@ -43,6 +43,7 @@ jobs:
       - name: Apply migrations and seed database
         run: |
           cd backend
+          pnpm prisma generate
           pnpm prisma migrate deploy
           pnpm db:big-seed
         env:
