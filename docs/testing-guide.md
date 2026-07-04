@@ -92,7 +92,9 @@ Realtime security regression coverage must also verify:
 
 - Run axe checks and require zero serious/critical issues.
 - Validate keyboard navigation, visible focus, dialog focus trap, and chart/table alternatives.
+- Run `web/e2e/tests/visual-contract.spec.ts` with the Playwright suite. It verifies the Admin and Restaurant FoodFlow login brand shells, responsive centering, SVG logo tokens, CTA contrast, and stores review screenshots under Playwright `test-results`.
 - Compare Admin and Restaurant screens against approved Stitch references.
+- No approved Stitch bitmap baseline is currently stored in this repo; add reviewed Stitch exports before replacing the contract guard with pixel `toHaveScreenshot` snapshots.
 - Check desktop 1440/1280, tablet, and mobile responsive layouts.
 
 ## Mobile

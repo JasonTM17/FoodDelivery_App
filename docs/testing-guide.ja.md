@@ -74,7 +74,9 @@ Realtime security regression では次も確認します。
 
 - Axe serious/critical issue は 0。
 - Keyboard navigation、visible focus、dialog focus trap、chart/table alternatives を確認。
+- Playwright suite で `web/e2e/tests/visual-contract.spec.ts` を実行する。Admin/Restaurant の FoodFlow login brand shell、responsive centering、SVG logo token、CTA contrast を検証し、review 用 screenshot を Playwright `test-results` に保存する。
 - Approved Stitch baseline と比較。
+- この repo には approved Stitch bitmap baseline はまだ保存されていない。review 済み Stitch export を追加してから pixel `toHaveScreenshot` snapshot に置き換える。
 - Desktop 1440/1280、tablet、mobile を確認。
 
 ## Mobile

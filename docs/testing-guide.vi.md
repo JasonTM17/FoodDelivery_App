@@ -74,7 +74,9 @@ Regression bảo mật realtime cũng phải kiểm tra:
 
 - Axe không có serious/critical issue.
 - Keyboard navigation, visible focus, dialog focus trap, chart/table alternatives.
+- Chạy `web/e2e/tests/visual-contract.spec.ts` cùng Playwright suite. Spec này kiểm Admin và Restaurant login brand shell của FoodFlow, centering responsive, token SVG logo, contrast CTA và lưu screenshot review trong Playwright `test-results`.
 - So sánh với Stitch baseline đã duyệt.
+- Hiện repo chưa lưu Stitch bitmap baseline đã duyệt; chỉ thêm pixel snapshot `toHaveScreenshot` sau khi Stitch export đã được review và chấp thuận.
 - Kiểm desktop 1440/1280, tablet và mobile.
 
 ## Mobile
