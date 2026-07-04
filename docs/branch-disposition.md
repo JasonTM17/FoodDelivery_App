@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-04 on `codex/batch4-integration` at `78bf643`.
+Last audited: 2026-07-04 on `codex/batch4-integration` at `e7d8cbd`.
 
 This record documents the branch state used for Batch 4 salvage decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -20,15 +20,15 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `origin/codex/batch4-integration` | `78bf643` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
-| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `322 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
+| `origin/codex/batch4-integration` | `e7d8cbd` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
+| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `334 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
 
 ## Local heads after cleanup
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `78bf643` | Current working branch, tracking `origin/codex/batch4-integration`; local route/mobile gates are green, while remote GitHub Actions are currently blocked before runner start by account billing/spending-limit status. | Active. |
-| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `92 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
+| `codex/batch4-integration` | `e7d8cbd` | Current working branch, tracking `origin/codex/batch4-integration`; local backend, web, Restaurant, Docker/E2E, and mobile gates have current local evidence, while remote GitHub Actions are currently blocked by account token/auth or billing status. | Active. |
+| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `104 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
 
 ## Cleaned-up branch refs
 
@@ -53,8 +53,8 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Current conclusion
 
-No branch merge is required from the branch refs currently available. `git branch -a --no-merged HEAD` returned zero refs, and every live local/remote branch had `patchUniqueCount=0` against `78bf643`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter analyze` and `flutter test` (133 tests passed after GPS metadata normalization).
+No branch merge is required from the branch refs currently available. `git branch -a --no-merged HEAD` returned zero refs, and every live local/remote branch had `patchUniqueCount=0` against `e7d8cbd`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. The only live local branch besides `codex/batch4-integration` is `master`, which is checked out in the dirty root worktree `D:\Food_Delivery`; it is not a Batch 4 cleanup candidate. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter analyze` and full `flutter test` (139 tests passed) after driver route/navigation fixes.
 
 Remote CI last fully ran green for `e776f5c`: Gitleaks Secret Scan, Lint, Build Check, SBOM Generation, Trivy Vulnerability Scan, CodeQL Security Scan, CI, E2E Tests, and Integration Smoke Gate all completed successfully. Integration Smoke Gate included AI Scenario Assertions, Playwright E2E, Lighthouse CI mobile/desktop, k6 Load Test, and the final Integration Gate. Run evidence: `28704171253` Gitleaks, `28704171260` Lint, `28704171258` Build Check, `28704171266` SBOM, `28704171279` Trivy, `28704171259` CodeQL, `28704171265` CI, `28704171252` E2E Tests, and `28704171294` Integration Smoke Gate. Mobile-specific CI last ran green for `0fe1895` as part of the dispatch/cancel localization commit.
 
-Remote CI for current head `78bf643` did not start jobs because GitHub Actions returned this annotation on each workflow: "The job was not started because recent account payments have failed or your spending limit needs to be increased." Affected run IDs include Mobile CI `28705120618`, CI `28705120603`, Build Check `28705120634`, Lint `28705120626`, Gitleaks `28705120629`, CodeQL `28705120627`, Trivy `28705120597`, SBOM `28705120609`, and Integration Smoke Gate `28705120614`. Rerun these checks after billing/spending-limit is fixed.
+Remote CI for the current Batch 4 heads after `78bf643`, including `e7d8cbd`, has not produced fresh green workflow evidence because GitHub Actions access is currently blocked by account token/auth or billing status. Previously observed affected workflows include Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate. Rerun all of them after Actions access is restored before deploying.
