@@ -85,7 +85,7 @@
         { "role": "user", "message": "Còn bao lâu nữa?" },
         {
           "role": "assert_tool_called",
-          "tool": "getOrderStatus",
+          "tool": "getDriverLocation",
           "args": { "orderReference": "FF-004" }
         },
         {

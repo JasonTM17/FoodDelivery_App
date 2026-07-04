@@ -19,7 +19,7 @@ const TOOL_REQUIRED_KEYWORDS: Record<AiToolName, RegExp> = {
   getRefundEligibility:
     /hoàn\s*tiền|refund|trả\s*lại\s*tiền|huỷ\s*hoàn|tiền\s*lại|lấy\s*lại\s*tiền|đòi\s*tiền/i,
   createSupportTicket:
-    /khiếu\s*nại|báo\s*cáo|hỗ\s*trợ|vấn\s*đề|sự\s*cố|bị\s*lỗi|tạo\s*ticket|issue|complaint|problem|unreachable|charged|dị\s*ứng|allerg|không\s*bắt\s*máy|bị\s*trừ\s*tiền|thiếu\s*món|sai\s*món/i,
+    /khiếu\s*nại|báo\s*cáo|hỗ\s*trợ|vấn\s*đề|sự\s*cố|bị\s*lỗi|tạo\s*ticket|issue|complaint|problem|unreachable|charged|dị\s*ứng|allerg|không\s*bắt\s*máy|bị\s*trừ\s*tiền|thiếu\s*món|sai\s*món|quá\s*tệ|đợi\s*\d+\s*tiếng|đợi\s*cả\s*tiếng|cả\s*tiếng|trễ\s*quá|chậm\s*thế|muộn\s*quá/i,
   getRecommendedFoods:
     /gợi\s*ý|recommend|nên\s*đặt|món\s*ngon|ăn\s*gì|đề\s*xuất|suggest|gợi\s*món/i,
   notifyAdmin:
