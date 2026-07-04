@@ -21,7 +21,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は 2026-07-04 に local で再確認済みです。`flutter analyze` は clean、`flutter test` は 115 tests passed。
+- Mobile Flutter gate は 2026-07-04 に local で再確認済みです。`flutter analyze` は clean、`flutter test` は 122 tests passed。
 
 ### Mobile
 

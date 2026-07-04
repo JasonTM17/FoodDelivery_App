@@ -21,7 +21,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
 - Vietnamese AI chat fast paths covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
-- Mobile Flutter gate was rechecked locally on 2026-07-04 with `flutter analyze` clean and `flutter test` passing 115 tests.
+- Mobile Flutter gate was rechecked locally on 2026-07-04 with `flutter analyze` clean and `flutter test` passing 122 tests.
 
 ### Mobile
 
