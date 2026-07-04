@@ -6,7 +6,6 @@ describe('TrackingGateway authorization', () => {
   const handleLocationUpdate = jest.fn()
   const getDriverLocation = jest.fn()
   const getOrFetchRoute = jest.fn()
-  const calculateETA = jest.fn()
   const maybeEnqueueRecompute = jest.fn()
   const authenticate = jest.fn()
   const getUser = jest.fn()
@@ -25,7 +24,6 @@ describe('TrackingGateway authorization', () => {
         handleLocationUpdate,
         getDriverLocation,
         getOrFetchRoute,
-        calculateETA,
         maybeEnqueueRecompute,
       } as never,
       {
@@ -77,8 +75,13 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-1')
-    orderFindUnique.mockResolvedValue({ deliveryAddressId: 'address-1' })
-    queryRawUnsafe.mockResolvedValue([{ lat: 10.75, lng: 106.65 }])
+    queryRawUnsafe.mockResolvedValue([{
+      status: 'delivering',
+      restaurantLat: 10.77,
+      restaurantLng: 106.68,
+      deliveryLat: 10.75,
+      deliveryLng: 106.65,
+    }])
     getOrFetchRoute.mockResolvedValue({
       polyline: 'encoded-route',
       distanceMeters: 4_000,
@@ -100,7 +103,17 @@ describe('TrackingGateway authorization', () => {
       etaMinutes: 10,
       source: 'google',
       degraded: false,
+      routePolyline: 'encoded-route',
+      routePhase: 'dropoff',
     })
+    expect(getOrFetchRoute).toHaveBeenCalledWith(
+      'order-1',
+      10.8,
+      106.7,
+      10.75,
+      106.65,
+      'dropoff',
+    )
     expect(emitToRoom).toHaveBeenCalledWith('driver:location_changed', expect.objectContaining({
       orderId: 'order-1',
       driverId: 'driver-1',
@@ -109,14 +122,18 @@ describe('TrackingGateway authorization', () => {
     }))
   })
 
-  it('marks straight-line ETA updates as degraded when route providers fail', async () => {
+  it('emits unavailable ETA without fabricating straight-line minutes when route providers fail', async () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-1')
-    orderFindUnique.mockResolvedValue({ deliveryAddressId: 'address-1' })
-    queryRawUnsafe.mockResolvedValue([{ lat: 10.75, lng: 106.65 }])
+    queryRawUnsafe.mockResolvedValue([{
+      status: 'delivering',
+      restaurantLat: 10.77,
+      restaurantLng: 106.68,
+      deliveryLat: 10.75,
+      deliveryLng: 106.65,
+    }])
     getOrFetchRoute.mockResolvedValue(null)
-    calculateETA.mockReturnValue(18)
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -128,9 +145,56 @@ describe('TrackingGateway authorization', () => {
 
     expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
       orderId: 'order-1',
-      etaMinutes: 18,
-      source: 'straight_line_estimate',
+      etaMinutes: null,
+      source: 'route_unavailable',
       degraded: true,
+      routePolyline: null,
+      routePhase: 'dropoff',
+    })
+  })
+
+  it('routes drivers to the restaurant before pickup', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue('order-1')
+    queryRawUnsafe.mockResolvedValue([{
+      status: 'driver_assigned',
+      restaurantLat: 10.77,
+      restaurantLng: 106.68,
+      deliveryLat: 10.75,
+      deliveryLng: 106.65,
+    }])
+    getOrFetchRoute.mockResolvedValue({
+      polyline: 'pickup-route',
+      distanceMeters: 1_200,
+      durationSeconds: 300,
+      waypoints: [],
+      provider: 'osrm',
+    })
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 0,
+      speed: 20,
+      accuracy: 5,
+    })
+
+    expect(getOrFetchRoute).toHaveBeenCalledWith(
+      'order-1',
+      10.8,
+      106.7,
+      10.77,
+      106.68,
+      'pickup',
+    )
+    expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
+      orderId: 'order-1',
+      etaMinutes: 5,
+      source: 'osrm',
+      degraded: false,
+      routePolyline: 'pickup-route',
+      routePhase: 'pickup',
     })
   })
 

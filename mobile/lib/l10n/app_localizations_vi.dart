@@ -559,6 +559,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get trackingMessageDriver => 'Nhắn tin';
 
   @override
+  String get trackingMarkerRestaurant => 'Nhà hàng';
+
+  @override
+  String get trackingMarkerDriver => 'Tài xế';
+
+  @override
+  String get trackingMarkerDestination => 'Điểm đến';
+
+  @override
   String get orderHistoryTitle => 'Đơn hàng của tôi';
 
   @override
@@ -1082,6 +1091,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driverNavPhoneError => 'Không thể mở trình quay số';
+
+  @override
+  String get driverNavOpenDirections => 'Mở chỉ đường';
+
+  @override
+  String get driverNavDirectionsUnavailable =>
+      'Chưa có tọa độ hợp lệ để chỉ đường';
 
   @override
   String get cartPlaceOrder => 'Đặt hàng';

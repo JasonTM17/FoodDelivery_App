@@ -38,6 +38,7 @@ describe('TrackingController', () => {
     )).resolves.toEqual({
       orderId: 'order-1',
       status: OrderStatus.delivering,
+      routePhase: 'dropoff',
       driverLocation: {
         lat: 10.8,
         lng: 106.7,
@@ -48,6 +49,30 @@ describe('TrackingController', () => {
     })
     expect(getTracking).toHaveBeenCalledWith('order-1', 'customer-1')
     expect(getDriverLocation).toHaveBeenCalledWith('driver-1')
+    expect(getCachedRoute).toHaveBeenCalledWith('order-1', 'dropoff')
+  })
+
+  it('reads the pickup route cache before the driver has picked up the order', async () => {
+    getTracking.mockResolvedValue({
+      id: 'order-3',
+      status: OrderStatus.driver_assigned,
+      driverId: 'driver-1',
+      estimatedDeliveryTimeMinutes: null,
+      routePolyline: null,
+    })
+    getDriverLocation.mockResolvedValue(null)
+    getCachedRoute.mockResolvedValue(null)
+
+    await expect(controller.getTracking(
+      { sub: 'customer-1', role: 'customer' },
+      'order-3',
+    )).resolves.toMatchObject({
+      orderId: 'order-3',
+      routePhase: 'pickup',
+      etaMinutes: null,
+      routePolyline: null,
+    })
+    expect(getCachedRoute).toHaveBeenCalledWith('order-3', 'pickup')
   })
 
   it('returns persisted tracking metadata without fabricating a driver location', async () => {
@@ -66,6 +91,7 @@ describe('TrackingController', () => {
     )).resolves.toEqual({
       orderId: 'order-2',
       status: OrderStatus.preparing,
+      routePhase: 'dropoff',
       driverLocation: null,
       etaMinutes: null,
       routePolyline: null,

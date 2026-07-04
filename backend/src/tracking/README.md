@@ -2,15 +2,21 @@
 
 ## Purpose
 
-Realtime GPS tracking + ETA computation. Driver location ingest qua WebSocket, anti-spoofing detection (speed jump > 200 km/h, GPS hopping), batch flush to PostGIS, Google Directions / OSRM provider abstraction với polyline persist + deviation-triggered ETA recompute (BullMQ). Gọi bởi: driver mobile (location ping), customer mobile (subscribe), admin tracking dashboard.
+Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSocket, anti-spoofing detection (speed jump > 150 km/h, GPS hopping), batch flush to PostGIS, Google Directions / OSRM provider abstraction với polyline persist + deviation-triggered ETA recompute (BullMQ). Gọi bởi: driver mobile (location ping), customer mobile (subscribe), admin tracking dashboard.
 
 ## API surface
 
 - `WebSocket /tracking` — Driver pushes location updates, customer subscribes
-- `GET /tracking/:orderId/eta` — Cache-first ETA snapshot
-- `GET /tracking/:orderId/route` — Persisted polyline + waypoints
+- `GET /orders/:id/tracking` — Cache-first route/ETA snapshot for the authenticated customer
 - BullMQ: `tracking-eta` recompute queue
-- Internal: `getOrFetchRoute(origin, dest)` provider with Google + OSRM fallback
+- Internal: `getOrFetchRoute(origin, dest, phase)` provider with Google primary + OSRM router fallback. If no routed provider succeeds, the WebSocket emits `etaMinutes: null`, `source: "route_unavailable"`, and no polyline instead of fabricating straight-line minutes.
+
+## Route phases
+
+- `driver_assigned` / `driver_arriving_restaurant` use `pickup` phase and route the driver to the restaurant.
+- `picked_up` / `delivering` use `dropoff` phase and route the driver to the customer address.
+- Redis route keys include the phase (`route:<orderId>:pickup` or `route:<orderId>:dropoff`) so a restaurant-bound polyline is never reused as the customer-bound route.
+- `delivery:eta_updated` includes `{ orderId, etaMinutes, source, degraded, routePolyline, routePhase }`; mobile must draw `routePolyline` only when present and keep telemetry trail separate.
 
 ## Env vars
 
@@ -34,12 +40,12 @@ pnpm start:dev
 
 ```bash
 npx jest tracking
-# 26/26 tests covering provider fallback, snap-to-line, deviation
+# 41/41 tracking tests cover provider fallback, phase-aware destination selection, no fabricated ETA, snap-to-line, and deviation recompute
 ```
 
 ## Runbook
 
 - **GPS spoofing alerts:** Inspect `driver_location_anomaly` table. Auto-flag drivers with > 3 anomalies/hour for review.
-- **ETA cache stale:** `DEL eta:order:<id>` to force recompute.
+- **ETA cache stale:** `DEL route:<orderId>:pickup` or `DEL route:<orderId>:dropoff` to force phase-specific recompute.
 - **Directions API quota:** Monitor `directions_api_calls_total{provider="google"}` Prometheus metric. Switch to OSRM-primary if quota exceeded.
 - **Open handle warning on shutdown:** `TrackingService.onModuleDestroy` clears `flushInterval` — verify nếu test logs warning.

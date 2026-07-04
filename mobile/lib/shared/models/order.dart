@@ -1,5 +1,7 @@
 import '../utils/backend_date_time.dart';
 
+const _orderModelUnset = Object();
+
 class OrderModel {
   final String id;
   final String userId;
@@ -70,6 +72,83 @@ class OrderModel {
     this.estimatedDeliveryTimeMinutes,
     this.routePolyline,
   });
+
+  OrderModel copyWith({
+    String? id,
+    String? userId,
+    String? restaurantId,
+    String? restaurantName,
+    String? restaurantLogoUrl,
+    String? restaurantPhone,
+    String? customerName,
+    String? customerPhone,
+    List<OrderItem>? items,
+    double? subtotal,
+    double? deliveryFee,
+    double? discount,
+    double? total,
+    String? status,
+    String? driverId,
+    String? driverName,
+    String? driverPhone,
+    String? driverAvatarUrl,
+    double? driverRating,
+    double? driverLatitude,
+    double? driverLongitude,
+    OrderAddress? deliveryAddress,
+    String? paymentMethod,
+    String? note,
+    String? promoCode,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? deliveredAt,
+    List<StatusHistory>? statusHistory,
+    double? restaurantLatitude,
+    double? restaurantLongitude,
+    Object? estimatedDeliveryTimeMinutes = _orderModelUnset,
+    Object? routePolyline = _orderModelUnset,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      restaurantId: restaurantId ?? this.restaurantId,
+      restaurantName: restaurantName ?? this.restaurantName,
+      restaurantLogoUrl: restaurantLogoUrl ?? this.restaurantLogoUrl,
+      restaurantPhone: restaurantPhone ?? this.restaurantPhone,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      discount: discount ?? this.discount,
+      total: total ?? this.total,
+      status: status ?? this.status,
+      driverId: driverId ?? this.driverId,
+      driverName: driverName ?? this.driverName,
+      driverPhone: driverPhone ?? this.driverPhone,
+      driverAvatarUrl: driverAvatarUrl ?? this.driverAvatarUrl,
+      driverRating: driverRating ?? this.driverRating,
+      driverLatitude: driverLatitude ?? this.driverLatitude,
+      driverLongitude: driverLongitude ?? this.driverLongitude,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      note: note ?? this.note,
+      promoCode: promoCode ?? this.promoCode,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
+      statusHistory: statusHistory ?? this.statusHistory,
+      restaurantLatitude: restaurantLatitude ?? this.restaurantLatitude,
+      restaurantLongitude: restaurantLongitude ?? this.restaurantLongitude,
+      estimatedDeliveryTimeMinutes:
+          identical(estimatedDeliveryTimeMinutes, _orderModelUnset)
+          ? this.estimatedDeliveryTimeMinutes
+          : estimatedDeliveryTimeMinutes as int?,
+      routePolyline: identical(routePolyline, _orderModelUnset)
+          ? this.routePolyline
+          : routePolyline as String?,
+    );
+  }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(

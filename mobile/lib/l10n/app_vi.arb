@@ -205,6 +205,9 @@
   "trackingOrderInProgress": "Đơn hàng đang được giao",
   "trackingCallDriver": "Gọi",
   "trackingMessageDriver": "Nhắn tin",
+  "trackingMarkerRestaurant": "Nhà hàng",
+  "trackingMarkerDriver": "Tài xế",
+  "trackingMarkerDestination": "Điểm đến",
 
   "orderHistoryTitle": "Đơn hàng của tôi",
   "orderHistoryTabActive": "Đang hoạt động ({count})",
@@ -416,6 +419,8 @@
   "driverDeliveryMissingTitle": "Không có dữ liệu thu nhập chuyến giao.",
   "driverDeliveryMissingDescription": "Vui lòng mở màn này từ đơn vừa hoàn thành.",
   "driverNavPhoneError": "Không thể mở trình quay số",
+  "driverNavOpenDirections": "Mở chỉ đường",
+  "driverNavDirectionsUnavailable": "Chưa có tọa độ hợp lệ để chỉ đường",
 
   "cartPlaceOrder": "Đặt hàng",
   "checkoutConfirmOrder": "Xác nhận đặt hàng",

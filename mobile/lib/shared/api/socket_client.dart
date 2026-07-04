@@ -194,7 +194,13 @@ class SocketClient {
   }
 
   // Throttled to one ping per 250 ms — for driver location updates.
-  void emitLocationPing(double lat, double lng) {
+  void emitLocationPing(
+    double lat,
+    double lng, {
+    double? bearing,
+    double? speed,
+    double? accuracy,
+  }) {
     final now = DateTime.now();
     if (_lastLocationEmit != null &&
         now.difference(_lastLocationEmit!) <
@@ -205,6 +211,9 @@ class SocketClient {
     _emitToNamespace(_trackingNamespace, 'driver:location', {
       'lat': lat,
       'lng': lng,
+      if (bearing != null && bearing.isFinite) 'bearing': bearing,
+      if (speed != null && speed.isFinite) 'speed': speed,
+      if (accuracy != null && accuracy.isFinite) 'accuracy': accuracy,
     });
   }
 

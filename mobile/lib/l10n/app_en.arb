@@ -199,6 +199,9 @@
   "trackingOrderInProgress": "Your order is on the way",
   "trackingCallDriver": "Call",
   "trackingMessageDriver": "Message",
+  "trackingMarkerRestaurant": "Restaurant",
+  "trackingMarkerDriver": "Driver",
+  "trackingMarkerDestination": "Destination",
 
   "orderHistoryTitle": "My Orders",
   "orderHistoryTabActive": "Active ({count})",
@@ -410,6 +413,8 @@
   "driverDeliveryMissingTitle": "No trip earnings data is available.",
   "driverDeliveryMissingDescription": "Open this screen from a completed order.",
   "driverNavPhoneError": "Cannot open phone dialer",
+  "driverNavOpenDirections": "Open directions",
+  "driverNavDirectionsUnavailable": "Directions are unavailable for this stop",
 
   "cartPlaceOrder": "Place order",
   "checkoutConfirmOrder": "Confirm order",

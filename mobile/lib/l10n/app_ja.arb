@@ -199,6 +199,9 @@
   "trackingOrderInProgress": "注文を配達中です",
   "trackingCallDriver": "電話",
   "trackingMessageDriver": "メッセージ",
+  "trackingMarkerRestaurant": "レストラン",
+  "trackingMarkerDriver": "配達員",
+  "trackingMarkerDestination": "配達先",
 
   "orderHistoryTitle": "注文一覧",
   "orderHistoryTabActive": "進行中 ({count})",
@@ -410,6 +413,8 @@
   "driverDeliveryMissingTitle": "この配達の収益データがありません。",
   "driverDeliveryMissingDescription": "完了した注文からこの画面を開いてください。",
   "driverNavPhoneError": "電話アプリを開けません",
+  "driverNavOpenDirections": "経路を開く",
+  "driverNavDirectionsUnavailable": "この地点への経路を利用できません",
 
   "cartPlaceOrder": "注文する",
   "checkoutConfirmOrder": "注文を確定",

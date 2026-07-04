@@ -559,6 +559,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingMessageDriver => 'Message';
 
   @override
+  String get trackingMarkerRestaurant => 'Restaurant';
+
+  @override
+  String get trackingMarkerDriver => 'Driver';
+
+  @override
+  String get trackingMarkerDestination => 'Destination';
+
+  @override
   String get orderHistoryTitle => 'My Orders';
 
   @override
@@ -1081,6 +1090,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driverNavPhoneError => 'Cannot open phone dialer';
+
+  @override
+  String get driverNavOpenDirections => 'Open directions';
+
+  @override
+  String get driverNavDirectionsUnavailable =>
+      'Directions are unavailable for this stop';
 
   @override
   String get cartPlaceOrder => 'Place order';

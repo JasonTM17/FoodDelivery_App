@@ -16,8 +16,18 @@ const _kMaxBuffer = 200;
 class _LocationPing {
   final double lat;
   final double lng;
+  final double? bearing;
+  final double? speed;
+  final double? accuracy;
   final DateTime timestamp;
-  const _LocationPing(this.lat, this.lng, this.timestamp);
+  const _LocationPing(
+    this.lat,
+    this.lng,
+    this.timestamp, {
+    this.bearing,
+    this.speed,
+    this.accuracy,
+  });
 }
 
 /// Streams driver GPS to the backend via WebSocket + offline buffer.
@@ -151,7 +161,14 @@ class BackgroundLocationService {
     final throttle = _hasActiveOrder ? _kActiveInterval : _kIdleInterval;
     if (_lastEmit != null && now.difference(_lastEmit!) < throttle) return;
     _lastEmit = now;
-    _emitPosition(pos.latitude, pos.longitude, now);
+    _emitPosition(
+      pos.latitude,
+      pos.longitude,
+      now,
+      bearing: pos.heading,
+      speed: pos.speed,
+      accuracy: pos.accuracy,
+    );
   }
 
   void _emitLastKnown() {
@@ -160,20 +177,45 @@ class BackgroundLocationService {
       _lastPosition!.latitude,
       _lastPosition!.longitude,
       DateTime.now(),
+      bearing: _lastPosition!.heading,
+      speed: _lastPosition!.speed,
+      accuracy: _lastPosition!.accuracy,
     );
   }
 
-  void _emitPosition(double lat, double lng, DateTime ts) {
+  void _emitPosition(
+    double lat,
+    double lng,
+    DateTime ts, {
+    double? bearing,
+    double? speed,
+    double? accuracy,
+  }) {
     final socket = SocketClient.instance;
     if (socket.isConnected) {
       _flushBuffer();
-      socket.emitLocationPing(lat, lng);
+      socket.emitLocationPing(
+        lat,
+        lng,
+        bearing: bearing,
+        speed: speed,
+        accuracy: accuracy,
+      );
     } else {
       // Buffer so pings survive brief disconnects.
       if (_offlineBuffer.length >= _kMaxBuffer) {
         _offlineBuffer.removeFirst(); // drop oldest
       }
-      _offlineBuffer.addLast(_LocationPing(lat, lng, ts));
+      _offlineBuffer.addLast(
+        _LocationPing(
+          lat,
+          lng,
+          ts,
+          bearing: bearing,
+          speed: speed,
+          accuracy: accuracy,
+        ),
+      );
     }
   }
 
@@ -183,7 +225,13 @@ class BackgroundLocationService {
     if (!socket.isConnected) return;
     while (_offlineBuffer.isNotEmpty) {
       final ping = _offlineBuffer.removeFirst();
-      socket.emitLocationPing(ping.lat, ping.lng);
+      socket.emitLocationPing(
+        ping.lat,
+        ping.lng,
+        bearing: ping.bearing,
+        speed: ping.speed,
+        accuracy: ping.accuracy,
+      );
     }
   }
 }

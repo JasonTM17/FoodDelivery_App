@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../shared/providers/order_provider.dart';
 import '../../shared/providers/tracking_provider.dart';
 import '../../shared/models/order.dart';
+import '../../shared/maps/encoded_polyline.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
@@ -28,6 +29,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
   bool _showBottomSheet = true;
   Set<Polygon> _boundaryPolygons = {};
+  String _lastCameraSignature = '';
 
   static const CameraPosition _defaultCamera = CameraPosition(
     target: LatLng(10.7769, 106.7009),
@@ -60,6 +62,17 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final orderState = ref.watch(orderProvider);
     final trackingState = ref.watch(trackingProvider);
     final order = orderState.currentTrackingOrder;
+    final l10n = AppLocalizations.of(context);
+
+    ref.listen<OrderModel?>(
+      orderProvider.select((s) => s.currentTrackingOrder),
+      (_, next) {
+        _updateMapPins(next, ref.read(trackingProvider));
+      },
+    );
+    ref.listen<TrackingState>(trackingProvider, (_, next) {
+      _updateMapPins(ref.read(orderProvider).currentTrackingOrder, next);
+    });
 
     return Scaffold(
       body: Stack(
@@ -70,10 +83,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             initialCameraPosition: _defaultCamera,
             onMapCreated: (controller) {
               _mapController.complete(controller);
-              _updateMapPins(order);
+              _updateMapPins(order, trackingState);
             },
-            markers: _buildMarkers(order, trackingState),
-            polylines: _buildPolylines(trackingState),
+            markers: _buildMarkers(order, trackingState, l10n),
+            polylines: _buildPolylines(order, trackingState),
             polygons: _boundaryPolygons,
             minMaxZoomPreference: const MinMaxZoomPreference(
               VietnamMapConstants.minZoom,
@@ -462,7 +475,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
   }
 
-  Set<Marker> _buildMarkers(OrderModel? order, TrackingState tracking) {
+  Set<Marker> _buildMarkers(
+    OrderModel? order,
+    TrackingState tracking,
+    AppLocalizations l10n,
+  ) {
     final markers = <Marker>{};
 
     // Restaurant
@@ -478,7 +495,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueGreen,
           ),
-          infoWindow: const InfoWindow(title: 'Nhà hàng'),
+          infoWindow: InfoWindow(title: l10n.trackingMarkerRestaurant),
         ),
       );
     }
@@ -494,7 +511,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueOrange,
           ),
-          infoWindow: InfoWindow(title: order?.driverName ?? 'Tài xế'),
+          infoWindow: InfoWindow(
+            title: order?.driverName ?? l10n.trackingMarkerDriver,
+          ),
         ),
       );
     }
@@ -509,7 +528,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             order.deliveryAddress.longitude,
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(title: 'Điểm đến'),
+          infoWindow: InfoWindow(title: l10n.trackingMarkerDestination),
         ),
       );
     }
@@ -517,8 +536,20 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     return markers;
   }
 
-  Set<Polyline> _buildPolylines(TrackingState tracking) {
-    if (tracking.driverLocations.length < 2) return {};
+  Set<Polyline> _buildPolylines(OrderModel? order, TrackingState tracking) {
+    final polylines = <Polyline>{};
+    final plannedRoute = _routePoints(order, tracking);
+    if (plannedRoute.length >= 2) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('planned-route'),
+          points: plannedRoute,
+          color: AppColors.info,
+          width: 5,
+        ),
+      );
+    }
+
     final points = tracking.driverLocations
         .map((point) {
           final lat = (point['lat'] as num?)?.toDouble();
@@ -527,39 +558,109 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         })
         .whereType<LatLng>()
         .toList();
-    if (points.length < 2) return {};
-    return {
-      Polyline(
-        polylineId: const PolylineId('driver-telemetry'),
-        points: points,
-        color: AppColors.primary,
-        width: 3,
-      ),
-    };
-  }
-
-  Future<void> _updateMapPins(OrderModel? order) async {
-    if (order == null) return;
-    final controller = await _mapController.future;
-    if (order.deliveryAddress.latitude != 0 &&
-        order.deliveryAddress.longitude != 0) {
-      controller.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(
-              (order.restaurantLatitude ?? order.deliveryAddress.latitude) -
-                  0.01,
-              (order.restaurantLongitude ?? order.deliveryAddress.longitude) -
-                  0.01,
-            ),
-            northeast: LatLng(
-              order.deliveryAddress.latitude + 0.01,
-              order.deliveryAddress.longitude + 0.01,
-            ),
-          ),
-          80,
+    if (points.length >= 2) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('driver-telemetry'),
+          points: points,
+          color: AppColors.primary,
+          width: 3,
         ),
       );
     }
+    return polylines;
+  }
+
+  Future<void> _updateMapPins(OrderModel? order, TrackingState tracking) async {
+    if (order == null) return;
+    final signature = _cameraSignature(order, tracking);
+    if (signature == _lastCameraSignature) return;
+    _lastCameraSignature = signature;
+    final controller = await _mapController.future;
+    if (!mounted) return;
+
+    final points = <LatLng>[
+      ..._routePoints(order, tracking),
+      if (_isValidLatLng(order.restaurantLatitude, order.restaurantLongitude))
+        LatLng(order.restaurantLatitude!, order.restaurantLongitude!),
+      if (_isValidLatLng(
+        order.deliveryAddress.latitude,
+        order.deliveryAddress.longitude,
+      ))
+        LatLng(order.deliveryAddress.latitude, order.deliveryAddress.longitude),
+    ];
+    final driverLat = tracking.driverLatitude ?? order.driverLatitude;
+    final driverLng = tracking.driverLongitude ?? order.driverLongitude;
+    if (_isValidLatLng(driverLat, driverLng)) {
+      points.add(LatLng(driverLat!, driverLng!));
+    }
+
+    if (points.length >= 2) {
+      controller.animateCamera(
+        CameraUpdate.newLatLngBounds(_boundsFor(points), 80),
+      );
+    } else if (points.length == 1) {
+      controller.animateCamera(CameraUpdate.newLatLngZoom(points.single, 15));
+    }
+  }
+
+  List<LatLng> _routePoints(OrderModel? order, TrackingState tracking) {
+    final encoded = tracking.routePolyline ?? order?.routePolyline;
+    return tryDecodeEncodedPolyline(encoded)
+        .map((point) => LatLng(point.latitude, point.longitude))
+        .where((point) => _isValidLatLng(point.latitude, point.longitude))
+        .toList(growable: false);
+  }
+
+  String _cameraSignature(OrderModel order, TrackingState tracking) {
+    final driverLat = tracking.driverLatitude ?? order.driverLatitude;
+    final driverLng = tracking.driverLongitude ?? order.driverLongitude;
+    return [
+      order.id,
+      tracking.routePolyline ?? order.routePolyline ?? '',
+      driverLat?.toStringAsFixed(4) ?? '',
+      driverLng?.toStringAsFixed(4) ?? '',
+      order.restaurantLatitude?.toStringAsFixed(4) ?? '',
+      order.restaurantLongitude?.toStringAsFixed(4) ?? '',
+      order.deliveryAddress.latitude.toStringAsFixed(4),
+      order.deliveryAddress.longitude.toStringAsFixed(4),
+    ].join('|');
+  }
+
+  LatLngBounds _boundsFor(List<LatLng> points) {
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+    if ((maxLat - minLat).abs() < 0.001) {
+      minLat -= 0.005;
+      maxLat += 0.005;
+    }
+    if ((maxLng - minLng).abs() < 0.001) {
+      minLng -= 0.005;
+      maxLng += 0.005;
+    }
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  bool _isValidLatLng(double? lat, double? lng) {
+    return lat != null &&
+        lng != null &&
+        lat.isFinite &&
+        lng.isFinite &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180 &&
+        !(lat == 0 && lng == 0);
   }
 }

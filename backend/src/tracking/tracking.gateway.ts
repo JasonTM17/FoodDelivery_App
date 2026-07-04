@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets'
 import { UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
-import { TrackingService } from './tracking.service'
+import { routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
 import { OrdersGateway } from '../orders/orders.gateway'
@@ -42,7 +42,7 @@ export class TrackingGateway implements OnGatewayConnection {
   @SubscribeMessage('driver:location')
   async handleLocationUpdate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { lat: number; lng: number; bearing: number; speed: number; accuracy: number },
+    @MessageBody() data: { lat: number; lng: number; bearing?: number; speed?: number; accuracy?: number },
   ): Promise<void> {
     const user = this.socketAuth.getUser(client)
     if (user?.role !== UserRole.driver) return
@@ -52,7 +52,11 @@ export class TrackingGateway implements OnGatewayConnection {
       client.emit('driver:location_rejected', { reason: 'out_of_bbox' })
       return
     }
-    if (data.speed > 150) {
+    if (
+      typeof data.speed === 'number' &&
+      Number.isFinite(data.speed) &&
+      data.speed > 150
+    ) {
       client.emit('driver:location_rejected', { reason: 'speed_exceeded' })
       return
     }
@@ -72,7 +76,10 @@ export class TrackingGateway implements OnGatewayConnection {
 
     this.server.to(room).emit('driver:location_changed', {
       orderId, driverId, lat: data.lat, lng: data.lng,
-      bearing: data.bearing, timestamp: new Date().toISOString(),
+      bearing: typeof data.bearing === 'number' && Number.isFinite(data.bearing)
+        ? data.bearing
+        : null,
+      timestamp: new Date().toISOString(),
     })
 
     const adminEvent = {
@@ -86,38 +93,49 @@ export class TrackingGateway implements OnGatewayConnection {
     this.server.to('admin:drivers:all').emit('admin:driver_location_changed', adminEvent)
     this.ordersGateway.notifyAdminDriverLocation(adminEvent)
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      select: { deliveryAddressId: true },
-    })
-    if (order) {
-      const addr = await this.prisma.$queryRawUnsafe<Array<{ lng: number; lat: number }>>(
-        `SELECT ST_X(location::geometry)::float8 AS lng, ST_Y(location::geometry)::float8 AS lat
-         FROM addresses WHERE id = $1::uuid LIMIT 1`, order.deliveryAddressId,
+    const routeTarget = await this.prisma.$queryRawUnsafe<Array<{
+      status: string
+      restaurantLng: number
+      restaurantLat: number
+      deliveryLng: number
+      deliveryLat: number
+    }>>(
+      `SELECT o.status::text AS "status",
+              ST_X(r.location::geometry)::float8 AS "restaurantLng",
+              ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+              ST_X(a.location::geometry)::float8 AS "deliveryLng",
+              ST_Y(a.location::geometry)::float8 AS "deliveryLat"
+       FROM orders o
+       JOIN restaurants r ON r.id = o.restaurant_id
+       JOIN addresses a ON a.id = o.delivery_address_id
+       WHERE o.id = $1::uuid
+       LIMIT 1`,
+      orderId,
+    )
+    const target = routeTarget[0]
+    if (target) {
+      const routePhase = routePhaseForStatus(target.status)
+      const destLat = routePhase === 'pickup' ? target.restaurantLat : target.deliveryLat
+      const destLng = routePhase === 'pickup' ? target.restaurantLng : target.deliveryLng
+
+      // Try route cache first; fetches + caches on miss. If providers are unavailable,
+      // emit an explicit unavailable ETA instead of fabricating a straight-line travel time.
+      const route = await this.trackingService.getOrFetchRoute(
+        orderId, data.lat, data.lng, destLat, destLng, routePhase,
       )
-      if (addr.length > 0) {
-        const destLat = addr[0].lat
-        const destLng = addr[0].lng
+      const etaMinutes = route ? Math.max(1, Math.round(route.durationSeconds / 60)) : null
 
-        // Try route cache first; fetches + caches on miss. If providers are unavailable,
-        // emit a clearly degraded straight-line estimate instead of pretending it is a routed ETA.
-        const route = await this.trackingService.getOrFetchRoute(
-          orderId, data.lat, data.lng, destLat, destLng,
-        )
-        const etaMinutes = route
-          ? Math.round(route.durationSeconds / 60)
-          : this.trackingService.calculateETA(data.lat, data.lng, destLat, destLng)
+      this.server.to(room).emit('delivery:eta_updated', {
+        orderId,
+        etaMinutes,
+        source: route?.provider ?? 'route_unavailable',
+        degraded: !route,
+        routePolyline: route?.polyline ?? null,
+        routePhase,
+      })
 
-        this.server.to(room).emit('delivery:eta_updated', {
-          orderId,
-          etaMinutes,
-          source: route?.provider ?? 'straight_line_estimate',
-          degraded: !route,
-        })
-
-        // Non-blocking: enqueue recompute when driver deviates >100m from cached polyline
-        void this.trackingService.maybeEnqueueRecompute(orderId, data.lat, data.lng)
-      }
+      // Non-blocking: enqueue recompute when driver deviates >100m from cached polyline
+      void this.trackingService.maybeEnqueueRecompute(orderId, data.lat, data.lng, routePhase)
     }
   }
 

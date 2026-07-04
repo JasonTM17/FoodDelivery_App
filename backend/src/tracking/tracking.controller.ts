@@ -5,7 +5,7 @@ import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
 import { OrdersService } from '../orders/orders.service'
-import { TrackingService } from './tracking.service'
+import { routePhaseForStatus, TrackingService } from './tracking.service'
 
 @ApiTags('tracking')
 @ApiBearerAuth()
@@ -21,16 +21,18 @@ export class TrackingController {
   @Roles('customer')
   async getTracking(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     const order = await this.ordersService.getTracking(id, user.sub)
+    const routePhase = routePhaseForStatus(order.status)
     const [driverLocation, cachedRoute] = await Promise.all([
       order.driverId
         ? this.trackingService.getDriverLocation(order.driverId)
         : Promise.resolve(null),
-      this.trackingService.getCachedRoute(order.id),
+      this.trackingService.getCachedRoute(order.id, routePhase),
     ])
 
     return {
       orderId: order.id,
       status: order.status,
+      routePhase,
       driverLocation: driverLocation
         ? {
             lat: driverLocation.lat,

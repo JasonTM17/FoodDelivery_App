@@ -11,7 +11,7 @@ export interface RouteResult {
   durationSeconds: number
   waypoints: GeoPoint[]
   /** Which provider returned this result */
-  provider: 'google' | 'osrm' | 'haversine'
+  provider: 'google' | 'osrm'
 }
 
 export interface DriverLocation {

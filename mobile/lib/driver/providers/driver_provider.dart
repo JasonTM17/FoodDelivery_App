@@ -311,6 +311,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   final ApiClient _api = ApiClient.instance;
   final SocketClient _socket = SocketClient.instance;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
+  StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
 
@@ -406,6 +407,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> goOffline() async {
     _stopLocationUpdates();
+    _etaSub?.cancel();
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
     try {
@@ -630,6 +632,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   void _listenOrderStatus(String orderId) {
     _orderStatusSub?.cancel();
+    _etaSub?.cancel();
     _socket.connect();
     _socket.subscribeOrder(orderId);
 
@@ -648,6 +651,20 @@ class DriverNotifier extends StateNotifier<DriverState> {
           await fetchActiveOrder();
         }
       }
+    });
+
+    _etaSub = _socket.onEtaUpdate.listen((data) {
+      if (data['orderId'] != orderId || state.activeOrder?.id != orderId) {
+        return;
+      }
+      final eta = (data['etaMinutes'] as num?)?.toInt();
+      final routePolyline = data['routePolyline'] as String?;
+      state = state.copyWith(
+        activeOrder: state.activeOrder!.copyWith(
+          estimatedDeliveryTimeMinutes: eta,
+          routePolyline: routePolyline,
+        ),
+      );
     });
   }
 
@@ -696,6 +713,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   @override
   void dispose() {
     _orderStatusSub?.cancel();
+    _etaSub?.cancel();
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
     BackgroundLocationService.instance.stop();

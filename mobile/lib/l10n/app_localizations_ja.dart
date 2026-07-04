@@ -556,6 +556,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get trackingMessageDriver => 'メッセージ';
 
   @override
+  String get trackingMarkerRestaurant => 'レストラン';
+
+  @override
+  String get trackingMarkerDriver => '配達員';
+
+  @override
+  String get trackingMarkerDestination => '配達先';
+
+  @override
   String get orderHistoryTitle => '注文一覧';
 
   @override
@@ -1064,6 +1073,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverNavPhoneError => '電話アプリを開けません';
+
+  @override
+  String get driverNavOpenDirections => '経路を開く';
+
+  @override
+  String get driverNavDirectionsUnavailable => 'この地点への経路を利用できません';
 
   @override
   String get cartPlaceOrder => '注文する';

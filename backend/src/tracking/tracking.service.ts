@@ -9,12 +9,24 @@ import { hasDeviatedFromRoute } from '../common/utils/route.utils'
 import { RouteResult } from '../common/types/location.types'
 import Redis from 'ioredis'
 
+export type DeliveryRoutePhase = 'pickup' | 'dropoff'
+
+export function routePhaseForStatus(status: string): DeliveryRoutePhase {
+  return status === 'driver_assigned' || status === 'driver_arriving_restaurant'
+    ? 'pickup'
+    : 'dropoff'
+}
+
+export function routeCacheKey(orderId: string, phase: DeliveryRoutePhase): string {
+  return `${orderId}:${phase}`
+}
+
 interface LocationData {
   lat: number
   lng: number
-  bearing: number
-  speed: number
-  accuracy: number
+  bearing?: number
+  speed?: number
+  accuracy?: number
 }
 
 interface LocationRecord {
@@ -28,6 +40,7 @@ export interface RecomputeJobData {
   orderId: string
   lat: number
   lng: number
+  phase: DeliveryRoutePhase
 }
 
 @Injectable()
@@ -76,8 +89,10 @@ export class TrackingService implements OnModuleDestroy {
     originLng: number,
     destLat: number,
     destLng: number,
+    phase: DeliveryRoutePhase = 'dropoff',
   ): Promise<RouteResult | null> {
-    const cached = await this.etaCache.getRoute(orderId)
+    const cacheKey = routeCacheKey(orderId, phase)
+    const cached = await this.etaCache.getRoute(cacheKey)
     if (cached) return cached
 
     try {
@@ -85,7 +100,7 @@ export class TrackingService implements OnModuleDestroy {
         { lat: originLat, lng: originLng },
         { lat: destLat, lng: destLng },
       )
-      await this.etaCache.setRoute(orderId, route)
+      await this.etaCache.setRoute(cacheKey, route)
       // Persist to DB non-blocking; failure is logged, not thrown
       void this.persistRouteToOrder(orderId, route)
       return route
@@ -99,27 +114,28 @@ export class TrackingService implements OnModuleDestroy {
    * Enqueues an ETA recompute job when the driver deviates >100 m from the
    * cached polyline. Uses a stable jobId to avoid queue spam per order.
    */
-  async maybeEnqueueRecompute(orderId: string, lat: number, lng: number): Promise<void> {
-    const cached = await this.etaCache.getRoute(orderId)
+  async maybeEnqueueRecompute(
+    orderId: string,
+    lat: number,
+    lng: number,
+    phase: DeliveryRoutePhase = 'dropoff',
+  ): Promise<void> {
+    const cacheKey = routeCacheKey(orderId, phase)
+    const cached = await this.etaCache.getRoute(cacheKey)
     if (!cached) return
 
     if (hasDeviatedFromRoute(cached.polyline, lat, lng)) {
       await this.etaQueue.add(
         'recompute-route',
-        { orderId, lat, lng } satisfies RecomputeJobData,
+        { orderId, lat, lng, phase } satisfies RecomputeJobData,
         {
           removeOnComplete: true,
           removeOnFail: 100,
           // Deduplicate: only one pending recompute per order at a time
-          jobId: `recompute:${orderId}`,
+          jobId: `recompute:${orderId}:${phase}`,
         },
       )
     }
-  }
-
-  calculateETA(driverLat: number, driverLng: number, destLat: number, destLng: number): number {
-    const distKm = this.haversine(driverLat, driverLng, destLat, destLng)
-    return Math.round((distKm / 20) * 60 + 5)
   }
 
   async getDriverLocation(driverId: string): Promise<{ lat: number; lng: number; timestamp: string } | null> {
@@ -133,8 +149,8 @@ export class TrackingService implements OnModuleDestroy {
     return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp }
   }
 
-  getCachedRoute(orderId: string): Promise<RouteResult | null> {
-    return this.etaCache.getRoute(orderId)
+  getCachedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {
+    return this.etaCache.getRoute(routeCacheKey(orderId, phase))
   }
 
   async findNearbyDriversPostGIS(
@@ -170,16 +186,6 @@ export class TrackingService implements OnModuleDestroy {
     } catch (err) {
       this.logger.warn(`Failed to persist route for order ${orderId}: ${(err as Error).message}`)
     }
-  }
-
-  private haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   }
 
   private async flush(): Promise<void> {

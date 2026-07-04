@@ -41,19 +41,6 @@ describe('TrackingService', () => {
     await module?.close()
   })
 
-  describe('calculateETA', () => {
-    it('returns positive minutes for valid distance', () => {
-      const eta = service.calculateETA(10.8231, 106.6297, 10.7800, 106.6950)
-      expect(eta).toBeGreaterThan(0)
-    })
-
-    it('nearby locations have shorter ETA', () => {
-      const near = service.calculateETA(10.8, 106.7, 10.8001, 106.7001)
-      const far = service.calculateETA(10.8, 106.7, 11.0, 107.0)
-      expect(near).toBeLessThan(far)
-    })
-  })
-
   describe('handleLocationUpdate', () => {
     it('stores driver location in Redis and returns orderId', async () => {
       mockRedis.get.mockResolvedValueOnce('order-123')
@@ -112,6 +99,7 @@ describe('TrackingService', () => {
       mockEtaCache.getRoute.mockResolvedValueOnce(mockRoute)
       const result = await service.getOrFetchRoute('ord-1', 10.8, 106.7, 10.75, 106.65)
       expect(result).toBe(mockRoute)
+      expect(mockEtaCache.getRoute).toHaveBeenCalledWith('ord-1:dropoff')
       expect(mockDirectionsApi.fetchRoute).not.toHaveBeenCalled()
     })
 
@@ -123,8 +111,22 @@ describe('TrackingService', () => {
         { lat: 10.8, lng: 106.7 },
         { lat: 10.75, lng: 106.65 },
       )
-      expect(mockEtaCache.setRoute).toHaveBeenCalledWith('ord-1', mockRoute)
+      expect(mockEtaCache.setRoute).toHaveBeenCalledWith('ord-1:dropoff', mockRoute)
       expect(result).toEqual(mockRoute)
+    })
+
+    it('keeps pickup and dropoff route cache entries separate', async () => {
+      mockEtaCache.getRoute.mockResolvedValueOnce(null)
+      mockDirectionsApi.fetchRoute.mockResolvedValueOnce(mockRoute)
+
+      await service.getOrFetchRoute('ord-1', 10.8, 106.7, 10.77, 106.68, 'pickup')
+
+      expect(mockEtaCache.getRoute).toHaveBeenCalledWith('ord-1:pickup')
+      expect(mockEtaCache.setRoute).toHaveBeenCalledWith('ord-1:pickup', mockRoute)
+      expect(mockDirectionsApi.fetchRoute).toHaveBeenCalledWith(
+        { lat: 10.8, lng: 106.7 },
+        { lat: 10.77, lng: 106.68 },
+      )
     })
 
     it('returns null and does not throw when Directions API fails', async () => {
@@ -155,8 +157,8 @@ describe('TrackingService', () => {
       await service.maybeEnqueueRecompute('ord-1', 10.85, 106.75)
       expect(mockEtaQueue.add).toHaveBeenCalledWith(
         'recompute-route',
-        expect.objectContaining({ orderId: 'ord-1', lat: 10.85, lng: 106.75 }),
-        expect.objectContaining({ jobId: 'recompute:ord-1' }),
+        expect.objectContaining({ orderId: 'ord-1', lat: 10.85, lng: 106.75, phase: 'dropoff' }),
+        expect.objectContaining({ jobId: 'recompute:ord-1:dropoff' }),
       )
     })
 

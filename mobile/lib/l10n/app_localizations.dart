@@ -1186,6 +1186,24 @@ abstract class AppLocalizations {
   /// **'Nhắn tin'**
   String get trackingMessageDriver;
 
+  /// No description provided for @trackingMarkerRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà hàng'**
+  String get trackingMarkerRestaurant;
+
+  /// No description provided for @trackingMarkerDriver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài xế'**
+  String get trackingMarkerDriver;
+
+  /// No description provided for @trackingMarkerDestination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm đến'**
+  String get trackingMarkerDestination;
+
   /// No description provided for @orderHistoryTitle.
   ///
   /// In vi, this message translates to:
@@ -2151,6 +2169,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không thể mở trình quay số'**
   String get driverNavPhoneError;
+
+  /// No description provided for @driverNavOpenDirections.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở chỉ đường'**
+  String get driverNavOpenDirections;
+
+  /// No description provided for @driverNavDirectionsUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tọa độ hợp lệ để chỉ đường'**
+  String get driverNavDirectionsUnavailable;
 
   /// No description provided for @cartPlaceOrder.
   ///

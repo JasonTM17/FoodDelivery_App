@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/socket_client.dart';
 import 'order_provider.dart';
 
+const _trackingUnset = Object();
+
 final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
   (ref) {
     final orderNotifier = ref.read(orderProvider.notifier);
@@ -19,6 +21,8 @@ class TrackingState {
   final int? etaMinutes;
   final String? etaSource;
   final bool etaDegraded;
+  final String? routePolyline;
+  final String? routePhase;
 
   const TrackingState({
     this.isConnected = false,
@@ -29,6 +33,8 @@ class TrackingState {
     this.etaMinutes,
     this.etaSource,
     this.etaDegraded = false,
+    this.routePolyline,
+    this.routePhase,
   });
 
   TrackingState copyWith({
@@ -37,9 +43,11 @@ class TrackingState {
     double? driverLongitude,
     String? currentOrderId,
     List<Map<String, dynamic>>? driverLocations,
-    int? etaMinutes,
-    String? etaSource,
+    Object? etaMinutes = _trackingUnset,
+    Object? etaSource = _trackingUnset,
     bool? etaDegraded,
+    Object? routePolyline = _trackingUnset,
+    Object? routePhase = _trackingUnset,
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
@@ -47,9 +55,19 @@ class TrackingState {
       driverLongitude: driverLongitude ?? this.driverLongitude,
       currentOrderId: currentOrderId ?? this.currentOrderId,
       driverLocations: driverLocations ?? this.driverLocations,
-      etaMinutes: etaMinutes ?? this.etaMinutes,
-      etaSource: etaSource ?? this.etaSource,
+      etaMinutes: identical(etaMinutes, _trackingUnset)
+          ? this.etaMinutes
+          : etaMinutes as int?,
+      etaSource: identical(etaSource, _trackingUnset)
+          ? this.etaSource
+          : etaSource as String?,
       etaDegraded: etaDegraded ?? this.etaDegraded,
+      routePolyline: identical(routePolyline, _trackingUnset)
+          ? this.routePolyline
+          : routePolyline as String?,
+      routePhase: identical(routePhase, _trackingUnset)
+          ? this.routePhase
+          : routePhase as String?,
     );
   }
 }
@@ -102,11 +120,12 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _etaSub = _socketClient.onEtaUpdate.listen((data) {
       if (data['orderId'] != orderId) return;
       final eta = (data['etaMinutes'] as num?)?.toInt();
-      if (eta == null) return;
       state = state.copyWith(
         etaMinutes: eta,
         etaSource: data['source'] as String?,
         etaDegraded: data['degraded'] == true,
+        routePolyline: data['routePolyline'] as String?,
+        routePhase: data['routePhase'] as String?,
       );
     });
 
