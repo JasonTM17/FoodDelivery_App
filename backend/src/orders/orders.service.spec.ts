@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { Queue } from 'bullmq'
 import dayjs from 'dayjs'
+import { Prisma } from '@prisma/client'
 import { generateOrderCode, OrdersService } from './orders.service'
 import { PrismaService } from '../database/prisma.service'
 import { PaymentsService } from './payments.service'
@@ -251,6 +252,47 @@ describe('OrdersService', () => {
           data: expect.objectContaining({ cancelledReason: 'Changed my mind' }),
         }),
       )
+    })
+
+    it('clears stale route geometry when transitioning from pickup to dropoff phase', async () => {
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({
+        id: orderId,
+        status: 'driver_arriving_restaurant',
+        driverId: userId,
+      })
+      mockTx.order.update.mockResolvedValue({ id: orderId, status: 'picked_up' })
+
+      await service.transition(orderId, 'picked_up', userId, 'driver')
+
+      expect(mockTx.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: expect.objectContaining({
+          status: 'picked_up',
+          estimatedDeliveryTimeMinutes: null,
+          routePolyline: null,
+          routeWaypoints: Prisma.DbNull,
+        }),
+      })
+    })
+
+    it('keeps route geometry when the route phase does not change', async () => {
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({
+        id: orderId,
+        status: 'driver_assigned',
+        driverId: userId,
+      })
+      mockTx.order.update.mockResolvedValue({ id: orderId, status: 'driver_arriving_restaurant' })
+
+      await service.transition(orderId, 'driver_arriving_restaurant', userId, 'driver')
+
+      expect(mockTx.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: expect.not.objectContaining({
+          estimatedDeliveryTimeMinutes: null,
+          routePolyline: null,
+          routeWaypoints: Prisma.DbNull,
+        }),
+      })
     })
 
     it('marks payment refunded and enqueues refund job when cancelled with completed payment', async () => {

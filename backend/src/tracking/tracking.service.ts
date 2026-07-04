@@ -195,7 +195,7 @@ export class TrackingService implements OnModuleDestroy {
     try {
       await this.prisma.$executeRawUnsafe(
         `INSERT INTO driver_location_history (driver_id, location, recorded_at)
-         VALUES ${batch.map((_, i) => `($${i * 3 + 1}::uuid, ST_SetSRID(ST_MakePoint($${i * 3 + 2}::float8, $${i * 3 + 3}::float8), 4326), $${i * 3 + 4}::timestamptz)`).join(', ')}`,
+         VALUES ${batch.map((_, i) => `($${i * 4 + 1}::uuid, ST_SetSRID(ST_MakePoint($${i * 4 + 2}::float8, $${i * 4 + 3}::float8), 4326), $${i * 4 + 4}::timestamptz)`).join(', ')}`,
         ...batch.flatMap((r) => [r.driverId, r.lng, r.lat, r.recordedAt]),
       )
     } catch (err) {

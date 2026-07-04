@@ -12,6 +12,7 @@ import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
 import { PromotionsService } from '../promotions/promotions.service'
+import { routePhaseForStatus } from '../tracking/tracking.service'
 
 @Injectable()
 export class OrdersService {
@@ -51,12 +52,21 @@ export class OrdersService {
         throw new NotFoundException('ORDER_NOT_FOUND')
       }
       OrderStateMachine.validate(order.status as OrderStatus, toStatus, role)
+      const routePhaseChanged =
+        routePhaseForStatus(order.status) !== routePhaseForStatus(toStatus)
 
       const updated = await tx.order.update({
         where: { id: orderId },
         data: {
           status: toStatus as PrismaOrderStatus,
           ...(toStatus === 'cancelled' ? { cancelledReason: reason ?? 'Cancelled' } : {}),
+          ...(routePhaseChanged
+            ? {
+              estimatedDeliveryTimeMinutes: null,
+              routePolyline: null,
+              routeWaypoints: Prisma.DbNull,
+            }
+            : {}),
         },
       })
 
