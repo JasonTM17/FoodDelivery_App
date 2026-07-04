@@ -10,6 +10,7 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../providers/driver_provider.dart';
+import '../utils/directions_uri.dart';
 import '../widgets/delivery_step_indicator.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -168,12 +169,15 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
                   // Step-specific content
                   switch (order.status) {
-                    'driver_assigned' => _buildHeadingToRestaurant(order),
+                    'driver_assigned' => _buildHeadingToRestaurant(
+                      order,
+                      state,
+                    ),
                     'driver_arriving_restaurant' => _buildAtRestaurant(order),
                     'picked_up' ||
-                    'delivering' => _buildHeadingToCustomer(order),
+                    'delivering' => _buildHeadingToCustomer(order, state),
                     'delivered' || 'completed' => _buildComplete(order),
-                    _ => _buildHeadingToRestaurant(order),
+                    _ => _buildHeadingToRestaurant(order, state),
                   },
                 ],
               ),
@@ -282,7 +286,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   // ---- Step 0: Heading to restaurant ----
 
-  Widget _buildHeadingToRestaurant(OrderModel order) {
+  Widget _buildHeadingToRestaurant(OrderModel order, DriverState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -311,6 +315,8 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           onPressed: () => _openDirections(
             order.restaurantLatitude,
             order.restaurantLongitude,
+            originLat: state.currentLat ?? order.driverLatitude,
+            originLng: state.currentLng ?? order.driverLongitude,
           ),
         ),
         const SizedBox(height: 24),
@@ -468,7 +474,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
   // ---- Step 2: Heading to customer ----
 
-  Widget _buildHeadingToCustomer(OrderModel order) {
+  Widget _buildHeadingToCustomer(OrderModel order, DriverState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -546,6 +552,8 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           onPressed: () => _openDirections(
             order.deliveryAddress.latitude,
             order.deliveryAddress.longitude,
+            originLat: state.currentLat ?? order.driverLatitude,
+            originLng: state.currentLng ?? order.driverLongitude,
           ),
         ),
 
@@ -833,16 +841,22 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         !(lat == 0 && lng == 0);
   }
 
-  Future<void> _openDirections(double? lat, double? lng) async {
-    if (!_isValidLatLng(lat, lng)) {
+  Future<void> _openDirections(
+    double? lat,
+    double? lng, {
+    double? originLat,
+    double? originLng,
+  }) async {
+    final uri = buildGoogleMapsDirectionsUri(
+      destinationLat: lat,
+      destinationLng: lng,
+      originLat: originLat,
+      originLng: originLng,
+    );
+    if (uri == null) {
       _showDirectionsError();
       return;
     }
-    final uri = Uri.https('www.google.com', '/maps/dir/', {
-      'api': '1',
-      'destination': '$lat,$lng',
-      'travelmode': 'driving',
-    });
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);

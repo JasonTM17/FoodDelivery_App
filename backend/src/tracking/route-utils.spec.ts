@@ -35,6 +35,11 @@ describe('snapToPolylineDistanceKm', () => {
     expect(dist).toBeCloseTo(0, 1)
   })
 
+  it('snaps to a route segment instead of only route vertices', () => {
+    const dist = snapToPolylineDistanceKm(GOOGLE_EXAMPLE_POLYLINE, 39.6, -120.575)
+    expect(dist).toBeLessThan(0.01)
+  })
+
   it('returns Infinity for an empty polyline', () => {
     const dist = snapToPolylineDistanceKm('', 10.8, 106.7)
     expect(dist).toBe(Infinity)
@@ -54,6 +59,11 @@ describe('hasDeviatedFromRoute', () => {
     expect(deviated).toBe(false)
   })
 
+  it('returns false when driver is on a sparse polyline segment between vertices', () => {
+    const deviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 39.6, -120.575, 100)
+    expect(deviated).toBe(false)
+  })
+
   it('returns true when driver is >100m from every polyline vertex', () => {
     // (10.8, 106.7) is thousands of km from the US-based polyline
     const deviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 10.8, 106.7)
@@ -61,10 +71,10 @@ describe('hasDeviatedFromRoute', () => {
   })
 
   it('respects custom threshold — boundary values', () => {
-    // At ~38.5° lat, 1° ≈ 111 km → 0.0001° ≈ 11 m (within 100 m) → false
-    const notDeviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 38.5001, -120.2, 100)
-    // 0.001° ≈ 111 m > 100 m → true
-    const deviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 38.501, -120.2, 100)
+    // At ~38.5° lat, 0.0001° longitude is under 10 m from the route start.
+    const notDeviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 38.5, -120.1999, 100)
+    // 0.01° longitude is safely beyond the 100 m deviation threshold.
+    const deviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 38.5, -120.19, 100)
     expect(notDeviated).toBe(false)
     expect(deviated).toBe(true)
   })
