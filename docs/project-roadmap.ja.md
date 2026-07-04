@@ -4,15 +4,15 @@
 
 この roadmap は integration branch の方針を示します。すでに landed したものと、production deployment 前にまだ test が必要なものを分けています。
 
-## 現在の優先事項: Batch 4 web/backend parity
+## 現在の優先事項: Batch 4 web/backend parity と mobile stabilization
 
-Goal: Admin と Restaurant dashboard を real backend data で production-grade にしつつ、Next.js 14、React 18、ESLint 8、pnpm 10、既存 mobile/customer contracts を維持します。
+Goal: Admin と Restaurant dashboard を real backend data で production-grade にし、その後 mobile/customer apps を安定した Batch 4 contract に合わせます。Next.js 14、React 18、ESLint 8、pnpm 10、現行 Flutter constraints は維持します。
 
 Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、deployment validation が通るまで完了ではありません。
 
 ## Integration branch に landed
 
-- `batch4-integration` の clean integration worktree。
+- `codex/batch4-integration` の clean integration worktree。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。
@@ -21,6 +21,14 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
+- Mobile Flutter gate は 2026-07-04 に local で再確認済みです。`flutter analyze` は clean、`flutter test` は 115 tests passed。
+
+### Mobile
+
+- Flutter customer/driver app を安定済み Batch 4 API contract に合わせる。
+- OpenAPI contract を意図的に refresh するまで mobile API client は regenerate/commit しない。
+- Violet/Indigo は branch refs または review 済み patch artifacts が入手できた場合だけ reconcile する。現在の `origin` head list にはそれらの branch は無い。
+- Mobile に影響する backend/web contract 変更後は `flutter analyze` と `flutter test` を再実行する。
 
 ## Draft PR 前に進行中
 
@@ -76,7 +84,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 - Stale team branches を raw merge しません。
 - Amber、Steel、audit branches からは focused tests で証明した behavior だけ port します。
-- Violet と Indigo mobile reconciliation は Batch 4 web/backend 安定後の別 mobile branch に defer。
+- Violet または Indigo ref が再出現した場合は、focused Flutter tests 付きで hunk-by-hunk に salvage し、disposition をここに記録する。
 - Generated screenshots、local caches、backup folders、assistant private files は Git に入れません。
 
 ## Deployment 前の required gates
@@ -93,7 +101,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## Gates が green になった後の deploy plan
 
-1. `batch4-integration` を push。
+1. `codex/batch4-integration` を push。
 2. `master` 向け draft PR を開く。
 3. Branch disposition、test matrix、rejected changes、known degraded states を添付。
 4. Required checks 通過後、merge commit で merge。
@@ -103,7 +111,6 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## Batch 4 から deferred
 
-- Mobile Violet/Indigo reconciliation。
 - Next.js、React、ESLint、Node major migrations。
 - httpOnly cookie auth migration。
 - Data warehouse または OLAP redesign。

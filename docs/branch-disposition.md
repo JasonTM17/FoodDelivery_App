@@ -19,17 +19,17 @@ git diff --stat HEAD...<branch>
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `origin/codex/batch4-integration` | `90cba1f` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
-| `origin/batch4-integration` | `032a6c0` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `46 0`, so the branch contributes no unique patch. | Superseded by `codex/batch4-integration`; do not raw-merge. Safe cleanup only after backup and explicit approval. |
-| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `283 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
+| `origin/codex/batch4-integration` | `764227d` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
+| `origin/batch4-integration` | `032a6c0` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `64 0`, so the branch contributes no unique patch. | Superseded by `codex/batch4-integration`; do not raw-merge. Safe cleanup only after backup and explicit approval. |
+| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `301 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
 
 ## Local heads
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `90cba1f` | Current working branch, tracking `origin/codex/batch4-integration`; worktree clean after push. | Active. |
-| `batch4-integration` | `032a6c0` | Ancestor of current branch; same commit as `origin/batch4-integration`; `HEAD...branch` cherry counts are `46 0`. | Superseded by current branch. |
-| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `53 0`. Checked out in another worktree, so Batch 4 work did not switch or mutate it. | Local historical branch. Do not use as Batch 4 target. |
+| `codex/batch4-integration` | `764227d` | Current working branch, tracking `origin/codex/batch4-integration`; worktree clean after push. | Active. |
+| `batch4-integration` | `032a6c0` | Ancestor of current branch; same commit as `origin/batch4-integration`; `HEAD...branch` cherry counts are `64 0`. | Superseded by current branch. |
+| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `71 0`. Checked out in another worktree, so Batch 4 work did not switch or mutate it. | Local historical branch. Do not use as Batch 4 target. |
 
 ## Missing branch refs
 
@@ -47,4 +47,4 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Current conclusion
 
-No branch merge is required from the branch refs currently available. Batch 4 integration already contains all commits reachable from the live remote/local branch heads listed above as of `90cba1f`. Mobile Violet/Indigo reconciliation remains pending because no such branch refs are available in `origin` at this audit point.
+No branch merge is required from the branch refs currently available. Batch 4 integration already contains all commits reachable from the live remote/local branch heads listed above as of `764227d`. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter analyze` and `flutter test` (115 tests passed).

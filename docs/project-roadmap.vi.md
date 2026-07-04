@@ -4,15 +4,15 @@ Ngôn ngữ: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadma
 
 Roadmap này phản ánh hướng của integration branch. Nó tách phần đã landing khỏi phần còn phải test trước production deployment.
 
-## Ưu tiên hiện tại: Batch 4 web/backend parity
+## Ưu tiên hiện tại: Batch 4 web/backend parity và mobile stabilization
 
-Mục tiêu: đưa Admin và Restaurant dashboard lên mức production-grade với dữ liệu backend thật, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 10 và contract mobile/customer hiện có.
+Mục tiêu: đưa Admin và Restaurant dashboard lên mức production-grade với dữ liệu backend thật, sau đó giữ app mobile/customer khớp Batch 4 contract đã ổn định, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 10 và constraints Flutter hiện có.
 
 Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, tenant-isolation checks và deployment validation chưa pass.
 
 ## Đã landing trong integration branch
 
-- Clean integration worktree trên `batch4-integration`.
+- Clean integration worktree trên `codex/batch4-integration`.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.
@@ -21,6 +21,14 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
 - Vietnamese AI chat fast paths có focused tests.
 - Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
+- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-04 với `flutter analyze` sạch và `flutter test` pass 115 test.
+
+### Mobile
+
+- Giữ app Flutter customer/driver khớp Batch 4 API contract đã ổn định.
+- Không regenerate hoặc commit mobile API client nếu OpenAPI contract chưa được refresh có chủ đích.
+- Chỉ reconcile Violet/Indigo khi branch refs hoặc patch artifacts đã review xuất hiện; danh sách head hiện tại của `origin` không có các branch này.
+- Chạy lại `flutter analyze` và `flutter test` sau các thay đổi backend/web contract ảnh hưởng mobile.
 
 ## Đang làm trước draft PR
 
@@ -76,7 +84,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 - Không raw-merge stale team branches.
 - Chỉ port hành vi đã chứng minh từ Amber, Steel và audit branches bằng focused tests.
-- Defer Violet và Indigo mobile reconciliation sang mobile branches riêng sau khi Batch 4 web/backend ổn định.
+- Nếu ref Violet hoặc Indigo xuất hiện lại, salvage mobile hunk-by-hunk với focused Flutter tests và ghi disposition tại đây.
 - Generated screenshots, local caches, backup folders và assistant private files không được vào Git.
 
 ## Gate bắt buộc trước deployment
@@ -93,7 +101,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Kế hoạch deploy sau khi gate xanh
 
-1. Push `batch4-integration`.
+1. Push `codex/batch4-integration`.
 2. Mở draft PR vào `master`.
 3. Đính kèm branch disposition, test matrix, rejected changes và known degraded states.
 4. Sau required checks xanh, merge bằng merge commit.
@@ -103,7 +111,6 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Deferred khỏi Batch 4
 
-- Mobile Violet và Indigo reconciliation.
 - Migration major Next.js, React, ESLint hoặc Node.
 - httpOnly cookie auth migration.
 - Data warehouse hoặc OLAP redesign.

@@ -118,6 +118,7 @@ flutter test
 
 Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
 The Batch 4 mobile gate currently requires `flutter analyze` with zero issues and the full Flutter test suite passing.
+Latest local evidence: 2026-07-04 on `codex/batch4-integration`, `flutter analyze` found no issues and `flutter test` passed 115 tests.
 
 ## Security Checks
 

@@ -181,10 +181,10 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 
 ## Branch and integration policy
 
-- Use `batch4-integration` as the clean integration branch. New work branches should not use a tool-specific prefix.
+- Use `codex/batch4-integration` as the current clean integration branch; the older `batch4-integration` ref is superseded and tracked in branch disposition.
 - Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
 - Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
-- Keep mobile reconciliation separate until web/backend Batch 4 is stable.
+- Continue mobile reconciliation after web/backend Batch 4 is stable; if Violet/Indigo refs are unavailable, document that evidence instead of inventing a merge.
 - Do not delete local or remote branches until backups and [branch disposition](docs/branch-disposition.md) are verified.
 
 ## License

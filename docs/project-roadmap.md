@@ -4,15 +4,15 @@ Languages: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.
 
 This roadmap reflects the integration branch direction. It separates what is already landed from what still must pass tests before a production deployment.
 
-## Current priority: Batch 4 web/backend parity
+## Current priority: Batch 4 web/backend parity and mobile stabilization
 
-Goal: make Admin and Restaurant dashboards production-grade against real backend data while keeping Next.js 14, React 18, ESLint 8, pnpm 10, and the existing mobile/customer contracts.
+Goal: make Admin and Restaurant dashboards production-grade against real backend data, then keep mobile/customer apps aligned with the stabilized Batch 4 contract while staying on Next.js 14, React 18, ESLint 8, pnpm 10, and the current Flutter constraints.
 
 Batch 4 is not complete until local gates, E2E, accessibility, visual checks, tenant-isolation checks, and deployment validation pass.
 
 ## Landed in the integration branch
 
-- Clean integration worktree on `batch4-integration`.
+- Clean integration worktree on `codex/batch4-integration`.
 - Web response contract documented as `{ success: true, data, meta? }`.
 - Error contract documented as RFC 7807 Problem Details.
 - OpenAPI validation workflow and Spectral rules added.
@@ -21,6 +21,14 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
 - Vietnamese AI chat fast paths covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
+- Mobile Flutter gate was rechecked locally on 2026-07-04 with `flutter analyze` clean and `flutter test` passing 115 tests.
+
+### Mobile
+
+- Keep the Flutter customer/driver app aligned with the stabilized Batch 4 API contract.
+- Do not regenerate or commit a mobile API client until the OpenAPI contract is intentionally refreshed.
+- Reconcile Violet/Indigo only if branch refs or reviewed patch artifacts become available; the current `origin` head list does not expose those branches.
+- Re-run `flutter analyze` and `flutter test` after backend/web contract changes that affect mobile behavior.
 
 ## In progress before draft PR
 
@@ -76,7 +84,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 - Do not raw-merge stale team branches.
 - Port only proven behavior from Amber, Steel, and audit branches with focused tests.
-- Defer Violet and Indigo mobile reconciliation to separate mobile branches after Batch 4 web/backend is stable.
+- If Violet or Indigo refs reappear, salvage mobile work hunk-by-hunk with focused Flutter tests and document the disposition here.
 - Track the current branch audit in [branch-disposition.md](branch-disposition.md).
 - Keep generated screenshots, local caches, backup folders, and assistant private files out of Git.
 
@@ -94,7 +102,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Deployment plan after green gates
 
-1. Push `batch4-integration`.
+1. Push `codex/batch4-integration`.
 2. Open a draft PR into `master`.
 3. Attach branch disposition, test matrix, rejected changes, and known degraded states.
 4. After required checks pass, merge with a merge commit.
@@ -104,7 +112,6 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Deferred out of Batch 4
 
-- Mobile Violet and Indigo reconciliation.
 - Next.js, React, ESLint, or Node major migrations.
 - httpOnly cookie auth migration.
 - Data warehouse or OLAP redesign.
