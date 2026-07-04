@@ -24,16 +24,16 @@ These apps are frontend-only consumers. They call the backend REST API and maint
 Configuration is read from Dart defines. Debug/test builds keep an emulator-friendly local default, but release builds must pass a real backend API URL; they no longer silently fall back to localhost or `10.0.2.2`.
 
 ```bash
+$env:GOOGLE_MAPS_API_KEY="your-native-google-maps-key"
 flutter run -t lib/main_customer.dart \
-  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
-  --dart-define=GOOGLE_MAPS_API_KEY=your-key
+  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api
 ```
 
 | Name | Required | Default | Description |
 |------|----------|---------|-------------|
 | `API_BASE_URL` | Release: yes; debug/test: no | Debug/test only: `http://10.0.2.2:3001/api` | Backend API base URL |
 | `WS_URL` | No | Derived by stripping `/api` from `API_BASE_URL` | Socket.IO gateway root; set only when it differs from the REST API origin |
-| `GOOGLE_MAPS_API_KEY` | No | — | Google Maps API key (required for map features) |
+| `GOOGLE_MAPS_API_KEY` | Yes for map screens | — | Native Google Maps SDK key. Android reads this from an environment variable or Gradle property; iOS reads it from gitignored `ios/Flutter/GoogleMapsKeys.xcconfig`. Never commit the key. |
 
 ## 4. Run Locally
 
@@ -114,23 +114,43 @@ flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=https://api.foo
 
 ### Build APK/IPA for Distribution
 
-Release builds require Flutter platform projects to exist under `mobile/android`
-and `mobile/ios`. The current Batch 4 tree is a Dart/Flutter workspace with
-shared customer/driver code and tests, but it does not yet contain those platform
-folders; `flutter build apk --debug` therefore stops before compilation with an
-unsupported Gradle project message. Generate/reconcile the Android and iOS
-platform projects in the dedicated mobile phase before treating APK/IPA builds
-as release gates.
+The Batch 4 mobile tree now includes Flutter Android and iOS platform projects
+under `mobile/android` and `mobile/ios`. Android debug APK builds were verified
+locally on 2026-07-04 for both entrypoints.
 
 ```bash
-# Android APK (customer)
+# Android debug APK (customer)
+flutter build apk --debug -t lib/main_customer.dart
+
+# Android debug APK (driver)
+flutter build apk --debug -t lib/main_driver.dart
+
+# Android release APK (customer)
 flutter build apk -t lib/main_customer.dart --release
 
-# Android APK (driver)
+# Android release APK (driver)
 flutter build apk -t lib/main_driver.dart --release
 
 # iOS (requires macOS + Xcode)
 flutter build ios -t lib/main_customer.dart --release
+```
+
+Android release builds must not use debug signing. Set these values via
+environment variables or Gradle properties before running a release build:
+
+| Name | Description |
+|------|-------------|
+| `FOODFLOW_UPLOAD_STORE_FILE` | Absolute or project-relative path to the Android upload keystore |
+| `FOODFLOW_UPLOAD_STORE_PASSWORD` | Upload keystore password |
+| `FOODFLOW_UPLOAD_KEY_ALIAS` | Upload key alias |
+| `FOODFLOW_UPLOAD_KEY_PASSWORD` | Upload key password |
+
+If these values are missing, the Gradle release task fails before signing. For
+iOS local development, create a gitignored key file:
+
+```xcconfig
+// mobile/ios/Flutter/GoogleMapsKeys.xcconfig
+GOOGLE_MAPS_API_KEY=your-native-google-maps-key
 ```
 
 ### Clearing Flutter Build Cache
