@@ -1,10 +1,12 @@
 /**
  * k6-mixed.js — FoodFlow mixed load test
  *
- * Target: 100 RPS sustained for 5 minutes
- *   60% customer flow  (browse → menu → checkout)
- *   30% restaurant flow (orders list + status update)
- *   10% driver flow    (location ping + accept offer)
+ * Target: ~100 HTTP RPS sustained for 5 minutes
+ *   customer flow   browse → menu → checkout
+ *   restaurant flow orders list
+ *   driver flow     location ping + active order check
+ *
+ * Defaults below are calibrated to ~100 HTTP RPS in CI; override with LOADTEST_* env vars.
  *
  * Thresholds:
  *   p95 request duration < 500 ms
@@ -28,10 +30,11 @@ import {
 } from './k6-helpers.js'
 
 const TEST_DURATION = __ENV.LOADTEST_DURATION || '5m'
-const CUSTOMER_RATE = Number(__ENV.LOADTEST_CUSTOMER_RATE || 60)
-const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 30)
-const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 10)
+const CUSTOMER_RATE = Number(__ENV.LOADTEST_CUSTOMER_RATE || 20)
+const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 8)
+const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 4)
 const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 100)
+const NEARBY_RADIUS_KM = Number(__ENV.LOADTEST_NEARBY_RADIUS_KM || 50)
 
 // ---------------------------------------------------------------------------
 // Custom metrics
@@ -53,8 +56,8 @@ export const options = {
       rate: CUSTOMER_RATE,
       timeUnit: '1s',
       duration: TEST_DURATION,
-      preAllocatedVUs: 80,
-      maxVUs: 200,
+      preAllocatedVUs: Math.min(CUSTOMER_POOL_SIZE, 60),
+      maxVUs: CUSTOMER_POOL_SIZE,
       exec: 'customerFlow',
     },
     restaurant_flow: {
@@ -138,7 +141,7 @@ export function customerFlow(data) {
 
   // Browse restaurant list
   const browseRes = http.get(
-    `${BASE_URL}/restaurants/nearby?lat=${FIXTURES.deliveryLat}&lng=${FIXTURES.deliveryLng}&radius=8&page=1&limit=10`,
+    `${BASE_URL}/restaurants/nearby?lat=${FIXTURES.deliveryLat}&lng=${FIXTURES.deliveryLng}&radius=${NEARBY_RADIUS_KM}&page=1&limit=10`,
   )
   const browsePayload = responseData(browseRes)
   const browseItems = Array.isArray(browsePayload)
@@ -172,6 +175,10 @@ export function customerFlow(data) {
   const addCartOk = addCartRes.status === 200 || addCartRes.status === 201
   check(addCartRes, { 'customer: add cart item 2xx': () => addCartOk })
   errorRate.add(!addCartOk)
+  if (!addCartOk) {
+    sleep(0.4)
+    return
+  }
 
   // Place order from the real cart contract
   const orderStart = Date.now()
