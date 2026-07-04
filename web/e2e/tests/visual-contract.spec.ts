@@ -38,8 +38,10 @@ async function expectFoodFlowLogo(logo: Locator): Promise<void> {
 async function expectCenteredLoginForm(page: Page, submitButton: Locator): Promise<void> {
   const form = page.locator('form')
   await expect(form).toBeVisible()
-  await expect(form.locator('#email')).toBeVisible()
-  await expect(form.locator('#password')).toBeVisible()
+  const emailInput = form.locator('#email')
+  const passwordInput = form.locator('#password')
+  await expect(emailInput).toBeVisible()
+  await expect(passwordInput).toBeVisible()
   await expect(submitButton).toBeVisible()
 
   const [formBox, viewport] = await Promise.all([form.boundingBox(), Promise.resolve(page.viewportSize())])
@@ -65,6 +67,14 @@ async function expectCenteredLoginForm(page: Page, submitButton: Locator): Promi
   expect(buttonStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
   expect(buttonStyles.color).not.toBe(buttonStyles.backgroundColor)
   expect(Number.parseFloat(buttonStyles.borderRadius)).toBeGreaterThanOrEqual(8)
+
+  const controlRadii = await Promise.all([
+    emailInput.evaluate((input) => window.getComputedStyle(input).borderRadius),
+    passwordInput.evaluate((input) => window.getComputedStyle(input).borderRadius),
+  ])
+  for (const radius of controlRadii) {
+    expect(Number.parseFloat(radius)).toBeGreaterThanOrEqual(8)
+  }
 }
 
 test.describe('Batch 4 visual contract regression', () => {
