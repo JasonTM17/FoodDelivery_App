@@ -8,6 +8,7 @@ import { RolesGuard } from './roles.guard'
 import { Public } from './public.decorator'
 import { CurrentUser } from './current-user.decorator'
 import { SanitizedUser } from './auth.service'
+import { publicAuthThrottle } from './auth-throttle'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import {
   registerSchema,
@@ -29,7 +30,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle(publicAuthThrottle(3))
   @UsePipes(new ZodValidationPipe(registerSchema))
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto): Promise<AuthResult> {
@@ -41,7 +42,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle(publicAuthThrottle(5))
   @UsePipes(new ZodValidationPipe(loginSchema))
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto): Promise<AuthResult> {
@@ -60,7 +61,7 @@ export class AuthController {
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset instructions' })
   @ApiResponse({ status: 200, description: 'Password reset request accepted' })
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle(publicAuthThrottle(3))
   @UsePipes(new ZodValidationPipe(forgotPasswordSchema))
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
@@ -72,7 +73,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with a one-time token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
   @ApiResponse({ status: 400, description: 'Invalid or expired reset token' })
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle(publicAuthThrottle(5))
   @UsePipes(new ZodValidationPipe(resetPasswordSchema))
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
