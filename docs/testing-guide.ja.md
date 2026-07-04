@@ -56,6 +56,8 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
+最新の local web evidence: 2026-07-04 `codex/batch4-integration` の `e776f5c` で、`pnpm typecheck`、`pnpm lint`、`pnpm test` が pass。Admin/Restaurant Vitest は Admin 135 tests、Restaurant 79 tests が pass。
+
 ## Playwright E2E
 
 ```bash
@@ -100,7 +102,7 @@ flutter test
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
 Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
-最新の local evidence: 2026-07-04 `codex/batch4-integration` の `1b96e3c` で、`flutter analyze` は issue 0、`flutter test` は 128 tests passed。同じ head は GitHub Mobile CI と Integration Smoke Gate 全体でも green です。
+最新の local evidence: 2026-07-04 の Batch 4 mobile cleanup 後、`flutter analyze` は issue 0、`flutter test` は 131 tests passed。最新の mobile-touching commit `0fe1895` で GitHub Mobile CI は green。Full branch CI は `e776f5c` で green: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。
 
 ## Security checks
 

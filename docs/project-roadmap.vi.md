@@ -21,8 +21,11 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
 - Vietnamese AI chat fast paths có focused tests.
 - Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
-- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-04 tại `1b96e3c` với `flutter analyze` sạch và `flutter test` pass 128 test; GitHub Mobile CI và toàn bộ Integration Smoke Gate đều xanh trên cùng head.
-- Mobile runtime UI hiện không còn hardcoded presentation string theo scanner mobile, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.
+- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-04 sau cụm cleanup mobile Batch 4 với `flutter analyze` sạch và `flutter test` pass 131 test; GitHub Mobile CI xanh cho commit mới nhất có chạm mobile `0fe1895`.
+- Mobile runtime UI hiện không còn hardcoded presentation string theo targeted scanner cho các flow dispatch/cancel đã chạm, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.
+- Bản đồ tracking customer/driver hiện dùng `routePolyline` thật từ backend, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff và không tự bịa ETA đường thẳng khi route provider không khả dụng.
+- Shared tag input của Admin không còn tự sinh placeholder tiếng Anh mặc định; caller phải truyền placeholder đã localize.
+- Remote CI xanh cho `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate.
 
 ### Mobile
 

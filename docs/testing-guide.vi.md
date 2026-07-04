@@ -56,6 +56,8 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
+Evidence web local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `e776f5c`, `pnpm typecheck` pass, `pnpm lint` pass và `pnpm test` pass toàn bộ Vitest của Admin/Restaurant (Admin 135 test, Restaurant 79 test).
+
 ## Playwright E2E
 
 ```bash
@@ -100,7 +102,7 @@ flutter test
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
 Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
-Evidence local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `1b96e3c`, `flutter analyze` không có issue và `flutter test` pass 128 test. Cùng head này đã xanh trên GitHub Mobile CI và toàn bộ Integration Smoke Gate.
+Evidence local mới nhất: 2026-07-04 sau cụm cleanup mobile Batch 4, `flutter analyze` không có issue và `flutter test` pass 131 test. GitHub Mobile CI xanh cho commit mới nhất có chạm mobile `0fe1895`. CI toàn branch xanh cho `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`.
 
 ## Security checks
 

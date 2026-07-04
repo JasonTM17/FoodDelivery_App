@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-04 on `codex/batch4-integration` at `1b96e3c`.
+Last audited: 2026-07-04 on `codex/batch4-integration` at `e776f5c`.
 
 This record documents the branch state used for Batch 4 salvage decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -20,15 +20,15 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `origin/codex/batch4-integration` | `1b96e3c` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
-| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `315 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
+| `origin/codex/batch4-integration` | `e776f5c` | Active integration branch; `HEAD...branch` cherry counts are `0 0` after push. | Keep and continue focused commits here. |
+| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `319 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
 
 ## Local heads after cleanup
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `1b96e3c` | Current working branch, tracking `origin/codex/batch4-integration`; remote CI is green after push. | Active. |
-| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `85 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
+| `codex/batch4-integration` | `e776f5c` | Current working branch, tracking `origin/codex/batch4-integration`; remote CI is green after push. | Active. |
+| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `89 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
 
 ## Cleaned-up branch refs
 
@@ -53,6 +53,6 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Current conclusion
 
-No branch merge is required from the branch refs currently available. `git branch -a --no-merged HEAD` returned zero refs, and every live local/remote branch had `patchUniqueCount=0` against `1b96e3c`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter analyze` and `flutter test` (128 tests passed).
+No branch merge is required from the branch refs currently available. `git branch -a --no-merged HEAD` returned zero refs, and every live local/remote branch had `patchUniqueCount=0` against `e776f5c`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter analyze` and `flutter test` (131 tests passed after the dispatch/cancel i18n cleanup).
 
-Remote CI for `1b96e3c` is green: Gitleaks Secret Scan, Lint, Build Check, Mobile CI, SBOM Generation, Trivy Vulnerability Scan, CodeQL Security Scan, CI, and Integration Smoke Gate all completed successfully. Integration Smoke Gate included AI Scenario Assertions, Playwright E2E, Lighthouse CI mobile/desktop, k6 Load Test, and the final Integration Gate. Run evidence: `28702994252` Gitleaks, `28702994251` Lint, `28702994259` Build Check, `28702994275` Mobile CI, `28702994250` SBOM, `28702994257` Trivy, `28702994248` CodeQL, `28702994254` CI, and `28702994265` Integration Smoke Gate.
+Remote CI for `e776f5c` is green: Gitleaks Secret Scan, Lint, Build Check, SBOM Generation, Trivy Vulnerability Scan, CodeQL Security Scan, CI, E2E Tests, and Integration Smoke Gate all completed successfully. Integration Smoke Gate included AI Scenario Assertions, Playwright E2E, Lighthouse CI mobile/desktop, k6 Load Test, and the final Integration Gate. Run evidence: `28704171253` Gitleaks, `28704171260` Lint, `28704171258` Build Check, `28704171266` SBOM, `28704171279` Trivy, `28704171259` CodeQL, `28704171265` CI, `28704171252` E2E Tests, and `28704171294` Integration Smoke Gate. Mobile-specific CI most recently ran green for `0fe1895` as part of the dispatch/cancel localization commit.

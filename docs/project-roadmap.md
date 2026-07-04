@@ -21,8 +21,11 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
 - Vietnamese AI chat fast paths covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
-- Mobile Flutter gate was rechecked locally on 2026-07-04 at `1b96e3c` with `flutter analyze` clean and `flutter test` passing 128 tests; GitHub Mobile CI and Integration Smoke Gate are green for the same head.
-- Mobile runtime UI now has no remaining hardcoded presentation strings found by the mobile scanner, no runtime "coming soon" actions, deterministic backend timestamp parsing instead of current-time payload fallbacks, and release builds require explicit `API_BASE_URL`.
+- Mobile Flutter gate was rechecked locally on 2026-07-04 after the Batch 4 mobile cleanup with `flutter analyze` clean and `flutter test` passing 131 tests; GitHub Mobile CI is green for the latest mobile-touching commit `0fe1895`.
+- Mobile runtime UI now has no remaining hardcoded presentation strings found by the targeted mobile scanner for the touched dispatch/cancel flows, no runtime "coming soon" actions, deterministic backend timestamp parsing instead of current-time payload fallbacks, and release builds require explicit `API_BASE_URL`.
+- Driver/customer tracking maps now consume backend-routed `routePolyline` values, keep telemetry trails separate from planned routes, support pickup/dropoff route phases, and do not fabricate straight-line ETA minutes when route providers are unavailable.
+- Admin shared tag input no longer invents default English placeholder copy; callers must provide localized placeholder text.
+- Remote CI is green for `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests, and Integration Smoke Gate.
 
 ### Mobile
 

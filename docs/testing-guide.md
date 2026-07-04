@@ -56,6 +56,8 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
+Latest local web evidence: 2026-07-04 on `codex/batch4-integration` at `e776f5c`, `pnpm typecheck` passed, `pnpm lint` passed, and `pnpm test` passed all Admin and Restaurant Vitest suites (Admin 135 tests, Restaurant 79 tests).
+
 ## Playwright E2E
 
 Install browsers once:
@@ -118,7 +120,7 @@ flutter test
 
 Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
 The Batch 4 mobile gate currently requires `flutter analyze` with zero issues and the full Flutter test suite passing.
-Latest local evidence: 2026-07-04 on `codex/batch4-integration` at `1b96e3c`, `flutter analyze` found no issues and `flutter test` passed 128 tests. The same head is green in GitHub Mobile CI and the full Integration Smoke Gate.
+Latest local evidence: 2026-07-04 after Batch 4 mobile cleanup, `flutter analyze` found no issues and `flutter test` passed 131 tests. GitHub Mobile CI is green for the latest mobile-touching commit `0fe1895`. Full branch CI is green for `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252`, and Integration Smoke Gate `28704171294`.
 
 ## Security Checks
 
