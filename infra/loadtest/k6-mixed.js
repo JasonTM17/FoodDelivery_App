@@ -22,6 +22,7 @@ import { Counter, Rate, Trend } from 'k6/metrics'
 import {
   BASE_URL,
   FIXTURES,
+  CREDENTIALS,
   login,
   authHeaders,
   responseData,
@@ -35,6 +36,7 @@ const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 8)
 const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 4)
 const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 100)
 const NEARBY_RADIUS_KM = Number(__ENV.LOADTEST_NEARBY_RADIUS_KM || 50)
+const CUSTOMER_PASSWORD = __ENV.LOADTEST_CUSTOMER_PASSWORD || CREDENTIALS.customer.password
 
 // ---------------------------------------------------------------------------
 // Custom metrics
@@ -104,7 +106,7 @@ export function setup() {
   for (let i = 1; i <= CUSTOMER_POOL_SIZE; i++) {
     const customer = login(`customer${i}`, {
       email: `customer${i}@foodflow.vn`,
-      password: 'Customer@123',
+      password: CUSTOMER_PASSWORD,
     })
     const addressId = resolveCustomerAddress(customer.accessToken)
     if (customer.accessToken && addressId) {
