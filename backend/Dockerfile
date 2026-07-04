@@ -1,6 +1,9 @@
 # backend/Dockerfile — Multi-stage (distroless runtime)
-FROM node:22-alpine AS builder
+FROM node:22-bookworm-slim AS builder
 WORKDIR /app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -24,5 +27,5 @@ COPY --from=builder /app/package.json ./
 USER 65534:65534
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
-  CMD ["node", "-e", "require('http').get('http://localhost:3001/api/healthz',r=>{process.exit(r.statusCode===200?0:1)})"]
-CMD ["node", "dist/main.js"]
+  CMD ["/nodejs/bin/node", "-e", "require('http').get('http://localhost:3001/api/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
+CMD ["dist/main.js"]
