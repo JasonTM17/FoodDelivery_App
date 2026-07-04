@@ -40,5 +40,5 @@ COPY --from=builder /app/apps/admin/public ./apps/admin/public
 USER 65532:65532
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s \
-  CMD ["node", "-e", "require('http').get('http://localhost:3000/api/healthz',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
+  CMD ["/nodejs/bin/node", "-e", "require('http').get('http://localhost:3000/api/healthz',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
 CMD ["apps/admin/server.js"]
