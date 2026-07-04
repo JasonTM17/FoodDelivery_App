@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '0 6 * * *'
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   scan:
     runs-on: ubuntu-latest

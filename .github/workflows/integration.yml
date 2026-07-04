@@ -53,7 +53,11 @@ jobs:
           done; echo "Backend unhealthy"; exit 1
 
       - name: Seed database
-        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile
+          pnpm prisma generate
+          pnpm db:big-seed
 
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
@@ -116,7 +120,11 @@ jobs:
           done; exit 1
 
       - name: Seed database
-        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile
+          pnpm prisma generate
+          pnpm db:big-seed
 
       - name: Install k6
         run: |
@@ -178,7 +186,11 @@ jobs:
           done; exit 1
 
       - name: Seed database
-        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile
+          pnpm prisma generate
+          pnpm db:big-seed
 
       - name: Install web + LHCI
         run: cd web && pnpm install --frozen-lockfile && pnpm add -D @lhci/cli
@@ -247,7 +259,11 @@ jobs:
           done; exit 1
 
       - name: Seed database
-        run: cd backend && pnpm install --frozen-lockfile && pnpm db:big-seed
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile
+          pnpm prisma generate
+          pnpm db:big-seed
 
       - name: Install tsx
         run: npm install -g tsx
