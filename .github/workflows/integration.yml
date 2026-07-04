@@ -58,6 +58,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm prisma generate
           pnpm db:big-seed
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
@@ -125,6 +128,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm prisma generate
           pnpm db:big-seed
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Install k6
         run: |
@@ -191,6 +197,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm prisma generate
           pnpm db:big-seed
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Install web + LHCI
         run: cd web && pnpm install --frozen-lockfile && pnpm add -D @lhci/cli
@@ -264,6 +273,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm prisma generate
           pnpm db:big-seed
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Install tsx
         run: npm install -g tsx
