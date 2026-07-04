@@ -33,7 +33,7 @@ export const exportFormats: Array<{
   disabled: boolean;
 }> = [
   { value: 'csv', icon: FileSpreadsheet, disabled: false },
-  { value: 'xlsx', icon: FileText, disabled: true },
+  { value: 'xlsx', icon: FileText, disabled: false },
   { value: 'parquet', icon: FileArchive, disabled: true },
 ];
 

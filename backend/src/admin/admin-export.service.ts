@@ -13,6 +13,13 @@ import {
   toCsv,
   toFilterSummary,
 } from './admin-export.helpers'
+import { toXlsx } from './admin-export-xlsx'
+
+export interface AdminExportDownload {
+  filename: string
+  contentType: string
+  body: string | Buffer
+}
 
 @Injectable()
 export class AdminExportService {
@@ -38,11 +45,11 @@ export class AdminExportService {
     const resource = normalizeResource(dto.resource ?? dto.type)
     const format = normalizeFormat(dto.format)
     const filters = normalizeFilters(dto)
-    const isCsv = format === ExportFormat.csv
-    const status = isCsv ? ExportJobStatus.completed : ExportJobStatus.failed
-    const errorMessage = isCsv
+    const canCompleteInline = format === ExportFormat.csv || format === ExportFormat.xlsx
+    const status = canCompleteInline ? ExportJobStatus.completed : ExportJobStatus.failed
+    const errorMessage = canCompleteInline
       ? null
-      : `${format.toUpperCase()} export worker is not configured yet. Use CSV until file generation storage is available.`
+      : `${format.toUpperCase()} export worker is not configured yet. Use CSV or XLSX until parquet file generation storage is available.`
 
     const job = await this.prisma.adminExportJob.create({
       data: {
@@ -51,10 +58,10 @@ export class AdminExportService {
         format,
         status,
         filters: filters as Prisma.InputJsonValue,
-        progress: isCsv ? 100 : 0,
-        fileUrl: isCsv ? 'download' : null,
+        progress: canCompleteInline ? 100 : 0,
+        fileUrl: canCompleteInline ? 'download' : null,
         errorMessage,
-        expiresAt: isCsv ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
+        expiresAt: canCompleteInline ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
       },
       include: { requestedBy: { select: { id: true, email: true, fullName: true } } },
     })
@@ -62,18 +69,30 @@ export class AdminExportService {
     return this.toResponse(job)
   }
 
-  async getDownload(id: string) {
+  async getDownload(id: string): Promise<AdminExportDownload> {
     const job = await this.prisma.adminExportJob.findUnique({ where: { id } })
     if (!job) throw new NotFoundException('EXPORT_JOB_NOT_FOUND')
-    if (job.status !== ExportJobStatus.completed || job.format !== ExportFormat.csv) {
+    if (
+      job.status !== ExportJobStatus.completed
+      || (job.format !== ExportFormat.csv && job.format !== ExportFormat.xlsx)
+    ) {
       throw new BadRequestException('EXPORT_JOB_NOT_READY')
     }
 
     const rows = await getExportRows(this.prisma, job.resource as AdminExportResource, asFilters(job.filters))
-    const csv = toCsv(rows)
+    const date = job.createdAt.toISOString().slice(0, 10)
+    if (job.format === ExportFormat.xlsx) {
+      return {
+        filename: `foodflow-${job.resource}-${date}.xlsx`,
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        body: toXlsx(rows),
+      }
+    }
+
     return {
-      filename: `foodflow-${job.resource}-${job.createdAt.toISOString().slice(0, 10)}.csv`,
-      csv,
+      filename: `foodflow-${job.resource}-${date}.csv`,
+      contentType: 'text/csv; charset=utf-8',
+      body: toCsv(rows),
     }
   }
 

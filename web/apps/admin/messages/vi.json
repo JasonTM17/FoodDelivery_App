@@ -818,7 +818,7 @@
       "cancelled": "Đã hủy"
     },
     "formatUnavailable": "{format} — chưa khả dụng",
-    "formatNotice": "XLSX và Parquet bị vô hiệu hóa cho đến khi worker lưu trữ được cấu hình.",
+    "formatNotice": "CSV và XLSX được tạo ngay trên backend. Parquet vẫn bị vô hiệu hóa cho đến khi có worker lưu trữ thật.",
     "generating": "Đang tạo...",
     "generate": "Tạo báo cáo",
     "generateError": "Không thể tạo báo cáo.",
@@ -830,7 +830,7 @@
     "rowCount": "{count} dòng",
     "failedLabel": "Lỗi",
     "emptyTitle": "Chưa có báo cáo",
-    "emptyDescription": "Tạo báo cáo CSV để xem tại đây.",
+    "emptyDescription": "Tạo báo cáo CSV hoặc XLSX để xem tại đây.",
     "loadError": "Không thể tải báo cáo",
     "loadErrorDescription": "Kiểm tra kết nối rồi thử lại.",
     "retry": "Thử lại",

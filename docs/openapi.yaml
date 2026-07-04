@@ -4101,7 +4101,7 @@ paths:
     post:
       tags: [audit]
       summary: Create an admin export job
-      description: Creates a canonical export job for CSV/XLSX/Parquet. CSV can complete inline; unavailable file workers return a failed degraded job instead of a fake file.
+      description: Creates a canonical export job for CSV/XLSX/Parquet. CSV and XLSX complete inline from real database rows; Parquet returns a failed degraded job until a real file worker/storage writer is configured.
       operationId: admin_exports_create
       x-foo-actor: admin
       requestBody:
@@ -4125,15 +4125,19 @@ paths:
   /admin/exports/{id}/download:
     get:
       tags: [audit]
-      summary: Download a completed CSV export
-      description: Streams the generated UTF-8 CSV for a completed export job. Non-CSV or incomplete jobs return a problem detail.
+      summary: Download a completed CSV or XLSX export
+      description: Streams the generated UTF-8 CSV or XLSX workbook for a completed export job. Parquet or incomplete jobs return a problem detail.
       operationId: admin_exports_download
       x-foo-actor: admin
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
-        "200": { description: "UTF-8 CSV download", content: { text/csv: { schema: { type: string, format: binary } } } }
-        "400": { description: "Export job is not ready or not CSV", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "200":
+          description: "CSV or XLSX download"
+          content:
+            text/csv: { schema: { type: string, format: binary } }
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: { schema: { type: string, format: binary } }
+        "400": { description: "Export job is not ready or not downloadable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "Export job not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/export-jobs:

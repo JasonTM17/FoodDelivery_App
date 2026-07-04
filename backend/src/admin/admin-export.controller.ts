@@ -31,9 +31,9 @@ export class AdminExportController {
   @Get('exports/:id/download')
   async download(@Param('id') id: string, @Res() response: Response) {
     const file = await this.exports.getDownload(id)
-    response.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    response.setHeader('Content-Type', file.contentType)
     response.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`)
-    response.send(file.csv)
+    response.send(file.body)
   }
 
   @Get('export-jobs')

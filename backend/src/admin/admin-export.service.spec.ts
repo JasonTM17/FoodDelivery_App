@@ -55,7 +55,25 @@ describe('AdminExportService', () => {
     expect(result.filterSummary).toEqual({ period: '7d' })
   })
 
-  it('marks non-CSV formats as failed when export storage workers are unavailable', async () => {
+  it('creates a completed XLSX job with canonical download metadata', async () => {
+    adminExportJob.create.mockImplementation(({ data }) => ({
+      ...makeJob(),
+      ...data,
+      requestedBy: makeRequester(),
+    }))
+
+    const result = await service.create('admin-1', {
+      resource: 'audit_logs',
+      format: ExportFormat.xlsx,
+    })
+
+    expect(result.status).toBe(ExportJobStatus.completed)
+    expect(result.downloadUrl).toBe('/admin/exports/export-1/download')
+    expect(result.rowCount).toBe(2)
+    expect(result.errorMessage).toBeUndefined()
+  })
+
+  it('marks Parquet as failed when export storage workers are unavailable', async () => {
     adminExportJob.create.mockImplementation(({ data }) => ({
       ...makeJob(),
       ...data,
@@ -64,13 +82,13 @@ describe('AdminExportService', () => {
 
     const result = await service.create('admin-1', {
       resource: 'orders',
-      format: ExportFormat.xlsx,
+      format: ExportFormat.parquet,
     })
 
     expect(result.status).toBe(ExportJobStatus.failed)
     expect(result.downloadUrl).toBeUndefined()
     expect(result.rowCount).toBe(0)
-    expect(result.errorMessage).toContain('worker is not configured')
+    expect(result.errorMessage).toContain('PARQUET export worker is not configured')
   })
 
   it('downloads UTF-8 CSV and neutralizes spreadsheet formulas', async () => {
@@ -82,9 +100,25 @@ describe('AdminExportService', () => {
     const result = await service.getDownload('export-1')
 
     expect(result.filename).toBe('foodflow-audit_logs-2026-07-02.csv')
-    expect(result.csv.startsWith('\uFEFF')).toBe(true)
-    expect(result.csv).toContain('"\'=HYPERLINK(""bad"")"')
+    expect(result.contentType).toBe('text/csv; charset=utf-8')
+    expect(String(result.body).startsWith('\uFEFF')).toBe(true)
+    expect(String(result.body)).toContain('"\'=HYPERLINK(""bad"")"')
     expect(adminAuditLog.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 50_000 }))
+  })
+
+  it('downloads a real XLSX workbook and neutralizes spreadsheet formulas', async () => {
+    adminExportJob.findUnique.mockResolvedValue(makeJob({
+      format: ExportFormat.xlsx,
+      status: ExportJobStatus.completed,
+    }))
+
+    const result = await service.getDownload('export-1')
+
+    expect(result.filename).toBe('foodflow-audit_logs-2026-07-02.xlsx')
+    expect(result.contentType).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    expect(Buffer.isBuffer(result.body)).toBe(true)
+    expect((result.body as Buffer).subarray(0, 2).toString('utf8')).toBe('PK')
+    expect((result.body as Buffer).toString('utf8')).toContain('&apos;=HYPERLINK(&quot;bad&quot;)')
   })
 
   it('rejects downloads for jobs without a real CSV file', async () => {

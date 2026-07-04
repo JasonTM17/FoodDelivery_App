@@ -818,7 +818,7 @@
       "cancelled": "Cancelled"
     },
     "formatUnavailable": "{format} — unavailable",
-    "formatNotice": "XLSX and Parquet remain disabled until their storage workers are configured.",
+    "formatNotice": "CSV and XLSX exports complete inline. Parquet stays disabled until a real storage worker is configured.",
     "generating": "Creating...",
     "generate": "Create report",
     "generateError": "Could not create the report.",
@@ -830,7 +830,7 @@
     "rowCount": "{count, plural, =0 {No rows} one {# row} other {# rows}}",
     "failedLabel": "Error",
     "emptyTitle": "No reports yet",
-    "emptyDescription": "Create a CSV report to see it here.",
+    "emptyDescription": "Create a CSV or XLSX report to see it here.",
     "loadError": "Could not load reports",
     "loadErrorDescription": "Check the connection and try again.",
     "retry": "Try again",

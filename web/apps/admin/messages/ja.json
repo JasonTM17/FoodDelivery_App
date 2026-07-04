@@ -818,7 +818,7 @@
       "cancelled": "キャンセル済み"
     },
     "formatUnavailable": "{format} — 利用不可",
-    "formatNotice": "XLSX と Parquet はストレージワーカーが構成されるまで無効です。",
+    "formatNotice": "CSV と XLSX は backend で inline 生成されます。Parquet は実ストレージワーカーが構成されるまで無効です。",
     "generating": "作成中...",
     "generate": "レポート作成",
     "generateError": "レポートを作成できませんでした。",
@@ -830,7 +830,7 @@
     "rowCount": "{count} 行",
     "failedLabel": "エラー",
     "emptyTitle": "レポートがありません",
-    "emptyDescription": "CSV レポートを作成するとここに表示されます。",
+    "emptyDescription": "CSV または XLSX レポートを作成するとここに表示されます。",
     "loadError": "レポートを読み込めませんでした",
     "loadErrorDescription": "接続を確認して、もう一度お試しください。",
     "retry": "再試行",

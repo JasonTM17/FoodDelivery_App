@@ -9,9 +9,9 @@ import {
 } from '@/app/[locale]/reports/report-export-config';
 
 describe('reports UI', () => {
-  it('keeps unavailable export formats disabled and validates custom ranges', () => {
+  it('enables inline CSV/XLSX exports and keeps unavailable Parquet disabled', () => {
     expect(exportFormats.find(format => format.value === 'csv')?.disabled).toBe(false);
-    expect(exportFormats.find(format => format.value === 'xlsx')?.disabled).toBe(true);
+    expect(exportFormats.find(format => format.value === 'xlsx')?.disabled).toBe(false);
     expect(exportFormats.find(format => format.value === 'parquet')?.disabled).toBe(true);
     expect(validateCustomDateRange('30d', '', '')).toBeNull();
     expect(validateCustomDateRange('custom', '', '')).toBe('required');
