@@ -120,16 +120,16 @@ locally on 2026-07-04 for both entrypoints.
 
 ```bash
 # Android debug APK (customer)
-flutter build apk --debug -t lib/main_customer.dart
+flutter build apk --debug --flavor customer -t lib/main_customer.dart
 
 # Android debug APK (driver)
-flutter build apk --debug -t lib/main_driver.dart
+flutter build apk --debug --flavor driver -t lib/main_driver.dart
 
 # Android release APK (customer)
-flutter build apk -t lib/main_customer.dart --release
+flutter build apk --release --flavor customer -t lib/main_customer.dart
 
 # Android release APK (driver)
-flutter build apk -t lib/main_driver.dart --release
+flutter build apk --release --flavor driver -t lib/main_driver.dart
 
 # iOS (requires macOS + Xcode)
 flutter build ios -t lib/main_customer.dart --release
@@ -146,6 +146,9 @@ environment variables or Gradle properties before running a release build:
 | `FOODFLOW_UPLOAD_KEY_PASSWORD` | Upload key password |
 
 If these values are missing, the Gradle release task fails before signing. For
+iOS builds still use the Flutter entrypoint target. Android builds use flavors so
+the customer app installs as `vn.foodflow.customer` and the driver app installs
+as `vn.foodflow.driver` with separate launcher labels. For
 iOS local development, create a gitignored key file:
 
 ```xcconfig

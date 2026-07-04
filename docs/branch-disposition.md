@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-04 on `codex/batch4-integration` after local native mobile scaffold commit `fcf9c35`.
+Last audited: 2026-07-04 on `codex/batch4-integration` after local Android flavor commit `14b40aa`.
 
 This record documents the branch state used for Batch 4 salvage decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -20,15 +20,15 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `origin/codex/batch4-integration` | `693c5d0` | Active integration branch; local `fcf9c35` is ahead by one native mobile scaffold commit before the next push (`HEAD...branch` cherry counts `1 0`). | Keep and continue focused commits here. |
-| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `342 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
+| `origin/codex/batch4-integration` | `cc16805` | Active integration branch; local `14b40aa` is ahead by one Android flavor commit before the next push (`HEAD...branch` cherry counts `1 0`). | Keep and continue focused commits here. |
+| `origin/master` | `b675c09` | Ancestor of `codex/batch4-integration`; `HEAD...branch` cherry counts are `344 0`, so the branch contributes no unique patch. | Historical remote baseline; keep until release/PR policy decides otherwise. |
 
 ## Local heads after cleanup
 
 | Branch | Head at audit | Relationship to `codex/batch4-integration` | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `fcf9c35` | Current working branch, tracking `origin/codex/batch4-integration`; local backend, web, Restaurant, Docker/E2E, and mobile gates have current local evidence, while remote GitHub Actions are currently blocked by account token/auth or billing status. | Active. |
-| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `112 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
+| `codex/batch4-integration` | `14b40aa` | Current working branch, tracking `origin/codex/batch4-integration`; local backend, web, Restaurant, Docker/E2E, and mobile gates have current local evidence, while remote GitHub Actions are currently blocked by account token/auth or billing status. | Active. |
+| `master` | `4fb2799` | Ancestor of current branch; `HEAD...branch` cherry counts are `114 0`. Checked out in dirty root worktree `D:\Food_Delivery`, so Batch 4 work did not switch, mutate, or delete it. | Local historical/default worktree branch. Do not use as Batch 4 target. |
 
 ## Cleaned-up branch refs
 
@@ -53,8 +53,8 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Current conclusion
 
-No branch merge is required from the branch refs currently available. `git branch -r --no-merged HEAD` returned zero refs, and every live remote branch contributes no unique patch against `fcf9c35`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. The only live local branch besides `codex/batch4-integration` is `master`, which is checked out in the dirty root worktree `D:\Food_Delivery`; it is not a Batch 4 cleanup candidate. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter pub get --enforce-lockfile`, `flutter analyze`, focused route/map tests (14/14), full `flutter test` (143 tests), and Android debug APK builds for `lib/main_customer.dart` and `lib/main_driver.dart` after native Android/iOS scaffold, FoodFlow launcher icons, Google Maps native key placeholders, release signing fail-closed configuration, driver route/navigation, and delivery coordinate guard fixes.
+No branch merge is required from the branch refs currently available. `git branch -r --no-merged HEAD` returned zero refs, and every live remote branch contributes no unique patch against `14b40aa`. Batch 4 integration already contains or supersedes all commits reachable from the live remote/local branch heads listed above. The superseded `batch4-integration` branch was backed up to remote tag `backup/batch4-integration-20260704-032a6c0` before both the remote and local branch refs were deleted. The only live local branch besides `codex/batch4-integration` is `master`, which is checked out in the dirty root worktree `D:\Food_Delivery`; it is not a Batch 4 cleanup candidate. Mobile Violet/Indigo reconciliation remains pending as branch salvage work because no such branch refs are available in `origin` at this audit point. The mobile tree currently present on `codex/batch4-integration` was verified locally on 2026-07-04 with `flutter pub get --enforce-lockfile`, `flutter analyze`, focused route/map tests (14/14), full `flutter test` (143 tests), and Android flavor debug APK builds for `--flavor customer -t lib/main_customer.dart` and `--flavor driver -t lib/main_driver.dart` after native Android/iOS scaffold, FoodFlow launcher icons, Google Maps native key placeholders, release signing fail-closed configuration, separate customer/driver package IDs, driver route/navigation, and delivery coordinate guard fixes.
 
 Remote CI last fully ran green for `e776f5c`: Gitleaks Secret Scan, Lint, Build Check, SBOM Generation, Trivy Vulnerability Scan, CodeQL Security Scan, CI, E2E Tests, and Integration Smoke Gate all completed successfully. Integration Smoke Gate included AI Scenario Assertions, Playwright E2E, Lighthouse CI mobile/desktop, k6 Load Test, and the final Integration Gate. Run evidence: `28704171253` Gitleaks, `28704171260` Lint, `28704171258` Build Check, `28704171266` SBOM, `28704171279` Trivy, `28704171259` CodeQL, `28704171265` CI, `28704171252` E2E Tests, and `28704171294` Integration Smoke Gate. Mobile-specific CI last ran green for `0fe1895` as part of the dispatch/cancel localization commit.
 
-Remote CI for the current Batch 4 heads after `78bf643`, including the mobile native scaffold commit `fcf9c35`, has not produced fresh green workflow evidence because GitHub Actions access is currently blocked by account token/auth or billing status. Previously observed affected workflows include Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate. Rerun all of them after Actions access is restored before deploying.
+Remote CI for the current Batch 4 heads after `78bf643`, including the Android flavor commit `14b40aa`, has not produced fresh green workflow evidence because GitHub Actions access is currently blocked by account token/auth or billing status. Previously observed affected workflows include Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate. Rerun all of them after Actions access is restored before deploying.
