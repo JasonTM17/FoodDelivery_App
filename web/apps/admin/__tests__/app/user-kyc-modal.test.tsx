@@ -50,7 +50,8 @@ describe('UserKycModal', () => {
 
     await waitFor(() => {
       expect(mockedApiPost).toHaveBeenCalledWith('/admin/users/user-1/kyc/review', {
-        action: 'reject',
+        submissionId: 'kyc-1',
+        status: 'rejected',
         reason: 'Missing selfie',
       });
     });
@@ -67,7 +68,8 @@ describe('UserKycModal', () => {
 
     await waitFor(() => {
       expect(mockedApiPost).toHaveBeenCalledWith('/admin/users/user-1/kyc/review', {
-        action: 'approve',
+        submissionId: 'kyc-1',
+        status: 'approved',
       });
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
@@ -88,14 +90,20 @@ describe('UserKycModal', () => {
 
 function makeKyc() {
   return {
-    status: 'pending',
-    submittedAt: '2026-07-01T00:00:00.000Z',
-    reviewedAt: null,
-    rejectReason: null,
-    documents: {
-      idFront: 'https://example.test/front.jpg',
-      idBack: 'https://example.test/back.jpg',
-      selfie: null,
-    },
+    available: true,
+    submissions: [
+      {
+        id: 'kyc-1',
+        status: 'pending',
+        createdAt: '2026-07-01T00:00:00.000Z',
+        reviewedAt: null,
+        rejectionReason: null,
+        documentUrls: {
+          idFront: 'https://example.test/front.jpg',
+          idBack: 'https://example.test/back.jpg',
+          selfie: null,
+        },
+      },
+    ],
   };
 }

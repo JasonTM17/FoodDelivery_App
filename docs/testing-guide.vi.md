@@ -56,7 +56,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-Evidence web local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `e776f5c`, `pnpm typecheck` pass, `pnpm lint` pass và `pnpm test` pass toàn bộ Vitest của Admin/Restaurant (Admin 135 test, Restaurant 79 test). Sau fix route integrity, coverage Vitest tập trung map Admin đã được chạy lại và pass toàn bộ Admin suite (33 files, 135 test).
+Evidence web/API-contract local mới nhất: 2026-07-04 trên `codex/batch4-integration`, OpenAPI YAML parse pass với 137 path và scanner coverage endpoint web local báo `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test` và `pnpm build` pass cho toàn bộ web workspace; Vitest pass Admin 34 files / 137 test và Restaurant 27 files / 79 test. Backend cho cụm contract này pass `pnpm typecheck`, `pnpm lint` và Jest target (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suite / 9 test).
 
 ## Playwright E2E
 

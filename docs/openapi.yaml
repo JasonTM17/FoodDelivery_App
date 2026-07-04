@@ -709,6 +709,33 @@ components:
         status: "preparing"
         note: "Bắt đầu chế biến món"
 
+    AdminOrderStatusRequest:
+      type: object
+      properties:
+        status: { type: string, description: "Target order status accepted by the backend order state machine." }
+        note: { type: string }
+      required: [status]
+
+    RestaurantReviewRequest:
+      type: object
+      properties:
+        notes: { type: string }
+        reason: { type: string }
+
+    RestaurantMenuAvailabilityRequest:
+      type: object
+      properties:
+        available: { type: boolean }
+      required: [available]
+
+    KycReviewRequest:
+      type: object
+      properties:
+        submissionId: { type: string, format: uuid }
+        status: { type: string, enum: [approved, rejected] }
+        reason: { type: string }
+      required: [submissionId, status]
+
     CreateReviewRequest:
       type: object
       properties:
@@ -1444,6 +1471,18 @@ components:
             required: [date, count, revenueAttributed, discountGiven]
       required: [usageCount, revenueAttributed, discountGiven, redemptionRate, roi, usageTimeline]
 
+    AdminPromotionAnalytics:
+      type: object
+      description: Admin-wide promotion analytics derived from real `promotion_usage` and linked order totals.
+      properties:
+        redemptions: { type: integer, minimum: 0 }
+        gmv: { type: number, minimum: 0, description: "Gross merchandise value from orders that redeemed the promotion." }
+        discountCost: { type: number, minimum: 0, description: "Promotion discount cost in VND." }
+        roi:
+          type: [number, "null"]
+          description: "(gmv - discountCost) / discountCost, null when discountCost is zero."
+      required: [redemptions, gmv, discountCost, roi]
+
     RestaurantInsightSuggestionParams:
       type: object
       additionalProperties:
@@ -1797,6 +1836,28 @@ components:
         body: "Chúng tôi đã kiểm tra và sẽ hoàn tiền cho món thiếu. Xin lỗi bạn vì sự bất tiện này."
         createdAt: "2026-06-09T12:30:00Z"
 
+    SupportAgent:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+      required: [id, fullName, email]
+
+    SupportMessagesPayload:
+      type: object
+      properties:
+        messages:
+          type: array
+          items: { $ref: "#/components/schemas/TicketReply" }
+      required: [messages]
+
+    SupportMessageRequest:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+      required: [body]
+
     CreateTicketRequest:
       type: object
       properties:
@@ -2059,6 +2120,65 @@ components:
         periodStart: "2026-06-01T00:00:00Z"
         periodEnd: "2026-06-09T23:59:59Z"
 
+    AdminKpiCard:
+      type: object
+      description: One admin dashboard KPI card returned by the database-backed `/admin/kpis` endpoint.
+      properties:
+        key: { type: string, example: revenue }
+        label: { type: string, example: Revenue }
+        value: { type: number }
+        formattedValue: { type: string, example: "₫12,450,000" }
+        delta: { type: number, description: "Ratio versus the previous period, e.g. 0.12 for +12%." }
+        sparkline:
+          type: array
+          items: { type: number }
+        drillDownHref: { type: string, example: "/analytics" }
+      required: [key, label, value, formattedValue, delta, sparkline, drillDownHref]
+
+    AdminKpisResponse:
+      type: object
+      properties:
+        kpis:
+          type: array
+          items: { $ref: "#/components/schemas/AdminKpiCard" }
+      required: [kpis]
+
+    AdminRecentOrder:
+      type: object
+      description: Recent order card used by the admin realtime order feed.
+      properties:
+        id: { type: string, format: uuid }
+        orderCode: { type: string }
+        status: { type: string }
+        total: { type: number, description: "VND" }
+        customer:
+          type: object
+          properties:
+            name: { type: string }
+          required: [name]
+        restaurant:
+          type: object
+          properties:
+            name: { type: string }
+          required: [name]
+        driver:
+          oneOf:
+            - type: object
+              properties:
+                name: { type: string }
+              required: [name]
+            - type: "null"
+        placedAt: { type: string, format: date-time }
+      required: [id, orderCode, status, total, customer, restaurant, driver, placedAt]
+
+    AdminRecentOrdersResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items: { $ref: "#/components/schemas/AdminRecentOrder" }
+      required: [orders]
+
     RevenueChartPoint:
       type: object
       properties:
@@ -2178,6 +2298,7 @@ components:
     HeatmapPoint:
       type: object
       properties:
+        districtCode: { type: string, description: "Restaurant district/city bucket for dispatch demand heatmaps." }
         lat:         { type: number }
         lng:         { type: number }
         orderCount:  { type: integer }
@@ -4107,6 +4228,20 @@ paths:
         "200": { description: "Tickets", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedSupportTickets" } } } }
 
   /admin/support-tickets/{ticketId}:
+    get:
+      tags: [support]
+      summary: Get one support ticket
+      description: Returns one support ticket with user, assigned admin, order, messages, CSAT, and computed SLA deadline.
+      operationId: support_adminGetTicket
+      x-foo-actor: admin
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Support ticket", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicket" } } } }
+        "404": { description: "Support ticket not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
     patch:
       tags: [support]
       summary: Update ticket (assign, change status, resolve) -- admin
@@ -4126,6 +4261,43 @@ paths:
       responses:
         "200": { description: "Ticket updated", content: { application/json: { schema: { $ref: "#/components/schemas/SupportTicket" } } } }
 
+  /admin/support-tickets/{ticketId}/messages:
+    get:
+      tags: [support]
+      summary: Get support ticket messages
+      description: Returns real persisted support ticket messages in chronological order.
+      operationId: support_adminGetMessages
+      x-foo-actor: admin
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Ticket messages", content: { application/json: { schema: { $ref: "#/components/schemas/SupportMessagesPayload" } } } }
+        "404": { description: "Support ticket not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/support-tickets/{ticketId}/replies:
+    post:
+      tags: [support]
+      summary: Add a public support reply
+      description: Persists a public admin reply, moves the ticket into progress when applicable, and creates a user notification.
+      operationId: support_adminReply
+      x-foo-actor: admin
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupportMessageRequest" }
+      responses:
+        "201": { description: "Reply created", content: { application/json: { schema: { $ref: "#/components/schemas/TicketReply" } } } }
+        "404": { description: "Support ticket not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /admin/support-tickets/bulk:
     post:
       tags: [support]
@@ -4140,16 +4312,26 @@ paths:
             schema:
               type: object
               properties:
-                ticketIds: { type: array, items: { type: string, format: uuid } }
-                action: { type: string, enum: [close, assign, update_priority] }
+                ids: { type: array, items: { type: string, format: uuid } }
+                action: { type: string, enum: [assign, status, priority, tag] }
                 value: { type: string }
-              required: [ticketIds, action]
+              required: [ids, action, value]
               example:
-                ticketIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "abababab-abab-4bab-8bab-abababababab"]
-                action: "close"
-                value: "spam"
+                ids: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "abababab-abab-4bab-8bab-abababababab"]
+                action: "status"
+                value: "resolved"
       responses:
-        "200": { description: "Bulk action executed", content: { application/json: { schema: { type: object, properties: { affected: { type: integer } } } } } }
+        "200": { description: "Bulk action executed", content: { application/json: { schema: { type: object, properties: { updated: { type: integer } }, required: [updated] } } } }
+
+  /admin/support-agents:
+    get:
+      tags: [support]
+      summary: List active admin support agents
+      description: Returns active admin users available for ticket assignment.
+      operationId: support_adminListAgents
+      x-foo-actor: admin
+      responses:
+        "200": { description: "Support agents", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/SupportAgent" } } } } }
 
   # ═══════════════════════════════════════════════
   # AUDIT (admin)
@@ -4472,6 +4654,23 @@ paths:
         "200": { description: "SSE stream with thinking/token/escalated/degraded/done events", content: { text/event-stream: { schema: { type: string } } } }
         "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
+  /admin/kpis:
+    get:
+      tags: [analytics]
+      summary: Get admin KPI cards
+      description: Returns database-backed KPI cards for the selected period and previous-period comparison.
+      operationId: analytics_adminKpis
+      x-foo-actor: admin
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, default: today }
+        - name: compare
+          in: query
+          schema: { type: string, default: yesterday }
+      responses:
+        "200": { description: "Admin KPI cards", content: { application/json: { schema: { $ref: "#/components/schemas/AdminKpisResponse" } } } }
+
   /admin/charts:
     get:
       tags: [analytics]
@@ -4527,16 +4726,30 @@ paths:
   /admin/dashboard/heatmap:
     get:
       tags: [analytics]
-      summary: Dispatch order density heatmap
-      description: Returns order density points for the admin heatmap since the requested timestamp.
+      summary: Dashboard order density heatmap
+      description: Returns day/hour order-density cells for the admin dashboard heatmap. Use `/admin/dispatch/heatmap` for map coordinates.
       operationId: analytics_heatmap
+      x-foo-actor: admin
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+      responses:
+        "200": { description: "Dashboard heatmap cells", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/AdminOrderHeatmapCell" } } } } }
+
+  /admin/dispatch/heatmap:
+    get:
+      tags: [analytics]
+      summary: Dispatch demand map heatmap
+      description: Returns real order density by restaurant district/city bucket with centroid coordinates for the admin dispatch map. The `since` query must be an ISO date-time; clients should not send natural-language placeholders.
+      operationId: analytics_dispatchHeatmap
       x-foo-actor: admin
       parameters:
         - name: since
           in: query
           schema: { type: string, format: date-time }
       responses:
-        "200": { description: "Heatmap points", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/HeatmapPoint" } } } } } } }
+        "200": { description: "Dispatch map heatmap points", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/HeatmapPoint" } } } } }
 
   /admin/restaurants/{restaurantId}/kpi:
     get:
@@ -4619,6 +4832,139 @@ paths:
       responses:
         "200": { description: "User list", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedUsers" } } } }
 
+  /admin/users/{userId}:
+    get:
+      tags: [analytics]
+      summary: Get one user for admin review
+      description: Returns one user with customer, driver, and restaurant profile details. Password hashes are omitted by the backend.
+      operationId: admin_getUser
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "User detail", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/users/{userId}/wallet:
+    get:
+      tags: [analytics]
+      summary: Get one user's wallet ledger
+      description: Returns the confirmed balance derived from real wallet transactions and the latest wallet ledger rows.
+      operationId: admin_getUserWallet
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Wallet ledger"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance: { type: number }
+                  transactions:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                required: [balance, transactions]
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/users/{userId}/vouchers:
+    get:
+      tags: [analytics]
+      summary: Get voucher wallet availability for one user
+      description: Returns an explicit unavailable contract until a voucher wallet model is added; the backend does not synthesize voucher rows.
+      operationId: admin_getUserVouchers
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Voucher wallet status"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean, const: false }
+                  vouchers: { type: array, maxItems: 0, items: { type: object } }
+                  reason: { type: string, enum: [VOUCHER_WALLET_NOT_MODELLED] }
+                required: [available, vouchers, reason]
+
+  /admin/users/{userId}/refunds:
+    get:
+      tags: [analytics]
+      summary: Get refunded payments for one user
+      description: Returns real refunded payment rows linked to the user's customer orders.
+      operationId: admin_getUserRefunds
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Refunded payments", content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/users/{userId}/kyc:
+    get:
+      tags: [drivers]
+      summary: Get driver KYC submissions for one user
+      description: Returns an explicit unavailable reason for non-driver users or real driver KYC submissions for driver users.
+      operationId: admin_getUserKyc
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "KYC payload"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean }
+                  reason: { type: string }
+                  submissions:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                required: [available]
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/users/{userId}/kyc/review:
+    post:
+      tags: [drivers]
+      summary: Review one driver KYC submission
+      description: Approves or rejects a real KYC submission and records the reviewing admin.
+      operationId: admin_reviewUserKyc
+      x-foo-actor: admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KycReviewRequest" }
+      responses:
+        "201": { description: "KYC review saved", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "KYC submission not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /admin/users/{userId}/status:
     patch:
       tags: [analytics]
@@ -4655,6 +5001,198 @@ paths:
         - $ref: "#/components/parameters/LimitParam"
       responses:
         "200": { description: "Restaurant list", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedRestaurants" } } } }
+
+  /admin/restaurants/{restaurantId}:
+    get:
+      tags: [analytics]
+      summary: Get one restaurant for admin review
+      description: Returns one restaurant with opening hours and owner profile relations for admin detail pages.
+      operationId: admin_getRestaurant
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant detail", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/overview:
+    get:
+      tags: [analytics]
+      summary: Get restaurant operational overview
+      description: Returns real aggregate order, revenue, rating, menu, and staff counts for one restaurant.
+      operationId: admin_getRestaurantOverview
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Restaurant overview"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalOrders: { type: integer, minimum: 0 }
+                  completedOrders: { type: integer, minimum: 0 }
+                  revenue: { type: number, minimum: 0 }
+                  rating: { type: number, minimum: 0, maximum: 5 }
+                  reviewCount: { type: integer, minimum: 0 }
+                  menuItems: { type: integer, minimum: 0 }
+                  activeStaff: { type: integer, minimum: 0 }
+                required: [totalOrders, completedOrders, revenue, rating, reviewCount, menuItems, activeStaff]
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/menu:
+    get:
+      tags: [restaurants]
+      summary: Get restaurant menu for admin review
+      description: Returns real menu categories, items, options, and option values for one restaurant.
+      operationId: admin_getRestaurantMenu
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Restaurant menu", content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/menu/{itemId}:
+    patch:
+      tags: [restaurants]
+      summary: Update one restaurant menu item's availability
+      description: Updates the real menu item availability after verifying it belongs to the selected restaurant.
+      operationId: admin_updateRestaurantMenuItem
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantMenuAvailabilityRequest" }
+      responses:
+        "200": { description: "Menu item updated", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "Menu item not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/orders:
+    get:
+      tags: [analytics]
+      summary: List orders for one restaurant as admin
+      description: Returns real orders for one restaurant with pagination.
+      operationId: admin_getRestaurantOrders
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Restaurant orders", content: { application/json: { schema: { type: object, properties: { orders: { type: array, items: { $ref: "#/components/schemas/OrderDetail" } }, meta: { $ref: "#/components/schemas/PaginationMeta" } }, required: [orders, meta] } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/reviews:
+    get:
+      tags: [reviews]
+      summary: List reviews for one restaurant as admin
+      description: Returns real review rows for one restaurant with pagination.
+      operationId: admin_getRestaurantReviews
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200": { description: "Restaurant reviews", content: { application/json: { schema: { type: object, properties: { reviews: { type: array, items: { type: object, additionalProperties: true } }, meta: { $ref: "#/components/schemas/PaginationMeta" } }, required: [reviews, meta] } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/finance:
+    get:
+      tags: [analytics]
+      summary: Get restaurant finance summary
+      description: Returns real gross, commission, net, and completed order count for one restaurant.
+      operationId: admin_getRestaurantFinance
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Restaurant finance"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gross: { type: number, minimum: 0 }
+                  commission: { type: number, minimum: 0 }
+                  net: { type: number }
+                  orderCount: { type: integer, minimum: 0 }
+                required: [gross, commission, net, orderCount]
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/approve:
+    post:
+      tags: [restaurants]
+      summary: Approve one restaurant
+      description: Approves a pending restaurant, records admin notes, sets it active, and emits an audit log.
+      operationId: admin_approveRestaurant
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantReviewRequest" }
+      responses:
+        "201": { description: "Restaurant approved", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/restaurants/{restaurantId}/reject:
+    post:
+      tags: [restaurants]
+      summary: Reject one restaurant
+      description: Rejects a pending restaurant, records admin notes or reason, and emits an audit log.
+      operationId: admin_rejectRestaurant
+      x-foo-actor: admin
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantReviewRequest" }
+      responses:
+        "201": { description: "Restaurant rejected", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "404": { description: "Restaurant not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/restaurants/{restaurantId}/status:
     patch:
@@ -4711,6 +5249,20 @@ paths:
         "409": { description: "Code already exists", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/promotions/{promotionId}:
+    get:
+      tags: [promotions]
+      summary: Get one promotion (admin)
+      description: Returns one platform promotion with its promotion items for the admin detail page.
+      operationId: admin_getPromotion
+      x-foo-actor: admin
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Promotion", content: { application/json: { schema: { $ref: "#/components/schemas/Promotion" } } } }
+        "404": { description: "Not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
     patch:
       tags: [promotions]
       summary: Update a promotion (admin)
@@ -4760,6 +5312,36 @@ paths:
       responses:
         "200": { description: "Promotion toggled" }
 
+  /admin/promotions/{promotionId}/analytics:
+    get:
+      tags: [promotions]
+      summary: Get admin promotion analytics
+      description: Returns real promotion redemption count, GMV, discount cost, and ROI from promotion usage rows.
+      operationId: admin_getPromotionAnalytics
+      x-foo-actor: admin
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Promotion analytics", content: { application/json: { schema: { $ref: "#/components/schemas/AdminPromotionAnalytics" } } } }
+        "404": { description: "Promotion not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/orders/recent:
+    get:
+      tags: [analytics]
+      summary: Recent orders for admin realtime feed
+      description: Returns the most recent orders used to hydrate the admin realtime order panel before socket events arrive.
+      operationId: admin_recentOrders
+      x-foo-actor: admin
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200": { description: "Recent orders", content: { application/json: { schema: { $ref: "#/components/schemas/AdminRecentOrdersResponse" } } } }
+
   /admin/orders:
     get:
       tags: [analytics]
@@ -4775,3 +5357,41 @@ paths:
         - $ref: "#/components/parameters/LimitParam"
       responses:
         "200": { description: "Orders", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedOrders" } } } }
+
+  /admin/orders/{orderId}:
+    get:
+      tags: [analytics]
+      summary: Get one order for admin review
+      description: Returns a serialized order with customer, restaurant, driver, address, items, payment, delivery task, and status history details.
+      operationId: admin_getOrder
+      x-foo-actor: admin
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: "Order detail", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "404": { description: "Order not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/orders/{orderId}/status:
+    patch:
+      tags: [analytics]
+      summary: Update one order status as admin
+      description: Applies an admin order status transition through the backend order state machine and audit logging.
+      operationId: admin_updateOrderStatus
+      x-foo-actor: admin
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminOrderStatusRequest" }
+      responses:
+        "200": { description: "Order status updated", content: { application/json: { schema: { $ref: "#/components/schemas/OrderDetail" } } } }
+        "400": { description: "Invalid transition", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Order not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }

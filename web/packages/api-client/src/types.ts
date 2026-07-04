@@ -165,6 +165,72 @@ export interface AdminDriverLocation {
   lastSeenAt: string;
 }
 
+export interface AdminDispatchHeatmapPoint {
+  districtCode: string;
+  lat: number;
+  lng: number;
+  orderCount: number;
+}
+
+export interface AdminKpiCard {
+  key: string;
+  label: string;
+  value: number;
+  formattedValue: string;
+  delta: number;
+  sparkline: number[];
+  drillDownHref: string;
+}
+
+export interface AdminKpisResponse {
+  kpis: AdminKpiCard[];
+}
+
+export interface AdminRecentOrder {
+  id: string;
+  orderCode: string;
+  customer: { name: string };
+  restaurant: { name: string };
+  driver: { name: string } | null;
+  status: string;
+  total: number;
+  placedAt: string;
+}
+
+export interface AdminRecentOrdersResponse {
+  orders: AdminRecentOrder[];
+}
+
+export interface AdminPromotionAnalytics {
+  redemptions: number;
+  gmv: number;
+  discountCost: number;
+  roi: number | null;
+}
+
+export type AdminKycStatus = 'pending' | 'approved' | 'rejected';
+
+export interface AdminKycSubmission {
+  id: string;
+  status: AdminKycStatus;
+  documentUrls: Record<string, unknown>;
+  rejectionReason: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
+export interface AdminKycPayload {
+  available: boolean;
+  reason?: string;
+  submissions?: AdminKycSubmission[];
+}
+
+export interface AdminKycReviewRequest {
+  submissionId: string;
+  status: 'approved' | 'rejected';
+  reason?: string;
+}
+
 export type RestaurantInsightSuggestionType = 'pricing' | 'menu_mix' | 'marketing' | 'operations';
 export type RestaurantInsightSuggestionParams = Record<string, string | number | boolean | null | undefined>;
 

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import type { AdminPromotionAnalytics } from '@foodflow/api-client';
 import { apiGet, apiPatch } from '@/lib/api';
 import type { AdminPromotion } from '@/components/promotions/admin-promotions-types';
 import { formatDate, formatCurrency } from '@/lib/utils';
@@ -15,10 +16,6 @@ import { ArrowLeft, Percent, DollarSign, Calendar, Users } from 'lucide-react';
 import { Link } from '@/navigation';
 import PromotionFunnelClient from './promotion-funnel-client';
 
-interface PromotionAnalytics {
-  discountCost: number;
-}
-
 export default function PromotionDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const t = useTranslations('promotionDetail');
@@ -29,9 +26,9 @@ export default function PromotionDetailPage({ params }: { params: { id: string }
     queryKey: ['promotion', id],
     queryFn: () => apiGet<AdminPromotion>(`/admin/promotions/${id}`),
   });
-  const { data: analytics, isLoading: analyticsLoading } = useQuery<PromotionAnalytics>({
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<AdminPromotionAnalytics>({
     queryKey: ['promotion', id, 'analytics'],
-    queryFn: () => apiGet<PromotionAnalytics>(`/admin/promotions/${id}/analytics`),
+    queryFn: () => apiGet<AdminPromotionAnalytics>(`/admin/promotions/${id}/analytics`),
   });
 
   const toggleActive = async () => {

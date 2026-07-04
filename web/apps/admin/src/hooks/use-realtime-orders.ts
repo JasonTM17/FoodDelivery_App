@@ -2,23 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import type { AdminRecentOrder, AdminRecentOrdersResponse } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 
-export interface LiveOrder {
-  id: string;
-  orderCode: string;
-  customer: { name: string };
-  restaurant: { name: string };
-  driver: { name: string } | null;
-  status: string;
-  total: number;
-  placedAt: string;
-}
-
-interface RealtimeOrdersResponse {
-  orders: LiveOrder[];
-}
+export type LiveOrder = AdminRecentOrder;
 
 interface OrderStatusChangedEvent {
   orderId: string;
@@ -47,9 +35,9 @@ const fallbackPollingIntervalMs = 15_000;
 export function useRealtimeOrders(): UseRealtimeOrdersResult {
   const [orders, setOrders] = useState<LiveOrder[]>([]);
   const [status, setStatus] = useState<RealtimeConnectionStatus>('connecting');
-  const query = useQuery<RealtimeOrdersResponse>({
+  const query = useQuery<AdminRecentOrdersResponse>({
     queryKey: ['realtime-orders'],
-    queryFn: () => apiGet<RealtimeOrdersResponse>('/admin/orders/recent?limit=20'),
+    queryFn: () => apiGet<AdminRecentOrdersResponse>('/admin/orders/recent', { params: { limit: 20 } }),
     refetchInterval: status === 'connected' ? false : fallbackPollingIntervalMs,
     retry: 2,
   });

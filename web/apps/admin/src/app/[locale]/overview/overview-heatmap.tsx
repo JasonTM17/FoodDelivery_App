@@ -2,19 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import type { AdminDispatchHeatmapPoint } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
 import { MapPin, AlertCircle } from 'lucide-react';
 
-interface HeatmapCell {
-  districtCode: string;
-  lat: number;
-  lng: number;
-  orderCount: number;
-}
-
 export default function OverviewHeatmap() {
   const t = useTranslations('overview');
-  const [cells, setCells] = useState<HeatmapCell[]>([]);
+  const [cells, setCells] = useState<AdminDispatchHeatmapPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,9 +16,10 @@ export default function OverviewHeatmap() {
     let cancelled = false;
     const fetchData = async () => {
       try {
-        const data = await apiGet<HeatmapCell[]>(
-          '/admin/dispatch/heatmap?since=now-1h',
-        );
+        const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const data = await apiGet<AdminDispatchHeatmapPoint[]>('/admin/dispatch/heatmap', {
+          params: { since },
+        });
         if (!cancelled) {
           setCells(Array.isArray(data) ? data : []);
           setError(null);

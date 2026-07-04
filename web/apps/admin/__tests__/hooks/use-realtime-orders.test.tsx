@@ -91,7 +91,7 @@ describe('useRealtimeOrders', () => {
 
     await waitFor(() => expect(result.current.orders).toHaveLength(1));
 
-    expect(mockedApiGet).toHaveBeenCalledWith('/admin/orders/recent?limit=20');
+    expect(mockedApiGet).toHaveBeenCalledWith('/admin/orders/recent', { params: { limit: 20 } });
     expect(socketMock.emit).toHaveBeenCalledWith('admin:subscribe_orders');
     expect(result.current.status).toBe('connected');
     expect(result.current.isFallbackPolling).toBe(false);

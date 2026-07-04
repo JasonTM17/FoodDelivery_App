@@ -1,12 +1,8 @@
 'use client';
 
 import { useSuspenseQuery } from '@tanstack/react-query';
+import type { AdminKpisResponse } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
-import type { KpiData } from '@/components/kpi/kpi-card';
-
-interface KpiResponse {
-  kpis: KpiData[];
-}
 
 interface UseKpiOptions {
   period?: string;
@@ -17,9 +13,9 @@ export function useKpi(options?: UseKpiOptions) {
   const period = options?.period || 'today';
   const compare = options?.comparePeriod || 'yesterday';
 
-  return useSuspenseQuery<KpiResponse>({
+  return useSuspenseQuery<AdminKpisResponse>({
     queryKey: ['admin-kpis', period, compare],
-    queryFn: () => apiGet<KpiResponse>('/admin/kpis', { params: { period, compare } }),
+    queryFn: () => apiGet<AdminKpisResponse>('/admin/kpis', { params: { period, compare } }),
     refetchInterval: 30000,
   });
 }

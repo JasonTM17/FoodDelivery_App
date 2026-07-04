@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock, FileText, XCircle } from 'lucide-react';
+import type { AdminKycPayload, AdminKycReviewRequest, AdminKycStatus } from '@foodflow/api-client';
 import { apiGet, apiPost } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,16 +20,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
-type KycStatus = 'pending' | 'verified' | 'rejected';
-
-interface KycData {
-  status: KycStatus;
-  submittedAt: string;
-  reviewedAt: string | null;
-  rejectReason: string | null;
-  documents: { idFront: string | null; idBack: string | null; selfie: string | null };
-}
-
 interface UserKycModalProps {
   userId: string;
   open: boolean;
@@ -36,9 +27,23 @@ interface UserKycModalProps {
 }
 
 const documentKeys = ['idFront', 'idBack', 'selfie'] as const;
+type KycDocumentKey = (typeof documentKeys)[number];
+type KycDocuments = Record<KycDocumentKey, string | null>;
 
-function KycStatusBadge({ status, label }: { status: KycStatus; label: string }) {
-  if (status === 'verified') {
+function normalizeDocumentUrls(documentUrls: Record<string, unknown> | null | undefined): KycDocuments {
+  return documentKeys.reduce((documents, key) => {
+    const value = documentUrls?.[key];
+    documents[key] = typeof value === 'string' && value.length > 0 ? value : null;
+    return documents;
+  }, {} as KycDocuments);
+}
+
+function kycStatusLabelKey(status: AdminKycStatus) {
+  return status === 'approved' ? 'verified' : status;
+}
+
+function KycStatusBadge({ status, label }: { status: AdminKycStatus; label: string }) {
+  if (status === 'approved') {
     return (
       <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
         <CheckCircle2 className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -71,20 +76,25 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
   const [loading, setLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
 
-  const { data: kyc, isLoading } = useQuery<KycData>({
+  const { data: kyc, isLoading } = useQuery<AdminKycPayload>({
     queryKey: ['user-kyc', userId],
-    queryFn: () => apiGet<KycData>(`/admin/users/${userId}/kyc`),
+    queryFn: () => apiGet<AdminKycPayload>(`/admin/users/${userId}/kyc`),
     enabled: open,
   });
+  const activeSubmission = kyc?.available ? kyc.submissions?.[0] ?? null : null;
+  const documents = normalizeDocumentUrls(activeSubmission?.documentUrls);
 
   const handleReview = async (action: 'approve' | 'reject') => {
+    if (!activeSubmission) return;
     setLoading(true);
     setReviewError('');
     try {
-      await apiPost(`/admin/users/${userId}/kyc/review`, {
-        action,
+      const payload: AdminKycReviewRequest = {
+        submissionId: activeSubmission.id,
+        status: action === 'approve' ? 'approved' : 'rejected',
         ...(action === 'reject' && { reason: rejectReason.trim() }),
-      });
+      };
+      await apiPost(`/admin/users/${userId}/kyc/review`, payload);
       queryClient.invalidateQueries({ queryKey: ['user-kyc', userId] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
       if (action === 'approve') onOpenChange(false);
@@ -112,23 +122,26 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
               <div key={index} className="h-24 animate-pulse rounded-lg bg-muted" />
             ))}
           </div>
-        ) : kyc ? (
+        ) : activeSubmission ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('kycStatus')}</span>
-              <KycStatusBadge status={kyc.status} label={t(`kycStatuses.${kyc.status}`)} />
+              <KycStatusBadge
+                status={activeSubmission.status}
+                label={t(`kycStatuses.${kycStatusLabelKey(activeSubmission.status)}`)}
+              />
             </div>
             <div className="grid grid-cols-3 gap-3">
               {documentKeys.map((documentKey) => (
                 <div key={documentKey} className="space-y-1">
                   <p className="text-xs text-muted-foreground">{t(`kycDocuments.${documentKey}`)}</p>
                   <div className="flex h-24 items-center justify-center rounded-lg bg-muted/50">
-                    {kyc.documents[documentKey] ? (
+                    {documents[documentKey] ? (
                       <div
                         role="img"
                         aria-label={t('kycDocumentPreview', { document: t(`kycDocuments.${documentKey}`) })}
                         className="h-full w-full rounded-lg bg-cover bg-center"
-                        style={{ backgroundImage: `url(${JSON.stringify(kyc.documents[documentKey])})` }}
+                        style={{ backgroundImage: `url(${JSON.stringify(documents[documentKey])})` }}
                       />
                     ) : (
                       <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -137,16 +150,16 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
                 </div>
               ))}
             </div>
-            {kyc.rejectReason && (
+            {activeSubmission.rejectionReason && (
               <>
                 <Separator />
-                <p className="text-xs text-destructive">{kyc.rejectReason}</p>
+                <p className="text-xs text-destructive">{activeSubmission.rejectionReason}</p>
               </>
             )}
             {reviewError && (
               <p role="alert" className="text-sm text-destructive">{reviewError}</p>
             )}
-            {kyc.status === 'pending' && (
+            {activeSubmission.status === 'pending' && (
               <>
                 <Separator />
                 <div className="space-y-2">

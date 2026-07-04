@@ -56,7 +56,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-最新の local web evidence: 2026-07-04 `codex/batch4-integration` の `e776f5c` で、`pnpm typecheck`、`pnpm lint`、`pnpm test` が pass。Admin/Restaurant Vitest は Admin 135 tests、Restaurant 79 tests が pass。Route integrity fix 後、Admin map-focused Vitest coverage を再実行し、Admin suite 全体も pass しました (33 files、135 tests)。
+最新の local web/API-contract evidence: 2026-07-04 `codex/batch4-integration` で、OpenAPI YAML parse は 137 paths で pass し、local web endpoint coverage scanner は `MISSING_ENDPOINTS=0` を報告しました。Web workspace 全体で `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build` が pass。Vitest は Admin 34 files / 137 tests、Restaurant 27 files / 79 tests が pass。Backend はこの contract cluster で `pnpm typecheck`、`pnpm lint`、targeted Jest (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suites / 9 tests) が pass しました。
 
 ## Playwright E2E
 
