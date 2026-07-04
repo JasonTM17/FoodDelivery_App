@@ -1037,6 +1037,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get walletCredit => 'Nạp tiền';
 
   @override
+  String get walletReasonOrderPayment => 'Thanh toán đơn hàng';
+
+  @override
+  String get walletReasonOrderRefund => 'Hoàn tiền đơn hàng';
+
+  @override
+  String get walletReasonWithdrawal => 'Rút tiền';
+
+  @override
+  String get walletReasonAdjustment => 'Điều chỉnh số dư';
+
+  @override
   String get referralTitle => 'Giới thiệu bạn bè';
 
   @override

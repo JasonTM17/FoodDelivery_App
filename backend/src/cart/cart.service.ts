@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { AddCartItemDto, UpdateCartItemDto, ApplyPromotionDto } from './cart.dto'
+import { PromotionsService } from '../promotions/promotions.service'
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly promotionsService: PromotionsService,
+  ) {}
 
   async getCart(userId: string) {
     const cart = await this.prisma.cart.findUnique({
@@ -104,24 +108,20 @@ export class CartService {
       include: { items: true },
     })
     if (!cart || cart.items.length === 0) throw new BadRequestException('CART_EMPTY')
+    if (!cart.restaurantId) throw new BadRequestException('CART_NO_RESTAURANT')
 
     const subtotal = cart.items.reduce((sum, i) => sum + Number(i.unitPrice) * i.quantity, 0)
-
-    const promo = await this.prisma.promotion.findUnique({ where: { code: dto.code } })
-    if (!promo || !promo.isActive) throw new BadRequestException('PROMOTION_INVALID')
-    if (new Date() < promo.startsAt || new Date() > promo.expiresAt) throw new BadRequestException('PROMOTION_EXPIRED')
-    if (promo.usageCount >= promo.usageLimit) throw new BadRequestException('PROMOTION_EXHAUSTED')
-    if (Number(subtotal) < Number(promo.minOrderAmount)) throw new BadRequestException('MIN_ORDER_NOT_MET')
+    const { discountAmount } = await this.promotionsService.preview(
+      dto.code,
+      { subtotal, restaurantId: cart.restaurantId },
+      userId,
+    )
 
     await this.prisma.cart.update({
       where: { id: cart.id },
       data: { promotionCode: dto.code },
     })
 
-    const discount = promo.type === 'percentage'
-      ? Math.min(Number(subtotal) * Number(promo.value) / 100, Number(promo.maxDiscount ?? Infinity))
-      : Number(promo.value)
-
-    return { code: promo.code, type: promo.type, discount, subtotal: Number(subtotal) }
+    return { code: dto.code, discount: discountAmount, subtotal: Number(subtotal) }
   }
 }

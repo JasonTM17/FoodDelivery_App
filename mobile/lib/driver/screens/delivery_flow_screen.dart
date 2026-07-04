@@ -137,7 +137,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
                   const SizedBox(height: 20),
 
                   // Map area
-                  _buildMapPlaceholder(order),
+                  _buildTripMap(order),
 
                   const SizedBox(height: 20),
 
@@ -156,7 +156,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     );
   }
 
-  Widget _buildMapPlaceholder(OrderModel order) {
+  Widget _buildTripMap(OrderModel order) {
     return SizedBox(
       width: double.infinity,
       height: 200,

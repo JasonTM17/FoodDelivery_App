@@ -36,7 +36,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
   }
 
   void _copyCode(String code) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -48,7 +48,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(vouchersProvider);
 
     final tabs = [
@@ -67,8 +67,14 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+          ),
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
@@ -94,20 +100,29 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
       child: TabBarView(
         controller: _tabController,
         children: [
-          _buildTab(state.myVouchers, showCopy: true, showUse: true),
-          _buildTab(state.availableVouchers, showUse: false),
+          _buildTab(state.myVouchers),
+          _buildTab(state.availableVouchers, showUse: true, isAvailable: true),
           _buildTab(state.expiredVouchers, isExpired: true),
         ],
       ),
     );
   }
 
-  Widget _buildTab(List<Voucher> vouchers, {bool showCopy = false, bool showUse = false, bool isExpired = false}) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildTab(
+    List<Voucher> vouchers, {
+    bool showUse = false,
+    bool isAvailable = false,
+    bool isExpired = false,
+  }) {
+    final l10n = AppLocalizations.of(context);
     if (vouchers.isEmpty) {
       return EmptyState(
         icon: isExpired ? Icons.event_busy : Icons.local_offer_outlined,
-        title: isExpired ? l10n.vouchersEmptyExpired : l10n.vouchersEmptyMine,
+        title: isExpired
+            ? l10n.vouchersEmptyExpired
+            : isAvailable
+            ? l10n.vouchersEmptyAvailable
+            : l10n.vouchersEmptyMine,
         subtitle: isExpired
             ? l10n.vouchersEmptyExpiredSubtitle
             : l10n.vouchersEmptyAvailableSubtitle,
@@ -118,17 +133,21 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
       itemCount: vouchers.length,
       itemBuilder: (context, index) {
         final voucher = vouchers[index];
-        final l10nCard = AppLocalizations.of(context)!;
+        final l10nCard = AppLocalizations.of(context);
         return VoucherCard(
           voucher: voucher,
-          onUse: showUse
-              ? () => _copyCode(voucher.code)
-              : showCopy
-                  ? () => _copyCode(voucher.code)
-                  : null,
-          percentOffLabel: voucher.percentOff != null ? l10nCard.vouchersPercentOff(voucher.percentOff!) : null,
-          minOrderLabel: voucher.minOrderAmount != null ? l10nCard.vouchersMinOrder(_formatVnd(voucher.minOrderAmount!)) : null,
-          expiresAtLabel: voucher.expiresAt != null ? l10nCard.vouchersExpiresAt(DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)) : null,
+          onUse: showUse ? () => _copyCode(voucher.code) : null,
+          percentOffLabel: voucher.percentOff != null
+              ? l10nCard.vouchersPercentOff(voucher.percentOff!)
+              : null,
+          minOrderLabel: voucher.minOrderAmount != null
+              ? l10nCard.vouchersMinOrder(_formatVnd(voucher.minOrderAmount!))
+              : null,
+          expiresAtLabel: voucher.expiresAt != null
+              ? l10nCard.vouchersExpiresAt(
+                  DateFormat('dd/MM/yyyy').format(voucher.expiresAt!),
+                )
+              : null,
           useNowLabel: l10nCard.vouchersUseNow,
         );
       },
@@ -136,7 +155,11 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
   }
 
   String _formatVnd(int vnd) {
-    final fmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+    final fmt = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
     return fmt.format(vnd);
   }
 }

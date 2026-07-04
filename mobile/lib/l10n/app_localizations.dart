@@ -2074,6 +2074,30 @@ abstract class AppLocalizations {
   /// **'Nạp tiền'**
   String get walletCredit;
 
+  /// No description provided for @walletReasonOrderPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán đơn hàng'**
+  String get walletReasonOrderPayment;
+
+  /// No description provided for @walletReasonOrderRefund.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tiền đơn hàng'**
+  String get walletReasonOrderRefund;
+
+  /// No description provided for @walletReasonWithdrawal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rút tiền'**
+  String get walletReasonWithdrawal;
+
+  /// No description provided for @walletReasonAdjustment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều chỉnh số dư'**
+  String get walletReasonAdjustment;
+
   /// No description provided for @referralTitle.
   ///
   /// In vi, this message translates to:

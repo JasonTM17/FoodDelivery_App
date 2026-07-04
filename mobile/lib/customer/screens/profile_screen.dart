@@ -29,7 +29,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
     final orderState = ref.watch(orderProvider);
     final addressState = ref.watch(addressProvider);
@@ -66,7 +66,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ? NetworkImage(user!.avatarUrl!) as ImageProvider
                             : null,
                         child: user?.avatarUrl == null
-                            ? const Icon(Icons.person, size: 48, color: AppColors.primary)
+                            ? const Icon(
+                                Icons.person,
+                                size: 48,
+                                color: AppColors.primary,
+                              )
                             : null,
                       ),
                       Positioned(
@@ -80,7 +84,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -93,14 +101,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   if (user?.phone != null) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      user?.phone ?? '',
-                      style: AppTextStyles.bodySmall,
-                    ),
+                    Text(user?.phone ?? '', style: AppTextStyles.bodySmall),
                   ],
                 ],
               ),
@@ -114,7 +121,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Row(
@@ -148,7 +159,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Column(
@@ -189,36 +204,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   _buildDivider(),
                   _buildMenuItem(
-                    icon: Icons.payment_outlined,
-                    title: l10n.paymentMethods,
-                    subtitle: l10n.paymentMethodsSubtitle,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.featureInDevelopment)),
-                      );
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
                     icon: Icons.notifications_outlined,
                     title: l10n.notificationsTitle,
                     subtitle: l10n.notificationsSubtitle,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.featureInDevelopment)),
-                      );
-                    },
+                    onTap: () => context.push(Routes.notifications),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.favorite_outline,
                     title: l10n.favorites,
                     subtitle: l10n.favoritesSubtitle,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.featureInDevelopment)),
-                      );
-                    },
+                    onTap: () => context.push(Routes.favorites),
                   ),
                 ],
               ),
@@ -231,7 +227,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Column(
@@ -240,12 +240,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: Icons.headset_mic_outlined,
                     title: l10n.support,
                     subtitle: l10n.supportSubtitle,
-                    onTap: () {
-                      // TODO: localize hotline number per locale
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Vui lòng liên hệ hotline: 1900-1234')),
-                      );
-                    },
+                    onTap: () => context.push(Routes.help),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
@@ -257,7 +252,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         context: context,
                         applicationName: 'FoodFlow',
                         applicationVersion: '1.0.0',
-                        applicationLegalese: '© 2026 FoodFlow. Đặt đồ ăn nhanh chóng, giao hàng tận nơi.',
+                        applicationLegalese:
+                            '© 2026 FoodFlow. Đặt đồ ăn nhanh chóng, giao hàng tận nơi.',
                       );
                     },
                   ),
@@ -274,7 +270,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Row(
@@ -282,7 +282,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   Text(
                     l10n.languageTitle,
-                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const LocaleSwitcher(),
                 ],
@@ -372,9 +374,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         child: Icon(icon, color: AppColors.primary, size: 22),
       ),
-      title: Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+      title: Text(
+        title,
+        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textHint, size: 20),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppColors.textHint,
+        size: 20,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onTap: onTap,
     );

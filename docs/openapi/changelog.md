@@ -1,5 +1,7 @@
 # OpenAPI Changelog
 
+- 2026-07-04: Aligned customer promotion endpoints with backend/mobile: added `/promotions/available` and `/promotions/my`, changed `/promotions/validate` to accept `subtotal`, and documented validation as a preview-only response before atomic order-time claim.
+- 2026-07-04: Aligned `/users/wallet` with the confirmed wallet ledger (`amountDelta`, `credit|debit`, `reason`, optional `refId`) and removed the unimplemented `/users/wallet/topup` contract; mobile no longer exposes fake top-up/withdraw actions.
 - 2026-07-04: Added `/admin/charts` response contract for database-backed customer retention cohorts; Admin Analytics no longer displays a degraded retention placeholder.
 - 2026-07-04: Admin export jobs now complete CSV and XLSX inline from real database rows; `/admin/exports/{id}/download` advertises both CSV and XLSX content types while Parquet remains explicitly unavailable until a real file writer exists.
 - 2026-07-04: `/admin/ai-monitor` now reports DB-backed AI conversation counts, escalations, and resolution rate; chatbot support tickets are attributed with `ai_session:<uuid>` tags and usage-cost/token latency fields remain nullable until real telemetry is connected.

@@ -1023,6 +1023,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get walletCredit => 'チャージ';
 
   @override
+  String get walletReasonOrderPayment => '注文の支払い';
+
+  @override
+  String get walletReasonOrderRefund => '注文の返金';
+
+  @override
+  String get walletReasonWithdrawal => '出金';
+
+  @override
+  String get walletReasonAdjustment => '残高調整';
+
+  @override
   String get referralTitle => '友達を招待';
 
   @override

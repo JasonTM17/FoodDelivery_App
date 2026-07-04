@@ -28,12 +28,27 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   List<_FaqEntry> _faqs(AppLocalizations l10n) {
     return [
       _FaqEntry(l10n.helpFaqCancelOrderQ, l10n.helpFaqCancelOrderA, 'orders'),
-      _FaqEntry(l10n.helpFaqLateDeliveryQ, l10n.helpFaqLateDeliveryA, 'delivery'),
-      _FaqEntry(l10n.helpFaqPaymentMethodsQ, l10n.helpFaqPaymentMethodsA, 'payment'),
-      _FaqEntry(l10n.helpFaqTopUpWalletQ, l10n.helpFaqTopUpWalletA, 'payment'),
+      _FaqEntry(
+        l10n.helpFaqLateDeliveryQ,
+        l10n.helpFaqLateDeliveryA,
+        'delivery',
+      ),
+      _FaqEntry(
+        l10n.helpFaqPaymentMethodsQ,
+        l10n.helpFaqPaymentMethodsA,
+        'payment',
+      ),
       _FaqEntry(l10n.helpFaqAddAddressQ, l10n.helpFaqAddAddressA, 'account'),
-      _FaqEntry(l10n.helpFaqMissingOrderQ, l10n.helpFaqMissingOrderA, 'delivery'),
-      _FaqEntry(l10n.helpFaqRewardPointsQ, l10n.helpFaqRewardPointsA, 'account'),
+      _FaqEntry(
+        l10n.helpFaqMissingOrderQ,
+        l10n.helpFaqMissingOrderA,
+        'delivery',
+      ),
+      _FaqEntry(
+        l10n.helpFaqRewardPointsQ,
+        l10n.helpFaqRewardPointsA,
+        'account',
+      ),
       _FaqEntry(l10n.helpFaqTrackOrderQ, l10n.helpFaqTrackOrderA, 'orders'),
     ];
   }
@@ -41,8 +56,11 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   List<_FaqEntry> _filtered(AppLocalizations l10n) {
     final faqs = _faqs(l10n);
     return faqs.where((faq) {
-      final matchQuery = _query.isEmpty || faq.question.toLowerCase().contains(_query.toLowerCase());
-      final matchCat = _selectedCategory == null || faq.category == _selectedCategory;
+      final matchQuery =
+          _query.isEmpty ||
+          faq.question.toLowerCase().contains(_query.toLowerCase());
+      final matchCat =
+          _selectedCategory == null || faq.category == _selectedCategory;
       return matchQuery && matchCat;
     }).toList();
   }
@@ -59,7 +77,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final filtered = _filtered(l10n);
 
     return Scaffold(
@@ -96,11 +114,23 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildContactBtn(Icons.chat_bubble_outline, l10n.helpCenterChatCta, () => context.push('${Routes.chat}', extra: 'support')),
+                _buildContactBtn(
+                  Icons.chat_bubble_outline,
+                  l10n.helpCenterChatCta,
+                  () => context.push('${Routes.chat}', extra: 'support'),
+                ),
                 const SizedBox(width: 8),
-                _buildContactBtn(Icons.phone_outlined, l10n.helpCallSupport, _launchPhone),
+                _buildContactBtn(
+                  Icons.phone_outlined,
+                  l10n.helpCallSupport,
+                  _launchPhone,
+                ),
                 const SizedBox(width: 8),
-                _buildContactBtn(Icons.email_outlined, l10n.helpEmailSupport, _launchEmail),
+                _buildContactBtn(
+                  Icons.email_outlined,
+                  l10n.helpEmailSupport,
+                  _launchEmail,
+                ),
               ],
             ),
           ),
@@ -109,9 +139,19 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
           // FAQ list
           Expanded(
             child: filtered.isEmpty
-                ? Center(child: Text(l10n.helpCenterNoResults, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)))
+                ? Center(
+                    child: Text(
+                      l10n.helpCenterNoResults,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  )
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (ctx, i) => _buildFaqTile(filtered[i]),
@@ -132,12 +172,17 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+          ),
         ),
-        child: Text(label, style: AppTextStyles.bodySmall.copyWith(
-          color: isSelected ? Colors.white : AppColors.textPrimary,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-        )),
+        child: Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
       ),
     );
   }
@@ -157,7 +202,13 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             children: [
               Icon(icon, color: AppColors.primary, size: 22),
               const SizedBox(height: 4),
-              Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.textPrimary), textAlign: TextAlign.center),
+              Text(
+                label,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -170,13 +221,30 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1))],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        title: Text(faq.question, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
-        children: [Text(faq.answer, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.6))],
+        title: Text(
+          faq.question,
+          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+        ),
+        children: [
+          Text(
+            faq.answer,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.6,
+            ),
+          ),
+        ],
       ),
     );
   }

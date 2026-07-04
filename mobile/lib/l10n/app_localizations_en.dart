@@ -1033,6 +1033,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletCredit => 'Credit';
 
   @override
+  String get walletReasonOrderPayment => 'Order payment';
+
+  @override
+  String get walletReasonOrderRefund => 'Order refund';
+
+  @override
+  String get walletReasonWithdrawal => 'Withdrawal';
+
+  @override
+  String get walletReasonAdjustment => 'Wallet adjustment';
+
+  @override
   String get referralTitle => 'Refer a Friend';
 
   @override

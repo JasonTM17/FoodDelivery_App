@@ -17,8 +17,11 @@ class WalletScreen extends ConsumerStatefulWidget {
 }
 
 class _WalletScreenState extends ConsumerState<WalletScreen> {
-  static const List<double> _topUpAmounts = [50000, 100000, 200000, 500000, 1000000];
-  final _currencyFmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+  final _currencyFmt = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: '₫',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
@@ -26,86 +29,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     Future.microtask(() => ref.read(walletProvider.notifier).fetchWallet());
   }
 
-  void _showTopUpSheet(BuildContext context, AppLocalizations l10n) {
-    double? selected;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.walletTopUpTitle, style: AppTextStyles.headline3),
-              const SizedBox(height: 8),
-              Text(l10n.walletSelectAmount, style: AppTextStyles.bodySmall),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _topUpAmounts.map((amt) {
-                  final isSelected = selected == amt;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => selected = amt),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
-                      ),
-                      child: Text(
-                        _currencyFmt.format(amt),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: isSelected ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    final walletState = ref.watch(walletProvider);
-                    return ElevatedButton(
-                      onPressed: selected == null || walletState.isTopUpLoading
-                          ? null
-                          : () async {
-                              final ok = await ref.read(walletProvider.notifier).topUp(selected!);
-                              if (context.mounted) {
-                                Navigator.of(ctx).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(ok ? '${_currencyFmt.format(selected)} đã được nạp thành công' : (ref.read(walletProvider).error ?? 'Lỗi')),
-                                  backgroundColor: ok ? AppColors.success : AppColors.error,
-                                ));
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                      child: walletState.isTopUpLoading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Text(l10n.walletConfirmTopUp),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(walletProvider);
 
     return Scaffold(
@@ -114,12 +40,19 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       body: state.isLoading
           ? const LoadingShimmer()
           : state.error != null
-              ? ErrorState(message: state.error!, onRetry: () => ref.read(walletProvider.notifier).fetchWallet())
-              : _buildBody(context, l10n, state),
+          ? ErrorState(
+              message: state.error!,
+              onRetry: () => ref.read(walletProvider.notifier).fetchWallet(),
+            )
+          : _buildBody(context, l10n, state),
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n, WalletState state) {
+  Widget _buildBody(
+    BuildContext context,
+    AppLocalizations l10n,
+    WalletState state,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -136,38 +69,27 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.walletBalance, style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
+                Text(
+                  l10n.walletBalance,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(_currencyFmt.format(state.balance),
-                    style: AppTextStyles.headline2.copyWith(color: Colors.white)),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showTopUpSheet(context, l10n),
-                        icon: const Icon(Icons.add, color: Colors.white, size: 18),
-                        label: Text(l10n.walletTopUp, style: const TextStyle(color: Colors.white)),
-                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white54)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.featureInDevelopment)),
-                        ),
-                        icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 18),
-                        label: Text(l10n.walletWithdraw, style: const TextStyle(color: Colors.white)),
-                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white54)),
-                      ),
-                    ),
-                  ],
+                Text(
+                  _currencyFmt.format(state.balance),
+                  style: AppTextStyles.headline2.copyWith(color: Colors.white),
                 ),
               ],
             ),
@@ -179,7 +101,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
           const SizedBox(height: 12),
           state.transactions.isEmpty
               ? _buildEmpty(l10n)
-              : Column(children: state.transactions.map((tx) => WalletTxTile(tx: tx)).toList()),
+              : Column(
+                  children: state.transactions
+                      .map((tx) => WalletTxTile(tx: tx))
+                      .toList(),
+                ),
         ],
       ),
     );
@@ -191,12 +117,20 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       alignment: Alignment.center,
       child: Column(
         children: [
-          const Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.textHint),
+          const Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 48,
+            color: AppColors.textHint,
+          ),
           const SizedBox(height: 12),
-          Text(l10n.walletTransactionEmpty, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+          Text(
+            l10n.walletTransactionEmpty,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
   }
-
 }

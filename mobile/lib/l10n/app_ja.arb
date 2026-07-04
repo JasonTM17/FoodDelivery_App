@@ -392,6 +392,10 @@
   "walletConfirmTopUp": "チャージを確認",
   "walletDebit": "支出",
   "walletCredit": "チャージ",
+  "walletReasonOrderPayment": "注文の支払い",
+  "walletReasonOrderRefund": "注文の返金",
+  "walletReasonWithdrawal": "出金",
+  "walletReasonAdjustment": "残高調整",
 
   "referralTitle": "友達を招待",
   "referralSubtitle": "招待コードを共有して特典をゲット",

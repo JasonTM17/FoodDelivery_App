@@ -15,12 +15,14 @@ import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
 import { OrderChatService } from './order-chat.service'
 import { AuthModule } from '../auth/auth.module'
 import { RealtimeRoomAccessService } from './realtime-room-access.service'
+import { PromotionsModule } from '../promotions/promotions.module'
 
 @Module({
   imports: [
     AuthModule,
     forwardRef(() => CartModule),
     PaymentsModule,
+    PromotionsModule,
     BullModule.registerQueue({ name: 'dispatch' }),
     BullModule.registerQueue({ name: 'refund' }),
     BullModule.registerQueue({ name: 'order-timeout' }),

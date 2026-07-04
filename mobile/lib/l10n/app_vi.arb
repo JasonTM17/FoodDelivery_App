@@ -398,6 +398,10 @@
   "walletConfirmTopUp": "Xác nhận nạp tiền",
   "walletDebit": "Chi tiêu",
   "walletCredit": "Nạp tiền",
+  "walletReasonOrderPayment": "Thanh toán đơn hàng",
+  "walletReasonOrderRefund": "Hoàn tiền đơn hàng",
+  "walletReasonWithdrawal": "Rút tiền",
+  "walletReasonAdjustment": "Điều chỉnh số dư",
 
   "referralTitle": "Giới thiệu bạn bè",
   "referralSubtitle": "Chia sẻ mã giới thiệu và nhận thưởng",

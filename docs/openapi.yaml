@@ -329,45 +329,37 @@ components:
       type: object
       properties:
         balance:      { type: integer, description: "Available balance in VND" }
-        totalTopup:   { type: integer, description: "Lifetime topup VND" }
-        totalSpent:   { type: integer, description: "Lifetime spent VND" }
         transactions:
           type: array
           items: { $ref: "#/components/schemas/WalletTransaction" }
-      required: [balance, totalTopup, totalSpent]
+      required: [balance, transactions]
       example:
         balance: 350000
-        totalTopup: 500000
-        totalSpent: 150000
-        transactions: []
+        transactions:
+          - id: "22222222-2222-4222-8222-222222222222"
+            amountDelta: 200000
+            type: credit
+            reason: order_refund
+            refId: "11111111-1111-4111-8111-111111111111"
+            createdAt: "2026-06-09T10:30:00Z"
 
     WalletTransaction:
       type: object
       properties:
-        id:        { type: string, format: uuid }
-        amount:    { type: integer, description: "VND. Positive = credit, negative = debit" }
-        type:      { type: string, enum: [topup, payment, refund, withdrawal, adjustment] }
-        reference: { type: string, description: "Reference ID (order, topup request)" }
-        balanceAfter: { type: integer, description: "Wallet balance after this tx (VND)" }
+        id: { type: string, format: uuid }
+        amountDelta: { type: integer, description: "Signed wallet ledger delta in VND" }
+        type: { type: string, enum: [credit, debit] }
+        reason: { type: string, description: "Ledger reason such as order_refund, referral_bonus, or order_payment" }
+        refId: { type: string, format: uuid, nullable: true }
         createdAt: { type: string, format: date-time }
-      required: [id, amount, type, balanceAfter, createdAt]
+      required: [id, amountDelta, type, reason, createdAt]
       example:
         id: "22222222-2222-4222-8222-222222222222"
-        amount: 200000
-        type: "topup"
-        reference: "sepay-ref-abc123"
-        balanceAfter: 500000
+        amountDelta: 200000
+        type: credit
+        reason: order_refund
+        refId: "11111111-1111-4111-8111-111111111111"
         createdAt: "2026-06-09T10:30:00Z"
-
-    WalletTopupRequest:
-      type: object
-      properties:
-        amount: { type: integer, minimum: 10000, maximum: 50000000, description: "VND" }
-        method: { type: string, enum: [sepay] }
-      required: [amount, method]
-      example:
-        amount: 200000
-        method: "sepay"
 
     # ── Restaurants ──
 
@@ -1630,24 +1622,57 @@ components:
       properties:
         code:          { type: string }
         restaurantId:  { type: string, format: uuid }
-        orderAmount:   { type: integer, description: "VND" }
-      required: [code, restaurantId, orderAmount]
+        subtotal:      { type: integer, description: "Order subtotal in VND before delivery fee and discount" }
+      required: [code, restaurantId, subtotal]
       example:
         code: "WELCOME2026"
         restaurantId: "33333333-3333-4333-8333-333333333333"
-        orderAmount: 200000
+        subtotal: 200000
 
     PromotionValidateResult:
       type: object
       properties:
-        valid:          { type: boolean }
         discountAmount: { type: integer, description: "VND" }
-        message:        { type: string }
-      required: [valid, discountAmount]
+      required: [discountAmount]
       example:
-        valid: true
         discountAmount: 40000
-        message: "Áp dụng mã WELCOME2026: giảm 20%, tối đa 50,000đ"
+
+    CustomerPromotion:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        code:           { type: string }
+        title:          { type: string }
+        name:           { type: string }
+        description:    { type: string }
+        type:           { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
+        value:          { type: integer, description: "Raw promotion value" }
+        discountPercent: { type: integer, nullable: true }
+        percentOff:     { type: integer, nullable: true }
+        fixedAmount:    { type: integer, nullable: true, description: "VND" }
+        maxDiscount:    { type: integer, nullable: true, description: "VND" }
+        minOrderAmount: { type: integer, description: "VND" }
+        restaurantId:   { type: string, format: uuid, nullable: true }
+        expiresAt:      { type: string, format: date-time }
+        isUsed:         { type: boolean }
+        status:         { type: string, enum: [available, used] }
+        usedAt:         { type: string, format: date-time, nullable: true }
+      required: [id, code, title, name, description, type, value, minOrderAmount, expiresAt, isUsed, status]
+      example:
+        id: "11111111-1111-4111-8111-111111111111"
+        code: "WELCOME2026"
+        title: "Welcome 2026"
+        name: "Welcome 2026"
+        description: "20% off your first FoodFlow order"
+        type: "percentage"
+        value: 20
+        discountPercent: 20
+        percentOff: 20
+        maxDiscount: 50000
+        minOrderAmount: 100000
+        expiresAt: "2026-12-31T16:59:59.000Z"
+        isUsed: false
+        status: "available"
 
     # ── Notifications ──
 
@@ -2597,24 +2622,6 @@ paths:
       x-foo-actor: user
       responses:
         "200": { description: "Wallet snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/WalletSnapshot" } } } }
-
-  /users/wallet/topup:
-    post:
-      tags: [users]
-      summary: Initiate wallet topup via SePay
-      description: Creates a SePay wallet top-up intent for the authenticated user.
-      operationId: users_topupWallet
-      x-foo-actor: user
-      parameters:
-        - $ref: "#/components/parameters/IdempotencyKeyHeader"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/WalletTopupRequest" }
-      responses:
-        "201": { description: "Topup initiated (returns SePay QR URL)", content: { application/json: { schema: { type: object, properties: { qrUrl: { type: string }, transactionRef: { type: string }, amount: { type: integer } } } } } }
-        "400": { description: "Invalid amount", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   # ═══════════════════════════════════════════════
   # RESTAURANTS (public discovery)
@@ -3870,6 +3877,38 @@ paths:
   # ═══════════════════════════════════════════════
   # PROMOTIONS
   # ═══════════════════════════════════════════════
+
+  /promotions/available:
+    get:
+      tags: [promotions]
+      summary: List promotions available to the authenticated customer
+      description: Returns active, time-valid promotions filtered by usage limit, first-order rules, and the authenticated customer's per-user redemption count.
+      operationId: promotions_listAvailable
+      x-foo-actor: user
+      responses:
+        "200":
+          description: Customer-scoped available promotions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CustomerPromotion" }
+
+  /promotions/my:
+    get:
+      tags: [promotions]
+      summary: List promotions used by the authenticated customer
+      description: Returns a deduplicated promotion redemption history scoped to the authenticated customer.
+      operationId: promotions_listMine
+      x-foo-actor: user
+      responses:
+        "200":
+          description: Customer-scoped used promotion history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CustomerPromotion" }
 
   /promotions/validate:
     post:

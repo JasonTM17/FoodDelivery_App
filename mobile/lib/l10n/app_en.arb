@@ -392,6 +392,10 @@
   "walletConfirmTopUp": "Confirm Top Up",
   "walletDebit": "Debit",
   "walletCredit": "Credit",
+  "walletReasonOrderPayment": "Order payment",
+  "walletReasonOrderRefund": "Order refund",
+  "walletReasonWithdrawal": "Withdrawal",
+  "walletReasonAdjustment": "Wallet adjustment",
 
   "referralTitle": "Refer a Friend",
   "referralSubtitle": "Share your referral code and earn rewards",

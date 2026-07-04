@@ -8,7 +8,10 @@ import { PrismaService } from '../database/prisma.service'
 const PROMO = {
   id: 'promo-uuid',
   code: 'SAVE10',
+  name: 'Save ten percent',
+  description: 'Customer promotion',
   type: 'percentage',
+  status: 'active',
   value: 10,
   minOrderAmount: 0,
   maxDiscount: null,
@@ -22,6 +25,7 @@ const PROMO = {
   expiresAt: new Date(Date.now() + 86400000),
   isActive: true,
   createdAt: new Date(),
+  updatedAt: new Date(),
 }
 
 const CART = { subtotal: 100_000, restaurantId: 'rest-1' }
@@ -47,13 +51,26 @@ describe('PromotionsService', () => {
   let eligibility: jest.Mocked<EligibilityService>
   let fraud: jest.Mocked<FraudDetectionService>
   let txMock: ReturnType<typeof makeTxMock>
-  let prismaMock: { $transaction: jest.Mock; promotion: { findUnique: jest.Mock } }
+  let prismaMock: {
+    $transaction: jest.Mock
+    promotion: { findUnique: jest.Mock; findMany: jest.Mock }
+    promotionUsage: { groupBy: jest.Mock; findMany: jest.Mock }
+    order: { count: jest.Mock }
+  }
 
   beforeEach(async () => {
     txMock = makeTxMock()
     prismaMock = {
       $transaction: jest.fn().mockImplementation((fn: Function) => fn(txMock)),
-      promotion: { findUnique: jest.fn().mockResolvedValue(PROMO) },
+      promotion: {
+        findUnique: jest.fn().mockResolvedValue(PROMO),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      promotionUsage: {
+        groupBy: jest.fn().mockResolvedValue([]),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      order: { count: jest.fn().mockResolvedValue(0) },
     }
 
     const module: TestingModule = await Test.createTestingModule({
@@ -114,11 +131,14 @@ describe('PromotionsService', () => {
       expect(result).toEqual({ discountAmount: 10_000 })
     })
 
-    it('increments currentUsageCount in transaction', async () => {
+    it('increments reporting and current usage counters in transaction', async () => {
       await service.validateAndClaim('SAVE10', CART, USER_ID, ORDER_ID)
       expect(txMock.promotion.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { currentUsageCount: { increment: 1 } },
+          data: {
+            usageCount: { increment: 1 },
+            currentUsageCount: { increment: 1 },
+          },
         }),
       )
     })
@@ -176,6 +196,72 @@ describe('PromotionsService', () => {
     it('throws NotFoundException when code does not exist', async () => {
       prismaMock.promotion.findUnique.mockResolvedValueOnce(null)
       await expect(service.findByCode('UNKNOWN')).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('preview', () => {
+    it('validates an order context without claiming usage', async () => {
+      const result = await service.preview('SAVE10', CART, USER_ID)
+
+      expect(result).toEqual({ discountAmount: 10_000 })
+      expect(eligibility.validate).toHaveBeenCalledWith(PROMO, CART, USER_ID)
+      expect(prismaMock.$transaction).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when preview code does not exist', async () => {
+      prismaMock.promotion.findUnique.mockResolvedValueOnce(null)
+
+      await expect(service.preview('UNKNOWN', CART, USER_ID)).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('customer promotion lists', () => {
+    it('returns only promotions the authenticated customer can still use', async () => {
+      prismaMock.promotion.findMany.mockResolvedValue([
+        PROMO,
+        { ...PROMO, id: 'exhausted', currentUsageCount: 1, usageLimit: 1 },
+        { ...PROMO, id: 'first-order', firstOrderOnly: true },
+        { ...PROMO, id: 'per-user', maxPerUser: 1 },
+      ])
+      prismaMock.promotionUsage.groupBy.mockResolvedValue([
+        { promotionId: 'per-user', _count: { _all: 1 } },
+      ])
+      prismaMock.order.count.mockResolvedValue(2)
+
+      const result = await service.listAvailable(USER_ID)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual(expect.objectContaining({
+        id: PROMO.id,
+        code: 'SAVE10',
+        title: 'Save ten percent',
+        percentOff: 10,
+        status: 'available',
+      }))
+      expect(prismaMock.promotionUsage.groupBy).toHaveBeenCalledWith(expect.objectContaining({
+        where: { userId: USER_ID },
+      }))
+    })
+
+    it('returns a deduplicated history of promotions used by the customer', async () => {
+      const usedAt = new Date('2026-07-04T00:00:00.000Z')
+      prismaMock.promotionUsage.findMany.mockResolvedValue([
+        { promotionId: PROMO.id, promotion: PROMO, usedAt },
+        { promotionId: PROMO.id, promotion: PROMO, usedAt: new Date('2026-07-03T00:00:00.000Z') },
+      ])
+
+      const result = await service.listMine(USER_ID)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual(expect.objectContaining({
+        id: PROMO.id,
+        isUsed: true,
+        status: 'used',
+        usedAt: usedAt.toISOString(),
+      }))
+      expect(prismaMock.promotionUsage.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { userId: USER_ID },
+      }))
     })
   })
 })

@@ -1,6 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common'
 import { I18nService, I18nContext } from 'nestjs-i18n'
-import { Promotion } from '@prisma/client'
+import type { Prisma, Promotion } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { CartContext, ValidationResult } from './promotions.types'
 import { fallbackT } from '../i18n/fallback-translations'
@@ -22,6 +22,7 @@ export class EligibilityService {
     promotion: Promotion,
     cart: CartContext,
     userId: string,
+    db: Pick<Prisma.TransactionClient, 'order' | 'promotionUsage'> = this.prisma,
   ): Promise<ValidationResult> {
     if (!promotion.isActive) {
       return { valid: false, error: this.t('errors.promotion_invalid') }
@@ -46,14 +47,14 @@ export class EligibilityService {
     }
 
     if (promotion.firstOrderOnly) {
-      const orderCount = await this.prisma.order.count({ where: { customerId: userId } })
+      const orderCount = await db.order.count({ where: { customerId: userId } })
       if (orderCount > 0) {
         return { valid: false, error: this.t('errors.promotion_first_order_only') }
       }
     }
 
     if (promotion.maxPerUser != null) {
-      const usageCount = await this.prisma.promotionUsage.count({
+      const usageCount = await db.promotionUsage.count({
         where: { promotionId: promotion.id, userId },
       })
       if (usageCount >= promotion.maxPerUser) {

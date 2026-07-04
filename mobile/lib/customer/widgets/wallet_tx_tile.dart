@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/wallet_provider.dart';
@@ -11,8 +12,12 @@ class WalletTxTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
-    final isTopup = tx.description.contains('Nạp') || tx.description.contains('Top');
+    final l10n = AppLocalizations.of(context);
+    final currencyFmt = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -35,8 +40,8 @@ class WalletTxTile extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: tx.isCredit
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.error.withOpacity(0.1),
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -53,15 +58,22 @@ class WalletTxTile extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: (tx.isCredit ? AppColors.success : AppColors.error).withOpacity(0.1),
+                        color:
+                            (tx.isCredit ? AppColors.success : AppColors.error)
+                                .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        isTopup ? 'Nạp tiền' : (tx.isCredit ? 'Nhận' : 'Chi'),
+                        tx.isCredit ? l10n.walletCredit : l10n.walletDebit,
                         style: AppTextStyles.caption.copyWith(
-                          color: tx.isCredit ? AppColors.success : AppColors.error,
+                          color: tx.isCredit
+                              ? AppColors.success
+                              : AppColors.error,
                           fontWeight: FontWeight.w600,
                           fontSize: 10,
                         ),
@@ -70,8 +82,10 @@ class WalletTxTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        tx.description,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                        _reasonLabel(l10n, tx.description),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -87,7 +101,7 @@ class WalletTxTile extends StatelessWidget {
             ),
           ),
           Text(
-            '${tx.isCredit ? '+' : '-'}${currencyFmt.format(tx.amount)}',
+            '${tx.isCredit ? '+' : '-'}${currencyFmt.format(tx.amount.abs())}',
             style: AppTextStyles.bodyMedium.copyWith(
               color: tx.isCredit ? AppColors.success : AppColors.error,
               fontWeight: FontWeight.w700,
@@ -97,4 +111,13 @@ class WalletTxTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _reasonLabel(AppLocalizations l10n, String reason) {
+  return switch (reason) {
+    'order_payment' => l10n.walletReasonOrderPayment,
+    'order_refund' => l10n.walletReasonOrderRefund,
+    'withdrawal' => l10n.walletReasonWithdrawal,
+    _ => l10n.walletReasonAdjustment,
+  };
 }

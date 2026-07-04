@@ -11,6 +11,7 @@ import { OrderStatus as PrismaOrderStatus, Prisma } from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
+import { PromotionsService } from '../promotions/promotions.service'
 
 @Injectable()
 export class OrdersService {
@@ -19,6 +20,7 @@ export class OrdersService {
     private readonly paymentsService: PaymentsService,
     private readonly ordersGateway: OrdersGateway,
     private readonly cancellationService: CancellationService,
+    private readonly promotionsService: PromotionsService,
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
     @InjectQueue('refund') private readonly refundQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
@@ -131,29 +133,12 @@ export class OrdersService {
     }
 
     const orderCode = generateOrderCode()
-
-    // Pre-fetch promotion outside txn (read-only, idempotent)
-    const code = dto.promotionCode ?? cart.promotionCode
-    let resolvedPromotion: { id: string; type: string; value: unknown; maxDiscount: unknown; minOrderAmount: unknown } | null = null
-    let promotionDiscount = 0
-
-    if (code) {
-      const promo = await this.prisma.promotion.findUnique({ where: { code } })
-      if (promo && promo.isActive && promo.usageCount < promo.usageLimit) {
-        if (Number(subtotal) >= Number(promo.minOrderAmount)) {
-          resolvedPromotion = promo
-          promotionDiscount = promo.type === 'percentage'
-            ? Math.min(Number(subtotal) * Number(promo.value) / 100, Number(promo.maxDiscount ?? Infinity))
-            : Number(promo.value)
-        }
-      }
-    }
-
-    const total = subtotal + deliveryFee - promotionDiscount
+    const code = (dto.promotionCode ?? cart.promotionCode)?.trim()
     const paymentMethod = normalizeOrderPaymentMethod(dto.paymentMethod)
 
     const order = await this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.create({
+      const baseTotal = subtotal + deliveryFee
+      let order = await tx.order.create({
         data: {
           orderCode,
           customerId: userId,
@@ -162,8 +147,8 @@ export class OrdersService {
           status: 'created',
           subtotal,
           deliveryFee,
-          promotionDiscount,
-          total,
+          promotionDiscount: 0,
+          total: baseTotal,
           paymentMethod,
           notes: dto.notes,
           estimatedPrepTimeMinutes: restaurant.prepTimeAvgMinutes,
@@ -184,14 +169,20 @@ export class OrdersService {
         data: { orderId: order.id, status: 'created', changedBy: userId },
       })
 
-      // Record promotion usage + increment counter atomically
-      if (resolvedPromotion) {
-        await tx.promotion.update({
-          where: { id: resolvedPromotion.id },
-          data: { usageCount: { increment: 1 } },
-        })
-        await tx.promotionUsage.create({
-          data: { promotionId: resolvedPromotion.id, userId, orderId: order.id, discountAmount: promotionDiscount },
+      if (code) {
+        const { discountAmount } = await this.promotionsService.claimInTransaction(
+          tx,
+          code,
+          { subtotal, restaurantId: cart.restaurantId! },
+          userId,
+          order.id,
+        )
+        order = await tx.order.update({
+          where: { id: order.id },
+          data: {
+            promotionDiscount: discountAmount,
+            total: baseTotal - discountAmount,
+          },
         })
       }
 
@@ -201,11 +192,12 @@ export class OrdersService {
 
       return order
     })
+    const orderTotal = Number(order.total)
 
     // Payment must settle or create a real provider intent before side effects run.
     const paymentResult = await this.paymentsService.processPayment(
       order.id,
-      Number(total),
+      orderTotal,
       paymentMethod,
     )
 
@@ -231,7 +223,7 @@ export class OrdersService {
       this.ordersGateway.notifyRestaurant(restaurant.id, {
         orderId: order.id,
         orderCode,
-        total: Number(total),
+        total: orderTotal,
         items: cart.items.map(i => ({ name: i.menuItem.name, quantity: i.quantity })),
       })
     }
@@ -241,7 +233,7 @@ export class OrdersService {
         orderId: order.id,
         orderCode,
         restaurantId: restaurant.id,
-        total: Number(total),
+        total: orderTotal,
         status,
         ...(paymentResult.failureCode ? { failureCode: paymentResult.failureCode } : {}),
         createdAt: new Date().toISOString(),

@@ -26,7 +26,9 @@ class PromoCode {
       code: json['code'] as String,
       description: json['description'] as String? ?? '',
       discountPercent: (json['discountPercent'] as num).toDouble(),
-      maxDiscount: json['maxDiscount'] != null ? (json['maxDiscount'] as num).toDouble() : null,
+      maxDiscount: json['maxDiscount'] != null
+          ? (json['maxDiscount'] as num).toDouble()
+          : null,
       minOrderAmount: (json['minOrderAmount'] as num? ?? 0).toDouble(),
     );
   }
@@ -47,7 +49,8 @@ Future<void> _fetchPromos(WidgetRef ref) async {
     ref.read(_promosProvider.notifier).state = list;
   } on DioException catch (e) {
     ref.read(_promoErrorProvider.notifier).state =
-        e.response?.data?['message'] as String? ?? 'Không thể tải mã khuyến mãi.';
+        e.response?.data?['message'] as String? ??
+        'Không thể tải mã khuyến mãi.';
   } catch (_) {
     ref.read(_promoErrorProvider.notifier).state = 'Có lỗi xảy ra.';
   } finally {
@@ -75,13 +78,15 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isLoading = ref.watch(_promoLoadingProvider);
     final promos = ref.watch(_promosProvider);
     final error = ref.watch(_promoErrorProvider);
 
     return Container(
-      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -93,7 +98,10 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
             margin: const EdgeInsets.only(top: 12),
             width: 40,
             height: 4,
-            decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -101,7 +109,10 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(l10n.cartPromoCode, style: AppTextStyles.headline4),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ],
             ),
           ),
@@ -111,20 +122,37 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (error != null)
             Expanded(
-              child: Center(child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(error, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
-              )),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    error,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
             )
           else if (promos.isEmpty)
             Expanded(
-              child: Center(child: Text(l10n.featureInDevelopment,
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary))),
+              child: Center(
+                child: Text(
+                  l10n.vouchersEmptyAvailable,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
             )
           else
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: promos.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (ctx, i) => _buildPromoTile(promos[i]),
@@ -139,8 +167,13 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(_selectedCode),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: Text(l10n.cartPromoApply, style: AppTextStyles.buttonLarge),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.cartPromoApply,
+                    style: AppTextStyles.buttonLarge,
+                  ),
                 ),
               ),
             ),
@@ -151,15 +184,22 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
   }
 
   Widget _buildPromoTile(PromoCode promo) {
+    final l10n = AppLocalizations.of(context);
     final isSelected = _selectedCode == promo.code;
     return GestureDetector(
-      onTap: () => setState(() => _selectedCode = isSelected ? null : promo.code),
+      onTap: () =>
+          setState(() => _selectedCode = isSelected ? null : promo.code),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.08) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 1.5 : 1),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
@@ -183,13 +223,27 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Giảm ${promo.discountPercent.toStringAsFixed(0)}%',
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                  Text(promo.description, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    l10n.vouchersPercentOff(promo.discountPercent.round()),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    promo.description,
+                    style: AppTextStyles.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
-            if (isSelected) const Icon(Icons.check_circle, color: AppColors.primary, size: 22),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 22,
+              ),
           ],
         ),
       ),

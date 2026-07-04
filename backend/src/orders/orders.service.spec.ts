@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { Queue } from 'bullmq'
 import dayjs from 'dayjs'
 import { generateOrderCode, OrdersService } from './orders.service'
@@ -6,6 +6,8 @@ import { PrismaService } from '../database/prisma.service'
 import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
+import { PromotionsService } from '../promotions/promotions.service'
+import { PaymentMethodDto } from './orders.dto'
 
 describe('OrdersService', () => {
   let service: OrdersService
@@ -14,15 +16,22 @@ describe('OrdersService', () => {
   let mockOrderTimeoutQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockGateway: { broadcastToOrder: jest.Mock; notifyRestaurant: jest.Mock; notifyAdmins: jest.Mock }
   let mockCancellationService: { assertCanCancel: jest.Mock }
+  let mockPaymentsService: { processPayment: jest.Mock }
+  let mockPromotionsService: { claimInTransaction: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
-    order: { findUniqueOrThrow: jest.Mock; update: jest.Mock }
+    order: { findUniqueOrThrow: jest.Mock; update: jest.Mock; create: jest.Mock }
     restaurantProfile: { findUnique: jest.Mock }
     orderStatusHistory: { create: jest.Mock }
     payment: { findUnique: jest.Mock; update: jest.Mock }
+    cartItem: { deleteMany: jest.Mock }
+    cart: { delete: jest.Mock }
   }
   let mockPrisma: {
     order: { findUniqueOrThrow: jest.Mock; findFirst: jest.Mock }
+    cart: { findUnique: jest.Mock }
+    restaurant: { findUniqueOrThrow: jest.Mock }
+    address: { findFirst: jest.Mock }
     $transaction: jest.Mock
   }
 
@@ -35,28 +44,41 @@ describe('OrdersService', () => {
       order: {
         findUniqueOrThrow: jest.fn().mockResolvedValue({ id: orderId, status: 'paid', restaurantId: 'restaurant-1', driverId: null }),
         update: jest.fn().mockResolvedValue({ id: orderId, status: 'restaurant_pending' }),
+        create: jest.fn().mockResolvedValue({ id: 'order-new', total: 115000 }),
       },
       restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }) },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
+      cartItem: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      cart: { delete: jest.fn().mockResolvedValue({}) },
     }
     mockPrisma = {
       order: { findUniqueOrThrow: jest.fn(), findFirst: jest.fn() },
+      cart: { findUnique: jest.fn() },
+      restaurant: { findUniqueOrThrow: jest.fn() },
+      address: { findFirst: jest.fn() },
       $transaction: jest.fn().mockImplementation(
         (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       ),
     }
     mockGateway = { broadcastToOrder: jest.fn(), notifyRestaurant: jest.fn(), notifyAdmins: jest.fn() }
     mockCancellationService = { assertCanCancel: jest.fn() }
+    mockPaymentsService = {
+      processPayment: jest.fn().mockResolvedValue({ readyForRestaurant: true }),
+    }
+    mockPromotionsService = {
+      claimInTransaction: jest.fn().mockResolvedValue({ discountAmount: 0 }),
+    }
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
     mockRefundQueue = { add: jest.fn().mockResolvedValue({}) }
     mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
 
     service = new OrdersService(
       mockPrisma as unknown as PrismaService,
-      {} as unknown as PaymentsService,
+      mockPaymentsService as unknown as PaymentsService,
       mockGateway as unknown as OrdersGateway,
       mockCancellationService as unknown as CancellationService,
+      mockPromotionsService as unknown as PromotionsService,
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
@@ -101,6 +123,86 @@ describe('OrdersService', () => {
 
       await expect(service.getTracking(orderId, 'other-customer'))
         .rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('placeOrder()', () => {
+    beforeEach(() => {
+      mockPrisma.cart.findUnique.mockResolvedValue({
+        id: 'cart-1',
+        restaurantId: 'restaurant-1',
+        promotionCode: null,
+        items: [{
+          menuItemId: 'menu-1',
+          unitPrice: 100000,
+          quantity: 1,
+          selectedOptions: [],
+          notes: null,
+          menuItem: { name: 'Pho bo' },
+        }],
+      })
+      mockPrisma.restaurant.findUniqueOrThrow.mockResolvedValue({
+        id: 'restaurant-1',
+        isOpen: true,
+        isActive: true,
+        minOrderAmount: 0,
+        prepTimeAvgMinutes: 15,
+      })
+      mockPrisma.address.findFirst.mockResolvedValue({ id: 'address-1', userId })
+      mockTx.order.create.mockResolvedValue({ id: 'order-new', total: 115000 })
+    })
+
+    it('charges the base total when no promotion code is present', async () => {
+      await service.placeOrder(userId, { addressId: 'address-1', paymentMethod: PaymentMethodDto.cash })
+
+      expect(mockPromotionsService.claimInTransaction).not.toHaveBeenCalled()
+      expect(mockPaymentsService.processPayment).toHaveBeenCalledWith('order-new', 115000, 'cash')
+      expect(mockTx.cartItem.deleteMany).toHaveBeenCalledWith({ where: { cartId: 'cart-1' } })
+      expect(mockTx.cart.delete).toHaveBeenCalledWith({ where: { id: 'cart-1' } })
+    })
+
+    it('claims promotion inside the order transaction and charges the discounted total', async () => {
+      mockPromotionsService.claimInTransaction.mockResolvedValueOnce({ discountAmount: 10000 })
+      mockTx.order.update.mockResolvedValueOnce({
+        id: 'order-new',
+        total: 105000,
+        promotionDiscount: 10000,
+      })
+
+      await service.placeOrder(userId, {
+        addressId: 'address-1',
+        paymentMethod: PaymentMethodDto.cash,
+        promotionCode: 'SAVE10',
+      })
+
+      expect(mockPromotionsService.claimInTransaction).toHaveBeenCalledWith(
+        mockTx,
+        'SAVE10',
+        { subtotal: 100000, restaurantId: 'restaurant-1' },
+        userId,
+        'order-new',
+      )
+      expect(mockTx.order.update).toHaveBeenCalledWith({
+        where: { id: 'order-new' },
+        data: { promotionDiscount: 10000, total: 105000 },
+      })
+      expect(mockPaymentsService.processPayment).toHaveBeenCalledWith('order-new', 105000, 'cash')
+    })
+
+    it('does not settle payment or clear cart when promotion claim fails', async () => {
+      mockPromotionsService.claimInTransaction.mockRejectedValueOnce(new BadRequestException('PROMOTION_INVALID'))
+
+      await expect(
+        service.placeOrder(userId, {
+          addressId: 'address-1',
+          paymentMethod: PaymentMethodDto.cash,
+          promotionCode: 'BADCODE',
+        }),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(mockPaymentsService.processPayment).not.toHaveBeenCalled()
+      expect(mockTx.cartItem.deleteMany).not.toHaveBeenCalled()
+      expect(mockTx.cart.delete).not.toHaveBeenCalled()
     })
   })
 
