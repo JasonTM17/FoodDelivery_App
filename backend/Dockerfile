@@ -10,7 +10,13 @@ RUN pnpm install --frozen-lockfile
 COPY prisma/ ./prisma/
 COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 COPY src/ ./src/
-RUN pnpm prisma generate && pnpm build && pnpm prune --prod
+RUN pnpm prisma generate && pnpm build
+
+FROM builder AS migrator
+CMD ["pnpm", "prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+
+FROM builder AS prod-deps
+RUN pnpm prune --prod
 
 FROM gcr.io/distroless/nodejs22-debian12 AS runner
 WORKDIR /app
@@ -20,7 +26,7 @@ LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA
 
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./

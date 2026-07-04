@@ -52,6 +52,20 @@ services:
       timeout: 5s
       retries: 3
 
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: foodflow-migrate
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+      DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
@@ -65,6 +79,7 @@ services:
       DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
+      AUTH_PUBLIC_THROTTLE_LIMIT: "500"
       JWT_SECRET: dev-secret-minimum-32-chars-xxxxxxxxxxxxxx
       JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
       MINIO_ENDPOINT: minio
@@ -77,6 +92,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       minio:
