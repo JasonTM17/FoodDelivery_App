@@ -289,7 +289,7 @@ jobs:
             AI_LOGIN_JSON="$AI_LOGIN_JSON" node -e 'const payload = JSON.parse(process.env.AI_LOGIN_JSON); const token = payload.accessToken || payload.data?.accessToken; if (!token) { console.error("missing access token"); process.exit(1); } process.stdout.write(token);'
           )"
           export AI_ACCESS_TOKEN
-          tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+          npx --yes tsx e2e/ai-scenarios/run-ai-scenarios.ts \
             --endpoint http://localhost:3001/api/ai/chat \
             --fixtures e2e/ai-scenarios/canonical-conversations.json
         env:

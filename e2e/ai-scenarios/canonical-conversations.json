@@ -74,7 +74,7 @@
     {
       "id": "smoke-04-multi-turn-context-retention",
       "title": "Multi-turn — bot must retain orderId across turns",
-      "context": { "userId": "user-004", "sessionId": "smoke-sess-004" },
+      "context": { "userId": "user-004", "sessionId": "smoke-sess-004", "knownOrderId": "FF-004" },
       "turns": [
         { "role": "user", "message": "Đơn FF-004 đến chưa?" },
         {
