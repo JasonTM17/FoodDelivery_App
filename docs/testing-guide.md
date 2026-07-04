@@ -70,9 +70,11 @@ pnpm test:e2e:install
 Run seeded E2E against real local services:
 
 ```bash
-pnpm test:e2e -- --project=chromium
-pnpm test:e2e -- --project=firefox
+pnpm test:e2e --project=chromium
+pnpm test:e2e --project=firefox
 ```
+
+Latest local E2E evidence: 2026-07-04 on `codex/batch4-integration`, Docker Compose built healthy Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`, then `pnpm test:e2e --project=chromium --project=firefox` passed 70/70 tests, including axe serious/critical smoke, visual contract, and tenant isolation coverage.
 
 Batch 4 E2E coverage should include:
 

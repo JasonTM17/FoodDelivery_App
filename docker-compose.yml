@@ -90,7 +90,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: foodflow
       MINIO_PUBLIC_URL: http://localhost:9000
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3002,http://localhost:3003
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002,http://localhost:3003,http://[::1]:3000,http://[::1]:3002,http://[::1]:3003}
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,6 +110,8 @@ services:
     build:
       context: ./web
       dockerfile: apps/admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
     container_name: foodflow-admin
     restart: unless-stopped
     ports:
@@ -130,6 +132,8 @@ services:
     build:
       context: ./web
       dockerfile: apps/restaurant/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
     container_name: foodflow-restaurant
     restart: unless-stopped
     ports:

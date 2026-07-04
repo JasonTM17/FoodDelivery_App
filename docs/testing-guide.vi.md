@@ -63,9 +63,11 @@ Evidence web/API-contract local mới nhất: 2026-07-04 trên `codex/batch4-int
 ```bash
 cd web
 pnpm test:e2e:install
-pnpm test:e2e -- --project=chromium
-pnpm test:e2e -- --project=firefox
+pnpm test:e2e --project=chromium
+pnpm test:e2e --project=firefox
 ```
+
+Evidence E2E local mới nhất: 2026-07-04 trên `codex/batch4-integration`, Docker Compose build Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`, sau đó `pnpm test:e2e --project=chromium --project=firefox` pass 70/70 test, gồm axe serious/critical smoke, visual contract và tenant isolation.
 
 Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation. Spec `web/e2e/tests/tenant-isolation.spec.ts` phải chứng minh user nhà hàng không thể list, đọc hoặc update order thuộc tenant nhà hàng khác.
 
