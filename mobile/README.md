@@ -21,19 +21,18 @@ These apps are frontend-only consumers. They call the backend REST API and maint
 
 ## 3. Env Vars
 
-Configuration is managed via Dart constants in the API client. For production, use `--dart-define`:
+Configuration is read from Dart defines. Debug/test builds keep an emulator-friendly local default, but release builds must pass a real backend API URL; they no longer silently fall back to localhost or `10.0.2.2`.
 
 ```bash
 flutter run -t lib/main_customer.dart \
-  --dart-define=API_BASE_URL=http://localhost:3001/api \
-  --dart-define=WS_URL=ws://localhost:3001 \
+  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
   --dart-define=GOOGLE_MAPS_API_KEY=your-key
 ```
 
 | Name | Required | Default | Description |
 |------|----------|---------|-------------|
-| `API_BASE_URL` | Yes | `http://localhost:3001/api` | Backend API base URL |
-| `WS_URL` | Yes | `ws://localhost:3001` | WebSocket gateway URL |
+| `API_BASE_URL` | Release: yes; debug/test: no | Debug/test only: `http://10.0.2.2:3001/api` | Backend API base URL |
+| `WS_URL` | No | Derived by stripping `/api` from `API_BASE_URL` | Socket.IO gateway root; set only when it differs from the REST API origin |
 | `GOOGLE_MAPS_API_KEY` | No | — | Google Maps API key (required for map features) |
 
 ## 4. Run Locally
@@ -55,8 +54,7 @@ flutter run -t lib/main_driver.dart
 
 # 5. For physical device, ensure the API URL points to your machine's LAN IP:
 flutter run -t lib/main_customer.dart \
-  --dart-define=API_BASE_URL=http://192.168.1.100:3001/api \
-  --dart-define=WS_URL=ws://192.168.1.100:3001
+  --dart-define=API_BASE_URL=http://192.168.1.100:3001/api
 ```
 
 ## 5. Test
@@ -90,11 +88,11 @@ This regenerates Freezed models and JSON serialization code. Run whenever `dto` 
 
 ### Switching Between Environments
 
-Update the API base URL in `lib/shared/api/api_client.dart` or pass via `--dart-define`:
+Pass the API base URL via `--dart-define`; do not edit runtime source files for environment switching:
 
 ```bash
-# Development
-flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=http://localhost:3001/api
+# Development on Android emulator
+flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=http://10.0.2.2:3001/api
 
 # Staging
 flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=https://staging-api.foodflow.vn/api

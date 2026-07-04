@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
 
 class _BufferedEvent {
   final String namespace;
@@ -68,12 +69,10 @@ class SocketClient {
     if (_sockets.isNotEmpty) return;
 
     final token = await _storage.read(key: 'auth_token');
-    final stored =
-        await _storage.read(key: 'API_BASE_URL') ?? 'http://10.0.2.2:3001';
-    // Socket.io connects to the root — strip /api suffix if present.
-    final wsUrl = stored.endsWith('/api')
-        ? stored.substring(0, stored.length - 4)
-        : stored;
+    final stored = await _storage.read(key: AppConfig.apiBaseUrlStorageKey);
+    final wsUrl = stored != null && stored.trim().isNotEmpty
+        ? AppConfig.socketBaseUrlFromApiBaseUrl(stored)
+        : AppConfig.socketBaseUrl;
 
     _connectNamespace(_eventsNamespace, wsUrl, token);
     _connectNamespace(_trackingNamespace, wsUrl, token);

@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
 
 class ApiClient {
-  static const String _baseUrlKey = 'API_BASE_URL';
-  static const String _defaultBaseUrl = 'http://10.0.2.2:3001/api';
-
   static ApiClient? _instance;
   static final _logoutController = StreamController<void>.broadcast();
   static Stream<void> get onLogout => _logoutController.stream;
@@ -15,7 +13,7 @@ class ApiClient {
   ApiClient._() : _storage = const FlutterSecureStorage() {
     dio = Dio(
       BaseOptions(
-        baseUrl: _defaultBaseUrl,
+        baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 30),
         sendTimeout: const Duration(seconds: 30),
@@ -39,12 +37,22 @@ class ApiClient {
   }
 
   static Future<String?> get baseUrl async {
-    return _instance?._storage.read(key: _baseUrlKey) ?? _defaultBaseUrl;
+    final stored = await _instance?._storage.read(
+      key: AppConfig.apiBaseUrlStorageKey,
+    );
+    if (stored != null && stored.trim().isNotEmpty) {
+      return AppConfig.normalizeBaseUrl(stored);
+    }
+    return AppConfig.apiBaseUrl;
   }
 
   static void setBaseUrl(String url) {
-    _instance?.dio.options.baseUrl = url;
-    _instance?._storage.write(key: _baseUrlKey, value: url);
+    final normalized = AppConfig.normalizeBaseUrl(url);
+    _instance?.dio.options.baseUrl = normalized;
+    _instance?._storage.write(
+      key: AppConfig.apiBaseUrlStorageKey,
+      value: normalized,
+    );
   }
 
   static String generateIdempotencyKey() {
