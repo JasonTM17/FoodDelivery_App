@@ -100,7 +100,7 @@ flutter test
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
 Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
-最新の local evidence: 2026-07-04 `codex/batch4-integration` で、`flutter analyze` は issue 0、`flutter test` は 122 tests passed。
+最新の local evidence: 2026-07-04 `codex/batch4-integration` の `1b96e3c` で、`flutter analyze` は issue 0、`flutter test` は 128 tests passed。同じ head は GitHub Mobile CI と Integration Smoke Gate 全体でも green です。
 
 ## Security checks
 

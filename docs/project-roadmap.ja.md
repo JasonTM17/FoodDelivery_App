@@ -21,7 +21,8 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は 2026-07-04 に local で再確認済みです。`flutter analyze` は clean、`flutter test` は 122 tests passed。
+- Mobile Flutter gate は 2026-07-04 の `1b96e3c` で local 再確認済みです。`flutter analyze` は clean、`flutter test` は 128 tests passed。同じ head で GitHub Mobile CI と Integration Smoke Gate 全体も green です。
+- Mobile runtime UI は scanner 上の hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。
 
 ### Mobile
 

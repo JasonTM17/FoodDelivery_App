@@ -100,7 +100,7 @@ flutter test
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
 Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
-Evidence local mới nhất: 2026-07-04 trên `codex/batch4-integration`, `flutter analyze` không có issue và `flutter test` pass 122 test.
+Evidence local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `1b96e3c`, `flutter analyze` không có issue và `flutter test` pass 128 test. Cùng head này đã xanh trên GitHub Mobile CI và toàn bộ Integration Smoke Gate.
 
 ## Security checks
 
