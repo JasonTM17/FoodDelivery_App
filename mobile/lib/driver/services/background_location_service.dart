@@ -13,6 +13,24 @@ const _kIdleInterval = Duration(seconds: 30);
 /// At 4s active rate: 200 × 4s ≈ 13 minutes of coverage.
 const _kMaxBuffer = 200;
 
+double? normalizeGpsBearingDegrees(double? headingDegrees) {
+  if (headingDegrees == null || !headingDegrees.isFinite) return null;
+  if (headingDegrees < 0 || headingDegrees >= 360) return null;
+  return headingDegrees;
+}
+
+double? normalizeGpsSpeedKmh(double? metersPerSecond) {
+  if (metersPerSecond == null || !metersPerSecond.isFinite) return null;
+  if (metersPerSecond < 0) return null;
+  return metersPerSecond * 3.6;
+}
+
+double? normalizeGpsAccuracyMeters(double? accuracyMeters) {
+  if (accuracyMeters == null || !accuracyMeters.isFinite) return null;
+  if (accuracyMeters < 0) return null;
+  return accuracyMeters;
+}
+
 class _LocationPing {
   final double lat;
   final double lng;
@@ -165,9 +183,9 @@ class BackgroundLocationService {
       pos.latitude,
       pos.longitude,
       now,
-      bearing: pos.heading,
-      speed: pos.speed,
-      accuracy: pos.accuracy,
+      bearing: normalizeGpsBearingDegrees(pos.heading),
+      speed: normalizeGpsSpeedKmh(pos.speed),
+      accuracy: normalizeGpsAccuracyMeters(pos.accuracy),
     );
   }
 
@@ -177,9 +195,9 @@ class BackgroundLocationService {
       _lastPosition!.latitude,
       _lastPosition!.longitude,
       DateTime.now(),
-      bearing: _lastPosition!.heading,
-      speed: _lastPosition!.speed,
-      accuracy: _lastPosition!.accuracy,
+      bearing: normalizeGpsBearingDegrees(_lastPosition!.heading),
+      speed: normalizeGpsSpeedKmh(_lastPosition!.speed),
+      accuracy: normalizeGpsAccuracyMeters(_lastPosition!.accuracy),
     );
   }
 

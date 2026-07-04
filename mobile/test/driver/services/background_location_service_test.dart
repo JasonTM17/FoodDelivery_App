@@ -67,4 +67,22 @@ void main() {
       expect(BackgroundLocationService.instance.positionStream, isNotNull);
     });
   });
+
+  group('GPS metadata normalization', () {
+    test('converts Geolocator speed from meters per second to km/h', () {
+      expect(normalizeGpsSpeedKmh(0), 0);
+      expect(normalizeGpsSpeedKmh(10), 36);
+      expect(normalizeGpsSpeedKmh(41.6666667), closeTo(150, 0.0001));
+    });
+
+    test('drops invalid GPS metadata instead of sending misleading values', () {
+      expect(normalizeGpsSpeedKmh(-1), isNull);
+      expect(normalizeGpsSpeedKmh(double.nan), isNull);
+      expect(normalizeGpsBearingDegrees(-1), isNull);
+      expect(normalizeGpsBearingDegrees(360), isNull);
+      expect(normalizeGpsBearingDegrees(90), 90);
+      expect(normalizeGpsAccuracyMeters(-1), isNull);
+      expect(normalizeGpsAccuracyMeters(8.5), 8.5);
+    });
+  });
 }
