@@ -196,6 +196,151 @@ function randInt(min: number, max: number): number { return Math.floor(rand(min,
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
 function jitter(base: number, pct: number): number { return base * (1 + (Math.random() - 0.5) * 2 * pct / 100) }
 
+type CanonicalAiOrder = {
+  orderCode: string
+  status: OrderStatus
+  total: number
+  driverId?: string
+  createdMinutesAgo: number
+  note: string
+}
+
+async function upsertCanonicalAiSmokeOrders(
+  restaurantIds: string[],
+  driverIds: string[],
+): Promise<number> {
+  const customer = await prisma.user.findUnique({
+    where: { email: 'customer1@foodflow.vn' },
+    select: { id: true },
+  })
+  const restaurantId = restaurantIds[0]
+  const driverId = driverIds[0]
+  if (!customer || !restaurantId || !driverId) {
+    throw new Error('Canonical AI smoke seed requires customer1, one restaurant, and one driver')
+  }
+
+  const address = await prisma.address.findFirst({
+    where: { userId: customer.id },
+    select: { id: true },
+  })
+  const menuItem = await prisma.menuItem.findFirst({
+    where: { restaurantId, isAvailable: true },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, name: true, basePrice: true },
+  })
+  if (!address || !menuItem) {
+    throw new Error('Canonical AI smoke seed requires one customer address and one menu item')
+  }
+
+  const orders: CanonicalAiOrder[] = [
+    { orderCode: 'FF-001', status: OrderStatus.delivering, total: 85_000, driverId, createdMinutesAgo: 24, note: 'AI smoke: status happy path' },
+    { orderCode: 'FF-002', status: OrderStatus.delivering, total: 120_000, driverId, createdMinutesAgo: 75, note: 'AI smoke: delayed angry escalation' },
+    { orderCode: 'FF-003', status: OrderStatus.completed, total: 92_000, driverId, createdMinutesAgo: 5, note: 'AI smoke: short delay refund ineligible' },
+    { orderCode: 'FF-004', status: OrderStatus.delivering, total: 68_000, driverId, createdMinutesAgo: 18, note: 'AI smoke: multi-turn retention' },
+    { orderCode: 'FF-006', status: OrderStatus.preparing, total: 50_000, driverId, createdMinutesAgo: 12, note: 'AI smoke: eligible partial refund grounding' },
+    { orderCode: 'FF-007', status: OrderStatus.delivering, total: 110_000, driverId, createdMinutesAgo: 45, note: 'AI smoke: driver unreachable escalation' },
+    { orderCode: 'FF-008', status: OrderStatus.preparing, total: 73_000, driverId, createdMinutesAgo: 8, note: 'AI smoke: cancellation safety' },
+    { orderCode: 'FF-009', status: OrderStatus.delivering, total: 77_000, driverId, createdMinutesAgo: 16, note: 'AI smoke: English language match' },
+    { orderCode: 'FF-010', status: OrderStatus.preparing, total: 64_000, driverId, createdMinutesAgo: 6, note: 'AI smoke: allergy support priority' },
+  ]
+
+  for (const canonical of orders) {
+    const createdAt = new Date(Date.now() - canonical.createdMinutesAgo * 60_000)
+    const deliveryFee = 10_000
+    const subtotal = canonical.total - deliveryFee
+    const itemQuantity = Math.max(1, Math.round(subtotal / Number(menuItem.basePrice)))
+    const existing = await prisma.order.findUnique({
+      where: { orderCode: canonical.orderCode },
+      select: { id: true },
+    })
+
+    if (existing) {
+      await prisma.orderItem.deleteMany({ where: { orderId: existing.id } })
+      await prisma.order.update({
+        where: { id: existing.id },
+        data: {
+          customerId: customer.id,
+          restaurantId,
+          driverId: canonical.driverId,
+          deliveryAddressId: address.id,
+          status: canonical.status,
+          subtotal,
+          deliveryFee,
+          promotionDiscount: 0,
+          total: canonical.total,
+          paymentMethod: PaymentMethod.cash,
+          notes: canonical.note,
+          estimatedPrepTimeMinutes: 15,
+          estimatedDeliveryTimeMinutes: 30,
+          createdAt,
+          updatedAt: createdAt,
+          orderItems: {
+            create: [{
+              menuItemId: menuItem.id,
+              nameSnapshot: menuItem.name,
+              quantity: itemQuantity,
+              unitPrice: menuItem.basePrice,
+              selectedOptions: [],
+            }],
+          },
+        },
+      })
+    } else {
+      await prisma.order.create({
+        data: {
+          orderCode: canonical.orderCode,
+          customerId: customer.id,
+          restaurantId,
+          driverId: canonical.driverId,
+          deliveryAddressId: address.id,
+          status: canonical.status,
+          subtotal,
+          deliveryFee,
+          promotionDiscount: 0,
+          total: canonical.total,
+          paymentMethod: PaymentMethod.cash,
+          notes: canonical.note,
+          estimatedPrepTimeMinutes: 15,
+          estimatedDeliveryTimeMinutes: 30,
+          createdAt,
+          updatedAt: createdAt,
+          orderItems: {
+            create: [{
+              menuItemId: menuItem.id,
+              nameSnapshot: menuItem.name,
+              quantity: itemQuantity,
+              unitPrice: menuItem.basePrice,
+              selectedOptions: [],
+            }],
+          },
+        },
+      })
+    }
+  }
+
+  const driverOrder = await prisma.order.findUnique({
+    where: { orderCode: 'FF-007' },
+    select: { id: true, driverId: true },
+  })
+  if (driverOrder?.driverId) {
+    await prisma.$executeRawUnsafe(
+      'DELETE FROM driver_location_history WHERE driver_id = $1::uuid AND order_id = $2::uuid',
+      driverOrder.driverId,
+      driverOrder.id,
+    )
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO driver_location_history (driver_id, order_id, location, recorded_at)
+       VALUES ($1::uuid, $2::uuid, ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography, NOW())`,
+      driverOrder.driverId,
+      driverOrder.id,
+      106.7004,
+      10.7757,
+    )
+  }
+
+  return orders.length
+}
+
 async function main() {
   console.log('🌱 FoodFlow BIG SEED — generating rich data...\n')
 
@@ -473,6 +618,9 @@ async function main() {
     ordersCreated++
   }
   console.log(`✅ ${ordersCreated} historical orders created`)
+
+  const canonicalAiOrdersCreated = await upsertCanonicalAiSmokeOrders(restaurantIds, driverIds)
+  console.log(`✅ ${canonicalAiOrdersCreated} canonical AI smoke orders upserted`)
 
   // ─── 7. Reviews ───
   const completedOrders = await prisma.$queryRawUnsafe<Array<{ id: string; customer_id: string; restaurant_id: string; driver_id: string | null }>>(

@@ -12,11 +12,12 @@
         {
           "role": "assert_tool_called",
           "tool": "getOrderStatus",
-          "args": { "orderId": "FF-001" }
+          "args": { "orderReference": "FF-001" }
         },
         {
           "role": "assert_response_contains",
-          "patterns": ["FF-001", "phút|giờ|đang|trạng thái"]
+          "patterns": ["FF-001", "phút|giờ|đang|trạng thái"],
+          "skipWhenDegraded": true
         },
         {
           "role": "assert_no_hallucination",
@@ -44,7 +45,8 @@
         },
         {
           "role": "assert_response_contains",
-          "patterns": ["xin lỗi", "ticket|ưu tiên|hỗ trợ"]
+          "patterns": ["xin lỗi", "ticket|ưu tiên|hỗ trợ"],
+          "skipWhenDegraded": true
         }
       ]
     },
@@ -64,7 +66,8 @@
         },
         {
           "role": "assert_response_contains",
-          "patterns": ["chưa đủ điều kiện|không đủ điều kiện|chính sách"]
+          "patterns": ["chưa đủ điều kiện|không đủ điều kiện|chính sách"],
+          "skipWhenDegraded": true
         }
       ]
     },
@@ -77,13 +80,13 @@
         {
           "role": "assert_tool_called",
           "tool": "getOrderStatus",
-          "args": { "orderId": "FF-004" }
+          "args": { "orderReference": "FF-004" }
         },
         { "role": "user", "message": "Còn bao lâu nữa?" },
         {
           "role": "assert_tool_called",
           "tool": "getOrderStatus",
-          "args": { "orderId": "FF-004" }
+          "args": { "orderReference": "FF-004" }
         },
         {
           "role": "assert_response_does_not_contain",
@@ -104,8 +107,8 @@
           "role": "assert_no_tool_called"
         },
         {
-          "role": "assert_response_contains",
-          "patterns": ["chỉ có thể hỗ trợ|không thể|only assist|cannot"]
+          "role": "assert_http_status",
+          "status": 400
         },
         {
           "role": "assert_no_hallucination",
@@ -120,7 +123,7 @@
       "turns": [
         { "role": "user", "message": "Đơn FF-006 thiếu một món, tôi muốn hoàn tiền" },
         { "role": "assert_tool_called", "tool": "getRefundEligibility" },
-        { "role": "assert_response_contains", "patterns": ["hoàn", "50.?000|50000"] }
+        { "role": "assert_response_contains", "patterns": ["hoàn", "50.?000|50000"], "skipWhenDegraded": true }
       ]
     },
     {
@@ -142,7 +145,7 @@
         { "role": "user", "message": "Hủy đơn FF-008 cho tôi" },
         { "role": "assert_tool_called", "tool": "getOrderStatus" },
         { "role": "assert_response_does_not_contain", "patterns": ["đã hủy", "hủy thành công"] },
-        { "role": "assert_response_contains", "patterns": ["xác nhận|chính sách|màn hình đơn"] }
+        { "role": "assert_response_contains", "patterns": ["xác nhận|chính sách|màn hình đơn"], "skipWhenDegraded": true }
       ]
     },
     {
@@ -151,7 +154,7 @@
       "context": { "userId": "user-009", "sessionId": "smoke-sess-009", "knownOrderId": "FF-009" },
       "turns": [
         { "role": "user", "message": "Where is my order FF-009?" },
-        { "role": "assert_tool_called", "tool": "getOrderStatus", "args": { "orderId": "FF-009" } },
+        { "role": "assert_tool_called", "tool": "getOrderStatus", "args": { "orderReference": "FF-009" } },
         { "role": "assert_response_language", "language": "en" }
       ]
     },
@@ -163,7 +166,7 @@
         { "role": "user", "message": "Tôi dị ứng đậu phộng, đơn FF-010 báo quán giúp" },
         { "role": "assert_severity", "level": "MEDIUM" },
         { "role": "assert_tool_called", "tool": "createSupportTicket" },
-        { "role": "assert_response_contains", "patterns": ["dị ứng|đậu phộng", "ticket|hỗ trợ|đã báo"] }
+        { "role": "assert_response_contains", "patterns": ["dị ứng|đậu phộng", "ticket|hỗ trợ|đã báo"], "skipWhenDegraded": true }
       ]
     }
   ],
@@ -175,6 +178,7 @@
       "assert_response_contains",
       "assert_response_does_not_contain",
       "assert_no_hallucination",
+      "assert_http_status",
       "assert_severity",
       "assert_response_language"
     ]

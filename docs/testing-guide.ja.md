@@ -23,6 +23,14 @@ pnpm test -- restaurant-revenue.service.spec.ts
 
 Backend tests は real behavior を証明する必要があります。runtime mock payment、fabricated AI answer、random business value、tenant scope の欠落を許可しません。
 
+Backend coverage threshold は `backend/jest.config.ts` で管理します。Shell ごとに quoting が異なるため、JSON threshold を CLI 引数で渡さないでください。
+
+### AI scenario smoke gate
+
+`pnpm db:big-seed` は `customer1@foodflow.vn` 向けに deterministic な AI smoke order `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, `FF-010` を作成します。Integration workflow は `/api/auth/login` でログインし、認証済み `/api/ai/chat` に対して `e2e/ai-scenarios/run-ai-scenarios.ts` を実行します。
+
+LLM provider secret がない CI では `AI_ALLOW_DEGRADED=true` を使えます。この場合も auth、tool grounding、tenant-scoped order lookup、support-ticket escalation、hallucination guard は検証します。Release verification では degraded mode を使わず、secret manager から rotate 済みで有効な `DEEPSEEK_API_KEY` を設定して実行してください。
+
 ## Web
 
 ```bash

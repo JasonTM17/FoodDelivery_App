@@ -7,6 +7,14 @@ const config: Config = {
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   collectCoverageFrom: ['src/**/*.(t|j)s', '!src/**/*.spec.ts', '!src/workers/**'],
   coverageDirectory: './coverage',
+  coverageThreshold: {
+    global: {
+      branches: 53,
+      functions: 55,
+      lines: 57,
+      statements: 56,
+    },
+  },
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

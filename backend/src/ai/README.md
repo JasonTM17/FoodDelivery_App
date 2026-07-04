@@ -45,7 +45,16 @@ Any key pasted into chat, screenshots, logs, tickets, or Git history must be rot
 pnpm exec jest src/ai --runInBand
 ```
 
-Before release, also run the seeded AI scenario runner against `/ai/chat` with a real test JWT.
+Before release, also run the seeded AI scenario runner against `/ai/chat` with a real test JWT:
+
+```bash
+AI_ACCESS_TOKEN=<seeded-customer-token> \
+tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+  --endpoint http://localhost:3001/api/ai/chat \
+  --fixtures e2e/ai-scenarios/canonical-conversations.json
+```
+
+`pnpm db:big-seed` provisions canonical customer orders `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, and `FF-010` for the scenario gate. CI may use `AI_ALLOW_DEGRADED=true` only when no provider secret is configured; release/prod verification must run without degraded mode and with a valid rotated `DEEPSEEK_API_KEY`.
 
 ## Runbook
 

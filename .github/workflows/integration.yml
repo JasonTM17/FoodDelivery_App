@@ -202,7 +202,7 @@ jobs:
           DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
 
       - name: Install web + LHCI
-        run: cd web && pnpm install --frozen-lockfile && pnpm add -D @lhci/cli
+        run: cd web && pnpm install --frozen-lockfile
 
       - name: Build web apps
         run: cd web && pnpm build
@@ -216,13 +216,13 @@ jobs:
           npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
 
       - name: Lighthouse — mobile
-        run: cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+        run: cd web && pnpm exec lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
         env:
           ADMIN_URL: http://localhost:3000
           RESTAURANT_URL: http://localhost:3002
 
       - name: Lighthouse — desktop
-        run: cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+        run: cd web && pnpm exec lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
         env:
           ADMIN_URL: http://localhost:3000
           RESTAURANT_URL: http://localhost:3002
@@ -282,9 +282,18 @@ jobs:
 
       - name: Run AI scenarios
         run: |
-          npx tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+          AI_LOGIN_JSON="$(curl -fsS -X POST http://localhost:3001/api/auth/login \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"customer1@foodflow.vn","password":"Customer@123"}')"
+          AI_ACCESS_TOKEN="$(
+            AI_LOGIN_JSON="$AI_LOGIN_JSON" node -e 'const payload = JSON.parse(process.env.AI_LOGIN_JSON); const token = payload.accessToken || payload.data?.accessToken; if (!token) { console.error("missing access token"); process.exit(1); } process.stdout.write(token);'
+          )"
+          export AI_ACCESS_TOKEN
+          tsx e2e/ai-scenarios/run-ai-scenarios.ts \
             --endpoint http://localhost:3001/api/ai/chat \
             --fixtures e2e/ai-scenarios/canonical-conversations.json
+        env:
+          AI_ALLOW_DEGRADED: 'true'
 
       - uses: actions/upload-artifact@v4
         if: always()

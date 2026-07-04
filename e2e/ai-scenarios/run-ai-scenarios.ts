@@ -30,6 +30,9 @@ interface ConversationTurn {
   forbidden_patterns?: string[]
   level?: string
   language?: string
+  status?: number
+  action?: string
+  skipWhenDegraded?: boolean
 }
 
 interface Conversation {
@@ -46,6 +49,8 @@ interface Fixtures {
 interface BotResponse {
   text: string
   toolCalls: Array<{ name: string; args: Record<string, unknown> }>
+  status: number
+  action?: string
   severity?: string
   language?: string
 }
@@ -62,7 +67,7 @@ interface AssertionResult {
 // CLI argument parsing
 // ---------------------------------------------------------------------------
 
-function parseArgs(argv: string[]): { endpoint: string; fixtures: string; accessToken: string } {
+function parseArgs(argv: string[]): { endpoint: string; fixtures: string; accessToken: string; allowDegraded: boolean } {
   const args: Record<string, string> = {}
   for (let i = 0; i < argv.length; i++) {
     const cur = argv[i]
@@ -84,6 +89,7 @@ function parseArgs(argv: string[]): { endpoint: string; fixtures: string; access
       args.fixtures ??
       'e2e/ai-scenarios/canonical-conversations.json',
     accessToken: args.token ?? process.env.AI_ACCESS_TOKEN ?? '',
+    allowDegraded: args['allow-degraded'] === 'true' || process.env.AI_ALLOW_DEGRADED === 'true',
   }
 }
 
@@ -109,17 +115,28 @@ async function callEndpoint(
     body: JSON.stringify({ message, sessionId, orderId }),
     signal: AbortSignal.timeout(15_000),
   })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`AI endpoint ${res.status}: ${text.slice(0, 200)}`)
+  const raw = await res.text()
+  let json: Record<string, unknown> = {}
+  try {
+    json = raw ? JSON.parse(raw) as Record<string, unknown> : {}
+  } catch {
+    json = { message: raw }
   }
-  const json = (await res.json()) as Record<string, unknown>
+  if (!res.ok) {
+    return {
+      text: String(json.message ?? json.error ?? raw ?? ''),
+      toolCalls: [],
+      status: res.status,
+    }
+  }
   const payload = isRecord(json.data) ? json.data : json
   return {
     text: String(payload.reply ?? payload.text ?? payload.response ?? payload.message ?? ''),
     toolCalls: Array.isArray(payload.toolCalls)
       ? (payload.toolCalls as Array<{ name: string; args: Record<string, unknown> }>)
       : [],
+    status: res.status,
+    action: typeof payload.action === 'string' ? payload.action : undefined,
     severity: typeof payload.severity === 'string' ? payload.severity : undefined,
     language: typeof payload.language === 'string' ? payload.language : undefined,
   }
@@ -164,6 +181,7 @@ async function runConversation(
   endpoint: string,
   conv: Conversation,
   accessToken: string,
+  allowDegraded: boolean,
 ): Promise<AssertionResult[]> {
   const results: AssertionResult[] = []
   let lastResp: BotResponse | null = null
@@ -201,6 +219,24 @@ async function runConversation(
     let r: { ok: boolean; detail: string }
 
     switch (turn.role) {
+      case 'assert_http_status':
+        r =
+          lastResp.status === turn.status
+            ? { ok: true, detail: 'ok' }
+            : {
+                ok: false,
+                detail: `status "${lastResp.status}" expected "${turn.status}"`,
+              }
+        break
+      case 'assert_action':
+        r =
+          lastResp.action === turn.action
+            ? { ok: true, detail: 'ok' }
+            : {
+                ok: false,
+                detail: `action "${lastResp.action}" expected "${turn.action}"`,
+              }
+        break
       case 'assert_tool_called':
         r = assertToolCalled(lastResp, turn.tool ?? '', turn.args)
         break
@@ -214,7 +250,9 @@ async function runConversation(
               }
         break
       case 'assert_response_contains':
-        r = (turn.patterns ?? []).every((p) => regexTest(lastResp!.text, p))
+        r = allowDegraded && turn.skipWhenDegraded === true && lastResp.action === 'degraded'
+          ? { ok: true, detail: 'skipped because provider is unavailable and degraded mode is allowed' }
+          : (turn.patterns ?? []).every((p) => regexTest(lastResp!.text, p))
           ? { ok: true, detail: 'ok' }
           : {
               ok: false,
@@ -271,7 +309,7 @@ async function runConversation(
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  const { endpoint, fixtures, accessToken } = parseArgs(process.argv.slice(2))
+  const { endpoint, fixtures, accessToken, allowDegraded } = parseArgs(process.argv.slice(2))
   if (!accessToken) {
     throw new Error('AI_ACCESS_TOKEN is required for the authenticated /ai/chat endpoint')
   }
@@ -286,7 +324,7 @@ async function main(): Promise<void> {
 
   for (const conv of data.conversations) {
     console.log(`\n  running ${conv.id}: ${conv.title}`)
-    const results = await runConversation(endpoint, conv, accessToken)
+    const results = await runConversation(endpoint, conv, accessToken, allowDegraded)
     allResults.push(...results)
     const fails = results.filter((r) => !r.passed)
     if (fails.length === 0) {

@@ -13,14 +13,14 @@ Lighthouse CI configuration for FoodFlow web apps — performance, accessibility
 Prerequisites: web apps running on `localhost:3000` (admin) and `localhost:3002` (restaurant).
 
 ```bash
-# Install LHCI (once)
-cd web && pnpm add -D @lhci/cli
+# Install workspace dependencies (LHCI is already in web devDependencies)
+cd web && pnpm install --frozen-lockfile
 
 # Mobile audit (default)
-cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+cd web && pnpm exec lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
 
 # Desktop audit
-LHCI_FORM_FACTOR=desktop cd web && npx lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
+LHCI_FORM_FACTOR=desktop cd web && pnpm exec lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
 ```
 
 ## Thresholds
@@ -47,7 +47,7 @@ Assertions marked `error` fail the CI job. Assertions marked `warn` produce warn
 Override via env vars:
 
 ```bash
-ADMIN_URL=http://localhost:3000 RESTAURANT_URL=http://localhost:3002 npx lhci autorun ...
+ADMIN_URL=http://localhost:3000 RESTAURANT_URL=http://localhost:3002 pnpm exec lhci autorun ...
 ```
 
 ## LHCI server (optional)
