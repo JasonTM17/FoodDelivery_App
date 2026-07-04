@@ -68,7 +68,7 @@ export default function AdminSidebar({ className, initialFocusRef, onNavigate }:
           markClassName="h-9 w-9"
           wordmarkClassName="text-white"
         />
-        <span className="ml-2 whitespace-nowrap rounded-full bg-primary/20 px-1.5 py-0.5 text-[9px] font-medium text-primary">
+        <span className="ml-2 whitespace-nowrap rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold text-white ring-1 ring-white/25">
           {t('sidebar.adminBadge')}
         </span>
       </div>
