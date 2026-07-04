@@ -57,7 +57,7 @@ pnpm --filter restaurant build
 ```
 
 Evidence web/API-contract local mới nhất: 2026-07-04 trên `codex/batch4-integration`, OpenAPI YAML parse pass với 137 path và scanner coverage endpoint web local báo `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test` và `pnpm build` pass cho toàn bộ web workspace; Vitest pass Admin 34 files / 137 test và Restaurant 27 files / 79 test. Backend cho cụm contract này pass `pnpm typecheck`, `pnpm lint` và Jest target (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suite / 9 test).
-Evidence backend current-head mới nhất: 2026-07-04 tại `7916ea3`, `pnpm db:generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 750 test) và `pnpm build` đều pass.
+Evidence map/tracking current-head mới nhất: 2026-07-04 tại `0cf12c5`, backend `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 752 test), focused `route-utils.spec.ts` (11 test) và `pnpm build` đều pass. Admin driver map realtime pass `pnpm --filter foodflow-admin test` (34 files / 139 test), `pnpm --filter foodflow-admin typecheck`, `pnpm --filter foodflow-admin lint`, web `pnpm install --frozen-lockfile` và `pnpm --filter foodflow-admin build`.
 
 ## Playwright E2E
 
@@ -81,8 +81,11 @@ Regression bảo mật realtime cũng phải kiểm tra:
 - Chỉ tài khoản driver đã xác thực mới được gửi cập nhật GPS.
 - Mobile normalize GPS metadata của driver trước khi publish: speed từ Geolocator được đổi từ m/s sang km/h theo contract backend, và heading/speed/accuracy invalid bị bỏ.
 - Map driver/customer phải vẽ `routePolyline` từ backend tách riêng khỏi raw telemetry trail.
+- Kiểm tra lệch tuyến phải snap vào các đoạn polyline nối liền, không chỉ các vertex, để route provider trả polyline thưa không làm tài xế bị đánh dấu lệch tuyến sai.
 - Route geometry bị clear khi đơn hàng đổi từ pickup phase sang dropoff phase để client không vẽ nhầm tuyến cũ đến nhà hàng sau khi đã pickup.
 - Nếu Google/OSRM route provider không khả dụng, tracking trả `etaMinutes: null` và `source: route_unavailable`; backend không được tự bịa ETA đường thẳng.
+- Admin driver map phải xoá `currentOrder` cũ khi realtime gửi `orderId: null` và bỏ qua tọa độ realtime invalid trước khi đưa vào Google Maps.
+- Mobile driver “Mở chỉ đường” phải truyền tọa độ tài xế hiện tại làm Google Maps `origin` khi có, dùng navigation mode, và hiển thị trạng thái không khả dụng rõ ràng khi destination invalid.
 - Client notification không thể subscribe hoặc sửa dữ liệu dưới danh nghĩa user khác.
 - Phòng offer dispatch và thao tác accept/reject phải gắn với driver ID đã xác thực.
 - Web Admin và Restaurant gửi access token mới nhất khi reconnect.
@@ -109,7 +112,7 @@ flutter test
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
 Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
-Evidence mobile local mới nhất: 2026-07-04 trên `codex/batch4-integration` sau fix clear stale route, `dart format --set-exit-if-changed` không đổi file, focused route tests pass (`tracking_provider_test.dart`, `encoded_polyline_test.dart`, `trip_route_provider_test.dart`), `flutter analyze` không có issue và toàn bộ `flutter test` pass 136 test. Backend route integrity gates cũng đã chạy local trước commit mobile-only GPS metadata: `pnpm typecheck`, `pnpm lint`, `pnpm test` (106 suites, 747 test) và `pnpm build` đều pass.
+Evidence mobile local mới nhất: 2026-07-04 trên `codex/batch4-integration` sau các fix route/navigation của driver, `dart format --set-exit-if-changed` không đổi file, focused driver route tests pass (`directions_uri_test.dart`, `trip_route_provider_test.dart`, `pickup_delivery_completion_test.dart`), `flutter analyze` không có issue và toàn bộ `flutter test` pass 139 test. Backend route integrity gates cũng pass local cho cùng cụm map/tracking: `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites, 752 test), focused `route-utils.spec.ts` và `pnpm build`.
 
 Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Các head sau đó, gồm những commit local Batch 4 mới nhất, chưa thể start hoặc hoàn tất remote jobs vì GitHub Actions báo blocker billing/spending-limit hoặc token/auth. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests và Integration Smoke Gate sau khi billing/auth được xử lý.
 

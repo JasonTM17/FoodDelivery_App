@@ -57,7 +57,7 @@ pnpm --filter restaurant build
 ```
 
 最新の local web/API-contract evidence: 2026-07-04 `codex/batch4-integration` で、OpenAPI YAML parse は 137 paths で pass し、local web endpoint coverage scanner は `MISSING_ENDPOINTS=0` を報告しました。Web workspace 全体で `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build` が pass。Vitest は Admin 34 files / 137 tests、Restaurant 27 files / 79 tests が pass。Backend はこの contract cluster で `pnpm typecheck`、`pnpm lint`、targeted Jest (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suites / 9 tests) が pass しました。
-最新の current-head backend evidence: 2026-07-04 `7916ea3` で、`pnpm db:generate`、`pnpm typecheck`、`pnpm lint`、full `pnpm test` (106 suites / 750 tests)、`pnpm build` はすべて pass。
+最新の current-head map/tracking evidence: 2026-07-04 `0cf12c5` で、backend `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint`、full `pnpm test` (106 suites / 752 tests)、focused `route-utils.spec.ts` (11 tests)、`pnpm build` はすべて pass。Admin driver map realtime は `pnpm --filter foodflow-admin test` (34 files / 139 tests)、`pnpm --filter foodflow-admin typecheck`、`pnpm --filter foodflow-admin lint`、web `pnpm install --frozen-lockfile`、`pnpm --filter foodflow-admin build` が pass。
 
 ## Playwright E2E
 
@@ -81,8 +81,11 @@ Realtime security regression では次も確認します。
 - 認証済み driver account のみ GPS update を送信できる。
 - Mobile は driver GPS metadata を publish 前に normalize します。Geolocator speed は m/s から backend km/h contract に変換し、invalid な heading/speed/accuracy は送信しません。
 - Driver/customer maps は backend `routePolyline` と raw telemetry trail を別々に描画する必要があります。
+- Route deviation check は vertex だけでなく接続された polyline segment に snap し、provider polyline が疎でも driver を誤って off-route 判定しないこと。
 - Order が pickup phase から dropoff phase に変わる時、client が pickup 後に stale restaurant-bound route を描画しないよう route geometry を clear します。
 - Google/OSRM route provider が使えない場合、tracking は `etaMinutes: null` と `source: route_unavailable` を返します。Backend は straight-line ETA minutes を捏造してはいけません。
+- Admin driver map は realtime が `orderId: null` を送った時に stale `currentOrder` を clear し、invalid realtime coordinates を Google Maps に渡す前に無視すること。
+- Mobile driver の「Open directions」は、利用可能なら現在の driver coordinates を Google Maps `origin` として渡し、navigation mode を使い、invalid destination では明示的な unavailable state を表示すること。
 - Notification client は別 user として subscribe または mutation できない。
 - Dispatch offer room と accept/reject は認証済み driver ID に紐付く。
 - Admin/Restaurant web client は reconnect 時に最新 access token を送信する。
@@ -109,7 +112,7 @@ flutter test
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
 Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
-最新の local mobile evidence: 2026-07-04 `codex/batch4-integration` で stale route clear fix 後、`dart format --set-exit-if-changed` は変更なし、focused route tests (`tracking_provider_test.dart`, `encoded_polyline_test.dart`, `trip_route_provider_test.dart`) は pass、`flutter analyze` は issue 0、full `flutter test` は 136 tests passed。Mobile-only GPS metadata commit の前に backend route integrity gates も local 実行済みです: `pnpm typecheck`、`pnpm lint`、`pnpm test` (106 suites、747 tests)、`pnpm build` はすべて pass。
+最新の local mobile evidence: 2026-07-04 `codex/batch4-integration` で driver route/navigation fixes 後、`dart format --set-exit-if-changed` は変更なし、focused driver route tests (`directions_uri_test.dart`, `trip_route_provider_test.dart`, `pickup_delivery_completion_test.dart`) は pass、`flutter analyze` は issue 0、full `flutter test` は 139 tests passed。同じ map/tracking cluster で backend route integrity gates も local pass 済みです: `pnpm typecheck`、`pnpm lint`、full `pnpm test` (106 suites、752 tests)、focused `route-utils.spec.ts`、`pnpm build`。
 
 Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。その後の head（最新 Batch 4 local commits を含む）は GitHub Actions account billing/spending-limit または token/auth blocker により remote jobs が start/complete できませんでした。Billing/auth 修正後、Mobile CI、CI、Build Check、Lint、Gitleaks、CodeQL、Trivy、SBOM、E2E Tests、Integration Smoke Gate を rerun してください。
 
