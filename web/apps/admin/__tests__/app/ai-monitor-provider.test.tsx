@@ -26,9 +26,9 @@ describe('AI monitor provider state', () => {
   it('renders the configured DeepSeek model without fabricated telemetry', async () => {
     mockedApiGet.mockResolvedValueOnce({
       instance: {
-        status: 'degraded',
+        status: 'online',
         dashboardUrl: 'https://platform.deepseek.com/usage',
-        degradedReason: 'AI_MONITOR_TELEMETRY_NOT_ENABLED',
+        degradedReason: null,
         provider: 'deepseek',
         model: 'deepseek-v4-flash',
       },
@@ -38,8 +38,8 @@ describe('AI monitor provider state', () => {
     renderWithClient(<AiMonitorProviderClient />);
 
     expect(await screen.findByText('deepseek-v4-flash')).toBeInTheDocument();
-    expect(screen.getByText('statusDegraded')).toBeInTheDocument();
-    expect(screen.getByText(/AI_MONITOR_TELEMETRY_NOT_ENABLED/)).toBeInTheDocument();
+    expect(screen.getByText('statusOnline')).toBeInTheDocument();
+    expect(screen.queryByText(/AI_MONITOR_TELEMETRY_NOT_ENABLED/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'openDashboard' })).toHaveAttribute(
       'href',
       'https://platform.deepseek.com/usage',

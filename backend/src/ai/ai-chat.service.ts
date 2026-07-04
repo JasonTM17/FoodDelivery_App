@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
+import { ChatSenderType, ChatSessionType } from '@prisma/client'
 import { I18nService } from 'nestjs-i18n'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
+import { PrismaService } from '../database/prisma.service'
 import { AiGroundingService, AiToolCall } from './ai-grounding.service'
 import { ConversationMemoryService } from './conversation-memory.service'
 import { DeepSeekChatProviderService } from './deepseek-chat-provider.service'
@@ -45,6 +47,7 @@ export class AiChatService {
     private readonly deepSeek: DeepSeekChatProviderService,
     private readonly grounding: AiGroundingService,
     private readonly i18n: I18nService,
+    private readonly prisma: PrismaService,
   ) {}
 
   validateMessage(message: string, userId: string): void {
@@ -60,9 +63,10 @@ export class AiChatService {
 
   async createReply(body: AiChatRequest, user: JwtPayload): Promise<AiChatReply> {
     const { message, orderId } = body
-    const sessionId = body.sessionId ?? user.sub
+    const sessionId = body.sessionId?.trim() || user.sub
     const language = detectLanguage(message)
     this.validateMessage(message, user.sub)
+    const persistedSessionId = await this.safeEnsurePersistedSession(user.sub, orderId)
 
     const fastPathKey = this.matchFastPath(message.trim())
     if (fastPathKey) {
@@ -70,6 +74,10 @@ export class AiChatService {
       await this.safeAppendBatch(sessionId, [
         { role: 'user', content: message, timestamp: new Date().toISOString() },
         { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
+      ])
+      await this.safePersistBatch(persistedSessionId, [
+        { senderType: ChatSenderType.customer, senderId: user.sub, content: message },
+        { senderType: ChatSenderType.ai, senderId: null, content: reply },
       ])
       return { reply, sessionId, action: 'answered', language, grounded: false }
     }
@@ -85,12 +93,16 @@ export class AiChatService {
       content: message,
       timestamp: new Date().toISOString(),
     })
+    await this.safePersistBatch(persistedSessionId, [
+      { senderType: ChatSenderType.customer, senderId: user.sub, content: message },
+    ])
 
     try {
       const groundingResult = await this.grounding.collect({
         message,
         orderId,
         userId: user.sub,
+        sessionId: persistedSessionId ?? undefined,
         sentimentLabel,
       })
       toolCalls = groundingResult.toolCalls
@@ -116,6 +128,9 @@ export class AiChatService {
         content: reply,
         timestamp: new Date().toISOString(),
       })
+      await this.safePersistBatch(persistedSessionId, [
+        { senderType: ChatSenderType.ai, senderId: null, content: reply },
+      ])
 
       return {
         reply,
@@ -129,8 +144,12 @@ export class AiChatService {
       }
     } catch (err) {
       this.logger.error(`AI chat provider error: ${this.safeErrorCode(err)}`)
+      const reply = this.translate('ai_templates.service_unavailable')
+      await this.safePersistBatch(persistedSessionId, [
+        { senderType: ChatSenderType.ai, senderId: null, content: reply },
+      ])
       return {
-        reply: this.translate('ai_templates.service_unavailable'),
+        reply,
         sessionId,
         action: 'degraded',
         escalated: groundingEscalated || undefined,
@@ -175,6 +194,67 @@ export class AiChatService {
     }
   }
 
+  private async safeEnsurePersistedSession(userId: string, orderId?: string): Promise<string | null> {
+    if (!isUuid(userId)) return null
+
+    try {
+      const resolvedOrderId = await this.safeResolveOwnedOrderId(userId, orderId)
+      const existing = await this.prisma.chatSession.findFirst({
+        where: {
+          userId,
+          type: ChatSessionType.ai_support,
+          orderId: resolvedOrderId ?? null,
+          isActive: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      })
+      if (existing) return existing.id
+
+      const created = await this.prisma.chatSession.create({
+        data: {
+          userId,
+          orderId: resolvedOrderId,
+          type: ChatSessionType.ai_support,
+        },
+        select: { id: true },
+      })
+      return created.id
+    } catch (err) {
+      this.logger.warn(`AI chat persistence skipped: ${this.safeErrorCode(err)}`)
+      return null
+    }
+  }
+
+  private async safeResolveOwnedOrderId(userId: string, orderId?: string): Promise<string | undefined> {
+    if (!orderId || !isUuid(orderId)) return undefined
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, customerId: userId },
+      select: { id: true },
+    })
+    return order?.id
+  }
+
+  private async safePersistBatch(
+    sessionId: string | null,
+    messages: Array<{ senderType: ChatSenderType; senderId: string | null; content: string }>,
+  ): Promise<void> {
+    if (!sessionId || messages.length === 0) return
+
+    try {
+      await this.prisma.chatMessage.createMany({
+        data: messages.map(message => ({
+          sessionId,
+          senderType: message.senderType,
+          senderId: message.senderId,
+          content: message.content,
+        })),
+      })
+    } catch (err) {
+      this.logger.warn(`AI chat message persistence skipped: ${this.safeErrorCode(err)}`)
+    }
+  }
+
   private safeErrorCode(err: unknown): string {
     const message = err instanceof Error ? err.message : 'UNKNOWN'
     if (/^(DEEPSEEK|MESSAGE|INVALID)[A-Z0-9_:-]*$/.test(message)) return message
@@ -190,6 +270,10 @@ function detectLanguage(message: string): AiChatLanguage {
 
 function isAscii(value: string): boolean {
   return [...value].every(character => character.charCodeAt(0) <= 0x7f)
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }
 
 function strongestSeverity(...values: Array<string | undefined>): string | undefined {

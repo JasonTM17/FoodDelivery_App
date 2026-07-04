@@ -24,6 +24,7 @@ interface GroundingInput {
   message: string
   orderId?: string
   userId: string
+  sessionId?: string
   sentimentLabel: string
 }
 
@@ -68,6 +69,7 @@ export class AiGroundingService {
         classifyIssueType(input.message),
         input.message,
         severity === 'HIGH' ? TicketPriority.high : TicketPriority.medium,
+        input.sessionId,
       ))
       const ticketId = readString(ticket, 'id')
       toolCalls.push({ name: 'createSupportTicket', args: { orderReference: orderReference ?? null } })

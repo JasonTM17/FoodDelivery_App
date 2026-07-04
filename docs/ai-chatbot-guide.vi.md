@@ -11,6 +11,8 @@ FoodFlow dùng hướng LLM-first cho chatbot trong Batch 4. Backend AI module s
 - Chat trên mobile customer gọi trực tiếp `POST /ai/chat`; chat hỗ trợ chung không gửi `orderId`, còn chat theo đơn chỉ gửi order code hoặc UUID hợp lệ để backend grounding.
 - Tool nội bộ lấy dữ liệu thật về order, tài xế, nhà hàng, refund, gợi ý món và support ticket.
 - Tool call luôn scope theo `user.sub` đã xác thực; không tin riêng order ID do user nhập.
+- Chat turn được persist best-effort vào `ChatSession`/`ChatMessage` cho Admin monitor thật; order link chỉ lưu sau khi check customer-scoped ownership.
+- Support ticket do AI tạo dùng `channel: ai_chat` và tag `ai_session:<uuid>` để attribution escalation không phải đoán.
 - Thiếu hoặc lỗi cấu hình model trả `action: "degraded"` thay vì bịa câu trả lời thành công.
 
 ## Cấu hình bắt buộc
@@ -44,4 +46,4 @@ Trước release, chạy:
 - Prompt-injection và no-false-promise checks.
 - Tenant isolation tests cho order và support-ticket tools.
 - Secret scan trên env examples, docs và staged diff.
-- Admin AI monitor checks cho configured và degraded states.
+- Admin AI monitor checks cho online, not-configured và degraded states; conversation counts, escalations và resolution rate lấy từ DB thật, còn cost/token latency giữ null cho tới khi có usage telemetry source thật.

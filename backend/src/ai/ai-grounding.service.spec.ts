@@ -50,6 +50,7 @@ describe('AiGroundingService', () => {
     const result = await service.collect({
       message: 'Driver is unreachable and I was charged for FD0000000001, escalate to admin',
       userId: 'customer-1',
+      sessionId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
       sentimentLabel: 'angry',
     })
 
@@ -59,6 +60,7 @@ describe('AiGroundingService', () => {
       'driver_issue',
       'Driver is unreachable and I was charged for FD0000000001, escalate to admin',
       TicketPriority.high,
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
     )
     expect(tools.notifyAdmin).toHaveBeenCalledWith('ticket-1', 'HIGH', 'customer-1')
     expect(result).toMatchObject({

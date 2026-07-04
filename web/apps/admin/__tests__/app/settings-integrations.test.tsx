@@ -36,9 +36,9 @@ describe('settings integrations page', () => {
       if (path === '/admin/ai-monitor') {
         return {
           instance: {
-            status: 'degraded',
+            status: 'online',
             dashboardUrl: null,
-            degradedReason: 'AI_MONITOR_TELEMETRY_NOT_ENABLED',
+            degradedReason: null,
             provider: 'deepseek',
             model: 'deepseek-v4-flash',
           },

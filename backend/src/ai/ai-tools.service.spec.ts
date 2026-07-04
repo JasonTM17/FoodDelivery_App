@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
-import { RestaurantApprovalStatus, TicketPriority, TicketStatus } from '@prisma/client'
+import { RestaurantApprovalStatus, SupportChannel, TicketPriority, TicketStatus } from '@prisma/client'
 import { AiToolsService } from './ai-tools.service'
 
 describe('AiToolsService', () => {
@@ -86,6 +86,39 @@ describe('AiToolsService', () => {
     }))
     expect(prisma.aiSupportTicket.create).not.toHaveBeenCalled()
     expect(result).toBe(existing)
+  })
+
+  it('creates AI chat support tickets with a session tag for monitor attribution', async () => {
+    const created = {
+      id: 'ticket-1',
+      issueType: 'driver_issue',
+      summary: 'Driver is unreachable',
+      status: TicketStatus.open,
+      priority: TicketPriority.high,
+      createdAt: new Date('2026-07-03T00:00:00.000Z'),
+    }
+    prisma.order.findFirst.mockResolvedValue({ id: 'order-1' })
+    prisma.aiSupportTicket.findFirst.mockResolvedValue(null)
+    prisma.aiSupportTicket.create.mockResolvedValue(created)
+
+    const result = await service.createSupportTicket(
+      'customer-1',
+      'FD0000000001',
+      'driver_issue',
+      'Driver is unreachable',
+      TicketPriority.high,
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    )
+
+    expect(prisma.aiSupportTicket.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        userId: 'customer-1',
+        orderId: 'order-1',
+        channel: SupportChannel.ai_chat,
+        tags: ['ai_session:bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'],
+      }),
+    }))
+    expect(result).toBe(created)
   })
 
   it('rejects support tickets for orders that do not belong to the authenticated customer', async () => {

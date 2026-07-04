@@ -11,6 +11,8 @@ FoodFlow uses an LLM-first chatbot path in Batch 4. The backend AI module owns t
 - Customer mobile chat uses `POST /ai/chat` directly; support-only chats omit `orderId`, while order chats pass a verified-looking order code or UUID for backend grounding.
 - Internal grounding tools fetch real order, driver, restaurant, refund, recommendation, and support-ticket context.
 - Tool calls are scoped to the authenticated `user.sub`; user-supplied order IDs are never trusted alone.
+- Chat turns are persisted best-effort to `ChatSession`/`ChatMessage` for real Admin monitoring; order links are only stored after customer-scoped ownership checks.
+- AI-created support tickets use `channel: ai_chat` plus an `ai_session:<uuid>` tag so escalations can be attributed without guessing.
 - Missing or failing model configuration returns `action: "degraded"` instead of a fabricated answer.
 
 ## Required configuration
@@ -44,4 +46,4 @@ Before release, run:
 - Prompt-injection and no-false-promise checks.
 - Tenant isolation tests for order and support-ticket tools.
 - Secret scan over env examples, docs, and staged diff.
-- Admin AI monitor checks for configured and degraded states.
+- Admin AI monitor checks for online, not-configured, and degraded states; conversation counts, escalations, and resolution rate are DB-backed, while cost/token latency fields remain null until a real usage telemetry source is connected.

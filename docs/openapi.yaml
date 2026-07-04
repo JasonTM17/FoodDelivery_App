@@ -4298,7 +4298,7 @@ paths:
     get:
       tags: [ai]
       summary: Get AI chatbot monitor overview
-      description: Returns the DeepSeek configuration state and nullable real telemetry fields. Missing telemetry stays null rather than being fabricated.
+      description: Returns the DeepSeek configuration state plus DB-backed AI conversation, escalation, and resolution metrics. Usage-cost/token/latency telemetry stays null until a real telemetry source is connected.
       operationId: admin_aiMonitor_getOverview
       x-foo-actor: admin
       responses:

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { Prisma, TicketIssueType, TicketPriority, TicketStatus } from '@prisma/client'
+import { Prisma, SupportChannel, TicketIssueType, TicketPriority, TicketStatus } from '@prisma/client'
 import {
   availableRecommendationWhere,
   isAvailableRecommendedMenuItem,
@@ -87,6 +87,7 @@ export class AiToolsService {
     issueType: string,
     summary: string,
     priority: TicketPriority,
+    sessionId?: string,
   ) {
     const validTypes = Object.values(TicketIssueType)
     const resolvedType: TicketIssueType = validTypes.includes(issueType as TicketIssueType)
@@ -114,6 +115,8 @@ export class AiToolsService {
     })
     if (existing) return existing
 
+    const tags = sessionId ? [`ai_session:${sessionId}`] : []
+
     return this.prisma.aiSupportTicket.create({
       data: {
         userId,
@@ -121,6 +124,8 @@ export class AiToolsService {
         issueType: resolvedType,
         summary: normalizedSummary,
         priority,
+        channel: SupportChannel.ai_chat,
+        tags,
       },
       select: { id: true, issueType: true, summary: true, status: true, priority: true, createdAt: true },
     })

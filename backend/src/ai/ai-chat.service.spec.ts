@@ -1,4 +1,5 @@
 import { HttpException } from '@nestjs/common'
+import { ChatSenderType, ChatSessionType } from '@prisma/client'
 import { AiChatService } from './ai-chat.service'
 
 describe('AiChatService', () => {
@@ -15,6 +16,18 @@ describe('AiChatService', () => {
   const deepSeek = { createReply: jest.fn() }
   const grounding = { collect: jest.fn() }
   const i18n = { t: jest.fn() }
+  const prisma = {
+    order: {
+      findFirst: jest.fn(),
+    },
+    chatSession: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    chatMessage: {
+      createMany: jest.fn(),
+    },
+  }
   const service = new AiChatService(
     memory as never,
     sentiment as never,
@@ -22,6 +35,7 @@ describe('AiChatService', () => {
     deepSeek as never,
     grounding as never,
     i18n as never,
+    prisma as never,
   )
   const user = { sub: 'user-1', role: 'customer' }
 
@@ -33,6 +47,10 @@ describe('AiChatService', () => {
     memory.getHistory.mockResolvedValue([{ role: 'assistant', content: 'old', timestamp: '2026-07-02T00:00:00.000Z' }])
     memory.append.mockResolvedValue(undefined)
     memory.appendBatch.mockResolvedValue(undefined)
+    prisma.chatSession.findFirst.mockResolvedValue(null)
+    prisma.chatSession.create.mockResolvedValue({ id: '11111111-1111-4111-8111-111111111111' })
+    prisma.chatMessage.createMany.mockResolvedValue({ count: 0 })
+    prisma.order.findFirst.mockResolvedValue(null)
     grounding.collect.mockResolvedValue({ entries: [], toolCalls: [], escalated: false, severity: undefined })
     deepSeek.createReply.mockReset()
     i18n.t.mockImplementation((key: string) => ({
@@ -71,6 +89,46 @@ describe('AiChatService', () => {
     expect(result).toMatchObject({ language: 'en', grounded: false })
     expect(grounding.collect).not.toHaveBeenCalled()
     expect(deepSeek.createReply).not.toHaveBeenCalled()
+  })
+
+  it('persists UUID-backed AI sessions without changing the client session contract', async () => {
+    const userWithUuid = {
+      sub: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      role: 'customer',
+    }
+    const persistedSessionId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    prisma.chatSession.create.mockResolvedValueOnce({ id: persistedSessionId })
+
+    const result = await service.createReply({
+      message: 'hello',
+      sessionId: 'mobile-support',
+    }, userWithUuid)
+
+    expect(result).toMatchObject({ sessionId: 'mobile-support', action: 'answered' })
+    expect(prisma.chatSession.create).toHaveBeenCalledWith({
+      data: {
+        userId: userWithUuid.sub,
+        orderId: undefined,
+        type: ChatSessionType.ai_support,
+      },
+      select: { id: true },
+    })
+    expect(prisma.chatMessage.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          sessionId: persistedSessionId,
+          senderType: ChatSenderType.customer,
+          senderId: userWithUuid.sub,
+          content: 'hello',
+        }),
+        expect.objectContaining({
+          sessionId: persistedSessionId,
+          senderType: ChatSenderType.ai,
+          senderId: null,
+          content: 'Hello from FoodFlow AI',
+        }),
+      ],
+    })
   })
 
   it('answers Vietnamese fast-path greetings from templates without calling providers', async () => {
@@ -123,6 +181,47 @@ describe('AiChatService', () => {
       grounded: true,
       toolCalls: [{ name: 'getOrderStatus', args: { orderReference: 'FD0000000001' } }],
     })
+  })
+
+  it('passes the persisted AI session id into grounding for support escalation linkage', async () => {
+    const userWithUuid = {
+      sub: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      role: 'customer',
+    }
+    const persistedSessionId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    prisma.chatSession.findFirst.mockResolvedValueOnce({ id: persistedSessionId })
+    deepSeek.createReply.mockResolvedValue({ reply: 'We are checking that now.' })
+
+    await service.createReply({
+      message: 'My order FD0000000001 is very late',
+      sessionId: 'mobile-FD0000000001',
+    }, userWithUuid)
+
+    expect(grounding.collect).toHaveBeenCalledWith(expect.objectContaining({
+      sessionId: persistedSessionId,
+    }))
+  })
+
+  it('does not link persisted AI sessions to orders outside the authenticated customer scope', async () => {
+    const userWithUuid = {
+      sub: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      role: 'customer',
+    }
+    const orderId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+
+    await service.createReply({
+      message: 'hello',
+      orderId,
+      sessionId: 'mobile-support',
+    }, userWithUuid)
+
+    expect(prisma.order.findFirst).toHaveBeenCalledWith({
+      where: { id: orderId, customerId: userWithUuid.sub },
+      select: { id: true },
+    })
+    expect(prisma.chatSession.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ orderId: undefined }),
+    }))
   })
 
   it('continues with empty history when conversation memory is unavailable', async () => {

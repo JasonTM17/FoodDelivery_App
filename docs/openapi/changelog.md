@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-04: `/admin/ai-monitor` now reports DB-backed AI conversation counts, escalations, and resolution rate; chatbot support tickets are attributed with `ai_session:<uuid>` tags and usage-cost/token latency fields remain nullable until real telemetry is connected.
 - 2026-07-03: Added `GET/PATCH /restaurant/profile` contract with tenant-scoped `openingHours` and persisted `holidayClosures` replace-list semantics.
 - 2026-07-03: Aligned driver dispatch/mobile contract: added `GET /driver/orders/active`, `GET /driver/orders/history`, payout-ledger `DriverEarnings.entries`, and documented `/dispatch` WebSocket accept/reject with `offerToken` instead of legacy REST accept endpoints.
 - 2026-07-03: Isolated persisted restaurant-driver chat events from customer order rooms and added `orderId` to the realtime event payload.
