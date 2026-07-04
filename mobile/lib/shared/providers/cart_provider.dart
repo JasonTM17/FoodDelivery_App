@@ -79,7 +79,8 @@ class CartNotifier extends StateNotifier<CartState> {
       state = CartState(
         currentCart: CartModel(
           restaurantId: item.restaurantId,
-          restaurantName: item.name, // Will be updated when restaurant context is known
+          restaurantName:
+              item.name, // Will be updated when restaurant context is known
           items: [
             CartItemModel(
               menuItem: item,
@@ -126,15 +127,19 @@ class CartNotifier extends StateNotifier<CartState> {
         menuItem: updatedItems[existingIndex].menuItem,
         quantity: updatedItems[existingIndex].quantity + quantity,
         selectedOptions: selectedOptions,
-        specialInstructions: specialInstructions ?? updatedItems[existingIndex].specialInstructions,
+        specialInstructions:
+            specialInstructions ??
+            updatedItems[existingIndex].specialInstructions,
       );
     } else {
-      updatedItems.add(CartItemModel(
-        menuItem: item,
-        quantity: quantity,
-        selectedOptions: selectedOptions,
-        specialInstructions: specialInstructions,
-      ));
+      updatedItems.add(
+        CartItemModel(
+          menuItem: item,
+          quantity: quantity,
+          selectedOptions: selectedOptions,
+          specialInstructions: specialInstructions,
+        ),
+      );
     }
 
     state = CartState(
@@ -209,25 +214,33 @@ class CartNotifier extends StateNotifier<CartState> {
   Future<void> applyPromoCode(String code) async {
     state = state.copyWith(isApplyingPromo: true, error: null);
     try {
-      final response = await ApiClient.instance.post('/promotions/validate', data: {
-        'code': code,
-        'restaurantId': state.currentCart?.restaurantId,
-        'subtotal': state.subtotal,
-      });
+      final response = await ApiClient.instance.post(
+        '/promotions/validate',
+        data: {
+          'code': code,
+          'restaurantId': state.currentCart?.restaurantId,
+          'subtotal': state.subtotal,
+        },
+      );
       final data = response.data as Map<String, dynamic>;
-      final discountAmount = (data['discountAmount'] as num?)?.toDouble() ?? 0.0;
+      final discountAmount =
+          (data['discountAmount'] as num?)?.toDouble() ?? 0.0;
       state = state.copyWith(
         isApplyingPromo: false,
         promoCode: code,
         discount: discountAmount,
       );
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Mã khuyến mãi không hợp lệ.';
       state = state.copyWith(isApplyingPromo: false, error: message);
     } catch (e) {
-      state = state.copyWith(isApplyingPromo: false, error: 'Có lỗi xảy ra khi kiểm tra mã.');
+      state = state.copyWith(
+        isApplyingPromo: false,
+        error: 'Có lỗi xảy ra khi kiểm tra mã.',
+      );
     }
   }
 
@@ -235,7 +248,11 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(promoCode: null, discount: 0.0);
   }
 
-  void setRestaurantInfo(String restaurantId, String restaurantName, {String? logoUrl}) {
+  void setRestaurantInfo(
+    String restaurantId,
+    String restaurantName, {
+    String? logoUrl,
+  }) {
     final currentCart = state.currentCart;
     if (currentCart != null) {
       state = CartState(
@@ -258,7 +275,8 @@ class CartNotifier extends StateNotifier<CartState> {
   bool _optionsMatch(List<SelectedOption> a, List<SelectedOption> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
-      if (a[i].optionName != b[i].optionName || a[i].groupName != b[i].groupName) {
+      if (a[i].optionName != b[i].optionName ||
+          a[i].groupName != b[i].groupName) {
         return false;
       }
     }

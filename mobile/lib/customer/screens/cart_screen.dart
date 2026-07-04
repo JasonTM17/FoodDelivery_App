@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/providers/cart_provider.dart';
 import '../widgets/cart_item_tile.dart';
-import '../../shared/models/cart.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -39,7 +38,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final cartState = ref.watch(cartProvider);
 
     if (cartState.isEmpty) {
@@ -77,13 +76,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ref.read(cartProvider.notifier).clearCart();
                         Navigator.of(context).pop();
                       },
-                      child: Text(l10n.cartDelete, style: const TextStyle(color: AppColors.error)),
+                      child: Text(
+                        l10n.cartDelete,
+                        style: const TextStyle(color: AppColors.error),
+                      ),
                     ),
                   ],
                 ),
               );
             },
-            child: Text(l10n.cartClearAll, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+            child: Text(
+              l10n.cartClearAll,
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
+            ),
           ),
         ],
       ),
@@ -100,7 +105,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
-                      BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                      BoxShadow(
+                        color: AppColors.shadow,
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
                     ],
                   ),
                   child: Row(
@@ -116,12 +125,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                   fit: BoxFit.cover,
                                   errorWidget: (_, __, ___) => Container(
                                     color: AppColors.surface,
-                                    child: const Icon(Icons.restaurant, size: 24, color: AppColors.textHint),
+                                    child: const Icon(
+                                      Icons.restaurant,
+                                      size: 24,
+                                      color: AppColors.textHint,
+                                    ),
                                   ),
                                 )
                               : Container(
                                   color: AppColors.surface,
-                                  child: const Icon(Icons.restaurant, size: 24, color: AppColors.textHint),
+                                  child: const Icon(
+                                    Icons.restaurant,
+                                    size: 24,
+                                    color: AppColors.textHint,
+                                  ),
                                 ),
                         ),
                       ),
@@ -129,7 +146,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       Expanded(
                         child: Text(
                           cart.restaurantName,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -144,8 +163,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   return CartItemTile(
                     item: item,
                     index: index,
-                    onRemove: () => ref.read(cartProvider.notifier).removeItem(index),
-                    onQuantityChanged: (qty) => ref.read(cartProvider.notifier).updateItemQuantity(index, qty),
+                    onRemove: () =>
+                        ref.read(cartProvider.notifier).removeItem(index),
+                    onQuantityChanged: (qty) => ref
+                        .read(cartProvider.notifier)
+                        .updateItemQuantity(index, qty),
                   );
                 }),
 
@@ -158,7 +180,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
-                      BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                      BoxShadow(
+                        color: AppColors.shadow,
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
                     ],
                   ),
                   child: Column(
@@ -173,7 +199,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               controller: _promoController,
                               decoration: InputDecoration(
                                 hintText: l10n.cartPromoHint,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -188,28 +217,43 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 _promoController.clear();
                                 ref.read(cartProvider.notifier).removePromo();
                               },
-                              child: Text(l10n.cartPromoRemove, style: const TextStyle(color: AppColors.error)),
+                              child: Text(
+                                l10n.cartPromoRemove,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
                             )
                           else
                             ElevatedButton(
                               onPressed: _isApplyingPromo ? null : _applyPromo,
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                               ),
                               child: _isApplyingPromo
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : Text(l10n.cartPromoApply, style: const TextStyle(fontSize: 13)),
+                                  : Text(
+                                      l10n.cartPromoApply,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
                             ),
                         ],
                       ),
                       if (cartState.promoCode != null) ...[
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -228,7 +272,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         const SizedBox(height: 8),
                         Text(
                           cartState.error!,
-                          style: const TextStyle(color: AppColors.error, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ],
@@ -244,14 +291,26 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
-                      BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                      BoxShadow(
+                        color: AppColors.shadow,
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      _buildPriceRow(l10n.cartSubtotal, _formatPrice(cartState.subtotal)),
+                      _buildPriceRow(
+                        l10n.cartSubtotal,
+                        _formatPrice(cartState.subtotal),
+                      ),
                       const SizedBox(height: 8),
-                      _buildPriceRow(l10n.cartDeliveryFee, cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : l10n.cartFreeDelivery),
+                      _buildPriceRow(
+                        l10n.cartDeliveryFee,
+                        cartState.deliveryFee > 0
+                            ? _formatPrice(cartState.deliveryFee)
+                            : l10n.cartFreeDelivery,
+                      ),
                       if (cartState.discount > 0) ...[
                         const SizedBox(height: 8),
                         _buildPriceRow(
@@ -308,13 +367,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, {bool isTotal = false, Color? valueColor}) {
+  Widget _buildPriceRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+    Color? valueColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: isTotal ? AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700) : AppTextStyles.bodyMedium,
+          style: isTotal
+              ? AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)
+              : AppTextStyles.bodyMedium,
         ),
         Text(
           value,
@@ -329,9 +395,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 }

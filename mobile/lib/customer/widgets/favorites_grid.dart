@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_text_styles.dart';
 import '../providers/favorites_provider.dart';
-import '../../shared/widgets/restaurant_card.dart';
 
 class FavoritesGrid extends StatelessWidget {
   final List<FavoriteItem> items;
@@ -52,7 +51,9 @@ class FavoritesGrid extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: item.imageUrl.isNotEmpty
                     ? Image.network(
                         item.imageUrl,
@@ -75,7 +76,7 @@ class FavoritesGrid extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
                         ),
                       ],
@@ -86,7 +87,11 @@ class FavoritesGrid extends StatelessWidget {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.favorite, color: AppColors.error, size: 18),
+                        : const Icon(
+                            Icons.favorite,
+                            color: AppColors.error,
+                            size: 18,
+                          ),
                   ),
                 ),
               ),
@@ -100,7 +105,9 @@ class FavoritesGrid extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

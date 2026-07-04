@@ -36,14 +36,19 @@ class TipAmountPicker extends ConsumerWidget {
             return GestureDetector(
               onTap: () => ref.read(tipProvider.notifier).selectAmount(amount),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary.withValues(alpha: 0.15)
                       : const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : const Color(0xFF374151),
+                    color: isSelected
+                        ? AppColors.primary
+                        : const Color(0xFF374151),
                     width: isSelected ? 2 : 1,
                   ),
                 ),

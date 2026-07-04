@@ -33,11 +33,7 @@ class EmptyState extends StatelessWidget {
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: AppColors.textHint,
-              ),
+              child: Icon(icon, size: 40, color: AppColors.textHint),
             ),
             const SizedBox(height: 20),
             Text(
@@ -49,16 +45,15 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
+              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),

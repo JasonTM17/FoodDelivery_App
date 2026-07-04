@@ -30,7 +30,10 @@ class MenuItemModel {
   factory MenuItemModel.fromJson(Map<String, dynamic> json) {
     return MenuItemModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
-      restaurantId: json['restaurantId'] as String? ?? json['restaurant_id'] as String? ?? '',
+      restaurantId:
+          json['restaurantId'] as String? ??
+          json['restaurant_id'] as String? ??
+          '',
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       imageUrl: json['imageUrl'] as String? ?? json['image_url'] as String?,
@@ -39,16 +42,19 @@ class MenuItemModel {
       category: json['category'] as String? ?? 'General',
       optionGroups: json['optionGroups'] != null
           ? (json['optionGroups'] as List<dynamic>)
-              .map((e) => ItemOptionGroup.fromJson(e as Map<String, dynamic>))
-              .toList()
+                .map((e) => ItemOptionGroup.fromJson(e as Map<String, dynamic>))
+                .toList()
           : json['option_groups'] != null
-              ? (json['option_groups'] as List<dynamic>)
-                  .map((e) => ItemOptionGroup.fromJson(e as Map<String, dynamic>))
-                  .toList()
-              : [],
-      isAvailable: json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
-      isPopular: json['isPopular'] as bool? ?? json['is_popular'] as bool? ?? false,
-      orderCount: json['orderCount'] as int? ?? json['order_count'] as int? ?? 0,
+          ? (json['option_groups'] as List<dynamic>)
+                .map((e) => ItemOptionGroup.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : [],
+      isAvailable:
+          json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
+      isPopular:
+          json['isPopular'] as bool? ?? json['is_popular'] as bool? ?? false,
+      orderCount:
+          json['orderCount'] as int? ?? json['order_count'] as int? ?? 0,
     );
   }
 
@@ -90,8 +96,8 @@ class ItemOptionGroup {
       required: json['required'] as bool? ?? false,
       options: json['options'] != null
           ? (json['options'] as List<dynamic>)
-              .map((e) => ItemOption.fromJson(e as Map<String, dynamic>))
-              .toList()
+                .map((e) => ItemOption.fromJson(e as Map<String, dynamic>))
+                .toList()
           : [],
     );
   }
@@ -110,10 +116,7 @@ class ItemOption {
   final String name;
   final double price;
 
-  ItemOption({
-    required this.name,
-    this.price = 0.0,
-  });
+  ItemOption({required this.name, this.price = 0.0});
 
   factory ItemOption.fromJson(Map<String, dynamic> json) {
     return ItemOption(
@@ -123,9 +126,6 @@ class ItemOption {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'price': price,
-    };
+    return {'name': name, 'price': price};
   }
 }

@@ -17,20 +17,24 @@ class LoyaltyPointsLedger extends StatelessWidget {
         alignment: Alignment.center,
         child: Column(
           children: [
-            const Icon(Icons.stars_outlined, size: 48, color: AppColors.textHint),
+            const Icon(
+              Icons.stars_outlined,
+              size: 48,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 12),
             Text(
               'Chưa có lịch sử điểm thưởng',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
       );
     }
 
-    return Column(
-      children: transactions.map(_buildRow).toList(),
-    );
+    return Column(children: transactions.map(_buildRow).toList());
   }
 
   Widget _buildRow(LoyaltyTransaction tx) {
@@ -56,12 +60,14 @@ class LoyaltyPointsLedger extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: tx.isCredit
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.error.withOpacity(0.1),
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
-              tx.isCredit ? Icons.add_circle_outline : Icons.remove_circle_outline,
+              tx.isCredit
+                  ? Icons.add_circle_outline
+                  : Icons.remove_circle_outline,
               color: tx.isCredit ? AppColors.success : AppColors.error,
               size: 20,
             ),
@@ -73,7 +79,9 @@ class LoyaltyPointsLedger extends StatelessWidget {
               children: [
                 Text(
                   tx.description,
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   dateFmt.format(tx.createdAt.toLocal()),

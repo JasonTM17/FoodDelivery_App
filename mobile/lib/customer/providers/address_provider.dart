@@ -3,7 +3,9 @@ import 'package:dio/dio.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/models/user.dart';
 
-final addressProvider = StateNotifierProvider<AddressNotifier, AddressState>((ref) {
+final addressProvider = StateNotifierProvider<AddressNotifier, AddressState>((
+  ref,
+) {
   return AddressNotifier();
 });
 
@@ -42,18 +44,24 @@ class AddressNotifier extends StateNotifier<AddressState> {
       final response = await _api.get('/users/addresses');
       final List<dynamic> dataList = response.data is List
           ? response.data as List<dynamic>
-          : (response.data as Map<String, dynamic>)['addresses'] as List<dynamic>? ?? [];
+          : (response.data as Map<String, dynamic>)['addresses']
+                    as List<dynamic>? ??
+                [];
       final addresses = dataList
           .map((e) => AddressModel.fromJson(e as Map<String, dynamic>))
           .toList();
       state = state.copyWith(isLoading: false, addresses: addresses);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Không thể tải danh sách địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải địa chỉ.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải địa chỉ.',
+      );
     }
   }
 
@@ -68,16 +76,21 @@ class AddressNotifier extends StateNotifier<AddressState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.post('/users/addresses', data: {
-        'label': label,
-        'address': address,
-        'latitude': latitude,
-        'longitude': longitude,
-        'apartmentNumber': apartmentNumber,
-        'note': note,
-        'isDefault': isDefault,
-      });
-      final newAddress = AddressModel.fromJson(response.data as Map<String, dynamic>);
+      final response = await _api.post(
+        '/users/addresses',
+        data: {
+          'label': label,
+          'address': address,
+          'latitude': latitude,
+          'longitude': longitude,
+          'apartmentNumber': apartmentNumber,
+          'note': note,
+          'isDefault': isDefault,
+        },
+      );
+      final newAddress = AddressModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       final updatedAddresses = isDefault
           ? state.addresses.map((a) => a.copyWith(isDefault: false)).toList()
           : List<AddressModel>.from(state.addresses);
@@ -85,13 +98,17 @@ class AddressNotifier extends StateNotifier<AddressState> {
       state = state.copyWith(isLoading: false, addresses: updatedAddresses);
       return true;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Không thể thêm địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi thêm địa chỉ.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi thêm địa chỉ.',
+      );
       return false;
     }
   }
@@ -137,13 +154,17 @@ class AddressNotifier extends StateNotifier<AddressState> {
       state = state.copyWith(isLoading: false, addresses: updatedAddresses);
       return true;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Không thể cập nhật địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi cập nhật địa chỉ.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi cập nhật địa chỉ.',
+      );
       return false;
     }
   }
@@ -152,17 +173,23 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await _api.delete('/users/addresses/$id');
-      final updatedAddresses = state.addresses.where((a) => a.id != id).toList();
+      final updatedAddresses = state.addresses
+          .where((a) => a.id != id)
+          .toList();
       state = state.copyWith(isLoading: false, addresses: updatedAddresses);
       return true;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Không thể xóa địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi xóa địa chỉ.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi xóa địa chỉ.',
+      );
       return false;
     }
   }

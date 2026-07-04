@@ -65,9 +65,11 @@ class CancelOrderState {
 }
 
 final cancelOrderProvider =
-    StateNotifierProvider.autoDispose<CancelOrderNotifier, CancelOrderState>((ref) {
-  return CancelOrderNotifier();
-});
+    StateNotifierProvider.autoDispose<CancelOrderNotifier, CancelOrderState>((
+      ref,
+    ) {
+      return CancelOrderNotifier();
+    });
 
 class CancelOrderNotifier extends StateNotifier<CancelOrderState> {
   final ApiClient _api = ApiClient.instance;
@@ -88,19 +90,23 @@ class CancelOrderNotifier extends StateNotifier<CancelOrderState> {
     if (!canSubmit) return false;
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _api.post('/orders/$orderId/cancel', data: {
-        'reason': state.selectedReason!.apiValue(),
-        'note': state.note,
-      });
+      await _api.post(
+        '/orders/$orderId/cancel',
+        data: {'reason': state.selectedReason!.apiValue(), 'note': state.note},
+      );
       state = state.copyWith(isLoading: false, cancelled: true);
       return true;
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
+      final msg =
+          e.response?.data?['message'] as String? ??
           'Không thể hủy đơn hàng. Vui lòng thử lại.';
       state = state.copyWith(isLoading: false, error: msg);
       return false;
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi hủy đơn hàng.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi hủy đơn hàng.',
+      );
       return false;
     }
   }

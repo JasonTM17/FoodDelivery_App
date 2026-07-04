@@ -32,13 +32,11 @@ void main() {
 
       // Find the 3 dot containers (identified by different widths — active=24, inactive=8)
       final containers = tester.widgetList<Container>(find.byType(Container));
-      final dots = containers
-          .where((c) {
-            final decoration = c.decoration as BoxDecoration?;
-            return decoration?.borderRadius != null &&
-                (c.constraints?.maxWidth == 24 || c.constraints?.maxWidth == 8);
-          })
-          .toList();
+      final dots = containers.where((c) {
+        final decoration = c.decoration as BoxDecoration?;
+        return decoration?.borderRadius != null &&
+            (c.constraints?.maxWidth == 24 || c.constraints?.maxWidth == 8);
+      }).toList();
       expect(dots.length, greaterThanOrEqualTo(3));
     });
 

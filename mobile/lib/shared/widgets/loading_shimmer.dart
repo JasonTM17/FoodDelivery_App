@@ -51,7 +51,9 @@ class LoadingShimmer extends StatelessWidget {
             height: 140,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
             ),
           ),
           Padding(
@@ -103,7 +105,9 @@ class LoadingShimmer extends StatelessWidget {
             height: 100,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(12),
+              ),
             ),
           ),
           Expanded(
@@ -282,10 +286,4 @@ class LoadingShimmer extends StatelessWidget {
   }
 }
 
-enum ShimmerType {
-  restaurant,
-  foodItem,
-  order,
-  cartItem,
-  textLine,
-}
+enum ShimmerType { restaurant, foodItem, order, cartItem, textLine }

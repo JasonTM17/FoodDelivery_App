@@ -13,7 +13,13 @@ import '../widgets/category_chip.dart';
 import '../../l10n/app_localizations.dart';
 
 const _filterLabels = [
-  'Tất cả', 'Gần nhất', 'Phở', 'Cơm', 'Đồ uống', 'Pizza', 'Đang mở',
+  'Tất cả',
+  'Gần nhất',
+  'Phở',
+  'Cơm',
+  'Đồ uống',
+  'Pizza',
+  'Đang mở',
 ];
 
 const _defaultCamera = CameraPosition(
@@ -48,7 +54,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final filter = ref.watch(restaurantFilterProvider);
     final restaurants = ref.watch(restaurantProvider);
 
@@ -100,7 +106,10 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
   }
 
   Widget _pill(
-      String label, RestaurantViewMode mode, RestaurantViewMode current) {
+    String label,
+    RestaurantViewMode mode,
+    RestaurantViewMode current,
+  ) {
     final active = mode == current;
     return Expanded(
       child: GestureDetector(
@@ -118,8 +127,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color:
-                  active ? AppColors.textOnPrimary : AppColors.textSecondary,
+              color: active ? AppColors.textOnPrimary : AppColors.textSecondary,
             ),
           ),
         ),
@@ -179,11 +187,13 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
   Widget _buildMapView(RestaurantState state) {
     final list = state.nearbyRestaurants;
     final markers = list
-        .map((r) => Marker(
-              markerId: MarkerId(r.id),
-              position: LatLng(r.latitude, r.longitude),
-              infoWindow: InfoWindow(title: r.name),
-            ))
+        .map(
+          (r) => Marker(
+            markerId: MarkerId(r.id),
+            position: LatLng(r.latitude, r.longitude),
+            infoWindow: InfoWindow(title: r.name),
+          ),
+        )
         .toSet();
 
     return Stack(
@@ -203,17 +213,14 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
             height: 200,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: list.length.clamp(0, 3),
               itemBuilder: (_, i) => SizedBox(
                 width: 260,
                 child: RestaurantCard(
                   restaurant: list[i],
-                  onTap: () => context.push(
-                    '/restaurant-detail',
-                    extra: list[i].id,
-                  ),
+                  onTap: () =>
+                      context.push('/restaurant-detail', extra: list[i].id),
                 ),
               ),
             ),

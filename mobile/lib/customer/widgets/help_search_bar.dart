@@ -25,8 +25,14 @@ class HelpSearchBar extends StatelessWidget {
         onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
-          prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondary),
+          hintStyle: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textHint,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            size: 20,
+            color: AppColors.textSecondary,
+          ),
           suffixIcon: query.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear, size: 18),
@@ -42,7 +48,10 @@ class HelpSearchBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );

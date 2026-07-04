@@ -34,5 +34,5 @@ class RestaurantFilterNotifier extends StateNotifier<RestaurantFilterState> {
 
 final restaurantFilterProvider =
     StateNotifierProvider<RestaurantFilterNotifier, RestaurantFilterState>(
-  (ref) => RestaurantFilterNotifier(),
-);
+      (ref) => RestaurantFilterNotifier(),
+    );

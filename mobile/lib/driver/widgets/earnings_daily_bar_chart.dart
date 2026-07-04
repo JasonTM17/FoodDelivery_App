@@ -65,10 +65,7 @@ class EarningsDailyBarChart extends StatelessWidget {
             height: chartHeight,
             child: CustomPaint(
               size: const Size(double.infinity, double.infinity),
-              painter: _BarChartPainter(
-                byDay: byDay,
-                maxAmount: effectiveMax,
-              ),
+              painter: _BarChartPainter(byDay: byDay, maxAmount: effectiveMax),
             ),
           ),
           const SizedBox(height: 8),
@@ -77,10 +74,7 @@ class EarningsDailyBarChart extends StatelessWidget {
             children: byDay.map((d) {
               return Text(
                 '${d.date.day}/${d.date.month}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Color(0xFF6B7280),
-                ),
+                style: const TextStyle(fontSize: 9, color: Color(0xFF6B7280)),
               );
             }).toList(),
           ),
@@ -124,10 +118,7 @@ class _BarChartPainter extends CustomPainter {
       );
 
       final gradient = LinearGradient(
-        colors: [
-          AppColors.primary,
-          AppColors.primary.withValues(alpha: 0.5),
-        ],
+        colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.5)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       );

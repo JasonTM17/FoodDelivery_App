@@ -36,16 +36,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Future<void> _submitReview() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isSubmitting = true);
 
     try {
-      await ref.read(orderProvider.notifier).submitReview(
-        widget.orderId,
-        _foodRating,
-        _deliveryRating,
-        _commentController.text.trim(),
-      );
+      await ref
+          .read(orderProvider.notifier)
+          .submitReview(
+            widget.orderId,
+            _foodRating,
+            _deliveryRating,
+            _commentController.text.trim(),
+          );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,15 +72,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final orderState = ref.watch(orderProvider);
     final order = orderState.currentTrackingOrder;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(l10n.reviewTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.reviewTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -93,7 +93,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
                 child: Row(
@@ -105,7 +109,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         color: AppColors.primaryLight.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.restaurant, color: AppColors.primary, size: 32),
+                      child: const Icon(
+                        Icons.restaurant,
+                        color: AppColors.primary,
+                        size: 32,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -151,16 +159,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     itemCount: 5,
                     itemSize: 44,
                     itemPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemBuilder: (context, _) => const Icon(
-                      Icons.star,
-                      color: AppColors.accent,
-                    ),
-                    onRatingUpdate: (rating) => setState(() => _foodRating = rating),
+                    itemBuilder: (context, _) =>
+                        const Icon(Icons.star, color: AppColors.accent),
+                    onRatingUpdate: (rating) =>
+                        setState(() => _foodRating = rating),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _getRatingText(_foodRating, l10n),
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -182,16 +191,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     itemCount: 5,
                     itemSize: 44,
                     itemPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemBuilder: (context, _) => const Icon(
-                      Icons.star,
-                      color: AppColors.primary,
-                    ),
-                    onRatingUpdate: (rating) => setState(() => _deliveryRating = rating),
+                    itemBuilder: (context, _) =>
+                        const Icon(Icons.star, color: AppColors.primary),
+                    onRatingUpdate: (rating) =>
+                        setState(() => _deliveryRating = rating),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _getRatingText(_deliveryRating, l10n),
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -207,7 +217,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: l10n.reviewCommentHint,
-                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                hintStyle: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textHint,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -226,7 +238,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
                       )
                     : Text(l10n.reviewSubmit),
               ),
@@ -248,9 +263,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 }

@@ -56,12 +56,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 20),
                   Text(
                     'FoodFlow Driver',
-                    style: AppTextStyles.headline2.copyWith(color: Colors.white),
+                    style: AppTextStyles.headline2.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Đăng nhập để nhận đơn hàng',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 40),
 
@@ -98,7 +102,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       icon: Icons.lock_outlined,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: AppColors.textSecondary,
                         ),
                         onPressed: () {
@@ -123,7 +129,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -149,7 +158,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? null
                           : () {
                               if (_formKey.currentState!.validate()) {
-                                ref.read(driverProvider.notifier).login(
+                                ref
+                                    .read(driverProvider.notifier)
+                                    .login(
                                       _emailController.text.trim(),
                                       _passwordController.text,
                                     );
@@ -157,7 +168,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.4,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),

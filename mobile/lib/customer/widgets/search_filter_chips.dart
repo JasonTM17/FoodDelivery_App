@@ -22,10 +22,12 @@ class SearchFilterChips extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: SearchSort.values
-            .map((sort) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _buildChip(context, sort),
-                ))
+            .map(
+              (sort) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _buildChip(context, sort),
+              ),
+            )
             .toList(),
       ),
     );

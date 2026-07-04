@@ -32,10 +32,7 @@ class LocaleNotifier extends Notifier<Locale> {
   Future<void> setLocale(Locale locale) async {
     state = locale;
     try {
-      await _storage.write(
-        key: _localeStorageKey,
-        value: locale.languageCode,
-      );
+      await _storage.write(key: _localeStorageKey, value: locale.languageCode);
     } catch (_) {
       // Persist failure is non-fatal — locale is still updated in-memory.
     }

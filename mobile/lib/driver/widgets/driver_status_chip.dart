@@ -5,11 +5,7 @@ class DriverStatusChip extends StatelessWidget {
   final String? vehiclePlate;
   final int? rideNumber;
 
-  const DriverStatusChip({
-    super.key,
-    this.vehiclePlate,
-    this.rideNumber,
-  });
+  const DriverStatusChip({super.key, this.vehiclePlate, this.rideNumber});
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +16,7 @@ class DriverStatusChip extends StatelessWidget {
           _PlateChip(plate: vehiclePlate!),
           const SizedBox(width: 8),
         ],
-        if (rideNumber != null)
-          _RideNumberBadge(number: rideNumber!),
+        if (rideNumber != null) _RideNumberBadge(number: rideNumber!),
       ],
     );
   }

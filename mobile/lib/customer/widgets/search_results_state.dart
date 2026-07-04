@@ -47,11 +47,17 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 56, color: AppColors.textHint),
+            const Icon(
+              Icons.cloud_off_outlined,
+              size: 56,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -83,12 +89,25 @@ class _EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_off_outlined, size: 56, color: AppColors.textHint),
+            const Icon(
+              Icons.search_off_outlined,
+              size: 56,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 16),
-            Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
-              Text(subtitle!, style: AppTextStyles.bodySmall, textAlign: TextAlign.center),
+              Text(
+                subtitle!,
+                style: AppTextStyles.bodySmall,
+                textAlign: TextAlign.center,
+              ),
             ],
           ],
         ),

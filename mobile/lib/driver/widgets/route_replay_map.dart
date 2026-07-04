@@ -112,8 +112,8 @@ class _RouteReplayMapState extends State<RouteReplayMap>
                   _controller.isAnimating
                       ? Icons.pause
                       : _controller.isDismissed
-                          ? Icons.play_arrow
-                          : Icons.replay,
+                      ? Icons.play_arrow
+                      : Icons.replay,
                   color: AppColors.primary,
                 ),
                 onPressed: _toggleReplay,
@@ -125,12 +125,9 @@ class _RouteReplayMapState extends State<RouteReplayMap>
               _controller.isAnimating
                   ? 'Đang phát...'
                   : _controller.isDismissed
-                      ? 'Nhấn để phát lại'
-                      : 'Đã phát xong',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF9CA3AF),
-              ),
+                  ? 'Nhấn để phát lại'
+                  : 'Đã phát xong',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -180,7 +177,10 @@ class _RoutePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    final animatedCount = (points.length * progress).ceil().clamp(0, points.length);
+    final animatedCount = (points.length * progress).ceil().clamp(
+      0,
+      points.length,
+    );
     for (int i = 0; i < animatedCount; i++) {
       final pt = toDraw(points[i].lat, points[i].lng);
       if (i == 0) {
@@ -206,7 +206,10 @@ class _RoutePainter extends CustomPainter {
     if (points.isNotEmpty) {
       final deliveryPt = toDraw(points.last.lat, points.last.lng);
       canvas.drawCircle(
-          deliveryPt, 6, Paint()..color = const Color(0xFFF97316));
+        deliveryPt,
+        6,
+        Paint()..color = const Color(0xFFF97316),
+      );
       final deliveryBorder = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
@@ -218,8 +221,7 @@ class _RoutePainter extends CustomPainter {
     if (animatedCount > 0 && animatedCount <= points.length) {
       final idx = (animatedCount - 1).clamp(0, points.length - 1);
       final currentPt = toDraw(points[idx].lat, points[idx].lng);
-      canvas.drawCircle(
-          currentPt, 8, Paint()..color = const Color(0xFF3B82F6));
+      canvas.drawCircle(currentPt, 8, Paint()..color = const Color(0xFF3B82F6));
       final markerBorder = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke

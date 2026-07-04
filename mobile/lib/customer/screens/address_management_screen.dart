@@ -10,10 +10,12 @@ class AddressManagementScreen extends ConsumerStatefulWidget {
   const AddressManagementScreen({super.key});
 
   @override
-  ConsumerState<AddressManagementScreen> createState() => _AddressManagementScreenState();
+  ConsumerState<AddressManagementScreen> createState() =>
+      _AddressManagementScreenState();
 }
 
-class _AddressManagementScreenState extends ConsumerState<AddressManagementScreen> {
+class _AddressManagementScreenState
+    extends ConsumerState<AddressManagementScreen> {
   @override
   void initState() {
     super.initState();
@@ -109,7 +111,9 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              final success = await ref.read(addressProvider.notifier).deleteAddress(address.id);
+              final success = await ref
+                  .read(addressProvider.notifier)
+                  .deleteAddress(address.id);
               if (context.mounted) {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -131,22 +135,19 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
   }
 
   Future<void> _setAsDefault(AddressModel address) async {
-    await ref.read(addressProvider.notifier).updateAddress(
-      id: address.id,
-      isDefault: true,
-    );
+    await ref
+        .read(addressProvider.notifier)
+        .updateAddress(id: address.id, isDefault: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final addressState = ref.watch(addressProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(l10n.addressManagementTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.addressManagementTitle)),
       body: _buildBody(addressState, l10n),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddAddressDialog,
@@ -182,7 +183,11 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline, size: 40, color: AppColors.error),
+              child: const Icon(
+                Icons.error_outline,
+                size: 40,
+                color: AppColors.error,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -192,7 +197,8 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => ref.read(addressProvider.notifier).fetchAddresses(),
+              onPressed: () =>
+                  ref.read(addressProvider.notifier).fetchAddresses(),
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text('Thử lại'),
             ),
@@ -213,14 +219,20 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.location_off, size: 40, color: AppColors.textHint),
+              child: const Icon(
+                Icons.location_off,
+                size: 40,
+                color: AppColors.textHint,
+              ),
             ),
             const SizedBox(height: 16),
             Text(l10n.addressEmpty, style: AppTextStyles.headline4),
             const SizedBox(height: 8),
             Text(
               l10n.addressEmptySubtitle,
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -232,7 +244,8 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: state.addresses.length,
-        itemBuilder: (context, index) => _buildAddressCard(state.addresses[index]),
+        itemBuilder: (context, index) =>
+            _buildAddressCard(state.addresses[index]),
       ),
     );
   }
@@ -245,7 +258,11 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -264,7 +281,9 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 ),
                 child: Icon(
                   _iconForLabel(address.label),
-                  color: address.isDefault ? AppColors.primary : AppColors.textHint,
+                  color: address.isDefault
+                      ? AppColors.primary
+                      : AppColors.textHint,
                   size: 22,
                 ),
               ),
@@ -277,19 +296,28 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                       children: [
                         Text(
                           address.label,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         if (address.isDefault) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              AppLocalizations.of(context)!.addressDefault,
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
+                              AppLocalizations.of(context).addressDefault,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryDark,
+                              ),
                             ),
                           ),
                         ],
@@ -306,7 +334,11 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: AppColors.textHint, size: 20),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: AppColors.textHint,
+                  size: 20,
+                ),
                 onSelected: (value) {
                   switch (value) {
                     case 'edit':
@@ -331,13 +363,19 @@ class _AddressManagementScreenState extends ConsumerState<AddressManagementScree
                 TextButton.icon(
                   onPressed: () => _setAsDefault(address),
                   icon: const Icon(Icons.check_circle_outline, size: 16),
-                  label: Text(AppLocalizations.of(context)!.addressSetDefault, style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    AppLocalizations.of(context).addressSetDefault,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               const Spacer(),
               TextButton.icon(
                 onPressed: () => _showEditAddressDialog(address),
                 icon: const Icon(Icons.edit, size: 16),
-                label: Text(AppLocalizations.of(context)!.addressEdit, style: const TextStyle(fontSize: 12)),
+                label: Text(
+                  AppLocalizations.of(context).addressEdit,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),

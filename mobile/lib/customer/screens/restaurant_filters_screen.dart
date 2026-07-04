@@ -19,16 +19,23 @@ class RestaurantFilters {
   });
 
   bool get hasActiveFilters =>
-      minRating != null || maxDeliveryMinutes != null ||
-      priceRange != null || freeDeliveryOnly || openNowOnly;
+      minRating != null ||
+      maxDeliveryMinutes != null ||
+      priceRange != null ||
+      freeDeliveryOnly ||
+      openNowOnly;
 }
 
 class RestaurantFiltersScreen extends StatefulWidget {
   final RestaurantFilters initial;
-  const RestaurantFiltersScreen({super.key, this.initial = const RestaurantFilters()});
+  const RestaurantFiltersScreen({
+    super.key,
+    this.initial = const RestaurantFilters(),
+  });
 
   @override
-  State<RestaurantFiltersScreen> createState() => _RestaurantFiltersScreenState();
+  State<RestaurantFiltersScreen> createState() =>
+      _RestaurantFiltersScreenState();
 }
 
 class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
@@ -50,7 +57,7 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -64,7 +71,10 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
               _freeDelivery = false;
               _openNow = false;
             }),
-            child: Text(l10n.filterReset, style: const TextStyle(color: AppColors.error)),
+            child: Text(
+              l10n.filterReset,
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -79,7 +89,8 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
               options: const [3.0, 3.5, 4.0, 4.5],
               selected: _minRating,
               labelBuilder: (v) => '${v}+★',
-              onSelect: (v) => setState(() => _minRating = _minRating == v ? null : v),
+              onSelect: (v) =>
+                  setState(() => _minRating = _minRating == v ? null : v),
             ),
             const SizedBox(height: 20),
 
@@ -89,7 +100,8 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
               options: const [15, 30, 45, 60],
               selected: _maxMinutes,
               labelBuilder: (v) => l10n.filterMinutes(v),
-              onSelect: (v) => setState(() => _maxMinutes = _maxMinutes == v ? null : v),
+              onSelect: (v) =>
+                  setState(() => _maxMinutes = _maxMinutes == v ? null : v),
             ),
             const SizedBox(height: 20),
 
@@ -98,16 +110,29 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
             _buildChipRow<String>(
               options: const ['low', 'medium', 'high'],
               selected: _priceRange,
-              labelBuilder: (v) => v == 'low' ? '₫' : v == 'medium' ? '₫₫' : '₫₫₫',
-              onSelect: (v) => setState(() => _priceRange = _priceRange == v ? null : v),
+              labelBuilder: (v) => v == 'low'
+                  ? '₫'
+                  : v == 'medium'
+                  ? '₫₫'
+                  : '₫₫₫',
+              onSelect: (v) =>
+                  setState(() => _priceRange = _priceRange == v ? null : v),
             ),
             const SizedBox(height: 20),
 
-            _buildToggleRow(l10n.filterFreeDelivery, Icons.delivery_dining_outlined,
-                _freeDelivery, (v) => setState(() => _freeDelivery = v)),
+            _buildToggleRow(
+              l10n.filterFreeDelivery,
+              Icons.delivery_dining_outlined,
+              _freeDelivery,
+              (v) => setState(() => _freeDelivery = v),
+            ),
             const Divider(height: 24),
-            _buildToggleRow(l10n.filterOpenNow, Icons.access_time_outlined,
-                _openNow, (v) => setState(() => _openNow = v)),
+            _buildToggleRow(
+              l10n.filterOpenNow,
+              Icons.access_time_outlined,
+              _openNow,
+              (v) => setState(() => _openNow = v),
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -116,14 +141,18 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(RestaurantFilters(
-              minRating: _minRating,
-              maxDeliveryMinutes: _maxMinutes,
-              priceRange: _priceRange,
-              freeDeliveryOnly: _freeDelivery,
-              openNowOnly: _openNow,
-            )),
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+            onPressed: () => Navigator.of(context).pop(
+              RestaurantFilters(
+                minRating: _minRating,
+                maxDeliveryMinutes: _maxMinutes,
+                priceRange: _priceRange,
+                freeDeliveryOnly: _freeDelivery,
+                openNowOnly: _openNow,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
             child: Text(l10n.filterApply, style: AppTextStyles.buttonLarge),
           ),
         ),
@@ -151,7 +180,9 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
             decoration: BoxDecoration(
               color: isSelected ? AppColors.primary : AppColors.cardBackground,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.border,
+              ),
             ),
             child: Text(
               labelBuilder(opt),
@@ -166,13 +197,22 @@ class _RestaurantFiltersScreenState extends State<RestaurantFiltersScreen> {
     );
   }
 
-  Widget _buildToggleRow(String label, IconData icon, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildToggleRow(
+    String label,
+    IconData icon,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Row(
       children: [
         Icon(icon, color: AppColors.primary, size: 22),
         const SizedBox(width: 12),
         Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-        Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: AppColors.primary,
+        ),
       ],
     );
   }

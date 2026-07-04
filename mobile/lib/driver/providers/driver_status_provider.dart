@@ -89,5 +89,5 @@ class DriverStatusNotifier extends StateNotifier<DriverStatus> {
 
 final driverStatusProvider =
     StateNotifierProvider<DriverStatusNotifier, DriverStatus>((ref) {
-  return DriverStatusNotifier();
-});
+      return DriverStatusNotifier();
+    });

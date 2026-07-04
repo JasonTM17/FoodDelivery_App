@@ -41,11 +41,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (_selectedAddress == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.checkoutSelectAddress)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.checkoutSelectAddress)));
       return;
     }
 
@@ -55,21 +55,25 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cart = cartState.currentCart;
     if (cart == null) return;
 
-    final orderId = await ref.read(orderProvider.notifier).placeOrder(
-      restaurantId: cart.restaurantId,
-      items: cart.items.map((item) => item.toJson()).toList(),
-      deliveryAddress: _selectedAddress!.toJson(),
-      paymentMethod: _paymentMethod,
-      note: _noteController.text.isNotEmpty ? _noteController.text : null,
-      promoCode: cartState.promoCode,
-    );
+    final orderId = await ref
+        .read(orderProvider.notifier)
+        .placeOrder(
+          restaurantId: cart.restaurantId,
+          items: cart.items.map((item) => item.toJson()).toList(),
+          deliveryAddress: _selectedAddress!.toJson(),
+          paymentMethod: _paymentMethod,
+          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+          promoCode: cartState.promoCode,
+        );
 
     if (!mounted) return;
     setState(() => _isPlacing = false);
 
     if (orderId != null) {
       ref.read(cartProvider.notifier).clearCart();
-      Navigator.of(context).pushReplacementNamed('/order-tracking', arguments: orderId);
+      Navigator.of(
+        context,
+      ).pushReplacementNamed('/order-tracking', arguments: orderId);
     } else {
       final error = ref.read(orderProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +84,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final cartState = ref.watch(cartProvider);
     final orderState = ref.watch(orderProvider);
     final cart = cartState.currentCart;
@@ -117,7 +121,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             if (addressState.isLoading && addresses.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(12),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               )
             else if (addresses.isEmpty)
               Container(
@@ -129,92 +135,118 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.location_off, color: AppColors.textHint, size: 32),
+                    const Icon(
+                      Icons.location_off,
+                      color: AppColors.textHint,
+                      size: 32,
+                    ),
                     const SizedBox(height: 8),
-                    Text(l10n.checkoutNoAddress, style: AppTextStyles.bodyMedium),
+                    Text(
+                      l10n.checkoutNoAddress,
+                      style: AppTextStyles.bodyMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.checkoutNoAddressSubtitle,
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               )
             else
-              ...addresses.map((address) => GestureDetector(
-              onTap: () => setState(() => _selectedAddress = address),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _selectedAddress?.id == address.id ? AppColors.primary : AppColors.border,
-                    width: _selectedAddress?.id == address.id ? 2 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
+              ...addresses.map(
+                (address) => GestureDetector(
+                  onTap: () => setState(() => _selectedAddress = address),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
                         color: _selectedAddress?.id == address.id
-                            ? AppColors.primary.withValues(alpha: 0.1)
-                            : AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        address.label == 'Nhà' ? Icons.home : Icons.work,
-                        color: AppColors.primary,
-                        size: 20,
+                            ? AppColors.primary
+                            : AppColors.border,
+                        width: _selectedAddress?.id == address.id ? 2 : 1,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _selectedAddress?.id == address.id
+                                ? AppColors.primary.withValues(alpha: 0.1)
+                                : AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            address.label == 'Nhà' ? Icons.home : Icons.work,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(address.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              if (address.isDefault) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryLight,
-                                    borderRadius: BorderRadius.circular(6),
+                              Row(
+                                children: [
+                                  Text(
+                                    address.label,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                  child: Text(
-                                    l10n.addressDefault,
-                                    style: const TextStyle(fontSize: 10, color: AppColors.primaryDark),
-                                  ),
-                                ),
-                              ],
+                                  if (address.isDefault) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryLight,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        l10n.addressDefault,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.primaryDark,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                address.address,
+                                style: AppTextStyles.bodySmall,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            address.address,
-                            style: AppTextStyles.bodySmall,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                        ),
+                        Icon(
+                          _selectedAddress?.id == address.id
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: _selectedAddress?.id == address.id
+                              ? AppColors.primary
+                              : AppColors.textHint,
+                        ),
+                      ],
                     ),
-                    Icon(
-                      _selectedAddress?.id == address.id
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color: _selectedAddress?.id == address.id ? AppColors.primary : AppColors.textHint,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            )),
             TextButton.icon(
               onPressed: () => context.push(Routes.addresses),
               icon: const Icon(Icons.add, size: 18),
@@ -273,34 +305,64 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
                 ],
               ),
               child: Column(
                 children: [
-                  ...cart.items.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Text('${item.quantity}x ', style: const TextStyle(fontWeight: FontWeight.w600)),
-                        Expanded(child: Text(item.menuItem.name, style: AppTextStyles.bodyMedium)),
-                        Text(
-                          _formatPrice(item.totalPrice),
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                  ...cart.items.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${item.quantity}x ',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Expanded(
+                            child: Text(
+                              item.menuItem.name,
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                          ),
+                          Text(
+                            _formatPrice(item.totalPrice),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                   const Divider(),
-                  _buildSummaryRow(l10n.cartSubtotal, _formatPrice(cartState.subtotal)),
+                  _buildSummaryRow(
+                    l10n.cartSubtotal,
+                    _formatPrice(cartState.subtotal),
+                  ),
                   const SizedBox(height: 6),
-                  _buildSummaryRow(l10n.cartDeliveryFee, cartState.deliveryFee > 0 ? _formatPrice(cartState.deliveryFee) : l10n.cartFreeDelivery),
+                  _buildSummaryRow(
+                    l10n.cartDeliveryFee,
+                    cartState.deliveryFee > 0
+                        ? _formatPrice(cartState.deliveryFee)
+                        : l10n.cartFreeDelivery,
+                  ),
                   if (cartState.discount > 0) ...[
                     const SizedBox(height: 6),
-                    _buildSummaryRow(l10n.cartDiscountLabel, '-${_formatPrice(cartState.discount)}', valueColor: AppColors.success),
+                    _buildSummaryRow(
+                      l10n.cartDiscountLabel,
+                      '-${_formatPrice(cartState.discount)}',
+                      valueColor: AppColors.success,
+                    ),
                   ],
                   const SizedBox(height: 6),
-                  _buildSummaryRow(l10n.cartGrandTotal, _formatPrice(cartState.total), isTotal: true),
+                  _buildSummaryRow(
+                    l10n.cartGrandTotal,
+                    _formatPrice(cartState.total),
+                    isTotal: true,
+                  ),
                 ],
               ),
             ),
@@ -326,12 +388,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: (_isPlacing || orderState.isPlacingOrder) ? null : _placeOrder,
+              onPressed: (_isPlacing || orderState.isPlacingOrder)
+                  ? null
+                  : _placeOrder,
               child: (_isPlacing || orderState.isPlacingOrder)
                   ? const SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
                     )
                   : Text(
                       '${l10n.checkoutConfirmOrder} · ${_formatPrice(cartState.total)}',
@@ -371,7 +438,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   Text(subtitle, style: AppTextStyles.bodySmall),
                 ],
               ),
@@ -386,7 +456,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isTotal = false, Color? valueColor}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+    Color? valueColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -410,9 +485,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 }

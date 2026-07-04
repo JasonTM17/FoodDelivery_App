@@ -100,12 +100,16 @@ class _BankAccountFormSheetState extends State<BankAccountFormSheet> {
                   .map(
                     (bank) => DropdownMenuItem(
                       value: bank.code,
-                      child: Text(bank.name, style: const TextStyle(fontSize: 14)),
+                      child: Text(
+                        bank.name,
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ),
                   )
                   .toList(),
               onChanged: (value) => setState(() => _selectedBankCode = value),
-              validator: (value) => value == null ? l10n.driver_bank_name_required : null,
+              validator: (value) =>
+                  value == null ? l10n.driver_bank_name_required : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -116,8 +120,9 @@ class _BankAccountFormSheetState extends State<BankAccountFormSheet> {
                 l10n.driver_bank_holder_label,
                 hintText: l10n.driver_bank_holder_hint,
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? l10n.driver_bank_holder_required : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? l10n.driver_bank_holder_required
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -129,8 +134,9 @@ class _BankAccountFormSheetState extends State<BankAccountFormSheet> {
                 l10n.driver_bank_account_label,
                 hintText: l10n.driver_bank_account_hint,
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? l10n.driver_bank_account_required : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? l10n.driver_bank_account_required
+                  : null,
             ),
             const SizedBox(height: 24),
             SizedBox(

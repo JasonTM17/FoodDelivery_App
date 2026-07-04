@@ -12,7 +12,8 @@ class AddressPickerScreen extends ConsumerStatefulWidget {
   const AddressPickerScreen({super.key});
 
   @override
-  ConsumerState<AddressPickerScreen> createState() => _AddressPickerScreenState();
+  ConsumerState<AddressPickerScreen> createState() =>
+      _AddressPickerScreenState();
 }
 
 class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
@@ -34,15 +35,18 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final addrState = ref.watch(addressProvider);
     final authState = ref.watch(authProvider);
 
-    final filtered = addrState.addresses.where((a) =>
-      _query.isEmpty ||
-      a.address.toLowerCase().contains(_query.toLowerCase()) ||
-      (a.label?.toLowerCase().contains(_query.toLowerCase()) ?? false)
-    ).toList();
+    final filtered = addrState.addresses
+        .where(
+          (a) =>
+              _query.isEmpty ||
+              a.address.toLowerCase().contains(_query.toLowerCase()) ||
+              a.label.toLowerCase().contains(_query.toLowerCase()),
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -61,7 +65,10 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () { _searchCtrl.clear(); setState(() => _query = ''); },
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          setState(() => _query = '');
+                        },
                       )
                     : null,
                 filled: true,
@@ -70,7 +77,10 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -92,7 +102,10 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(l10n.addressPickerSaved, style: AppTextStyles.bodySmall),
+              child: Text(
+                l10n.addressPickerSaved,
+                style: AppTextStyles.bodySmall,
+              ),
             ),
           ),
 
@@ -100,28 +113,35 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
             child: addrState.isLoading
                 ? const LoadingShimmer()
                 : filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.addressPickerNoSaved,
-                          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, indent: 56),
-                        itemBuilder: (ctx, i) {
-                          final addr = filtered[i];
-                          final isSelected = _selected?.id == addr.id;
-                          return _buildOptionTile(
-                            icon: addr.isDefault ? Icons.home : Icons.location_on_outlined,
-                            iconColor: addr.isDefault ? AppColors.primary : AppColors.textSecondary,
-                            title: addr.label ?? addr.address,
-                            subtitle: addr.label != null ? addr.address : null,
-                            isSelected: isSelected,
-                            onTap: () => setState(() => _selected = addr),
-                          );
-                        },
+                ? Center(
+                    child: Text(
+                      l10n.addressPickerNoSaved,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, indent: 56),
+                    itemBuilder: (ctx, i) {
+                      final addr = filtered[i];
+                      final isSelected = _selected?.id == addr.id;
+                      return _buildOptionTile(
+                        icon: addr.isDefault
+                            ? Icons.home
+                            : Icons.location_on_outlined,
+                        iconColor: addr.isDefault
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        title: addr.label,
+                        subtitle: addr.address,
+                        isSelected: isSelected,
+                        onTap: () => setState(() => _selected = addr),
+                      );
+                    },
+                  ),
           ),
 
           // Confirm button
@@ -133,8 +153,13 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(_selected),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                    child: Text(l10n.addressPickerConfirm, style: AppTextStyles.buttonLarge),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      l10n.addressPickerConfirm,
+                      style: AppTextStyles.buttonLarge,
+                    ),
                   ),
                 ),
               ),
@@ -157,18 +182,25 @@ class _AddressPickerScreenState extends ConsumerState<AddressPickerScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.1),
+          color: iconColor.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(title,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? AppColors.primary : AppColors.textPrimary,
-          )),
+      title: Text(
+        title,
+        style: AppTextStyles.bodyMedium.copyWith(
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: isSelected ? AppColors.primary : AppColors.textPrimary,
+        ),
+      ),
       subtitle: subtitle != null
-          ? Text(subtitle, style: AppTextStyles.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis)
+          ? Text(
+              subtitle,
+              style: AppTextStyles.bodySmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
       trailing: isSelected
           ? const Icon(Icons.check_circle, color: AppColors.primary, size: 22)

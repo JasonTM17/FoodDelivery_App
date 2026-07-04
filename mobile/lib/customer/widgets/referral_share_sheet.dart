@@ -18,7 +18,8 @@ class ReferralShareSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shareMessage = message ??
+    final shareMessage =
+        message ??
         'Dùng mã $referralCode để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!';
 
     return Container(
@@ -42,10 +43,7 @@ class ReferralShareSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              'Chia sẻ mã giới thiệu',
-              style: AppTextStyles.headline4,
-            ),
+            Text('Chia sẻ mã giới thiệu', style: AppTextStyles.headline4),
             const SizedBox(height: 16),
             // Code display
             Container(
@@ -54,7 +52,9 @@ class ReferralShareSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 referralCode,
@@ -71,17 +71,15 @@ class ReferralShareSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildShareButton(
-                  context,
-                  Icons.copy,
-                  'Sao chép mã',
-                  () {
-                    Clipboard.setData(ClipboardData(text: referralCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã sao chép mã'), backgroundColor: AppColors.success),
-                    );
-                  },
-                ),
+                _buildShareButton(context, Icons.copy, 'Sao chép mã', () {
+                  Clipboard.setData(ClipboardData(text: referralCode));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã sao chép mã'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }),
                 _buildShareButton(
                   context,
                   Icons.share,
@@ -119,7 +117,7 @@ class ReferralShareSheet extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppColors.primary, size: 24),

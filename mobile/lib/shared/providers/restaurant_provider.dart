@@ -4,9 +4,10 @@ import '../api/api_client.dart';
 import '../models/restaurant.dart';
 import '../models/menu_item.dart';
 
-final restaurantProvider = StateNotifierProvider<RestaurantNotifier, RestaurantState>((ref) {
-  return RestaurantNotifier();
-});
+final restaurantProvider =
+    StateNotifierProvider<RestaurantNotifier, RestaurantState>((ref) {
+      return RestaurantNotifier();
+    });
 
 class RestaurantState {
   final bool isLoading;
@@ -69,21 +70,26 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
       if (longitude != null) queryParams['longitude'] = longitude;
       if (cuisine != null) queryParams['cuisine'] = cuisine;
 
-      final response = await _api.get('/restaurants/nearby', queryParameters: queryParams);
+      final response = await _api.get(
+        '/restaurants/nearby',
+        queryParameters: queryParams,
+      );
       final dataList = response.data as List<dynamic>;
       final restaurants = dataList
           .map((e) => RestaurantModel.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      state = state.copyWith(
-        isLoading: false,
-        nearbyRestaurants: restaurants,
-      );
+      state = state.copyWith(isLoading: false, nearbyRestaurants: restaurants);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể tải danh sách nhà hàng.';
+      final message =
+          e.response?.data?['message'] as String? ??
+          'Không thể tải danh sách nhà hàng.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải nhà hàng.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải nhà hàng.',
+      );
     }
   }
 
@@ -91,13 +97,20 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get('/restaurants/$restaurantId');
-      final restaurant = RestaurantModel.fromJson(response.data as Map<String, dynamic>);
+      final restaurant = RestaurantModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       state = state.copyWith(isLoading: false, selectedRestaurant: restaurant);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể tải thông tin nhà hàng.';
+      final message =
+          e.response?.data?['message'] as String? ??
+          'Không thể tải thông tin nhà hàng.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải thông tin nhà hàng.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải thông tin nhà hàng.',
+      );
     }
   }
 
@@ -112,10 +125,14 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
 
       state = state.copyWith(isLoadingMenu: false, menuItems: menuItems);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Không thể tải thực đơn.';
+      final message =
+          e.response?.data?['message'] as String? ?? 'Không thể tải thực đơn.';
       state = state.copyWith(isLoadingMenu: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoadingMenu: false, error: 'Có lỗi xảy ra khi tải thực đơn.');
+      state = state.copyWith(
+        isLoadingMenu: false,
+        error: 'Có lỗi xảy ra khi tải thực đơn.',
+      );
     }
   }
 
@@ -126,7 +143,10 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     }
     state = state.copyWith(isSearching: true);
     try {
-      final response = await _api.get('/restaurants/search', queryParameters: {'q': query});
+      final response = await _api.get(
+        '/restaurants/search',
+        queryParameters: {'q': query},
+      );
       final dataList = response.data as List<dynamic>;
       final results = dataList
           .map((e) => RestaurantModel.fromJson(e as Map<String, dynamic>))

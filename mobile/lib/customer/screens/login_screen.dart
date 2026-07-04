@@ -33,10 +33,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    await ref.read(authProvider.notifier).login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    await ref
+        .read(authProvider.notifier)
+        .login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -49,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -87,7 +89,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.loginWelcomeBack,
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
@@ -101,7 +105,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -113,8 +121,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => ref.read(authProvider.notifier).clearError(),
-                          child: const Icon(Icons.close, color: AppColors.error, size: 18),
+                          onTap: () =>
+                              ref.read(authProvider.notifier).clearError(),
+                          child: const Icon(
+                            Icons.close,
+                            color: AppColors.error,
+                            size: 18,
+                          ),
                         ),
                       ],
                     ),
@@ -134,7 +147,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.emailRequired;
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value.trim())) {
                       return l10n.emailInvalid;
                     }
                     return null;
@@ -151,9 +166,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     hintText: l10n.passwordHint,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (value) {
@@ -188,7 +206,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                     child: Text(
                       l10n.forgotPassword,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
@@ -217,7 +238,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       l10n.noAccount,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => context.push(Routes.register),

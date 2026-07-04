@@ -35,7 +35,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
   }
 
   Future<void> _handleCancel() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final provider = ref.read(cancelOrderProvider.notifier);
     final ok = await provider.cancelOrder(widget.orderId);
     if (!mounted) return;
@@ -60,7 +60,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(cancelOrderProvider);
 
     return Scaffold(
@@ -97,13 +97,17 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
                 children: [
                   Text(
                     l10n.cancelOrderInfoHeader,
-                    style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   if (widget.restaurantName != null)
                     Text(
                       widget.restaurantName!,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   if (widget.orderSummary != null)
                     Padding(
@@ -127,10 +131,7 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
             const SizedBox(height: 24),
 
             // Reason picker
-            Text(
-              l10n.cancelOrderReasonHeader,
-              style: AppTextStyles.headline4,
-            ),
+            Text(l10n.cancelOrderReasonHeader, style: AppTextStyles.headline4),
             const SizedBox(height: 4),
             Text(
               l10n.cancelOrderReasonSubtitle,
@@ -139,7 +140,8 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
             const SizedBox(height: 16),
             CancelReasonPicker(
               selectedReason: state.selectedReason,
-              onSelected: (reason) => ref.read(cancelOrderProvider.notifier).selectReason(reason),
+              onSelected: (reason) =>
+                  ref.read(cancelOrderProvider.notifier).selectReason(reason),
               labels: _reasonLabels(l10n),
             ),
             const SizedBox(height: 20),
@@ -148,10 +150,13 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
             TextField(
               controller: _noteController,
               maxLines: 3,
-              onChanged: (v) => ref.read(cancelOrderProvider.notifier).updateNote(v),
+              onChanged: (v) =>
+                  ref.read(cancelOrderProvider.notifier).updateNote(v),
               decoration: InputDecoration(
                 hintText: l10n.cancelOrderNoteHint,
-                hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
+                hintStyle: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textHint,
+                ),
                 filled: true,
                 fillColor: AppColors.cardBackground,
                 border: OutlineInputBorder(
@@ -167,17 +172,23 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.08),
+                color: AppColors.info.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: AppColors.info, size: 20),
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.info,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       l10n.cancelOrderRefundNote,
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.info),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.info,
+                      ),
                     ),
                   ),
                 ],
@@ -189,23 +200,33 @@ class _CancelOrderScreenState extends ConsumerState<CancelOrderScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: state.isLoading || state.selectedReason == null ? null : _handleCancel,
+                onPressed: state.isLoading || state.selectedReason == null
+                    ? null
+                    : _handleCancel,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   disabledBackgroundColor: AppColors.border,
                 ),
                 child: state.isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Text(
                         l10n.cancelOrderConfirmCta,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               ),
             ),

@@ -32,10 +32,10 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   }
 
   Color _demandColor(int level) => switch (level) {
-        2 => const Color(0xFFEF4444),
-        1 => const Color(0xFFF97316),
-        _ => const Color(0xFF3B82F6),
-      };
+    2 => const Color(0xFFEF4444),
+    1 => const Color(0xFFF97316),
+    _ => const Color(0xFF3B82F6),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +49,10 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
         elevation: 0,
         title: Text(
           l10n.driver_heatmap_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Column(
@@ -61,37 +64,37 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : state.points.isEmpty
-                    ? _buildEmptyState(l10n)
-                    : Stack(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFF374151)),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: HeatmapCanvas(
-                                points: state.points,
-                                centerLat: 10.8231,
-                                centerLng: 106.6297,
-                                onPointTap: (point) {
-                                  setState(() => _selectedPoint = point);
-                                },
-                              ),
-                            ),
+                ? _buildEmptyState(l10n)
+                : Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E1E),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF374151)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: HeatmapCanvas(
+                            points: state.points,
+                            centerLat: 10.8231,
+                            centerLng: 106.6297,
+                            onPointTap: (point) {
+                              setState(() => _selectedPoint = point);
+                            },
                           ),
-                          if (_selectedPoint != null)
-                            Positioned(
-                              bottom: 16,
-                              left: 16,
-                              right: 16,
-                              child: _buildPointDetail(),
-                            ),
-                        ],
+                        ),
                       ),
+                      if (_selectedPoint != null)
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                          child: _buildPointDetail(),
+                        ),
+                    ],
+                  ),
           ),
           _buildLegend(l10n),
         ],
@@ -114,11 +117,9 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     _selectedWindow = w.$1;
                     _selectedPoint = null;
                   });
-                  ref.read(heatmapProvider.notifier).setWindow(
-                        w.$1,
-                        10.8231,
-                        106.6297,
-                      );
+                  ref
+                      .read(heatmapProvider.notifier)
+                      .setWindow(w.$1, 10.8231, 106.6297);
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -139,7 +140,9 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isActive ? AppColors.primary : const Color(0xFF6B7280),
+                      color: isActive
+                          ? AppColors.primary
+                          : const Color(0xFF6B7280),
                     ),
                   ),
                 ),
@@ -177,7 +180,10 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                 color: _demandColor(p.demandLevel).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.location_on, color: _demandColor(p.demandLevel)),
+              child: Icon(
+                Icons.location_on,
+                color: _demandColor(p.demandLevel),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -213,8 +219,8 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                 p.demandLevel == 2
                     ? 'Cao'
                     : p.demandLevel == 1
-                        ? 'TB'
-                        : 'Thấp',
+                    ? 'TB'
+                    : 'Thấp',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -270,8 +276,11 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.map_outlined,
-              size: 64, color: const Color(0xFF6B7280).withValues(alpha: 0.5)),
+          Icon(
+            Icons.map_outlined,
+            size: 64,
+            color: const Color(0xFF6B7280).withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
           const Text(
             'Chưa có dữ liệu nhu cầu',

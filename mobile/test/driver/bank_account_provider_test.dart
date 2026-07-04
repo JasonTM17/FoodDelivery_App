@@ -23,19 +23,22 @@ void main() {
     });
   });
 
-  test('BankAccount copyWith updates default flag without losing account details', () {
-    const account = BankAccount(
-      id: 'account-1',
-      bankCode: 'vcb',
-      bankName: 'Vietcombank',
-      accountNumber: '001100223344',
-      accountHolderName: 'NGUYEN VAN A',
-    );
+  test(
+    'BankAccount copyWith updates default flag without losing account details',
+    () {
+      const account = BankAccount(
+        id: 'account-1',
+        bankCode: 'vcb',
+        bankName: 'Vietcombank',
+        accountNumber: '001100223344',
+        accountHolderName: 'NGUYEN VAN A',
+      );
 
-    final updated = account.copyWith(isDefault: true);
+      final updated = account.copyWith(isDefault: true);
 
-    expect(updated.id, account.id);
-    expect(updated.accountNumber, account.accountNumber);
-    expect(updated.isDefault, isTrue);
-  });
+      expect(updated.id, account.id);
+      expect(updated.accountNumber, account.accountNumber);
+      expect(updated.isDefault, isTrue);
+    },
+  );
 }

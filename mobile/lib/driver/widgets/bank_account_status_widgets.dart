@@ -18,7 +18,10 @@ class BankAccountInfoCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
+          const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: AppColors.primary,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -58,7 +61,10 @@ class RetryableBankError extends StatelessWidget {
           const Icon(Icons.error_outline, color: Color(0xFFF87171)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(message, style: const TextStyle(color: Color(0xFFFCA5A5))),
+            child: Text(
+              message,
+              style: const TextStyle(color: Color(0xFFFCA5A5)),
+            ),
           ),
           TextButton(onPressed: onRetry, child: Text(retryLabel)),
         ],

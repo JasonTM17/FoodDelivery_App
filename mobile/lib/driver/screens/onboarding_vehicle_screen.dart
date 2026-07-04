@@ -33,7 +33,7 @@ class _OnboardingVehicleScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final typeLabels = [
       l10n.driver_onboarding_vehicle_type_bike,
       l10n.driver_onboarding_vehicle_type_motorbike,
@@ -47,7 +47,10 @@ class _OnboardingVehicleScreenState
         elevation: 0,
         title: Text(
           l10n.driver_onboarding_vehicle_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -166,7 +169,11 @@ class _VehicleTypeCard extends StatelessWidget {
             ),
             const Spacer(),
             if (selected)
-              const Icon(Icons.check_circle, color: AppColors.primary, size: 20),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 20,
+              ),
           ],
         ),
       ),

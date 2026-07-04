@@ -32,14 +32,16 @@ class VietnamBoundaryOverlay {
         final pair = c as List<dynamic>;
         return LatLng(pair[1] as double, pair[0] as double);
       }).toList();
-      result.add(Polygon(
-        polygonId: PolygonId(id),
-        points: points,
-        strokeColor: _strokeColor,
-        strokeWidth: _strokeWidth,
-        fillColor: _fillColor,
-        geodesic: true,
-      ));
+      result.add(
+        Polygon(
+          polygonId: PolygonId(id),
+          points: points,
+          strokeColor: _strokeColor,
+          strokeWidth: _strokeWidth,
+          fillColor: _fillColor,
+          geodesic: true,
+        ),
+      );
     }
     _cached = result;
     return result;

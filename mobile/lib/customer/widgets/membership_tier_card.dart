@@ -29,7 +29,6 @@ class MembershipTierCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = tier.monthlyPriceVnd();
     final isFree = tier == MembershipTier.free;
 
     return Container(
@@ -51,7 +50,7 @@ class MembershipTierCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isCurrentTier
-                ? AppColors.primary.withOpacity(0.3)
+                ? AppColors.primary.withValues(alpha: 0.3)
                 : AppColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 3),
@@ -72,7 +71,10 @@ class MembershipTierCard extends StatelessWidget {
               ),
               if (isCurrentTier)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white24,
                     borderRadius: BorderRadius.circular(12),
@@ -89,33 +91,41 @@ class MembershipTierCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            isFree ? freeLabel : '${tier.monthlyPriceVnd().toString()}${pricePerMonthSuffix}',
+            isFree
+                ? freeLabel
+                : '${tier.monthlyPriceVnd().toString()}${pricePerMonthSuffix}',
             style: AppTextStyles.headline3.copyWith(
               color: isCurrentTier ? Colors.white : AppColors.primary,
             ),
           ),
           const SizedBox(height: 16),
-          ...benefits.map((benefit) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      size: 18,
-                      color: isCurrentTier ? Colors.white : AppColors.success,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        benefit,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: isCurrentTier ? Colors.white70 : AppColors.textSecondary,
+          ...benefits
+              .map(
+                (benefit) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 18,
+                        color: isCurrentTier ? Colors.white : AppColors.success,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          benefit,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: isCurrentTier
+                                ? Colors.white70
+                                : AppColors.textSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )).toList(),
+              )
+              .toList(),
           if (!isCurrentTier && !isFree && onUpgrade != null) ...[
             const SizedBox(height: 16),
             SizedBox(
@@ -126,7 +136,9 @@ class MembershipTierCard extends StatelessWidget {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: Text(upgradeCtaLabel),
               ),

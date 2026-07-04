@@ -4,10 +4,7 @@ import '../theme/app_colors.dart';
 class OrderStatusBadge extends StatelessWidget {
   final String status;
 
-  const OrderStatusBadge({
-    super.key,
-    required this.status,
-  });
+  const OrderStatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {

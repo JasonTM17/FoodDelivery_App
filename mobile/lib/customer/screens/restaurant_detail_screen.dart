@@ -21,7 +21,8 @@ class RestaurantDetailScreen extends ConsumerStatefulWidget {
   const RestaurantDetailScreen({super.key, required this.restaurantId});
 
   @override
-  ConsumerState<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
+  ConsumerState<RestaurantDetailScreen> createState() =>
+      _RestaurantDetailScreenState();
 }
 
 class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
@@ -38,7 +39,9 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
   }
 
   Future<void> _loadData() async {
-    ref.read(restaurantProvider.notifier).fetchRestaurantDetail(widget.restaurantId);
+    ref
+        .read(restaurantProvider.notifier)
+        .fetchRestaurantDetail(widget.restaurantId);
     ref.read(restaurantProvider.notifier).fetchMenu(widget.restaurantId);
   }
 
@@ -60,96 +63,115 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
       body: state.isLoading && restaurant == null
           ? const Center(child: CircularProgressIndicator())
           : restaurant == null
-              ? ErrorState(
-                  message: state.error ?? 'Không thể tải thông tin nhà hàng',
-                  onRetry: _loadData,
-                )
-              : NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) {
-                    return [
-                      SliverAppBar(
-                        expandedHeight: 200,
-                        pinned: true,
-                        stretch: true,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              restaurant.coverImageUrl != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: restaurant.coverImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorWidget: (_, __, ___) =>
-                                          Container(color: AppColors.surface),
-                                    )
-                                  : Container(color: AppColors.surface),
-                              // Gradient overlay
-                              DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.7),
-                                    ],
-                                  ),
-                                ),
+          ? ErrorState(
+              message: state.error ?? 'Không thể tải thông tin nhà hàng',
+              onRetry: _loadData,
+            )
+          : NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    expandedHeight: 200,
+                    pinned: true,
+                    stretch: true,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          restaurant.coverImageUrl != null
+                              ? CachedNetworkImage(
+                                  imageUrl: restaurant.coverImageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      Container(color: AppColors.surface),
+                                )
+                              : Container(color: AppColors.surface),
+                          // Gradient overlay
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.7),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                        actions: [
-                          IconButton(
-                            icon: const Icon(Icons.share_outlined, color: Colors.white),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Đã sao chép liên kết: ${restaurant.name}')),
-                              );
-                            },
+                            ),
                           ),
                         ],
-                        bottom: PreferredSize(
-                          preferredSize: const Size.fromHeight(100),
-                          child: _buildRestaurantHeader(restaurant),
-                        ),
                       ),
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _TabBarDelegate(
-                          TabBar(
-                            controller: _tabController,
-                            labelColor: AppColors.primary,
-                            unselectedLabelColor: AppColors.textSecondary,
-                            indicatorColor: AppColors.primary,
-                            indicatorWeight: 3,
-                            labelStyle: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                    ),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Đã sao chép liên kết: ${restaurant.name}',
+                              ),
                             ),
-                            tabs: [
-                              Tab(text: AppLocalizations.of(context)!.restaurantMenuTab),
-                              Tab(text: AppLocalizations.of(context)!.restaurantReviewsTab),
-                              Tab(text: AppLocalizations.of(context)!.restaurantInfoTab),
-                            ],
-                          ),
-                        ),
+                          );
+                        },
                       ),
-                    ];
-                  },
-                  body: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildMenuTab(menuItems, state.isLoadingMenu),
-                      _buildReviewsTab(restaurant.reviews),
-                      _buildInfoTab(restaurant),
                     ],
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(100),
+                      child: _buildRestaurantHeader(restaurant),
+                    ),
                   ),
-                ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TabBarDelegate(
+                      TabBar(
+                        controller: _tabController,
+                        labelColor: AppColors.primary,
+                        unselectedLabelColor: AppColors.textSecondary,
+                        indicatorColor: AppColors.primary,
+                        indicatorWeight: 3,
+                        labelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        tabs: [
+                          Tab(
+                            text: AppLocalizations.of(
+                              context,
+                            ).restaurantMenuTab,
+                          ),
+                          Tab(
+                            text: AppLocalizations.of(
+                              context,
+                            ).restaurantReviewsTab,
+                          ),
+                          Tab(
+                            text: AppLocalizations.of(
+                              context,
+                            ).restaurantInfoTab,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildMenuTab(menuItems, state.isLoadingMenu),
+                  _buildReviewsTab(restaurant.reviews),
+                  _buildInfoTab(restaurant),
+                ],
+              ),
+            ),
       bottomNavigationBar: cartState.isEmpty
           ? null
           : _buildCartBottomBar(cartState),
@@ -178,12 +200,19 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               const SizedBox(width: 4),
               Text(
                 restaurant.rating.toStringAsFixed(1),
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(width: 4),
               Text(
                 '(${restaurant.reviewCount})',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
               ),
               if (restaurant.distance != null) ...[
                 const SizedBox(width: 12),
@@ -191,7 +220,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                 const SizedBox(width: 2),
                 Text(
                   restaurant.distance!,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
                 ),
               ],
               const SizedBox(width: 12),
@@ -199,7 +231,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               const SizedBox(width: 2),
               Text(
                 '${restaurant.estimatedPrepTime}ph',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -214,7 +249,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               spacing: 6,
               children: restaurant.cuisineTypes.map((cuisine) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
@@ -240,8 +278,8 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
     if (menuItems.isEmpty) {
       return EmptyState(
         icon: Icons.restaurant_menu,
-        title: AppLocalizations.of(context)!.restaurantMenuEmpty,
-        subtitle: AppLocalizations.of(context)!.restaurantMenuEmptySubtitle,
+        title: AppLocalizations.of(context).restaurantMenuEmpty,
+        subtitle: AppLocalizations.of(context).restaurantMenuEmptySubtitle,
       );
     }
 
@@ -266,36 +304,51 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 category,
-                style: AppTextStyles.headline4.copyWith(color: AppColors.primaryDark),
+                style: AppTextStyles.headline4.copyWith(
+                  color: AppColors.primaryDark,
+                ),
               ),
             ),
-            ...items.map((item) => FoodCard(
-              item: item,
-              onTap: () {
-                context.push(
-                  Routes.foodDetail,
-                  extra: {'item': item, 'restaurantName': ref.read(restaurantProvider).selectedRestaurant?.name ?? ''},
-                );
-              },
-              onAddToCart: () {
-                ref.read(cartProvider.notifier).setRestaurantInfo(
-                  widget.restaurantId,
-                  ref.read(restaurantProvider).selectedRestaurant?.name ?? '',
-                );
-                ref.read(cartProvider.notifier).addItem(item: item);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Đã thêm ${item.name} vào giỏ hàng'),
-                    duration: const Duration(seconds: 2),
-                    action: SnackBarAction(
-                      label: AppLocalizations.of(context)!.cartViewCart,
-                      textColor: Colors.white,
-                      onPressed: () => context.push(Routes.cart),
+            ...items.map(
+              (item) => FoodCard(
+                item: item,
+                onTap: () {
+                  context.push(
+                    Routes.foodDetail,
+                    extra: {
+                      'item': item,
+                      'restaurantName':
+                          ref
+                              .read(restaurantProvider)
+                              .selectedRestaurant
+                              ?.name ??
+                          '',
+                    },
+                  );
+                },
+                onAddToCart: () {
+                  ref
+                      .read(cartProvider.notifier)
+                      .setRestaurantInfo(
+                        widget.restaurantId,
+                        ref.read(restaurantProvider).selectedRestaurant?.name ??
+                            '',
+                      );
+                  ref.read(cartProvider.notifier).addItem(item: item);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã thêm ${item.name} vào giỏ hàng'),
+                      duration: const Duration(seconds: 2),
+                      action: SnackBarAction(
+                        label: AppLocalizations.of(context).cartViewCart,
+                        textColor: Colors.white,
+                        onPressed: () => context.push(Routes.cart),
+                      ),
                     ),
-                  ),
-                );
-              },
-            )),
+                  );
+                },
+              ),
+            ),
           ],
         );
       },
@@ -308,10 +361,14 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.rate_review_outlined, size: 48, color: AppColors.textHint),
+            const Icon(
+              Icons.rate_review_outlined,
+              size: 48,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.restaurantNoReviews,
+              AppLocalizations.of(context).restaurantNoReviews,
               style: AppTextStyles.headline4,
             ),
           ],
@@ -333,8 +390,12 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
   }
 
   Widget _buildReviewSummary(List<ReviewModel> reviews) {
-    final avgFood = reviews.fold<double>(0.0, (sum, r) => sum + r.foodRating) / reviews.length;
-    final avgDelivery = reviews.fold<double>(0.0, (sum, r) => sum + r.deliveryRating) / reviews.length;
+    final avgFood =
+        reviews.fold<double>(0.0, (sum, r) => sum + r.foodRating) /
+        reviews.length;
+    final avgDelivery =
+        reviews.fold<double>(0.0, (sum, r) => sum + r.deliveryRating) /
+        reviews.length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -343,7 +404,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
         ],
       ),
       child: Row(
@@ -352,7 +417,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             children: [
               Text(
                 avgFood.toStringAsFixed(1),
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.accent),
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accent,
+                ),
               ),
               const Row(
                 children: [
@@ -368,7 +437,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             children: [
               Text(
                 avgDelivery.toStringAsFixed(1),
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.primary),
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
               ),
               const Row(
                 children: [
@@ -384,7 +457,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             children: [
               Text(
                 '${reviews.length}',
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const Text('Đánh giá', style: AppTextStyles.caption),
             ],
@@ -402,7 +479,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 2, offset: const Offset(0, 1)),
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
         ],
       ),
       child: Column(
@@ -417,14 +498,21 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                     ? CachedNetworkImageProvider(review.userAvatarUrl!)
                     : null,
                 child: review.userAvatarUrl == null
-                    ? const Icon(Icons.person, size: 18, color: AppColors.textHint)
+                    ? const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: AppColors.textHint,
+                      )
                     : null,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   review.userName ?? 'Người dùng',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               Row(
@@ -433,7 +521,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   const SizedBox(width: 2),
                   Text(
                     review.foodRating.toStringAsFixed(1),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -444,10 +535,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             Text(review.comment!, style: AppTextStyles.bodyMedium),
           ],
           const SizedBox(height: 6),
-          Text(
-            _formatDate(review.createdAt),
-            style: AppTextStyles.caption,
-          ),
+          Text(_formatDate(review.createdAt), style: AppTextStyles.caption),
         ],
       ),
     );
@@ -465,27 +553,50 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
-                BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1)),
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppLocalizations.of(context)!.restaurantInfoTitle, style: AppTextStyles.headline4),
+                Text(
+                  AppLocalizations.of(context).restaurantInfoTitle,
+                  style: AppTextStyles.headline4,
+                ),
                 const SizedBox(height: 16),
                 if (restaurant.description != null) ...[
-                  _buildInfoRow(Icons.info_outline, 'Mô tả', restaurant.description!),
+                  _buildInfoRow(
+                    Icons.info_outline,
+                    'Mô tả',
+                    restaurant.description!,
+                  ),
                   const SizedBox(height: 12),
                 ],
-                _buildInfoRow(Icons.location_on, 'Địa chỉ', restaurant.address ?? 'Đang cập nhật'),
+                _buildInfoRow(
+                  Icons.location_on,
+                  'Địa chỉ',
+                  restaurant.address ?? 'Đang cập nhật',
+                ),
                 if (restaurant.phone != null) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(Icons.phone, 'Điện thoại', restaurant.phone!),
                 ],
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.access_time, 'Thời gian giao hàng', '${restaurant.estimatedPrepTime} phút'),
+                _buildInfoRow(
+                  Icons.access_time,
+                  'Thời gian giao hàng',
+                  '${restaurant.estimatedPrepTime} phút',
+                ),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.attach_money, 'Khoảng giá', restaurant.priceRange),
+                _buildInfoRow(
+                  Icons.attach_money,
+                  'Khoảng giá',
+                  restaurant.priceRange,
+                ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   Icons.star,
@@ -549,10 +660,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 
   String _formatDate(DateTime date) {
@@ -571,11 +679,12 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   _TabBarDelegate(this.tabBar);
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: AppColors.background,
-      child: tabBar,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: AppColors.background, child: tabBar);
   }
 
   @override

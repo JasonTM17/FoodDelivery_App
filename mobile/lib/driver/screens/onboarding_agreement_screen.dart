@@ -13,10 +13,12 @@ class OnboardingAgreementScreen extends ConsumerStatefulWidget {
   const OnboardingAgreementScreen({super.key});
 
   @override
-  ConsumerState<OnboardingAgreementScreen> createState() => _OnboardingAgreementScreenState();
+  ConsumerState<OnboardingAgreementScreen> createState() =>
+      _OnboardingAgreementScreenState();
 }
 
-class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementScreen> {
+class _OnboardingAgreementScreenState
+    extends ConsumerState<OnboardingAgreementScreen> {
   bool _agreed = false;
   bool _submitting = false;
   String? _error;
@@ -54,7 +56,10 @@ class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementS
         elevation: 0,
         title: Text(
           l10n.driver_onboarding_agreement_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Padding(
@@ -88,12 +93,16 @@ class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementS
             ),
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: _submitting ? null : () => setState(() => _agreed = !_agreed),
+              onTap: _submitting
+                  ? null
+                  : () => setState(() => _agreed = !_agreed),
               child: Row(
                 children: [
                   Checkbox(
                     value: _agreed,
-                    onChanged: _submitting ? null : (value) => setState(() => _agreed = value ?? false),
+                    onChanged: _submitting
+                        ? null
+                        : (value) => setState(() => _agreed = value ?? false),
                     activeColor: AppColors.primary,
                     side: const BorderSide(color: Color(0xFF6B7280)),
                   ),
@@ -110,7 +119,10 @@ class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementS
             _AgreementNote(text: l10n.driver_onboarding_agreement_note),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              _AgreementError(message: l10n.driver_onboarding_agreement_failed, detail: _error!),
+              _AgreementError(
+                message: l10n.driver_onboarding_agreement_failed,
+                detail: _error!,
+              ),
             ],
             const SizedBox(height: 16),
             SizedBox(
@@ -121,7 +133,10 @@ class _OnboardingAgreementScreenState extends ConsumerState<OnboardingAgreementS
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Text(l10n.driver_onboarding_agreement_submit),
               ),
@@ -181,7 +196,11 @@ class _AgreementError extends StatelessWidget {
       ),
       child: Text(
         '$message\n$detail',
-        style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 12, height: 1.4),
+        style: const TextStyle(
+          color: Color(0xFFFCA5A5),
+          fontSize: 12,
+          height: 1.4,
+        ),
       ),
     );
   }
@@ -190,9 +209,12 @@ class _AgreementError extends StatelessWidget {
 String _errorMessage(Object error) {
   if (error is DioException) {
     final data = error.response?.data;
-    if (data is Map && data['detail'] is String) return data['detail'] as String;
-    if (data is Map && data['message'] is String) return data['message'] as String;
-    if (error.message != null && error.message!.isNotEmpty) return error.message!;
+    if (data is Map && data['detail'] is String)
+      return data['detail'] as String;
+    if (data is Map && data['message'] is String)
+      return data['message'] as String;
+    if (error.message != null && error.message!.isNotEmpty)
+      return error.message!;
   }
   return error.toString();
 }

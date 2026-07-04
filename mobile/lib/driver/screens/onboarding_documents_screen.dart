@@ -16,7 +16,7 @@ class OnboardingDocumentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -25,7 +25,10 @@ class OnboardingDocumentsScreen extends ConsumerWidget {
         elevation: 0,
         title: Text(
           l10n.driver_onboarding_documents_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Padding(

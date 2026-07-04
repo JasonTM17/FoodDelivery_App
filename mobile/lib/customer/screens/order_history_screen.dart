@@ -41,7 +41,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final orderState = ref.watch(orderProvider);
 
     return Scaffold(
@@ -54,30 +54,50 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: [
-            Tab(text: l10n.orderHistoryTabActive(orderState.activeOrders.length)),
-            Tab(text: l10n.orderHistoryTabCompleted(orderState.completedOrders.length)),
-            Tab(text: l10n.orderHistoryTabCancelled(orderState.cancelledOrders.length)),
+            Tab(
+              text: l10n.orderHistoryTabActive(orderState.activeOrders.length),
+            ),
+            Tab(
+              text: l10n.orderHistoryTabCompleted(
+                orderState.completedOrders.length,
+              ),
+            ),
+            Tab(
+              text: l10n.orderHistoryTabCancelled(
+                orderState.cancelledOrders.length,
+              ),
+            ),
           ],
         ),
       ),
       body: orderState.isLoading
           ? const LoadingShimmer(type: ShimmerType.order, itemCount: 4)
           : orderState.error != null
-              ? ErrorState(message: orderState.error!, onRetry: () => ref.read(orderProvider.notifier).fetchOrders())
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildOrderList(orderState.activeOrders, 'active', l10n),
-                    _buildOrderList(orderState.completedOrders, 'completed', l10n),
-                    _buildOrderList(orderState.cancelledOrders, 'cancelled', l10n),
-                  ],
-                ),
+          ? ErrorState(
+              message: orderState.error!,
+              onRetry: () => ref.read(orderProvider.notifier).fetchOrders(),
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrderList(orderState.activeOrders, 'active', l10n),
+                _buildOrderList(orderState.completedOrders, 'completed', l10n),
+                _buildOrderList(orderState.cancelledOrders, 'cancelled', l10n),
+              ],
+            ),
     );
   }
 
-  Widget _buildOrderList(List<OrderModel> orders, String type, AppLocalizations l10n) {
+  Widget _buildOrderList(
+    List<OrderModel> orders,
+    String type,
+    AppLocalizations l10n,
+  ) {
     if (orders.isEmpty) {
       String message;
       IconData icon;
@@ -127,7 +147,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
-            BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -142,7 +166,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                     color: AppColors.primaryLight.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.restaurant, color: AppColors.primary, size: 24),
+                  child: const Icon(
+                    Icons.restaurant,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -151,7 +179,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                     children: [
                       Text(
                         order.restaurantName,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -166,7 +196,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              order.items.map((item) => '${item.name} (x${item.quantity})').join(', '),
+              order.items
+                  .map((item) => '${item.name} (x${item.quantity})')
+                  .join(', '),
               style: AppTextStyles.bodySmall,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -183,13 +215,21 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                 const Spacer(),
                 if (order.isActive)
                   TextButton(
-                    onPressed: () => context.push(Routes.orderTracking, extra: order.id),
-                    child: Text(AppLocalizations.of(context)!.orderHistoryTrack, style: const TextStyle(fontSize: 12)),
+                    onPressed: () =>
+                        context.push(Routes.orderTracking, extra: order.id),
+                    child: Text(
+                      AppLocalizations.of(context).orderHistoryTrack,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   )
                 else if (order.status == 'delivered')
                   TextButton(
-                    onPressed: () => context.push(Routes.review, extra: order.id),
-                    child: const Text('Đánh giá', style: TextStyle(fontSize: 12)),
+                    onPressed: () =>
+                        context.push(Routes.review, extra: order.id),
+                    child: const Text(
+                      'Đánh giá',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
               ],
             ),
@@ -200,9 +240,6 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 }

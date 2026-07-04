@@ -9,12 +9,7 @@ class FoodCard extends StatelessWidget {
   final VoidCallback? onAddToCart;
   final VoidCallback? onTap;
 
-  const FoodCard({
-    super.key,
-    required this.item,
-    this.onAddToCart,
-    this.onTap,
-  });
+  const FoodCard({super.key, required this.item, this.onAddToCart, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +97,8 @@ class FoodCard extends StatelessWidget {
                                 ),
                             ],
                           ),
-                          if (item.description != null && item.description!.isNotEmpty) ...[
+                          if (item.description != null &&
+                              item.description!.isNotEmpty) ...[
                             const SizedBox(height: 2),
                             Text(
                               item.description!,
@@ -151,7 +147,10 @@ class FoodCard extends StatelessWidget {
                             )
                           else
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.error.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -179,9 +178,6 @@ class FoodCard extends StatelessWidget {
   }
 
   String _formatPrice(double price) {
-    return '${price.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}đ';
+    return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 }

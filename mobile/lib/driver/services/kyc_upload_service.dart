@@ -4,12 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../shared/api/api_client.dart';
 
 /// Identifies which KYC document is being uploaded.
-enum KycDocumentType {
-  cccdFront,
-  cccdBack,
-  driverLicense,
-  vehicleRegistration,
-}
+enum KycDocumentType { cccdFront, cccdBack, driverLicense, vehicleRegistration }
 
 extension KycDocumentTypeExt on KycDocumentType {
   String get backendKey {
@@ -31,11 +26,7 @@ class KycUploadResult {
   final String? fileUrl;
   final String? error;
 
-  const KycUploadResult({
-    required this.success,
-    this.fileUrl,
-    this.error,
-  });
+  const KycUploadResult({required this.success, this.fileUrl, this.error});
 }
 
 /// Handles KYC document capture + MinIO upload via backend presigned URLs.
@@ -99,7 +90,9 @@ class KycUploadService {
   // ---------------------------------------------------------------------------
 
   Future<KycUploadResult> _uploadFile(
-      File file, KycDocumentType docType) async {
+    File file,
+    KycDocumentType docType,
+  ) async {
     try {
       final fileName =
           '${docType.name}_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -115,8 +108,7 @@ class KycUploadService {
       );
 
       final body = presignedResp.data as Map<String, dynamic>;
-      final uploadUrl =
-          body['url'] as String? ?? body['uploadUrl'] as String?;
+      final uploadUrl = body['url'] as String? ?? body['uploadUrl'] as String?;
       final fileUrl =
           body['fileUrl'] as String? ?? body['publicUrl'] as String?;
 

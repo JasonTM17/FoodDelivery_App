@@ -49,13 +49,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    await ref.read(authProvider.notifier).register(
-      fullName: _fullNameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      password: _passwordController.text,
-      role: _selectedRole,
-    );
+    await ref
+        .read(authProvider.notifier)
+        .register(
+          fullName: _fullNameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          password: _passwordController.text,
+          role: _selectedRole,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -68,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -96,7 +98,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 6),
                 Text(
                   l10n.registerSubtitle,
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 28),
 
@@ -109,17 +113,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             authState.error!,
-                            style: const TextStyle(color: AppColors.error, fontSize: 13),
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => ref.read(authProvider.notifier).clearError(),
-                          child: const Icon(Icons.close, color: AppColors.error, size: 18),
+                          onTap: () =>
+                              ref.read(authProvider.notifier).clearError(),
+                          child: const Icon(
+                            Icons.close,
+                            color: AppColors.error,
+                            size: 18,
+                          ),
                         ),
                       ],
                     ),
@@ -158,7 +174,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.emailRequired;
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value.trim())) {
                       return l10n.emailInvalid;
                     }
                     return null;
@@ -195,9 +213,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     hintText: l10n.passwordHintLong,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (value) {
@@ -221,9 +242,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     hintText: l10n.confirmPasswordHint,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirm
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
-                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
                   ),
                   validator: (value) {
@@ -238,10 +262,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                Text(
-                  l10n.registerAs,
-                  style: AppTextStyles.bodyMedium,
-                ),
+                Text(l10n.registerAs, style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -287,13 +308,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     Text(
                       l10n.hasAccount,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text(
                         l10n.loginButton,
-                        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],

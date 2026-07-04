@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/widgets/locale_switcher.dart';
 import '../providers/driver_provider.dart';
@@ -52,7 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -61,7 +60,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         elevation: 0,
         title: Text(
           l10n.driver_settings_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: ListView(
@@ -166,12 +168,17 @@ class _ToggleTile extends StatelessWidget {
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         secondary: Icon(icon, color: AppColors.primary),
-        title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-        subtitle:
-            Text(subtitle, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+        title: Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+        ),
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
       ),
     );
   }
@@ -227,14 +234,19 @@ class _NavTile extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
+                        color: Color(0xFF6B7280),
+                        fontSize: 12,
+                      ),
                     ),
                 ],
               ),
             ),
             trailing ??
-                const Icon(Icons.chevron_right,
-                    color: Color(0xFF6B7280), size: 20),
+                const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFF6B7280),
+                  size: 20,
+                ),
           ],
         ),
       ),

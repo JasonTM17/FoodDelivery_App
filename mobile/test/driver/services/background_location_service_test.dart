@@ -52,8 +52,9 @@ void main() {
   group('BackgroundLocationService — positionStream', () {
     test('positionStream emits no events initially', () async {
       final events = <Object>[];
-      final sub = BackgroundLocationService.instance.positionStream
-          .listen(events.add);
+      final sub = BackgroundLocationService.instance.positionStream.listen(
+        events.add,
+      );
       // Give a brief window to confirm nothing was emitted at rest.
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(events, isEmpty);

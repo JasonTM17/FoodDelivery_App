@@ -41,7 +41,11 @@ class CartItemTile extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(color: AppColors.shadow, blurRadius: 2, offset: const Offset(0, 1)),
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
           ],
         ),
         child: Row(
@@ -74,9 +78,9 @@ class CartItemTile extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(
-        color: AppColors.surface,
-        child: const Icon(Icons.fastfood, size: 28, color: AppColors.textHint),
-      );
+    color: AppColors.surface,
+    child: const Icon(Icons.fastfood, size: 28, color: AppColors.textHint),
+  );
 
   Widget _buildDetails() {
     return Column(
@@ -137,8 +141,6 @@ class CartItemTile extends StatelessWidget {
     );
   }
 
-  String _fmt(double price) => '${price.round().toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]}.',
-      )}đ';
+  String _fmt(double price) =>
+      '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
 }

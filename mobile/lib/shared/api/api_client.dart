@@ -60,8 +60,12 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return dio.get<T>(path,
-        queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+    return dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> post<T>(
@@ -71,11 +75,13 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return dio.post<T>(path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken);
+    return dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> put<T>(
@@ -85,11 +91,13 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return dio.put<T>(path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken);
+    return dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> patch<T>(
@@ -99,11 +107,13 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return dio.patch<T>(path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken);
+    return dio.patch<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<Response<T>> delete<T>(
@@ -113,11 +123,13 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return dio.delete<T>(path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken);
+    return dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 }
 
@@ -129,7 +141,10 @@ class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._storage, this._dio);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await _storage.read(key: 'auth_token');
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -147,16 +162,20 @@ class _AuthInterceptor extends Interceptor {
       if (refreshToken != null && refreshToken.isNotEmpty) {
         _isRefreshing = true;
         try {
-          final refreshDio = Dio(BaseOptions(
-            baseUrl: err.requestOptions.baseUrl,
-            headers: {'Content-Type': 'application/json'},
-          ));
-          final res = await refreshDio.post('/auth/refresh', data: {
-            'refreshToken': refreshToken,
-          });
+          final refreshDio = Dio(
+            BaseOptions(
+              baseUrl: err.requestOptions.baseUrl,
+              headers: {'Content-Type': 'application/json'},
+            ),
+          );
+          final res = await refreshDio.post(
+            '/auth/refresh',
+            data: {'refreshToken': refreshToken},
+          );
           if (res.statusCode == 200) {
             final body = res.data;
-            final payload = (body is Map<String, dynamic> && body.containsKey('data'))
+            final payload =
+                (body is Map<String, dynamic> && body.containsKey('data'))
                 ? (body['data'] as Map<String, dynamic>? ?? body)
                 : body as Map<String, dynamic>;
             final newToken = payload['accessToken'] as String?;
@@ -202,14 +221,18 @@ class _LogInterceptor extends Interceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final requestId = response.headers.value('x-request-id') ?? '-';
     // ignore: avoid_print
-    print('[HTTP] <-- ${response.statusCode} ${response.requestOptions.path} [rid=$requestId]');
+    print(
+      '[HTTP] <-- ${response.statusCode} ${response.requestOptions.path} [rid=$requestId]',
+    );
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // ignore: avoid_print
-    print('[HTTP] <-- ERROR ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}');
+    print(
+      '[HTTP] <-- ERROR ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}',
+    );
     handler.next(err);
   }
 }

@@ -34,9 +34,11 @@ class ReferralState {
   }
 }
 
-final referralProvider = StateNotifierProvider<ReferralNotifier, ReferralState>((ref) {
-  return ReferralNotifier();
-});
+final referralProvider = StateNotifierProvider<ReferralNotifier, ReferralState>(
+  (ref) {
+    return ReferralNotifier();
+  },
+);
 
 class ReferralNotifier extends StateNotifier<ReferralState> {
   final ApiClient _api = ApiClient.instance;
@@ -55,7 +57,9 @@ class ReferralNotifier extends StateNotifier<ReferralState> {
         bonusPoints: data['bonusPoints'] as int? ?? 0,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Không thể tải thông tin giới thiệu.';
+      final msg =
+          e.response?.data?['message'] as String? ??
+          'Không thể tải thông tin giới thiệu.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra.');

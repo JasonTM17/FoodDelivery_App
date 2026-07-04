@@ -44,9 +44,11 @@ class HeatmapCanvas extends StatelessWidget {
     final latRange = 0.06;
     final lngRange = 0.06;
     for (final p in points) {
-      final dx = ((p.lng - centerLng + lngRange / 2) / lngRange) *
+      final dx =
+          ((p.lng - centerLng + lngRange / 2) / lngRange) *
           constraints.maxWidth;
-      final dy = ((centerLat + latRange / 2 - p.lat) / latRange) *
+      final dy =
+          ((centerLat + latRange / 2 - p.lat) / latRange) *
           constraints.maxHeight;
       final dist = (dx - tap.dx).abs() + (dy - tap.dy).abs();
       if (dist < minDist && dist < 40) {
@@ -80,16 +82,16 @@ class _HeatmapPainter extends CustomPainter {
     final lngRange = 0.06;
 
     for (final point in points) {
-      final x = ((point.lng - centerLng + lngRange / 2) / lngRange) *
-          size.width;
-      final y = ((centerLat + latRange / 2 - point.lat) / latRange) *
-          size.height;
+      final x =
+          ((point.lng - centerLng + lngRange / 2) / lngRange) * size.width;
+      final y =
+          ((centerLat + latRange / 2 - point.lat) / latRange) * size.height;
       final radius = 8.0 + point.demandLevel * 6.0;
       final color = point.demandLevel == 2
           ? _highColor
           : point.demandLevel == 1
-              ? _medColor
-              : _lowColor;
+          ? _medColor
+          : _lowColor;
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.0)],

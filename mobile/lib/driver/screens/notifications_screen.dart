@@ -11,7 +11,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
@@ -35,11 +36,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     super.dispose();
   }
 
-  List<DriverNotification> _filtered(List<DriverNotification> all, int tabIndex) {
+  List<DriverNotification> _filtered(
+    List<DriverNotification> all,
+    int tabIndex,
+  ) {
     if (tabIndex == 0) return all;
     final type = _typeMap[tabIndex];
     if (type == 'promotion') {
-      return all.where((notification) => notification.type == 'promotion' || notification.type == 'promo').toList();
+      return all
+          .where(
+            (notification) =>
+                notification.type == 'promotion' ||
+                notification.type == 'promo',
+          )
+          .toList();
     }
     return all.where((notification) => notification.type == type).toList();
   }
@@ -55,17 +65,24 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
         titleSpacing: 16,
-        title: DriverNotificationsTitle(title: l10n.notificationsTitle, unread: state.unreadCount),
+        title: DriverNotificationsTitle(
+          title: l10n.notificationsTitle,
+          unread: state.unreadCount,
+        ),
         centerTitle: false,
         actions: [
           TextButton(
             onPressed: state.unreadCount > 0
-                ? () => ref.read(driverNotificationsProvider.notifier).markAllRead()
+                ? () => ref
+                      .read(driverNotificationsProvider.notifier)
+                      .markAllRead()
                 : null,
             child: Text(
               l10n.driver_notifications_read_all,
               style: TextStyle(
-                color: state.unreadCount > 0 ? AppColors.primary : const Color(0xFF6B7280),
+                color: state.unreadCount > 0
+                    ? AppColors.primary
+                    : const Color(0xFF6B7280),
                 fontSize: 13,
               ),
             ),
@@ -77,7 +94,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           unselectedLabelColor: const Color(0xFF6B7280),
           indicatorColor: AppColors.primary,
           indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: [
             Tab(text: l10n.driver_notifications_all),
             Tab(text: l10n.driver_notifications_orders),
@@ -92,14 +112,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   Widget _buildBody(DriverNotificationsState state, AppLocalizations l10n) {
     if (state.isLoading && state.notifications.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     if (state.error != null && state.notifications.isEmpty) {
       return DriverNotificationError(
         message: l10n.driver_notifications_load_failed,
         detail: state.error!,
         retryLabel: l10n.driver_bank_retry,
-        onRetry: () => ref.read(driverNotificationsProvider.notifier).fetchNotifications(),
+        onRetry: () =>
+            ref.read(driverNotificationsProvider.notifier).fetchNotifications(),
       );
     }
     return TabBarView(
@@ -107,7 +130,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       children: List.generate(4, (index) {
         final items = _filtered(state.notifications, index);
         return RefreshIndicator(
-          onRefresh: () => ref.read(driverNotificationsProvider.notifier).fetchNotifications(),
+          onRefresh: () => ref
+              .read(driverNotificationsProvider.notifier)
+              .fetchNotifications(),
           color: AppColors.primary,
           backgroundColor: const Color(0xFF1E1E1E),
           child: items.isEmpty
@@ -121,7 +146,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                   itemBuilder: (_, itemIndex) => DriverNotificationCard(
                     notification: items[itemIndex],
                     l10n: l10n,
-                    onTap: () => ref.read(driverNotificationsProvider.notifier).markRead(items[itemIndex].id),
+                    onTap: () => ref
+                        .read(driverNotificationsProvider.notifier)
+                        .markRead(items[itemIndex].id),
                   ),
                 ),
         );

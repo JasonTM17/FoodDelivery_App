@@ -89,15 +89,18 @@ class BackgroundLocationService {
       distanceFilter: 10,
     );
 
-    _positionSub = Geolocator.getPositionStream(locationSettings: settings)
-        .listen(_onPosition, onError: (_) {});
+    _positionSub = Geolocator.getPositionStream(
+      locationSettings: settings,
+    ).listen(_onPosition, onError: (_) {});
 
     // In idle mode the driver may stay stationary — push a heartbeat every 30s.
     _scheduleIdleTimer();
 
     // Flush any offline-buffered pings every 15s when back online.
-    _bufferFlushTimer =
-        Timer.periodic(const Duration(seconds: 15), (_) => _flushBuffer());
+    _bufferFlushTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _flushBuffer(),
+    );
   }
 
   /// Stop all location streaming and timers. Call when driver goes offline.
@@ -134,8 +137,7 @@ class BackgroundLocationService {
     _idleFlushTimer?.cancel();
     if (!_hasActiveOrder) {
       // Heartbeat so the server knows the driver is still online.
-      _idleFlushTimer =
-          Timer.periodic(_kIdleInterval, (_) => _emitLastKnown());
+      _idleFlushTimer = Timer.periodic(_kIdleInterval, (_) => _emitLastKnown());
     }
   }
 
@@ -155,7 +157,10 @@ class BackgroundLocationService {
   void _emitLastKnown() {
     if (_lastPosition == null) return;
     _emitPosition(
-        _lastPosition!.latitude, _lastPosition!.longitude, DateTime.now());
+      _lastPosition!.latitude,
+      _lastPosition!.longitude,
+      DateTime.now(),
+    );
   }
 
   void _emitPosition(double lat, double lng, DateTime ts) {

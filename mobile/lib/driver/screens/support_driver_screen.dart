@@ -31,14 +31,16 @@ class _SupportDriverScreenState extends ConsumerState<SupportDriverScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.driverNavPhoneError)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).driverNavPhoneError),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final faqs = [
       (q: l10n.driver_support_faq_q1, a: l10n.driver_support_faq_a1),
@@ -52,7 +54,10 @@ class _SupportDriverScreenState extends ConsumerState<SupportDriverScreen> {
         elevation: 0,
         title: Text(
           l10n.driver_support_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -136,7 +141,9 @@ class _FaqItem extends StatelessWidget {
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: expanded ? AppColors.primary.withValues(alpha: 0.5) : const Color(0xFF374151),
+          color: expanded
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : const Color(0xFF374151),
         ),
       ),
       child: Column(

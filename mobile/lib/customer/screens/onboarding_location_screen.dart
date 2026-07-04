@@ -9,7 +9,7 @@ class OnboardingLocationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -22,7 +22,12 @@ class OnboardingLocationScreen extends StatelessWidget {
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: () => context.go('/home'),
-                  child: Text(l10n.onboardingSkip, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  child: Text(
+                    l10n.onboardingSkip,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ),
               const Spacer(flex: 2),
@@ -34,7 +39,11 @@ class OnboardingLocationScreen extends StatelessWidget {
                   color: AppColors.accentLight,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.location_on, size: 120, color: AppColors.accent),
+                child: const Icon(
+                  Icons.location_on,
+                  size: 120,
+                  color: AppColors.accent,
+                ),
               ),
               const Spacer(flex: 1),
 
@@ -46,7 +55,9 @@ class OnboardingLocationScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 l10n.onboardingLocationSubtitle,
-                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const Spacer(flex: 2),
@@ -58,14 +69,24 @@ class OnboardingLocationScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => context.push('/onboarding-notifications'),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: Text(l10n.locationPermissionAllow, style: AppTextStyles.buttonLarge),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    l10n.locationPermissionAllow,
+                    style: AppTextStyles.buttonLarge,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.push('/onboarding-notifications'),
-                child: Text(l10n.onboardingNext, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                child: Text(
+                  l10n.onboardingNext,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
             ],
@@ -84,15 +105,18 @@ class _PageDots extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(3, (i) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        width: i == current ? 24 : 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: i == current ? AppColors.primary : AppColors.border,
-          borderRadius: BorderRadius.circular(4),
+      children: List.generate(
+        3,
+        (i) => Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: i == current ? 24 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: i == current ? AppColors.primary : AppColors.border,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
-      )),
+      ),
     );
   }
 }

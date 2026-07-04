@@ -6,8 +6,8 @@ import '../../shared/api/socket_client.dart';
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
-  return NotificationNotifier();
-});
+      return NotificationNotifier();
+    });
 
 class NotificationModel {
   final String id;
@@ -43,14 +43,14 @@ class NotificationModel {
   }
 
   NotificationModel copyWith({bool? isRead}) => NotificationModel(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        createdAt: createdAt,
-        isRead: isRead ?? this.isRead,
-        deepLink: deepLink,
-      );
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    createdAt: createdAt,
+    isRead: isRead ?? this.isRead,
+    deepLink: deepLink,
+  );
 }
 
 class NotificationState {
@@ -114,11 +114,14 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         unreadCount: unread,
       );
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
-          'Không thể tải thông báo.';
+      final message =
+          e.response?.data?['message'] as String? ?? 'Không thể tải thông báo.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải thông báo.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải thông báo.',
+      );
     }
   }
 
@@ -140,7 +143,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   Future<void> markAllRead() async {
-    final updated = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
+    final updated = state.notifications
+        .map((n) => n.copyWith(isRead: true))
+        .toList();
     state = state.copyWith(notifications: updated, unreadCount: 0);
     try {
       await _api.patch('/notifications/read-all');

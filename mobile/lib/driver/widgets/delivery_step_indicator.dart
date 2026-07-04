@@ -11,10 +11,7 @@ class DeliveryStepIndicator extends StatelessWidget {
     'Hoàn tất',
   ];
 
-  const DeliveryStepIndicator({
-    super.key,
-    required this.currentStep,
-  });
+  const DeliveryStepIndicator({super.key, required this.currentStep});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +30,6 @@ class DeliveryStepIndicator extends StatelessWidget {
   Widget _buildStep(int index) {
     final isCompleted = index < currentStep;
     final isCurrent = index == currentStep;
-    final isPending = index > currentStep;
 
     Color bgColor;
     Color textColor;

@@ -20,12 +20,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(favoritesProvider.notifier).fetchFavorites());
+    Future.microtask(
+      () => ref.read(favoritesProvider.notifier).fetchFavorites(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(favoritesProvider);
 
     return Scaffold(
@@ -42,7 +44,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildBody(FavoritesState state) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (state.isLoading && state.items.isEmpty) {
       return const LoadingShimmer(type: ShimmerType.restaurant, itemCount: 4);
     }
@@ -65,7 +67,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       onRefresh: () => ref.read(favoritesProvider.notifier).fetchFavorites(),
       child: FavoritesGrid(
         items: state.items,
-        onToggle: (id) => ref.read(favoritesProvider.notifier).toggle(id, type: 'restaurant'),
+        onToggle: (id) =>
+            ref.read(favoritesProvider.notifier).toggle(id, type: 'restaurant'),
         togglingIds: state.togglingIds,
       ),
     );

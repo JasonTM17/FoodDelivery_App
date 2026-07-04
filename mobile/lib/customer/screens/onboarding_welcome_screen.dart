@@ -9,7 +9,7 @@ class OnboardingWelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -22,7 +22,12 @@ class OnboardingWelcomeScreen extends StatelessWidget {
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: () => context.go('/home'),
-                  child: Text(l10n.onboardingSkip, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  child: Text(
+                    l10n.onboardingSkip,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ),
               const Spacer(flex: 2),
@@ -35,7 +40,11 @@ class OnboardingWelcomeScreen extends StatelessWidget {
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.restaurant, size: 120, color: AppColors.primary),
+                child: const Icon(
+                  Icons.restaurant,
+                  size: 120,
+                  color: AppColors.primary,
+                ),
               ),
               const Spacer(flex: 1),
 
@@ -47,7 +56,9 @@ class OnboardingWelcomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 l10n.onboardingWelcomeSubtitle,
-                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const Spacer(flex: 2),
@@ -60,8 +71,13 @@ class OnboardingWelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => context.push('/onboarding-location'),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: Text(l10n.onboardingNext, style: AppTextStyles.buttonLarge),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    l10n.onboardingNext,
+                    style: AppTextStyles.buttonLarge,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -81,15 +97,18 @@ class _PageDots extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(3, (i) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        width: i == current ? 24 : 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: i == current ? AppColors.primary : AppColors.border,
-          borderRadius: BorderRadius.circular(4),
+      children: List.generate(
+        3,
+        (i) => Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: i == current ? 24 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: i == current ? AppColors.primary : AppColors.border,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
-      )),
+      ),
     );
   }
 }

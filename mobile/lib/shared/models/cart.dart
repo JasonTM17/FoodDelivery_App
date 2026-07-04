@@ -54,11 +54,7 @@ class SelectedOption {
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'groupName': groupName,
-      'optionName': optionName,
-      'price': price,
-    };
+    return {'groupName': groupName, 'optionName': optionName, 'price': price};
   }
 }
 

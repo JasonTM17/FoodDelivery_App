@@ -29,11 +29,15 @@ class _FakeLoyaltyNotifier extends LoyaltyNotifier {
 void main() {
   group('LoyaltyScreen', () {
     testWidgets('shows loading shimmer initially', (tester) async {
-      final fakeNotifier = _FakeLoyaltyNotifier(const LoyaltyState(isLoading: true));
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      final fakeNotifier = _FakeLoyaltyNotifier(
+        const LoyaltyState(isLoading: true),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pump();
       // Loading state should not crash
       expect(find.byType(LoyaltyScreen), findsOneWidget);
@@ -48,10 +52,12 @@ void main() {
         transactions: [],
       );
       final fakeNotifier = _FakeLoyaltyNotifier(loadedState);
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Points should be displayed
@@ -62,10 +68,12 @@ void main() {
       final fakeNotifier = _FakeLoyaltyNotifier(
         const LoyaltyState(isLoading: false, totalPoints: 0, tier: 'bronze'),
       );
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(LoyaltyScreen), findsOneWidget);
@@ -75,23 +83,33 @@ void main() {
       final fakeNotifier = _FakeLoyaltyNotifier(
         const LoyaltyState(isLoading: false, error: 'Network error'),
       );
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Network error'), findsOneWidget);
     });
 
-    testWidgets('shows empty history message when no transactions', (tester) async {
+    testWidgets('shows empty history message when no transactions', (
+      tester,
+    ) async {
       final fakeNotifier = _FakeLoyaltyNotifier(
-        const LoyaltyState(isLoading: false, totalPoints: 100, transactions: []),
+        const LoyaltyState(
+          isLoading: false,
+          totalPoints: 100,
+          transactions: [],
+        ),
       );
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Empty history state visible
@@ -102,10 +120,12 @@ void main() {
       final fakeNotifier = _FakeLoyaltyNotifier(
         const LoyaltyState(isLoading: false, totalPoints: 50),
       );
-      await tester.pumpWidget(_wrap(
-        const LoyaltyScreen(),
-        overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LoyaltyScreen(),
+          overrides: [loyaltyProvider.overrideWith((ref) => fakeNotifier)],
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);

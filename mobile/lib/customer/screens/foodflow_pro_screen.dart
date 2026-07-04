@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
-import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../providers/membership_provider.dart';
@@ -23,11 +22,13 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(membershipProvider.notifier).fetchMembership());
+    Future.microtask(
+      () => ref.read(membershipProvider.notifier).fetchMembership(),
+    );
   }
 
   Future<void> _handleUpgrade(MembershipTier tier) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isUpgrading = true);
     final ok = await ref.read(membershipProvider.notifier).upgrade(tier);
     if (!mounted) return;
@@ -40,7 +41,8 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
         ),
       );
     } else {
-      final error = ref.read(membershipProvider).error ?? l10n.membershipUpgradeFailed;
+      final error =
+          ref.read(membershipProvider).error ?? l10n.membershipUpgradeFailed;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: AppColors.error),
       );
@@ -49,7 +51,7 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(membershipProvider);
 
     return Scaffold(
@@ -66,8 +68,10 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
   }
 
   Widget _buildBody(MembershipState state) {
-    final l10n = AppLocalizations.of(context)!;
-    if (state.isLoading && state.currentTier == MembershipTier.free && !_isUpgrading) {
+    final l10n = AppLocalizations.of(context);
+    if (state.isLoading &&
+        state.currentTier == MembershipTier.free &&
+        !_isUpgrading) {
       return const LoadingShimmer(type: ShimmerType.foodItem, itemCount: 3);
     }
     if (state.error != null && state.currentTier == MembershipTier.free) {
@@ -100,17 +104,27 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.workspace_premium, color: Colors.white, size: 48),
+                    const Icon(
+                      Icons.workspace_premium,
+                      color: Colors.white,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       state.currentTier.labelVi(),
-                      style: AppTextStyles.headline2.copyWith(color: Colors.white),
+                      style: AppTextStyles.headline2.copyWith(
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     if (state.expiryDate != null)
                       Text(
-                        l10n.membershipValidUntil(DateFormat('dd/MM/yyyy').format(state.expiryDate!)),
-                        style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+                        l10n.membershipValidUntil(
+                          DateFormat('dd/MM/yyyy').format(state.expiryDate!),
+                        ),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: Colors.white70,
+                        ),
                       ),
                   ],
                 ),
@@ -139,9 +153,10 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
   }
 
   Widget _buildTierCard(MembershipTier tier, MembershipState state) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isCurrent = tier == MembershipTier.free
-        ? state.currentTier == MembershipTier.free && !state.hasActiveSubscription
+        ? state.currentTier == MembershipTier.free &&
+              !state.hasActiveSubscription
         : state.currentTier == tier;
     return MembershipTierCard(
       tier: tier,
@@ -159,7 +174,10 @@ class _FoodflowProScreenState extends ConsumerState<FoodflowProScreen> {
   List<String> _benefitLabels(MembershipTier tier, AppLocalizations l10n) {
     switch (tier) {
       case MembershipTier.free:
-        return [l10n.membershipBenefitBasicDelivery, l10n.membershipBenefitBasicPoints];
+        return [
+          l10n.membershipBenefitBasicDelivery,
+          l10n.membershipBenefitBasicPoints,
+        ];
       case MembershipTier.pro:
         return [
           l10n.membershipBenefitFreeDelivery,

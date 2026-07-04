@@ -53,7 +53,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -62,8 +62,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
             Expanded(
               flex: 3,
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
                 child: GoogleMap(
                   initialCameraPosition: _vietnamCamera,
                   polygons: _boundaryPolygons,
@@ -91,8 +92,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.locationPermissionSubtitle,
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const Spacer(),

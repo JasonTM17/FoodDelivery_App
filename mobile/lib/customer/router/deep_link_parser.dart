@@ -17,8 +17,7 @@ class DeepLinkParser {
     }
 
     // Handle https://foodflow.vn scheme
-    if (uri.scheme == DeepLinkScheme.https &&
-        uri.host == 'foodflow.vn') {
+    if (uri.scheme == DeepLinkScheme.https && uri.host == 'foodflow.vn') {
       return _parseHttpsLink(uri);
     }
 

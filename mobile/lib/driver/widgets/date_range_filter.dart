@@ -46,8 +46,11 @@ class DateRangeFilter extends StatelessWidget {
                       _pickDateRange(context);
                     } else {
                       final now = DateTime.now();
-                      final start = DateTime(now.year, now.month, now.day)
-                          .subtract(Duration(days: option.$2));
+                      final start = DateTime(
+                        now.year,
+                        now.month,
+                        now.day,
+                      ).subtract(Duration(days: option.$2));
                       onFromDateChanged?.call(start);
                       onToDateChanged?.call(now);
                     }
@@ -57,7 +60,9 @@ class DateRangeFilter extends StatelessWidget {
                   labelStyle: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isActive ? AppColors.primary : const Color(0xFF9CA3AF),
+                    color: isActive
+                        ? AppColors.primary
+                        : const Color(0xFF9CA3AF),
                   ),
                   side: BorderSide(
                     color: isActive

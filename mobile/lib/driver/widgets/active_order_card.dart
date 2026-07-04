@@ -11,19 +11,22 @@ class ActiveOrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push('/delivery-flow', extra: {
-        'orderId': order.id,
-        'restaurantName': order.restaurantName,
-        'restaurantAddress': order.restaurantLatitude?.toString() ?? '',
-        'restaurantLat': order.restaurantLatitude,
-        'restaurantLng': order.restaurantLongitude,
-        'customerAddress': order.deliveryAddress.address,
-        'customerLat': order.deliveryAddress.latitude,
-        'customerLng': order.deliveryAddress.longitude,
-        'items': order.items
-            .map((i) => {'name': i.name, 'quantity': i.quantity})
-            .toList(),
-      }),
+      onTap: () => context.push(
+        '/delivery-flow',
+        extra: {
+          'orderId': order.id,
+          'restaurantName': order.restaurantName,
+          'restaurantAddress': order.restaurantLatitude?.toString() ?? '',
+          'restaurantLat': order.restaurantLatitude,
+          'restaurantLng': order.restaurantLongitude,
+          'customerAddress': order.deliveryAddress.address,
+          'customerLat': order.deliveryAddress.latitude,
+          'customerLng': order.deliveryAddress.longitude,
+          'items': order.items
+              .map((i) => {'name': i.name, 'quantity': i.quantity})
+              .toList(),
+        },
+      ),
       borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(16),

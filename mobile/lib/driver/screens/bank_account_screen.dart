@@ -54,7 +54,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
-        title: Text(l10n.driver_bank_delete_title, style: const TextStyle(color: Colors.white)),
+        title: Text(
+          l10n.driver_bank_delete_title,
+          style: const TextStyle(color: Colors.white),
+        ),
         content: Text(
           l10n.driver_bank_delete_message,
           style: const TextStyle(color: Color(0xFF9CA3AF)),
@@ -82,7 +85,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -98,11 +103,16 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         elevation: 0,
         title: Text(
           l10n.driver_bank_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: isInitialLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : RefreshIndicator(
               onRefresh: () => ref.read(bankAccountsProvider.notifier).load(),
               child: SingleChildScrollView(
@@ -117,7 +127,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
                       RetryableBankError(
                         message: state.error!,
                         retryLabel: l10n.driver_bank_retry,
-                        onRetry: () => ref.read(bankAccountsProvider.notifier).load(),
+                        onRetry: () =>
+                            ref.read(bankAccountsProvider.notifier).load(),
                       ),
                     ],
                     const SizedBox(height: 24),

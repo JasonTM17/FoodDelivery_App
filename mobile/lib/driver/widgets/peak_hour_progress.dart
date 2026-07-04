@@ -38,8 +38,11 @@ class PeakHourProgress extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.local_fire_department,
-                      size: 16, color: Color(0xFFF97316)),
+                  const Icon(
+                    Icons.local_fire_department,
+                    size: 16,
+                    color: Color(0xFFF97316),
+                  ),
                   const SizedBox(width: 6),
                   const Text(
                     'Giờ cao điểm',
@@ -68,7 +71,9 @@ class PeakHourProgress extends StatelessWidget {
               value: _progress,
               minHeight: 8,
               backgroundColor: const Color(0xFF374151),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF97316)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFFF97316),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -78,7 +83,9 @@ class PeakHourProgress extends StatelessWidget {
                 : 'Hoàn thành ${targetOrders - completedOrders} đơn nữa để nhận +${bonusAmount.toStringAsFixed(0)}đ',
             style: TextStyle(
               fontSize: 12,
-              color: _isComplete ? const Color(0xFFF97316) : const Color(0xFF6B7280),
+              color: _isComplete
+                  ? const Color(0xFFF97316)
+                  : const Color(0xFF6B7280),
             ),
           ),
         ],

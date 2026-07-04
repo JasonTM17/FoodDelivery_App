@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/api/api_client.dart';
 
 final driverNotificationsProvider =
-    StateNotifierProvider<DriverNotificationsNotifier, DriverNotificationsState>((ref) {
-  return DriverNotificationsNotifier();
-});
+    StateNotifierProvider<
+      DriverNotificationsNotifier,
+      DriverNotificationsState
+    >((ref) {
+      return DriverNotificationsNotifier();
+    });
 
 class DriverNotification {
   final String id;
@@ -29,13 +32,20 @@ class DriverNotification {
 
   factory DriverNotification.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
-    final payload = data is Map ? Map<String, dynamic>.from(data) : const <String, dynamic>{};
+    final payload = data is Map
+        ? Map<String, dynamic>.from(data)
+        : const <String, dynamic>{};
     return DriverNotification(
       id: json['id'] as String? ?? '',
-      type: json['type'] as String? ?? payload['eventType'] as String? ?? 'system',
+      type:
+          json['type'] as String? ??
+          payload['eventType'] as String? ??
+          'system',
       title: json['title'] as String? ?? '',
       body: json['body'] as String? ?? json['message'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       isRead: json['isRead'] as bool? ?? json['read'] as bool? ?? false,
       deepLink: json['deepLink'] as String? ?? payload['deepLink'] as String?,
     );
@@ -82,12 +92,13 @@ class DriverNotificationsState {
   }
 }
 
-class DriverNotificationsNotifier extends StateNotifier<DriverNotificationsState> {
+class DriverNotificationsNotifier
+    extends StateNotifier<DriverNotificationsState> {
   final ApiClient _api;
 
   DriverNotificationsNotifier({ApiClient? apiClient})
-      : _api = apiClient ?? ApiClient.instance,
-        super(const DriverNotificationsState());
+    : _api = apiClient ?? ApiClient.instance,
+      super(const DriverNotificationsState());
 
   Future<void> fetchNotifications() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -108,7 +119,11 @@ class DriverNotificationsNotifier extends StateNotifier<DriverNotificationsState
   Future<void> markRead(String id) async {
     final previous = state;
     final updated = state.notifications
-        .map((notification) => notification.id == id ? notification.copyWith(isRead: true) : notification)
+        .map(
+          (notification) => notification.id == id
+              ? notification.copyWith(isRead: true)
+              : notification,
+        )
         .toList();
     state = state.copyWith(
       notifications: updated,
@@ -123,7 +138,9 @@ class DriverNotificationsNotifier extends StateNotifier<DriverNotificationsState
 
   Future<void> markAllRead() async {
     final previous = state;
-    final updated = state.notifications.map((notification) => notification.copyWith(isRead: true)).toList();
+    final updated = state.notifications
+        .map((notification) => notification.copyWith(isRead: true))
+        .toList();
     state = state.copyWith(notifications: updated, unreadCount: 0);
     try {
       await _api.patch<dynamic>('/notifications/read-all');
@@ -138,7 +155,9 @@ List<DriverNotification> _parseNotifications(dynamic data) {
   if (list is! List) return const [];
   return list
       .whereType<Map>()
-      .map((item) => DriverNotification.fromJson(Map<String, dynamic>.from(item)))
+      .map(
+        (item) => DriverNotification.fromJson(Map<String, dynamic>.from(item)),
+      )
       .toList();
 }
 
@@ -152,9 +171,12 @@ int _parseUnreadCount(dynamic data, List<DriverNotification> notifications) {
 String _errorMessage(Object error) {
   if (error is DioException) {
     final data = error.response?.data;
-    if (data is Map && data['detail'] is String) return data['detail'] as String;
-    if (data is Map && data['message'] is String) return data['message'] as String;
-    if (error.message != null && error.message!.isNotEmpty) return error.message!;
+    if (data is Map && data['detail'] is String)
+      return data['detail'] as String;
+    if (data is Map && data['message'] is String)
+      return data['message'] as String;
+    if (error.message != null && error.message!.isNotEmpty)
+      return error.message!;
   }
   return error.toString();
 }

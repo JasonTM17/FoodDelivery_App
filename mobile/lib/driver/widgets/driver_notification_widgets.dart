@@ -29,7 +29,9 @@ class DriverNotificationCard extends StatelessWidget {
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: notification.isRead ? Colors.transparent : color.withValues(alpha: 0.3),
+            color: notification.isRead
+                ? Colors.transparent
+                : color.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -65,21 +67,30 @@ class DriverNotificationCard extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primary,
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
                     notification.body,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFFD1D5DB)),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFD1D5DB),
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _relativeTime(notification.createdAt),
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                 ],
               ),
@@ -119,8 +130,10 @@ class DriverNotificationCard extends StatelessWidget {
   String _relativeTime(DateTime createdAt) {
     final diff = DateTime.now().difference(createdAt);
     if (diff.inMinutes < 1) return l10n.driver_notifications_now;
-    if (diff.inHours < 1) return '${diff.inMinutes}${l10n.driver_notifications_minute_suffix}';
-    if (diff.inDays < 1) return '${diff.inHours}${l10n.driver_notifications_hour_suffix}';
+    if (diff.inHours < 1)
+      return '${diff.inMinutes}${l10n.driver_notifications_minute_suffix}';
+    if (diff.inDays < 1)
+      return '${diff.inHours}${l10n.driver_notifications_hour_suffix}';
     return '${diff.inDays}${l10n.driver_notifications_day_suffix}';
   }
 }

@@ -19,7 +19,8 @@ class TipAdjustmentScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TipAdjustmentScreen> createState() => _TipAdjustmentScreenState();
+  ConsumerState<TipAdjustmentScreen> createState() =>
+      _TipAdjustmentScreenState();
 }
 
 class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
@@ -35,7 +36,10 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
         elevation: 0,
         title: Text(
           l10n.driver_tip_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -91,7 +95,9 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: tipState.isSubmitting ? null : () => Navigator.of(context).pop(false),
+            onPressed: tipState.isSubmitting
+                ? null
+                : () => Navigator.of(context).pop(false),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF6B7280),
               side: const BorderSide(color: Color(0xFF374151)),
@@ -106,15 +112,21 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
             onPressed: (tipState.isSubmitting || effective <= 0)
                 ? null
                 : () async {
-                    final success = await ref.read(tipProvider.notifier).submitTip(widget.tripId);
+                    final success = await ref
+                        .read(tipProvider.notifier)
+                        .submitTip(widget.tripId);
                     if (mounted && success) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.driver_tip_success_snackbar)),
+                        SnackBar(
+                          content: Text(l10n.driver_tip_success_snackbar),
+                        ),
                       );
                     }
                   },
             child: effective > 0
-                ? Text('${l10n.driver_tip_confirm} ${effective.toStringAsFixed(0)}đ')
+                ? Text(
+                    '${l10n.driver_tip_confirm} ${effective.toStringAsFixed(0)}đ',
+                  )
                 : Text(l10n.driver_tip_confirm),
           ),
         ),
@@ -153,7 +165,11 @@ class _TipHeader extends StatelessWidget {
               color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.card_giftcard, color: Color(0xFFF59E0B), size: 32),
+            child: const Icon(
+              Icons.card_giftcard,
+              color: Color(0xFFF59E0B),
+              size: 32,
+            ),
           ),
           const SizedBox(height: 12),
           Text(

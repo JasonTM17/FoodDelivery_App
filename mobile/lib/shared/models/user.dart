@@ -28,7 +28,8 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
-      fullName: json['fullName'] as String? ?? json['full_name'] as String? ?? '',
+      fullName:
+          json['fullName'] as String? ?? json['full_name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String? ?? 'customer',
@@ -37,22 +38,26 @@ class UserModel {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : json['created_at'] != null
-              ? DateTime.parse(json['created_at'] as String)
-              : DateTime.now(),
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : json['updated_at'] != null
-              ? DateTime.parse(json['updated_at'] as String)
-              : DateTime.now(),
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
       defaultAddress: json['defaultAddress'] != null
-          ? AddressModel.fromJson(json['defaultAddress'] as Map<String, dynamic>)
+          ? AddressModel.fromJson(
+              json['defaultAddress'] as Map<String, dynamic>,
+            )
           : json['default_address'] != null
-              ? AddressModel.fromJson(json['default_address'] as Map<String, dynamic>)
-              : null,
+          ? AddressModel.fromJson(
+              json['default_address'] as Map<String, dynamic>,
+            )
+          : null,
       addresses: json['addresses'] != null
           ? (json['addresses'] as List<dynamic>)
-              .map((e) => AddressModel.fromJson(e as Map<String, dynamic>))
-              .toList()
+                .map((e) => AddressModel.fromJson(e as Map<String, dynamic>))
+                .toList()
           : null,
     );
   }
@@ -125,9 +130,12 @@ class AddressModel {
       address: json['address'] as String? ?? '',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      apartmentNumber: json['apartmentNumber'] as String? ?? json['apartment_number'] as String?,
+      apartmentNumber:
+          json['apartmentNumber'] as String? ??
+          json['apartment_number'] as String?,
       note: json['note'] as String?,
-      isDefault: json['isDefault'] as bool? ?? json['is_default'] as bool? ?? false,
+      isDefault:
+          json['isDefault'] as bool? ?? json['is_default'] as bool? ?? false,
     );
   }
 

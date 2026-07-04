@@ -52,7 +52,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (token != null && token.isNotEmpty) {
         try {
           final response = await _api.get('/auth/profile');
-          final user = UserModel.fromJson(response.data as Map<String, dynamic>);
+          final user = UserModel.fromJson(
+            response.data as Map<String, dynamic>,
+          );
           state = AuthState(
             isAuthenticated: true,
             user: user,
@@ -70,19 +72,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.post('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final response = await _api.post(
+        '/auth/login',
+        data: {'email': email, 'password': password},
+      );
       final data = response.data as Map<String, dynamic>;
-      final accessToken = data['accessToken'] as String? ?? data['token'] as String? ?? '';
-      final refreshToken = data['refreshToken'] as String? ?? data['refresh_token'] as String?;
+      final accessToken =
+          data['accessToken'] as String? ?? data['token'] as String? ?? '';
+      final refreshToken =
+          data['refreshToken'] as String? ?? data['refresh_token'] as String?;
 
       await _storage.write(key: 'auth_token', value: accessToken);
       if (refreshToken != null) {
@@ -97,18 +98,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user = UserModel.fromJson(profileResponse.data as Map<String, dynamic>);
       }
 
-      state = AuthState(
-        isAuthenticated: true,
-        user: user,
-        isInitialized: true,
-      );
+      state = AuthState(isAuthenticated: true, user: user, isInitialized: true);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra. Vui lòng thử lại.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra. Vui lòng thử lại.',
+      );
     }
   }
 
@@ -121,19 +122,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.post('/auth/register', data: {
-        'fullName': fullName,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        'role': role,
-      });
+      final response = await _api.post(
+        '/auth/register',
+        data: {
+          'fullName': fullName,
+          'email': email,
+          'phone': phone,
+          'password': password,
+          'role': role,
+        },
+      );
       final data = response.data as Map<String, dynamic>;
-      final accessToken = data['accessToken'] as String? ?? data['token'] as String? ?? '';
+      final accessToken =
+          data['accessToken'] as String? ?? data['token'] as String? ?? '';
 
       if (accessToken.isNotEmpty) {
         await _storage.write(key: 'auth_token', value: accessToken);
-        final refreshToken = data['refreshToken'] as String? ?? data['refresh_token'] as String?;
+        final refreshToken =
+            data['refreshToken'] as String? ?? data['refresh_token'] as String?;
         if (refreshToken != null) {
           await _storage.write(key: 'refresh_token', value: refreshToken);
         }
@@ -149,12 +155,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isInitialized: true,
       );
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ??
+      final message =
+          e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Đăng ký thất bại. Vui lòng thử lại.';
       state = state.copyWith(isLoading: false, error: message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra. Vui lòng thử lại.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra. Vui lòng thử lại.',
+      );
     }
   }
 

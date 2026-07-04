@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -27,7 +26,10 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
   void _copyCode(BuildContext context, AppLocalizations l10n, String code) {
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.referralCodeCopied), backgroundColor: AppColors.success),
+      SnackBar(
+        content: Text(l10n.referralCodeCopied),
+        backgroundColor: AppColors.success,
+      ),
     );
   }
 
@@ -44,7 +46,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(referralProvider);
 
     return Scaffold(
@@ -53,12 +55,20 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
       body: state.isLoading
           ? const LoadingShimmer()
           : state.error != null
-              ? ErrorState(message: state.error!, onRetry: () => ref.read(referralProvider.notifier).fetchReferral())
-              : _buildBody(context, l10n, state),
+          ? ErrorState(
+              message: state.error!,
+              onRetry: () =>
+                  ref.read(referralProvider.notifier).fetchReferral(),
+            )
+          : _buildBody(context, l10n, state),
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n, ReferralState state) {
+  Widget _buildBody(
+    BuildContext context,
+    AppLocalizations l10n,
+    ReferralState state,
+  ) {
     final code = state.referralCode ?? '---';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -80,9 +90,18 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
               children: [
                 const Icon(Icons.card_giftcard, size: 48, color: Colors.white),
                 const SizedBox(height: 12),
-                Text(l10n.referralTitle, style: AppTextStyles.headline3.copyWith(color: Colors.white)),
+                Text(
+                  l10n.referralTitle,
+                  style: AppTextStyles.headline3.copyWith(color: Colors.white),
+                ),
                 const SizedBox(height: 4),
-                Text(l10n.referralSubtitle, style: AppTextStyles.bodySmall.copyWith(color: Colors.white70), textAlign: TextAlign.center),
+                Text(
+                  l10n.referralSubtitle,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
@@ -94,7 +113,13 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,18 +127,29 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                 Text(l10n.referralCode, style: AppTextStyles.bodySmall),
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(code,
-                          style: AppTextStyles.headline3.copyWith(
-                              color: AppColors.primary, letterSpacing: 4, fontWeight: FontWeight.w800)),
+                      Text(
+                        code,
+                        style: AppTextStyles.headline3.copyWith(
+                          color: AppColors.primary,
+                          letterSpacing: 4,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -145,17 +181,21 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
           // Stats row
           Row(
             children: [
-              Expanded(child: _buildStatCard(
-                '${state.inviteCount}',
-                l10n.referralInviteCount(state.inviteCount),
-                Icons.people_outline,
-              )),
+              Expanded(
+                child: _buildStatCard(
+                  '${state.inviteCount}',
+                  l10n.referralInviteCount(state.inviteCount),
+                  Icons.people_outline,
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard(
-                '${state.bonusPoints}pt',
-                l10n.referralBonusEarned,
-                Icons.stars_outlined,
-              )),
+              Expanded(
+                child: _buildStatCard(
+                  '${state.bonusPoints}pt',
+                  l10n.referralBonusEarned,
+                  Icons.stars_outlined,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -166,7 +206,13 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,15 +237,28 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: const Offset(0, 1))],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Icon(icon, color: AppColors.primary, size: 28),
           const SizedBox(height: 8),
-          Text(value, style: AppTextStyles.headline3.copyWith(color: AppColors.primary)),
+          Text(
+            value,
+            style: AppTextStyles.headline3.copyWith(color: AppColors.primary),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.caption, textAlign: TextAlign.center),
+          Text(
+            label,
+            style: AppTextStyles.caption,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -214,15 +273,26 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
           Container(
             width: 28,
             height: 28,
-            decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
             alignment: Alignment.center,
-            child: Text(num, style: AppTextStyles.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+            child: Text(
+              num,
+              style: AppTextStyles.caption.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(text, style: AppTextStyles.bodyMedium),
-          )),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(text, style: AppTextStyles.bodyMedium),
+            ),
+          ),
         ],
       ),
     );

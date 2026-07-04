@@ -25,7 +25,11 @@ class VoucherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isExpired = voucher.status == 'expired' || voucher.isUsed;
-    final currencyFmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+    final currencyFmt = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -33,7 +37,9 @@ class VoucherCard extends StatelessWidget {
         color: isExpired ? AppColors.surface : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isExpired ? AppColors.border : AppColors.primary.withOpacity(0.3),
+          color: isExpired
+              ? AppColors.border
+              : AppColors.primary.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
@@ -75,15 +81,20 @@ class VoucherCard extends StatelessWidget {
                               voucher.title,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: isExpired ? AppColors.textHint : AppColors.textPrimary,
+                                color: isExpired
+                                    ? AppColors.textHint
+                                    : AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 4),
                             if (voucher.percentOff != null)
                               Text(
-                                percentOffLabel ?? 'Giảm ${voucher.percentOff}%',
+                                percentOffLabel ??
+                                    'Giảm ${voucher.percentOff}%',
                                 style: AppTextStyles.priceMedium.copyWith(
-                                  color: isExpired ? AppColors.textHint : AppColors.error,
+                                  color: isExpired
+                                      ? AppColors.textHint
+                                      : AppColors.error,
                                 ),
                               ),
                           ],
@@ -91,18 +102,23 @@ class VoucherCard extends StatelessWidget {
                       ),
                       // Code badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: isExpired
                               ? AppColors.border
-                              : AppColors.primary.withOpacity(0.1),
+                              : AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           voucher.code,
                           style: AppTextStyles.caption.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isExpired ? AppColors.textHint : AppColors.primary,
+                            color: isExpired
+                                ? AppColors.textHint
+                                : AppColors.primary,
                           ),
                         ),
                       ),
@@ -111,12 +127,14 @@ class VoucherCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   if (voucher.minOrderAmount != null)
                     Text(
-                      minOrderLabel ?? 'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
+                      minOrderLabel ??
+                          'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
                       style: AppTextStyles.caption,
                     ),
                   if (voucher.expiresAt != null)
                     Text(
-                      expiresAtLabel ?? 'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)}',
+                      expiresAtLabel ??
+                          'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)}',
                       style: AppTextStyles.caption.copyWith(
                         color: voucher.expiresAt!.isBefore(DateTime.now())
                             ? AppColors.error

@@ -22,8 +22,8 @@ class OnlineToggleSwitch extends ConsumerWidget {
           color: isOnline
               ? AppColors.primary.withValues(alpha: 0.3)
               : isPaused
-                  ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
-                  : const Color(0xFF374151),
+              ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
+              : const Color(0xFF374151),
         ),
       ),
       child: Row(
@@ -36,8 +36,8 @@ class OnlineToggleSwitch extends ConsumerWidget {
               color: isOnline
                   ? AppColors.primary
                   : isPaused
-                      ? const Color(0xFFF59E0B)
-                      : const Color(0xFF6B7280),
+                  ? const Color(0xFFF59E0B)
+                  : const Color(0xFF6B7280),
               boxShadow: isOnline
                   ? [
                       BoxShadow(
@@ -56,24 +56,24 @@ class OnlineToggleSwitch extends ConsumerWidget {
                 isOnline
                     ? 'Đang trực tuyến'
                     : isPaused
-                        ? 'Đang tạm dừng'
-                        : 'Đang ngoại tuyến',
+                    ? 'Đang tạm dừng'
+                    : 'Đang ngoại tuyến',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: isOnline
                       ? AppColors.primary
                       : isPaused
-                          ? const Color(0xFFF59E0B)
-                          : const Color(0xFF6B7280),
+                      ? const Color(0xFFF59E0B)
+                      : const Color(0xFF6B7280),
                 ),
               ),
               Text(
                 isOnline
                     ? 'Sẵn sàng nhận đơn'
                     : isPaused
-                        ? 'Sẽ tự động offline khi hết giờ'
-                        : 'Bật để nhận đơn hàng',
+                    ? 'Sẽ tự động offline khi hết giờ'
+                    : 'Bật để nhận đơn hàng',
                 style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
               ),
             ],

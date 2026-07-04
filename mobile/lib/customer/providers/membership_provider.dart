@@ -77,15 +77,16 @@ class MembershipState {
       error: error,
       currentTier: currentTier ?? this.currentTier,
       expiryDate: expiryDate ?? this.expiryDate,
-      hasActiveSubscription: hasActiveSubscription ?? this.hasActiveSubscription,
+      hasActiveSubscription:
+          hasActiveSubscription ?? this.hasActiveSubscription,
     );
   }
 }
 
 final membershipProvider =
     StateNotifierProvider<MembershipNotifier, MembershipState>((ref) {
-  return MembershipNotifier();
-});
+      return MembershipNotifier();
+    });
 
 class MembershipNotifier extends StateNotifier<MembershipState> {
   final ApiClient _api = ApiClient.instance;
@@ -101,8 +102,8 @@ class MembershipNotifier extends StateNotifier<MembershipState> {
       final tier = tierStr == 'pro'
           ? MembershipTier.pro
           : tierStr == 'pro_plus'
-              ? MembershipTier.proPlus
-              : MembershipTier.free;
+          ? MembershipTier.proPlus
+          : MembershipTier.free;
       state = state.copyWith(
         isLoading: false,
         currentTier: tier,
@@ -112,27 +113,38 @@ class MembershipNotifier extends StateNotifier<MembershipState> {
         hasActiveSubscription: data['hasActiveSubscription'] as bool? ?? false,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
+      final msg =
+          e.response?.data?['message'] as String? ??
           'Không thể tải thông tin thành viên.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải thông tin thành viên.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải thông tin thành viên.',
+      );
     }
   }
 
   Future<bool> upgrade(MembershipTier tier) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _api.post('/users/me/membership/upgrade', data: {'tier': tier.name});
+      await _api.post(
+        '/users/me/membership/upgrade',
+        data: {'tier': tier.name},
+      );
       await fetchMembership();
       return true;
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
+      final msg =
+          e.response?.data?['message'] as String? ??
           'Không thể nâng cấp. Vui lòng thử lại.';
       state = state.copyWith(isLoading: false, error: msg);
       return false;
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi nâng cấp.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi nâng cấp.',
+      );
       return false;
     }
   }

@@ -41,8 +41,7 @@ class OrderTimeline extends StatelessWidget {
             timestamp: _timestampFor(step.status),
           );
         }),
-        if (isCancelled)
-          _CancelledRow(timestamp: _timestampFor('cancelled')),
+        if (isCancelled) _CancelledRow(timestamp: _timestampFor('cancelled')),
       ],
     );
   }
@@ -83,8 +82,8 @@ class _TimelineRow extends StatelessWidget {
     final labelColor = isActive
         ? AppColors.textPrimary
         : isDone
-            ? AppColors.textSecondary
-            : AppColors.textHint;
+        ? AppColors.textSecondary
+        : AppColors.textHint;
 
     return IntrinsicHeight(
       child: Row(
@@ -98,14 +97,18 @@ class _TimelineRow extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: (isDone || isActive) ? AppColors.primary : AppColors.surface,
+                    color: (isDone || isActive)
+                        ? AppColors.primary
+                        : AppColors.surface,
                     shape: BoxShape.circle,
                     border: Border.all(color: dotColor, width: 2),
                   ),
                   child: Icon(
                     isDone ? Icons.check : step.icon,
                     size: 14,
-                    color: (isDone || isActive) ? Colors.white : AppColors.textHint,
+                    color: (isDone || isActive)
+                        ? Colors.white
+                        : AppColors.textHint,
                   ),
                 ),
                 if (!isLast)
@@ -159,7 +162,10 @@ class _CancelledRow extends StatelessWidget {
           child: Container(
             width: 28,
             height: 28,
-            decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: AppColors.error,
+              shape: BoxShape.circle,
+            ),
             child: const Icon(Icons.close, size: 14, color: Colors.white),
           ),
         ),
@@ -177,7 +183,8 @@ class _CancelledRow extends StatelessWidget {
                     color: AppColors.error,
                   ),
                 ),
-                if (timestamp != null) Text(timestamp!, style: AppTextStyles.caption),
+                if (timestamp != null)
+                  Text(timestamp!, style: AppTextStyles.caption),
               ],
             ),
           ),

@@ -57,9 +57,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                     const Text(
                       'Danh sách món',
                       style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ...List.generate(_items.length, (i) => _itemTile(i)),
@@ -104,9 +105,7 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                 color: checked ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: checked
-                      ? AppColors.primary
-                      : const Color(0xFF6B7280),
+                  color: checked ? AppColors.primary : const Color(0xFF6B7280),
                   width: 1.5,
                 ),
               ),
@@ -142,9 +141,7 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
           bottomLeft: Radius.circular(12),
           bottomRight: Radius.circular(12),
         ),
-        border: Border(
-          left: BorderSide(color: AppColors.warning, width: 4),
-        ),
+        border: Border(left: BorderSide(color: AppColors.warning, width: 4)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,9 +149,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
           Text(
             'Lưu ý từ nhà hàng',
             style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.warning),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.warning,
+            ),
           ),
           SizedBox(height: 4),
           Text(
@@ -200,19 +198,22 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed:
-                  _allChecked ? () => context.go('/delivery-complete') : null,
+              onPressed: _allChecked
+                  ? () => context.go('/delivery-complete')
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: const Text(
                 'ĐÃ LẤY HÀNG',
                 style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -222,9 +223,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
             child: const Text(
               'Báo vấn đề',
               style: TextStyle(
-                  color: AppColors.warning,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600),
+                color: AppColors.warning,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -237,8 +239,7 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('Báo vấn đề',
-            style: TextStyle(color: Colors.white)),
+        title: const Text('Báo vấn đề', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Liên hệ hỗ trợ sẽ được kết nối ngay.',
           style: TextStyle(color: Color(0xFFD1D5DB)),
@@ -246,8 +247,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng',
-                style: TextStyle(color: AppColors.primary)),
+            child: const Text(
+              'Đóng',
+              style: TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),

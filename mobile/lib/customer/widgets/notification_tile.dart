@@ -7,18 +7,16 @@ class NotificationTile extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback? onTap;
 
-  const NotificationTile({
-    super.key,
-    required this.notification,
-    this.onTap,
-  });
+  const NotificationTile({super.key, required this.notification, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: notification.isRead ? null : AppColors.primary.withValues(alpha: 0.04),
+        color: notification.isRead
+            ? null
+            : AppColors.primary.withValues(alpha: 0.04),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +45,9 @@ class NotificationTile extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         notification.title,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),

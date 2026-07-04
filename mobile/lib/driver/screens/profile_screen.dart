@@ -11,7 +11,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(driverProvider);
 
     return Scaffold(
@@ -21,7 +21,10 @@ class ProfileScreen extends ConsumerWidget {
         elevation: 0,
         title: Text(
           l10n.driverProfileTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -39,60 +42,62 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   // Avatar
-                    Stack(
-                      children: [
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primary.withValues(alpha: 0.15),
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              width: 2,
-                            ),
+                  Stack(
+                    children: [
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            width: 2,
                           ),
-                          child: state.driverAvatarUrl != null
-                              ? ClipOval(
-                                  child: Image.network(
-                                    state.driverAvatarUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: AppColors.primary,
-                                    ),
+                        ),
+                        child: state.driverAvatarUrl != null
+                            ? ClipOval(
+                                child: Image.network(
+                                  state.driverAvatarUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: AppColors.primary,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: AppColors.primary,
                                 ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
-                            ),
+                              )
+                            : const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: AppColors.primary,
+                              ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 14,
+                            color: Colors.white,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     state.driverName ?? l10n.defaultDriver,
-                    style: AppTextStyles.headline3.copyWith(color: Colors.white),
+                    style: AppTextStyles.headline3.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -112,7 +117,9 @@ class ProfileScreen extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Icon(
-                          starHalf ? Icons.star_half : (starFill ? Icons.star : Icons.star_border),
+                          starHalf
+                              ? Icons.star_half
+                              : (starFill ? Icons.star : Icons.star_border),
                           color: AppColors.warning,
                           size: 22,
                         ),
@@ -145,7 +152,11 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.directions_bike, color: AppColors.primary, size: 20),
+                      const Icon(
+                        Icons.directions_bike,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.vehicleInfo,
@@ -179,7 +190,11 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.analytics_outlined, color: AppColors.primary, size: 20),
+                      const Icon(
+                        Icons.analytics_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.statistics,
@@ -192,7 +207,10 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  _buildInfoRow(l10n.totalDeliveries, '${state.totalDeliveries}'),
+                  _buildInfoRow(
+                    l10n.totalDeliveries,
+                    '${state.totalDeliveries}',
+                  ),
                   const Divider(color: Color(0xFF374151), height: 20),
                   _buildInfoRow(
                     l10n.totalEarnings,
@@ -264,10 +282,7 @@ class ProfileScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF6B7280),
-          ),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
         ),
         Text(
           value,
@@ -282,7 +297,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showLogoutConfirm(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -290,7 +305,10 @@ class ProfileScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           l10n.logout,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: Text(
           l10n.logoutConfirm,

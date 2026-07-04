@@ -66,8 +66,8 @@ class FavoritesState {
 
 final favoritesProvider =
     StateNotifierProvider<FavoritesNotifier, FavoritesState>((ref) {
-  return FavoritesNotifier();
-});
+      return FavoritesNotifier();
+    });
 
 class FavoritesNotifier extends StateNotifier<FavoritesState> {
   final ApiClient _api = ApiClient.instance;
@@ -84,20 +84,22 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
           .toList();
       state = state.copyWith(isLoading: false, items: items);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
+      final msg =
+          e.response?.data?['message'] as String? ??
           'Không thể tải danh sách yêu thích.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải danh sách yêu thích.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải danh sách yêu thích.',
+      );
     }
   }
 
   Future<void> toggle(String id, {required String type}) async {
     final isFav = state.items.any((item) => item.id == id);
     // Optimistic toggle
-    state = state.copyWith(
-      togglingIds: {...state.togglingIds, id},
-    );
+    state = state.copyWith(togglingIds: {...state.togglingIds, id});
     try {
       if (isFav) {
         await _api.delete('/users/me/favorites/$id');
@@ -112,9 +114,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
       }
     } on DioException catch (_) {
       // Rollback — re-fetch real state
-      state = state.copyWith(
-        togglingIds: state.togglingIds.difference({id}),
-      );
+      state = state.copyWith(togglingIds: state.togglingIds.difference({id}));
       await fetchFavorites();
     }
   }

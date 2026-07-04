@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,9 +29,8 @@ class LocaleSwitcher extends ConsumerWidget {
           child: _LocaleButton(
             label: entry.label,
             isSelected: isSelected,
-            onTap: () => ref
-                .read(localeProvider.notifier)
-                .setLocale(Locale(entry.code)),
+            onTap: () =>
+                ref.read(localeProvider.notifier).setLocale(Locale(entry.code)),
           ),
         );
       }).toList(),

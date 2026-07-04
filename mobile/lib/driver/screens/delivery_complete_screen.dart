@@ -23,10 +23,14 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900));
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
     _scale = CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut);
-    _ripple = Tween<double>(begin: 0.8, end: 1.4)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _ripple = Tween<double>(
+      begin: 0.8,
+      end: 1.4,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
   }
 
@@ -51,9 +55,10 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
               const Text(
                 'Giao hàng thành công!',
                 style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white),
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -116,8 +121,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -129,17 +133,21 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           Text(
             '${(_deliveryFee + _bonus).toStringAsFixed(0)}đ',
             style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primary),
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(height: 16),
           const Divider(color: Color(0xFF374151)),
           const SizedBox(height: 12),
           _earningRow('Phí giao hàng', '${_deliveryFee.toStringAsFixed(0)}đ'),
           const SizedBox(height: 8),
-          _earningRow('Thưởng', '+${_bonus.toStringAsFixed(0)}đ',
-              highlight: true),
+          _earningRow(
+            'Thưởng',
+            '+${_bonus.toStringAsFixed(0)}đ',
+            highlight: true,
+          ),
         ],
       ),
     );
@@ -149,15 +157,18 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 14, color: Color(0xFFD1D5DB))),
-        Text(value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: highlight ? AppColors.primary : Colors.white,
-            )),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Color(0xFFD1D5DB)),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: highlight ? AppColors.primary : Colors.white,
+          ),
+        ),
       ],
     );
   }
@@ -173,14 +184,16 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: const Text(
               'TIẾP TỤC NHẬN ĐƠN',
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -193,14 +206,16 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.primary, width: 1.5),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: const Text(
               'VỀ TRANG CHỦ',
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
             ),
           ),
         ),

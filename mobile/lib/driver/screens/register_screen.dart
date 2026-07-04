@@ -59,13 +59,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 _section('Thông tin cá nhân'),
                 const SizedBox(height: 12),
-                _field(_nameCtrl, 'Họ và tên', Icons.person_outline, 'Nguyễn Văn A'),
+                _field(
+                  _nameCtrl,
+                  'Họ và tên',
+                  Icons.person_outline,
+                  'Nguyễn Văn A',
+                ),
                 const SizedBox(height: 12),
-                _field(_phoneCtrl, 'Số điện thoại', Icons.phone_outlined, '0901234567',
-                    keyboardType: TextInputType.phone),
+                _field(
+                  _phoneCtrl,
+                  'Số điện thoại',
+                  Icons.phone_outlined,
+                  '0901234567',
+                  keyboardType: TextInputType.phone,
+                ),
                 const SizedBox(height: 12),
-                _field(_emailCtrl, 'Email', Icons.email_outlined, 'example@email.com',
-                    keyboardType: TextInputType.emailAddress),
+                _field(
+                  _emailCtrl,
+                  'Email',
+                  Icons.email_outlined,
+                  'example@email.com',
+                  keyboardType: TextInputType.emailAddress,
+                ),
                 const SizedBox(height: 12),
                 _passwordField(),
                 const SizedBox(height: 24),
@@ -73,12 +88,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 12),
                 _vehicleTypeSelector(),
                 const SizedBox(height: 12),
-                _field(_plateCtrl, 'Biển số xe', Icons.confirmation_number_outlined, '51A-123.45'),
+                _field(
+                  _plateCtrl,
+                  'Biển số xe',
+                  Icons.confirmation_number_outlined,
+                  '51A-123.45',
+                ),
                 const SizedBox(height: 12),
-                _field(_makeCtrl, 'Hãng xe', Icons.directions_car_outlined, 'Honda, Yamaha...'),
+                _field(
+                  _makeCtrl,
+                  'Hãng xe',
+                  Icons.directions_car_outlined,
+                  'Honda, Yamaha...',
+                ),
                 const SizedBox(height: 12),
-                _field(_yearCtrl, 'Năm sản xuất', Icons.calendar_today_outlined, '2020',
-                    keyboardType: TextInputType.number),
+                _field(
+                  _yearCtrl,
+                  'Năm sản xuất',
+                  Icons.calendar_today_outlined,
+                  '2020',
+                  keyboardType: TextInputType.number,
+                ),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -92,12 +122,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: const Text(
                       'TIẾP TỤC',
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -110,10 +144,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _section(String label) => Text(
-        label,
-        style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-      );
+    label,
+    style: const TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: Colors.white,
+    ),
+  );
 
   Widget _field(
     TextEditingController ctrl,
@@ -146,8 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
             color: const Color(0xFF6B7280),
           ),
-          onPressed: () =>
-              setState(() => _obscurePassword = !_obscurePassword),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
       validator: (v) {
@@ -190,14 +226,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18,
-                  color: selected ? Colors.white : const Color(0xFF6B7280)),
+              Icon(
+                icon,
+                size: 18,
+                color: selected ? Colors.white : const Color(0xFF6B7280),
+              ),
               const SizedBox(width: 6),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : const Color(0xFF6B7280))),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.white : const Color(0xFF6B7280),
+                ),
+              ),
             ],
           ),
         ),
@@ -221,17 +263,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       labelStyle: const TextStyle(color: Color(0xFF6B7280)),
       hintStyle: const TextStyle(color: Color(0xFF4B5563)),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF374151))),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF374151)),
+      ),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF374151))),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF374151)),
+      ),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
       errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.error)),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
     );
   }
 }

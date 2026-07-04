@@ -71,19 +71,26 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary),
+          textStyle: AppTextStyles.buttonMedium.copyWith(
+            color: AppColors.primary,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary),
+          textStyle: AppTextStyles.buttonMedium.copyWith(
+            color: AppColors.primary,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
@@ -105,16 +112,16 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
-        labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textSecondary,
+        ),
         prefixIconColor: AppColors.textHint,
         suffixIconColor: AppColors.textHint,
       ),
       cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: AppColors.shadow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: AppColors.cardBackground,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
@@ -123,9 +130,7 @@ class AppTheme {
         selectedColor: AppColors.primaryLight,
         labelStyle: AppTextStyles.bodySmall,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: const BorderSide(color: AppColors.border),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -134,7 +139,10 @@ class AppTheme {
         unselectedItemColor: AppColors.textHint,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 12),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -150,7 +158,9 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimary,
-        contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textOnPrimary),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textOnPrimary,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
@@ -200,7 +210,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF374151)),
@@ -221,7 +234,10 @@ class AppTheme {
         unselectedItemColor: Color(0xFF6B7280),
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 12),
       ),
       snackBarTheme: SnackBarThemeData(

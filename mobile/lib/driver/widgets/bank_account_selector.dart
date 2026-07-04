@@ -37,7 +37,9 @@ class BankAccountSelector extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          ...accounts.map((account) => _buildAccountCard(context, account, l10n)),
+          ...accounts.map(
+            (account) => _buildAccountCard(context, account, l10n),
+          ),
           const SizedBox(height: 16),
         ],
         _buildAddButton(context, l10n),
@@ -45,7 +47,11 @@ class BankAccountSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountCard(BuildContext context, BankAccount account, AppLocalizations l10n) {
+  Widget _buildAccountCard(
+    BuildContext context,
+    BankAccount account,
+    AppLocalizations l10n,
+  ) {
     final bank = vnBanks.firstWhere(
       (b) => b.code == account.bankCode,
       orElse: () => vnBanks.first,
@@ -130,7 +136,9 @@ class BankAccountSelector extends StatelessWidget {
               icon: const Icon(Icons.delete_outline, size: 20),
               color: const Color(0xFF6B7280),
               tooltip: l10n.driver_bank_delete_tooltip,
-              onPressed: onDeleteTap == null ? null : () => onDeleteTap!(account),
+              onPressed: onDeleteTap == null
+                  ? null
+                  : () => onDeleteTap!(account),
             ),
           ],
         ),
@@ -155,7 +163,11 @@ class BankAccountSelector extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_circle_outline, color: AppColors.primary, size: 20),
+            const Icon(
+              Icons.add_circle_outline,
+              color: AppColors.primary,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               l10n.driver_bank_add_button,

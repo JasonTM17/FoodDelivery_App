@@ -8,11 +8,7 @@ class RestaurantCard extends StatelessWidget {
   final RestaurantModel restaurant;
   final VoidCallback? onTap;
 
-  const RestaurantCard({
-    super.key,
-    required this.restaurant,
-    this.onTap,
-  });
+  const RestaurantCard({super.key, required this.restaurant, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +31,9 @@ class RestaurantCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: SizedBox(
                 height: 140,
                 width: double.infinity,
@@ -85,7 +83,10 @@ class RestaurantCard extends StatelessWidget {
                       ),
                       if (!restaurant.isOpen)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -121,7 +122,11 @@ class RestaurantCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       if (restaurant.distance != null) ...[
-                        const Icon(Icons.location_on, size: 14, color: AppColors.textHint),
+                        const Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: AppColors.textHint,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           restaurant.distance!,
@@ -129,7 +134,11 @@ class RestaurantCard extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(width: 12),
-                      const Icon(Icons.access_time, size: 14, color: AppColors.textHint),
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: AppColors.textHint,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         '${restaurant.estimatedPrepTime}ph',
@@ -144,9 +153,14 @@ class RestaurantCard extends StatelessWidget {
                       runSpacing: 4,
                       children: restaurant.cuisineTypes.map((cuisine) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withValues(alpha: 0.3),
+                            color: AppColors.primaryLight.withValues(
+                              alpha: 0.3,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

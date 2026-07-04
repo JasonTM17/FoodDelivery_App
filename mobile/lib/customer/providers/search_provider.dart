@@ -93,8 +93,9 @@ class SearchState {
   }
 }
 
-final searchProvider =
-    StateNotifierProvider<SearchNotifier, SearchState>((ref) {
+final searchProvider = StateNotifierProvider<SearchNotifier, SearchState>((
+  ref,
+) {
   return SearchNotifier();
 });
 
@@ -149,8 +150,10 @@ class SearchNotifier extends StateNotifier<SearchState> {
         default:
           sortParam = 'distance';
       }
-      final response = await _api.get('/restaurants/search',
-          queryParameters: {'q': query, 'sort': sortParam});
+      final response = await _api.get(
+        '/restaurants/search',
+        queryParameters: {'q': query, 'sort': sortParam},
+      );
       final dataList = response.data as List<dynamic>;
       final results = dataList
           .map((e) => SearchResultItem.fromJson(e as Map<String, dynamic>))
@@ -158,11 +161,14 @@ class SearchNotifier extends StateNotifier<SearchState> {
       state = state.copyWith(isLoading: false, results: results);
       addRecentSearch(query);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
-          'Không thể tìm kiếm.';
+      final msg =
+          e.response?.data?['message'] as String? ?? 'Không thể tìm kiếm.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tìm kiếm.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tìm kiếm.',
+      );
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../screens/splash_screen.dart';
@@ -228,7 +227,9 @@ final appRouter = GoRouter(
       name: 'restaurant-filters',
       builder: (context, state) {
         final initial = state.extra as RestaurantFilters?;
-        return RestaurantFiltersScreen(initial: initial ?? const RestaurantFilters());
+        return RestaurantFiltersScreen(
+          initial: initial ?? const RestaurantFilters(),
+        );
       },
     ),
     GoRoute(

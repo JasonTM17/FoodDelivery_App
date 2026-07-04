@@ -4,7 +4,6 @@ import '../../shared/theme/app_colors.dart';
 import '../providers/driver_status_provider.dart';
 import '../widgets/online_toggle_switch.dart';
 
-
 class OfflineStatusScreen extends ConsumerWidget {
   const OfflineStatusScreen({super.key});
 
@@ -90,9 +89,8 @@ class OfflineStatusScreen extends ConsumerWidget {
                   status.status == DriverOnlineStatus.paused &&
                   status.pausedDuration == option.$2;
               return GestureDetector(
-                onTap: () => ref
-                    .read(driverStatusProvider.notifier)
-                    .pauseFor(option.$2),
+                onTap: () =>
+                    ref.read(driverStatusProvider.notifier).pauseFor(option.$2),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -114,9 +112,7 @@ class OfflineStatusScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isActive
-                          ? const Color(0xFFF59E0B)
-                          : Colors.white,
+                      color: isActive ? const Color(0xFFF59E0B) : Colors.white,
                     ),
                   ),
                 ),
@@ -217,9 +213,7 @@ class OfflineStatusScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: const Row(
         children: [

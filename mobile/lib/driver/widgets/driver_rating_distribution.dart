@@ -89,8 +89,8 @@ class DriverRatingDistribution extends StatelessWidget {
                           star >= 4
                               ? AppColors.primary
                               : star == 3
-                                  ? const Color(0xFFF59E0B)
-                                  : const Color(0xFFEF4444),
+                              ? const Color(0xFFF59E0B)
+                              : const Color(0xFFEF4444),
                         ),
                       ),
                     ),
@@ -123,9 +123,7 @@ class DriverRatingDistribution extends StatelessWidget {
         return Icon(
           i < rating ? Icons.star : Icons.star_border,
           size: 16,
-          color: i < rating
-              ? const Color(0xFFF59E0B)
-              : const Color(0xFF4B5563),
+          color: i < rating ? const Color(0xFFF59E0B) : const Color(0xFF4B5563),
         );
       }),
     );

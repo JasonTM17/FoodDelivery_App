@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'l10n/app_localizations.dart';
@@ -46,7 +45,10 @@ final _router = GoRouter(
         GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
         GoRoute(path: '/earnings', builder: (_, __) => const EarningsScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-        GoRoute(path: '/history', builder: (_, __) => const DeliveryHistoryScreen()),
+        GoRoute(
+          path: '/history',
+          builder: (_, __) => const DeliveryHistoryScreen(),
+        ),
       ],
     ),
     GoRoute(
@@ -63,23 +65,39 @@ class DriverShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: location.contains('/earnings') ? 1 : location.contains('/profile') ? 2 : 0,
+        currentIndex: location.contains('/earnings')
+            ? 1
+            : location.contains('/profile')
+            ? 2
+            : 0,
         onTap: (index) {
           switch (index) {
-            case 0: context.go('/home');
-            case 1: context.go('/earnings');
-            case 2: context.go('/profile');
+            case 0:
+              context.go('/home');
+            case 1:
+              context.go('/earnings');
+            case 2:
+              context.go('/profile');
           }
         },
         selectedItemColor: AppColors.primary,
         items: [
-          BottomNavigationBarItem(icon: const Icon(Icons.home_rounded), label: l10n.navHome),
-          BottomNavigationBarItem(icon: const Icon(Icons.payments_rounded), label: l10n.navEarnings),
-          BottomNavigationBarItem(icon: const Icon(Icons.person_rounded), label: l10n.driverProfileTitle),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_rounded),
+            label: l10n.navHome,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.payments_rounded),
+            label: l10n.navEarnings,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_rounded),
+            label: l10n.driverProfileTitle,
+          ),
         ],
       ),
     );

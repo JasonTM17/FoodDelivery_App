@@ -69,14 +69,64 @@ class VnBank {
 }
 
 const vnBanks = [
-  VnBank(code: 'vcb', name: 'Ngân hàng TMCP Ngoại thương Việt Nam', shortName: 'Vietcombank', logoUrl: ''),
-  VnBank(code: 'bidv', name: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam', shortName: 'BIDV', logoUrl: ''),
-  VnBank(code: 'tcb', name: 'Ngân hàng TMCP Kỹ Thương Việt Nam', shortName: 'Techcombank', logoUrl: ''),
-  VnBank(code: 'mbb', name: 'Ngân hàng TMCP Quân đội', shortName: 'MB Bank', logoUrl: ''),
-  VnBank(code: 'acb', name: 'Ngân hàng TMCP Á Châu', shortName: 'ACB', logoUrl: ''),
-  VnBank(code: 'vpb', name: 'Ngân hàng TMCP Việt Nam Thịnh Vượng', shortName: 'VPBank', logoUrl: ''),
-  VnBank(code: 'stb', name: 'Ngân hàng TMCP Sài Gòn Thương Tín', shortName: 'Sacombank', logoUrl: ''),
-  VnBank(code: 'shb', name: 'Ngân hàng TMCP Sài Gòn – Hà Nội', shortName: 'SHB', logoUrl: ''),
-  VnBank(code: 'tpb', name: 'Ngân hàng TMCP Tiên Phong', shortName: 'TPBank', logoUrl: ''),
-  VnBank(code: 'ctg', name: 'Ngân hàng TMCP Công Thương Việt Nam', shortName: 'VietinBank', logoUrl: ''),
+  VnBank(
+    code: 'vcb',
+    name: 'Ngân hàng TMCP Ngoại thương Việt Nam',
+    shortName: 'Vietcombank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'bidv',
+    name: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam',
+    shortName: 'BIDV',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'tcb',
+    name: 'Ngân hàng TMCP Kỹ Thương Việt Nam',
+    shortName: 'Techcombank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'mbb',
+    name: 'Ngân hàng TMCP Quân đội',
+    shortName: 'MB Bank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'acb',
+    name: 'Ngân hàng TMCP Á Châu',
+    shortName: 'ACB',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'vpb',
+    name: 'Ngân hàng TMCP Việt Nam Thịnh Vượng',
+    shortName: 'VPBank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'stb',
+    name: 'Ngân hàng TMCP Sài Gòn Thương Tín',
+    shortName: 'Sacombank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'shb',
+    name: 'Ngân hàng TMCP Sài Gòn – Hà Nội',
+    shortName: 'SHB',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'tpb',
+    name: 'Ngân hàng TMCP Tiên Phong',
+    shortName: 'TPBank',
+    logoUrl: '',
+  ),
+  VnBank(
+    code: 'ctg',
+    name: 'Ngân hàng TMCP Công Thương Việt Nam',
+    shortName: 'VietinBank',
+    logoUrl: '',
+  ),
 ];

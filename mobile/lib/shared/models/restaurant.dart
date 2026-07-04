@@ -42,14 +42,24 @@ class RestaurantModel {
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
-      coverImageUrl: json['coverImageUrl'] as String? ?? json['cover_image_url'] as String?,
+      coverImageUrl:
+          json['coverImageUrl'] as String? ??
+          json['cover_image_url'] as String?,
       logoUrl: json['logoUrl'] as String? ?? json['logo_url'] as String?,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewCount: json['reviewCount'] as int? ?? json['review_count'] as int? ?? 0,
+      reviewCount:
+          json['reviewCount'] as int? ?? json['review_count'] as int? ?? 0,
       distance: json['distance'] as String?,
-      estimatedPrepTime: json['estimatedPrepTime'] as int? ?? json['estimated_prep_time'] as int? ?? 0,
-      priceRange: json['priceRange'] as String? ?? json['price_range'] as String? ?? '\$\$',
-      cuisineTypes: (json['cuisineTypes'] as List<dynamic>?)
+      estimatedPrepTime:
+          json['estimatedPrepTime'] as int? ??
+          json['estimated_prep_time'] as int? ??
+          0,
+      priceRange:
+          json['priceRange'] as String? ??
+          json['price_range'] as String? ??
+          '\$\$',
+      cuisineTypes:
+          (json['cuisineTypes'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           (json['cuisine_types'] as List<dynamic>?)
@@ -63,8 +73,8 @@ class RestaurantModel {
       phone: json['phone'] as String?,
       reviews: json['reviews'] != null
           ? (json['reviews'] as List<dynamic>)
-              .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
-              .toList()
+                .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
+                .toList()
           : null,
     );
   }
@@ -118,15 +128,17 @@ class ReviewModel {
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
       userId: json['userId'] as String? ?? json['user_id'] as String? ?? '',
       userName: json['userName'] as String? ?? json['user_name'] as String?,
-      userAvatarUrl: json['userAvatarUrl'] as String? ?? json['user_avatar_url'] as String?,
+      userAvatarUrl:
+          json['userAvatarUrl'] as String? ??
+          json['user_avatar_url'] as String?,
       foodRating: (json['foodRating'] as num?)?.toDouble() ?? 5.0,
       deliveryRating: (json['deliveryRating'] as num?)?.toDouble() ?? 5.0,
       comment: json['comment'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : json['created_at'] != null
-              ? DateTime.parse(json['created_at'] as String)
-              : DateTime.now(),
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
     );
   }
 

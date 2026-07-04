@@ -27,13 +27,16 @@ class SecureStorageService {
   Future<void> deleteRefreshToken() => _storage.delete(key: _refreshTokenKey);
 
   Future<String?> getUserId() => _storage.read(key: _userIdKey);
-  Future<void> setUserId(String id) => _storage.write(key: _userIdKey, value: id);
+  Future<void> setUserId(String id) =>
+      _storage.write(key: _userIdKey, value: id);
 
   Future<String?> getUserRole() => _storage.read(key: _userRoleKey);
-  Future<void> setUserRole(String role) => _storage.write(key: _userRoleKey, value: role);
+  Future<void> setUserRole(String role) =>
+      _storage.write(key: _userRoleKey, value: role);
 
   Future<String?> get(String key) => _storage.read(key: key);
-  Future<void> set(String key, String value) => _storage.write(key: key, value: value);
+  Future<void> set(String key, String value) =>
+      _storage.write(key: key, value: value);
   Future<void> delete(String key) => _storage.delete(key: key);
 
   Future<void> clear() async {

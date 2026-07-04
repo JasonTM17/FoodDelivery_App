@@ -342,11 +342,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  AppLocalizations.of(context)!.searchClosedBadge,
+                  AppLocalizations.of(context).searchClosedBadge,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.error,
                     fontWeight: FontWeight.w600,

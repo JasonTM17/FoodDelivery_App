@@ -53,8 +53,7 @@ class TripHistoryFilter {
 
   String? get dateRangeLabel {
     if (fromDate == null && toDate == null) return null;
-    final fmt = (DateTime d) =>
-        '${d.day}/${d.month}/${d.year}';
+    final fmt = (DateTime d) => '${d.day}/${d.month}/${d.year}';
     if (fromDate != null && toDate != null) {
       return '${fmt(fromDate!)} - ${fmt(toDate!)}';
     }
@@ -76,11 +75,7 @@ class TripHistoryFilterNotifier extends StateNotifier<TripHistoryFilter> {
   }
 
   void setStatusFilter(TripStatusFilter filter) {
-    state = state.copyWith(
-      statusFilter: filter,
-      currentPage: 1,
-      hasMore: true,
-    );
+    state = state.copyWith(statusFilter: filter, currentPage: 1, hasMore: true);
   }
 
   void setPage(int page) {
@@ -94,5 +89,5 @@ class TripHistoryFilterNotifier extends StateNotifier<TripHistoryFilter> {
 
 final tripHistoryFilterProvider =
     StateNotifierProvider<TripHistoryFilterNotifier, TripHistoryFilter>((ref) {
-  return TripHistoryFilterNotifier();
-});
+      return TripHistoryFilterNotifier();
+    });

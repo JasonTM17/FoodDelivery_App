@@ -81,10 +81,11 @@ class VouchersState {
   }
 }
 
-final vouchersProvider =
-    StateNotifierProvider<VouchersNotifier, VouchersState>((ref) {
-  return VouchersNotifier();
-});
+final vouchersProvider = StateNotifierProvider<VouchersNotifier, VouchersState>(
+  (ref) {
+    return VouchersNotifier();
+  },
+);
 
 class VouchersNotifier extends StateNotifier<VouchersState> {
   final ApiClient _api = ApiClient.instance;
@@ -102,11 +103,13 @@ class VouchersNotifier extends StateNotifier<VouchersState> {
         _api.get('/promotions/my'),
         _api.get('/promotions/available'),
       ]);
-      final myData = (results[0].data as List<dynamic>?)
+      final myData =
+          (results[0].data as List<dynamic>?)
               ?.map((e) => Voucher.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
-      final availData = (results[1].data as List<dynamic>?)
+      final availData =
+          (results[1].data as List<dynamic>?)
               ?.map((e) => Voucher.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
@@ -128,11 +131,15 @@ class VouchersNotifier extends StateNotifier<VouchersState> {
         expiredVouchers: expired,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
+      final msg =
+          e.response?.data?['message'] as String? ??
           'Không thể tải danh sách voucher.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra khi tải voucher.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Có lỗi xảy ra khi tải voucher.',
+      );
     }
   }
 }

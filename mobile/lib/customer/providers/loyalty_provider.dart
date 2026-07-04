@@ -64,7 +64,9 @@ class LoyaltyState {
   }
 }
 
-final loyaltyProvider = StateNotifierProvider<LoyaltyNotifier, LoyaltyState>((ref) {
+final loyaltyProvider = StateNotifierProvider<LoyaltyNotifier, LoyaltyState>((
+  ref,
+) {
   return LoyaltyNotifier();
 });
 
@@ -89,7 +91,9 @@ class LoyaltyNotifier extends StateNotifier<LoyaltyState> {
         transactions: txList,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Không thể tải thông tin điểm thưởng.';
+      final msg =
+          e.response?.data?['message'] as String? ??
+          'Không thể tải thông tin điểm thưởng.';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra.');
