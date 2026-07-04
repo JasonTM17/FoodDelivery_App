@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../models/driver_flow_args.dart';
 import '../../shared/theme/app_colors.dart';
 
 class DeliveryCompleteScreen extends StatefulWidget {
-  const DeliveryCompleteScreen({super.key});
+  final DeliveryCompleteArgs? args;
+
+  const DeliveryCompleteScreen({super.key, this.args});
 
   @override
   State<DeliveryCompleteScreen> createState() => _DeliveryCompleteScreenState();
@@ -14,10 +17,6 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
   late AnimationController _ctrl;
   late Animation<double> _scale;
   late Animation<double> _ripple;
-
-  // Demo earnings — in production sourced from active order / route extra
-  static const double _deliveryFee = 25000;
-  static const double _bonus = 5000;
 
   @override
   void initState() {
@@ -42,36 +41,96 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
 
   @override
   Widget build(BuildContext context) {
+    final args = widget.args;
+    if (args == null || !args.hasEarningsData) {
+      return _buildMissingEarningsState(context);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Spacer(),
-              _successIcon(),
-              const SizedBox(height: 20),
-              const Text(
-                'Giao hàng thành công!',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final minHeight = constraints.maxHeight > 48
+                ? constraints.maxHeight - 48
+                : 0.0;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: minHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _successIcon(),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Giao hàng thành công!',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Cảm ơn bạn đã hoàn thành chuyến giao hàng',
+                      style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    _earningsCard(args),
+                    const SizedBox(height: 32),
+                    _actionButtons(context),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Cảm ơn bạn đã hoàn thành chuyến giao hàng',
-                style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              _earningsCard(),
-              const Spacer(),
-              _actionButtons(context),
-            ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMissingEarningsState(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      body: SafeArea(
+        child: Center(
+          key: const Key('delivery-complete-missing-state'),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.receipt_long_outlined,
+                  size: 48,
+                  color: Color(0xFF6B7280),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Không có dữ liệu thu nhập chuyến giao.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Vui lòng mở màn này từ đơn vừa hoàn thành.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => context.go('/home'),
+                  child: const Text('Về trang chủ'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -114,8 +173,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
     );
   }
 
-  Widget _earningsCard() {
+  Widget _earningsCard(DeliveryCompleteArgs args) {
     return Container(
+      key: const Key('delivery-complete-earnings-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -131,7 +191,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            '${(_deliveryFee + _bonus).toStringAsFixed(0)}đ',
+            _formatVnd(args.total),
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
@@ -141,13 +201,15 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           const SizedBox(height: 16),
           const Divider(color: Color(0xFF374151)),
           const SizedBox(height: 12),
-          _earningRow('Phí giao hàng', '${_deliveryFee.toStringAsFixed(0)}đ'),
-          const SizedBox(height: 8),
-          _earningRow(
-            'Thưởng',
-            '+${_bonus.toStringAsFixed(0)}đ',
-            highlight: true,
-          ),
+          _earningRow('Phí giao hàng', _formatVnd(args.deliveryFee)),
+          if (args.bonus > 0) ...[
+            const SizedBox(height: 8),
+            _earningRow(
+              'Thưởng',
+              '+${_formatVnd(args.bonus)}',
+              highlight: true,
+            ),
+          ],
         ],
       ),
     );
@@ -180,7 +242,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () => context.pop(),
+            onPressed: () => context.go('/home'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
@@ -222,4 +284,6 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
       ],
     );
   }
+
+  String _formatVnd(double amount) => '${amount.toStringAsFixed(0)}đ';
 }

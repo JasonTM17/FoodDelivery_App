@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../models/driver_flow_args.dart';
 import '../../shared/theme/app_colors.dart';
 
 class PickupConfirmationScreen extends StatefulWidget {
-  const PickupConfirmationScreen({super.key});
+  final PickupConfirmationArgs? args;
+
+  const PickupConfirmationScreen({super.key, this.args});
 
   @override
   State<PickupConfirmationScreen> createState() =>
@@ -11,26 +14,31 @@ class PickupConfirmationScreen extends StatefulWidget {
 }
 
 class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
-  // Demo items — in production sourced from active order via provider/route extra
-  static const _items = [
-    'Cơm tấm sườn bì chả (x1)',
-    'Bún bò Huế đặc biệt (x2)',
-    'Nước dừa tươi (x2)',
-    'Chả giò hải sản (x1)',
-  ];
-
   late List<bool> _checked;
 
   @override
   void initState() {
     super.initState();
-    _checked = List.filled(_items.length, false);
+    _checked = List.filled(widget.args?.items.length ?? 0, false);
   }
 
-  bool get _allChecked => _checked.every((c) => c);
+  @override
+  void didUpdateWidget(covariant PickupConfirmationScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.args?.items.length != widget.args?.items.length) {
+      _checked = List.filled(widget.args?.items.length ?? 0, false);
+    }
+  }
+
+  bool get _allChecked => _checked.isNotEmpty && _checked.every((c) => c);
 
   @override
   Widget build(BuildContext context) {
+    final args = widget.args;
+    if (args == null || !args.hasPickupData) {
+      return _buildMissingOrderState(context);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -63,10 +71,13 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...List.generate(_items.length, (i) => _itemTile(i)),
+                    ...List.generate(
+                      args.items.length,
+                      (i) => _itemTile(args.items[i], i),
+                    ),
                     const SizedBox(height: 20),
-                    _restaurantNote(),
-                    const SizedBox(height: 12),
+                    _restaurantNote(args.restaurantNote),
+                    if (args.restaurantNote != null) const SizedBox(height: 12),
                     if (!_allChecked) _hintCard(),
                   ],
                 ),
@@ -79,7 +90,62 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
     );
   }
 
-  Widget _itemTile(int index) {
+  Widget _buildMissingOrderState(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1A1A1A),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Xác nhận lấy hàng',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+      ),
+      body: Center(
+        key: const Key('pickup-confirmation-missing-state'),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.inventory_2_outlined,
+                size: 48,
+                color: Color(0xFF6B7280),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Không có dữ liệu đơn hàng để xác nhận.',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Vui lòng mở màn này từ đơn đang hoạt động.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Về trang chủ'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _itemTile(DriverPickupItem item, int index) {
     final checked = _checked[index];
     return GestureDetector(
       onTap: () => setState(() => _checked[index] = !checked),
@@ -116,7 +182,7 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                _items[index],
+                item.label,
                 style: TextStyle(
                   fontSize: 14,
                   color: checked ? Colors.white : const Color(0xFFD1D5DB),
@@ -129,7 +195,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
     );
   }
 
-  Widget _restaurantNote() {
+  Widget _restaurantNote(String? note) {
+    if (note == null || note.trim().isEmpty) return const SizedBox.shrink();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -143,10 +211,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
         ),
         border: Border(left: BorderSide(color: AppColors.warning, width: 4)),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Lưu ý từ nhà hàng',
             style: TextStyle(
               fontSize: 13,
@@ -154,10 +222,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
               color: AppColors.warning,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
-            'Kiểm tra kỹ các hộp bao gồm nước chấm và dụng cụ ăn uống.',
-            style: TextStyle(fontSize: 13, color: Color(0xFFD1D5DB)),
+            note,
+            style: const TextStyle(fontSize: 13, color: Color(0xFFD1D5DB)),
           ),
         ],
       ),
@@ -198,8 +266,12 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
+              key: const Key('pickup-confirmation-complete-button'),
               onPressed: _allChecked
-                  ? () => context.go('/delivery-complete')
+                  ? () => context.go(
+                      '/delivery-complete',
+                      extra: widget.args!.toDeliveryCompleteArgs(),
+                    )
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

@@ -27,6 +27,7 @@ import 'screens/trip_detail_screen.dart';
 import 'screens/bank_account_screen.dart';
 import 'screens/support_driver_screen.dart';
 import 'screens/settings_screen.dart';
+import 'models/driver_flow_args.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -47,11 +48,15 @@ final _router = GoRouter(
     GoRoute(path: '/kyc', builder: (_, __) => const KycVerificationScreen()),
     GoRoute(
       path: '/pickup-confirmation',
-      builder: (_, __) => const PickupConfirmationScreen(),
+      builder: (_, state) => PickupConfirmationScreen(
+        args: PickupConfirmationArgs.fromExtra(state.extra),
+      ),
     ),
     GoRoute(
       path: '/delivery-complete',
-      builder: (_, __) => const DeliveryCompleteScreen(),
+      builder: (_, state) => DeliveryCompleteScreen(
+        args: DeliveryCompleteArgs.fromExtra(state.extra),
+      ),
     ),
     GoRoute(
       path: '/notifications',
