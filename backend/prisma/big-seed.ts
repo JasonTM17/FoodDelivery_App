@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentMethod, PrismaClient } from '@prisma/client'
+import { OrderStatus, PaymentMethod, PrismaClient, VehicleType } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { SeedPriceRange, toDatabasePriceRange } from './seed-database-values'
 
@@ -191,10 +191,21 @@ const DRIVER_LAST_NAMES = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Hu�
 const DRIVER_MIDDLE_NAMES = ['Văn', 'Thị', 'Hữu', 'Đức', 'Minh', 'Thanh', 'Quốc', 'Tuấn', 'Ngọc', 'Hồng']
 const DRIVER_FIRST_NAMES = ['An', 'Bình', 'Cường', 'Dũng', 'Em', 'Giang', 'Hải', 'Hùng', 'Khang', 'Linh', 'Long', 'Mai', 'Nam', 'Phong', 'Quân', 'Tâm', 'Thảo', 'Trang', 'Tuấn', 'Việt']
 
-function rand(min: number, max: number): number { return min + Math.random() * (max - min) }
+let seedState = 0x5f3759df
+
+function seededRandom(): number {
+  seedState = (seedState * 1664525 + 1013904223) >>> 0
+  return seedState / 0x100000000
+}
+
+function chance(probability: number): boolean {
+  return seededRandom() < probability
+}
+
+function rand(min: number, max: number): number { return min + seededRandom() * (max - min) }
 function randInt(min: number, max: number): number { return Math.floor(rand(min, max + 1)) }
-function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
-function jitter(base: number, pct: number): number { return base * (1 + (Math.random() - 0.5) * 2 * pct / 100) }
+function pick<T>(arr: T[]): T { return arr[Math.floor(seededRandom() * arr.length)] }
+function jitter(base: number, pct: number): number { return base * (1 + (seededRandom() - 0.5) * 2 * pct / 100) }
 
 type CanonicalAiOrder = {
   orderCode: string
@@ -464,7 +475,7 @@ async function main() {
               name: item.name, basePrice: jitter(item.price, 15),
               description: `${item.name} thơm ngon, nguyên liệu tươi sống`,
               imageUrl: `https://picsum.photos/seed/${slug}-${item.name.toLowerCase().replace(/\s/g, '-')}/400/400`,
-              isPopular: Math.random() > 0.6,
+              isPopular: chance(0.4),
             },
           })
         }
@@ -489,16 +500,21 @@ async function main() {
     })
 
     const dist = pick(DISTRICTS)
+    const profileData = {
+      licenseNumber: `LIC-${String(100000 + i)}`,
+      vehicleType: chance(0.9) ? VehicleType.motorbike : VehicleType.car,
+      vehiclePlate: `59${String.fromCharCode(65 + randInt(0, 25))}1-${String(10000 + i).slice(-5)}`,
+      isVerified: i < 10 || chance(0.85),
+      rating: jitter(4.2, 20),
+      totalDeliveries: randInt(20, 2000),
+      totalEarnings: randInt(2000000, 80000000),
+      currentLat: jitter(dist.lat, 3),
+      currentLng: jitter(dist.lng, 3),
+    }
     await prisma.driverProfile.upsert({
-      where: { userId: driver.id }, update: {},
-      create: {
-        userId: driver.id, licenseNumber: `LIC-${String(100000 + i)}`,
-        vehicleType: Math.random() > 0.1 ? 'motorbike' : 'car',
-        vehiclePlate: `59${String.fromCharCode(65 + randInt(0, 25))}1-${String(10000 + i).slice(-5)}`,
-        isVerified: Math.random() > 0.15, rating: jitter(4.2, 20),
-        totalDeliveries: randInt(20, 2000), totalEarnings: randInt(2000000, 80000000),
-        currentLat: jitter(dist.lat, 3), currentLng: jitter(dist.lng, 3),
-      },
+      where: { userId: driver.id },
+      update: profileData,
+      create: { userId: driver.id, ...profileData },
     })
     driverIds.push(driver.id)
   }
@@ -572,8 +588,8 @@ async function main() {
          starts_at = EXCLUDED.starts_at,
          expires_at = EXCLUDED.expires_at,
          is_active = EXCLUDED.is_active`,
-      p.code, p.type, p.value, p.minOrder, p.maxDiscount, p.limit, Math.random() > 0.3 ? randInt(0, p.limit) : 0,
-      new Date('2026-01-01'), new Date('2026-12-31'), Math.random() > 0.2,
+      p.code, p.type, p.value, p.minOrder, p.maxDiscount, p.limit, chance(0.7) ? randInt(0, p.limit) : 0,
+      new Date('2026-01-01'), new Date('2026-12-31'), chance(0.8),
     )
   }
   console.log(`✅ ${promos.length} promotions created`)
@@ -626,7 +642,7 @@ async function main() {
       0,
     )
     const deliveryFee = randInt(10000, 30000)
-    const promotionDiscount = Math.random() > 0.7 ? randInt(5000, 30000) : 0
+    const promotionDiscount = chance(0.3) ? randInt(5000, 30000) : 0
     const total = subtotal + deliveryFee - promotionDiscount
     const daysAgo = randInt(0, 60)
     const createdAt = new Date(Date.now() - daysAgo * 86400000 - randInt(0, 86400000))
@@ -678,7 +694,7 @@ async function main() {
     'Ngon, giá hợp lý', 'Quán làm nhanh, giao đúng giờ',
   ]
   for (const order of completedOrders) {
-    if (Math.random() > 0.6) continue
+    if (chance(0.4)) continue
     const existingReview = await prisma.review.findUnique({
       where: { orderId: order.id },
       select: { id: true },

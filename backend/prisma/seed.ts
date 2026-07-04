@@ -4,6 +4,17 @@ import { SeedPriceRange, toDatabasePriceRange } from './seed-database-values'
 
 const prisma = new PrismaClient()
 
+let seedState = 0x1234abcd
+
+function seededRandom(): number {
+  seedState = (seedState * 1664525 + 1013904223) >>> 0
+  return seedState / 0x100000000
+}
+
+function chance(probability: number): boolean {
+  return seededRandom() < probability
+}
+
 async function main() {
   console.log('Seeding FoodFlow database...')
 
@@ -119,7 +130,7 @@ async function main() {
         vehicleType: 'motorbike',
         vehiclePlate: `59A1-${10000 + i}`,
         isVerified: true,
-        rating: 4.0 + Math.random() * 1.0,
+        rating: 4.0 + seededRandom() * 1.0,
         totalDeliveries: 50 + i * 30,
         totalEarnings: 5000000 + i * 2000000,
       },
@@ -152,8 +163,8 @@ async function main() {
     })
 
     // Add addresses (raw SQL — Address has PostGIS Unsupported column)
-    const aLat = 10.7740 + Math.random() * 0.01
-    const aLng = 106.6980 + Math.random() * 0.01
+    const aLat = 10.7740 + seededRandom() * 0.01
+    const aLng = 106.6980 + seededRandom() * 0.01
     await prisma.$executeRawUnsafe(
       `INSERT INTO addresses (id, user_id, label, address_line, location, is_default, created_at)
        VALUES (gen_random_uuid(), $1::uuid, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), true, NOW())`,
@@ -164,7 +175,7 @@ async function main() {
 
   // Update address locations with raw SQL (PostGIS points)
   await prisma.$executeRawUnsafe(`
-    UPDATE addresses SET location = ST_SetSRID(ST_MakePoint(106.6980 + random() * 0.01, 10.7740 + random() * 0.01), 4326)
+    UPDATE addresses SET location = ST_SetSRID(ST_MakePoint(106.7030, 10.7790), 4326)
     WHERE location IS NULL
   `)
 
@@ -266,7 +277,7 @@ async function main() {
             description: item.desc,
             basePrice: item.price,
             imageUrl: `https://picsum.photos/seed/${slug}-${item.name.toLowerCase().replace(/\s/g, '-')}/400/400`,
-            isPopular: Math.random() > 0.7,
+            isPopular: chance(0.3),
           },
         })
         totalItems++
