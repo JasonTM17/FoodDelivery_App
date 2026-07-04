@@ -22,8 +22,16 @@ import {
   FIXTURES,
   login,
   authHeaders,
+  responseData,
   resolveFixtures,
+  resolveCustomerAddress,
 } from './k6-helpers.js'
+
+const TEST_DURATION = __ENV.LOADTEST_DURATION || '5m'
+const CUSTOMER_RATE = Number(__ENV.LOADTEST_CUSTOMER_RATE || 60)
+const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 30)
+const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 10)
+const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 80)
 
 // ---------------------------------------------------------------------------
 // Custom metrics
@@ -31,7 +39,6 @@ import {
 
 const errorRate = new Rate('errors')
 const orderPlaceDuration = new Trend('order_place_duration_ms', true)
-const statusUpdateDuration = new Trend('status_update_duration_ms', true)
 const locationPingDuration = new Trend('location_ping_duration_ms', true)
 const orderCount = new Counter('orders_placed')
 
@@ -43,27 +50,27 @@ export const options = {
   scenarios: {
     customer_flow: {
       executor: 'constant-arrival-rate',
-      rate: 60,
+      rate: CUSTOMER_RATE,
       timeUnit: '1s',
-      duration: '5m',
+      duration: TEST_DURATION,
       preAllocatedVUs: 80,
       maxVUs: 200,
       exec: 'customerFlow',
     },
     restaurant_flow: {
       executor: 'constant-arrival-rate',
-      rate: 30,
+      rate: RESTAURANT_RATE,
       timeUnit: '1s',
-      duration: '5m',
+      duration: TEST_DURATION,
       preAllocatedVUs: 40,
       maxVUs: 100,
       exec: 'restaurantFlow',
     },
     driver_flow: {
       executor: 'constant-arrival-rate',
-      rate: 10,
+      rate: DRIVER_RATE,
       timeUnit: '1s',
-      duration: '5m',
+      duration: TEST_DURATION,
       preAllocatedVUs: 15,
       maxVUs: 40,
       exec: 'driverFlow',
@@ -88,14 +95,32 @@ export const options = {
 // ---------------------------------------------------------------------------
 
 export function setup() {
-  const customer = login('customer')
   const restaurant = login('restaurant')
   const driver = login('driver')
 
   const { restaurantId, menuItemId } = resolveFixtures(restaurant.accessToken)
+  const customers = []
+
+  for (let i = 1; i <= CUSTOMER_POOL_SIZE; i++) {
+    const customer = login(`customer${i}`, {
+      email: `customer${i}@foodflow.vn`,
+      password: 'Customer@123',
+    })
+    const addressId = resolveCustomerAddress(customer.accessToken)
+    if (customer.accessToken && addressId) {
+      customers.push({ ...customer, addressId })
+    }
+  }
+
+  if (!restaurantId || !menuItemId) {
+    throw new Error('k6 setup: failed to resolve restaurant/menu fixtures')
+  }
+  if (customers.length === 0) {
+    throw new Error('k6 setup: failed to resolve customer tokens and addresses')
+  }
 
   return {
-    customerToken: customer.accessToken,
+    customers,
     restaurantToken: restaurant.accessToken,
     driverToken: driver.accessToken,
     restaurantId,
@@ -108,36 +133,56 @@ export function setup() {
 // ---------------------------------------------------------------------------
 
 export function customerFlow(data) {
-  const { customerToken, restaurantId, menuItemId } = data
+  const { restaurantId, menuItemId } = data
+  const customer = data.customers[(__VU - 1) % data.customers.length]
+  const customerToken = customer.accessToken
+  const addressId = customer.addressId
   const hdrs = authHeaders(customerToken)
 
   // Browse restaurant list
-  const browseRes = http.get(`${BASE_URL}/restaurants?page=1&limit=10`, hdrs)
-  const browseOk = browseRes.status === 200
+  const browseRes = http.get(
+    `${BASE_URL}/restaurants/nearby?lat=${FIXTURES.deliveryLat}&lng=${FIXTURES.deliveryLng}&radius=8&page=1&limit=10`,
+  )
+  const browsePayload = responseData(browseRes)
+  const browseItems = Array.isArray(browsePayload)
+    ? browsePayload
+    : (browsePayload?.items ?? browsePayload?.restaurants ?? [])
+  const browseOk = browseRes.status === 200 && browseItems.length > 0
   check(browseRes, { 'customer: browse restaurants 200': () => browseOk })
   errorRate.add(!browseOk)
 
   sleep(0.2)
 
   // Fetch restaurant menu
-  const menuRes = http.get(`${BASE_URL}/restaurants/${restaurantId}/menu`, hdrs)
-  const menuOk = menuRes.status === 200
+  const menuRes = http.get(`${BASE_URL}/restaurants/${restaurantId}/menu`)
+  const menuOk = menuRes.status === 200 && !!menuItemId
   check(menuRes, { 'customer: get menu 200': () => menuOk })
   errorRate.add(!menuOk)
 
   sleep(0.2)
 
-  // Place order
+  http.del(`${BASE_URL}/cart`, null, hdrs)
+  const addCartRes = http.post(
+    `${BASE_URL}/cart/items`,
+    JSON.stringify({
+      restaurantId,
+      menuItemId,
+      quantity: 1,
+      selectedOptions: [],
+    }),
+    hdrs,
+  )
+  const addCartOk = addCartRes.status === 200 || addCartRes.status === 201
+  check(addCartRes, { 'customer: add cart item 2xx': () => addCartOk })
+  errorRate.add(!addCartOk)
+
+  // Place order from the real cart contract
   const orderStart = Date.now()
   const orderRes = http.post(
     `${BASE_URL}/orders`,
     JSON.stringify({
-      restaurantId,
-      items: [{ menuItemId, quantity: 1 }],
-      deliveryAddress: FIXTURES.deliveryAddress,
-      deliveryLat: FIXTURES.deliveryLat,
-      deliveryLng: FIXTURES.deliveryLng,
-      paymentMethod: 'cod',
+      addressId,
+      paymentMethod: 'cash',
     }),
     authHeaders(customerToken),
   )
@@ -161,7 +206,7 @@ export function restaurantFlow(data) {
 
   // Fetch pending orders
   const listRes = http.get(
-    `${BASE_URL}/restaurants/orders?status=PENDING&page=1&limit=20`,
+    `${BASE_URL}/restaurant/orders?status=restaurant_pending`,
     hdrs,
   )
   const listOk = listRes.status === 200
@@ -169,28 +214,6 @@ export function restaurantFlow(data) {
   errorRate.add(!listOk)
 
   sleep(0.15)
-
-  // Confirm first order in list (if any)
-  if (listOk) {
-    const body = listRes.json()
-    const orders = Array.isArray(body) ? body : (body.data ?? body.orders ?? [])
-    if (orders.length > 0) {
-      const orderId = orders[0]?.id ?? orders[0]?.orderId
-      if (orderId) {
-        const updateStart = Date.now()
-        const updateRes = http.patch(
-          `${BASE_URL}/restaurants/orders/${orderId}/status`,
-          JSON.stringify({ status: 'CONFIRMED' }),
-          hdrs,
-        )
-        statusUpdateDuration.add(Date.now() - updateStart)
-
-        const updateOk = updateRes.status < 300
-        check(updateRes, { 'restaurant: update status 2xx': () => updateOk })
-        errorRate.add(!updateOk)
-      }
-    }
-  }
 
   sleep(0.35)
 }
@@ -206,7 +229,7 @@ export function driverFlow(data) {
   // Ping current location (jitter to simulate movement)
   const pingStart = Date.now()
   const pingRes = http.post(
-    `${BASE_URL}/drivers/location`,
+    `${BASE_URL}/driver/online`,
     JSON.stringify({
       lat: FIXTURES.deliveryLat + (Math.random() * 0.01 - 0.005),
       lng: FIXTURES.deliveryLng + (Math.random() * 0.01 - 0.005),
@@ -221,10 +244,10 @@ export function driverFlow(data) {
 
   sleep(0.1)
 
-  // Check available delivery offers
-  const offersRes = http.get(`${BASE_URL}/drivers/offers`, hdrs)
+  // Check active delivery assignment
+  const offersRes = http.get(`${BASE_URL}/driver/orders/active`, hdrs)
   const offersOk = offersRes.status === 200
-  check(offersRes, { 'driver: offers 200': () => offersOk })
+  check(offersRes, { 'driver: active order 200': () => offersOk })
   errorRate.add(!offersOk)
 
   sleep(0.4)

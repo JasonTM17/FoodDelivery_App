@@ -51,9 +51,10 @@ export const CREDENTIALS = {
  * @param {'customer'|'restaurant'|'driver'|'admin'} role
  * @returns {{ accessToken: string, userId: string, restaurantId: string }}
  */
-export function login(role) {
-  const creds = CREDENTIALS[role]
-  if (!creds) throw new Error(`k6-helpers: unknown role "${role}"`)
+export function login(role, overrides = {}) {
+  const base = CREDENTIALS[role]
+  if (!base && !overrides.email) throw new Error(`k6-helpers: unknown role "${role}"`)
+  const creds = { ...(base || {}), ...overrides }
 
   const res = http.post(
     `${BASE_URL}/auth/login`,
@@ -62,11 +63,24 @@ export function login(role) {
   )
   check(res, { [`login(${role}) 200`]: (r) => r.status === 200 })
 
-  const body = res.json()
+  const body = responseData(res) || {}
+  const user = body.user || {}
   return {
     accessToken: body.accessToken ?? '',
-    userId: body.user?.id ?? '',
-    restaurantId: body.user?.restaurantId ?? '',
+    userId: user.id ?? '',
+    restaurantId: user.restaurantId ?? body.restaurantId ?? '',
+  }
+}
+
+export function responseData(res) {
+  try {
+    const body = res.json()
+    if (body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'data')) {
+      return body.data
+    }
+    return body
+  } catch {
+    return null
   }
 }
 
@@ -100,6 +114,7 @@ export function authHeaders(token) {
 export const FIXTURES = {
   restaurantId: __ENV.FIXTURE_RESTAURANT_ID || '',
   menuItemId: __ENV.FIXTURE_MENU_ITEM_ID || '',
+  addressId: __ENV.FIXTURE_ADDRESS_ID || '',
   deliveryAddress: '1 Nguyễn Huệ, Quận 1, TP. HCM',
   deliveryLat: 10.7757,
   deliveryLng: 106.7004,
@@ -117,23 +132,43 @@ export function resolveFixtures(restaurantToken) {
   let menuItemId = FIXTURES.menuItemId
 
   // Resolve restaurant ID
-  const restRes = http.get(`${BASE_URL}/restaurants/mine`, {
+  const restRes = http.get(`${BASE_URL}/restaurant/profile`, {
     headers: { Authorization: `Bearer ${restaurantToken}` },
   })
   if (restRes.status === 200) {
-    const body = restRes.json()
-    restaurantId = body?.id ?? body?.restaurantId ?? restaurantId
+    const body = responseData(restRes)
+    restaurantId = body?.id ?? body?.restaurantId ?? body?.restaurant?.id ?? restaurantId
   }
 
   // Resolve first menu item
   if (restaurantId) {
     const menuRes = http.get(`${BASE_URL}/restaurants/${restaurantId}/menu`)
     if (menuRes.status === 200) {
-      const body = menuRes.json()
+      const body = responseData(menuRes)
       const cats = Array.isArray(body) ? body : (body.categories ?? [])
-      menuItemId = cats[0]?.items?.[0]?.id ?? menuItemId
+      menuItemId = cats[0]?.menuItems?.[0]?.id ?? cats[0]?.items?.[0]?.id ?? menuItemId
     }
   }
 
   return { restaurantId, menuItemId }
+}
+
+export function resolveCustomerAddress(customerToken) {
+  if (FIXTURES.addressId) return FIXTURES.addressId
+
+  const ordersRes = http.get(`${BASE_URL}/orders?page=1&limit=1`, authHeaders(customerToken))
+  if (ordersRes.status !== 200) return ''
+
+  const ordersPayload = responseData(ordersRes)
+  const orders = Array.isArray(ordersPayload)
+    ? ordersPayload
+    : (ordersPayload?.orders ?? ordersPayload?.items ?? [])
+  const orderId = orders[0]?.id
+  if (!orderId) return ''
+
+  const detailRes = http.get(`${BASE_URL}/orders/${orderId}`, authHeaders(customerToken))
+  if (detailRes.status !== 200) return ''
+
+  const detail = responseData(detailRes)
+  return detail?.deliveryAddress?.id ?? detail?.deliveryAddressId ?? ''
 }
