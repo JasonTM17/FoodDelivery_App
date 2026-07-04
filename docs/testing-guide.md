@@ -58,6 +58,7 @@ pnpm --filter restaurant build
 
 Latest local web/API-contract evidence: 2026-07-04 on `codex/batch4-integration`, OpenAPI YAML parse passed with 137 paths and the local web endpoint coverage scanner reported `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 34 files / 137 tests and Restaurant 27 files / 79 tests. Backend validation for this contract cluster passed `pnpm typecheck`, `pnpm lint`, and targeted Jest (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suites / 9 tests).
 Latest current-head map/tracking evidence: 2026-07-04 at `0cf12c5`, backend `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 752 tests), focused `route-utils.spec.ts` (11 tests), and `pnpm build` all passed. Admin driver map realtime validation passed `pnpm --filter foodflow-admin test` (34 files / 139 tests), `pnpm --filter foodflow-admin typecheck`, `pnpm --filter foodflow-admin lint`, web `pnpm install --frozen-lockfile`, and `pnpm --filter foodflow-admin build`.
+Latest current-head Restaurant web evidence: 2026-07-04 at `2cd87e5`, `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, `pnpm --filter restaurant test` (27 files / 79 tests), and `pnpm --filter restaurant build` all passed. The production build generated the localized `vi`, `en`, and `ja` route set plus `/api/healthz`.
 
 ## Playwright E2E
 
