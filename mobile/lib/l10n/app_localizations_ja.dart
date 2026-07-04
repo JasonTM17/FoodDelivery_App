@@ -263,6 +263,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationsSubtitle => 'プッシュ通知を管理';
 
   @override
+  String get notificationsReadAll => 'すべて既読';
+
+  @override
+  String get notificationsAll => 'すべて';
+
+  @override
+  String get notificationsOrders => '注文';
+
+  @override
+  String get notificationsPromotions => 'プロモーション';
+
+  @override
+  String get notificationsSystem => 'システム';
+
+  @override
+  String get notificationsEmptyTitle => '通知はありません';
+
+  @override
+  String get notificationsEmptySubtitle => 'まだ通知はありません。';
+
+  @override
   String get favorites => 'お気に入り';
 
   @override
@@ -288,6 +309,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cancel => 'キャンセル';
+
+  @override
+  String get commonRetry => '再試行';
 
   @override
   String get featureInDevelopment => 'この機能は近日公開予定です';
@@ -487,6 +511,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get restaurantInfoTitle => 'レストラン情報';
 
   @override
+  String get restaurantReviewFood => '料理';
+
+  @override
+  String get restaurantReviewDelivery => '配達';
+
+  @override
+  String get restaurantReviewCountLabel => 'レビュー';
+
+  @override
   String get foodPopular => '人気';
 
   @override
@@ -603,7 +636,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addressLabelField => 'ラベル';
 
   @override
+  String get addressFieldLabel => '住所';
+
+  @override
   String get addressFieldHint => '詳細な住所を入力';
+
+  @override
+  String get addressRequired => '住所を入力してください';
+
+  @override
+  String get addressAddDialogTitle => '新しい住所を追加';
+
+  @override
+  String get addressEditDialogTitle => '住所を編集';
+
+  @override
+  String get addressAddFailed => '住所を追加できません';
+
+  @override
+  String get addressUpdateFailed => '住所を更新できません';
+
+  @override
+  String get addressDeleteFailed => '住所を削除できません';
+
+  @override
+  String get addressDeleteAction => '削除';
+
+  @override
+  String get addressHomeLabel => '自宅';
+
+  @override
+  String get addressWorkLabel => '職場';
+
+  @override
+  String get addressOtherLabel => 'その他';
 
   @override
   String get supportConnecting => '接続中...';
@@ -676,6 +742,47 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverStatOnline => 'オンライン';
+
+  @override
+  String get driverStatusTitle => '稼働ステータス';
+
+  @override
+  String get driverStatusPauseTitle => '注文受付を一時停止';
+
+  @override
+  String get driverStatusPauseSubtitle => '指定した時間だけ一時停止し、その後自動でオンラインに戻ります。';
+
+  @override
+  String driverStatusPauseMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String driverStatusPauseHours(int hours) {
+    return '$hours時間';
+  }
+
+  @override
+  String get driverStatusResumeNow => '今すぐ注文受付を再開';
+
+  @override
+  String get driverStatusToday => '今日';
+
+  @override
+  String get driverStatusOnlineTime => 'オンライン時間';
+
+  @override
+  String driverStatusDurationMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String driverStatusDurationHoursMinutes(int hours, int minutes) {
+    return '$hours時間$minutes分';
+  }
+
+  @override
+  String get driverStatusInfoText => 'オンライン中は、稼働エリア内の新しい注文通知を受け取ります。';
 
   @override
   String get driverEarningsTitle => '収益';
@@ -779,6 +886,18 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get driverRouteReplayTooltip => 'ルートを再生';
+
+  @override
+  String get driverRouteReplayPlaying => '再生中...';
+
+  @override
+  String get driverRouteReplayReady => 'タップして再生';
+
+  @override
+  String get driverRouteReplayCompleted => '再生が完了しました';
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override
@@ -813,6 +932,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverKycNote => '申請は24〜48時間で審査されます。承認されたら通知が届きます。';
+
+  @override
+  String get driverKycSubmitFailed => '申請を送信できませんでした。もう一度お試しください。';
 
   @override
   String get driverHistoryTitle => '配達履歴';
@@ -1090,6 +1212,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get referralShareCode => 'コードを共有';
+
+  @override
+  String get referralShareSheetTitle => '紹介コードを共有';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'FoodFlowの初回注文で特典を受け取るにはコード $code を使ってください！';
+  }
+
+  @override
+  String get referralQrCode => 'QRコード';
 
   @override
   String referralInviteCount(int count) {

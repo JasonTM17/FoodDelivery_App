@@ -90,6 +90,13 @@
   "paymentMethodsSubtitle": "支払い方法を追加または変更",
   "notificationsTitle": "通知",
   "notificationsSubtitle": "プッシュ通知を管理",
+  "notificationsReadAll": "すべて既読",
+  "notificationsAll": "すべて",
+  "notificationsOrders": "注文",
+  "notificationsPromotions": "プロモーション",
+  "notificationsSystem": "システム",
+  "notificationsEmptyTitle": "通知はありません",
+  "notificationsEmptySubtitle": "まだ通知はありません。",
   "favorites": "お気に入り",
   "favoritesSubtitle": "お気に入りの料理一覧",
   "support": "サポート",
@@ -99,6 +106,7 @@
   "logout": "ログアウト",
   "logoutConfirm": "ログアウトしてもよろしいですか？",
   "cancel": "キャンセル",
+  "commonRetry": "再試行",
   "featureInDevelopment": "この機能は近日公開予定です",
 
   "driverProfileTitle": "プロフィール",
@@ -174,6 +182,9 @@
   "restaurantMenuEmptySubtitle": "このレストランにはまだメニューがありません",
   "restaurantNoReviews": "レビューはまだありません",
   "restaurantInfoTitle": "レストラン情報",
+  "restaurantReviewFood": "料理",
+  "restaurantReviewDelivery": "配達",
+  "restaurantReviewCountLabel": "レビュー",
 
   "foodPopular": "人気",
   "foodSpecialNote": "特別なリクエスト",
@@ -226,7 +237,18 @@
   "addressDeleteSuccess": "住所を削除しました",
   "addressSave": "保存",
   "addressLabelField": "ラベル",
+  "addressFieldLabel": "住所",
   "addressFieldHint": "詳細な住所を入力",
+  "addressRequired": "住所を入力してください",
+  "addressAddDialogTitle": "新しい住所を追加",
+  "addressEditDialogTitle": "住所を編集",
+  "addressAddFailed": "住所を追加できません",
+  "addressUpdateFailed": "住所を更新できません",
+  "addressDeleteFailed": "住所を削除できません",
+  "addressDeleteAction": "削除",
+  "addressHomeLabel": "自宅",
+  "addressWorkLabel": "職場",
+  "addressOtherLabel": "その他",
 
   "supportConnecting": "接続中...",
   "supportDriverOnline": "オンライン",
@@ -254,6 +276,32 @@
   "driverDashboardNoOrders": "注文はまだありません",
   "driverStatEarnings": "収益",
   "driverStatOnline": "オンライン",
+  "driverStatusTitle": "稼働ステータス",
+  "driverStatusPauseTitle": "注文受付を一時停止",
+  "driverStatusPauseSubtitle": "指定した時間だけ一時停止し、その後自動でオンラインに戻ります。",
+  "driverStatusPauseMinutes": "{minutes}分",
+  "@driverStatusPauseMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusPauseHours": "{hours}時間",
+  "@driverStatusPauseHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "driverStatusResumeNow": "今すぐ注文受付を再開",
+  "driverStatusToday": "今日",
+  "driverStatusOnlineTime": "オンライン時間",
+  "driverStatusDurationMinutes": "{minutes}分",
+  "@driverStatusDurationMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusDurationHoursMinutes": "{hours}時間{minutes}分",
+  "@driverStatusDurationHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "driverStatusInfoText": "オンライン中は、稼働エリア内の新しい注文通知を受け取ります。",
 
   "driverEarningsTitle": "収益",
   "driverEarningsPeriodToday": "今日",
@@ -298,6 +346,10 @@
   "@driverTripSummaryMinutes": {
     "placeholders": { "minutes": { "type": "int" } }
   },
+  "driverRouteReplayTooltip": "ルートを再生",
+  "driverRouteReplayPlaying": "再生中...",
+  "driverRouteReplayReady": "タップして再生",
+  "driverRouteReplayCompleted": "再生が完了しました",
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",
@@ -311,6 +363,7 @@
   "driverKycUploadHint": "写真を撮るかアップロード",
   "driverKycSubmit": "申請を送信",
   "driverKycNote": "申請は24〜48時間で審査されます。承認されたら通知が届きます。",
+  "driverKycSubmitFailed": "申請を送信できませんでした。もう一度お試しください。",
 
   "driverHistoryTitle": "配達履歴",
   "driverHistoryFilterDate": "日付でフィルター",
@@ -416,6 +469,12 @@
   "referralCopyCode": "コードをコピー",
   "referralCodeCopied": "コードをコピーしました！",
   "referralShareCode": "コードを共有",
+  "referralShareSheetTitle": "紹介コードを共有",
+  "referralShareMessage": "FoodFlowの初回注文で特典を受け取るにはコード {code} を使ってください！",
+  "@referralShareMessage": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "referralQrCode": "QRコード",
   "referralInviteCount": "{count}人を招待済み",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

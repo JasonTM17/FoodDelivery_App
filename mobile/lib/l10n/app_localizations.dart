@@ -604,6 +604,48 @@ abstract class AppLocalizations {
   /// **'Quản lý thông báo đẩy'**
   String get notificationsSubtitle;
 
+  /// No description provided for @notificationsReadAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc tất cả'**
+  String get notificationsReadAll;
+
+  /// No description provided for @notificationsAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get notificationsAll;
+
+  /// No description provided for @notificationsOrders.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng'**
+  String get notificationsOrders;
+
+  /// No description provided for @notificationsPromotions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khuyến mãi'**
+  String get notificationsPromotions;
+
+  /// No description provided for @notificationsSystem.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống'**
+  String get notificationsSystem;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có thông báo'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có thông báo nào.'**
+  String get notificationsEmptySubtitle;
+
   /// No description provided for @favorites.
   ///
   /// In vi, this message translates to:
@@ -657,6 +699,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hủy'**
   String get cancel;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get commonRetry;
 
   /// No description provided for @featureInDevelopment.
   ///
@@ -1048,6 +1096,24 @@ abstract class AppLocalizations {
   /// **'Thông tin nhà hàng'**
   String get restaurantInfoTitle;
 
+  /// No description provided for @restaurantReviewFood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Món ăn'**
+  String get restaurantReviewFood;
+
+  /// No description provided for @restaurantReviewDelivery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng'**
+  String get restaurantReviewDelivery;
+
+  /// No description provided for @restaurantReviewCountLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá'**
+  String get restaurantReviewCountLabel;
+
   /// No description provided for @foodPopular.
   ///
   /// In vi, this message translates to:
@@ -1264,11 +1330,77 @@ abstract class AppLocalizations {
   /// **'Nhãn'**
   String get addressLabelField;
 
+  /// No description provided for @addressFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ'**
+  String get addressFieldLabel;
+
   /// No description provided for @addressFieldHint.
   ///
   /// In vi, this message translates to:
   /// **'Nhập địa chỉ chi tiết'**
   String get addressFieldHint;
+
+  /// No description provided for @addressRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập địa chỉ'**
+  String get addressRequired;
+
+  /// No description provided for @addressAddDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa chỉ mới'**
+  String get addressAddDialogTitle;
+
+  /// No description provided for @addressEditDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa địa chỉ'**
+  String get addressEditDialogTitle;
+
+  /// No description provided for @addressAddFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm địa chỉ'**
+  String get addressAddFailed;
+
+  /// No description provided for @addressUpdateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật địa chỉ'**
+  String get addressUpdateFailed;
+
+  /// No description provided for @addressDeleteFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xóa địa chỉ'**
+  String get addressDeleteFailed;
+
+  /// No description provided for @addressDeleteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get addressDeleteAction;
+
+  /// No description provided for @addressHomeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà'**
+  String get addressHomeLabel;
+
+  /// No description provided for @addressWorkLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công ty'**
+  String get addressWorkLabel;
+
+  /// No description provided for @addressOtherLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get addressOtherLabel;
 
   /// No description provided for @supportConnecting.
   ///
@@ -1413,6 +1545,72 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Online'**
   String get driverStatOnline;
+
+  /// No description provided for @driverStatusTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái hoạt động'**
+  String get driverStatusTitle;
+
+  /// No description provided for @driverStatusPauseTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng nhận đơn'**
+  String get driverStatusPauseTitle;
+
+  /// No description provided for @driverStatusPauseSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng trong một khoảng thời gian, sau đó tự động trở lại trực tuyến.'**
+  String get driverStatusPauseSubtitle;
+
+  /// No description provided for @driverStatusPauseMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{minutes} phút'**
+  String driverStatusPauseMinutes(int minutes);
+
+  /// No description provided for @driverStatusPauseHours.
+  ///
+  /// In vi, this message translates to:
+  /// **'{hours} giờ'**
+  String driverStatusPauseHours(int hours);
+
+  /// No description provided for @driverStatusResumeNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếp tục nhận đơn ngay'**
+  String get driverStatusResumeNow;
+
+  /// No description provided for @driverStatusToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverStatusToday;
+
+  /// No description provided for @driverStatusOnlineTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian online'**
+  String get driverStatusOnlineTime;
+
+  /// No description provided for @driverStatusDurationMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{minutes}p'**
+  String driverStatusDurationMinutes(int minutes);
+
+  /// No description provided for @driverStatusDurationHoursMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{hours}g {minutes}p'**
+  String driverStatusDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @driverStatusInfoText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.'**
+  String get driverStatusInfoText;
 
   /// No description provided for @driverEarningsTitle.
   ///
@@ -1600,6 +1798,30 @@ abstract class AppLocalizations {
   /// **'{minutes} phút'**
   String driverTripSummaryMinutes(int minutes);
 
+  /// No description provided for @driverRouteReplayTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại lộ trình'**
+  String get driverRouteReplayTooltip;
+
+  /// No description provided for @driverRouteReplayPlaying.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang phát...'**
+  String get driverRouteReplayPlaying;
+
+  /// No description provided for @driverRouteReplayReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn để phát lại'**
+  String get driverRouteReplayReady;
+
+  /// No description provided for @driverRouteReplayCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã phát xong'**
+  String get driverRouteReplayCompleted;
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:
@@ -1671,6 +1893,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.'**
   String get driverKycNote;
+
+  /// No description provided for @driverKycSubmitFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi đơn thất bại. Vui lòng thử lại.'**
+  String get driverKycSubmitFailed;
 
   /// No description provided for @driverHistoryTitle.
   ///
@@ -2211,6 +2439,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chia sẻ mã'**
   String get referralShareCode;
+
+  /// No description provided for @referralShareSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ mã giới thiệu'**
+  String get referralShareSheetTitle;
+
+  /// No description provided for @referralShareMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng mã {code} để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!'**
+  String referralShareMessage(String code);
+
+  /// No description provided for @referralQrCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR'**
+  String get referralQrCode;
 
   /// No description provided for @referralInviteCount.
   ///

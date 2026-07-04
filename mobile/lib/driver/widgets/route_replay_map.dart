@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 class RouteReplayMap extends StatefulWidget {
   final List<RoutePointData> points;
@@ -68,6 +69,7 @@ class _RouteReplayMapState extends State<RouteReplayMap>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Container(
@@ -117,22 +119,24 @@ class _RouteReplayMapState extends State<RouteReplayMap>
                   color: AppColors.primary,
                 ),
                 onPressed: _toggleReplay,
-                tooltip: 'Phát lại lộ trình',
+                tooltip: l10n.driverRouteReplayTooltip,
               ),
             ),
             const SizedBox(width: 12),
             Text(
-              _controller.isAnimating
-                  ? 'Đang phát...'
-                  : _controller.isDismissed
-                  ? 'Nhấn để phát lại'
-                  : 'Đã phát xong',
+              _replayStatus(l10n),
               style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
             ),
           ],
         ),
       ],
     );
+  }
+
+  String _replayStatus(AppLocalizations l10n) {
+    if (_controller.isAnimating) return l10n.driverRouteReplayPlaying;
+    if (_controller.isDismissed) return l10n.driverRouteReplayReady;
+    return l10n.driverRouteReplayCompleted;
   }
 }
 

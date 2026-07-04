@@ -67,8 +67,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tính năng thông báo đang phát triển'),
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).featureInDevelopment,
+                  ),
                 ),
               );
             },

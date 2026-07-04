@@ -264,6 +264,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsSubtitle => 'Manage push notifications';
 
   @override
+  String get notificationsReadAll => 'Read all';
+
+  @override
+  String get notificationsAll => 'All';
+
+  @override
+  String get notificationsOrders => 'Orders';
+
+  @override
+  String get notificationsPromotions => 'Promotions';
+
+  @override
+  String get notificationsSystem => 'System';
+
+  @override
+  String get notificationsEmptyTitle => 'No notifications';
+
+  @override
+  String get notificationsEmptySubtitle =>
+      'You do not have any notifications yet.';
+
+  @override
   String get favorites => 'Favorites';
 
   @override
@@ -289,6 +311,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get commonRetry => 'Retry';
 
   @override
   String get featureInDevelopment => 'Feature coming soon';
@@ -489,6 +514,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restaurantInfoTitle => 'Restaurant info';
 
   @override
+  String get restaurantReviewFood => 'Food';
+
+  @override
+  String get restaurantReviewDelivery => 'Delivery';
+
+  @override
+  String get restaurantReviewCountLabel => 'Reviews';
+
+  @override
   String get foodPopular => 'Popular';
 
   @override
@@ -605,7 +639,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addressLabelField => 'Label';
 
   @override
+  String get addressFieldLabel => 'Address';
+
+  @override
   String get addressFieldHint => 'Enter detailed address';
+
+  @override
+  String get addressRequired => 'Please enter an address';
+
+  @override
+  String get addressAddDialogTitle => 'Add new address';
+
+  @override
+  String get addressEditDialogTitle => 'Edit address';
+
+  @override
+  String get addressAddFailed => 'Unable to add address';
+
+  @override
+  String get addressUpdateFailed => 'Unable to update address';
+
+  @override
+  String get addressDeleteFailed => 'Unable to delete address';
+
+  @override
+  String get addressDeleteAction => 'Delete';
+
+  @override
+  String get addressHomeLabel => 'Home';
+
+  @override
+  String get addressWorkLabel => 'Work';
+
+  @override
+  String get addressOtherLabel => 'Other';
 
   @override
   String get supportConnecting => 'Connecting...';
@@ -681,6 +748,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driverStatOnline => 'Online';
+
+  @override
+  String get driverStatusTitle => 'Availability status';
+
+  @override
+  String get driverStatusPauseTitle => 'Pause order intake';
+
+  @override
+  String get driverStatusPauseSubtitle =>
+      'Pause for a set time, then automatically return online.';
+
+  @override
+  String driverStatusPauseMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String driverStatusPauseHours(int hours) {
+    return '$hours hr';
+  }
+
+  @override
+  String get driverStatusResumeNow => 'Resume taking orders now';
+
+  @override
+  String get driverStatusToday => 'Today';
+
+  @override
+  String get driverStatusOnlineTime => 'Online time';
+
+  @override
+  String driverStatusDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String driverStatusDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get driverStatusInfoText =>
+      'When online, you will receive new order alerts in your active area.';
 
   @override
   String get driverEarningsTitle => 'Earnings';
@@ -784,6 +894,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get driverRouteReplayTooltip => 'Replay route';
+
+  @override
+  String get driverRouteReplayPlaying => 'Playing...';
+
+  @override
+  String get driverRouteReplayReady => 'Tap to replay';
+
+  @override
+  String get driverRouteReplayCompleted => 'Replay finished';
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override
@@ -819,6 +941,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driverKycNote =>
       'Application reviewed in 24-48h. You will be notified when approved.';
+
+  @override
+  String get driverKycSubmitFailed =>
+      'Could not submit application. Please try again.';
 
   @override
   String get driverHistoryTitle => 'Delivery history';
@@ -1106,6 +1232,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralShareCode => 'Share Code';
+
+  @override
+  String get referralShareSheetTitle => 'Share referral code';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'Use code $code to get a reward on your first FoodFlow order!';
+  }
+
+  @override
+  String get referralQrCode => 'QR code';
 
   @override
   String referralInviteCount(int count) {

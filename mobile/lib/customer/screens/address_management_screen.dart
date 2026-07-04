@@ -24,11 +24,11 @@ class _AddressManagementScreenState
     });
   }
 
-  IconData _iconForLabel(String label) {
+  IconData _iconForLabel(String label, AppLocalizations l10n) {
     switch (label) {
-      case 'Nhà':
+      case var value when value == l10n.addressHomeLabel:
         return Icons.home;
-      case 'Công ty':
+      case var value when value == l10n.addressWorkLabel:
         return Icons.work;
       default:
         return Icons.location_on;
@@ -36,10 +36,11 @@ class _AddressManagementScreenState
   }
 
   void _showAddAddressDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => _AddressFormDialog(
-        title: 'Thêm địa chỉ mới',
+        title: l10n.addressAddDialogTitle,
         onSave: (label, address) async {
           final notifier = ref.read(addressProvider.notifier);
           final success = await notifier.addAddress(
@@ -51,13 +52,13 @@ class _AddressManagementScreenState
           );
           if (context.mounted) {
             if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đã thêm địa chỉ mới')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.addressAddSuccess)));
             } else {
               final error = ref.read(addressProvider).error;
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error ?? 'Không thể thêm địa chỉ')),
+                SnackBar(content: Text(error ?? l10n.addressAddFailed)),
               );
             }
           }
@@ -67,10 +68,11 @@ class _AddressManagementScreenState
   }
 
   void _showEditAddressDialog(AddressModel address) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => _AddressFormDialog(
-        title: 'Sửa địa chỉ',
+        title: l10n.addressEditDialogTitle,
         initialLabel: address.label,
         initialAddress: address.address,
         onSave: (label, newAddress) async {
@@ -83,12 +85,12 @@ class _AddressManagementScreenState
           if (context.mounted) {
             if (success) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đã cập nhật địa chỉ')),
+                SnackBar(content: Text(l10n.addressUpdateSuccess)),
               );
             } else {
               final error = ref.read(addressProvider).error;
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error ?? 'Không thể cập nhật địa chỉ')),
+                SnackBar(content: Text(error ?? l10n.addressUpdateFailed)),
               );
             }
           }
@@ -98,15 +100,16 @@ class _AddressManagementScreenState
   }
 
   void _showDeleteConfirm(AddressModel address) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa địa chỉ?'),
-        content: Text('Xóa "${address.label}"?'),
+        title: Text(l10n.addressDeleteTitle),
+        content: Text(l10n.addressDeleteContent(address.label)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Hủy'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -117,17 +120,20 @@ class _AddressManagementScreenState
               if (context.mounted) {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xóa địa chỉ')),
+                    SnackBar(content: Text(l10n.addressDeleteSuccess)),
                   );
                 } else {
                   final error = ref.read(addressProvider).error;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error ?? 'Không thể xóa địa chỉ')),
+                    SnackBar(content: Text(error ?? l10n.addressDeleteFailed)),
                   );
                 }
               }
             },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+            child: Text(
+              l10n.addressDeleteAction,
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -200,7 +206,7 @@ class _AddressManagementScreenState
               onPressed: () =>
                   ref.read(addressProvider.notifier).fetchAddresses(),
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Thử lại'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),
@@ -251,6 +257,7 @@ class _AddressManagementScreenState
   }
 
   Widget _buildAddressCard(AddressModel address) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -280,7 +287,7 @@ class _AddressManagementScreenState
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  _iconForLabel(address.label),
+                  _iconForLabel(address.label, l10n),
                   color: address.isDefault
                       ? AppColors.primary
                       : AppColors.textHint,
@@ -350,8 +357,11 @@ class _AddressManagementScreenState
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Sửa')),
-                  const PopupMenuItem(value: 'delete', child: Text('Xóa')),
+                  PopupMenuItem(value: 'edit', child: Text(l10n.addressEdit)),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.addressDeleteAction),
+                  ),
                 ],
               ),
             ],
@@ -406,18 +416,14 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _labelController;
   late TextEditingController _addressController;
-  String _selectedLabel = 'Nhà';
-
-  final List<String> _labelOptions = ['Nhà', 'Công ty', 'Khác'];
+  String? _selectedLabel;
 
   @override
   void initState() {
     super.initState();
     _labelController = TextEditingController(text: widget.initialLabel);
     _addressController = TextEditingController(text: widget.initialAddress);
-    if (widget.initialLabel != null) {
-      _selectedLabel = widget.initialLabel!;
-    }
+    _selectedLabel = widget.initialLabel;
   }
 
   @override
@@ -429,6 +435,17 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final labelOptions = [
+      l10n.addressHomeLabel,
+      l10n.addressWorkLabel,
+      l10n.addressOtherLabel,
+    ];
+    final selectedLabel = _selectedLabel ?? labelOptions.first;
+    final dropdownOptions = labelOptions.contains(selectedLabel)
+        ? labelOptions
+        : [selectedLabel, ...labelOptions];
+
     return AlertDialog(
       title: Text(widget.title),
       content: Form(
@@ -437,9 +454,9 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              initialValue: _selectedLabel,
-              decoration: const InputDecoration(labelText: 'Nhãn'),
-              items: _labelOptions.map((label) {
+              initialValue: selectedLabel,
+              decoration: InputDecoration(labelText: l10n.addressLabelField),
+              items: dropdownOptions.map((label) {
                 return DropdownMenuItem(value: label, child: Text(label));
               }).toList(),
               onChanged: (value) {
@@ -452,14 +469,14 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Địa chỉ',
-                hintText: 'Nhập địa chỉ chi tiết',
+              decoration: InputDecoration(
+                labelText: l10n.addressFieldLabel,
+                hintText: l10n.addressFieldHint,
               ),
               maxLines: 3,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Vui lòng nhập địa chỉ';
+                  return l10n.addressRequired;
                 }
                 return null;
               },
@@ -470,16 +487,16 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Hủy'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.onSave(_selectedLabel, _addressController.text.trim());
+              widget.onSave(selectedLabel, _addressController.text.trim());
               Navigator.of(context).pop();
             }
           },
-          child: const Text('Lưu'),
+          child: Text(l10n.addressSave),
         ),
       ],
     );

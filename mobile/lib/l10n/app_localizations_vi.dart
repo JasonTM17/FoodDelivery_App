@@ -264,6 +264,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsSubtitle => 'Quản lý thông báo đẩy';
 
   @override
+  String get notificationsReadAll => 'Đọc tất cả';
+
+  @override
+  String get notificationsAll => 'Tất cả';
+
+  @override
+  String get notificationsOrders => 'Đơn hàng';
+
+  @override
+  String get notificationsPromotions => 'Khuyến mãi';
+
+  @override
+  String get notificationsSystem => 'Hệ thống';
+
+  @override
+  String get notificationsEmptyTitle => 'Không có thông báo';
+
+  @override
+  String get notificationsEmptySubtitle => 'Bạn chưa có thông báo nào.';
+
+  @override
   String get favorites => 'Yêu thích';
 
   @override
@@ -289,6 +310,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cancel => 'Hủy';
+
+  @override
+  String get commonRetry => 'Thử lại';
 
   @override
   String get featureInDevelopment => 'Tính năng đang phát triển';
@@ -490,6 +514,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get restaurantInfoTitle => 'Thông tin nhà hàng';
 
   @override
+  String get restaurantReviewFood => 'Món ăn';
+
+  @override
+  String get restaurantReviewDelivery => 'Giao hàng';
+
+  @override
+  String get restaurantReviewCountLabel => 'Đánh giá';
+
+  @override
   String get foodPopular => 'Phổ biến';
 
   @override
@@ -606,7 +639,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get addressLabelField => 'Nhãn';
 
   @override
+  String get addressFieldLabel => 'Địa chỉ';
+
+  @override
   String get addressFieldHint => 'Nhập địa chỉ chi tiết';
+
+  @override
+  String get addressRequired => 'Vui lòng nhập địa chỉ';
+
+  @override
+  String get addressAddDialogTitle => 'Thêm địa chỉ mới';
+
+  @override
+  String get addressEditDialogTitle => 'Sửa địa chỉ';
+
+  @override
+  String get addressAddFailed => 'Không thể thêm địa chỉ';
+
+  @override
+  String get addressUpdateFailed => 'Không thể cập nhật địa chỉ';
+
+  @override
+  String get addressDeleteFailed => 'Không thể xóa địa chỉ';
+
+  @override
+  String get addressDeleteAction => 'Xóa';
+
+  @override
+  String get addressHomeLabel => 'Nhà';
+
+  @override
+  String get addressWorkLabel => 'Công ty';
+
+  @override
+  String get addressOtherLabel => 'Khác';
 
   @override
   String get supportConnecting => 'Đang kết nối...';
@@ -682,6 +748,49 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driverStatOnline => 'Online';
+
+  @override
+  String get driverStatusTitle => 'Trạng thái hoạt động';
+
+  @override
+  String get driverStatusPauseTitle => 'Tạm dừng nhận đơn';
+
+  @override
+  String get driverStatusPauseSubtitle =>
+      'Tạm dừng trong một khoảng thời gian, sau đó tự động trở lại trực tuyến.';
+
+  @override
+  String driverStatusPauseMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String driverStatusPauseHours(int hours) {
+    return '$hours giờ';
+  }
+
+  @override
+  String get driverStatusResumeNow => 'Tiếp tục nhận đơn ngay';
+
+  @override
+  String get driverStatusToday => 'Hôm nay';
+
+  @override
+  String get driverStatusOnlineTime => 'Thời gian online';
+
+  @override
+  String driverStatusDurationMinutes(int minutes) {
+    return '${minutes}p';
+  }
+
+  @override
+  String driverStatusDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}g ${minutes}p';
+  }
+
+  @override
+  String get driverStatusInfoText =>
+      'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.';
 
   @override
   String get driverEarningsTitle => 'Thu nhập';
@@ -786,6 +895,18 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get driverRouteReplayTooltip => 'Phát lại lộ trình';
+
+  @override
+  String get driverRouteReplayPlaying => 'Đang phát...';
+
+  @override
+  String get driverRouteReplayReady => 'Nhấn để phát lại';
+
+  @override
+  String get driverRouteReplayCompleted => 'Đã phát xong';
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override
@@ -822,6 +943,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get driverKycNote =>
       'Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.';
+
+  @override
+  String get driverKycSubmitFailed => 'Gửi đơn thất bại. Vui lòng thử lại.';
 
   @override
   String get driverHistoryTitle => 'Lịch sử giao hàng';
@@ -1110,6 +1234,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get referralShareCode => 'Chia sẻ mã';
+
+  @override
+  String get referralShareSheetTitle => 'Chia sẻ mã giới thiệu';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'Dùng mã $code để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!';
+  }
+
+  @override
+  String get referralQrCode => 'Mã QR';
 
   @override
   String referralInviteCount(int count) {

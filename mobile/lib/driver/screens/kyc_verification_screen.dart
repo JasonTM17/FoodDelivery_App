@@ -136,7 +136,9 @@ class _KycVerificationScreenState extends ConsumerState<KycVerificationScreen> {
       context.go('/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gửi đơn thất bại. Vui lòng thử lại.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).driverKycSubmitFailed),
+        ),
       );
     }
   }

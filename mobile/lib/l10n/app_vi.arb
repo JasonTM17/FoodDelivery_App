@@ -96,6 +96,13 @@
   "paymentMethodsSubtitle": "Thêm hoặc thay đổi phương thức",
   "notificationsTitle": "Thông báo",
   "notificationsSubtitle": "Quản lý thông báo đẩy",
+  "notificationsReadAll": "Đọc tất cả",
+  "notificationsAll": "Tất cả",
+  "notificationsOrders": "Đơn hàng",
+  "notificationsPromotions": "Khuyến mãi",
+  "notificationsSystem": "Hệ thống",
+  "notificationsEmptyTitle": "Không có thông báo",
+  "notificationsEmptySubtitle": "Bạn chưa có thông báo nào.",
   "favorites": "Yêu thích",
   "favoritesSubtitle": "Danh sách món ăn yêu thích",
   "support": "Hỗ trợ",
@@ -105,6 +112,7 @@
   "logout": "Đăng xuất",
   "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
   "cancel": "Hủy",
+  "commonRetry": "Thử lại",
   "featureInDevelopment": "Tính năng đang phát triển",
 
   "driverProfileTitle": "Hồ sơ",
@@ -180,6 +188,9 @@
   "restaurantMenuEmptySubtitle": "Nhà hàng chưa có món nào trong thực đơn",
   "restaurantNoReviews": "Chưa có đánh giá nào",
   "restaurantInfoTitle": "Thông tin nhà hàng",
+  "restaurantReviewFood": "Món ăn",
+  "restaurantReviewDelivery": "Giao hàng",
+  "restaurantReviewCountLabel": "Đánh giá",
 
   "foodPopular": "Phổ biến",
   "foodSpecialNote": "Ghi chú đặc biệt",
@@ -232,7 +243,18 @@
   "addressDeleteSuccess": "Đã xóa địa chỉ",
   "addressSave": "Lưu",
   "addressLabelField": "Nhãn",
+  "addressFieldLabel": "Địa chỉ",
   "addressFieldHint": "Nhập địa chỉ chi tiết",
+  "addressRequired": "Vui lòng nhập địa chỉ",
+  "addressAddDialogTitle": "Thêm địa chỉ mới",
+  "addressEditDialogTitle": "Sửa địa chỉ",
+  "addressAddFailed": "Không thể thêm địa chỉ",
+  "addressUpdateFailed": "Không thể cập nhật địa chỉ",
+  "addressDeleteFailed": "Không thể xóa địa chỉ",
+  "addressDeleteAction": "Xóa",
+  "addressHomeLabel": "Nhà",
+  "addressWorkLabel": "Công ty",
+  "addressOtherLabel": "Khác",
 
   "supportConnecting": "Đang kết nối...",
   "supportDriverOnline": "Đang hoạt động",
@@ -260,6 +282,32 @@
   "driverDashboardNoOrders": "Chưa có đơn hàng nào",
   "driverStatEarnings": "Thu nhập",
   "driverStatOnline": "Online",
+  "driverStatusTitle": "Trạng thái hoạt động",
+  "driverStatusPauseTitle": "Tạm dừng nhận đơn",
+  "driverStatusPauseSubtitle": "Tạm dừng trong một khoảng thời gian, sau đó tự động trở lại trực tuyến.",
+  "driverStatusPauseMinutes": "{minutes} phút",
+  "@driverStatusPauseMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusPauseHours": "{hours} giờ",
+  "@driverStatusPauseHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "driverStatusResumeNow": "Tiếp tục nhận đơn ngay",
+  "driverStatusToday": "Hôm nay",
+  "driverStatusOnlineTime": "Thời gian online",
+  "driverStatusDurationMinutes": "{minutes}p",
+  "@driverStatusDurationMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusDurationHoursMinutes": "{hours}g {minutes}p",
+  "@driverStatusDurationHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "driverStatusInfoText": "Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.",
 
   "driverEarningsTitle": "Thu nhập",
   "driverEarningsPeriodToday": "Hôm nay",
@@ -304,6 +352,10 @@
   "@driverTripSummaryMinutes": {
     "placeholders": { "minutes": { "type": "int" } }
   },
+  "driverRouteReplayTooltip": "Phát lại lộ trình",
+  "driverRouteReplayPlaying": "Đang phát...",
+  "driverRouteReplayReady": "Nhấn để phát lại",
+  "driverRouteReplayCompleted": "Đã phát xong",
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",
@@ -317,6 +369,7 @@
   "driverKycUploadHint": "Chụp ảnh hoặc tải lên",
   "driverKycSubmit": "GỬI ĐĂNG KÝ",
   "driverKycNote": "Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.",
+  "driverKycSubmitFailed": "Gửi đơn thất bại. Vui lòng thử lại.",
 
   "driverHistoryTitle": "Lịch sử giao hàng",
   "driverHistoryFilterDate": "Lọc theo ngày",
@@ -422,6 +475,12 @@
   "referralCopyCode": "Sao chép mã",
   "referralCodeCopied": "Đã sao chép mã!",
   "referralShareCode": "Chia sẻ mã",
+  "referralShareSheetTitle": "Chia sẻ mã giới thiệu",
+  "referralShareMessage": "Dùng mã {code} để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!",
+  "@referralShareMessage": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "referralQrCode": "Mã QR",
   "referralInviteCount": "Đã giới thiệu {count} người",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

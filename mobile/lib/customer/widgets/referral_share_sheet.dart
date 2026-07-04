@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../l10n/app_localizations.dart';
 
 class ReferralShareSheet extends StatelessWidget {
   final String referralCode;
@@ -18,9 +19,8 @@ class ReferralShareSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shareMessage =
-        message ??
-        'Dùng mã $referralCode để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!';
+    final l10n = AppLocalizations.of(context);
+    final shareMessage = message ?? l10n.referralShareMessage(referralCode);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -43,7 +43,7 @@ class ReferralShareSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Chia sẻ mã giới thiệu', style: AppTextStyles.headline4),
+            Text(l10n.referralShareSheetTitle, style: AppTextStyles.headline4),
             const SizedBox(height: 16),
             // Code display
             Container(
@@ -71,27 +71,32 @@ class ReferralShareSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildShareButton(context, Icons.copy, 'Sao chép mã', () {
-                  Clipboard.setData(ClipboardData(text: referralCode));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã sao chép mã'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                }),
+                _buildShareButton(
+                  context,
+                  Icons.copy,
+                  l10n.referralCopyCode,
+                  () {
+                    Clipboard.setData(ClipboardData(text: referralCode));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.referralCodeCopied),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  },
+                ),
                 _buildShareButton(
                   context,
                   Icons.share,
-                  'Chia sẻ',
+                  l10n.referralShareCode,
                   () => Share.share(shareMessage),
                 ),
                 _buildShareButton(
                   context,
                   Icons.qr_code,
-                  'Mã QR',
+                  l10n.referralQrCode,
                   () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng sắp ra mắt')),
+                    SnackBar(content: Text(l10n.featureInDevelopment)),
                   ),
                 ),
               ],

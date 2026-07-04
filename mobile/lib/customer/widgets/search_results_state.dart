@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/loading_shimmer.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Displays the appropriate UI state for search results: loading, empty, error, or content.
 class SearchResultsState extends StatelessWidget {
@@ -65,7 +66,7 @@ class _ErrorView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Thử lại'),
+                label: Text(AppLocalizations.of(context).commonRetry),
               ),
             ],
           ],

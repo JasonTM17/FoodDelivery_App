@@ -3,29 +3,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/driver_status_provider.dart';
 import '../widgets/online_toggle_switch.dart';
+import '../../l10n/app_localizations.dart';
 
 class OfflineStatusScreen extends ConsumerWidget {
   const OfflineStatusScreen({super.key});
 
-  static const _pauseOptions = [
-    ('15 phút', Duration(minutes: 15)),
-    ('30 phút', Duration(minutes: 30)),
-    ('1 giờ', Duration(hours: 1)),
-    ('2 giờ', Duration(hours: 2)),
+  static const _pauseDurations = [
+    Duration(minutes: 15),
+    Duration(minutes: 30),
+    Duration(hours: 1),
+    Duration(hours: 2),
   ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(driverStatusProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
-        title: const Text(
-          'Trạng thái hoạt động',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverStatusTitle,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -35,11 +40,11 @@ class OfflineStatusScreen extends ConsumerWidget {
           children: [
             const OnlineToggleSwitch(),
             const SizedBox(height: 20),
-            _buildPauseSection(context, ref, status),
+            _buildPauseSection(context, ref, status, l10n),
             const SizedBox(height: 24),
-            _buildTodayStats(status),
+            _buildTodayStats(status, l10n),
             const SizedBox(height: 24),
-            _buildInfoCard(),
+            _buildInfoCard(l10n),
           ],
         ),
       ),
@@ -50,6 +55,7 @@ class OfflineStatusScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     DriverStatus status,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -61,13 +67,17 @@ class OfflineStatusScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.timer_outlined, color: Color(0xFFF59E0B), size: 18),
-              SizedBox(width: 8),
+              const Icon(
+                Icons.timer_outlined,
+                color: Color(0xFFF59E0B),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
               Text(
-                'Tạm dừng nhận đơn',
-                style: TextStyle(
+                l10n.driverStatusPauseTitle,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -76,21 +86,21 @@ class OfflineStatusScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Tạm dừng trong một khoảng thời gian, sau đó tự động trở lại trực tuyến',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          Text(
+            l10n.driverStatusPauseSubtitle,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 14),
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: _pauseOptions.map((option) {
+            children: _pauseDurations.map((duration) {
               final isActive =
                   status.status == DriverOnlineStatus.paused &&
-                  status.pausedDuration == option.$2;
+                  status.pausedDuration == duration;
               return GestureDetector(
                 onTap: () =>
-                    ref.read(driverStatusProvider.notifier).pauseFor(option.$2),
+                    ref.read(driverStatusProvider.notifier).pauseFor(duration),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -108,7 +118,7 @@ class OfflineStatusScreen extends ConsumerWidget {
                     ),
                   ),
                   child: Text(
-                    option.$1,
+                    _pauseLabel(l10n, duration),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -129,7 +139,7 @@ class OfflineStatusScreen extends ConsumerWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                 ),
-                child: const Text('Tiếp tục nhận đơn ngay'),
+                child: Text(l10n.driverStatusResumeNow),
               ),
             ),
           ],
@@ -138,7 +148,7 @@ class OfflineStatusScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTodayStats(DriverStatus status) {
+  Widget _buildTodayStats(DriverStatus status, AppLocalizations l10n) {
     final hours = status.totalOnlineToday.inHours;
     final minutes = status.totalOnlineToday.inMinutes % 60;
     return Container(
@@ -151,9 +161,9 @@ class OfflineStatusScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Hôm nay',
-            style: TextStyle(
+          Text(
+            l10n.driverStatusToday,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -165,8 +175,8 @@ class OfflineStatusScreen extends ConsumerWidget {
               Expanded(
                 child: _buildMiniStat(
                   Icons.timer,
-                  'Thời gian online',
-                  hours > 0 ? '${hours}h ${minutes}m' : '0m',
+                  l10n.driverStatusOnlineTime,
+                  _onlineDuration(l10n, hours, minutes),
                 ),
               ),
             ],
@@ -207,7 +217,7 @@ class OfflineStatusScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -215,18 +225,32 @@ class OfflineStatusScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-          SizedBox(width: 10),
+          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              l10n.driverStatusInfoText,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _pauseLabel(AppLocalizations l10n, Duration duration) {
+    if (duration.inHours >= 1) {
+      return l10n.driverStatusPauseHours(duration.inHours);
+    }
+    return l10n.driverStatusPauseMinutes(duration.inMinutes);
+  }
+
+  String _onlineDuration(AppLocalizations l10n, int hours, int minutes) {
+    if (hours > 0) {
+      return l10n.driverStatusDurationHoursMinutes(hours, minutes);
+    }
+    return l10n.driverStatusDurationMinutes(minutes);
   }
 }

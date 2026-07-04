@@ -90,6 +90,13 @@
   "paymentMethodsSubtitle": "Add or change payment method",
   "notificationsTitle": "Notifications",
   "notificationsSubtitle": "Manage push notifications",
+  "notificationsReadAll": "Read all",
+  "notificationsAll": "All",
+  "notificationsOrders": "Orders",
+  "notificationsPromotions": "Promotions",
+  "notificationsSystem": "System",
+  "notificationsEmptyTitle": "No notifications",
+  "notificationsEmptySubtitle": "You do not have any notifications yet.",
   "favorites": "Favorites",
   "favoritesSubtitle": "Your favorite dishes",
   "support": "Support",
@@ -99,6 +106,7 @@
   "logout": "Logout",
   "logoutConfirm": "Are you sure you want to logout?",
   "cancel": "Cancel",
+  "commonRetry": "Retry",
   "featureInDevelopment": "Feature coming soon",
 
   "driverProfileTitle": "Profile",
@@ -174,6 +182,9 @@
   "restaurantMenuEmptySubtitle": "No items in this menu yet",
   "restaurantNoReviews": "No reviews yet",
   "restaurantInfoTitle": "Restaurant info",
+  "restaurantReviewFood": "Food",
+  "restaurantReviewDelivery": "Delivery",
+  "restaurantReviewCountLabel": "Reviews",
 
   "foodPopular": "Popular",
   "foodSpecialNote": "Special instructions",
@@ -226,7 +237,18 @@
   "addressDeleteSuccess": "Address deleted",
   "addressSave": "Save",
   "addressLabelField": "Label",
+  "addressFieldLabel": "Address",
   "addressFieldHint": "Enter detailed address",
+  "addressRequired": "Please enter an address",
+  "addressAddDialogTitle": "Add new address",
+  "addressEditDialogTitle": "Edit address",
+  "addressAddFailed": "Unable to add address",
+  "addressUpdateFailed": "Unable to update address",
+  "addressDeleteFailed": "Unable to delete address",
+  "addressDeleteAction": "Delete",
+  "addressHomeLabel": "Home",
+  "addressWorkLabel": "Work",
+  "addressOtherLabel": "Other",
 
   "supportConnecting": "Connecting...",
   "supportDriverOnline": "Online",
@@ -254,6 +276,32 @@
   "driverDashboardNoOrders": "No orders yet",
   "driverStatEarnings": "Earnings",
   "driverStatOnline": "Online",
+  "driverStatusTitle": "Availability status",
+  "driverStatusPauseTitle": "Pause order intake",
+  "driverStatusPauseSubtitle": "Pause for a set time, then automatically return online.",
+  "driverStatusPauseMinutes": "{minutes} min",
+  "@driverStatusPauseMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusPauseHours": "{hours} hr",
+  "@driverStatusPauseHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "driverStatusResumeNow": "Resume taking orders now",
+  "driverStatusToday": "Today",
+  "driverStatusOnlineTime": "Online time",
+  "driverStatusDurationMinutes": "{minutes}m",
+  "@driverStatusDurationMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "driverStatusDurationHoursMinutes": "{hours}h {minutes}m",
+  "@driverStatusDurationHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "driverStatusInfoText": "When online, you will receive new order alerts in your active area.",
 
   "driverEarningsTitle": "Earnings",
   "driverEarningsPeriodToday": "Today",
@@ -298,6 +346,10 @@
   "@driverTripSummaryMinutes": {
     "placeholders": { "minutes": { "type": "int" } }
   },
+  "driverRouteReplayTooltip": "Replay route",
+  "driverRouteReplayPlaying": "Playing...",
+  "driverRouteReplayReady": "Tap to replay",
+  "driverRouteReplayCompleted": "Replay finished",
 
   "driverKycTitle": "KYC Verification",
   "driverKycUploadTitle": "Upload documents",
@@ -311,6 +363,7 @@
   "driverKycUploadHint": "Take photo or upload",
   "driverKycSubmit": "SUBMIT APPLICATION",
   "driverKycNote": "Application reviewed in 24-48h. You will be notified when approved.",
+  "driverKycSubmitFailed": "Could not submit application. Please try again.",
 
   "driverHistoryTitle": "Delivery history",
   "driverHistoryFilterDate": "Filter by date",
@@ -416,6 +469,12 @@
   "referralCopyCode": "Copy Code",
   "referralCodeCopied": "Code copied!",
   "referralShareCode": "Share Code",
+  "referralShareSheetTitle": "Share referral code",
+  "referralShareMessage": "Use code {code} to get a reward on your first FoodFlow order!",
+  "@referralShareMessage": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "referralQrCode": "QR code",
   "referralInviteCount": "Invited {count} friends",
   "@referralInviteCount": {
     "placeholders": { "count": { "type": "int" } }

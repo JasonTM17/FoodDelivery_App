@@ -390,6 +390,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
   }
 
   Widget _buildReviewSummary(List<ReviewModel> reviews) {
+    final l10n = AppLocalizations.of(context);
     final avgFood =
         reviews.fold<double>(0.0, (sum, r) => sum + r.foodRating) /
         reviews.length;
@@ -423,11 +424,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   color: AppColors.accent,
                 ),
               ),
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.star, size: 16, color: AppColors.accent),
-                  SizedBox(width: 4),
-                  Text('Món ăn', style: AppTextStyles.caption),
+                  const Icon(Icons.star, size: 16, color: AppColors.accent),
+                  const SizedBox(width: 4),
+                  Text(l10n.restaurantReviewFood, style: AppTextStyles.caption),
                 ],
               ),
             ],
@@ -443,11 +444,14 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   color: AppColors.primary,
                 ),
               ),
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.star, size: 16, color: AppColors.primary),
-                  SizedBox(width: 4),
-                  Text('Giao hàng', style: AppTextStyles.caption),
+                  const Icon(Icons.star, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    l10n.restaurantReviewDelivery,
+                    style: AppTextStyles.caption,
+                  ),
                 ],
               ),
             ],
@@ -463,7 +467,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   color: AppColors.textPrimary,
                 ),
               ),
-              const Text('Đánh giá', style: AppTextStyles.caption),
+              Text(
+                l10n.restaurantReviewCountLabel,
+                style: AppTextStyles.caption,
+              ),
             ],
           ),
         ],
