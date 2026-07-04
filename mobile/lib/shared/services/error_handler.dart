@@ -8,12 +8,15 @@ abstract class AppError {
 }
 
 class NetworkError extends AppError {
-  const NetworkError([super.message = 'Không có kết nối mạng. Vui lòng kiểm tra lại.']);
+  const NetworkError([
+    super.message = 'Không có kết nối mạng. Vui lòng kiểm tra lại.',
+  ]);
 }
 
 class AuthError extends AppError {
-  const AuthError(
-      [super.message = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.']);
+  const AuthError([
+    super.message = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  ]);
 }
 
 class ValidationError extends AppError {
@@ -23,7 +26,10 @@ class ValidationError extends AppError {
 
 class ServerError extends AppError {
   final int? statusCode;
-  const ServerError([super.message = 'Lỗi máy chủ. Vui lòng thử lại sau.', this.statusCode]);
+  const ServerError([
+    super.message = 'Lỗi máy chủ. Vui lòng thử lại sau.',
+    this.statusCode,
+  ]);
 }
 
 class NotFoundError extends AppError {
@@ -50,25 +56,43 @@ class ErrorHandler {
     switch (statusCode) {
       case 400:
         final fields = _extractFields(responseData);
-        return ValidationError(serverMessage ?? 'Dữ liệu không hợp lệ.', fields: fields);
+        return ValidationError(
+          serverMessage ?? 'Dữ liệu không hợp lệ.',
+          fields: fields,
+        );
       case 401:
         return AuthError(
-            serverMessage ?? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          serverMessage ??
+              'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+        );
       case 403:
         return const AuthError('Bạn không có quyền thực hiện thao tác này.');
       case 404:
-        return NotFoundError(serverMessage ?? 'Không tìm thấy dữ liệu yêu cầu.');
+        return NotFoundError(
+          serverMessage ?? 'Không tìm thấy dữ liệu yêu cầu.',
+        );
       case 422:
         final fields = _extractFields(responseData);
-        return ValidationError(serverMessage ?? 'Dữ liệu không hợp lệ.', fields: fields);
+        return ValidationError(
+          serverMessage ?? 'Dữ liệu không hợp lệ.',
+          fields: fields,
+        );
       case 429:
-        return const ServerError('Quá nhiều yêu cầu. Vui lòng thử lại sau.', 429);
+        return const ServerError(
+          'Quá nhiều yêu cầu. Vui lòng thử lại sau.',
+          429,
+        );
       default:
         if (statusCode != null && statusCode >= 500) {
           return ServerError(
-              serverMessage ?? 'Lỗi máy chủ. Vui lòng thử lại sau.', statusCode);
+            serverMessage ?? 'Lỗi máy chủ. Vui lòng thử lại sau.',
+            statusCode,
+          );
         }
-        return ServerError(serverMessage ?? 'Có lỗi xảy ra. Vui lòng thử lại.', statusCode);
+        return ServerError(
+          serverMessage ?? 'Có lỗi xảy ra. Vui lòng thử lại.',
+          statusCode,
+        );
     }
   }
 
@@ -107,12 +131,6 @@ class ErrorHandler {
       context,
       ServerError(message ?? 'Có lỗi xảy ra. Vui lòng thử lại.'),
     );
-  }
-
-  // Sentry stub — swap body for Sentry.captureException(error, stackTrace: stackTrace)
-  static void logToSentry(Object error, [StackTrace? stackTrace]) {
-    // ignore: avoid_print
-    print('[Sentry stub] $error\n$stackTrace');
   }
 
   static String? _extractMessage(dynamic data) {
