@@ -95,6 +95,7 @@ Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、vi
 - [API reference](api-reference.md)
 - [Architecture](system-architecture.md)
 - [Deployment guide](deployment-guide.md)
+- [Docker/local 開発ガイド](docker-local-dev-guide.ja.md)
 - [Testing guide](testing-guide.md)
 - [Security audit guide](security-audit-guide.ja.md)
 - [Documentation localization policy](documentation-localization.md)

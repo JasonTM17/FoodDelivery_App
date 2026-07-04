@@ -169,6 +169,7 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [API reference](docs/api-reference.md)
 - [Architecture](docs/system-architecture.md)
 - [Deployment guide](docs/deployment-guide.md)
+- [Docker/local development guide](docs/docker-local-dev-guide.md)
 - [Testing guide](docs/testing-guide.md)
 - [AI chatbot guide](docs/ai-chatbot-guide.md)
 - [Security audit guide](docs/security-audit-guide.md)

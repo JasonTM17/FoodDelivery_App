@@ -95,6 +95,7 @@ Batch 4 chỉ được coi là xong khi backend, web, Playwright Chromium/Firefo
 - [API reference](api-reference.md)
 - [Architecture](system-architecture.md)
 - [Deployment guide](deployment-guide.md)
+- [Hướng dẫn Docker/local dev](docker-local-dev-guide.vi.md)
 - [Testing guide](testing-guide.md)
 - [Security audit guide](security-audit-guide.vi.md)
 - [Documentation localization policy](documentation-localization.md)
