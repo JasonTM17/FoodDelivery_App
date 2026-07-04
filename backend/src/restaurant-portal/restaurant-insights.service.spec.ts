@@ -117,4 +117,38 @@ describe('RestaurantInsightsService', () => {
     expect(result.suggestions[0]).not.toHaveProperty('description')
     expect(result.suggestions[0]).not.toHaveProperty('predictedImpact')
   })
+
+  it('does not synthesize zero-valued forecast points without revenue history', async () => {
+    orderFindMany.mockResolvedValue([])
+    menuItemFindMany.mockResolvedValue([])
+    orderItemFindMany.mockResolvedValue([])
+
+    const result = await service.getInsights('user-1')
+
+    expect(result.forecast).toEqual([])
+  })
+
+  it('forecasts only future weekdays backed by historical revenue samples', async () => {
+    orderFindMany.mockResolvedValue([
+      {
+        id: 'order-1',
+        createdAt: new Date('2026-06-03T12:00:00.000Z'),
+        total: 120_000,
+        actualDeliveryTimeMinutes: 20,
+      },
+    ])
+    menuItemFindMany.mockResolvedValue([])
+    orderItemFindMany.mockResolvedValue([])
+
+    const result = await service.getInsights('user-1')
+
+    expect(result.forecast).toEqual([
+      {
+        date: '2026-06-17',
+        predicted: 120_000,
+        lower: 102_000,
+        upper: 138_000,
+      },
+    ])
+  })
 })

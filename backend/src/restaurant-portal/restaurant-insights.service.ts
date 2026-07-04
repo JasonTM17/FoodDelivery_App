@@ -175,10 +175,18 @@ function buildForecast(orders: Array<{ createdAt: Date; total: Prisma.Decimal }>
     const day = new Date(`${date}T00:00:00Z`).getUTCDay()
     weekday.set(day, [...(weekday.get(day) ?? []), value])
   })
-  return Array.from({ length: 7 }, (_, index) => {
+  return Array.from({ length: 7 }).flatMap((_, index) => {
     const date = new Date(now.getTime() + (index + 1) * 86_400_000)
     const samples = weekday.get(date.getUTCDay()) ?? []
-    return { date: date.toISOString().slice(0, 10), predicted: Math.round(average(samples)) }
+    if (samples.length === 0) return []
+
+    const predicted = Math.round(average(samples))
+    return [{
+      date: date.toISOString().slice(0, 10),
+      predicted,
+      lower: Math.max(0, Math.round(predicted * 0.85)),
+      upper: Math.round(predicted * 1.15),
+    }]
   })
 }
 
