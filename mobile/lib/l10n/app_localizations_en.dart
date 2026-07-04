@@ -1099,6 +1099,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Directions are unavailable for this stop';
 
   @override
+  String get driverDispatchNewOrderTitle => 'New order!';
+
+  @override
+  String get driverDispatchNewOrderSubtitle => 'Accept to start the delivery';
+
+  @override
+  String get driverDispatchRestaurantLabel => 'Restaurant';
+
+  @override
+  String get driverDispatchDeliveryLabel => 'Deliver to';
+
+  @override
+  String driverDispatchCountdownDecision(int seconds) {
+    return '$seconds seconds left to decide';
+  }
+
+  @override
+  String get driverDispatchCountdownUrgent => 'Almost out of time!';
+
+  @override
+  String get driverDispatchReject => 'Reject';
+
+  @override
+  String get driverDispatchAccept => 'Accept order';
+
+  @override
   String get cartPlaceOrder => 'Place order';
 
   @override

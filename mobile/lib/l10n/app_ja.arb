@@ -415,6 +415,21 @@
   "driverNavPhoneError": "電話アプリを開けません",
   "driverNavOpenDirections": "経路を開く",
   "driverNavDirectionsUnavailable": "この地点への経路を利用できません",
+  "driverDispatchNewOrderTitle": "新しい注文！",
+  "driverDispatchNewOrderSubtitle": "承諾して配達を開始",
+  "driverDispatchRestaurantLabel": "レストラン",
+  "driverDispatchDeliveryLabel": "配達先",
+  "driverDispatchCountdownDecision": "判断まであと{seconds}秒",
+  "@driverDispatchCountdownDecision": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "driverDispatchCountdownUrgent": "まもなく時間切れです！",
+  "driverDispatchReject": "拒否",
+  "driverDispatchAccept": "注文を承諾",
 
   "cartPlaceOrder": "注文する",
   "checkoutConfirmOrder": "注文を確定",

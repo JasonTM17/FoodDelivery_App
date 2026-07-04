@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/driver_provider.dart' show DispatchOffer;
 
@@ -70,6 +71,7 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: const Color(0xFF1E1E1E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -78,20 +80,20 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(),
+            _buildHeader(l10n),
             const SizedBox(height: 20),
-            _buildOrderDetails(),
+            _buildOrderDetails(l10n),
             const SizedBox(height: 16),
-            _buildCountdown(),
+            _buildCountdown(l10n),
             const SizedBox(height: 20),
-            _buildActions(),
+            _buildActions(l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppLocalizations l10n) {
     return Row(
       children: [
         Container(
@@ -108,21 +110,21 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
           ),
         ),
         const SizedBox(width: 12),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Đơn hàng mới!',
-                style: TextStyle(
+                l10n.driverDispatchNewOrderTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
               ),
               Text(
-                'Chấp nhận để bắt đầu giao hàng',
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                l10n.driverDispatchNewOrderSubtitle,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
               ),
             ],
           ),
@@ -131,7 +133,7 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
     );
   }
 
-  Widget _buildOrderDetails() {
+  Widget _buildOrderDetails(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -144,13 +146,13 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
           _infoRow(
             Icons.restaurant_outlined,
             widget.offer.restaurantName,
-            'Nhà hàng',
+            l10n.driverDispatchRestaurantLabel,
           ),
           const SizedBox(height: 12),
           _infoRow(
             Icons.location_on_outlined,
             widget.offer.deliveryAddress,
-            'Giao đến',
+            l10n.driverDispatchDeliveryLabel,
           ),
           const Divider(color: Color(0xFF374151), height: 24),
           Row(
@@ -218,7 +220,7 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
     );
   }
 
-  Widget _buildCountdown() {
+  Widget _buildCountdown(AppLocalizations l10n) {
     final progress = _remaining / widget.offer.timeoutSeconds;
     final color = _remaining > 10 ? AppColors.primary : AppColors.error;
     return Row(
@@ -249,15 +251,15 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
         const SizedBox(width: 14),
         Text(
           _remaining > 10
-              ? 'Còn $_remaining giây để quyết định'
-              : 'Sắp hết thời gian!',
+              ? l10n.driverDispatchCountdownDecision(_remaining)
+              : l10n.driverDispatchCountdownUrgent,
           style: TextStyle(fontSize: 13, color: color),
         ),
       ],
     );
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -272,9 +274,12 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Từ chối',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              child: Text(
+                l10n.driverDispatchReject,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -293,9 +298,12 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Nhận đơn',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              child: Text(
+                l10n.driverDispatchAccept,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),

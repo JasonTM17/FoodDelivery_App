@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/driver_provider.dart'
     show DispatchOffer;
 import 'package:foodflow_customer/driver/widgets/dispatch_offer_dialog.dart';
+import 'package:foodflow_customer/l10n/app_localizations.dart';
 
 const _testOffer = DispatchOffer(
   orderId: 'order-001',
@@ -19,6 +20,9 @@ const _testOffer = DispatchOffer(
 
 Widget _buildDialog({VoidCallback? onAccept, VoidCallback? onReject}) {
   return MaterialApp(
+    locale: const Locale('vi'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     theme: ThemeData.dark(),
     home: Scaffold(
       body: DispatchOfferDialog(

@@ -2182,6 +2182,54 @@ abstract class AppLocalizations {
   /// **'Chưa có tọa độ hợp lệ để chỉ đường'**
   String get driverNavDirectionsUnavailable;
 
+  /// No description provided for @driverDispatchNewOrderTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng mới!'**
+  String get driverDispatchNewOrderTitle;
+
+  /// No description provided for @driverDispatchNewOrderSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận để bắt đầu giao hàng'**
+  String get driverDispatchNewOrderSubtitle;
+
+  /// No description provided for @driverDispatchRestaurantLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà hàng'**
+  String get driverDispatchRestaurantLabel;
+
+  /// No description provided for @driverDispatchDeliveryLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao đến'**
+  String get driverDispatchDeliveryLabel;
+
+  /// No description provided for @driverDispatchCountdownDecision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {seconds} giây để quyết định'**
+  String driverDispatchCountdownDecision(int seconds);
+
+  /// No description provided for @driverDispatchCountdownUrgent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp hết thời gian!'**
+  String get driverDispatchCountdownUrgent;
+
+  /// No description provided for @driverDispatchReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get driverDispatchReject;
+
+  /// No description provided for @driverDispatchAccept.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận đơn'**
+  String get driverDispatchAccept;
+
   /// No description provided for @cartPlaceOrder.
   ///
   /// In vi, this message translates to:

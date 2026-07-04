@@ -1081,6 +1081,32 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverNavDirectionsUnavailable => 'この地点への経路を利用できません';
 
   @override
+  String get driverDispatchNewOrderTitle => '新しい注文！';
+
+  @override
+  String get driverDispatchNewOrderSubtitle => '承諾して配達を開始';
+
+  @override
+  String get driverDispatchRestaurantLabel => 'レストラン';
+
+  @override
+  String get driverDispatchDeliveryLabel => '配達先';
+
+  @override
+  String driverDispatchCountdownDecision(int seconds) {
+    return '判断まであと$seconds秒';
+  }
+
+  @override
+  String get driverDispatchCountdownUrgent => 'まもなく時間切れです！';
+
+  @override
+  String get driverDispatchReject => '拒否';
+
+  @override
+  String get driverDispatchAccept => '注文を承諾';
+
+  @override
   String get cartPlaceOrder => '注文する';
 
   @override

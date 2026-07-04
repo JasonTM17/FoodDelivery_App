@@ -1100,6 +1100,32 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có tọa độ hợp lệ để chỉ đường';
 
   @override
+  String get driverDispatchNewOrderTitle => 'Đơn hàng mới!';
+
+  @override
+  String get driverDispatchNewOrderSubtitle => 'Chấp nhận để bắt đầu giao hàng';
+
+  @override
+  String get driverDispatchRestaurantLabel => 'Nhà hàng';
+
+  @override
+  String get driverDispatchDeliveryLabel => 'Giao đến';
+
+  @override
+  String driverDispatchCountdownDecision(int seconds) {
+    return 'Còn $seconds giây để quyết định';
+  }
+
+  @override
+  String get driverDispatchCountdownUrgent => 'Sắp hết thời gian!';
+
+  @override
+  String get driverDispatchReject => 'Từ chối';
+
+  @override
+  String get driverDispatchAccept => 'Nhận đơn';
+
+  @override
   String get cartPlaceOrder => 'Đặt hàng';
 
   @override

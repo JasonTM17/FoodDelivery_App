@@ -4,20 +4,7 @@ import '../../shared/api/api_client.dart';
 
 enum CancelReason { slow, changedMind, wrongOrder, other }
 
-extension CancelReasonLabel on CancelReason {
-  String labelVi() {
-    switch (this) {
-      case CancelReason.slow:
-        return 'Nhà hàng quá lâu';
-      case CancelReason.changedMind:
-        return 'Đổi ý';
-      case CancelReason.wrongOrder:
-        return 'Đặt nhầm';
-      case CancelReason.other:
-        return 'Khác';
-    }
-  }
-
+extension CancelReasonApiValue on CancelReason {
   String apiValue() {
     switch (this) {
       case CancelReason.slow:
@@ -97,16 +84,14 @@ class CancelOrderNotifier extends StateNotifier<CancelOrderState> {
       state = state.copyWith(isLoading: false, cancelled: true);
       return true;
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] as String? ??
-          'Không thể hủy đơn hàng. Vui lòng thử lại.';
+      final responseData = e.response?.data;
+      final msg = responseData is Map<String, dynamic>
+          ? responseData['message'] as String?
+          : null;
       state = state.copyWith(isLoading: false, error: msg);
       return false;
     } catch (_) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Có lỗi xảy ra khi hủy đơn hàng.',
-      );
+      state = state.copyWith(isLoading: false, error: null);
       return false;
     }
   }

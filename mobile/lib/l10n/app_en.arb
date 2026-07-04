@@ -415,6 +415,21 @@
   "driverNavPhoneError": "Cannot open phone dialer",
   "driverNavOpenDirections": "Open directions",
   "driverNavDirectionsUnavailable": "Directions are unavailable for this stop",
+  "driverDispatchNewOrderTitle": "New order!",
+  "driverDispatchNewOrderSubtitle": "Accept to start the delivery",
+  "driverDispatchRestaurantLabel": "Restaurant",
+  "driverDispatchDeliveryLabel": "Deliver to",
+  "driverDispatchCountdownDecision": "{seconds} seconds left to decide",
+  "@driverDispatchCountdownDecision": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "driverDispatchCountdownUrgent": "Almost out of time!",
+  "driverDispatchReject": "Reject",
+  "driverDispatchAccept": "Accept order",
 
   "cartPlaceOrder": "Place order",
   "checkoutConfirmOrder": "Confirm order",

@@ -151,12 +151,14 @@ class OrderNotifier extends StateNotifier<OrderState> {
       await fetchOrders();
       return true;
     } on DioException catch (e) {
-      final message =
-          e.response?.data?['message'] as String? ?? 'Không thể hủy đơn hàng.';
+      final responseData = e.response?.data;
+      final message = responseData is Map<String, dynamic>
+          ? responseData['message'] as String?
+          : null;
       state = state.copyWith(error: message);
       return false;
     } catch (e) {
-      state = state.copyWith(error: 'Có lỗi xảy ra khi hủy đơn hàng.');
+      state = state.copyWith(error: null);
       return false;
     }
   }

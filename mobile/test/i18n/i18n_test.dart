@@ -348,6 +348,44 @@ void main() {
       await _pumpLocaleFrame(tester);
       expect(find.text('この配達の収益'), findsOneWidget);
     });
+
+    testWidgets('driverDispatchAccept switches across all 3 locales', (
+      tester,
+    ) async {
+      late WidgetRef capturedRef;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: Consumer(
+            builder: (context, ref, _) {
+              capturedRef = ref;
+              final locale = ref.watch(localeProvider);
+              return MaterialApp(
+                locale: locale,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Scaffold(
+                  body: Builder(
+                    builder: (ctx) =>
+                        Text(AppLocalizations.of(ctx).driverDispatchAccept),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Nhận đơn'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Accept order'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('注文を承諾'), findsOneWidget);
+    });
   });
 
   group('placeholder keys', () {

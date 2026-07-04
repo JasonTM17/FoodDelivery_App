@@ -421,6 +421,21 @@
   "driverNavPhoneError": "Không thể mở trình quay số",
   "driverNavOpenDirections": "Mở chỉ đường",
   "driverNavDirectionsUnavailable": "Chưa có tọa độ hợp lệ để chỉ đường",
+  "driverDispatchNewOrderTitle": "Đơn hàng mới!",
+  "driverDispatchNewOrderSubtitle": "Chấp nhận để bắt đầu giao hàng",
+  "driverDispatchRestaurantLabel": "Nhà hàng",
+  "driverDispatchDeliveryLabel": "Giao đến",
+  "driverDispatchCountdownDecision": "Còn {seconds} giây để quyết định",
+  "@driverDispatchCountdownDecision": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "driverDispatchCountdownUrgent": "Sắp hết thời gian!",
+  "driverDispatchReject": "Từ chối",
+  "driverDispatchAccept": "Nhận đơn",
 
   "cartPlaceOrder": "Đặt hàng",
   "checkoutConfirmOrder": "Xác nhận đặt hàng",
