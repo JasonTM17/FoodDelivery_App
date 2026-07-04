@@ -377,7 +377,25 @@ async function main() {
     // Create restaurant with PostGIS point
     await prisma.$executeRawUnsafe(
       `INSERT INTO restaurants (id, name, slug, description, logo_url, cover_url, location, address_line, city, district, phone, cuisine_types, price_range, rating, total_reviews, is_open, is_active, prep_time_avg_minutes, min_order_amount, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', $9, $10, $11::text[], $12::"PriceRange", $13, $14, true, true, $15, $16, NOW())`,
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, 'TP. Hồ Chí Minh', $9, $10, $11::text[], $12::"PriceRange", $13, $14, true, true, $15, $16, NOW())
+       ON CONFLICT (slug) DO UPDATE SET
+         name = EXCLUDED.name,
+         description = EXCLUDED.description,
+         logo_url = EXCLUDED.logo_url,
+         cover_url = EXCLUDED.cover_url,
+         location = EXCLUDED.location,
+         address_line = EXCLUDED.address_line,
+         city = EXCLUDED.city,
+         district = EXCLUDED.district,
+         phone = EXCLUDED.phone,
+         cuisine_types = EXCLUDED.cuisine_types,
+         price_range = EXCLUDED.price_range,
+         rating = EXCLUDED.rating,
+         total_reviews = EXCLUDED.total_reviews,
+         is_open = EXCLUDED.is_open,
+         is_active = EXCLUDED.is_active,
+         prep_time_avg_minutes = EXCLUDED.prep_time_avg_minutes,
+         min_order_amount = EXCLUDED.min_order_amount`,
       t.name, slug, `${t.name} - Món ngon mỗi ngày tại ${district.name}`,
       `https://picsum.photos/seed/${slug}/200/200`, `https://picsum.photos/seed/${slug}-cover/800/400`,
       lng, lat,
@@ -402,48 +420,54 @@ async function main() {
     })
 
     // Opening hours (6AM-10PM, some close earlier on Sunday)
-    for (let day = 0; day < 7; day++) {
-      const isSunday = day === 0
-      await prisma.restaurantOpeningHour.create({
-        data: { restaurantId: restaurant.id, dayOfWeek: day, openTime: '06:00', closeTime: isSunday ? '21:00' : '22:00' },
-      })
+    const openingHoursCount = await prisma.restaurantOpeningHour.count({ where: { restaurantId: restaurant.id } })
+    if (openingHoursCount === 0) {
+      for (let day = 0; day < 7; day++) {
+        const isSunday = day === 0
+        await prisma.restaurantOpeningHour.create({
+          data: { restaurantId: restaurant.id, dayOfWeek: day, openTime: '06:00', closeTime: isSunday ? '21:00' : '22:00' },
+        })
+      }
     }
 
     // Menu items
-    const cuisineType = t.cuisine[0]
-    let menuType = 'pho'
-    if (t.slug.includes('pho')) menuType = 'pho'
-    else if (t.slug.includes('bun-bo')) menuType = 'bun_bo'
-    else if (t.slug.includes('com-tam') || t.slug.includes('com-ga') || t.slug.includes('com-nieu')) menuType = 'com_tam'
-    else if (t.slug.includes('banh-mi')) menuType = 'banh_mi'
-    else if (t.slug.includes('pizza')) menuType = 'pizza'
-    else if (t.slug.includes('sushi') || t.slug.includes('ramen')) menuType = 'sushi'
-    else if (t.slug.includes('che') || t.slug.includes('sinh-to') || t.slug.includes('kem') || t.slug.includes('yaourt') || t.slug.includes('flan') || t.slug.includes('bo-bia')) menuType = 'desserts'
-    else if (t.slug.includes('tra-sua') || t.slug.includes('ca-phe') || t.slug.includes('nuoc-mia') || t.slug.includes('gong') || t.slug.includes('phuc-long') || t.slug.includes('cong-')) menuType = 'drinks'
-    else if (t.slug.includes('kfc') || t.slug.includes('popeyes') || t.slug.includes('burger') || t.slug.includes('ga-ran')) menuType = 'fast_food'
-    else if (t.slug.includes('lau')) menuType = 'hotpot'
-    else if (t.slug.includes('oc') || t.slug.includes('banh-canh-cua')) menuType = 'seafood'
-    else if (t.slug.includes('bun-cha')) menuType = 'bun_cha'
+    const existingMenuItems = await prisma.menuItem.count({ where: { restaurantId: restaurant.id } })
+    if (existingMenuItems === 0) {
+      const cuisineType = t.cuisine[0]
+      let menuType = 'pho'
+      if (t.slug.includes('pho')) menuType = 'pho'
+      else if (t.slug.includes('bun-bo')) menuType = 'bun_bo'
+      else if (t.slug.includes('com-tam') || t.slug.includes('com-ga') || t.slug.includes('com-nieu')) menuType = 'com_tam'
+      else if (t.slug.includes('banh-mi')) menuType = 'banh_mi'
+      else if (t.slug.includes('pizza')) menuType = 'pizza'
+      else if (t.slug.includes('sushi') || t.slug.includes('ramen')) menuType = 'sushi'
+      else if (t.slug.includes('che') || t.slug.includes('sinh-to') || t.slug.includes('kem') || t.slug.includes('yaourt') || t.slug.includes('flan') || t.slug.includes('bo-bia')) menuType = 'desserts'
+      else if (t.slug.includes('tra-sua') || t.slug.includes('ca-phe') || t.slug.includes('nuoc-mia') || t.slug.includes('gong') || t.slug.includes('phuc-long') || t.slug.includes('cong-')) menuType = 'drinks'
+      else if (t.slug.includes('kfc') || t.slug.includes('popeyes') || t.slug.includes('burger') || t.slug.includes('ga-ran')) menuType = 'fast_food'
+      else if (t.slug.includes('lau')) menuType = 'hotpot'
+      else if (t.slug.includes('oc') || t.slug.includes('banh-canh-cua')) menuType = 'seafood'
+      else if (t.slug.includes('bun-cha')) menuType = 'bun_cha'
 
-    const menuTemplate = MENU_DATA[menuType] ?? MENU_DATA.pho
-    const cats = CATEGORY_MAP[menuType] ?? ['Món chính', 'Thức uống']
+      const menuTemplate = MENU_DATA[menuType] ?? MENU_DATA.pho
+      const cats = CATEGORY_MAP[menuType] ?? ['Món chính', 'Thức uống']
 
-    for (let ci = 0; ci < cats.length; ci++) {
-      const category = await prisma.category.create({
-        data: { restaurantId: restaurant.id, name: cats[ci], sortOrder: ci },
-      })
-
-      const itemsForCat = ci === 0 ? menuTemplate.items : (MENU_DATA.drinks?.items ?? [])
-      for (const item of itemsForCat.slice(0, ci === 0 ? randInt(3, 7) : randInt(1, 3))) {
-        await prisma.menuItem.create({
-          data: {
-            restaurantId: restaurant.id, categoryId: category.id,
-            name: item.name, basePrice: jitter(item.price, 15),
-            description: `${item.name} thơm ngon, nguyên liệu tươi sống`,
-            imageUrl: `https://picsum.photos/seed/${slug}-${item.name.toLowerCase().replace(/\s/g, '-')}/400/400`,
-            isPopular: Math.random() > 0.6,
-          },
+      for (let ci = 0; ci < cats.length; ci++) {
+        const category = await prisma.category.create({
+          data: { restaurantId: restaurant.id, name: cats[ci], sortOrder: ci },
         })
+
+        const itemsForCat = ci === 0 ? menuTemplate.items : (MENU_DATA.drinks?.items ?? [])
+        for (const item of itemsForCat.slice(0, ci === 0 ? randInt(3, 7) : randInt(1, 3))) {
+          await prisma.menuItem.create({
+            data: {
+              restaurantId: restaurant.id, categoryId: category.id,
+              name: item.name, basePrice: jitter(item.price, 15),
+              description: `${item.name} thơm ngon, nguyên liệu tươi sống`,
+              imageUrl: `https://picsum.photos/seed/${slug}-${item.name.toLowerCase().replace(/\s/g, '-')}/400/400`,
+              isPopular: Math.random() > 0.6,
+            },
+          })
+        }
       }
     }
   }
@@ -500,6 +524,8 @@ async function main() {
     })
 
     // 1-3 addresses per customer
+    const existingAddresses = await prisma.address.count({ where: { userId: customer.id } })
+    if (existingAddresses === 0) {
     const numAddresses = randInt(1, 3)
     for (let a = 0; a < numAddresses; a++) {
       const dist = pick(DISTRICTS)
@@ -513,6 +539,7 @@ async function main() {
         `${randInt(1, 500)} ${pick(STREETS)}, ${dist.name}`,
         addrLng, addrLat, a === 0,
       )
+    }
     }
     customerIds.push(customer.id)
   }
@@ -534,7 +561,17 @@ async function main() {
   for (const p of promos) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO promotions (id, code, type, value, min_order_amount, max_discount, usage_limit, usage_count, starts_at, expires_at, is_active)
-       VALUES (gen_random_uuid(), $1, $2::"PromotionType", $3, $4, $5, $6, $7, $8, $9, $10)`,
+       VALUES (gen_random_uuid(), $1, $2::"PromotionType", $3, $4, $5, $6, $7, $8, $9, $10)
+       ON CONFLICT (code) DO UPDATE SET
+         type = EXCLUDED.type,
+         value = EXCLUDED.value,
+         min_order_amount = EXCLUDED.min_order_amount,
+         max_discount = EXCLUDED.max_discount,
+         usage_limit = EXCLUDED.usage_limit,
+         usage_count = EXCLUDED.usage_count,
+         starts_at = EXCLUDED.starts_at,
+         expires_at = EXCLUDED.expires_at,
+         is_active = EXCLUDED.is_active`,
       p.code, p.type, p.value, p.minOrder, p.maxDiscount, p.limit, Math.random() > 0.3 ? randInt(0, p.limit) : 0,
       new Date('2026-01-01'), new Date('2026-12-31'), Math.random() > 0.2,
     )
@@ -577,6 +614,12 @@ async function main() {
     if (items.length === 0) continue
 
     const orderCode = `FD${String(i + 1).padStart(10, '0')}`
+    const existingOrder = await prisma.order.findUnique({
+      where: { orderCode },
+      select: { id: true },
+    })
+    if (existingOrder) continue
+
     const selectedItems = items.map(item => ({ item, quantity: randInt(1, 3) }))
     const subtotal = selectedItems.reduce(
       (sum, { item, quantity }) => sum + Number(item.basePrice) * quantity,
@@ -636,6 +679,12 @@ async function main() {
   ]
   for (const order of completedOrders) {
     if (Math.random() > 0.6) continue
+    const existingReview = await prisma.review.findUnique({
+      where: { orderId: order.id },
+      select: { id: true },
+    })
+    if (existingReview) continue
+
     await prisma.review.create({
       data: {
         orderId: order.id, customerId: order.customer_id,
