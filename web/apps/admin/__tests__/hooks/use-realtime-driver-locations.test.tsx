@@ -117,6 +117,59 @@ describe('useRealtimeDriverLocations', () => {
     expect(result.current.lastUpdatedAt).toBe('2026-07-02T09:00:00.000Z');
   });
 
+  it('clears the current order when realtime explicitly reports no active order', async () => {
+    mockedApiGet.mockResolvedValueOnce([makeLocation({ currentOrder: 'ORD-OLD', status: 'delivering' })]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.drivers).toHaveLength(1);
+    });
+
+    act(() => {
+      socketMock.trigger('admin:driver_location_changed', {
+        driverId: 'driver-1',
+        lat: 10.81,
+        lng: 106.81,
+        orderId: null,
+        status: 'free',
+        timestamp: '2026-07-02T09:05:00.000Z',
+      });
+    });
+
+    expect(result.current.drivers[0]).toMatchObject({
+      lat: 10.81,
+      lng: 106.81,
+      status: 'free',
+      lastSeenAt: '2026-07-02T09:05:00.000Z',
+    });
+    expect(result.current.drivers[0].currentOrder).toBeUndefined();
+  });
+
+  it('ignores invalid realtime coordinates instead of passing them to the map', async () => {
+    const location = makeLocation();
+    mockedApiGet.mockResolvedValueOnce([location]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.drivers).toHaveLength(1);
+    });
+
+    act(() => {
+      socketMock.trigger('admin:driver_location_changed', {
+        driverId: 'driver-1',
+        lat: Number.NaN,
+        lng: 106.81,
+        orderId: 'ORD-INVALID',
+        status: 'delivering',
+        timestamp: '2026-07-02T09:05:00.000Z',
+      });
+    });
+
+    expect(result.current.drivers[0]).toEqual(location);
+    expect(result.current.lastUpdatedAt).not.toBe('2026-07-02T09:05:00.000Z');
+    expect(mockedApiGet).toHaveBeenCalledTimes(1);
+  });
+
   it('uses controlled polling when the websocket disconnects', async () => {
     mockedApiGet
       .mockResolvedValueOnce([makeLocation()])

@@ -28,6 +28,7 @@ export interface DriverLocationsState {
 }
 
 const fallbackPollingIntervalMs = 15_000;
+const hasOwn = Object.prototype.hasOwnProperty;
 
 export function useRealtimeDriverLocations(): DriverLocationsState {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
@@ -56,6 +57,8 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   }, [drivers]);
 
   const applyLocationUpdate = useCallback((update: DriverLocationChangedEvent) => {
+    if (!isValidLatLng(update.lat, update.lng)) return;
+
     const existingDriver = driversRef.current.find(
       (driver) => driver.id === update.driverId || driver.driverId === update.driverId,
     );
@@ -75,7 +78,9 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
         ...next[index],
         lat: update.lat,
         lng: update.lng,
-        currentOrder: update.orderId ?? next[index].currentOrder,
+        currentOrder: hasOwn.call(update, 'orderId')
+          ? update.orderId ?? undefined
+          : next[index].currentOrder,
         status: update.status ?? next[index].status,
         lastSeenAt: update.timestamp ?? new Date().toISOString(),
       };
@@ -131,4 +136,14 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
     lastUpdatedAt,
     refetch: () => loadDrivers(),
   };
+}
+
+function isValidLatLng(lat: number, lng: number): boolean {
+  return Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180 &&
+    !(lat === 0 && lng === 0);
 }
