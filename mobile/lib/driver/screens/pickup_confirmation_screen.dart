@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/driver_flow_args.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class PickupConfirmationScreen extends StatefulWidget {
@@ -35,8 +36,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
   @override
   Widget build(BuildContext context) {
     final args = widget.args;
+    final l10n = AppLocalizations.of(context);
     if (args == null || !args.hasPickupData) {
-      return _buildMissingOrderState(context);
+      return _buildMissingOrderState(context, l10n);
     }
 
     return Scaffold(
@@ -48,9 +50,12 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Xác nhận lấy hàng',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverPickupTitle,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -62,9 +67,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Danh sách món',
-                      style: TextStyle(
+                    Text(
+                      l10n.driverNavItemsToPickup,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -76,21 +81,21 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                       (i) => _itemTile(args.items[i], i),
                     ),
                     const SizedBox(height: 20),
-                    _restaurantNote(args.restaurantNote),
+                    _restaurantNote(l10n, args.restaurantNote),
                     if (args.restaurantNote != null) const SizedBox(height: 12),
-                    if (!_allChecked) _hintCard(),
+                    if (!_allChecked) _hintCard(l10n),
                   ],
                 ),
               ),
             ),
-            _bottomBar(context),
+            _bottomBar(context, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMissingOrderState(BuildContext context) {
+  Widget _buildMissingOrderState(BuildContext context, AppLocalizations l10n) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -100,9 +105,12 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Xác nhận lấy hàng',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.driverPickupTitle,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Center(
@@ -118,9 +126,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                 color: Color(0xFF6B7280),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Không có dữ liệu đơn hàng để xác nhận.',
-                style: TextStyle(
+              Text(
+                l10n.driverPickupMissingTitle,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -128,15 +136,15 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Vui lòng mở màn này từ đơn đang hoạt động.',
-                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+              Text(
+                l10n.driverPickupMissingDescription,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => context.go('/home'),
-                child: const Text('Về trang chủ'),
+                child: Text(l10n.driverNavGoHome),
               ),
             ],
           ),
@@ -195,7 +203,7 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
     );
   }
 
-  Widget _restaurantNote(String? note) {
+  Widget _restaurantNote(AppLocalizations l10n, String? note) {
     if (note == null || note.trim().isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -214,9 +222,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Lưu ý từ nhà hàng',
-            style: TextStyle(
+          Text(
+            l10n.driverPickupRestaurantNoteTitle,
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.warning,
@@ -232,27 +240,27 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
     );
   }
 
-  Widget _hintCard() {
+  Widget _hintCard(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.info_outline, color: Color(0xFF6B7280), size: 16),
-          SizedBox(width: 8),
+          const Icon(Icons.info_outline, color: Color(0xFF6B7280), size: 16),
+          const SizedBox(width: 8),
           Text(
-            'Kiểm tra đủ món trước khi xác nhận',
-            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            l10n.driverPickupHint,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
           ),
         ],
       ),
     );
   }
 
-  Widget _bottomBar(BuildContext context) {
+  Widget _bottomBar(BuildContext context, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       decoration: const BoxDecoration(
@@ -279,9 +287,9 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'ĐÃ LẤY HÀNG',
-                style: TextStyle(
+              child: Text(
+                l10n.driverNavConfirmPickup,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -291,10 +299,10 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
           ),
           const SizedBox(height: 10),
           TextButton(
-            onPressed: () => _showReportDialog(context),
-            child: const Text(
-              'Báo vấn đề',
-              style: TextStyle(
+            onPressed: () => _showReportDialog(context, l10n),
+            child: Text(
+              l10n.driverPickupReportIssue,
+              style: const TextStyle(
                 color: AppColors.warning,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -306,22 +314,25 @@ class _PickupConfirmationScreenState extends State<PickupConfirmationScreen> {
     );
   }
 
-  void _showReportDialog(BuildContext context) {
+  void _showReportDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('Báo vấn đề', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Liên hệ hỗ trợ sẽ được kết nối ngay.',
-          style: TextStyle(color: Color(0xFFD1D5DB)),
+        title: Text(
+          l10n.driverPickupReportIssue,
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          l10n.driverPickupReportSupportMessage,
+          style: const TextStyle(color: Color(0xFFD1D5DB)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Đóng',
-              style: TextStyle(color: AppColors.primary),
+            child: Text(
+              l10n.close,
+              style: const TextStyle(color: AppColors.primary),
             ),
           ),
         ],

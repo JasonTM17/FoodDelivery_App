@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/driver_flow_args.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class DeliveryCompleteScreen extends StatefulWidget {
@@ -42,8 +43,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
   @override
   Widget build(BuildContext context) {
     final args = widget.args;
+    final l10n = AppLocalizations.of(context);
     if (args == null || !args.hasEarningsData) {
-      return _buildMissingEarningsState(context);
+      return _buildMissingEarningsState(context, l10n);
     }
 
     return Scaffold(
@@ -63,9 +65,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                   children: [
                     _successIcon(),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Giao hàng thành công!',
-                      style: TextStyle(
+                    Text(
+                      l10n.driverNavDeliverySuccess,
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -73,15 +75,18 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Cảm ơn bạn đã hoàn thành chuyến giao hàng',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                    Text(
+                      l10n.driverDeliveryCompleteSubtitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
-                    _earningsCard(args),
+                    _earningsCard(args, l10n),
                     const SizedBox(height: 32),
-                    _actionButtons(context),
+                    _actionButtons(context, l10n),
                   ],
                 ),
               ),
@@ -92,7 +97,10 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
     );
   }
 
-  Widget _buildMissingEarningsState(BuildContext context) {
+  Widget _buildMissingEarningsState(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: SafeArea(
@@ -109,9 +117,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                   color: Color(0xFF6B7280),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Không có dữ liệu thu nhập chuyến giao.',
-                  style: TextStyle(
+                Text(
+                  l10n.driverDeliveryMissingTitle,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -119,15 +127,18 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Vui lòng mở màn này từ đơn vừa hoàn thành.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                Text(
+                  l10n.driverDeliveryMissingDescription,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => context.go('/home'),
-                  child: const Text('Về trang chủ'),
+                  child: Text(l10n.driverNavGoHome),
                 ),
               ],
             ),
@@ -173,7 +184,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
     );
   }
 
-  Widget _earningsCard(DeliveryCompleteArgs args) {
+  Widget _earningsCard(DeliveryCompleteArgs args, AppLocalizations l10n) {
     return Container(
       key: const Key('delivery-complete-earnings-card'),
       width: double.infinity,
@@ -185,9 +196,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
       ),
       child: Column(
         children: [
-          const Text(
-            'Thu nhập chuyến này',
-            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          Text(
+            l10n.driverDeliveryTripEarnings,
+            style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 8),
           Text(
@@ -201,11 +212,14 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           const SizedBox(height: 16),
           const Divider(color: Color(0xFF374151)),
           const SizedBox(height: 12),
-          _earningRow('Phí giao hàng', _formatVnd(args.deliveryFee)),
+          _earningRow(
+            l10n.driverHistoryDeliveryFee,
+            _formatVnd(args.deliveryFee),
+          ),
           if (args.bonus > 0) ...[
             const SizedBox(height: 8),
             _earningRow(
-              'Thưởng',
+              l10n.driverDeliveryBonus,
               '+${_formatVnd(args.bonus)}',
               highlight: true,
             ),
@@ -235,7 +249,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
     );
   }
 
-  Widget _actionButtons(BuildContext context) {
+  Widget _actionButtons(BuildContext context, AppLocalizations l10n) {
     return Column(
       children: [
         SizedBox(
@@ -249,9 +263,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text(
-              'TIẾP TỤC NHẬN ĐƠN',
-              style: TextStyle(
+            child: Text(
+              l10n.driverDeliveryContinue,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
@@ -271,9 +285,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text(
-              'VỀ TRANG CHỦ',
-              style: TextStyle(
+            child: Text(
+              l10n.driverNavGoHome,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,

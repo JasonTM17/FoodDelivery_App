@@ -271,6 +271,85 @@ void main() {
     });
   });
 
+  group('batch-4 driver pickup/completion keys', () {
+    testWidgets('driverPickupTitle switches across all 3 locales', (
+      tester,
+    ) async {
+      late WidgetRef capturedRef;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: Consumer(
+            builder: (context, ref, _) {
+              capturedRef = ref;
+              final locale = ref.watch(localeProvider);
+              return MaterialApp(
+                locale: locale,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Scaffold(
+                  body: Builder(
+                    builder: (ctx) =>
+                        Text(AppLocalizations.of(ctx).driverPickupTitle),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Xác nhận lấy hàng'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Confirm pickup'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('受け取り確認'), findsOneWidget);
+    });
+
+    testWidgets('driverDeliveryTripEarnings switches across all 3 locales', (
+      tester,
+    ) async {
+      late WidgetRef capturedRef;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: Consumer(
+            builder: (context, ref, _) {
+              capturedRef = ref;
+              final locale = ref.watch(localeProvider);
+              return MaterialApp(
+                locale: locale,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Scaffold(
+                  body: Builder(
+                    builder: (ctx) => Text(
+                      AppLocalizations.of(ctx).driverDeliveryTripEarnings,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Thu nhập chuyến này'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('en'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('Trip earnings'), findsOneWidget);
+
+      _setLocaleForWidgetTest(capturedRef, const Locale('ja'));
+      await _pumpLocaleFrame(tester);
+      expect(find.text('この配達の収益'), findsOneWidget);
+    });
+  });
+
   group('placeholder keys', () {
     testWidgets('cartPromoApplied renders with code placeholder', (
       tester,

@@ -915,6 +915,51 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverNavGoHome => 'VỀ TRANG CHỦ';
 
   @override
+  String get driverPickupTitle => 'Xác nhận lấy hàng';
+
+  @override
+  String get driverPickupRestaurantNoteTitle => 'Lưu ý từ nhà hàng';
+
+  @override
+  String get driverPickupHint => 'Kiểm tra đủ món trước khi xác nhận';
+
+  @override
+  String get driverPickupReportIssue => 'Báo vấn đề';
+
+  @override
+  String get driverPickupReportSupportMessage =>
+      'Liên hệ hỗ trợ sẽ được kết nối ngay.';
+
+  @override
+  String get driverPickupMissingTitle =>
+      'Không có dữ liệu đơn hàng để xác nhận.';
+
+  @override
+  String get driverPickupMissingDescription =>
+      'Vui lòng mở màn này từ đơn đang hoạt động.';
+
+  @override
+  String get driverDeliveryCompleteSubtitle =>
+      'Cảm ơn bạn đã hoàn thành chuyến giao hàng';
+
+  @override
+  String get driverDeliveryTripEarnings => 'Thu nhập chuyến này';
+
+  @override
+  String get driverDeliveryBonus => 'Thưởng';
+
+  @override
+  String get driverDeliveryContinue => 'TIẾP TỤC NHẬN ĐƠN';
+
+  @override
+  String get driverDeliveryMissingTitle =>
+      'Không có dữ liệu thu nhập chuyến giao.';
+
+  @override
+  String get driverDeliveryMissingDescription =>
+      'Vui lòng mở màn này từ đơn vừa hoàn thành.';
+
+  @override
   String get driverNavPhoneError => 'Không thể mở trình quay số';
 
   @override

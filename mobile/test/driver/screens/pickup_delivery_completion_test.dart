@@ -3,8 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/models/driver_flow_args.dart';
 import 'package:foodflow_customer/driver/screens/delivery_complete_screen.dart';
 import 'package:foodflow_customer/driver/screens/pickup_confirmation_screen.dart';
+import 'package:foodflow_customer/l10n/app_localizations.dart';
 
-Widget _wrap(Widget child) => MaterialApp(theme: ThemeData.dark(), home: child);
+Widget _wrap(Widget child) => MaterialApp(
+  theme: ThemeData.dark(),
+  locale: const Locale('vi'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: child,
+);
 
 void main() {
   group('PickupConfirmationScreen', () {

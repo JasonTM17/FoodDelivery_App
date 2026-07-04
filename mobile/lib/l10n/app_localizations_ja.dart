@@ -905,6 +905,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverNavGoHome => 'ホームへ戻る';
 
   @override
+  String get driverPickupTitle => '受け取り確認';
+
+  @override
+  String get driverPickupRestaurantNoteTitle => 'レストランからのメモ';
+
+  @override
+  String get driverPickupHint => '確認前にすべての商品を確認してください';
+
+  @override
+  String get driverPickupReportIssue => '問題を報告';
+
+  @override
+  String get driverPickupReportSupportMessage => 'サポートにすぐ接続します。';
+
+  @override
+  String get driverPickupMissingTitle => '確認できる注文データがありません。';
+
+  @override
+  String get driverPickupMissingDescription => '進行中の注文からこの画面を開いてください。';
+
+  @override
+  String get driverDeliveryCompleteSubtitle => '配達完了ありがとうございます';
+
+  @override
+  String get driverDeliveryTripEarnings => 'この配達の収益';
+
+  @override
+  String get driverDeliveryBonus => 'ボーナス';
+
+  @override
+  String get driverDeliveryContinue => '次の注文を受ける';
+
+  @override
+  String get driverDeliveryMissingTitle => 'この配達の収益データがありません。';
+
+  @override
+  String get driverDeliveryMissingDescription => '完了した注文からこの画面を開いてください。';
+
+  @override
   String get driverNavPhoneError => '電話アプリを開けません';
 
   @override

@@ -912,6 +912,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverNavGoHome => 'GO TO HOME';
 
   @override
+  String get driverPickupTitle => 'Confirm pickup';
+
+  @override
+  String get driverPickupRestaurantNoteTitle => 'Restaurant note';
+
+  @override
+  String get driverPickupHint => 'Check every item before confirming';
+
+  @override
+  String get driverPickupReportIssue => 'Report an issue';
+
+  @override
+  String get driverPickupReportSupportMessage =>
+      'Support will be connected right away.';
+
+  @override
+  String get driverPickupMissingTitle =>
+      'No order data is available to confirm.';
+
+  @override
+  String get driverPickupMissingDescription =>
+      'Open this screen from an active order.';
+
+  @override
+  String get driverDeliveryCompleteSubtitle =>
+      'Thanks for completing this delivery';
+
+  @override
+  String get driverDeliveryTripEarnings => 'Trip earnings';
+
+  @override
+  String get driverDeliveryBonus => 'Bonus';
+
+  @override
+  String get driverDeliveryContinue => 'CONTINUE ACCEPTING ORDERS';
+
+  @override
+  String get driverDeliveryMissingTitle =>
+      'No trip earnings data is available.';
+
+  @override
+  String get driverDeliveryMissingDescription =>
+      'Open this screen from a completed order.';
+
+  @override
   String get driverNavPhoneError => 'Cannot open phone dialer';
 
   @override

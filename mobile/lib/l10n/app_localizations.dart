@@ -1846,6 +1846,84 @@ abstract class AppLocalizations {
   /// **'VỀ TRANG CHỦ'**
   String get driverNavGoHome;
 
+  /// No description provided for @driverPickupTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận lấy hàng'**
+  String get driverPickupTitle;
+
+  /// No description provided for @driverPickupRestaurantNoteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu ý từ nhà hàng'**
+  String get driverPickupRestaurantNoteTitle;
+
+  /// No description provided for @driverPickupHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra đủ món trước khi xác nhận'**
+  String get driverPickupHint;
+
+  /// No description provided for @driverPickupReportIssue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo vấn đề'**
+  String get driverPickupReportIssue;
+
+  /// No description provided for @driverPickupReportSupportMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ hỗ trợ sẽ được kết nối ngay.'**
+  String get driverPickupReportSupportMessage;
+
+  /// No description provided for @driverPickupMissingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dữ liệu đơn hàng để xác nhận.'**
+  String get driverPickupMissingTitle;
+
+  /// No description provided for @driverPickupMissingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng mở màn này từ đơn đang hoạt động.'**
+  String get driverPickupMissingDescription;
+
+  /// No description provided for @driverDeliveryCompleteSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảm ơn bạn đã hoàn thành chuyến giao hàng'**
+  String get driverDeliveryCompleteSubtitle;
+
+  /// No description provided for @driverDeliveryTripEarnings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập chuyến này'**
+  String get driverDeliveryTripEarnings;
+
+  /// No description provided for @driverDeliveryBonus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thưởng'**
+  String get driverDeliveryBonus;
+
+  /// No description provided for @driverDeliveryContinue.
+  ///
+  /// In vi, this message translates to:
+  /// **'TIẾP TỤC NHẬN ĐƠN'**
+  String get driverDeliveryContinue;
+
+  /// No description provided for @driverDeliveryMissingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dữ liệu thu nhập chuyến giao.'**
+  String get driverDeliveryMissingTitle;
+
+  /// No description provided for @driverDeliveryMissingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng mở màn này từ đơn vừa hoàn thành.'**
+  String get driverDeliveryMissingDescription;
+
   /// No description provided for @driverNavPhoneError.
   ///
   /// In vi, this message translates to:
