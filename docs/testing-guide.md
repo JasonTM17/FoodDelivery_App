@@ -75,7 +75,7 @@ Batch 4 E2E coverage should include:
 - Restaurant menu/category/item/option CRUD and reorder
 - Revenue, staff, insights, benchmark
 - Notifications
-- Tenant isolation
+- Tenant isolation, including `web/e2e/tests/tenant-isolation.spec.ts`: restaurant users must not list, read, or update another restaurant tenant's orders.
 
 Realtime security regression coverage must also verify:
 
@@ -107,6 +107,7 @@ flutter test
 ```
 
 Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
+The Batch 4 mobile gate currently requires `flutter analyze` with zero issues and the full Flutter test suite passing.
 
 ## Security Checks
 

@@ -57,7 +57,7 @@ pnpm test:e2e -- --project=chromium
 pnpm test:e2e -- --project=firefox
 ```
 
-Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。
+Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。`web/e2e/tests/tenant-isolation.spec.ts` は、restaurant user が別 restaurant tenant の order を list/read/update できないことを検証します。
 
 Realtime security regression では次も確認します。
 
@@ -89,6 +89,7 @@ flutter test
 ```
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
+Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
 
 ## Security checks
 

@@ -57,7 +57,7 @@ pnpm test:e2e -- --project=chromium
 pnpm test:e2e -- --project=firefox
 ```
 
-Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation.
+Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation. Spec `web/e2e/tests/tenant-isolation.spec.ts` phải chứng minh user nhà hàng không thể list, đọc hoặc update order thuộc tenant nhà hàng khác.
 
 Regression bảo mật realtime cũng phải kiểm tra:
 
@@ -89,6 +89,7 @@ flutter test
 ```
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
+Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
 
 ## Security checks
 
