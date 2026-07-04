@@ -21,11 +21,11 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
 - Vietnamese AI chat fast paths có focused tests.
 - Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
-- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-04 sau cụm cleanup mobile Batch 4 với `flutter analyze` sạch và `flutter test` pass 131 test; GitHub Mobile CI xanh cho commit mới nhất có chạm mobile `0fe1895`.
+- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-04 tại head hiện tại `78bf643` với `flutter analyze` sạch và `flutter test` pass 133 test. GitHub Actions cho `78bf643` đang bị chặn trước khi runner start do trạng thái billing/spending-limit của account, nên cần rerun remote checks sau khi xử lý.
 - Mobile runtime UI hiện không còn hardcoded presentation string theo targeted scanner cho các flow dispatch/cancel đã chạm, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.
-- Bản đồ tracking customer/driver hiện dùng `routePolyline` thật từ backend, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff và không tự bịa ETA đường thẳng khi route provider không khả dụng.
+- Bản đồ tracking customer/driver hiện dùng `routePolyline` thật từ backend, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff, xoá route geometry cũ khi đổi phase, normalize GPS metadata của driver theo contract km/h của backend và không tự bịa ETA đường thẳng khi route provider không khả dụng.
 - Shared tag input của Admin không còn tự sinh placeholder tiếng Anh mặc định; caller phải truyền placeholder đã localize.
-- Remote CI xanh cho `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate.
+- Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate. CI head hiện tại `78bf643` bị GitHub billing/spending-limit chặn trước khi jobs start.
 
 ### Mobile
 

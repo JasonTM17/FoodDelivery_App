@@ -56,7 +56,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-Evidence web local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `e776f5c`, `pnpm typecheck` pass, `pnpm lint` pass và `pnpm test` pass toàn bộ Vitest của Admin/Restaurant (Admin 135 test, Restaurant 79 test).
+Evidence web local mới nhất: 2026-07-04 trên `codex/batch4-integration` tại `e776f5c`, `pnpm typecheck` pass, `pnpm lint` pass và `pnpm test` pass toàn bộ Vitest của Admin/Restaurant (Admin 135 test, Restaurant 79 test). Sau fix route integrity, coverage Vitest tập trung map Admin đã được chạy lại và pass toàn bộ Admin suite (33 files, 135 test).
 
 ## Playwright E2E
 
@@ -76,6 +76,10 @@ Regression bảo mật realtime cũng phải kiểm tra:
 - Nhà hàng không thể join phòng của tenant khác.
 - Khách hàng, tài xế và nhân viên nhà hàng không thể join phòng đơn hàng không liên quan.
 - Chỉ tài khoản driver đã xác thực mới được gửi cập nhật GPS.
+- Mobile normalize GPS metadata của driver trước khi publish: speed từ Geolocator được đổi từ m/s sang km/h theo contract backend, và heading/speed/accuracy invalid bị bỏ.
+- Map driver/customer phải vẽ `routePolyline` từ backend tách riêng khỏi raw telemetry trail.
+- Route geometry bị clear khi đơn hàng đổi từ pickup phase sang dropoff phase để client không vẽ nhầm tuyến cũ đến nhà hàng sau khi đã pickup.
+- Nếu Google/OSRM route provider không khả dụng, tracking trả `etaMinutes: null` và `source: route_unavailable`; backend không được tự bịa ETA đường thẳng.
 - Client notification không thể subscribe hoặc sửa dữ liệu dưới danh nghĩa user khác.
 - Phòng offer dispatch và thao tác accept/reject phải gắn với driver ID đã xác thực.
 - Web Admin và Restaurant gửi access token mới nhất khi reconnect.
@@ -102,7 +106,9 @@ flutter test
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
 Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
-Evidence local mới nhất: 2026-07-04 sau cụm cleanup mobile Batch 4, `flutter analyze` không có issue và `flutter test` pass 131 test. GitHub Mobile CI xanh cho commit mới nhất có chạm mobile `0fe1895`. CI toàn branch xanh cho `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`.
+Evidence local mới nhất: 2026-07-04 tại head hiện tại `78bf643`, `flutter analyze` không có issue và `flutter test` pass 133 test. Backend route integrity gates cũng đã chạy local trước commit mobile-only GPS metadata: `pnpm typecheck`, `pnpm lint`, `pnpm test` (106 suites, 747 test) và `pnpm build` đều pass.
+
+Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Remote CI head hiện tại `78bf643` không start jobs vì GitHub Actions báo blocker billing/spending-limit của account. Rerun Mobile CI `28705120618`, CI `28705120603`, Build Check `28705120634`, Lint `28705120626`, Gitleaks `28705120629`, CodeQL `28705120627`, Trivy `28705120597`, SBOM `28705120609` và Integration Smoke Gate `28705120614` sau khi xử lý billing.
 
 ## Security checks
 

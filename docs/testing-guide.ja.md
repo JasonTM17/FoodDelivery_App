@@ -56,7 +56,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-最新の local web evidence: 2026-07-04 `codex/batch4-integration` の `e776f5c` で、`pnpm typecheck`、`pnpm lint`、`pnpm test` が pass。Admin/Restaurant Vitest は Admin 135 tests、Restaurant 79 tests が pass。
+最新の local web evidence: 2026-07-04 `codex/batch4-integration` の `e776f5c` で、`pnpm typecheck`、`pnpm lint`、`pnpm test` が pass。Admin/Restaurant Vitest は Admin 135 tests、Restaurant 79 tests が pass。Route integrity fix 後、Admin map-focused Vitest coverage を再実行し、Admin suite 全体も pass しました (33 files、135 tests)。
 
 ## Playwright E2E
 
@@ -76,6 +76,10 @@ Realtime security regression では次も確認します。
 - Restaurant は別 tenant の room に join できない。
 - Customer、driver、restaurant staff は無関係な order room に join できない。
 - 認証済み driver account のみ GPS update を送信できる。
+- Mobile は driver GPS metadata を publish 前に normalize します。Geolocator speed は m/s から backend km/h contract に変換し、invalid な heading/speed/accuracy は送信しません。
+- Driver/customer maps は backend `routePolyline` と raw telemetry trail を別々に描画する必要があります。
+- Order が pickup phase から dropoff phase に変わる時、client が pickup 後に stale restaurant-bound route を描画しないよう route geometry を clear します。
+- Google/OSRM route provider が使えない場合、tracking は `etaMinutes: null` と `source: route_unavailable` を返します。Backend は straight-line ETA minutes を捏造してはいけません。
 - Notification client は別 user として subscribe または mutation できない。
 - Dispatch offer room と accept/reject は認証済み driver ID に紐付く。
 - Admin/Restaurant web client は reconnect 時に最新 access token を送信する。
@@ -102,7 +106,9 @@ flutter test
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
 Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
-最新の local evidence: 2026-07-04 の Batch 4 mobile cleanup 後、`flutter analyze` は issue 0、`flutter test` は 131 tests passed。最新の mobile-touching commit `0fe1895` で GitHub Mobile CI は green。Full branch CI は `e776f5c` で green: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。
+最新の local evidence: 2026-07-04 current head `78bf643` で、`flutter analyze` は issue 0、`flutter test` は 133 tests passed。Mobile-only GPS metadata commit の前に backend route integrity gates も local 実行済みです: `pnpm typecheck`、`pnpm lint`、`pnpm test` (106 suites、747 tests)、`pnpm build` はすべて pass。
+
+Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。Current head `78bf643` の remote CI は GitHub Actions account billing/spending-limit blocker により jobs が start しませんでした。Billing 修正後、Mobile CI `28705120618`、CI `28705120603`、Build Check `28705120634`、Lint `28705120626`、Gitleaks `28705120629`、CodeQL `28705120627`、Trivy `28705120597`、SBOM `28705120609`、Integration Smoke Gate `28705120614` を rerun してください。
 
 ## Security checks
 

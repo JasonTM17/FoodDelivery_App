@@ -56,7 +56,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-Latest local web evidence: 2026-07-04 on `codex/batch4-integration` at `e776f5c`, `pnpm typecheck` passed, `pnpm lint` passed, and `pnpm test` passed all Admin and Restaurant Vitest suites (Admin 135 tests, Restaurant 79 tests).
+Latest local web evidence: 2026-07-04 on `codex/batch4-integration` at `e776f5c`, `pnpm typecheck` passed, `pnpm lint` passed, and `pnpm test` passed all Admin and Restaurant Vitest suites (Admin 135 tests, Restaurant 79 tests). After the route integrity fix, Admin map-focused Vitest coverage was rerun and passed the full Admin suite again (33 files, 135 tests).
 
 ## Playwright E2E
 
@@ -94,6 +94,10 @@ Realtime security regression coverage must also verify:
 - Restaurants cannot join another tenant's room.
 - Customers, drivers, and restaurant staff cannot join unrelated order rooms.
 - Only authenticated drivers can publish GPS updates.
+- Mobile driver GPS metadata is normalized before publish: Geolocator speed is converted from m/s to backend km/h, and invalid heading/speed/accuracy values are dropped.
+- Driver/customer maps must draw backend `routePolyline` separately from raw telemetry trails.
+- Route geometry is cleared when an order changes from pickup phase to dropoff phase so clients do not draw stale restaurant-bound routes after pickup.
+- If Google/OSRM route providers are unavailable, tracking emits `etaMinutes: null` and `source: route_unavailable`; the backend must not fabricate straight-line ETA minutes.
 - Notification clients cannot subscribe or mutate data as another user.
 - Dispatch offer rooms and accept/reject actions are bound to the authenticated driver ID.
 - Admin and Restaurant web clients send the latest access token during reconnect.
@@ -120,7 +124,9 @@ flutter test
 
 Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
 The Batch 4 mobile gate currently requires `flutter analyze` with zero issues and the full Flutter test suite passing.
-Latest local evidence: 2026-07-04 after Batch 4 mobile cleanup, `flutter analyze` found no issues and `flutter test` passed 131 tests. GitHub Mobile CI is green for the latest mobile-touching commit `0fe1895`. Full branch CI is green for `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252`, and Integration Smoke Gate `28704171294`.
+Latest local evidence: 2026-07-04 at current head `78bf643`, `flutter analyze` found no issues and `flutter test` passed 133 tests. Backend route integrity gates were also run locally before the mobile-only GPS metadata commit: `pnpm typecheck`, `pnpm lint`, `pnpm test` (106 suites, 747 tests), and `pnpm build` all passed.
+
+Remote CI last fully ran green for `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252`, and Integration Smoke Gate `28704171294`. Current-head remote CI for `78bf643` did not start jobs because GitHub Actions reported an account billing/spending-limit blocker. Rerun Mobile CI `28705120618`, CI `28705120603`, Build Check `28705120634`, Lint `28705120626`, Gitleaks `28705120629`, CodeQL `28705120627`, Trivy `28705120597`, SBOM `28705120609`, and Integration Smoke Gate `28705120614` after billing is fixed.
 
 ## Security Checks
 
