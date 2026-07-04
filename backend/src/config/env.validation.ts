@@ -93,6 +93,8 @@ export const envSchema = z.object({
   MINIO_PUBLIC_URL: z.string().url().default('http://localhost:9000'),
   STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(5),
   THROTTLER_MEMORY_FALLBACK: z.enum(['true', 'false']).default('false'),
+  THROTTLER_TTL_MS: z.coerce.number().int().positive().max(600_000).default(60_000),
+  THROTTLER_LIMIT: z.coerce.number().int().positive().max(100_000).default(100),
   DEEPSEEK_API_KEY: z.string().optional(),
   DEEPSEEK_BASE_URL: z.string().url().optional(),
   DEEPSEEK_MODEL: z.string().min(1).optional(),

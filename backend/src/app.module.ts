@@ -45,7 +45,10 @@ import Redis from 'ioredis'
       imports: [RedisModule],
       inject: ['REDIS_CLIENT', ConfigService],
       useFactory: (redis: Redis, config: ConfigService) => ({
-        throttlers: [{ ttl: 60000, limit: 100 }],
+        throttlers: [{
+          ttl: config.get<number>('THROTTLER_TTL_MS', 60_000),
+          limit: config.get<number>('THROTTLER_LIMIT', 100),
+        }],
         storage: new ThrottlerStorageRedis(redis, {
           allowInMemoryFallback: config.get<string>('THROTTLER_MEMORY_FALLBACK') === 'true',
         }),

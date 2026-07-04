@@ -40,6 +40,19 @@ describe('validateEnv', () => {
     expect(env.JWT_SECRET.length).toBeGreaterThanOrEqual(64)
     expect(env.JWT_REFRESH_SECRET.length).toBeGreaterThanOrEqual(64)
     expect(env.THROTTLER_MEMORY_FALLBACK).toBe('false')
+    expect(env.THROTTLER_TTL_MS).toBe(60_000)
+    expect(env.THROTTLER_LIMIT).toBe(100)
+  })
+
+  it('accepts bounded non-production throttle overrides for load-test runs', () => {
+    const env = validateEnv({
+      NODE_ENV: 'test',
+      THROTTLER_TTL_MS: '60000',
+      THROTTLER_LIMIT: '50000',
+    })
+
+    expect(env.THROTTLER_TTL_MS).toBe(60_000)
+    expect(env.THROTTLER_LIMIT).toBe(50_000)
   })
 
   it('accepts a complete production configuration without local fallbacks', () => {

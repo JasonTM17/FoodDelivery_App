@@ -114,6 +114,8 @@ jobs:
 
       - name: Start Docker Compose stack
         run: docker compose up -d postgres redis minio backend
+        env:
+          THROTTLER_LIMIT: '50000'
 
       - name: Wait for backend health
         run: |

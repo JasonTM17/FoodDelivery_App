@@ -80,6 +80,8 @@ services:
       DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
       AUTH_PUBLIC_THROTTLE_LIMIT: "500"
+      THROTTLER_TTL_MS: "${THROTTLER_TTL_MS:-60000}"
+      THROTTLER_LIMIT: "${THROTTLER_LIMIT:-100}"
       JWT_SECRET: dev-secret-minimum-32-chars-xxxxxxxxxxxxxx
       JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
       MINIO_ENDPOINT: minio

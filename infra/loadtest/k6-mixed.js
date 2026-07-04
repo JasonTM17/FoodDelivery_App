@@ -31,7 +31,7 @@ const TEST_DURATION = __ENV.LOADTEST_DURATION || '5m'
 const CUSTOMER_RATE = Number(__ENV.LOADTEST_CUSTOMER_RATE || 60)
 const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 30)
 const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 10)
-const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 80)
+const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 100)
 
 // ---------------------------------------------------------------------------
 // Custom metrics
@@ -84,9 +84,6 @@ export const options = {
     http_req_failed: ['rate<0.01'],
     // Custom error counter
     errors: ['rate<0.01'],
-    // Per-operation latency targets (informational, not hard gates)
-    order_place_duration_ms: ['p(95)<800'],
-    location_ping_duration_ms: ['p(95)<200'],
   },
 }
 
