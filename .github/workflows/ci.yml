@@ -50,7 +50,7 @@ jobs:
           DIRECT_URL: postgresql://test:test@localhost:5432/test
 
       - name: Run tests with coverage
-        run: pnpm test -- --coverage --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
+        run: pnpm test --coverage --coverageThreshold='{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
         working-directory: backend
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
