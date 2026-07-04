@@ -114,6 +114,14 @@ flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=https://api.foo
 
 ### Build APK/IPA for Distribution
 
+Release builds require Flutter platform projects to exist under `mobile/android`
+and `mobile/ios`. The current Batch 4 tree is a Dart/Flutter workspace with
+shared customer/driver code and tests, but it does not yet contain those platform
+folders; `flutter build apk --debug` therefore stops before compilation with an
+unsupported Gradle project message. Generate/reconcile the Android and iOS
+platform projects in the dedicated mobile phase before treating APK/IPA builds
+as release gates.
+
 ```bash
 # Android APK (customer)
 flutter build apk -t lib/main_customer.dart --release
