@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apiGet, apiPost } from '@/lib/api';
 import { PageHeader } from '@/components/layout/admin-page-header';
@@ -11,8 +12,8 @@ import { Link } from '@/navigation';
 import { RestaurantApprovalActionsCard } from './restaurant-approval-actions-card';
 import { RestaurantApprovalInfoCards, type PendingRestaurant } from './restaurant-approval-info-cards';
 
-export default function RestaurantApprovePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function RestaurantApprovePage() {
+  const { id } = useParams<{ id: string }>();
   const t = useTranslations('restaurantApprove');
   const queryClient = useQueryClient();
   const [rejectReason, setRejectReason] = useState('');

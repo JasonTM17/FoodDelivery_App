@@ -92,5 +92,14 @@ function getSuggestionText(
   fallback: string | undefined,
   values: AiSuggestionParams,
 ): string {
-  return key ? t(key, values) : fallback ?? '';
+  return key ? t(key, toTranslationValues(values)) : fallback ?? '';
+}
+
+function toTranslationValues(values: AiSuggestionParams): Record<string, string | number | Date> {
+  return Object.fromEntries(
+    Object.entries(values).filter((entry): entry is [string, string | number] => {
+      const value = entry[1];
+      return typeof value === 'string' || typeof value === 'number';
+    }),
+  );
 }

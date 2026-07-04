@@ -3,8 +3,8 @@
  * Use these instead of next/navigation's Link, usePathname, useRouter
  * inside routes that live under app/[locale]/.
  */
-import { createSharedPathnamesNavigation } from 'next-intl/navigation';
-import { locales } from '@foodflow/i18n';
+import { createNavigation } from 'next-intl/navigation';
+import { routing } from './routing';
 
 export const { Link, redirect, usePathname, useRouter } =
-  createSharedPathnamesNavigation({ locales });
+  createNavigation(routing);

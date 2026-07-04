@@ -1,5 +1,6 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import type { AdminPromotionAnalytics } from '@foodflow/api-client';
@@ -16,8 +17,8 @@ import { ArrowLeft, Percent, DollarSign, Calendar, Users } from 'lucide-react';
 import { Link } from '@/navigation';
 import PromotionFunnelClient from './promotion-funnel-client';
 
-export default function PromotionDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function PromotionDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const t = useTranslations('promotionDetail');
   const managementT = useTranslations('adminPromotionManagement');
   const queryClient = useQueryClient();

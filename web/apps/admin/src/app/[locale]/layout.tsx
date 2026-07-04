@@ -6,7 +6,7 @@ import { RootLayoutClient } from '../root-layout-client';
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 /**
@@ -15,8 +15,10 @@ interface LocaleLayoutProps {
  */
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: LocaleLayoutProps) {
+  const { locale } = await params;
+
   if (!(locales as readonly string[]).includes(locale)) {
     notFound();
   }

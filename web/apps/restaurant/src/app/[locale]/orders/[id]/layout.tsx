@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata({
-  params: { id, locale },
+  params,
 }: {
-  params: { id: string; locale: string };
+  params: Promise<{ id: string; locale: string }>;
 }): Promise<Metadata> {
+  const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: 'orderDetail' });
   return {
     title: `${t('title')} #${id}`,

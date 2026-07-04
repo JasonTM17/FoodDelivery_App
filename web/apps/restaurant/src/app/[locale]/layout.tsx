@@ -6,7 +6,7 @@ import { locales } from '@foodflow/i18n';
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 /**
@@ -16,8 +16,10 @@ interface LocaleLayoutProps {
  */
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: LocaleLayoutProps) {
+  const { locale } = await params;
+
   if (!(locales as readonly string[]).includes(locale)) {
     notFound();
   }
@@ -37,8 +39,10 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: Pick<LocaleLayoutProps, 'params'>): Promise<Metadata> {
+  const { locale } = await params;
+
   if (!(locales as readonly string[]).includes(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'metadata' });
 

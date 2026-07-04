@@ -6,10 +6,10 @@ import NotFound from '@/app/not-found';
 import LocaleRootPage from '@/app/[locale]/page';
 
 describe('root fallback surfaces', () => {
-  it('redirects locale root to the localized overview dashboard', () => {
+  it('redirects locale root to the localized overview dashboard', async () => {
     vi.mocked(redirect).mockClear();
 
-    LocaleRootPage({ params: { locale: 'ja' } });
+    await LocaleRootPage({ params: Promise.resolve({ locale: 'ja' }) });
 
     expect(redirect).toHaveBeenCalledWith('/ja/overview');
   });

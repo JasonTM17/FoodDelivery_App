@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { apiGet, apiPatch } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import OrderStatusBadge from '@/components/badges/order-status-badge';
@@ -29,12 +30,8 @@ interface Order {
   updatedAt: string;
 }
 
-export default function OrderDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+export default function OrderDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const t = useTranslations('orders.detail');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');

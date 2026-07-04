@@ -1,17 +1,14 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { apiGet, apiPatch } from '@/lib/api';
 import { RestaurantDetailContent } from './restaurant-detail-content';
 import { RestaurantDetailEmptyState, RestaurantDetailLoading } from './restaurant-detail-state-panels';
 import type { Restaurant } from './restaurant-detail-types';
 
-export default function RestaurantDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+export default function RestaurantDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
 
   const { data: restaurant, isLoading } = useQuery<Restaurant>({

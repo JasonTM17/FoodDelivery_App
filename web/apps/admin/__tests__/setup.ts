@@ -9,6 +9,7 @@ const navigationRouterMock = vi.hoisted(() => ({
   refresh: vi.fn(),
   prefetch: vi.fn(),
 }));
+const navigationParamsMock = vi.hoisted(() => vi.fn(() => ({})));
 
 class ResizeObserverMock {
   observe() {}
@@ -25,7 +26,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => navigationRouterMock,
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
-  useParams: () => ({}),
+  useParams: navigationParamsMock,
   redirect: vi.fn(),
 }));
 

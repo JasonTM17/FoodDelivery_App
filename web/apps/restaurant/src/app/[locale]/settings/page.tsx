@@ -3,12 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/navigation';
 
 interface SettingsPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export default async function SettingsPage({ params: { locale } }: SettingsPageProps) {
+export default async function SettingsPage({ params }: SettingsPageProps) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'settings' });
 
   const sections = [

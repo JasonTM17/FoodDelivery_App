@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const raw = cookieStore.get('NEXT_LOCALE')?.value ?? 'vi'
   const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi'
 

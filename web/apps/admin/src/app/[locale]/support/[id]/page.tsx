@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { apiGet, apiPost } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { PageHeader } from '@/components/layout/admin-page-header';
@@ -18,8 +19,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 
-export default function SupportTicketDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function SupportTicketDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const t = useTranslations('supportDetail');
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');

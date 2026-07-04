@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiGet, apiPost } from '@/lib/api';
 import RestaurantApproveError from '@/app/[locale]/restaurants/[id]/approve/error';
@@ -24,13 +25,14 @@ describe('restaurant approval page', () => {
   beforeEach(() => {
     mockedApiGet.mockReset();
     mockedApiPost.mockReset();
+    vi.mocked(useParams).mockReturnValue({ id: 'restaurant-1' });
   });
 
   it('renders a localized pending status and approves the restaurant', async () => {
     mockedApiGet.mockResolvedValueOnce(makeRestaurant());
     mockedApiPost.mockResolvedValueOnce(undefined);
 
-    renderWithClient(<RestaurantApprovePage params={{ id: 'restaurant-1' }} />);
+    renderWithClient(<RestaurantApprovePage />);
 
     expect(await screen.findByText('statusPending')).toBeInTheDocument();
     expect(screen.getAllByText('Pho House')).toHaveLength(2);
@@ -46,7 +48,7 @@ describe('restaurant approval page', () => {
     mockedApiGet.mockResolvedValueOnce(makeRestaurant());
     mockedApiPost.mockResolvedValueOnce(undefined);
 
-    renderWithClient(<RestaurantApprovePage params={{ id: 'restaurant-1' }} />);
+    renderWithClient(<RestaurantApprovePage />);
 
     fireEvent.change(await screen.findByLabelText('rejectReason'), {
       target: { value: '  Missing business license  ' },
@@ -62,8 +64,9 @@ describe('restaurant approval page', () => {
 
   it('shows localized not-found state when the restaurant API returns empty data', async () => {
     mockedApiGet.mockResolvedValueOnce(null);
+    vi.mocked(useParams).mockReturnValue({ id: 'missing-restaurant' });
 
-    renderWithClient(<RestaurantApprovePage params={{ id: 'missing-restaurant' }} />);
+    renderWithClient(<RestaurantApprovePage />);
 
     expect(await screen.findByText('notFound')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'back' })).toHaveAttribute('href', '/restaurants');
