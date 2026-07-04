@@ -2,13 +2,13 @@ name: E2E Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master, main, codex/batch4-integration]
     paths:
       - 'web/**'
       - 'backend/**'
       - '.github/workflows/e2e.yml'
   pull_request:
-    branches: [master]
+    branches: [master, main, codex/batch4-integration]
     paths:
       - 'web/**'
       - 'backend/**'

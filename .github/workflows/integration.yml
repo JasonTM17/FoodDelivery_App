@@ -2,9 +2,9 @@ name: Integration Smoke Gate
 
 on:
   push:
-    branches: [master]
+    branches: [master, main, codex/batch4-integration]
   pull_request:
-    branches: [master]
+    branches: [master, main, codex/batch4-integration]
   workflow_dispatch:
     inputs:
       skip_k6:

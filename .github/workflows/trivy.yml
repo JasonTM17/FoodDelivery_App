@@ -2,7 +2,7 @@ name: Trivy Vulnerability Scan
 
 on:
   push:
-    branches: [main]
+    branches: [master, main, codex/batch4-integration]
   schedule:
     - cron: '0 6 * * *'
 

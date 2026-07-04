@@ -2,9 +2,9 @@ name: Gitleaks Secret Scan
 
 on:
   push:
-    branches: [main]
+    branches: [master, main, codex/batch4-integration]
   pull_request:
-    branches: [main]
+    branches: [master, main, codex/batch4-integration]
 
 jobs:
   scan:
