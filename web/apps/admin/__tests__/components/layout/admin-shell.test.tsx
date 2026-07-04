@@ -40,6 +40,7 @@ describe('Admin shell', () => {
       <PageHeader
         breadcrumbs={[
           { label: 'Admin' },
+          { label: 'Settings', href: '/settings' },
           { label: 'Users', href: '/users' },
           { label: 'Detail' },
         ]}
@@ -48,6 +49,8 @@ describe('Admin shell', () => {
     );
 
     expect(screen.getByRole('link', { name: 'home' })).toHaveAttribute('href', '/vi/overview');
+    expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'settings' })).toHaveAttribute('href', '/vi/settings');
     expect(screen.getByRole('link', { name: 'Users' })).toHaveAttribute('href', '/vi/users');
   });
 

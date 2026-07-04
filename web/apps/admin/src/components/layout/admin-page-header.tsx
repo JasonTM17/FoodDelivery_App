@@ -20,6 +20,7 @@ export function PageHeader({ breadcrumbs, ...props }: PageHeaderProps) {
   const t = useTranslations('common');
   const localizedBreadcrumbs = breadcrumbs.map(item => ({
     ...item,
+    label: localizeLegacyBreadcrumbLabel(item.label, t),
     href: item.href ? localizeHref(item.href, locale) : undefined,
   }));
 
@@ -32,4 +33,13 @@ export function PageHeader({ breadcrumbs, ...props }: PageHeaderProps) {
       homeLabel={t('home')}
     />
   );
+}
+
+function localizeLegacyBreadcrumbLabel(
+  label: string,
+  t: ReturnType<typeof useTranslations<'common'>>,
+): string {
+  if (label === 'Admin') return t('admin');
+  if (label === 'Settings') return t('settings');
+  return label;
 }

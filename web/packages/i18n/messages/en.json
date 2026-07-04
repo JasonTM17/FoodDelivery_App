@@ -43,6 +43,8 @@
     "close": "Close",
     "home": "Home",
     "breadcrumb": "Breadcrumb",
+    "admin": "Admin",
+    "settings": "Settings",
     "view": "View",
     "detail": "Detail",
     "actions": "Actions",
