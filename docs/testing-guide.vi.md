@@ -69,7 +69,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Evidence E2E local mới nhất: 2026-07-04 tại `c81e607` trên `codex/batch4-integration`, Docker Compose rebuild Backend/Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`, sau đó `pnpm test:e2e --project=chromium --project=firefox` pass 70/70 test, gồm axe serious/critical smoke, visual contract và tenant isolation.
+Evidence E2E local mới nhất: 2026-07-04 tại `14268da` trên `codex/batch4-integration`, Docker Compose có Backend/Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. `pnpm test:e2e --project=chromium` pass 35/35 test và `pnpm test:e2e --project=firefox` pass 35/35 test, bao phủ axe serious/critical smoke, visual contract, điều hướng admin driver map, tracking endpoint availability và tenant isolation.
 
 Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation. Spec `web/e2e/tests/tenant-isolation.spec.ts` phải chứng minh user nhà hàng không thể list, đọc hoặc update order thuộc tenant nhà hàng khác.
 

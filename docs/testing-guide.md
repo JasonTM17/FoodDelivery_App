@@ -76,7 +76,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Latest local E2E evidence: 2026-07-04 at `c81e607` on `codex/batch4-integration`, Docker Compose rebuilt healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`, then `pnpm test:e2e --project=chromium --project=firefox` passed 70/70 tests, including axe serious/critical smoke, visual contract, and tenant isolation coverage.
+Latest local E2E evidence: 2026-07-04 at `14268da` on `codex/batch4-integration`, Docker Compose had healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. `pnpm test:e2e --project=chromium` passed 35/35 tests and `pnpm test:e2e --project=firefox` passed 35/35 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, and tenant isolation.
 
 Batch 4 E2E coverage should include:
 

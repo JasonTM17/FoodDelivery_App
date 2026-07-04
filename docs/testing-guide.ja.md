@@ -69,7 +69,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-最新の local E2E evidence: 2026-07-04 `c81e607` / `codex/batch4-integration` で、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡して healthy な Backend/Admin/Restaurant standalone containers を rebuild しました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。その後 `pnpm test:e2e --project=chromium --project=firefox` は 70/70 tests pass し、axe serious/critical smoke、visual contract、tenant isolation coverage を含みます。
+最新の local E2E evidence: 2026-07-04 `14268da` / `codex/batch4-integration` で、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を使いました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。`pnpm test:e2e --project=chromium` は 35/35 tests pass、`pnpm test:e2e --project=firefox` も 35/35 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、tenant isolation coverage を含みます。
 
 Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。`web/e2e/tests/tenant-isolation.spec.ts` は、restaurant user が別 restaurant tenant の order を list/read/update できないことを検証します。
 
