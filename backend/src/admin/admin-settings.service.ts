@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import {
@@ -68,13 +69,15 @@ const DEFAULT_SETTINGS: Record<AdminSettingsSection, AdminSettingsValue> = {
     sepayConfigured: false,
     notificationProviderConfigured: false,
     outboundWebhooksConfigured: false,
-    degradedReason: 'Integration settings are not configured in PlatformSetting yet.',
   },
 }
 
 @Injectable()
 export class AdminSettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   async getAll() {
     const rows = await this.prisma.platformSetting.findMany({
@@ -142,10 +145,41 @@ export class AdminSettingsService {
     section: AdminSettingsSection,
     row?: { value: Prisma.JsonValue; updatedAt: Date } | null,
   ): AdminSettingsSectionResponse {
+    const stored = jsonObject(row?.value)
+    const runtime = section === 'integrations' ? this.integrationRuntimeSettings() : {}
     return {
       section,
-      settings: redactSensitiveSettings({ ...DEFAULT_SETTINGS[section], ...jsonObject(row?.value) }),
+      settings: redactSensitiveSettings({ ...DEFAULT_SETTINGS[section], ...stored, ...runtime }),
       updatedAt: row?.updatedAt ?? null,
+    }
+  }
+
+  private integrationRuntimeSettings(): AdminSettingsValue {
+    const sepayConfigured = allConfigured(
+      this.config.get<string>('SEPAY_API_KEY'),
+      this.config.get<string>('SEPAY_ACCOUNT_NUMBER'),
+      this.config.get<string>('SEPAY_WEBHOOK_SECRET'),
+    )
+    const notificationProviderConfigured = anyConfigured(
+      this.config.get<string>('FCM_SERVER_KEY'),
+      allConfigured(
+        this.config.get<string>('SMTP_HOST'),
+        this.config.get<string>('SMTP_USER'),
+        this.config.get<string>('SMTP_PASS'),
+        this.config.get<string>('SMTP_FROM'),
+      ),
+      allConfigured(
+        this.config.get<string>('TWILIO_ACCOUNT_SID'),
+        this.config.get<string>('TWILIO_AUTH_TOKEN'),
+        this.config.get<string>('TWILIO_FROM_NUMBER'),
+      ),
+    )
+    const outboundWebhooksConfigured = isConfigured(this.config.get<string>('WEBHOOK_SECRET'))
+
+    return {
+      sepayConfigured,
+      notificationProviderConfigured,
+      outboundWebhooksConfigured,
     }
   }
 }
@@ -180,4 +214,24 @@ function redactSensitiveSettings(settings: AdminSettingsValue): AdminSettingsVal
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function allConfigured(...values: unknown[]): boolean {
+  return values.every(isConfigured)
+}
+
+function anyConfigured(...values: unknown[]): boolean {
+  return values.some(isConfigured)
+}
+
+function isConfigured(value: unknown): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value !== 'string') return false
+  const normalized = value.trim()
+  if (!normalized) return false
+  return ![
+    /^(your[-_\s]|replace[-_\s]?with|replace[-_\s]?me|placeholder|example)/i,
+    /example\.com$/i,
+    /change[-_\s]?me/i,
+  ].some((pattern) => pattern.test(normalized))
 }

@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../database/prisma.service'
 import { AdminSettingsService } from './admin-settings.service'
 
@@ -8,13 +9,20 @@ describe('AdminSettingsService', () => {
     findUnique: jest.fn(),
     upsert: jest.fn(),
   }
-  const service = new AdminSettingsService({ platformSetting } as unknown as PrismaService)
+  const config = {
+    get: jest.fn(),
+  }
+  const service = new AdminSettingsService(
+    { platformSetting } as unknown as PrismaService,
+    config as unknown as ConfigService,
+  )
 
   beforeEach(() => {
     jest.clearAllMocks()
+    config.get.mockReturnValue(undefined)
   })
 
-  it('returns defaults when a settings section has not been configured', async () => {
+  it('returns runtime-derived integration flags without degraded placeholders', async () => {
     platformSetting.findUnique.mockResolvedValue(null)
 
     const result = await service.getSection('integrations')
@@ -22,8 +30,61 @@ describe('AdminSettingsService', () => {
     expect(result.section).toBe('integrations')
     expect(result.settings.sepayConfigured).toBe(false)
     expect(result.settings.outboundWebhooksConfigured).toBe(false)
-    expect(result.settings.degradedReason).toContain('not configured')
+    expect(result.settings).not.toHaveProperty('degradedReason')
     expect(result.updatedAt).toBeNull()
+  })
+
+  it('marks integrations configured only when real secret-manager env values are present', async () => {
+    platformSetting.findUnique.mockResolvedValue({
+      key: 'integrations',
+      value: {
+        sepayConfigured: false,
+        notificationProviderConfigured: false,
+        outboundWebhooksConfigured: false,
+      },
+      updatedAt: new Date('2026-07-02T00:00:00.000Z'),
+    })
+    config.get.mockImplementation((key: string) => ({
+      SEPAY_API_KEY: 'live-sepay-key',
+      SEPAY_ACCOUNT_NUMBER: '1234567890',
+      SEPAY_WEBHOOK_SECRET: 'live-sepay-webhook-secret',
+      FCM_SERVER_KEY: 'live-fcm-key',
+      WEBHOOK_SECRET: 'live-webhook-secret',
+    })[key])
+
+    const result = await service.getSection('integrations')
+
+    expect(result.settings).toEqual(expect.objectContaining({
+      sepayConfigured: true,
+      notificationProviderConfigured: true,
+      outboundWebhooksConfigured: true,
+    }))
+  })
+
+  it('does not treat documented placeholder env values as configured', async () => {
+    platformSetting.findUnique.mockResolvedValue(null)
+    config.get.mockImplementation((key: string) => ({
+      SEPAY_API_KEY: 'your-sepay-api-key',
+      SEPAY_ACCOUNT_NUMBER: 'your-sepay-account-number',
+      SEPAY_WEBHOOK_SECRET: 'your-sepay-webhook-secret',
+      FCM_SERVER_KEY: 'your-fcm-server-key',
+      SMTP_HOST: 'smtp.example.com',
+      SMTP_USER: 'your-smtp-user',
+      SMTP_PASS: 'your-smtp-password',
+      SMTP_FROM: 'noreply@foodflow.vn',
+      TWILIO_ACCOUNT_SID: 'your-twilio-account-sid',
+      TWILIO_AUTH_TOKEN: 'your-twilio-auth-token',
+      TWILIO_FROM_NUMBER: 'your-twilio-from-number',
+      WEBHOOK_SECRET: 'your-webhook-secret',
+    })[key])
+
+    const result = await service.getSection('integrations')
+
+    expect(result.settings).toEqual(expect.objectContaining({
+      sepayConfigured: false,
+      notificationProviderConfigured: false,
+      outboundWebhooksConfigured: false,
+    }))
   })
 
   it('returns complete server-owned defaults for editable settings sections', async () => {
