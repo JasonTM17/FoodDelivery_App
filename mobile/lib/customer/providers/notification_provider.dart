@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/api/socket_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
@@ -34,9 +35,7 @@ class NotificationModel {
       type: json['type'] as String? ?? 'system',
       title: json['title'] as String? ?? '',
       body: json['body'] as String? ?? json['message'] as String? ?? '',
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
-          : DateTime.now(),
+      createdAt: parseBackendDateTimeOrUnknown(json['createdAt']),
       isRead: json['isRead'] as bool? ?? json['read'] as bool? ?? false,
       deepLink: json['deepLink'] as String?,
     );

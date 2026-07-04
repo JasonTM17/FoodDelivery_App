@@ -1,3 +1,5 @@
+import '../utils/backend_date_time.dart';
+
 class RestaurantModel {
   final String id;
   final String name;
@@ -134,11 +136,9 @@ class ReviewModel {
       foodRating: (json['foodRating'] as num?)?.toDouble() ?? 5.0,
       deliveryRating: (json['deliveryRating'] as num?)?.toDouble() ?? 5.0,
       comment: json['comment'] as String?,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : DateTime.now(),
+      createdAt: parseBackendDateTimeOrUnknown(
+        json['createdAt'] ?? json['created_at'],
+      ),
     );
   }
 

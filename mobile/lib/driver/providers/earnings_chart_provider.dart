@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/api/api_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 class DailyEarning {
   final DateTime date;
@@ -14,7 +15,7 @@ class DailyEarning {
 
   factory DailyEarning.fromJson(Map<String, dynamic> json) {
     return DailyEarning(
-      date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime(1970),
+      date: parseBackendDateTimeOrUnknown(json['date']),
       amount: _readInt(json['amount']),
       tripCount: _readInt(json['tripCount']),
     );

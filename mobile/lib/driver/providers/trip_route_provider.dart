@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 class RoutePoint {
   final double lat;
@@ -17,9 +18,7 @@ class RoutePoint {
     return RoutePoint(
       lat: _readDouble(json['lat']),
       lng: _readDouble(json['lng']),
-      timestamp:
-          DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
-          DateTime.fromMillisecondsSinceEpoch(0),
+      timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/rating_history_provider.dart';
+import 'package:foodflow_customer/shared/utils/backend_date_time.dart';
 
 void main() {
   group('DriverReview.fromJson', () {
@@ -34,7 +35,7 @@ void main() {
 
       expect(review.rating, 5);
       expect(review.orderId, 'order-2');
-      expect(review.date, DateTime.fromMillisecondsSinceEpoch(0));
+      expect(review.date, unknownBackendDateTime);
     });
   });
 

@@ -1,3 +1,5 @@
+import '../utils/backend_date_time.dart';
+
 class OrderModel {
   final String id;
   final String userId;
@@ -122,21 +124,15 @@ class OrderModel {
           'cash',
       note: json['note'] as String?,
       promoCode: json['promoCode'] as String? ?? json['promo_code'] as String?,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : DateTime.now(),
-      deliveredAt: json['deliveredAt'] != null
-          ? DateTime.parse(json['deliveredAt'] as String)
-          : json['delivered_at'] != null
-          ? DateTime.parse(json['delivered_at'] as String)
-          : null,
+      createdAt: parseBackendDateTimeOrUnknown(
+        json['createdAt'] ?? json['created_at'],
+      ),
+      updatedAt: parseBackendDateTimeOrUnknown(
+        json['updatedAt'] ?? json['updated_at'],
+      ),
+      deliveredAt: parseBackendDateTimeOrNull(
+        json['deliveredAt'] ?? json['delivered_at'],
+      ),
       statusHistory: json['statusHistory'] != null
           ? (json['statusHistory'] as List<dynamic>)
                 .map((e) => StatusHistory.fromJson(e as Map<String, dynamic>))
@@ -312,9 +308,7 @@ class StatusHistory {
   factory StatusHistory.fromJson(Map<String, dynamic> json) {
     return StatusHistory(
       status: json['status'] as String? ?? '',
-      timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'] as String)
-          : DateTime.now(),
+      timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
       note: json['note'] as String?,
     );
   }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 final driverNotificationsProvider =
     StateNotifierProvider<
@@ -43,9 +44,7 @@ class DriverNotification {
           'system',
       title: json['title'] as String? ?? '',
       body: json['body'] as String? ?? json['message'] as String? ?? '',
-      createdAt:
-          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-          DateTime.now(),
+      createdAt: parseBackendDateTimeOrUnknown(json['createdAt']),
       isRead: json['isRead'] as bool? ?? json['read'] as bool? ?? false,
       deepLink: json['deepLink'] as String? ?? payload['deepLink'] as String?,
     );

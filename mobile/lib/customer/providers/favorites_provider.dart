@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../shared/api/api_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 class FavoriteItem {
   final String id;
@@ -29,9 +30,7 @@ class FavoriteItem {
       imageUrl: json['imageUrl'] as String? ?? '',
       rating: (json['rating'] as num?)?.toDouble(),
       subtitle: json['subtitle'] as String?,
-      addedAt: json['addedAt'] != null
-          ? DateTime.tryParse(json['addedAt'] as String) ?? DateTime.now()
-          : DateTime.now(),
+      addedAt: parseBackendDateTimeOrUnknown(json['addedAt']),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
+import '../../shared/utils/backend_date_time.dart';
 
 class DriverReview {
   final String id;
@@ -30,9 +31,7 @@ class DriverReview {
       customerAvatarUrl: json['customerAvatarUrl']?.toString(),
       rating: _readInt(json['rating']).clamp(1, 5).toInt(),
       comment: json['comment']?.toString(),
-      date:
-          DateTime.tryParse(json['date']?.toString() ?? '') ??
-          DateTime.fromMillisecondsSinceEpoch(0),
+      date: parseBackendDateTimeOrUnknown(json['date']),
       orderId: orderCode?.isNotEmpty == true ? orderCode! : orderId,
     );
   }

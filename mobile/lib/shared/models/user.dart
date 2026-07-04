@@ -1,3 +1,5 @@
+import '../utils/backend_date_time.dart';
+
 class UserModel {
   final String id;
   final String fullName;
@@ -35,16 +37,12 @@ class UserModel {
       role: json['role'] as String? ?? 'customer',
       avatarUrl: json['avatarUrl'] as String? ?? json['avatar_url'] as String?,
       isActive: json['isActive'] as bool? ?? json['is_active'] as bool? ?? true,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : DateTime.now(),
+      createdAt: parseBackendDateTimeOrUnknown(
+        json['createdAt'] ?? json['created_at'],
+      ),
+      updatedAt: parseBackendDateTimeOrUnknown(
+        json['updatedAt'] ?? json['updated_at'],
+      ),
       defaultAddress: json['defaultAddress'] != null
           ? AddressModel.fromJson(
               json['defaultAddress'] as Map<String, dynamic>,
