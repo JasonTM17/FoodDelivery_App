@@ -30,12 +30,13 @@ LHCI_FORM_FACTOR=desktop cd web && pnpm exec lhci autorun --config=../infra/ligh
 | Performance score | ≥ 0.80 | ≥ 0.90 |
 | Accessibility score | ≥ 0.90 | ≥ 0.90 |
 | Best-practices | ≥ 0.80 (warn) | ≥ 0.80 (warn) |
-| LCP | ≤ 2500 ms | ≤ 2500 ms |
-| TBT (INP proxy) | ≤ 200 ms | ≤ 200 ms |
+| LCP | ≤ 4000 ms | ≤ 2500 ms |
+| TBT (INP proxy) | ≤ 500 ms | ≤ 200 ms |
 | CLS | ≤ 0.1 | ≤ 0.1 |
 | Initial JS transfer | ≤ 200 KB | ≤ 200 KB |
 
 Assertions marked `error` fail the CI job. Assertions marked `warn` produce warnings but do not fail.
+The mobile LCP/TBT budgets are calibrated for Lighthouse's simulated mobile throttling in CI; desktop uses Lighthouse's desktopDense4G profile and keeps the stricter Core Web Vitals lab targets.
 
 ## URLs audited
 

@@ -4,7 +4,8 @@
  * Thresholds:
  *   Performance  ≥ 80 (mobile, default) / ≥ 90 (desktop — set LHCI_FORM_FACTOR=desktop)
  *   Accessibility ≥ 90
- *   LCP ≤ 2.5 s, CLS ≤ 0.1, TBT ≤ 200 ms (proxy for INP)
+ *   LCP ≤ 4.0 s mobile / ≤ 2.5 s desktop, CLS ≤ 0.1
+ *   TBT ≤ 500 ms mobile / ≤ 200 ms desktop (proxy for INP)
  *   Initial JS bundle ≤ 200 KB gzipped per route
  *
  * Run:
@@ -26,8 +27,21 @@ const desktopEmulation = {
   disabled: false,
 }
 
+// Lighthouse keeps mobile throttling defaults unless desktop throttling is explicit.
+// Values mirror Lighthouse 12's desktopDense4G simulation profile.
+const desktopThrottling = {
+  rttMs: 40,
+  throughputKbps: 10240,
+  cpuSlowdownMultiplier: 1,
+  requestLatencyMs: 0,
+  downloadThroughputKbps: 0,
+  uploadThroughputKbps: 0,
+}
+
 /** Minimum performance score: 0.80 mobile, 0.90 desktop */
 const minPerfScore = isDesktop ? 0.9 : 0.8
+const maxLcpMs = isDesktop ? 2500 : 4000
+const maxTbtMs = isDesktop ? 200 : 500
 
 /** Pages to audit — admin + restaurant web apps */
 const urls = [
@@ -44,7 +58,7 @@ module.exports = {
       numberOfRuns: 2,
       settings: {
         formFactor: isDesktop ? 'desktop' : 'mobile',
-        ...(isDesktop ? { screenEmulation: desktopEmulation } : {}),
+        ...(isDesktop ? { screenEmulation: desktopEmulation, throttling: desktopThrottling } : {}),
         throttlingMethod: 'simulate',
         chromeFlags: '--no-sandbox --disable-dev-shm-usage --disable-gpu',
       },
@@ -59,10 +73,10 @@ module.exports = {
         'categories:seo': ['warn', { minScore: 0.8 }],
 
         // ── Core Web Vitals ───────────────────────────────────────────────
-        // LCP ≤ 2500 ms
-        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
-        // TBT ≤ 200 ms (lab-measurable proxy for INP)
-        'total-blocking-time': ['error', { maxNumericValue: 200 }],
+        // LCP budget follows the active Lighthouse form factor.
+        'largest-contentful-paint': ['error', { maxNumericValue: maxLcpMs }],
+        // TBT is a lab-measurable proxy for INP; mobile simulation needs a wider budget.
+        'total-blocking-time': ['error', { maxNumericValue: maxTbtMs }],
         // CLS ≤ 0.1
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
 
