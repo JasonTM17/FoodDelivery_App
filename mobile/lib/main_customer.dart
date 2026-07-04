@@ -5,6 +5,11 @@ import 'shared/providers/locale_provider.dart';
 import 'shared/theme/app_theme.dart';
 import 'customer/router/app_router.dart';
 
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: CustomerApp()));
+}
+
 class CustomerApp extends ConsumerWidget {
   const CustomerApp({super.key});
 
