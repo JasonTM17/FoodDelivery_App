@@ -2046,6 +2046,81 @@ components:
         revenue: 18250000
         orders: 145
 
+    AdminOrderStatusPoint:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        pending: { type: integer, minimum: 0 }
+        confirmed: { type: integer, minimum: 0 }
+        delivering: { type: integer, minimum: 0 }
+        completed: { type: integer, minimum: 0 }
+        cancelled: { type: integer, minimum: 0 }
+      required: [date, pending, confirmed, delivering, completed, cancelled]
+
+    AdminTopRestaurantPoint:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        rating: { type: number }
+        revenue: { type: number, description: "VND" }
+        orderCount: { type: integer, minimum: 0 }
+      required: [id, name, rating, revenue, orderCount]
+
+    AdminRetentionCohort:
+      type: object
+      description: Daily first-order customer cohort derived from real orders, with retention counted only when a cohort customer places another order after the cohort date inside the requested window.
+      properties:
+        date: { type: string, format: date }
+        newCustomers: { type: integer, minimum: 0 }
+        retainedCustomers: { type: integer, minimum: 0 }
+        retentionRate: { type: number, minimum: 0, maximum: 100 }
+      required: [date, newCustomers, retainedCustomers, retentionRate]
+
+    AdminDriverOnlinePoint:
+      type: object
+      properties:
+        hour: { type: integer, minimum: 0, maximum: 23 }
+        count: { type: integer, minimum: 0 }
+      required: [hour, count]
+
+    AdminOrderHeatmapCell:
+      type: object
+      properties:
+        day: { type: integer, minimum: 0, maximum: 6, description: "Monday=0, Sunday=6" }
+        hour: { type: integer, minimum: 0, maximum: 23 }
+        count: { type: integer, minimum: 0 }
+      required: [day, hour, count]
+
+    AdminChartsResponse:
+      type: object
+      properties:
+        revenue:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              revenue: { type: number, description: "VND" }
+              prevRevenue: { type: number, description: "Previous period VND aligned by day offset" }
+            required: [date, revenue, prevRevenue]
+        orderStatus:
+          type: array
+          items: { $ref: "#/components/schemas/AdminOrderStatusPoint" }
+        driverOnline:
+          type: array
+          items: { $ref: "#/components/schemas/AdminDriverOnlinePoint" }
+        topRestaurants:
+          type: array
+          items: { $ref: "#/components/schemas/AdminTopRestaurantPoint" }
+        retention:
+          type: array
+          items: { $ref: "#/components/schemas/AdminRetentionCohort" }
+        heatmap:
+          type: array
+          items: { $ref: "#/components/schemas/AdminOrderHeatmapCell" }
+      required: [revenue, orderStatus, driverOnline, topRestaurants, retention, heatmap]
+
     RestaurantKpi:
       type: object
       properties:
@@ -4357,6 +4432,20 @@ paths:
       responses:
         "200": { description: "SSE stream with thinking/token/escalated/degraded/done events", content: { text/event-stream: { schema: { type: string } } } }
         "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /admin/charts:
+    get:
+      tags: [analytics]
+      summary: Get admin analytics chart data
+      description: Returns revenue, order funnel, driver-online, restaurant ranking, order heatmap, and database-backed customer retention cohorts for the requested rolling window.
+      operationId: analytics_adminCharts
+      x-foo-actor: admin
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, default: "30d" }
+      responses:
+        "200": { description: "Admin analytics charts", content: { application/json: { schema: { $ref: "#/components/schemas/AdminChartsResponse" } } } }
 
   /admin/dashboard:
     get:

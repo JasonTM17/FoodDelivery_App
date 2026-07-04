@@ -1139,6 +1139,10 @@
       "funnelTitle": "Phễu đơn hàng",
       "topRestaurantsTitle": "Top nhà hàng",
       "retentionTitle": "Retention khách hàng",
+      "retentionSummary": "{retained}/{total} khách mới đã quay lại trong kỳ này",
+      "retentionCohortLabel": "{date}: {retained}/{newCustomers} khách mới quay lại",
+      "retentionNewCustomers": "{count} khách mới",
+      "retentionRetainedCustomers": "{count} quay lại",
       "funnel": {
         "placed": "Đơn được tạo",
         "accepted": "Nhà hàng nhận",
@@ -1160,7 +1164,9 @@
       "funnelTitle": "Chưa có đơn hàng",
       "funnelDescription": "Phễu sẽ hiển thị khi hệ thống có đơn trong 30 ngày gần nhất.",
       "restaurantsTitle": "Chưa có doanh thu nhà hàng",
-      "restaurantsDescription": "Top nhà hàng sẽ hiển thị khi có đơn đã hoàn thành."
+      "restaurantsDescription": "Top nhà hàng sẽ hiển thị khi có đơn đã hoàn thành.",
+      "retentionTitle": "Chưa có cohort khách mới",
+      "retentionDescription": "Retention sẽ hiển thị sau khi khách đặt đơn đầu tiên trong kỳ này."
     },
     "errors": {
       "loadTitle": "Không tải được dữ liệu phân tích",
@@ -1170,10 +1176,6 @@
     },
     "actions": {
       "retry": "Thử lại"
-    },
-    "degraded": {
-      "retentionTitle": "Retention cohort chưa khả dụng",
-      "retentionDescription": "Backend hiện chưa cung cấp endpoint cohort retention. Màn hình hiển thị trạng thái degraded thay vì dùng số giả."
     }
   },
   "aiMonitorDetail": {

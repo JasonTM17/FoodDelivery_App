@@ -8,7 +8,20 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { apiGet } from '@/lib/api'
-import { buildFunnel, formatCurrency, formatInteger, type AdminChartsData } from './analytics-chart-data'
+import { buildFunnel, formatCurrency, formatInteger, formatPercent, type AdminChartsData } from './analytics-chart-data'
+
+const dateLocaleTags: Record<string, string> = {
+  en: 'en-US',
+  ja: 'ja-JP',
+  vi: 'vi-VN',
+}
+
+function formatDateLabel(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(dateLocaleTags[locale] ?? 'vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+  }).format(new Date(`${date}T00:00:00`))
+}
 
 function ChartSkeleton() {
   return (
@@ -34,9 +47,15 @@ export default function AnalyticsChartsClient() {
   const isForbidden = (error as { status?: number } | null)?.status === 403
   const funnelSteps = useMemo(() => buildFunnel(data?.orderStatus ?? []), [data?.orderStatus])
   const topRestaurants = data?.topRestaurants ?? []
+  const retention = data?.retention ?? []
   const maxRevenue = Math.max(...topRestaurants.map(restaurant => restaurant.revenue), 0)
   const hasFunnelData = funnelSteps.some(step => step.value > 0)
   const hasRestaurants = topRestaurants.length > 0
+  const totalNewCustomers = retention.reduce((sum, row) => sum + row.newCustomers, 0)
+  const totalRetainedCustomers = retention.reduce((sum, row) => sum + row.retainedCustomers, 0)
+  const overallRetentionRate = totalNewCustomers > 0 ? (totalRetainedCustomers / totalNewCustomers) * 100 : 0
+  const visibleRetention = retention.filter(row => row.newCustomers > 0).slice(-14)
+  const hasRetention = totalNewCustomers > 0
 
   if (isLoading) return <ChartSkeleton />
 
@@ -141,11 +160,65 @@ export default function AnalyticsChartsClient() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">{t('charts.retentionTitle')}</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-dashed p-4">
-            <p className="font-medium">{t('degraded.retentionTitle')}</p>
-            <p className="text-sm text-muted-foreground">{t('degraded.retentionDescription')}</p>
-          </div>
+        <CardContent className="space-y-4">
+          {hasRetention ? (
+            <>
+              <div className="rounded-lg bg-muted/50 p-4">
+                <p className="text-2xl font-semibold">{formatPercent(overallRetentionRate, locale)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('charts.retentionSummary', {
+                    retained: formatInteger(totalRetainedCustomers, locale),
+                    total: formatInteger(totalNewCustomers, locale),
+                  })}
+                </p>
+              </div>
+              <div className="space-y-3">
+                {visibleRetention.map(row => {
+                  const dateLabel = formatDateLabel(row.date, locale)
+
+                  return (
+                    <div key={row.date} className="grid gap-2 sm:grid-cols-[7rem,1fr,9rem] sm:items-center">
+                      <div>
+                        <p className="text-sm font-medium">{dateLabel}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('charts.retentionNewCustomers', { count: formatInteger(row.newCustomers, locale) })}
+                        </p>
+                      </div>
+                      <div
+                        className="h-3 overflow-hidden rounded-full bg-muted"
+                        role="meter"
+                        aria-label={t('charts.retentionCohortLabel', {
+                          date: dateLabel,
+                          newCustomers: formatInteger(row.newCustomers, locale),
+                          retained: formatInteger(row.retainedCustomers, locale),
+                        })}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(row.retentionRate)}
+                      >
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${Math.min(Math.max(row.retentionRate, 0), 100)}%` }}
+                        />
+                      </div>
+                      <div className="text-sm text-muted-foreground sm:text-right">
+                        <span className="font-medium text-foreground">{formatPercent(row.retentionRate, locale)}</span>
+                        {' · '}
+                        {t('charts.retentionRetainedCustomers', {
+                          count: formatInteger(row.retainedCustomers, locale),
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-lg border border-dashed p-4">
+              <p className="font-medium">{t('empty.retentionTitle')}</p>
+              <p className="text-sm text-muted-foreground">{t('empty.retentionDescription')}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

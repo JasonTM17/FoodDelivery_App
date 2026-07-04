@@ -1139,6 +1139,10 @@
       "funnelTitle": "Order funnel",
       "topRestaurantsTitle": "Top restaurants",
       "retentionTitle": "Customer retention",
+      "retentionSummary": "{retained}/{total} new customers returned in this window",
+      "retentionCohortLabel": "{date}: {retained} of {newCustomers} new customers returned",
+      "retentionNewCustomers": "{count} new",
+      "retentionRetainedCustomers": "{count} retained",
       "funnel": {
         "placed": "Orders placed",
         "accepted": "Restaurant accepted",
@@ -1160,7 +1164,9 @@
       "funnelTitle": "No orders yet",
       "funnelDescription": "The funnel appears after orders exist in the last 30 days.",
       "restaurantsTitle": "No restaurant revenue yet",
-      "restaurantsDescription": "Top restaurants appear after completed orders exist."
+      "restaurantsDescription": "Top restaurants appear after completed orders exist.",
+      "retentionTitle": "No new customer cohorts yet",
+      "retentionDescription": "Retention appears after customers place their first orders in this period."
     },
     "errors": {
       "loadTitle": "Could not load analytics",
@@ -1170,10 +1176,6 @@
     },
     "actions": {
       "retry": "Retry"
-    },
-    "degraded": {
-      "retentionTitle": "Retention cohort unavailable",
-      "retentionDescription": "The backend does not expose a cohort retention endpoint yet. This panel shows a degraded state instead of fake numbers."
     }
   },
   "aiMonitorDetail": {

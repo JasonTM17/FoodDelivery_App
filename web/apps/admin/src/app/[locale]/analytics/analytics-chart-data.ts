@@ -15,9 +15,17 @@ export interface TopRestaurant {
   orderCount: number
 }
 
+export interface RetentionCohort {
+  date: string
+  newCustomers: number
+  retainedCustomers: number
+  retentionRate: number
+}
+
 export interface AdminChartsData {
   orderStatus: OrderStatusPoint[]
   topRestaurants: TopRestaurant[]
+  retention: RetentionCohort[]
 }
 
 export interface FunnelStep {
@@ -69,4 +77,12 @@ export function formatCurrency(value: number, locale: string): string {
     maximumFractionDigits: 0,
     style: 'currency',
   }).format(value)
+}
+
+export function formatPercent(value: number, locale: string): string {
+  return new Intl.NumberFormat(localeTags[locale] ?? 'vi-VN', {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+    style: 'percent',
+  }).format(value / 100)
 }

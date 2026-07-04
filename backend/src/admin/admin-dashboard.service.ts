@@ -44,7 +44,7 @@ export class AdminDashboardService {
     const end = new Date()
     const start = new Date(end.getTime() - days * 86_400_000)
     const previousStart = new Date(start.getTime() - days * 86_400_000)
-    const [orders, previousOrders, restaurants, driverRows] = await Promise.all([
+    const [orders, previousOrders, restaurants, driverRows, retention] = await Promise.all([
       this.prisma.order.findMany({
         where: { createdAt: { gte: start, lt: end } },
         select: { createdAt: true, status: true, total: true, restaurantId: true },
@@ -64,6 +64,7 @@ export class AdminDashboardService {
         WHERE recorded_at >= ${start}
         GROUP BY EXTRACT(HOUR FROM recorded_at)
         ORDER BY hour`,
+      this.getRetentionCohorts(start, end, days),
     ])
     const previousByDay = groupByRelativeDay(previousOrders, previousStart)
     const revenue = dateRange(start, days).map((date, index) => ({
@@ -91,8 +92,59 @@ export class AdminDashboardService {
       orderStatus,
       driverOnline: driverRows,
       topRestaurants,
+      retention,
       heatmap: await this.getOrderHeatmap(start),
     }
+  }
+
+  async getRetentionCohorts(start: Date, end: Date, days: number) {
+    const rows = await this.prisma.$queryRaw<Array<{
+      date: string
+      new_customers: number | bigint
+      retained_customers: number | bigint
+    }>>`
+      WITH first_orders AS (
+        SELECT customer_id, MIN(created_at)::date AS cohort_date
+        FROM orders
+        GROUP BY customer_id
+      ),
+      cohort_customers AS (
+        SELECT customer_id, cohort_date
+        FROM first_orders
+        WHERE cohort_date >= CAST(${start} AS date)
+          AND cohort_date < CAST(${end} AS date)
+      ),
+      retained_customers AS (
+        SELECT DISTINCT cohort_customers.customer_id, cohort_customers.cohort_date
+        FROM cohort_customers
+        JOIN orders AS repeat_orders
+          ON repeat_orders.customer_id = cohort_customers.customer_id
+         AND repeat_orders.created_at::date > cohort_customers.cohort_date
+         AND repeat_orders.created_at < ${end}
+      )
+      SELECT cohort_customers.cohort_date::text AS date,
+             COUNT(cohort_customers.customer_id)::int AS new_customers,
+             COUNT(retained_customers.customer_id)::int AS retained_customers
+      FROM cohort_customers
+      LEFT JOIN retained_customers
+        ON retained_customers.customer_id = cohort_customers.customer_id
+       AND retained_customers.cohort_date = cohort_customers.cohort_date
+      GROUP BY cohort_customers.cohort_date
+      ORDER BY cohort_customers.cohort_date`
+    const byDate = new Map(rows.map(row => {
+      const newCustomers = toInteger(row.new_customers)
+      const retainedCustomers = toInteger(row.retained_customers)
+      return [row.date, { newCustomers, retainedCustomers }]
+    }))
+    return dateRange(start, days).map(date => {
+      const row = byDate.get(date) ?? { newCustomers: 0, retainedCustomers: 0 }
+      return {
+        date,
+        newCustomers: row.newCustomers,
+        retainedCustomers: row.retainedCustomers,
+        retentionRate: row.newCustomers > 0 ? round1(row.retainedCustomers / row.newCustomers * 100) : 0,
+      }
+    })
   }
 
   async getOrderHeatmap(since: Date) {
@@ -136,5 +188,7 @@ function groupDailyOrders(orders: Array<{ createdAt: Date }>, start: Date, days:
 function groupByRelativeDay(orders: Array<{ createdAt: Date; status: OrderStatus; total: unknown }>, start: Date) { const map = new Map<number, number>(); orders.forEach(order => { if (!REVENUE_STATUSES.includes(order.status)) return; const index = Math.floor((order.createdAt.getTime() - start.getTime()) / 86_400_000); map.set(index, (map.get(index) ?? 0) + Number(order.total)) }); return map }
 function groupStatuses(statuses: OrderStatus[]) { const counts = { pending: 0, confirmed: 0, delivering: 0, completed: 0, cancelled: 0 }; statuses.forEach(status => { if (['created', 'pending_payment', 'paid', 'restaurant_pending'].includes(status)) counts.pending += 1; else if (['restaurant_accepted', 'preparing', 'ready_for_pickup'].includes(status)) counts.confirmed += 1; else if (['driver_assigned', 'driver_arriving_restaurant', 'picked_up', 'delivering'].includes(status)) counts.delivering += 1; else if (['delivered', 'completed'].includes(status)) counts.completed += 1; else counts.cancelled += 1 }); return counts }
 function percentageRatio(current: number, previous: number) { return previous > 0 ? (current - previous) / previous : 0 }
+function round1(value: number) { return Math.round(value * 10) / 10 }
+function toInteger(value: number | bigint) { return typeof value === 'bigint' ? Number(value) : Math.trunc(value) }
 function formatVnd(value: number) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value) }
 function kpi(key: string, label: string, value: number, formattedValue: string, delta: number, sparkline: number[], drillDownHref: string) { return { key, label, value, formattedValue, delta, sparkline, drillDownHref } }

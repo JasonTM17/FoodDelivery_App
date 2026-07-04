@@ -1139,6 +1139,10 @@
       "funnelTitle": "注文ファネル",
       "topRestaurantsTitle": "上位レストラン",
       "retentionTitle": "顧客リテンション",
+      "retentionSummary": "この期間の新規顧客 {total} 人中 {retained} 人が再注文しました",
+      "retentionCohortLabel": "{date}: 新規顧客 {newCustomers} 人中 {retained} 人が再注文",
+      "retentionNewCustomers": "新規 {count} 人",
+      "retentionRetainedCustomers": "再注文 {count} 人",
       "funnel": {
         "placed": "作成された注文",
         "accepted": "レストラン承認",
@@ -1160,7 +1164,9 @@
       "funnelTitle": "注文はまだありません",
       "funnelDescription": "直近30日間に注文があるとファネルが表示されます。",
       "restaurantsTitle": "レストラン売上はまだありません",
-      "restaurantsDescription": "完了注文があると上位レストランが表示されます。"
+      "restaurantsDescription": "完了注文があると上位レストランが表示されます。",
+      "retentionTitle": "新規顧客コホートはまだありません",
+      "retentionDescription": "この期間に顧客が初回注文を行うとリテンションが表示されます。"
     },
     "errors": {
       "loadTitle": "分析データを読み込めません",
@@ -1170,10 +1176,6 @@
     },
     "actions": {
       "retry": "再試行"
-    },
-    "degraded": {
-      "retentionTitle": "リテンションコホートは未対応です",
-      "retentionDescription": "バックエンドにはまだコホートリテンションのエンドポイントがありません。偽の数値ではなく degraded 状態を表示します。"
     }
   },
   "aiMonitorDetail": {
