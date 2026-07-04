@@ -605,7 +605,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   List<LatLng> _routePoints(OrderModel? order, TrackingState tracking) {
-    final encoded = tracking.routePolyline ?? order?.routePolyline;
+    final encoded = resolveTrackingRoutePolyline(
+      tracking,
+      order?.routePolyline,
+    );
     return tryDecodeEncodedPolyline(encoded)
         .map((point) => LatLng(point.latitude, point.longitude))
         .where((point) => _isValidLatLng(point.latitude, point.longitude))
@@ -615,9 +618,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   String _cameraSignature(OrderModel order, TrackingState tracking) {
     final driverLat = tracking.driverLatitude ?? order.driverLatitude;
     final driverLng = tracking.driverLongitude ?? order.driverLongitude;
+    final routePolyline = resolveTrackingRoutePolyline(
+      tracking,
+      order.routePolyline,
+    );
     return [
       order.id,
-      tracking.routePolyline ?? order.routePolyline ?? '',
+      routePolyline ?? '',
       driverLat?.toStringAsFixed(4) ?? '',
       driverLng?.toStringAsFixed(4) ?? '',
       order.restaurantLatitude?.toStringAsFixed(4) ?? '',

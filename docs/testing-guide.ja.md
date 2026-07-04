@@ -106,9 +106,9 @@ flutter test
 
 Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
 Batch 4 mobile gate は `flutter analyze` が issue 0 で、Flutter test suite 全体が pass することを必須にします。
-最新の local evidence: 2026-07-04 current head `78bf643` で、`flutter analyze` は issue 0、`flutter test` は 133 tests passed。Mobile-only GPS metadata commit の前に backend route integrity gates も local 実行済みです: `pnpm typecheck`、`pnpm lint`、`pnpm test` (106 suites、747 tests)、`pnpm build` はすべて pass。
+最新の local mobile evidence: 2026-07-04 `codex/batch4-integration` で stale route clear fix 後、`dart format --set-exit-if-changed` は変更なし、focused route tests (`tracking_provider_test.dart`, `encoded_polyline_test.dart`, `trip_route_provider_test.dart`) は pass、`flutter analyze` は issue 0、full `flutter test` は 136 tests passed。Mobile-only GPS metadata commit の前に backend route integrity gates も local 実行済みです: `pnpm typecheck`、`pnpm lint`、`pnpm test` (106 suites、747 tests)、`pnpm build` はすべて pass。
 
-Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。Current head `78bf643` の remote CI は GitHub Actions account billing/spending-limit blocker により jobs が start しませんでした。Billing 修正後、Mobile CI `28705120618`、CI `28705120603`、Build Check `28705120634`、Lint `28705120626`、Gitleaks `28705120629`、CodeQL `28705120627`、Trivy `28705120597`、SBOM `28705120609`、Integration Smoke Gate `28705120614` を rerun してください。
+Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。その後の head（最新 Batch 4 local commits を含む）は GitHub Actions account billing/spending-limit または token/auth blocker により remote jobs が start/complete できませんでした。Billing/auth 修正後、Mobile CI、CI、Build Check、Lint、Gitleaks、CodeQL、Trivy、SBOM、E2E Tests、Integration Smoke Gate を rerun してください。
 
 ## Security checks
 

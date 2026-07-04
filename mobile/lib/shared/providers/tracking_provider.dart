@@ -23,6 +23,7 @@ class TrackingState {
   final bool etaDegraded;
   final String? routePolyline;
   final String? routePhase;
+  final bool routeUpdateReceived;
 
   const TrackingState({
     this.isConnected = false,
@@ -35,6 +36,7 @@ class TrackingState {
     this.etaDegraded = false,
     this.routePolyline,
     this.routePhase,
+    this.routeUpdateReceived = false,
   });
 
   TrackingState copyWith({
@@ -48,6 +50,7 @@ class TrackingState {
     bool? etaDegraded,
     Object? routePolyline = _trackingUnset,
     Object? routePhase = _trackingUnset,
+    bool? routeUpdateReceived,
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
@@ -68,8 +71,18 @@ class TrackingState {
       routePhase: identical(routePhase, _trackingUnset)
           ? this.routePhase
           : routePhase as String?,
+      routeUpdateReceived: routeUpdateReceived ?? this.routeUpdateReceived,
     );
   }
+}
+
+String? resolveTrackingRoutePolyline(
+  TrackingState tracking,
+  String? persistedRoutePolyline,
+) {
+  return tracking.routeUpdateReceived
+      ? tracking.routePolyline
+      : persistedRoutePolyline;
 }
 
 class TrackingNotifier extends StateNotifier<TrackingState> {
@@ -126,6 +139,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         etaDegraded: data['degraded'] == true,
         routePolyline: data['routePolyline'] as String?,
         routePhase: data['routePhase'] as String?,
+        routeUpdateReceived: true,
       );
     });
 

@@ -106,9 +106,9 @@ flutter test
 
 Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
 Gate mobile Batch 4 hiện yêu cầu `flutter analyze` không có issue và toàn bộ Flutter test suite pass.
-Evidence local mới nhất: 2026-07-04 tại head hiện tại `78bf643`, `flutter analyze` không có issue và `flutter test` pass 133 test. Backend route integrity gates cũng đã chạy local trước commit mobile-only GPS metadata: `pnpm typecheck`, `pnpm lint`, `pnpm test` (106 suites, 747 test) và `pnpm build` đều pass.
+Evidence mobile local mới nhất: 2026-07-04 trên `codex/batch4-integration` sau fix clear stale route, `dart format --set-exit-if-changed` không đổi file, focused route tests pass (`tracking_provider_test.dart`, `encoded_polyline_test.dart`, `trip_route_provider_test.dart`), `flutter analyze` không có issue và toàn bộ `flutter test` pass 136 test. Backend route integrity gates cũng đã chạy local trước commit mobile-only GPS metadata: `pnpm typecheck`, `pnpm lint`, `pnpm test` (106 suites, 747 test) và `pnpm build` đều pass.
 
-Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Remote CI head hiện tại `78bf643` không start jobs vì GitHub Actions báo blocker billing/spending-limit của account. Rerun Mobile CI `28705120618`, CI `28705120603`, Build Check `28705120634`, Lint `28705120626`, Gitleaks `28705120629`, CodeQL `28705120627`, Trivy `28705120597`, SBOM `28705120609` và Integration Smoke Gate `28705120614` sau khi xử lý billing.
+Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Các head sau đó, gồm những commit local Batch 4 mới nhất, chưa thể start hoặc hoàn tất remote jobs vì GitHub Actions báo blocker billing/spending-limit hoặc token/auth. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests và Integration Smoke Gate sau khi billing/auth được xử lý.
 
 ## Security checks
 
