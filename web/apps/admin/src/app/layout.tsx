@@ -48,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi';
   const messages = {
     ...getSharedMessages(locale),
-    ...appMessages[locale],
+    rootStates: appMessages[locale].rootStates,
   };
 
   return (

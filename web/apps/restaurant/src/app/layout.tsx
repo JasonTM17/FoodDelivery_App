@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const messages = {
     ...getSharedMessages(locale),
-    ...appMessages[locale],
+    rootStates: appMessages[locale].rootStates,
   }
 
   return (
