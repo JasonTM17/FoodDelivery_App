@@ -7,6 +7,7 @@ import '../../shared/providers/order_provider.dart';
 import '../../shared/providers/tracking_provider.dart';
 import '../../shared/models/order.dart';
 import '../../shared/maps/encoded_polyline.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
@@ -483,8 +484,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final markers = <Marker>{};
 
     // Restaurant
-    if (order?.restaurantLatitude != null &&
-        order?.restaurantLongitude != null) {
+    if (isValidDeliveryLatLng(
+      order?.restaurantLatitude,
+      order?.restaurantLongitude,
+    )) {
       markers.add(
         Marker(
           markerId: const MarkerId('restaurant'),
@@ -503,11 +506,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     // Driver
     final driverLat = tracking.driverLatitude ?? order?.driverLatitude;
     final driverLng = tracking.driverLongitude ?? order?.driverLongitude;
-    if (driverLat != null && driverLng != null) {
+    if (isValidDeliveryLatLng(driverLat, driverLng)) {
+      final markerLat = driverLat!;
+      final markerLng = driverLng!;
       markers.add(
         Marker(
           markerId: const MarkerId('driver'),
-          position: LatLng(driverLat, driverLng),
+          position: LatLng(markerLat, markerLng),
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueOrange,
           ),
@@ -519,7 +524,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     }
 
     // Customer
-    if (order != null) {
+    if (order != null &&
+        isValidDeliveryLatLng(
+          order.deliveryAddress.latitude,
+          order.deliveryAddress.longitude,
+        )) {
       markers.add(
         Marker(
           markerId: const MarkerId('customer'),
@@ -557,6 +566,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           return lat != null && lng != null ? LatLng(lat, lng) : null;
         })
         .whereType<LatLng>()
+        .where(
+          (point) => isValidDeliveryLatLng(point.latitude, point.longitude),
+        )
         .toList();
     if (points.length >= 2) {
       polylines.add(
@@ -581,9 +593,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
     final points = <LatLng>[
       ..._routePoints(order, tracking),
-      if (_isValidLatLng(order.restaurantLatitude, order.restaurantLongitude))
+      if (isValidDeliveryLatLng(
+        order.restaurantLatitude,
+        order.restaurantLongitude,
+      ))
         LatLng(order.restaurantLatitude!, order.restaurantLongitude!),
-      if (_isValidLatLng(
+      if (isValidDeliveryLatLng(
         order.deliveryAddress.latitude,
         order.deliveryAddress.longitude,
       ))
@@ -591,7 +606,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     ];
     final driverLat = tracking.driverLatitude ?? order.driverLatitude;
     final driverLng = tracking.driverLongitude ?? order.driverLongitude;
-    if (_isValidLatLng(driverLat, driverLng)) {
+    if (isValidDeliveryLatLng(driverLat, driverLng)) {
       points.add(LatLng(driverLat!, driverLng!));
     }
 
@@ -611,7 +626,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
     return tryDecodeEncodedPolyline(encoded)
         .map((point) => LatLng(point.latitude, point.longitude))
-        .where((point) => _isValidLatLng(point.latitude, point.longitude))
+        .where(
+          (point) => isValidDeliveryLatLng(point.latitude, point.longitude),
+        )
         .toList(growable: false);
   }
 
@@ -657,17 +674,5 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
     );
-  }
-
-  bool _isValidLatLng(double? lat, double? lng) {
-    return lat != null &&
-        lng != null &&
-        lat.isFinite &&
-        lng.isFinite &&
-        lat >= -90 &&
-        lat <= 90 &&
-        lng >= -180 &&
-        lng <= 180 &&
-        !(lat == 0 && lng == 0);
   }
 }

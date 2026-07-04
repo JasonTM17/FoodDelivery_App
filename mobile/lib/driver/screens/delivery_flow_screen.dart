@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../shared/models/order.dart';
 import '../../shared/maps/encoded_polyline.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
@@ -46,9 +47,12 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
     final points = <LatLng>[
       ..._routePoints(order),
-      if (_isValidLatLng(order.restaurantLatitude, order.restaurantLongitude))
+      if (isValidDeliveryLatLng(
+        order.restaurantLatitude,
+        order.restaurantLongitude,
+      ))
         LatLng(order.restaurantLatitude!, order.restaurantLongitude!),
-      if (_isValidLatLng(
+      if (isValidDeliveryLatLng(
         order.deliveryAddress.latitude,
         order.deliveryAddress.longitude,
       ))
@@ -56,7 +60,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     ];
     final driverLat = state.currentLat ?? order.driverLatitude;
     final driverLng = state.currentLng ?? order.driverLongitude;
-    if (_isValidLatLng(driverLat, driverLng)) {
+    if (isValidDeliveryLatLng(driverLat, driverLng)) {
       points.add(LatLng(driverLat!, driverLng!));
     }
 
@@ -222,7 +226,10 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     AppLocalizations l10n,
   ) {
     final markers = <Marker>{};
-    if (_isValidLatLng(order.restaurantLatitude, order.restaurantLongitude)) {
+    if (isValidDeliveryLatLng(
+      order.restaurantLatitude,
+      order.restaurantLongitude,
+    )) {
       markers.add(
         Marker(
           markerId: const MarkerId('restaurant'),
@@ -237,7 +244,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
         ),
       );
     }
-    if (_isValidLatLng(
+    if (isValidDeliveryLatLng(
       order.deliveryAddress.latitude,
       order.deliveryAddress.longitude,
     )) {
@@ -256,7 +263,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
 
     final driverLat = state.currentLat ?? order.driverLatitude;
     final driverLng = state.currentLng ?? order.driverLongitude;
-    if (_isValidLatLng(driverLat, driverLng)) {
+    if (isValidDeliveryLatLng(driverLat, driverLng)) {
       markers.add(
         Marker(
           markerId: const MarkerId('driver'),
@@ -784,7 +791,9 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
   List<LatLng> _routePoints(OrderModel order) {
     return tryDecodeEncodedPolyline(order.routePolyline)
         .map((point) => LatLng(point.latitude, point.longitude))
-        .where((point) => _isValidLatLng(point.latitude, point.longitude))
+        .where(
+          (point) => isValidDeliveryLatLng(point.latitude, point.longitude),
+        )
         .toList(growable: false);
   }
 
@@ -827,18 +836,6 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
     );
-  }
-
-  bool _isValidLatLng(double? lat, double? lng) {
-    return lat != null &&
-        lng != null &&
-        lat.isFinite &&
-        lng.isFinite &&
-        lat >= -90 &&
-        lat <= 90 &&
-        lng >= -180 &&
-        lng <= 180 &&
-        !(lat == 0 && lng == 0);
   }
 
   Future<void> _openDirections(

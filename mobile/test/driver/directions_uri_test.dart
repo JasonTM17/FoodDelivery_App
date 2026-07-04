@@ -47,5 +47,16 @@ void main() {
         expect(uri, isNull);
       },
     );
+
+    test('rejects navigation outside the Vietnam delivery map', () {
+      final uri = buildGoogleMapsDirectionsUri(
+        originLat: 10.7769,
+        originLng: 106.7009,
+        destinationLat: 13.7563,
+        destinationLng: 100.5018,
+      );
+
+      expect(uri, isNull);
+    });
   });
 }

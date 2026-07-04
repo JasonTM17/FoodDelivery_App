@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/socket_client.dart';
+import '../maps/lat_lng_validation.dart';
 import 'order_provider.dart';
 
 const _trackingUnset = Object();
@@ -112,21 +113,23 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       final lng =
           (data['lng'] as num?)?.toDouble() ??
           (data['longitude'] as num?)?.toDouble();
-      if (lat != null && lng != null) {
+      if (isValidDeliveryLatLng(lat, lng)) {
+        final driverLat = lat!;
+        final driverLng = lng!;
         final updatedLocations = [
           ...state.driverLocations,
-          {'lat': lat, 'lng': lng, 'timestamp': data['timestamp']},
+          {'lat': driverLat, 'lng': driverLng, 'timestamp': data['timestamp']},
         ];
         // Keep last 50 locations
         if (updatedLocations.length > 50) {
           updatedLocations.removeAt(0);
         }
         state = state.copyWith(
-          driverLatitude: lat,
-          driverLongitude: lng,
+          driverLatitude: driverLat,
+          driverLongitude: driverLng,
           driverLocations: updatedLocations,
         );
-        _orderNotifier.updateDriverLocation(orderId, lat, lng);
+        _orderNotifier.updateDriverLocation(orderId, driverLat, driverLng);
       }
     });
 
