@@ -57,6 +57,7 @@ pnpm --filter restaurant build
 ```
 
 Latest local web/API-contract evidence: 2026-07-04 on `codex/batch4-integration`, OpenAPI YAML parse passed with 137 paths and the local web endpoint coverage scanner reported `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 34 files / 137 tests and Restaurant 27 files / 79 tests. Backend validation for this contract cluster passed `pnpm typecheck`, `pnpm lint`, and targeted Jest (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suites / 9 tests).
+Latest current-head backend evidence: 2026-07-04 at `7916ea3`, `pnpm db:generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 750 tests), and `pnpm build` all passed.
 
 ## Playwright E2E
 

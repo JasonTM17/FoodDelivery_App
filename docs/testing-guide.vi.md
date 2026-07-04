@@ -57,6 +57,7 @@ pnpm --filter restaurant build
 ```
 
 Evidence web/API-contract local mới nhất: 2026-07-04 trên `codex/batch4-integration`, OpenAPI YAML parse pass với 137 path và scanner coverage endpoint web local báo `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test` và `pnpm build` pass cho toàn bộ web workspace; Vitest pass Admin 34 files / 137 test và Restaurant 27 files / 79 test. Backend cho cụm contract này pass `pnpm typecheck`, `pnpm lint` và Jest target (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suite / 9 test).
+Evidence backend current-head mới nhất: 2026-07-04 tại `7916ea3`, `pnpm db:generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 750 test) và `pnpm build` đều pass.
 
 ## Playwright E2E
 
