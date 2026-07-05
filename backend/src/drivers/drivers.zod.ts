@@ -1,8 +1,16 @@
 import { z } from 'zod'
+import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
+
+const finiteCoordinate = z.number().refine(Number.isFinite, {
+  message: 'Coordinate must be finite',
+})
 
 export const goOnlineSchema = z.object({
-  lat: z.number().min(-90).max(90, 'Latitude must be between -90 and 90'),
-  lng: z.number().min(-180).max(180, 'Longitude must be between -180 and 180'),
+  lat: finiteCoordinate,
+  lng: finiteCoordinate,
+}).refine(({ lat, lng }) => isWithinVietnamDeliveryBounds(lat, lng), {
+  message: 'LOCATION_OUT_OF_DELIVERY_AREA',
+  path: ['lat'],
 })
 
 export type GoOnlineInput = z.infer<typeof goOnlineSchema>

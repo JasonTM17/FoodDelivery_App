@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io'
 import { routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
+import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
 import { OrdersGateway } from '../orders/orders.gateway'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { RealtimeRoomAccessService } from '../orders/realtime-room-access.service'
@@ -158,7 +159,7 @@ export class TrackingGateway implements OnGatewayConnection {
   }
 
   private isInVietnamBbox(lat: number, lng: number): boolean {
-    return lat >= 4.5 && lat <= 23.5 && lng >= 102.0 && lng <= 117.5
+    return isWithinVietnamDeliveryBounds(lat, lng)
   }
 
   private async isTeleportation(driverId: string, lat: number, lng: number): Promise<boolean> {

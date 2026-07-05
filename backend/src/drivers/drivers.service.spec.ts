@@ -30,6 +30,14 @@ describe('DriversService', () => {
   })
 
   describe('goOnline', () => {
+    it('rejects driver online coordinates outside the Vietnam delivery bounds', async () => {
+      await expect(service.goOnline('d1', 13.7563, 100.5018)).rejects.toThrow(
+        new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA'),
+      )
+      expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+    })
+
     it('throws if driver not verified', async () => {
       mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
         isVerified: false,

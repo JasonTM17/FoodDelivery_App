@@ -2,6 +2,7 @@ import { Injectable, Inject, BadRequestException, NotFoundException } from '@nes
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { decodePolyline } from '../common/utils/route.utils'
+import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
 import { haversineDistance } from '../common/utils/geo.utils'
 import Redis from 'ioredis'
 
@@ -167,6 +168,10 @@ export class DriversService {
     lat: number,
     lng: number,
   ): Promise<{ isOnline: true; lat: number; lng: number }> {
+    if (!isWithinVietnamDeliveryBounds(lat, lng)) {
+      throw new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA')
+    }
+
     const profile = await this.prisma.driverProfile.findUniqueOrThrow({ where: { userId: driverId } })
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
     const now = new Date().toISOString()
