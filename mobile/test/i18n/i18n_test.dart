@@ -388,6 +388,27 @@ void main() {
     });
   });
 
+  group('batch-4 address map validation keys', () {
+    test('address location errors exist in vi/en/ja', () {
+      final vi = lookupAppLocalizations(const Locale('vi'));
+      final en = lookupAppLocalizations(const Locale('en'));
+      final ja = lookupAppLocalizations(const Locale('ja'));
+
+      expect(vi.addressLocationRequired, isNotEmpty);
+      expect(vi.addressLocationInvalid, isNotEmpty);
+      expect(
+        en.addressLocationRequired,
+        'Please choose a valid location on the map.',
+      );
+      expect(
+        en.addressLocationInvalid,
+        'The address location is invalid. Please choose it again on the map.',
+      );
+      expect(ja.addressLocationRequired, isNotEmpty);
+      expect(ja.addressLocationInvalid, isNotEmpty);
+    });
+  });
+
   group('placeholder keys', () {
     testWidgets('cartPromoApplied renders with code placeholder', (
       tester,

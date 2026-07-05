@@ -46,8 +46,6 @@ class _AddressManagementScreenState
           final success = await notifier.addAddress(
             label: label,
             address: address,
-            latitude: 0.0,
-            longitude: 0.0,
             isDefault: ref.read(addressProvider).addresses.isEmpty,
           );
           if (context.mounted) {
@@ -58,7 +56,11 @@ class _AddressManagementScreenState
             } else {
               final error = ref.read(addressProvider).error;
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error ?? l10n.addressAddFailed)),
+                SnackBar(
+                  content: Text(
+                    _addressErrorMessage(error, l10n, l10n.addressAddFailed),
+                  ),
+                ),
               );
             }
           }
@@ -90,7 +92,11 @@ class _AddressManagementScreenState
             } else {
               final error = ref.read(addressProvider).error;
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error ?? l10n.addressUpdateFailed)),
+                SnackBar(
+                  content: Text(
+                    _addressErrorMessage(error, l10n, l10n.addressUpdateFailed),
+                  ),
+                ),
               );
             }
           }
@@ -144,6 +150,19 @@ class _AddressManagementScreenState
     await ref
         .read(addressProvider.notifier)
         .updateAddress(id: address.id, isDefault: true);
+  }
+
+  String _addressErrorMessage(
+    String? error,
+    AppLocalizations l10n,
+    String fallback,
+  ) {
+    return switch (error) {
+      'ADDRESS_LOCATION_REQUIRED' => l10n.addressLocationRequired,
+      'ADDRESS_LOCATION_INVALID' => l10n.addressLocationInvalid,
+      null => fallback,
+      _ => error,
+    };
   }
 
   @override

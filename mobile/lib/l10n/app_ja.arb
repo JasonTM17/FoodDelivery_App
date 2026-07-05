@@ -245,6 +245,8 @@
   "addressAddDialogTitle": "新しい住所を追加",
   "addressEditDialogTitle": "住所を編集",
   "addressAddFailed": "住所を追加できません",
+  "addressLocationRequired": "地図で有効な位置を選択してください。",
+  "addressLocationInvalid": "住所の位置が無効です。地図でもう一度選択してください。",
   "addressUpdateFailed": "住所を更新できません",
   "addressDeleteFailed": "住所を削除できません",
   "addressDeleteAction": "削除",

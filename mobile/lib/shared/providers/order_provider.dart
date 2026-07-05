@@ -54,12 +54,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
   OrderNotifier() : super(const OrderState());
 
   Future<String?> placeOrder({
-    required String restaurantId,
-    required List<Map<String, dynamic>> items,
-    required Map<String, dynamic> deliveryAddress,
+    required String addressId,
     String paymentMethod = 'cash',
-    String? note,
-    String? promoCode,
+    String? notes,
+    String? promotionCode,
   }) async {
     state = state.copyWith(isPlacingOrder: true, error: null);
     try {
@@ -67,12 +65,11 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final response = await _api.post(
         '/orders',
         data: {
-          'restaurantId': restaurantId,
-          'items': items,
-          'deliveryAddress': deliveryAddress,
+          'addressId': addressId,
           'paymentMethod': paymentMethod,
-          'note': note,
-          'promoCode': promoCode,
+          if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+          if (promotionCode != null && promotionCode.trim().isNotEmpty)
+            'promotionCode': promotionCode.trim(),
         },
         options: Options(headers: {'X-Idempotency-Key': idempotencyKey}),
       );
@@ -107,7 +104,11 @@ class OrderNotifier extends StateNotifier<OrderState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get('/orders');
-      final dataList = response.data as List<dynamic>;
+      final payload = response.data;
+      final dataList = payload is List<dynamic>
+          ? payload
+          : (payload as Map<String, dynamic>)['orders'] as List<dynamic>? ??
+                const [];
       final allOrders = dataList
           .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -165,17 +166,17 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
   Future<bool> submitReview(
     String orderId,
-    double foodRating,
-    double deliveryRating,
+    int foodRating,
+    int deliveryRating,
     String comment,
   ) async {
     try {
       await _api.post(
-        '/orders/$orderId/reviews',
+        '/orders/$orderId/review',
         data: {
           'foodRating': foodRating,
           'deliveryRating': deliveryRating,
-          'comment': comment,
+          if (comment.trim().isNotEmpty) 'comment': comment.trim(),
         },
       );
       await fetchOrders();

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../shared/api/api_client.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/models/user.dart';
 
 final addressProvider = StateNotifierProvider<AddressNotifier, AddressState>((
@@ -68,19 +69,26 @@ class AddressNotifier extends StateNotifier<AddressState> {
   Future<bool> addAddress({
     required String label,
     required String address,
-    required double latitude,
-    required double longitude,
+    double? latitude,
+    double? longitude,
     String? apartmentNumber,
     String? note,
     bool isDefault = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
+    if (!isValidDeliveryLatLng(latitude, longitude)) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'ADDRESS_LOCATION_REQUIRED',
+      );
+      return false;
+    }
     try {
       final response = await _api.post(
         '/users/addresses',
         data: {
           'label': label,
-          'address': address,
+          'addressLine': address.trim(),
           'latitude': latitude,
           'longitude': longitude,
           'apartmentNumber': apartmentNumber,
@@ -127,9 +135,18 @@ class AddressNotifier extends StateNotifier<AddressState> {
     try {
       final data = <String, dynamic>{};
       if (label != null) data['label'] = label;
-      if (address != null) data['address'] = address;
-      if (latitude != null) data['latitude'] = latitude;
-      if (longitude != null) data['longitude'] = longitude;
+      if (address != null) data['addressLine'] = address.trim();
+      if (latitude != null || longitude != null) {
+        if (!isValidDeliveryLatLng(latitude, longitude)) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'ADDRESS_LOCATION_INVALID',
+          );
+          return false;
+        }
+        data['latitude'] = latitude;
+        data['longitude'] = longitude;
+      }
       if (apartmentNumber != null) data['apartmentNumber'] = apartmentNumber;
       if (note != null) data['note'] = note;
       if (isDefault != null) data['isDefault'] = isDefault;

@@ -245,6 +245,8 @@
   "addressAddDialogTitle": "Add new address",
   "addressEditDialogTitle": "Edit address",
   "addressAddFailed": "Unable to add address",
+  "addressLocationRequired": "Please choose a valid location on the map.",
+  "addressLocationInvalid": "The address location is invalid. Please choose it again on the map.",
   "addressUpdateFailed": "Unable to update address",
   "addressDeleteFailed": "Unable to delete address",
   "addressDeleteAction": "Delete",

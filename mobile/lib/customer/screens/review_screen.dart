@@ -40,14 +40,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      await ref
+      final submitted = await ref
           .read(orderProvider.notifier)
           .submitReview(
             widget.orderId,
-            _foodRating,
-            _deliveryRating,
+            _foodRating.round(),
+            _deliveryRating.round(),
             _commentController.text.trim(),
           );
+      if (!submitted) {
+        if (!mounted) return;
+        final error = ref.read(orderProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? l10n.reviewError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -155,7 +166,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     initialRating: _foodRating,
                     minRating: 1,
                     direction: Axis.horizontal,
-                    allowHalfRating: true,
+                    allowHalfRating: false,
                     itemCount: 5,
                     itemSize: 44,
                     itemPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -187,7 +198,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     initialRating: _deliveryRating,
                     minRating: 1,
                     direction: Axis.horizontal,
-                    allowHalfRating: true,
+                    allowHalfRating: false,
                     itemCount: 5,
                     itemSize: 44,
                     itemPadding: const EdgeInsets.symmetric(horizontal: 4),

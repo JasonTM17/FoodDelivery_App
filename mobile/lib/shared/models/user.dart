@@ -104,8 +104,8 @@ class AddressModel {
   final String id;
   final String label;
   final String address;
-  final double latitude;
-  final double longitude;
+  final double? latitude;
+  final double? longitude;
   final String? apartmentNumber;
   final String? note;
   final bool isDefault;
@@ -114,8 +114,8 @@ class AddressModel {
     required this.id,
     this.label = 'Nhà',
     required this.address,
-    required this.latitude,
-    required this.longitude,
+    this.latitude,
+    this.longitude,
     this.apartmentNumber,
     this.note,
     this.isDefault = false,
@@ -125,9 +125,13 @@ class AddressModel {
     return AddressModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
       label: json['label'] as String? ?? 'Nhà',
-      address: json['address'] as String? ?? '',
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      address:
+          json['address'] as String? ??
+          json['addressLine'] as String? ??
+          json['address_line'] as String? ??
+          '',
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
       apartmentNumber:
           json['apartmentNumber'] as String? ??
           json['apartment_number'] as String?,
@@ -140,9 +144,9 @@ class AddressModel {
   Map<String, dynamic> toJson() {
     return {
       'label': label,
-      'address': address,
-      'latitude': latitude,
-      'longitude': longitude,
+      'addressLine': address,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
       'apartmentNumber': apartmentNumber,
       'note': note,
       'isDefault': isDefault,

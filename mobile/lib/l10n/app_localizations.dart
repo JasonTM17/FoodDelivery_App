@@ -1378,6 +1378,18 @@ abstract class AppLocalizations {
   /// **'Không thể thêm địa chỉ'**
   String get addressAddFailed;
 
+  /// No description provided for @addressLocationRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn vị trí hợp lệ trên bản đồ.'**
+  String get addressLocationRequired;
+
+  /// No description provided for @addressLocationInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí địa chỉ không hợp lệ. Hãy chọn lại trên bản đồ.'**
+  String get addressLocationInvalid;
+
   /// No description provided for @addressUpdateFailed.
   ///
   /// In vi, this message translates to:

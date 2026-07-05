@@ -663,6 +663,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get addressAddFailed => 'Không thể thêm địa chỉ';
 
   @override
+  String get addressLocationRequired =>
+      'Vui lòng chọn vị trí hợp lệ trên bản đồ.';
+
+  @override
+  String get addressLocationInvalid =>
+      'Vị trí địa chỉ không hợp lệ. Hãy chọn lại trên bản đồ.';
+
+  @override
   String get addressUpdateFailed => 'Không thể cập nhật địa chỉ';
 
   @override

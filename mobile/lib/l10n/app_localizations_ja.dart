@@ -660,6 +660,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addressAddFailed => '住所を追加できません';
 
   @override
+  String get addressLocationRequired => '地図で有効な位置を選択してください。';
+
+  @override
+  String get addressLocationInvalid => '住所の位置が無効です。地図でもう一度選択してください。';
+
+  @override
   String get addressUpdateFailed => '住所を更新できません';
 
   @override

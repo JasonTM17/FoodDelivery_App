@@ -3,52 +3,22 @@
 import 'models_user_restaurant.dart';
 
 class PlaceOrderRequest {
-  final String restaurantId;
-  final String deliveryAddressId;
+  final String addressId;
   final String paymentMethod;
   final String? promotionCode;
   final String? notes;
-  final List<OrderItemInput> items;
 
   const PlaceOrderRequest({
-    required this.restaurantId,
-    required this.deliveryAddressId,
+    required this.addressId,
     required this.paymentMethod,
     this.promotionCode,
     this.notes,
-    required this.items,
   });
 
   Map<String, dynamic> toJson() => {
-        'restaurantId': restaurantId,
-        'deliveryAddressId': deliveryAddressId,
+        'addressId': addressId,
         'paymentMethod': paymentMethod,
         if (promotionCode != null) 'promotionCode': promotionCode,
-        if (notes != null) 'notes': notes,
-        'items': items.map((e) => e.toJson()).toList(),
-      };
-}
-
-class OrderItemInput {
-  final String menuItemId;
-  final int quantity;
-  final int unitPrice;
-  final List<Map<String, dynamic>>? selectedOptions;
-  final String? notes;
-
-  const OrderItemInput({
-    required this.menuItemId,
-    required this.quantity,
-    required this.unitPrice,
-    this.selectedOptions,
-    this.notes,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'menuItemId': menuItemId,
-        'quantity': quantity,
-        'unitPrice': unitPrice,
-        if (selectedOptions != null) 'selectedOptions': selectedOptions,
         if (notes != null) 'notes': notes,
       };
 }

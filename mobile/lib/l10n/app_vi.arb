@@ -251,6 +251,8 @@
   "addressAddDialogTitle": "Thêm địa chỉ mới",
   "addressEditDialogTitle": "Sửa địa chỉ",
   "addressAddFailed": "Không thể thêm địa chỉ",
+  "addressLocationRequired": "Vui lòng chọn vị trí hợp lệ trên bản đồ.",
+  "addressLocationInvalid": "Vị trí địa chỉ không hợp lệ. Hãy chọn lại trên bản đồ.",
   "addressUpdateFailed": "Không thể cập nhật địa chỉ",
   "addressDeleteFailed": "Không thể xóa địa chỉ",
   "addressDeleteAction": "Xóa",

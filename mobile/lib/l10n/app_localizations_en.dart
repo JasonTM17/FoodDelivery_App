@@ -663,6 +663,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addressAddFailed => 'Unable to add address';
 
   @override
+  String get addressLocationRequired =>
+      'Please choose a valid location on the map.';
+
+  @override
+  String get addressLocationInvalid =>
+      'The address location is invalid. Please choose it again on the map.';
+
+  @override
   String get addressUpdateFailed => 'Unable to update address';
 
   @override

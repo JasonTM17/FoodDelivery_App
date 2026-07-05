@@ -49,21 +49,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
-    setState(() => _isPlacing = true);
-
     final cartState = ref.read(cartProvider);
     final cart = cartState.currentCart;
     if (cart == null) return;
 
+    setState(() => _isPlacing = true);
+
     final orderId = await ref
         .read(orderProvider.notifier)
         .placeOrder(
-          restaurantId: cart.restaurantId,
-          items: cart.items.map((item) => item.toJson()).toList(),
-          deliveryAddress: _selectedAddress!.toJson(),
+          addressId: _selectedAddress!.id,
           paymentMethod: _paymentMethod,
-          note: _noteController.text.isNotEmpty ? _noteController.text : null,
-          promoCode: cartState.promoCode,
+          notes: _noteController.text,
+          promotionCode: cartState.promoCode,
         );
 
     if (!mounted) return;
@@ -71,9 +69,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     if (orderId != null) {
       ref.read(cartProvider.notifier).clearCart();
-      Navigator.of(
-        context,
-      ).pushReplacementNamed('/order-tracking', arguments: orderId);
+      context.go(Routes.orderTracking, extra: orderId);
     } else {
       final error = ref.read(orderProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(

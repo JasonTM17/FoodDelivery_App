@@ -151,6 +151,12 @@ class OrderModel {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final restaurant = json['restaurant'] as Map<String, dynamic>?;
+    final itemPayload =
+        json['items'] as List<dynamic>? ??
+        json['orderItems'] as List<dynamic>? ??
+        const [];
+
     return OrderModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
       userId: json['userId'] as String? ?? json['user_id'] as String? ?? '',
@@ -161,18 +167,20 @@ class OrderModel {
       restaurantName:
           json['restaurantName'] as String? ??
           json['restaurant_name'] as String? ??
+          restaurant?['name'] as String? ??
           '',
       restaurantLogoUrl:
           json['restaurantLogoUrl'] as String? ??
-          json['restaurant_logo_url'] as String?,
-      restaurantPhone: json['restaurantPhone'] as String?,
+          json['restaurant_logo_url'] as String? ??
+          restaurant?['logoUrl'] as String? ??
+          restaurant?['logo_url'] as String?,
+      restaurantPhone:
+          json['restaurantPhone'] as String? ?? restaurant?['phone'] as String?,
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
-      items: json['items'] != null
-          ? (json['items'] as List<dynamic>)
-                .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
-                .toList()
-          : [],
+      items: itemPayload
+          .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       deliveryFee:
           (json['deliveryFee'] as num?)?.toDouble() ??
@@ -201,8 +209,11 @@ class OrderModel {
           json['paymentMethod'] as String? ??
           json['payment_method'] as String? ??
           'cash',
-      note: json['note'] as String?,
-      promoCode: json['promoCode'] as String? ?? json['promo_code'] as String?,
+      note: json['note'] as String? ?? json['notes'] as String?,
+      promoCode:
+          json['promoCode'] as String? ??
+          json['promo_code'] as String? ??
+          json['promotionCode'] as String?,
       createdAt: parseBackendDateTimeOrUnknown(
         json['createdAt'] ?? json['created_at'],
       ),
@@ -286,16 +297,28 @@ class OrderItem {
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
       menuItemId:
-          json['menuItemId'] as String? ?? json['item_id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      quantity: json['quantity'] as int? ?? 1,
-      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0.0,
+          json['menuItemId'] as String? ??
+          json['menu_item_id'] as String? ??
+          json['item_id'] as String? ??
+          '',
+      name:
+          json['name'] as String? ??
+          json['nameSnapshot'] as String? ??
+          json['name_snapshot'] as String? ??
+          '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      unitPrice:
+          (json['unitPrice'] as num?)?.toDouble() ??
+          (json['unit_price'] as num?)?.toDouble() ??
+          0.0,
       totalPrice:
           (json['totalPrice'] as num?)?.toDouble() ??
           (json['price'] as num?)?.toDouble() ??
           0.0,
-      selectedOptions: json['selectedOptions'] != null
-          ? (json['selectedOptions'] as List<dynamic>)
+      selectedOptions:
+          (json['selectedOptions'] ?? json['selected_options']) != null
+          ? ((json['selectedOptions'] ?? json['selected_options'])
+                    as List<dynamic>)
                 .map((e) => SelectedOption.fromJson(e as Map<String, dynamic>))
                 .toList()
           : [],
@@ -355,14 +378,24 @@ class OrderAddress {
 
   factory OrderAddress.fromJson(Map<String, dynamic> json) {
     if (json.isEmpty) {
-      return OrderAddress(address: '', latitude: 0.0, longitude: 0.0);
+      return OrderAddress(
+        address: '',
+        latitude: double.nan,
+        longitude: double.nan,
+      );
     }
     return OrderAddress(
       label: json['label'] as String? ?? 'Nhà',
-      address: json['address'] as String? ?? '',
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      apartmentNumber: json['apartmentNumber'] as String?,
+      address:
+          json['address'] as String? ??
+          json['addressLine'] as String? ??
+          json['address_line'] as String? ??
+          '',
+      latitude: (json['latitude'] as num?)?.toDouble() ?? double.nan,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? double.nan,
+      apartmentNumber:
+          json['apartmentNumber'] as String? ??
+          json['apartment_number'] as String?,
     );
   }
 
