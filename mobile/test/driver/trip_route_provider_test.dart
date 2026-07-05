@@ -56,5 +56,39 @@ void main() {
         expect(route.payout, 0);
       },
     );
+
+    test('drops invalid route points instead of defaulting them to zero', () {
+      final route = TripRouteDetail.fromJson({
+        'tripId': 'order-1',
+        'points': [
+          {
+            'lat': 10.7769,
+            'lng': 106.7009,
+            'timestamp': '2026-07-03T08:00:00.000Z',
+          },
+          {'timestamp': '2026-07-03T08:05:00.000Z'},
+          {
+            'lat': 13.7563,
+            'lng': 100.5018,
+            'timestamp': '2026-07-03T08:10:00.000Z',
+          },
+        ],
+      });
+
+      expect(route.points, hasLength(1));
+      expect(route.points.single.lat, 10.7769);
+      expect(route.points.single.lng, 106.7009);
+    });
+
+    test('RoutePoint rejects invalid coordinates explicitly', () {
+      expect(
+        () => RoutePoint.fromJson({
+          'lat': 0,
+          'lng': 0,
+          'timestamp': '2026-07-03T08:00:00.000Z',
+        }),
+        throwsA(isA<FormatException>()),
+      );
+    });
   });
 }

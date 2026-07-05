@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/utils/backend_date_time.dart';
 
 class RoutePoint {
@@ -15,9 +16,14 @@ class RoutePoint {
   });
 
   factory RoutePoint.fromJson(Map<String, dynamic> json) {
+    final lat = _readDoubleOrNull(json['lat']);
+    final lng = _readDoubleOrNull(json['lng']);
+    if (!isValidDeliveryLatLng(lat, lng)) {
+      throw const FormatException('Invalid route point coordinates');
+    }
     return RoutePoint(
-      lat: _readDouble(json['lat']),
-      lng: _readDouble(json['lng']),
+      lat: lat!,
+      lng: lng!,
       timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
     );
   }
@@ -73,7 +79,7 @@ class TripRouteDetail {
       tripId: json['tripId']?.toString() ?? '',
       points: _readList(
         json['points'],
-      ).map((point) => RoutePoint.fromJson(point)).toList(growable: false),
+      ).map(_tryReadRoutePoint).whereType<RoutePoint>().toList(growable: false),
       segments: _readList(json['segments'])
           .map((segment) => RouteSegment.fromJson(segment))
           .toList(growable: false),
@@ -172,6 +178,21 @@ int _readInt(Object? value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
   return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+RoutePoint? _tryReadRoutePoint(Map<String, dynamic> json) {
+  try {
+    return RoutePoint.fromJson(json);
+  } on FormatException {
+    return null;
+  }
+}
+
+double? _readDoubleOrNull(Object? value) {
+  if (value is num && value.isFinite) return value.toDouble();
+  final parsed = double.tryParse(value?.toString() ?? '');
+  if (parsed != null && parsed.isFinite) return parsed;
+  return null;
 }
 
 double _readDouble(Object? value) {
