@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Star, Store } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -31,6 +32,9 @@ interface RestaurantDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, currentStatus: string) => void;
+  isLoading?: boolean;
+  loadError?: boolean;
+  onRetry?: () => void;
 }
 
 export default function RestaurantDetailSheet({
@@ -38,8 +42,12 @@ export default function RestaurantDetailSheet({
   open,
   onOpenChange,
   onStatusChange,
+  isLoading = false,
+  loadError = false,
+  onRetry,
 }: RestaurantDetailSheetProps) {
   const t = useTranslations('restaurantDetail');
+  const restaurantsT = useTranslations('restaurants');
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -48,7 +56,22 @@ export default function RestaurantDetailSheet({
           <SheetTitle>{t('title')}</SheetTitle>
           <SheetDescription>{restaurant?.name || ''}</SheetDescription>
         </SheetHeader>
-        {restaurant && (
+        {isLoading && (
+          <div role="status" className="mt-6 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            {restaurantsT('loading')}
+          </div>
+        )}
+        {!isLoading && loadError && (
+          <div role="alert" className="mt-6 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+            <h3 className="text-sm font-semibold text-destructive">{t('errorTitle')}</h3>
+            {onRetry && (
+              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+                {t('retry')}
+              </Button>
+            )}
+          </div>
+        )}
+        {!isLoading && !loadError && restaurant && (
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

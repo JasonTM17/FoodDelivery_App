@@ -40,6 +40,9 @@ export default function OrdersTableClient() {
     useTableFilters();
   const { value: search, setValue: setSearch, debouncedValue } = useDebouncedSearch();
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery<OrdersPage>({
@@ -63,12 +66,27 @@ export default function OrdersTableClient() {
   const totalPages = Math.max(1, Math.ceil((data?.meta.total ?? 0) / (data?.meta.limit ?? 15)));
 
   const handleViewOrder = async (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setSelectedOrder(null);
+    setDetailError(false);
+    setIsDetailLoading(true);
+    setSheetOpen(true);
     try {
       setSelectedOrder(await apiGet<OrderDetail>(`/admin/orders/${orderId}`));
     } catch {
-      setSelectedOrder(data?.orders.find((order) => order.id === orderId) ?? null);
+      setDetailError(true);
+    } finally {
+      setIsDetailLoading(false);
     }
-    setSheetOpen(true);
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    setSheetOpen(open);
+    if (!open) {
+      setSelectedOrder(null);
+      setDetailError(false);
+      setIsDetailLoading(false);
+    }
   };
 
   return (
@@ -186,8 +204,11 @@ export default function OrdersTableClient() {
       <OrderDetailSheet
         order={selectedOrder}
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={handleSheetOpenChange}
         onStatusChange={() => refetch()}
+        isLoading={isDetailLoading}
+        loadError={detailError}
+        onRetry={selectedOrderId ? () => handleViewOrder(selectedOrderId) : undefined}
       />
     </>
   );

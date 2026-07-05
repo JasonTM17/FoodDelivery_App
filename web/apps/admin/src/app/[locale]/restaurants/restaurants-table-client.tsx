@@ -21,6 +21,9 @@ export default function RestaurantsTableClient() {
   const t = useTranslations('restaurants');
   const queryClient = useQueryClient();
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantDetail | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data, isLoading } = useQuery<RestaurantsResponse>({
@@ -29,14 +32,28 @@ export default function RestaurantsTableClient() {
   });
 
   const handleViewRestaurant = async (restaurantId: string) => {
+    setSelectedRestaurantId(restaurantId);
+    setSelectedRestaurant(null);
+    setDetailError(false);
+    setIsDetailLoading(true);
+    setSheetOpen(true);
     try {
       const restaurant = await apiGet<RestaurantDetail>(`/admin/restaurants/${restaurantId}`);
       setSelectedRestaurant(restaurant);
     } catch {
-      const found = data?.restaurants.find((restaurant) => restaurant.id === restaurantId);
-      if (found) setSelectedRestaurant(found);
+      setDetailError(true);
+    } finally {
+      setIsDetailLoading(false);
     }
-    setSheetOpen(true);
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    setSheetOpen(open);
+    if (!open) {
+      setSelectedRestaurant(null);
+      setDetailError(false);
+      setIsDetailLoading(false);
+    }
   };
 
   const toggleStatus = async (restaurantId: string, currentStatus: string) => {
@@ -135,8 +152,11 @@ export default function RestaurantsTableClient() {
       <RestaurantDetailSheet
         restaurant={selectedRestaurant}
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={handleSheetOpenChange}
         onStatusChange={toggleStatus}
+        isLoading={isDetailLoading}
+        loadError={detailError}
+        onRetry={selectedRestaurantId ? () => handleViewRestaurant(selectedRestaurantId) : undefined}
       />
     </>
   );

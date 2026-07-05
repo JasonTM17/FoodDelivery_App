@@ -36,6 +36,9 @@ interface OrderDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusChange?: () => void;
+  isLoading?: boolean;
+  loadError?: boolean;
+  onRetry?: () => void;
 }
 
 export default function OrderDetailSheet({
@@ -43,8 +46,12 @@ export default function OrderDetailSheet({
   open,
   onOpenChange,
   onStatusChange,
+  isLoading = false,
+  loadError = false,
+  onRetry,
 }: OrderDetailSheetProps) {
   const t = useTranslations('orders.detail');
+  const ordersT = useTranslations('orders');
 
   const updateStatus = async (status: string) => {
     if (!order) return;
@@ -61,7 +68,22 @@ export default function OrderDetailSheet({
           <SheetDescription>{order?.orderCode || ''}</SheetDescription>
         </SheetHeader>
 
-        {order && (
+        {isLoading && (
+          <div role="status" className="mt-6 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            {ordersT('loading')}
+          </div>
+        )}
+        {!isLoading && loadError && (
+          <div role="alert" className="mt-6 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+            <h3 className="text-sm font-semibold text-destructive">{ordersT('loadError')}</h3>
+            {onRetry && (
+              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+                {ordersT('retry')}
+              </Button>
+            )}
+          </div>
+        )}
+        {!isLoading && !loadError && order && (
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold">{order.orderCode}</span>
