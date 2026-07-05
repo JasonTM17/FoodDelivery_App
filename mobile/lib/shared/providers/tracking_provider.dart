@@ -44,8 +44,8 @@ class TrackingState {
 
   TrackingState copyWith({
     bool? isConnected,
-    double? driverLatitude,
-    double? driverLongitude,
+    Object? driverLatitude = _trackingUnset,
+    Object? driverLongitude = _trackingUnset,
     String? currentOrderId,
     List<Map<String, dynamic>>? driverLocations,
     Object? etaMinutes = _trackingUnset,
@@ -57,8 +57,12 @@ class TrackingState {
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
-      driverLatitude: driverLatitude ?? this.driverLatitude,
-      driverLongitude: driverLongitude ?? this.driverLongitude,
+      driverLatitude: identical(driverLatitude, _trackingUnset)
+          ? this.driverLatitude
+          : driverLatitude as double?,
+      driverLongitude: identical(driverLongitude, _trackingUnset)
+          ? this.driverLongitude
+          : driverLongitude as double?,
       currentOrderId: currentOrderId ?? this.currentOrderId,
       driverLocations: driverLocations ?? this.driverLocations,
       etaMinutes: identical(etaMinutes, _trackingUnset)

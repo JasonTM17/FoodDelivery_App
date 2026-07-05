@@ -104,5 +104,41 @@ void main() {
       expect(merged.driverLongitude, isNull);
       expect(merged.driverLocations, isEmpty);
     });
+
+    test(
+      'clears a stale driver marker when the snapshot coordinates are invalid',
+      () {
+        const state = TrackingState(
+          currentOrderId: 'order-1',
+          driverLatitude: 10.7769,
+          driverLongitude: 106.7009,
+          driverLocations: [
+            {
+              'lat': 10.7769,
+              'lng': 106.7009,
+              'timestamp': '2026-07-05T01:00:00Z',
+            },
+          ],
+        );
+        const snapshot = TrackingResponse(
+          orderId: 'order-1',
+          status: 'delivering',
+          etaMinutes: 5,
+          routePolyline: 'encoded-route',
+          routePhase: 'dropoff',
+          driverLocation: DriverLocation(
+            lat: 0,
+            lng: 0,
+            lastUpdated: '2026-07-05T01:02:03Z',
+          ),
+        );
+
+        final merged = mergeTrackingSnapshot(state, snapshot);
+
+        expect(merged.driverLatitude, isNull);
+        expect(merged.driverLongitude, isNull);
+        expect(merged.driverLocations, hasLength(1));
+      },
+    );
   });
 }
