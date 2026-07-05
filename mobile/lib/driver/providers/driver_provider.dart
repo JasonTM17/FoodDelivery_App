@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/api/socket_client.dart';
 import '../../shared/models/order.dart';
+import '../../shared/services/secure_storage_service.dart';
 import '../services/background_location_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -310,6 +311,7 @@ final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((
 class DriverNotifier extends StateNotifier<DriverState> {
   final ApiClient _api = ApiClient.instance;
   final SocketClient _socket = SocketClient.instance;
+  final SecureStorageService _storage = SecureStorageService.instance;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
@@ -331,49 +333,94 @@ class DriverNotifier extends StateNotifier<DriverState> {
       final data = response.data as Map<String, dynamic>;
       final accessToken =
           data['accessToken'] as String? ?? data['token'] as String? ?? '';
+      final refreshToken =
+          data['refreshToken'] as String? ?? data['refresh_token'] as String?;
 
       if (accessToken.isEmpty) {
-        state = state.copyWith(isLoading: false, error: 'Đăng nhập thất bại');
+        await _clearAuthTokens();
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          error: 'Đăng nhập thất bại',
+        );
         return;
       }
 
-      await _fetchDriverProfile();
+      await _persistAuthTokens(accessToken, refreshToken);
+      final profileLoaded = await _fetchDriverProfile();
+      if (!profileLoaded) {
+        final profileError = state.error;
+        await _clearAuthTokens();
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          error: profileError,
+        );
+        return;
+      }
       state = state.copyWith(isLoading: false, isAuthenticated: true);
     } on DioException catch (e) {
+      await _clearAuthTokens();
       final message =
           e.response?.data?['message'] as String? ??
           e.response?.data?['error'] as String? ??
           'Sai email hoặc mật khẩu';
-      state = state.copyWith(isLoading: false, error: message);
-    } catch (e) {
       state = state.copyWith(
         isLoading: false,
+        isAuthenticated: false,
+        error: message,
+      );
+    } catch (e) {
+      await _clearAuthTokens();
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: false,
         error: 'Có lỗi xảy ra. Vui lòng thử lại.',
       );
     }
   }
 
-  Future<void> _fetchDriverProfile() async {
+  Future<void> _persistAuthTokens(
+    String accessToken,
+    String? refreshToken,
+  ) async {
+    await _storage.setAccessToken(accessToken);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.setRefreshToken(refreshToken);
+    } else {
+      await _storage.deleteRefreshToken();
+    }
+  }
+
+  Future<void> _clearAuthTokens() => _storage.clear();
+
+  Future<bool> _fetchDriverProfile() async {
     try {
       final response = await _api.get('/users/me');
       final data = response.data as Map<String, dynamic>;
       final profile = data['driverProfile'] as Map<String, dynamic>?;
+      if (data['role'] != 'driver' || profile == null) {
+        state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+        return false;
+      }
       state = state.copyWith(
         driverName: data['fullName'] as String?,
         driverPhone: data['phone'] as String?,
         driverAvatarUrl: data['avatarUrl'] as String?,
-        rating: (profile?['rating'] as num?)?.toDouble() ?? state.rating,
+        rating: (profile['rating'] as num?)?.toDouble() ?? state.rating,
         totalDeliveries:
-            profile?['totalDeliveries'] as int? ?? state.totalDeliveries,
+            profile['totalDeliveries'] as int? ?? state.totalDeliveries,
         totalEarnings:
-            (profile?['totalEarnings'] as num?)?.toDouble() ??
+            (profile['totalEarnings'] as num?)?.toDouble() ??
             state.totalEarnings,
-        vehicleType: profile?['vehicleType'] as String?,
-        vehiclePlate: profile?['vehiclePlate'] as String?,
-        isOnline: profile?['isOnline'] as bool? ?? false,
+        vehicleType: profile['vehicleType'] as String?,
+        vehiclePlate: profile['vehiclePlate'] as String?,
+        isOnline: profile['isOnline'] as bool? ?? false,
       );
+      return true;
     } catch (_) {
       state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+      return false;
     }
   }
 
@@ -382,6 +429,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
     try {
       await _api.post('/auth/logout');
     } catch (_) {}
+    await _clearAuthTokens();
     state = const DriverState();
   }
 
