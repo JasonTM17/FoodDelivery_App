@@ -1,6 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { ADMIN_URL, RESTAURANT_URL } from '../fixtures/test-users'
 
+const ADMIN_LOGIN_HEADING = /login|admin|quản trị|管理者/i
+const RESTAURANT_LOGIN_HEADING = /login|restaurant|quản lý nhà hàng|nhà hàng|レストラン/i
+
 async function disableMotion(page: Page): Promise<void> {
   await page.addStyleTag({
     content: `
@@ -82,7 +85,7 @@ test.describe('Batch 4 visual contract regression', () => {
     await page.goto(`${ADMIN_URL}/en/login`)
     await disableMotion(page)
 
-    await expect(page.getByRole('heading', { name: /login|admin/i }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: ADMIN_LOGIN_HEADING }).first()).toBeVisible()
     await expectFoodFlowLogo(page.getByRole('img', { name: 'FoodFlow' }).first())
     await expectCenteredLoginForm(page, page.locator('form button[type="submit"]'))
 
@@ -96,7 +99,7 @@ test.describe('Batch 4 visual contract regression', () => {
     await page.goto(`${RESTAURANT_URL}/en/login`)
     await disableMotion(page)
 
-    await expect(page.getByRole('heading', { name: /login|restaurant/i }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: RESTAURANT_LOGIN_HEADING }).first()).toBeVisible()
     await expectFoodFlowLogo(page.getByRole('img', { name: 'FoodFlow' }).first())
     await expectCenteredLoginForm(page, page.locator('form button[type="submit"]'))
 
