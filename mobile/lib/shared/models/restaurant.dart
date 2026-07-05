@@ -1,3 +1,4 @@
+import '../maps/lat_lng_validation.dart';
 import '../utils/backend_date_time.dart';
 
 class RestaurantModel {
@@ -32,8 +33,8 @@ class RestaurantModel {
     this.priceRange = '\$\$',
     this.cuisineTypes = const [],
     this.isOpen = true,
-    this.latitude = 0.0,
-    this.longitude = 0.0,
+    this.latitude = double.nan,
+    this.longitude = double.nan,
     this.address,
     this.phone,
     this.reviews,
@@ -69,8 +70,8 @@ class RestaurantModel {
               .toList() ??
           [],
       isOpen: json['isOpen'] as bool? ?? json['is_open'] as bool? ?? true,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      latitude: _readCoordinate(json['latitude'] ?? json['lat']),
+      longitude: _readCoordinate(json['longitude'] ?? json['lng']),
       address: json['address'] as String?,
       phone: json['phone'] as String?,
       reviews: json['reviews'] != null
@@ -95,13 +96,18 @@ class RestaurantModel {
       'priceRange': priceRange,
       'cuisineTypes': cuisineTypes,
       'isOpen': isOpen,
-      'latitude': latitude,
-      'longitude': longitude,
+      'latitude': isValidWorldLatLng(latitude, longitude) ? latitude : null,
+      'longitude': isValidWorldLatLng(latitude, longitude) ? longitude : null,
       'address': address,
       'phone': phone,
       'reviews': reviews?.map((e) => e.toJson()).toList(),
     };
   }
+}
+
+double _readCoordinate(Object? value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? double.nan;
 }
 
 class ReviewModel {

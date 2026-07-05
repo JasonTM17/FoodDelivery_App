@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../shared/providers/restaurant_provider.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/restaurant_card.dart';
@@ -187,6 +188,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
   Widget _buildMapView(RestaurantState state) {
     final list = state.nearbyRestaurants;
     final markers = list
+        .where((r) => isValidDeliveryLatLng(r.latitude, r.longitude))
         .map(
           (r) => Marker(
             markerId: MarkerId(r.id),
