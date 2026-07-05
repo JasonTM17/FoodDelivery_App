@@ -12,7 +12,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Đã landing trên `master`
 
-- `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`; remote integration branch đã xoá sau khi xác minh patch-equivalent. Runtime code đã verify gồm `161ce9a`, Docker/E2E đã rerun sau docs head `e24631c`; dùng `git ls-remote --heads origin` để lấy SHA `master` hiện tại chính xác sau các commit docs-only.
+- `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`; remote integration branch đã xoá sau khi xác minh patch-equivalent. Runtime code đã verify gồm `d201ce1`, Docker/E2E đã rerun sau docs head `e24631c` và mobile driver map overlays đã verify tại `d201ce1`; dùng `git ls-remote --heads origin` để lấy SHA `master` hiện tại chính xác sau các commit docs-only.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.

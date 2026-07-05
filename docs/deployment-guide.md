@@ -6,7 +6,7 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
 
-Current Batch 4 status on 2026-07-05: `codex/batch4-integration` was fast-forwarded into `master` at `3857433`, and the remote integration branch was deleted after patch-equivalence was verified. The latest verified runtime code includes `161ce9a`, with Docker/E2E rerun after docs head `e24631c`; use `git ls-remote --heads origin` for the exact current `master` SHA after docs-only evidence commits. This is a branch cleanup and local-hardening milestone, not a production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, and production secrets/CLI auth are valid.
+Current Batch 4 status on 2026-07-05: `codex/batch4-integration` was fast-forwarded into `master` at `3857433`, and the remote integration branch was deleted after patch-equivalence was verified. The latest verified runtime code includes `d201ce1`, with Docker/E2E rerun after docs head `e24631c` and mobile driver map overlays verified at `d201ce1`; use `git ls-remote --heads origin` for the exact current `master` SHA after docs-only evidence commits. This is a branch cleanup and local-hardening milestone, not a production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, and production secrets/CLI auth are valid.
 
 ## Local Docker Stack
 

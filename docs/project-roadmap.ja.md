@@ -12,7 +12,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## `master` に landed
 
-- `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みです。patch-equivalence 確認後、remote integration branch は削除されました。Verified runtime code includes `161ce9a`, and Docker/E2E was rerun after docs head `e24631c`; docs-only evidence commits 後の正確な current `master` SHA は `git ls-remote --heads origin` で確認します。
+- `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みです。patch-equivalence 確認後、remote integration branch は削除されました。Verified runtime code includes `d201ce1`, Docker/E2E was rerun after docs head `e24631c`, and mobile driver map overlays were verified at `d201ce1`; docs-only evidence commits 後の正確な current `master` SHA は `git ls-remote --heads origin` で確認します。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。

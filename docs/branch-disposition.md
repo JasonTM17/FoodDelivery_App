@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-05. Branch cleanup was performed after `codex/batch4-integration` was fast-forwarded into `master` at `3857433`. The latest verified runtime code includes `161ce9a`; exact remote `master` SHA should be checked with `git ls-remote --heads origin` after docs-only evidence commits.
+Last audited: 2026-07-05. Branch cleanup was performed after `codex/batch4-integration` was fast-forwarded into `master` at `3857433`. The latest verified runtime code includes `d201ce1`; exact remote `master` SHA should be checked with `git ls-remote --heads origin` after docs-only evidence commits.
 
 This record documents the branch state used for Batch 4 salvage and cleanup decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
