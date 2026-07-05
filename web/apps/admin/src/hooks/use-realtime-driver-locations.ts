@@ -82,11 +82,13 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
           ? update.orderId ?? undefined
           : next[index].currentOrder,
         status: update.status ?? next[index].status,
-        lastSeenAt: update.timestamp ?? new Date().toISOString(),
+        lastSeenAt: update.timestamp ?? next[index].lastSeenAt,
       };
       return next;
     });
-    setLastUpdatedAt(update.timestamp ?? new Date().toISOString());
+    if (update.timestamp) {
+      setLastUpdatedAt(update.timestamp);
+    }
   }, [loadDrivers]);
 
   useEffect(() => {

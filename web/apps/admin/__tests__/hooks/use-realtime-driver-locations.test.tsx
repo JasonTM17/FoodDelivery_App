@@ -117,6 +117,35 @@ describe('useRealtimeDriverLocations', () => {
     expect(result.current.lastUpdatedAt).toBe('2026-07-02T09:00:00.000Z');
   });
 
+  it('keeps the existing heartbeat timestamp when realtime omits timestamp', async () => {
+    mockedApiGet.mockResolvedValueOnce([makeLocation()]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.drivers).toHaveLength(1);
+    });
+    const previousLastUpdatedAt = result.current.lastUpdatedAt;
+
+    act(() => {
+      socketMock.trigger('admin:driver_location_changed', {
+        driverId: 'driver-1',
+        lat: 10.82,
+        lng: 106.82,
+        orderId: 'ORD-1',
+        status: 'delivering',
+      });
+    });
+
+    expect(result.current.drivers[0]).toMatchObject({
+      lat: 10.82,
+      lng: 106.82,
+      currentOrder: 'ORD-1',
+      status: 'delivering',
+      lastSeenAt: '2026-07-02T08:30:00.000Z',
+    });
+    expect(result.current.lastUpdatedAt).toBe(previousLastUpdatedAt);
+  });
+
   it('clears the current order when realtime explicitly reports no active order', async () => {
     mockedApiGet.mockResolvedValueOnce([makeLocation({ currentOrder: 'ORD-OLD', status: 'delivering' })]);
     const { result } = renderHook(() => useRealtimeDriverLocations());
