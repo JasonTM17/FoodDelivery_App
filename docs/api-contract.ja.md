@@ -117,6 +117,13 @@ Cursor-based endpoint は `meta` に cursor field を追加できますが、col
 - `/dispatch` は `driver` account のみ受け付け、`driver:<authenticated-user-id>` のみに join し、認証 user と異なる driver ID の offer response を拒否します。
 - Production origin は `CORS_ORIGINS` を使用し、local default は port 3000、3002、3003 を許可します。
 
+## Order tracking REST snapshot
+
+- `GET /orders/{id}/tracking` は customer-scoped で、認証済み customer 自身の order について Redis/cache/database の real telemetry だけを返します。
+- `driverLocation`、`etaMinutes`、`routePolyline` は nullable です。Client は null を unavailable data として扱い、straight-line ETA や route geometry を捏造してはいけません。
+- `routePhase` は必須 field で、pickup 前は `pickup`、pickup 後は `dropoff` です。Mobile/web client は stale pickup geometry を customer-bound delivery に再利用しないためにこの field を使います。
+- Customer mobile は realtime events を subscribe する前にこの snapshot を hydrate し、その後 realtime `delivery:eta_updated` で planned route を置換または clear します。
+
 ## HMAC 規約
 
 ### Inbound SePay webhook

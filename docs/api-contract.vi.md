@@ -104,6 +104,13 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 - `/dispatch` chỉ nhận tài khoản `driver`, chỉ join `driver:<authenticated-user-id>` và từ chối phản hồi offer có driver ID khác user đã xác thực.
 - Production origin lấy từ `CORS_ORIGINS`; mặc định local hỗ trợ các port 3000, 3002 và 3003.
 
+## Snapshot REST tracking đơn hàng
+
+- `GET /orders/{id}/tracking` scope theo customer và chỉ trả telemetry thật từ Redis/cache/database cho đơn của customer đã xác thực.
+- `driverLocation`, `etaMinutes` và `routePolyline` có thể null; client phải xem null là dữ liệu chưa khả dụng, không tự bịa ETA đường thẳng hoặc route geometry.
+- `routePhase` là field bắt buộc, giá trị `pickup` trước khi lấy món và `dropoff` sau khi lấy món. Mobile/web client phải dùng field này để tránh tái sử dụng geometry pickup stale cho chặng giao tới khách.
+- Customer mobile hydrate snapshot này trước khi subscribe realtime events, sau đó cho realtime `delivery:eta_updated` thay thế hoặc xoá planned route.
+
 ## Quy ước HMAC
 
 ### Webhook SePay inbound

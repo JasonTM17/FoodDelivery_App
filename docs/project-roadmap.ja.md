@@ -21,11 +21,11 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は 2026-07-04 に current head `78bf643` で local 再確認済みです。`flutter analyze` は clean、`flutter test` は 133 tests passed。`78bf643` の GitHub Actions は account billing/spending-limit により runner start 前に blocked されているため、修正後に remote checks を rerun する必要があります。
+- Mobile Flutter gate は 2026-07-05 に current head `d5ecfcb` で local 再確認済みです。`flutter analyze` は clean、`flutter test` は 149 tests passed、focused tracking snapshot tests は 6/6 pass。`d5ecfcb` の GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
 - Mobile runtime UI は touched dispatch/cancel flows の targeted scanner 上で hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。
-- Customer/driver tracking maps は backend-routed `routePolyline` を使い、telemetry trail と planned route を分離し、pickup/dropoff route phase を扱い、phase 変更時に stale route geometry を clear し、driver GPS metadata を backend の km/h contract に normalize します。Route provider が使えない場合も straight-line ETA minutes を捏造しません。
+- Customer/driver tracking maps は backend-routed `routePolyline` を使い、realtime 前に REST snapshot `/orders/:id/tracking` を hydrate し、telemetry trail と planned route を分離し、pickup/dropoff route phase を扱い、phase 変更または route-less snapshot で stale route geometry を clear し、driver GPS metadata を backend の km/h contract に normalize します。Route provider が使えない場合も straight-line ETA minutes を捏造しません。
 - Admin shared tag input は default English placeholder copy を生成しません。Caller が localized placeholder を渡す必要があります。
-- Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head `78bf643` の CI は GitHub billing/spending-limit により job start 前に blocked されています。
+- Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head `d5ecfcb` の CI は GitHub token/auth または billing status により job start 前に blocked されています。
 
 ### Mobile
 

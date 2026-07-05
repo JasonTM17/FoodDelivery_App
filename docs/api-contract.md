@@ -119,6 +119,13 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 - `/dispatch` accepts only `driver` accounts, joins only `driver:<authenticated-user-id>`, and rejects offer responses whose driver ID differs from the authenticated user.
 - Production origins come from `CORS_ORIGINS`; local defaults cover ports 3000, 3002, and 3003.
 
+## Order tracking REST snapshot
+
+- `GET /orders/{id}/tracking` is customer-scoped and returns only real Redis/cache/database telemetry for the authenticated customer's order.
+- `driverLocation`, `etaMinutes`, and `routePolyline` are nullable; clients must treat nulls as unavailable data, not fabricate straight-line ETA or route geometry.
+- `routePhase` is required and is `pickup` before pickup, `dropoff` after pickup. Mobile and web clients must use it to avoid reusing stale pickup geometry for customer-bound delivery.
+- Customer mobile hydrates this snapshot before subscribing to realtime events, then lets realtime `delivery:eta_updated` replace or clear the planned route.
+
 ## HMAC conventions
 
 ### Inbound SePay webhook
