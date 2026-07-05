@@ -39,7 +39,7 @@ curl http://localhost:3002/api/healthz
 | Storage | MinIO/S3 access key và secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` hoặc key của LLM provider được cấu hình |
-| Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` và `OSRM_URL` riêng; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLI | Vercel token, Supabase access token |
 
 Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history phải rotate trước production.

@@ -39,7 +39,7 @@ curl http://localhost:3002/api/healthz
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` または設定済み LLM provider key |
-| Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLI | Vercel token, Supabase access token |
 
 チャット、ログ、スクリーンショット、チケット、git history に出た key は production 前に rotate してください。

@@ -21,6 +21,20 @@ async function buildService(redis: ReturnType<typeof makeRedis>): Promise<Direct
 
 const origin = { lat: 10.8, lng: 106.7 }
 const dest   = { lat: 10.75, lng: 106.65 }
+const originalNodeEnv = process.env.NODE_ENV
+const originalGoogleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
+const originalOsrmUrl = process.env.OSRM_URL
+
+afterEach(() => {
+  if (originalNodeEnv === undefined) delete process.env.NODE_ENV
+  else process.env.NODE_ENV = originalNodeEnv
+
+  if (originalGoogleMapsApiKey === undefined) delete process.env.GOOGLE_MAPS_API_KEY
+  else process.env.GOOGLE_MAPS_API_KEY = originalGoogleMapsApiKey
+
+  if (originalOsrmUrl === undefined) delete process.env.OSRM_URL
+  else process.env.OSRM_URL = originalOsrmUrl
+})
 
 // ─── Suite 1: no API key configured ──────────────────────────────────────────
 
@@ -94,6 +108,16 @@ describe('DirectionsApiService (no API key)', () => {
 })
 
 // ─── Suite 2: Google API key configured ───────────────────────────────────────
+
+describe('DirectionsApiService production configuration', () => {
+  it('fails closed instead of using the public OSRM demo server in production', async () => {
+    process.env.NODE_ENV = 'production'
+    delete process.env.GOOGLE_MAPS_API_KEY
+    delete process.env.OSRM_URL
+
+    await expect(buildService(makeRedis())).rejects.toThrow('OSRM_URL is required in production')
+  })
+})
 
 describe('DirectionsApiService (with API key)', () => {
   let service: DirectionsApiService

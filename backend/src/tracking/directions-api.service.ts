@@ -140,7 +140,7 @@ export class DirectionsApiService {
   constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY
     this.googleProvider = apiKey ? new GoogleDirectionsProvider(apiKey) : null
-    const osrmUrl = process.env.OSRM_URL ?? 'https://router.project-osrm.org'
+    const osrmUrl = resolveOsrmUrl(process.env)
     this.osrmProvider = new OsrmRouteProvider(osrmUrl)
     this.dailyLimit = parseInt(process.env.DIRECTIONS_DAILY_LIMIT ?? '10000', 10)
   }
@@ -180,4 +180,15 @@ export class DirectionsApiService {
     // TTL set once; INCR on existing key preserves TTL, so only set on first call
     await this.redis.expire(key, 86_400)
   }
+}
+
+function resolveOsrmUrl(env: NodeJS.ProcessEnv): string {
+  const configuredUrl = env.OSRM_URL?.trim()
+  if (configuredUrl) return configuredUrl
+
+  if (env.NODE_ENV === 'production') {
+    throw new Error('OSRM_URL is required in production')
+  }
+
+  return 'https://router.project-osrm.org'
 }

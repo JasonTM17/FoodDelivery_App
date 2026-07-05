@@ -43,6 +43,7 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | No | — / `587` / `false` | SMTP worker transport for email delivery; password reset requests enqueue here when configured |
 | `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | No | — / — / `noreply@foodflow.vn` | SMTP credentials and sender address; keep credentials in secret manager / ignored `.env` |
 | `DEEPSEEK_API_KEY` | No | — | DeepSeek API key for direct chatbot replies. Keep in secret manager / ignored `.env`, never commit |
+| `OSRM_URL` | Production yes | local/test `https://router.project-osrm.org` | Owned routing fallback for shipper route ETA; production fails closed without it |
 | `DEEPSEEK_BASE_URL` | No | `https://api.deepseek.com` | DeepSeek OpenAI-compatible base URL |
 | `DEEPSEEK_MODEL` | No | `deepseek-v4-flash` | DeepSeek model for chatbot replies |
 | `DEEPSEEK_THINKING` | No | `disabled` | Set `enabled` only if the chat flow can handle slower reasoning responses |

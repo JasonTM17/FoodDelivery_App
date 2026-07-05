@@ -28,6 +28,8 @@ Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSo
 | `ETA_CACHE_TTL_SEC` | no | `120` | Redis TTL for ETA snapshot |
 | `ROUTE_DEVIATION_THRESHOLD_M` | no | `100` | Trigger recompute if driver off route > N meters |
 
+Production requires both `GOOGLE_MAPS_API_KEY` and an owned `OSRM_URL`; the backend fails closed instead of using the public OSRM demo service in production.
+
 ## Run locally
 
 ```bash

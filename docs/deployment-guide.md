@@ -41,7 +41,7 @@ Use provider secret managers, not committed files:
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
-| Maps | backend `GOOGLE_MAPS_API_KEY`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLIs | Vercel token, Supabase access token |
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
