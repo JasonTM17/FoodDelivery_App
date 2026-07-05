@@ -19,7 +19,7 @@ describe('OrdersService', () => {
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockPaymentsService: { processPayment: jest.Mock }
   let mockPromotionsService: { claimInTransaction: jest.Mock }
-  let mockRedis: { get: jest.Mock; del: jest.Mock }
+  let mockRedis: { get: jest.Mock; set: jest.Mock; del: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
     order: { findUniqueOrThrow: jest.Mock; update: jest.Mock; create: jest.Mock }
@@ -75,6 +75,7 @@ describe('OrdersService', () => {
     }
     mockRedis = {
       get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue('OK'),
       del: jest.fn().mockResolvedValue(1),
     }
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
@@ -351,19 +352,22 @@ describe('OrdersService', () => {
       )
     })
 
-    it('releases driver current order when a terminal order still owns the redis assignment', async () => {
+    it('releases driver current order and returns an alive driver to the online pool', async () => {
       mockTx.order.findUniqueOrThrow.mockResolvedValue({
         id: orderId,
         status: 'delivering',
         driverId: 'driver-1',
       })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
-      mockRedis.get.mockResolvedValueOnce(orderId)
+      mockRedis.get.mockResolvedValueOnce(orderId).mockResolvedValueOnce('1')
 
       await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')
 
       expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:current_order')
       expect(mockRedis.del).toHaveBeenCalledWith('driver:driver-1:current_order')
+      expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:alive')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:status', 'online')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:idle_since', expect.any(String))
     })
 
     it('does not release a driver assignment that has already moved to another order', async () => {

@@ -12,7 +12,7 @@ import { routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
 import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
-import { OrdersGateway } from '../orders/orders.gateway'
+import { OrdersGateway, type AdminDriverLocationChangedEvent } from '../orders/orders.gateway'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { RealtimeRoomAccessService } from '../orders/realtime-room-access.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
@@ -67,6 +67,15 @@ export class TrackingGateway implements OnGatewayConnection {
     }
 
     const orderId = await this.trackingService.handleLocationUpdate(driverId, data)
+    this.emitAdminDriverLocation(driverId, {
+      driverId,
+      lat: data.lat,
+      lng: data.lng,
+      ...(orderId ? { orderId } : {}),
+      status: orderId ? 'delivering' : 'online',
+      timestamp: new Date().toISOString(),
+    })
+
     if (!orderId) return
 
     const now = Date.now()
@@ -82,17 +91,6 @@ export class TrackingGateway implements OnGatewayConnection {
         : null,
       timestamp: new Date().toISOString(),
     })
-
-    const adminEvent = {
-      driverId,
-      lat: data.lat,
-      lng: data.lng,
-      orderId,
-      status: orderId ? 'delivering' as const : 'online' as const,
-      timestamp: new Date().toISOString(),
-    }
-    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', adminEvent)
-    this.ordersGateway.notifyAdminDriverLocation(adminEvent)
 
     const routeTarget = await this.prisma.$queryRawUnsafe<Array<{
       status: string
@@ -170,5 +168,19 @@ export class TrackingGateway implements OnGatewayConnection {
     const distKm = haversineDistance(last.lat, last.lng, lat, lng)
     const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
     return distKm > maxKm
+  }
+
+  private emitAdminDriverLocation(
+    driverId: string,
+    data: AdminDriverLocationChangedEvent,
+  ): void {
+    const key = `admin:driver:${driverId}`
+    const now = Date.now()
+    const lastTime = this.lastBroadcast.get(key) ?? 0
+    if (now - lastTime < 2000) return
+
+    this.lastBroadcast.set(key, now)
+    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', data)
+    this.ordersGateway.notifyAdminDriverLocation(data)
   }
 }

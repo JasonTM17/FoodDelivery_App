@@ -71,6 +71,33 @@ describe('TrackingGateway authorization', () => {
     expect(handleLocationUpdate).toHaveBeenCalledWith('driver-1', expect.any(Object))
   })
 
+  it('emits admin map updates for idle drivers without entering order routing flow', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 0,
+      speed: 20,
+      accuracy: 5,
+    })
+
+    expect(emitToRoom).toHaveBeenCalledWith('admin:driver_location_changed', expect.objectContaining({
+      driverId: 'driver-1',
+      lat: 10.8,
+      lng: 106.7,
+      status: 'online',
+    }))
+    expect(notifyAdminDriverLocation).toHaveBeenCalledWith(expect.objectContaining({
+      driverId: 'driver-1',
+      status: 'online',
+    }))
+    expect(queryRawUnsafe).not.toHaveBeenCalled()
+    expect(getOrFetchRoute).not.toHaveBeenCalled()
+  })
+
   it('marks routed ETA updates as non-degraded provider values', async () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)

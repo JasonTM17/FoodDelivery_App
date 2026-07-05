@@ -139,10 +139,21 @@ export class OrdersService {
   }
 
   private async releaseDriverAssignmentIfCurrent(driverId: string, orderId: string): Promise<void> {
-    const key = `driver:${driverId}:current_order`
-    const currentOrder = await this.redis.get(key)
+    const currentOrderKey = `driver:${driverId}:current_order`
+    const currentOrder = await this.redis.get(currentOrderKey)
     if (currentOrder === orderId) {
-      await this.redis.del(key)
+      await this.redis.del(currentOrderKey)
+
+      const statusKey = `driver:${driverId}:status`
+      const idleSinceKey = `driver:${driverId}:idle_since`
+      const isAlive = await this.redis.get(`driver:${driverId}:alive`)
+      if (isAlive) {
+        await this.redis.set(statusKey, 'online')
+        await this.redis.set(idleSinceKey, Date.now().toString())
+      } else {
+        await this.redis.del(statusKey)
+        await this.redis.del(idleSinceKey)
+      }
     }
   }
 
