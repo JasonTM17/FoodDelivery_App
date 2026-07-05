@@ -121,16 +121,17 @@ Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Li
 
 ## 最新 local evidence (2026-07-05)
 
-Branch: `codex/batch4-integration`。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
+Runtime code head は `3857433` / `master` です。`codex/batch4-integration` は fast-forward 後に remote integration branch が削除されました。Clean local worktree は local `codex/batch4-integration` を使う場合がありますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
 
 - Backend と web の frozen install は pinned `pnpm 11.7.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
-- Backend は `pnpm typecheck`、`pnpm lint`、full `pnpm test`（105 suites / 750 tests）、`pnpm build` が pass。refund/tracking/driver route の targeted regression は 8 suites / 82 tests が pass。
-- Web は `pnpm typecheck`、`pnpm lint`、`pnpm test`（Admin 34 files / 139 tests、Restaurant 27 files / 79 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
+- Backend は `pnpm typecheck`、`pnpm lint`、full `pnpm test`（107 suites / 758 tests）、`pnpm build` が pass。dispatch/order-code focused regressions は 3 suites / 46 tests が pass。
+- Web は `pnpm typecheck`、`pnpm lint`、`pnpm test`（Admin 35 files / 144 tests、Restaurant 28 files / 83 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
 - Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。`http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
-- Playwright は IPv6 loopback URL で `pnpm test:e2e --project=chromium` 35/35、`pnpm test:e2e --project=firefox` 35/35 が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
+- Playwright は IPv6 loopback URL で Chromium + Firefox together 70/70 tests が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
 - Mobile は `flutter analyze`、full `flutter test`（149 tests）、focused `flutter test test/shared/tracking_provider_test.dart`（6/6 tests）、`dart analyze packages/api_client` が pass。最新の Android debug APK evidence は以前 pass した customer/driver flavor builds です。
 - Tracking contract refresh `d5ecfcb` は backend `pnpm jest src/tracking/tracking.controller.spec.ts --runInBand`（3/3 tests）、web `pnpm typecheck`、OpenAPI YAML parse（137 paths、`OrderTrackingResponse.routePhase` required）、Spectral lint（0 errors、既存の tag warning 1 件）を pass。
-- Security evidence: high-confidence tracked secret scan は match なし。Native Firebase/provisioning artifacts は ignore 済み。Legacy fake refund processor は削除済み。Refund は `payment-refund` に enqueue され、full refund は SePay または wallet ledger reversal 成功後のみ反映されます。Mobile idempotency key は UUID v4、mobile HTTP body logging は debug-only かつ redacted です。
+- Dispatch/map evidence: restaurant acceptance は restaurant latitude/longitude と attempt metadata を含む route-aware dispatch jobs を enqueue します。Worker は legacy malformed jobs を skip し、ioredis `GEOSEARCH WITHDIST` tuple rows を parse し、`raw[i].replace is not a function` で fail しません。
+- Security evidence: high-confidence tracked secret scan は match なし。`.env.example` 以外の tracked dotenv/key/credential files はありません。Native Firebase/provisioning artifacts は ignore 済み。Legacy fake refund processor は削除済み。Refund は `payment-refund` に enqueue され、full refund は SePay または wallet ledger reversal 成功後のみ反映されます。Mobile idempotency key は UUID v4、mobile HTTP body logging は debug-only かつ redacted です。
 
 ## Security checks
 

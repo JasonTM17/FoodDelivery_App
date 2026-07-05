@@ -2,17 +2,17 @@
 
 Ngôn ngữ: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.vi.md) | [日本語](./project-roadmap.ja.md)
 
-Roadmap này phản ánh hướng của integration branch. Nó tách phần đã landing khỏi phần còn phải test trước production deployment.
+Roadmap này phản ánh hướng Batch 4 đã merge trên `master`. Nó tách phần đã landing khỏi phần còn phải test trước production deployment.
 
-## Ưu tiên hiện tại: Batch 4 web/backend parity và mobile stabilization
+## Ưu tiên hiện tại: hardening sau merge và sẵn sàng deploy
 
-Mục tiêu: đưa Admin và Restaurant dashboard lên mức production-grade với dữ liệu backend thật, sau đó giữ app mobile/customer khớp Batch 4 contract đã ổn định, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 11.7.0 đã pin và constraints Flutter hiện có.
+Mục tiêu: giữ Admin, Restaurant, backend và mobile khớp Batch 4 contract đã merge, đóng các gap sẵn sàng deploy và rerun remote CI sau khi GitHub Actions auth được khôi phục, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 11.7.0 đã pin và constraints Flutter hiện có.
 
-Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, tenant-isolation checks và deployment validation chưa pass.
+Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, tenant-isolation checks, remote CI/security checks và deployment validation chưa pass.
 
-## Đã landing trong integration branch
+## Đã landing trên `master`
 
-- Clean integration worktree trên `codex/batch4-integration`.
+- `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`; remote integration branch đã xoá sau khi xác minh patch-equivalent.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.
@@ -21,11 +21,13 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
 - Vietnamese AI chat fast paths có focused tests.
 - Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
-- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-05 tại head hiện tại `d5ecfcb` với `flutter analyze` sạch, `flutter test` pass 149 test và focused tracking snapshot tests pass 6/6. GitHub Actions cho `d5ecfcb` đang bị chặn do token/auth hoặc billing account, nên cần rerun remote checks sau khi xử lý.
+- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-05 với `flutter analyze` sạch, `flutter test` pass 149 test và focused tracking snapshot tests pass 6/6. GitHub Actions đang bị chặn do token/auth hoặc billing account, nên cần rerun remote checks sau khi xử lý.
 - Mobile runtime UI hiện không còn hardcoded presentation string theo targeted scanner cho các flow dispatch/cancel đã chạm, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.
 - Bản đồ tracking customer/driver hiện dùng `routePolyline` thật từ backend, hydrate snapshot REST `/orders/:id/tracking` trước realtime, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff, xoá route geometry stale khi đổi phase hoặc snapshot không có route, normalize GPS metadata của driver theo contract km/h của backend và không tự bịa ETA đường thẳng khi route provider không khả dụng.
+- Dispatch hiện enqueue job có tọa độ nhà hàng và attempt metadata, xử lý an toàn legacy malformed queue jobs và parse đúng ioredis `GEOSEARCH WITHDIST` tuple rows.
 - Shared tag input của Admin không còn tự sinh placeholder tiếng Anh mặc định; caller phải truyền placeholder đã localize.
-- Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate. CI head hiện tại `d5ecfcb` bị GitHub token/auth hoặc billing chặn trước khi jobs start.
+- Evidence local cho merged head `3857433`: backend typecheck/lint/build và Jest (107 suites / 758 tests), web typecheck/lint/build và Vitest (Admin 35 files / 144 tests; Restaurant 28 files / 83 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract và axe serious/critical smoke đều pass.
+- Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate. CI head hiện tại bị GitHub token/auth hoặc billing chặn trước khi jobs start.
 
 ### Mobile
 
@@ -34,7 +36,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - Chỉ reconcile Violet/Indigo khi branch refs hoặc patch artifacts đã review xuất hiện; danh sách head hiện tại của `origin` không có các branch này.
 - Chạy lại `flutter analyze` và `flutter test` sau các thay đổi backend/web contract ảnh hưởng mobile.
 
-## Đang làm trước draft PR
+## Đang làm trước deployment
 
 ### Backend
 
@@ -90,6 +92,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - Chỉ port hành vi đã chứng minh từ Amber, Steel và audit branches bằng focused tests.
 - Nếu ref Violet hoặc Indigo xuất hiện lại, salvage mobile hunk-by-hunk với focused Flutter tests và ghi disposition tại đây.
 - Generated screenshots, local caches, backup folders và assistant private files không được vào Git.
+- Giữ `master` là remote branch live duy nhất trừ khi chủ ý mở review branch mới.
 
 ## Gate bắt buộc trước deployment
 
@@ -105,13 +108,12 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Kế hoạch deploy sau khi gate xanh
 
-1. Push `codex/batch4-integration`.
-2. Mở draft PR vào `master`.
-3. Đính kèm branch disposition, test matrix, rejected changes và known degraded states.
-4. Sau required checks xanh, merge bằng merge commit.
-5. Deploy database/realtime lên Supabase chỉ khi secret đã rotate hợp lệ.
-6. Deploy web lên Vercel chỉ sau khi local và PR gates xanh.
-7. Chạy production smoke tests, realtime checks, map checks, AI chatbot checks và keep-alive monitoring.
+1. Giữ `master` sạch và đã push.
+2. Khôi phục GitHub Actions token/auth/billing và rerun các workflow CI/security đang bị chặn.
+3. Đính kèm branch disposition, test matrix, rejected changes và known degraded states vào release report.
+4. Deploy database/realtime lên Supabase chỉ khi secret đã rotate hợp lệ.
+5. Deploy web lên Vercel chỉ sau khi local và remote gates xanh.
+6. Chạy production smoke tests, realtime checks, map checks, AI chatbot checks, export checks, mobile API checks và keep-alive monitoring.
 
 ## Deferred khỏi Batch 4
 

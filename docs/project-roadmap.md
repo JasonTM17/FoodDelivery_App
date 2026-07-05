@@ -2,17 +2,17 @@
 
 Languages: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.vi.md) | [日本語](./project-roadmap.ja.md)
 
-This roadmap reflects the integration branch direction. It separates what is already landed from what still must pass tests before a production deployment.
+This roadmap reflects the merged Batch 4 direction on `master`. It separates what is already landed from what still must pass tests before a production deployment.
 
-## Current priority: Batch 4 web/backend parity and mobile stabilization
+## Current priority: Batch 4 post-merge hardening and deployment readiness
 
-Goal: make Admin and Restaurant dashboards production-grade against real backend data, then keep mobile/customer apps aligned with the stabilized Batch 4 contract while staying on Next.js 14, React 18, ESLint 8, pinned pnpm 11.7.0, and the current Flutter constraints.
+Goal: keep Admin, Restaurant, backend, and mobile aligned on the merged Batch 4 contract, close remaining deployment-readiness gaps, and rerun remote CI once GitHub Actions auth is restored while staying on Next.js 14, React 18, ESLint 8, pinned pnpm 11.7.0, and the current Flutter constraints.
 
-Batch 4 is not complete until local gates, E2E, accessibility, visual checks, tenant-isolation checks, and deployment validation pass.
+Batch 4 is not complete until local gates, E2E, accessibility, visual checks, tenant-isolation checks, remote CI/security checks, and deployment validation pass.
 
-## Landed in the integration branch
+## Landed on `master`
 
-- Clean integration worktree on `codex/batch4-integration`.
+- `codex/batch4-integration` was fast-forwarded into `master` at `3857433`; the remote integration branch was deleted after patch-equivalence was verified.
 - Web response contract documented as `{ success: true, data, meta? }`.
 - Error contract documented as RFC 7807 Problem Details.
 - OpenAPI validation workflow and Spectral rules added.
@@ -21,11 +21,13 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
 - Vietnamese AI chat fast paths covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
-- Mobile Flutter gate was rechecked locally on 2026-07-05 at current head `d5ecfcb` with `flutter analyze` clean, `flutter test` passing 149 tests, and focused tracking snapshot tests passing 6/6. GitHub Actions for `d5ecfcb` is blocked by account token/auth or billing status, so remote checks must be rerun after that is fixed.
+- Mobile Flutter gate was rechecked locally on 2026-07-05 with `flutter analyze` clean, `flutter test` passing 149 tests, and focused tracking snapshot tests passing 6/6. GitHub Actions is blocked by account token/auth or billing status, so remote checks must be rerun after that is fixed.
 - Mobile runtime UI now has no remaining hardcoded presentation strings found by the targeted mobile scanner for the touched dispatch/cancel flows, no runtime "coming soon" actions, deterministic backend timestamp parsing instead of current-time payload fallbacks, and release builds require explicit `API_BASE_URL`.
 - Driver/customer tracking maps now consume backend-routed `routePolyline` values, hydrate the initial `/orders/:id/tracking` REST snapshot before realtime events, keep telemetry trails separate from planned routes, support pickup/dropoff route phases, clear stale route geometry when the phase or snapshot changes, normalize driver GPS metadata to the backend km/h contract, and do not fabricate straight-line ETA minutes when route providers are unavailable.
+- Dispatch now enqueues route-aware driver jobs with restaurant coordinates and attempt metadata, handles legacy malformed queue jobs safely, and parses ioredis `GEOSEARCH WITHDIST` tuple rows without crashing.
 - Admin shared tag input no longer invents default English placeholder copy; callers must provide localized placeholder text.
-- Remote CI is last fully green for `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests, and Integration Smoke Gate. Current-head CI for `d5ecfcb` is blocked by GitHub token/auth or billing status before jobs start.
+- Local merged-head evidence for `3857433`: backend typecheck/lint/build and Jest (107 suites / 758 tests), web typecheck/lint/build and Vitest (Admin 35 files / 144 tests; Restaurant 28 files / 83 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, and axe serious/critical smoke all passed.
+- Remote CI is last fully green for `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests, and Integration Smoke Gate. Current-head CI is blocked by GitHub token/auth or billing status before jobs start.
 
 ### Mobile
 
@@ -34,7 +36,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - Reconcile Violet/Indigo only if branch refs or reviewed patch artifacts become available; the current `origin` head list does not expose those branches.
 - Re-run `flutter analyze` and `flutter test` after backend/web contract changes that affect mobile behavior.
 
-## In progress before draft PR
+## In progress before deployment
 
 ### Backend
 
@@ -91,6 +93,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - If Violet or Indigo refs reappear, salvage mobile work hunk-by-hunk with focused Flutter tests and document the disposition here.
 - Track the current branch audit in [branch-disposition.md](branch-disposition.md).
 - Keep generated screenshots, local caches, backup folders, and assistant private files out of Git.
+- Keep `master` as the only live remote branch unless a new review branch is intentionally opened.
 
 ## Required gates before deployment
 
@@ -106,13 +109,12 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Deployment plan after green gates
 
-1. Push `codex/batch4-integration`.
-2. Open a draft PR into `master`.
-3. Attach branch disposition, test matrix, rejected changes, and known degraded states.
-4. After required checks pass, merge with a merge commit.
-5. Deploy database/realtime resources to Supabase only with valid rotated secrets.
-6. Deploy web surfaces to Vercel only after local and PR gates are green.
-7. Run production smoke tests, realtime checks, map checks, AI chatbot checks, and keep-alive monitoring.
+1. Keep `master` clean and pushed.
+2. Restore GitHub Actions token/auth/billing access and rerun the blocked CI/security workflows.
+3. Attach branch disposition, test matrix, rejected changes, and known degraded states to the release report.
+4. Deploy database/realtime resources to Supabase only with valid rotated secrets.
+5. Deploy web surfaces to Vercel only after local and remote gates are green.
+6. Run production smoke tests, realtime checks, map checks, AI chatbot checks, export checks, mobile API checks, and keep-alive monitoring.
 
 ## Deferred out of Batch 4
 

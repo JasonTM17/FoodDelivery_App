@@ -2,17 +2,17 @@
 
 言語: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.vi.md) | [日本語](./project-roadmap.ja.md)
 
-この roadmap は integration branch の方針を示します。すでに landed したものと、production deployment 前にまだ test が必要なものを分けています。
+この roadmap は `master` に merge 済みの Batch 4 方針を示します。すでに landed したものと、production deployment 前にまだ test が必要なものを分けています。
 
-## 現在の優先事項: Batch 4 web/backend parity と mobile stabilization
+## 現在の優先事項: merge 後 hardening と deployment readiness
 
-Goal: Admin と Restaurant dashboard を real backend data で production-grade にし、その後 mobile/customer apps を安定した Batch 4 contract に合わせます。Next.js 14、React 18、ESLint 8、固定済み pnpm 11.7.0、現行 Flutter constraints は維持します。
+Goal: Admin、Restaurant、backend、mobile を merge 済み Batch 4 contract に合わせ続け、deployment readiness gaps を閉じ、GitHub Actions auth 復旧後に remote CI を rerun します。Next.js 14、React 18、ESLint 8、固定済み pnpm 11.7.0、現行 Flutter constraints は維持します。
 
-Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、deployment validation が通るまで完了ではありません。
+Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、remote CI/security checks、deployment validation が通るまで完了ではありません。
 
-## Integration branch に landed
+## `master` に landed
 
-- `codex/batch4-integration` の clean integration worktree。
+- `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みです。patch-equivalence 確認後、remote integration branch は削除されました。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。
@@ -21,11 +21,13 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は 2026-07-05 に current head `d5ecfcb` で local 再確認済みです。`flutter analyze` は clean、`flutter test` は 149 tests passed、focused tracking snapshot tests は 6/6 pass。`d5ecfcb` の GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
+- Mobile Flutter gate は 2026-07-05 に local 再確認済みです。`flutter analyze` は clean、`flutter test` は 149 tests passed、focused tracking snapshot tests は 6/6 pass。GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
 - Mobile runtime UI は touched dispatch/cancel flows の targeted scanner 上で hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。
 - Customer/driver tracking maps は backend-routed `routePolyline` を使い、realtime 前に REST snapshot `/orders/:id/tracking` を hydrate し、telemetry trail と planned route を分離し、pickup/dropoff route phase を扱い、phase 変更または route-less snapshot で stale route geometry を clear し、driver GPS metadata を backend の km/h contract に normalize します。Route provider が使えない場合も straight-line ETA minutes を捏造しません。
+- Dispatch は restaurant coordinates と attempt metadata を含む route-aware driver jobs を enqueue し、legacy malformed queue jobs を安全に扱い、ioredis `GEOSEARCH WITHDIST` tuple rows を crash せず parse します。
 - Admin shared tag input は default English placeholder copy を生成しません。Caller が localized placeholder を渡す必要があります。
-- Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head `d5ecfcb` の CI は GitHub token/auth または billing status により job start 前に blocked されています。
+- `3857433` の local merged-head evidence: backend typecheck/lint/build と Jest (107 suites / 758 tests)、web typecheck/lint/build と Vitest (Admin 35 files / 144 tests; Restaurant 28 files / 83 tests)、Playwright Chromium + Firefox 70/70、Docker health checks、tenant isolation、visual contract、axe serious/critical smoke が pass。
+- Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head CI は GitHub token/auth または billing status により job start 前に blocked されています。
 
 ### Mobile
 
@@ -34,7 +36,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - Violet/Indigo は branch refs または review 済み patch artifacts が入手できた場合だけ reconcile する。現在の `origin` head list にはそれらの branch は無い。
 - Mobile に影響する backend/web contract 変更後は `flutter analyze` と `flutter test` を再実行する。
 
-## Draft PR 前に進行中
+## Deployment 前に進行中
 
 ### Backend
 
@@ -90,6 +92,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - Amber、Steel、audit branches からは focused tests で証明した behavior だけ port します。
 - Violet または Indigo ref が再出現した場合は、focused Flutter tests 付きで hunk-by-hunk に salvage し、disposition をここに記録する。
 - Generated screenshots、local caches、backup folders、assistant private files は Git に入れません。
+- 意図的に新しい review branch を開く場合を除き、`master` を唯一の live remote branch として維持します。
 
 ## Deployment 前の required gates
 
@@ -105,13 +108,12 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## Gates が green になった後の deploy plan
 
-1. `codex/batch4-integration` を push。
-2. `master` 向け draft PR を開く。
-3. Branch disposition、test matrix、rejected changes、known degraded states を添付。
-4. Required checks 通過後、merge commit で merge。
-5. Rotated secrets が有効な場合のみ Supabase に database/realtime resources を deploy。
-6. Local と PR gates が green の場合のみ Vercel に web surfaces を deploy。
-7. Production smoke tests、realtime checks、map checks、AI chatbot checks、keep-alive monitoring を実行。
+1. `master` を clean かつ pushed に保つ。
+2. GitHub Actions token/auth/billing access を復旧し、blocked CI/security workflows を rerun する。
+3. Branch disposition、test matrix、rejected changes、known degraded states を release report に添付。
+4. Rotated secrets が有効な場合のみ Supabase に database/realtime resources を deploy。
+5. Local と remote gates が green の場合のみ Vercel に web surfaces を deploy。
+6. Production smoke tests、realtime checks、map checks、AI chatbot checks、export checks、mobile API checks、keep-alive monitoring を実行。
 
 ## Batch 4 から deferred
 

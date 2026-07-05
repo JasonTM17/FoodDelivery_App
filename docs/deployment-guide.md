@@ -6,6 +6,8 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
 
+Current Batch 4 status on 2026-07-05: `codex/batch4-integration` was fast-forwarded into `master` at `3857433` and the remote integration branch was deleted after patch-equivalence was verified. This is a branch cleanup milestone, not a production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, and production secrets/CLI auth are valid.
+
 ## Local Docker Stack
 
 For host-run development:

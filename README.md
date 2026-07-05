@@ -154,12 +154,13 @@ Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe ser
 
 Deployment is intentionally gated:
 
-1. Merge tested Batch 4 integration through a PR.
-2. Provision Supabase database/realtime only with rotated production secrets; backend Prisma uses pooled `DATABASE_URL` at runtime and direct/session `DIRECT_URL` for migrations.
-3. Deploy Admin and Restaurant to Vercel after web builds and E2E pass.
-4. Deploy backend with health checks, migrations, Redis, MinIO/storage, SePay webhook secrets, and CORS locked to production domains.
-5. Verify production health, realtime orders, maps, chatbot, exports, notifications, and tenant isolation.
-6. Enable keep-alive or external monitors only after health endpoints are stable.
+1. Keep `master` as the only live remote branch after the Batch 4 integration cleanup.
+2. Rerun remote CI once GitHub Actions token/auth/billing access is restored; local gates are not a substitute for production deploy approval.
+3. Provision Supabase database/realtime only with rotated production secrets; backend Prisma uses pooled `DATABASE_URL` at runtime and direct/session `DIRECT_URL` for migrations.
+4. Deploy Admin and Restaurant to Vercel after web builds, E2E, secret scans, and remote checks pass.
+5. Deploy backend with health checks, migrations, Redis, MinIO/storage, SePay webhook secrets, and CORS locked to production domains.
+6. Verify production health, realtime orders, maps, chatbot, exports, notifications, and tenant isolation.
+7. Enable keep-alive or external monitors only after health endpoints are stable.
 
 No deploy should happen from a dirty worktree or with unverified secrets.
 
@@ -182,7 +183,8 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 
 ## Branch and integration policy
 
-- Use `codex/batch4-integration` as the current clean integration branch; the older `batch4-integration` ref is superseded and tracked in branch disposition.
+- `master` is now the only live remote branch after `codex/batch4-integration` was fast-forwarded and deleted on 2026-07-05.
+- The clean worktree may still use a local `codex/batch4-integration` branch for Codex continuity, but it tracks `origin/master`; do not recreate the deleted remote branch unless an intentional review branch is needed.
 - Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
 - Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
 - Continue mobile reconciliation after web/backend Batch 4 is stable; if Violet/Indigo refs are unavailable, document that evidence instead of inventing a merge.

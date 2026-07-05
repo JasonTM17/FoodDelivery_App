@@ -121,16 +121,17 @@ Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, 
 
 ## Evidence local mới nhất (2026-07-05)
 
-Branch: `codex/batch4-integration`. Remote CI/Actions vẫn pending vì token/auth/billing GitHub chưa khả dụng.
+Runtime code head: `3857433` trên `master` sau khi `codex/batch4-integration` được fast-forward và remote integration branch đã xoá. Worktree sạch local có thể vẫn dùng branch `codex/batch4-integration`, nhưng branch này tracking `origin/master`. Remote CI/Actions vẫn pending vì token/auth/billing GitHub chưa khả dụng.
 
 - Frozen install pass cho backend và web với `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` pass.
-- Backend pass `pnpm typecheck`, `pnpm lint`, full `pnpm test` (105 suite / 750 test) và `pnpm build`; targeted refund/tracking/driver route regressions pass 8 suite / 82 test.
-- Web pass `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 file / 139 test; Restaurant 27 file / 79 test) và `pnpm build` (Admin 70 page localized; Restaurant 55 page localized).
+- Backend pass `pnpm typecheck`, `pnpm lint`, full `pnpm test` (107 suite / 758 test) và `pnpm build`; focused dispatch/order-code regressions pass 3 suite / 46 test.
+- Web pass `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 35 file / 144 test; Restaurant 28 file / 83 test) và `pnpm build` (Admin 70 page localized; Restaurant 55 page localized).
 - Docker Compose rebuild image Backend/Admin/Restaurant từ source hiện tại với frozen install; health check pass cho `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, `http://[::1]:3002/api/healthz`.
-- Playwright pass `pnpm test:e2e --project=chromium` 35/35 và `pnpm test:e2e --project=firefox` 35/35 với IPv6 loopback URL. Coverage gồm axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows và tenant isolation.
+- Playwright pass Chromium + Firefox cùng lúc: 70/70 test với IPv6 loopback URL. Coverage gồm axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows và tenant isolation.
 - Mobile pass `flutter analyze`, full `flutter test` (149 test), focused `flutter test test/shared/tracking_provider_test.dart` (6/6 test) và `dart analyze packages/api_client`. Evidence Android debug APK mới nhất vẫn là các build customer/driver flavor đã pass trước đó.
 - Tracking contract refresh tại `d5ecfcb` pass backend `pnpm jest src/tracking/tracking.controller.spec.ts --runInBand` (3/3 test), web `pnpm typecheck`, OpenAPI YAML parse (137 path; `OrderTrackingResponse.routePhase` required), và Spectral lint với 0 error, 1 warning tag cũ.
-- Security evidence: high-confidence tracked secret scan không có match. Native Firebase/provisioning artifacts đã được ignore. Legacy fake refund processor đã xoá; refund hiện enqueue `payment-refund` và full refund chỉ đánh dấu sau khi SePay hoặc wallet ledger reversal thành công. Mobile idempotency key là UUID v4, HTTP body log mobile chỉ bật trong debug và đã redact.
+- Dispatch/map evidence: restaurant acceptance hiện enqueue route-aware dispatch jobs có restaurant latitude/longitude và attempt metadata; worker bỏ qua legacy malformed jobs, parse đúng ioredis `GEOSEARCH WITHDIST` tuple rows và không còn fail `raw[i].replace is not a function`.
+- Security evidence: high-confidence tracked secret scan không có match. Không có tracked dotenv/key/credential file ngoài `.env.example`. Native Firebase/provisioning artifacts đã được ignore. Legacy fake refund processor đã xoá; refund hiện enqueue `payment-refund` và full refund chỉ đánh dấu sau khi SePay hoặc wallet ledger reversal thành công. Mobile idempotency key là UUID v4, HTTP body log mobile chỉ bật trong debug và đã redact.
 
 ## Security checks
 
