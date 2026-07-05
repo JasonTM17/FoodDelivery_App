@@ -1,12 +1,16 @@
-final DateTime unknownBackendDateTime = DateTime.fromMillisecondsSinceEpoch(
-  0,
-  isUtc: true,
-);
-
 DateTime parseBackendDateTimeOrUnknown(dynamic value) {
   if (value is DateTime) return value;
-  final parsed = DateTime.tryParse(value?.toString() ?? '');
-  return parsed ?? unknownBackendDateTime;
+
+  final raw = value?.toString().trim();
+  if (raw == null || raw.isEmpty) {
+    throw const FormatException('Missing required backend timestamp');
+  }
+
+  final parsed = DateTime.tryParse(raw);
+  if (parsed == null) {
+    throw FormatException('Invalid required backend timestamp', raw);
+  }
+  return parsed;
 }
 
 DateTime? parseBackendDateTimeOrNull(dynamic value) {

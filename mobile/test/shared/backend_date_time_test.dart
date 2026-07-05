@@ -10,11 +10,14 @@ void main() {
       );
     });
 
-    test('uses deterministic unknown sentinel instead of current time', () {
-      expect(parseBackendDateTimeOrUnknown(null), unknownBackendDateTime);
+    test('rejects missing or invalid required timestamps', () {
       expect(
-        parseBackendDateTimeOrUnknown('not-a-date'),
-        unknownBackendDateTime,
+        () => parseBackendDateTimeOrUnknown(null),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => parseBackendDateTimeOrUnknown('not-a-date'),
+        throwsA(isA<FormatException>()),
       );
     });
 

@@ -87,13 +87,23 @@ void main() {
     });
 
     test('uses defaults for missing optional fields', () {
-      final model = NotificationModel.fromJson({'id': 'n2'});
+      final model = NotificationModel.fromJson({
+        'id': 'n2',
+        'createdAt': '2026-01-15T10:00:00.000Z',
+      });
 
       expect(model.type, 'system');
       expect(model.title, '');
       expect(model.body, '');
       expect(model.isRead, false);
       expect(model.deepLink, isNull);
+    });
+
+    test('rejects payloads missing required backend timestamps', () {
+      expect(
+        () => NotificationModel.fromJson({'id': 'n2'}),
+        throwsA(isA<FormatException>()),
+      );
     });
 
     test('copyWith isRead flips read status', () {

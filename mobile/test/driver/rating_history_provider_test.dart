@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/rating_history_provider.dart';
-import 'package:foodflow_customer/shared/utils/backend_date_time.dart';
 
 void main() {
   group('DriverReview.fromJson', () {
@@ -29,13 +28,13 @@ void main() {
         'id': 'review-2',
         'customerName': 'Customer Two',
         'rating': 99,
-        'date': 'invalid-date',
+        'date': '2026-07-04T09:30:00.000Z',
         'orderId': 'order-2',
       });
 
       expect(review.rating, 5);
       expect(review.orderId, 'order-2');
-      expect(review.date, unknownBackendDateTime);
+      expect(review.date.toUtc().toIso8601String(), '2026-07-04T09:30:00.000Z');
     });
   });
 
