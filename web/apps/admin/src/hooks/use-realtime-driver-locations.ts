@@ -29,6 +29,12 @@ export interface DriverLocationsState {
 
 const fallbackPollingIntervalMs = 15_000;
 const hasOwn = Object.prototype.hasOwnProperty;
+const vietnamDeliveryBounds = {
+  south: 3.8,
+  north: 23.5,
+  west: 102.0,
+  east: 117.5,
+} as const;
 
 export function useRealtimeDriverLocations(): DriverLocationsState {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
@@ -43,7 +49,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
     if (!options.background) setIsLoading(true);
     try {
       const locations = await apiGet<DriverLocation[]>('/admin/online-drivers');
-      setDrivers(locations);
+      setDrivers(locations.filter(isValidDriverLocation));
       setLastUpdatedAt(new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'DRIVER_MAP_LOAD_FAILED');
@@ -140,6 +146,10 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   };
 }
 
+function isValidDriverLocation(location: DriverLocation): boolean {
+  return isValidLatLng(location.lat, location.lng);
+}
+
 function isValidLatLng(lat: number, lng: number): boolean {
   return Number.isFinite(lat) &&
     Number.isFinite(lng) &&
@@ -147,5 +157,9 @@ function isValidLatLng(lat: number, lng: number): boolean {
     lat <= 90 &&
     lng >= -180 &&
     lng <= 180 &&
-    !(lat === 0 && lng === 0);
+    !(lat === 0 && lng === 0) &&
+    lat >= vietnamDeliveryBounds.south &&
+    lat <= vietnamDeliveryBounds.north &&
+    lng >= vietnamDeliveryBounds.west &&
+    lng <= vietnamDeliveryBounds.east;
 }

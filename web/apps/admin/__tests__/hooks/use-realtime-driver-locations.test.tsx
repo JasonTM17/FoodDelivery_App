@@ -199,6 +199,51 @@ describe('useRealtimeDriverLocations', () => {
     expect(mockedApiGet).toHaveBeenCalledTimes(1);
   });
 
+  it('filters initial API locations outside the Vietnam delivery map', async () => {
+    const location = makeLocation();
+    mockedApiGet.mockResolvedValueOnce([
+      location,
+      makeLocation({
+        id: 'driver-bangkok',
+        driverId: 'driver-bangkok',
+        lat: 13.7563,
+        lng: 100.5018,
+      }),
+    ]);
+
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.drivers).toEqual([location]);
+  });
+
+  it('ignores realtime coordinates outside the Vietnam delivery map', async () => {
+    const location = makeLocation();
+    mockedApiGet.mockResolvedValueOnce([location]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.drivers).toHaveLength(1);
+    });
+
+    act(() => {
+      socketMock.trigger('admin:driver_location_changed', {
+        driverId: 'driver-1',
+        lat: 13.7563,
+        lng: 100.5018,
+        orderId: 'ORD-OUTSIDE',
+        status: 'delivering',
+        timestamp: '2026-07-02T09:10:00.000Z',
+      });
+    });
+
+    expect(result.current.drivers[0]).toEqual(location);
+    expect(result.current.lastUpdatedAt).not.toBe('2026-07-02T09:10:00.000Z');
+  });
+
   it('uses controlled polling when the websocket disconnects', async () => {
     mockedApiGet
       .mockResolvedValueOnce([makeLocation()])
