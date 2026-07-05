@@ -46,4 +46,8 @@ app.*.map.json
 
 # Local signing and native API keys
 /android/key.properties
+/android/app/google-services.json
 /ios/Flutter/GoogleMapsKeys.xcconfig
+/ios/Runner/GoogleService-Info.plist
+/ios/*.mobileprovision
+*.mobileprovision

@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 
 class ApiClient {
   static ApiClient? _instance;
   static final _logoutController = StreamController<void>.broadcast();
+  static final Random _idempotencyRandom = Random.secure();
   static Stream<void> get onLogout => _logoutController.stream;
   late final Dio dio;
   final FlutterSecureStorage _storage;
@@ -56,9 +59,24 @@ class ApiClient {
   }
 
   static String generateIdempotencyKey() {
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    final rand = Object().hashCode ^ ts;
-    return '${ts.toRadixString(16)}-${rand.abs().toRadixString(16)}';
+    final bytes = List<int>.generate(
+      16,
+      (_) => _idempotencyRandom.nextInt(256),
+      growable: false,
+    );
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
+    return [
+      hex.substring(0, 8),
+      hex.substring(8, 12),
+      hex.substring(12, 16),
+      hex.substring(16, 20),
+      hex.substring(20),
+    ].join('-');
   }
 
   // Convenience methods
@@ -216,11 +234,11 @@ class _AuthInterceptor extends Interceptor {
 class _LogInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // ignore: avoid_print
-    print('[HTTP] --> ${options.method} ${options.path}');
-    if (options.data != null) {
-      // ignore: avoid_print
-      print('[HTTP] Body: ${options.data}');
+    if (kDebugMode) {
+      debugPrint('[HTTP] --> ${options.method} ${options.path}');
+      if (options.data != null) {
+        debugPrint('[HTTP] Body: ${redactHttpLogValue(options.data)}');
+      }
     }
     handler.next(options);
   }
@@ -228,19 +246,21 @@ class _LogInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final requestId = response.headers.value('x-request-id') ?? '-';
-    // ignore: avoid_print
-    print(
-      '[HTTP] <-- ${response.statusCode} ${response.requestOptions.path} [rid=$requestId]',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '[HTTP] <-- ${response.statusCode} ${response.requestOptions.path} [rid=$requestId]',
+      );
+    }
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // ignore: avoid_print
-    print(
-      '[HTTP] <-- ERROR ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '[HTTP] <-- ERROR ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}',
+      );
+    }
     handler.next(err);
   }
 }
@@ -256,4 +276,55 @@ class _ResponseInterceptor extends Interceptor {
     }
     handler.next(response);
   }
+}
+
+const Set<String> _sensitiveHttpLogKeys = {
+  'authorization',
+  'password',
+  'token',
+  'accesstoken',
+  'refresh_token',
+  'refreshtoken',
+  'secret',
+  'apikey',
+  'api_key',
+  'phone',
+  'address',
+  'addressline',
+  'payment',
+  'paymentmethod',
+  'card',
+  'cvv',
+};
+
+Object? redactHttpLogValue(Object? value) {
+  if (value is FormData) {
+    return '[FormData fields=${value.fields.length} files=${value.files.length}]';
+  }
+  if (value is Map) {
+    return value.map((key, nestedValue) {
+      final keyText = key.toString();
+      return MapEntry(
+        keyText,
+        _isSensitiveHttpLogKey(keyText)
+            ? '[REDACTED]'
+            : redactHttpLogValue(nestedValue),
+      );
+    });
+  }
+  if (value is Iterable && value is! String) {
+    return value.map(redactHttpLogValue).toList(growable: false);
+  }
+  return value;
+}
+
+bool _isSensitiveHttpLogKey(String key) {
+  final normalized = key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  return _sensitiveHttpLogKeys.any((sensitive) {
+    final normalizedSensitive = sensitive
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+    return normalized == normalizedSensitive ||
+        normalized.contains(normalizedSensitive);
+  });
 }
