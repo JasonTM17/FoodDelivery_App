@@ -14,16 +14,17 @@ const phoneSchema = z
   .regex(/^\+?[1-9]\d{6,14}$/, 'Phone must be a valid international phone number (e.g. +84123456789)')
   .optional()
 
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: passwordSchema,
-  fullName: z
-    .string()
-    .min(2, 'Full name must be at least 2 characters')
-    .max(100, 'Full name must be at most 100 characters'),
-  phone: phoneSchema,
-  role: z.enum(['customer', 'driver', 'restaurant', 'admin']).optional(),
-})
+export const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email format'),
+    password: passwordSchema,
+    fullName: z
+      .string()
+      .min(2, 'Full name must be at least 2 characters')
+      .max(100, 'Full name must be at most 100 characters'),
+    phone: phoneSchema,
+  })
+  .strict()
 
 export type RegisterInput = z.infer<typeof registerSchema>
 

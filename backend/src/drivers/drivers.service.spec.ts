@@ -134,18 +134,28 @@ describe('DriversService', () => {
 
   describe('getHeatmap', () => {
     it('rejects invalid coordinates without querying demand data', async () => {
-      await expect(service.getHeatmap({ lat: 999, lng: 106.7 })).rejects.toThrow(BadRequestException)
+      await expect(service.getHeatmap('driver-1', { lat: 999, lng: 106.7 })).rejects.toThrow(BadRequestException)
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
+    })
+
+    it('rejects unverified drivers before querying demand data', async () => {
+      mockPrisma.driverProfile.findUnique.mockResolvedValueOnce({ isVerified: false })
+
+      await expect(service.getHeatmap('driver-1', { lat: 10.7769, lng: 106.7009 })).rejects.toThrow(
+        new BadRequestException('DRIVER_NOT_VERIFIED'),
+      )
       expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
     })
 
     it('returns real demand rows with derived demand levels', async () => {
+      mockPrisma.driverProfile.findUnique.mockResolvedValueOnce({ isVerified: true })
       mockPrisma.$queryRaw.mockResolvedValueOnce([
         { lat: 10.78, lng: 106.7, orderCount: 12, avgPayout: 32500.4 },
         { lat: 10.8, lng: 106.72, orderCount: 4, avgPayout: 22000 },
         { lat: 10.81, lng: 106.73, orderCount: 1, avgPayout: 18000 },
       ])
 
-      const points = await service.getHeatmap({ lat: 10.7769, lng: 106.7009, radiusKm: 5, window: '1h' })
+      const points = await service.getHeatmap('driver-1', { lat: 10.7769, lng: 106.7009, radiusKm: 5, window: '1h' })
 
       expect(mockPrisma.$queryRaw).toHaveBeenCalled()
       expect(points).toEqual([

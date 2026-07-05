@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-05: Restricted public `POST /auth/register` to customer-only signup, removed the `role` request field, and clarified that driver, restaurant, and admin accounts require controlled onboarding or invitation flows.
 - 2026-07-05: Aligned `GET /admin/restaurants/{restaurantId}/reviews` with the existing `restaurants` tag so Spectral OpenAPI lint is clean at warning severity.
 - 2026-07-05: Added required `routePhase` to `GET /orders/{id}/tracking` so customer/mobile clients can distinguish pickup and dropoff route geometry from the initial REST snapshot before realtime ETA events arrive.
 - 2026-07-04: Covered all literal Admin/Restaurant web API calls in `docs/openapi.yaml` (`MISSING_ENDPOINTS=0` in the local coverage scanner), including Admin KPI/recent-order feeds, dispatch heatmap coordinates, resource detail panels, support replies/agents, driver KYC review, and admin promotion analytics. Shared web API-client types now mirror these backend contracts.

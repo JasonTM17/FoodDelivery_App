@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@n
 import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { CartService } from './cart.service'
@@ -11,7 +12,7 @@ import { addCartItemSchema, updateCartItemSchema, applyPromotionSchema } from '.
 
 @ApiTags('cart')
 @Controller('cart')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('customer')
 export class CartController {
   constructor(private readonly cartService: CartService) {}

@@ -137,14 +137,13 @@ components:
         password: { type: string, minLength: 8, maxLength: 72, description: "Must include uppercase, lowercase, digit" }
         fullName: { type: string, minLength: 2, maxLength: 100 }
         phone:    { type: string, pattern: '^\+?[1-9]\d{6,14}$', description: "e.g. +84123456789" }
-        role:     { type: string, enum: [customer, driver, restaurant], default: customer }
       required: [email, password, fullName]
+      additionalProperties: false
       example:
         email: "nguyenvana@example.com"
         password: "REPLACE_WITH_STRONG_PASSWORD"
         fullName: "Nguyễn Văn A"
         phone: "+84987654321"
-        role: "customer"
 
     LoginRequest:
       type: object
@@ -2449,7 +2448,7 @@ paths:
     post:
       tags: [auth]
       summary: Register a new user
-      description: Creates a customer, driver, restaurant, or admin account using the public registration contract.
+      description: Creates a customer account using the public registration contract. Driver, restaurant, and admin accounts must be created through controlled onboarding or invitation flows.
       operationId: auth_register
       x-foo-actor: public
       security: []

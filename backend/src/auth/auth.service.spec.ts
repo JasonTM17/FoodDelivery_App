@@ -104,6 +104,28 @@ describe('AuthService', () => {
       expect(result.refreshToken).toBeDefined()
       expect(result.user.id).toBe('new-user')
     })
+
+    it('forces public registration to create customer accounts only', async () => {
+      mockUsersService.findByEmail.mockResolvedValueOnce(null)
+      mockUsersService.create.mockResolvedValueOnce({ id: 'new-user', role: 'customer' })
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'new-user', email: 'test@test.com', fullName: 'Test', role: 'customer',
+        phone: null, avatarUrl: null, isActive: true, createdAt: new Date(),
+      })
+
+      await service.register({
+        email: 'test@test.com',
+        password: 'Test1234!',
+        fullName: 'Test',
+        role: 'admin',
+      } as Parameters<AuthService['register']>[0] & { role: string })
+
+      expect(mockUsersService.create).toHaveBeenCalledWith(expect.objectContaining({
+        role: 'customer',
+      }))
+      expect(mockPrisma.customerProfile.create).toHaveBeenCalledWith({ data: { userId: 'new-user' } })
+      expect(mockPrisma.driverProfile.create).not.toHaveBeenCalled()
+    })
   })
 
   describe('login', () => {

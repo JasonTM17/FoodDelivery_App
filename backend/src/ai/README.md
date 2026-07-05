@@ -2,7 +2,7 @@
 
 ## Purpose
 
-FoodFlow AI is the customer-support chatbot module. It provides authenticated chat, SSE streaming, conversation memory, fast-path classification, sentiment detection, scoped backend grounding tools, output filtering, and direct DeepSeek replies through the backend provider adapter.
+FoodFlow AI is the customer-support chatbot module. It provides authenticated chat, SSE streaming, conversation memory, safe fast-path replies, sentiment detection, scoped backend grounding tools, output filtering, and direct DeepSeek replies through the backend provider adapter.
 
 The chatbot must never fabricate account-specific facts. Order, driver, restaurant, refund, recommendation, and ticket details come from internal tools that are always scoped to the authenticated `user.sub`.
 
@@ -10,7 +10,6 @@ The chatbot must never fabricate account-specific facts. Order, driver, restaura
 
 - `POST /ai/chat` - non-stream chatbot reply, auth required.
 - `POST /ai/stream` - SSE chatbot stream, auth required.
-- `POST /ai/chat/classify` - pre-classification fast path.
 
 Tool methods are internal service calls only. There is no public `/ai/tools/*` route and no service-JWT tool surface in Batch 4.
 
@@ -61,4 +60,4 @@ tsx e2e/ai-scenarios/run-ai-scenarios.ts \
 - **DeepSeek missing/down:** return `ai_templates.service_unavailable` with `action: "degraded"`; do not fabricate a successful answer.
 - **Hallucination report:** inspect the returned `grounded` and `toolCalls` metadata. Account-specific claims must have matching verified tool context.
 - **Tenant isolation concern:** check `AiToolsService` tests first; every order lookup must include authenticated `customerId`.
-- **Cost runaway:** keep rate limits active and prefer fast-path classification for safe static questions.
+- **Cost runaway:** keep rate limits active and prefer the authenticated service fast-path for safe static questions.

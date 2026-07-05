@@ -4,10 +4,8 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
-  IsEnum,
   Matches,
 } from 'class-validator'
-import { UserRole } from '@prisma/client'
 
 export class RegisterDto {
   @IsEmail()
@@ -33,9 +31,6 @@ export class RegisterDto {
   })
   phone?: string
 
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole
 }
 
 export class LoginDto {

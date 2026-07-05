@@ -4,6 +4,7 @@ import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import { DriverTripTipsService } from './driver-trip-tips.service'
 import { DriverTipReportInput, driverTipReportSchema } from './driver-trip-tips.zod'
@@ -11,7 +12,7 @@ import { DriverTipReportInput, driverTipReportSchema } from './driver-trip-tips.
 @ApiTags('drivers')
 @ApiBearerAuth()
 @Controller('driver/trips')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('driver')
 export class DriverTripTipsController {
   constructor(private readonly tripTipsService: DriverTripTipsService) {}

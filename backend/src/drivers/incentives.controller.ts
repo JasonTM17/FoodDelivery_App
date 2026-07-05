@@ -2,6 +2,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { IncentivesService } from './incentives.service'
@@ -9,7 +10,7 @@ import { IncentivesService } from './incentives.service'
 @ApiTags('drivers')
 @ApiBearerAuth()
 @Controller('driver')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('driver')
 export class IncentivesController {
   constructor(private readonly incentivesService: IncentivesService) {}

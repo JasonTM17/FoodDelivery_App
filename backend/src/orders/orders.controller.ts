@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterce
 import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { OrdersService } from './orders.service'
@@ -13,7 +14,7 @@ import { IdempotencyInterceptor } from './idempotency.interceptor'
 
 @ApiTags('orders')
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,

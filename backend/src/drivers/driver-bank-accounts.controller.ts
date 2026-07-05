@@ -4,6 +4,7 @@ import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import { DriverBankAccountsService } from './driver-bank-accounts.service'
 import { DriverBankAccountInput, driverBankAccountSchema } from './driver-bank-accounts.zod'
@@ -11,7 +12,7 @@ import { DriverBankAccountInput, driverBankAccountSchema } from './driver-bank-a
 @ApiTags('drivers')
 @ApiBearerAuth()
 @Controller('driver/bank-accounts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('driver')
 export class DriverBankAccountsController {
   constructor(private readonly bankAccountsService: DriverBankAccountsService) {}

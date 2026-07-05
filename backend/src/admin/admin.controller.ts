@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { UserRole } from '@prisma/client'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { AdminService } from './admin.service'
 import { CreatePromotionDto, UpdatePromotionDto, PromotionQueryDto } from './dto/promotion.dto'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
@@ -13,8 +15,8 @@ import {
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard)
-@Roles('admin')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.admin)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common'
 import { AiController } from './ai.controller'
 import { AiChatController } from './ai-chat.controller'
-import { ChatClassifyController } from './chat-classify.controller'
 import { AiGroundingService } from './ai-grounding.service'
 import { AiToolsService } from './ai-tools.service'
 import { AiChatService } from './ai-chat.service'
@@ -12,7 +11,7 @@ import { ToolJustificationService } from './tool-justification.service'
 import { OutputFilterService } from './output-filter.service'
 
 @Module({
-  controllers: [AiController, AiChatController, ChatClassifyController],
+  controllers: [AiController, AiChatController],
   providers: [
     AiToolsService,
     AiChatService,

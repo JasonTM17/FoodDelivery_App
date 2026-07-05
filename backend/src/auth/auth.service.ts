@@ -75,7 +75,8 @@ export class AuthService {
   // ─── Public API ───────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto): Promise<AuthResult> {
-    const { email, password, fullName, phone, role = UserRole.customer } = dto
+    const { email, password, fullName, phone } = dto
+    const role = UserRole.customer
 
     const existing = await this.usersService.findByEmail(email)
     if (existing) {

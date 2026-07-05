@@ -464,13 +464,14 @@ export class DriversService {
     }
   }
 
-  async getHeatmap(query: DriverHeatmapQuery): Promise<DriverHeatmapPoint[]> {
+  async getHeatmap(driverId: string, query: DriverHeatmapQuery): Promise<DriverHeatmapPoint[]> {
     const lat = query.lat
     const lng = query.lng
     const radiusKm = query.radiusKm ?? 5
     if (!isValidLatitude(lat) || !isValidLongitude(lng) || !Number.isFinite(radiusKm) || radiusKm <= 0) {
       throw new BadRequestException('INVALID_HEATMAP_QUERY')
     }
+    await this.assertVerifiedDriver(driverId)
 
     const radiusMeters = Math.min(radiusKm, 25) * 1000
     const sinceDate = heatmapWindowStart(query.window)
@@ -506,6 +507,14 @@ export class DriversService {
       avgPayout: Math.round(Number(row.avgPayout)),
       demandLevel: demandLevel(Number(row.orderCount)),
     }))
+  }
+
+  private async assertVerifiedDriver(driverId: string): Promise<void> {
+    const profile = await this.prisma.driverProfile.findUnique({
+      where: { userId: driverId },
+      select: { isVerified: true },
+    })
+    if (!profile?.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
   }
 
   private async serializeDriverOrder(order: DriverOrderRecord): Promise<DriverOrderResponse> {

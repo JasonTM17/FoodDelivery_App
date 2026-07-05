@@ -2,6 +2,7 @@ import { Controller, Post, Get, Query, Param, Body, UseGuards } from '@nestjs/co
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { DriversService } from './drivers.service'
@@ -11,7 +12,7 @@ import { GoOnlineInput, goOnlineSchema } from './drivers.zod'
 @ApiTags('drivers')
 @ApiBearerAuth()
 @Controller('driver')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('driver')
 export class DriversController {
   constructor(private readonly driversService: DriversService) {}
@@ -68,12 +69,13 @@ export class DriversController {
 
   @Get('heatmap')
   getHeatmap(
+    @CurrentUser() user: JwtPayload,
     @Query('lat') lat: string,
     @Query('lng') lng: string,
     @Query('radius') radius?: string,
     @Query('window') window: string = 'now',
   ) {
-    return this.driversService.getHeatmap({
+    return this.driversService.getHeatmap(user.sub, {
       lat: Number(lat),
       lng: Number(lng),
       radiusKm: radius ? Number(radius) : undefined,

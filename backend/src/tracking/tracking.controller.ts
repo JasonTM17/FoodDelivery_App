@@ -4,13 +4,14 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
+import { RolesGuard } from '../auth/roles.guard'
 import { OrdersService } from '../orders/orders.service'
 import { routePhaseForStatus, TrackingService } from './tracking.service'
 
 @ApiTags('tracking')
 @ApiBearerAuth()
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TrackingController {
   constructor(
     private readonly trackingService: TrackingService,
