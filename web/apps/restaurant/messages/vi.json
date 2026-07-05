@@ -809,6 +809,7 @@
       "title": "Giờ hoạt động",
       "description": "Thiết lập lịch mở cửa hàng tuần",
       "loadError": "Không thể tải lịch hoạt động",
+      "invalidOpeningHours": "Lịch hoạt động từ máy chủ chưa đầy đủ. Hãy tải lại trước khi lưu để không ghi đè giờ thật của nhà hàng.",
       "saveSuccess": "Đã lưu lịch hoạt động",
       "saveError": "Không thể lưu lịch hoạt động",
       "save": "Lưu lịch",

@@ -5,16 +5,40 @@ describe('hours editor helpers', () => {
   it('hydrates backend opening-hour rows into the editor shape', () => {
     const hours = fromOpeningHourPayload([
       { dayOfWeek: 0, openTime: '07:00', closeTime: '21:00', isClosed: false },
+      { dayOfWeek: 1, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 2, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 3, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 4, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 5, openTime: '09:00', closeTime: '23:00', isClosed: false },
       { dayOfWeek: 6, openTime: '10:00', closeTime: '16:00', isClosed: true },
     ]);
 
-    expect(hours.monday).toEqual({ open: '07:00', close: '21:00', isClosed: false });
-    expect(hours.sunday).toEqual({ open: '10:00', close: '16:00', isClosed: true });
-    expect(hours.tuesday).toEqual({ open: '08:00', close: '22:00', isClosed: false });
+    expect(hours?.monday).toEqual({ open: '07:00', close: '21:00', isClosed: false });
+    expect(hours?.sunday).toEqual({ open: '10:00', close: '16:00', isClosed: true });
+    expect(hours?.tuesday).toEqual({ open: '08:00', close: '22:00', isClosed: false });
+  });
+
+  it('rejects incomplete or malformed payloads instead of filling fallback hours', () => {
+    expect(fromOpeningHourPayload([
+      { dayOfWeek: 0, openTime: '07:00', closeTime: '21:00', isClosed: false },
+      { dayOfWeek: 6, openTime: '10:00', closeTime: '16:00', isClosed: true },
+    ])).toBeNull();
+    expect(fromOpeningHourPayload({
+      monday: { open: '07:00', close: '21:00', isClosed: false },
+    })).toBeNull();
+    expect(fromOpeningHourPayload([
+      { dayOfWeek: 0, openTime: '', closeTime: '21:00', isClosed: false },
+      { dayOfWeek: 1, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 2, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 3, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 4, openTime: '08:00', closeTime: '22:00', isClosed: false },
+      { dayOfWeek: 5, openTime: '09:00', closeTime: '23:00', isClosed: false },
+      { dayOfWeek: 6, openTime: '10:00', closeTime: '16:00', isClosed: true },
+    ])).toBeNull();
   });
 
   it('serializes the editor shape into the backend contract', () => {
-    const rows = toOpeningHourRows(fromOpeningHourPayload({
+    const hours = fromOpeningHourPayload({
       monday: { open: '06:30', close: '22:00', isClosed: false },
       tuesday: { open: '08:00', close: '22:00', isClosed: false },
       wednesday: { open: '08:00', close: '22:00', isClosed: false },
@@ -22,7 +46,10 @@ describe('hours editor helpers', () => {
       friday: { open: '08:00', close: '22:00', isClosed: false },
       saturday: { open: '09:00', close: '23:00', isClosed: false },
       sunday: { open: '09:00', close: '22:00', isClosed: false },
-    }));
+    });
+    expect(hours).not.toBeNull();
+
+    const rows = toOpeningHourRows(hours!);
 
     expect(rows[0]).toEqual({ dayOfWeek: 0, openTime: '06:30', closeTime: '22:00', isClosed: false });
     expect(rows).toHaveLength(7);

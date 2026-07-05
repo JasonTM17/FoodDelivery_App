@@ -7,7 +7,6 @@ import { api } from '@/lib/api';
 import type { DayHours, HolidayClosure, OpeningHours, Restaurant } from '@/lib/types';
 import { HolidayClosuresCard } from './holiday-closures-card';
 import {
-  DEFAULT_HOURS,
   DAY_ORDER,
   fromOpeningHourPayload,
   toOpeningHourRows,
@@ -18,7 +17,7 @@ import { WeeklyPreviewCard } from './weekly-preview-card';
 
 export function HoursEditor() {
   const t = useTranslations('settings.hoursEditor');
-  const [hours, setHours] = useState<OpeningHours>(DEFAULT_HOURS);
+  const [hours, setHours] = useState<OpeningHours | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState('');
@@ -31,10 +30,20 @@ export function HoursEditor() {
     setError('');
     try {
       const profile = await api.get<Restaurant>('/restaurant/profile');
-      setHours(fromOpeningHourPayload(profile.openingHours));
+      const loadedHours = fromOpeningHourPayload(profile.openingHours);
+      if (!loadedHours) {
+        setHours(null);
+        setHolidayClosures([]);
+        setError(t('invalidOpeningHours'));
+        setCanRetryLoad(true);
+        return;
+      }
+      setHours(loadedHours);
       setHolidayClosures(normalizeHolidayClosures(profile.holidayClosures));
       setCanRetryLoad(false);
     } catch (err: unknown) {
+      setHours(null);
+      setHolidayClosures([]);
       setError((err as { message?: string }).message || t('loadError'));
       setCanRetryLoad(true);
     } finally {
@@ -47,10 +56,11 @@ export function HoursEditor() {
   }, [loadHours]);
 
   const updateHour = (day: OpeningHoursDay, field: keyof DayHours, value: string | boolean) => {
-    setHours((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
+    setHours((prev) => (prev ? { ...prev, [day]: { ...prev[day], [field]: value } } : prev));
   };
 
   const copyToAll = (day: OpeningHoursDay) => {
+    if (!hours) return;
     const source = hours[day];
     const updated = { ...hours };
     DAY_ORDER.forEach((targetDay) => {
@@ -60,6 +70,11 @@ export function HoursEditor() {
   };
 
   const handleSave = async () => {
+    if (!hours) {
+      setError(t('invalidOpeningHours'));
+      setCanRetryLoad(true);
+      return;
+    }
     setIsSaving(true);
     setError('');
     setCanRetryLoad(false);
@@ -93,7 +108,7 @@ export function HoursEditor() {
             <p className="text-sm text-gray-500">{t('description')}</p>
           </div>
         </div>
-        <button type="button" onClick={handleSave} disabled={isSaving} className="btn-primary">
+        <button type="button" onClick={handleSave} disabled={isSaving || !hours} className="btn-primary">
           <Save className="mr-1.5 h-4 w-4" />
           {isSaving ? t('saving') : t('save')}
         </button>
@@ -109,9 +124,13 @@ export function HoursEditor() {
       )}
       {success && <HoursAlert tone="success" message={success} />}
 
-      <WeeklyHoursCard hours={hours} onUpdateHour={updateHour} onCopyToAll={copyToAll} />
-      <HolidayClosuresCard closures={holidayClosures} onChange={setHolidayClosures} />
-      <WeeklyPreviewCard hours={hours} />
+      {hours && (
+        <>
+          <WeeklyHoursCard hours={hours} onUpdateHour={updateHour} onCopyToAll={copyToAll} />
+          <HolidayClosuresCard closures={holidayClosures} onChange={setHolidayClosures} />
+          <WeeklyPreviewCard hours={hours} />
+        </>
+      )}
     </div>
   );
 }

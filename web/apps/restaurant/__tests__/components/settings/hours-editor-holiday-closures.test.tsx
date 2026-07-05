@@ -22,6 +22,7 @@ function translate(key: string, values?: { day?: string; date?: string }) {
     title: 'Opening hours',
     description: 'Set the weekly opening schedule',
     loadError: 'Could not load opening hours',
+    invalidOpeningHours: 'Opening hours payload is incomplete',
     saveSuccess: 'Opening hours saved',
     saveError: 'Could not save opening hours',
     save: 'Save schedule',
@@ -85,7 +86,7 @@ describe('HoursEditor holiday closures', () => {
       description: 'Vietnamese food',
       phone: '0900000000',
       isActive: true,
-      openingHours: [],
+      openingHours: fullOpeningHourRows(),
       holidayClosures: [{ id: 'closure-1', date: '2026-02-10', reason: 'Tet holiday' }],
       createdAt: '2026-07-03T00:00:00.000Z',
       updatedAt: '2026-07-03T00:00:00.000Z',
@@ -113,4 +114,38 @@ describe('HoursEditor holiday closures', () => {
       ],
     });
   });
+
+  it('blocks saving when profile opening hours are incomplete', async () => {
+    apiMock.get.mockResolvedValueOnce({
+      id: 'restaurant-1',
+      name: 'Pho 24',
+      slug: 'pho-24',
+      description: 'Vietnamese food',
+      phone: '0900000000',
+      isActive: true,
+      openingHours: [],
+      holidayClosures: [{ id: 'closure-1', date: '2026-02-10', reason: 'Tet holiday' }],
+      createdAt: '2026-07-03T00:00:00.000Z',
+      updatedAt: '2026-07-03T00:00:00.000Z',
+    });
+
+    render(<HoursEditor />);
+
+    expect(await screen.findByText('Opening hours payload is incomplete')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save schedule' })).toBeDisabled();
+    expect(screen.queryByText('This week preview')).not.toBeInTheDocument();
+    expect(apiMock.patch).not.toHaveBeenCalled();
+  });
 });
+
+function fullOpeningHourRows() {
+  return [
+    { dayOfWeek: 0, openTime: '07:00', closeTime: '21:00', isClosed: false },
+    { dayOfWeek: 1, openTime: '08:00', closeTime: '22:00', isClosed: false },
+    { dayOfWeek: 2, openTime: '08:00', closeTime: '22:00', isClosed: false },
+    { dayOfWeek: 3, openTime: '08:00', closeTime: '22:00', isClosed: false },
+    { dayOfWeek: 4, openTime: '08:00', closeTime: '22:00', isClosed: false },
+    { dayOfWeek: 5, openTime: '09:00', closeTime: '23:00', isClosed: false },
+    { dayOfWeek: 6, openTime: '10:00', closeTime: '16:00', isClosed: true },
+  ];
+}

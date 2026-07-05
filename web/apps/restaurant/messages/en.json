@@ -809,6 +809,7 @@
       "title": "Opening hours",
       "description": "Set the weekly opening schedule",
       "loadError": "Could not load opening hours",
+      "invalidOpeningHours": "Opening hours from the server are incomplete. Reload before saving so real restaurant hours are not overwritten.",
       "saveSuccess": "Opening hours saved",
       "saveError": "Could not save opening hours",
       "save": "Save schedule",

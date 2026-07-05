@@ -19,39 +19,40 @@ export const DAY_ORDER: OpeningHoursDay[] = [
   'sunday',
 ];
 
-export const DEFAULT_HOURS: OpeningHours = {
-  monday: { open: '08:00', close: '22:00', isClosed: false },
-  tuesday: { open: '08:00', close: '22:00', isClosed: false },
-  wednesday: { open: '08:00', close: '22:00', isClosed: false },
-  thursday: { open: '08:00', close: '22:00', isClosed: false },
-  friday: { open: '08:00', close: '22:00', isClosed: false },
-  saturday: { open: '09:00', close: '23:00', isClosed: false },
-  sunday: { open: '09:00', close: '22:00', isClosed: false },
-};
-
-export function fromOpeningHourPayload(payload: unknown): OpeningHours {
+export function fromOpeningHourPayload(payload: unknown): OpeningHours | null {
   if (Array.isArray(payload)) {
-    return payload.reduce<OpeningHours>((acc, row) => {
-      if (!isOpeningHourRow(row)) return acc;
+    if (payload.length !== DAY_ORDER.length) return null;
+    const seenDays = new Set<OpeningHoursDay>();
+    const hours = {} as OpeningHours;
+
+    for (const row of payload) {
+      if (!isOpeningHourRow(row)) return null;
       const day = DAY_ORDER[row.dayOfWeek];
-      if (!day) return acc;
-      acc[day] = {
-        open: row.openTime || DEFAULT_HOURS[day].open,
-        close: row.closeTime || DEFAULT_HOURS[day].close,
+      if (!day || seenDays.has(day)) return null;
+      seenDays.add(day);
+      hours[day] = {
+        open: row.openTime.trim(),
+        close: row.closeTime.trim(),
         isClosed: row.isClosed,
       };
-      return acc;
-    }, cloneDefaultHours());
+    }
+
+    return seenDays.size === DAY_ORDER.length ? hours : null;
   }
 
   if (isOpeningHoursObject(payload)) {
     return DAY_ORDER.reduce<OpeningHours>((acc, day) => {
-      acc[day] = { ...DEFAULT_HOURS[day], ...payload[day] };
+      const dayHours = payload[day];
+      acc[day] = {
+        open: dayHours.open.trim(),
+        close: dayHours.close.trim(),
+        isClosed: dayHours.isClosed,
+      };
       return acc;
-    }, cloneDefaultHours());
+    }, {} as OpeningHours);
   }
 
-  return cloneDefaultHours();
+  return null;
 }
 
 export function toOpeningHourRows(hours: OpeningHours): RestaurantOpeningHourRow[] {
@@ -63,13 +64,6 @@ export function toOpeningHourRows(hours: OpeningHours): RestaurantOpeningHourRow
   }));
 }
 
-function cloneDefaultHours(): OpeningHours {
-  return DAY_ORDER.reduce<OpeningHours>((acc, day) => {
-    acc[day] = { ...DEFAULT_HOURS[day] };
-    return acc;
-  }, {} as OpeningHours);
-}
-
 function isOpeningHoursObject(value: unknown): value is OpeningHours {
   if (!value || Array.isArray(value) || typeof value !== 'object') return false;
   return DAY_ORDER.every(day => isDayHours((value as Record<string, unknown>)[day]));
@@ -78,16 +72,23 @@ function isOpeningHoursObject(value: unknown): value is OpeningHours {
 function isDayHours(value: unknown): value is DayHours {
   if (!value || typeof value !== 'object') return false;
   const day = value as Partial<DayHours>;
-  return typeof day.open === 'string' && typeof day.close === 'string' && typeof day.isClosed === 'boolean';
+  return isNonEmptyString(day.open) && isNonEmptyString(day.close) && typeof day.isClosed === 'boolean';
 }
 
 function isOpeningHourRow(value: unknown): value is RestaurantOpeningHourRow {
   if (!value || typeof value !== 'object') return false;
   const row = value as Partial<RestaurantOpeningHourRow>;
   return (
-    typeof row.dayOfWeek === 'number'
-    && typeof row.openTime === 'string'
-    && typeof row.closeTime === 'string'
+    Number.isInteger(row.dayOfWeek)
+    && typeof row.dayOfWeek === 'number'
+    && row.dayOfWeek >= 0
+    && row.dayOfWeek < DAY_ORDER.length
+    && isNonEmptyString(row.openTime)
+    && isNonEmptyString(row.closeTime)
     && typeof row.isClosed === 'boolean'
   );
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
 }
