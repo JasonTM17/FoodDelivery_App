@@ -75,6 +75,28 @@ describe('TrackingController', () => {
     expect(getCachedRoute).toHaveBeenCalledWith('order-3', 'pickup')
   })
 
+  it('does not surface persisted estimated minutes when no routed cache exists', async () => {
+    getTracking.mockResolvedValue({
+      id: 'order-4',
+      status: OrderStatus.delivering,
+      driverId: 'driver-1',
+      estimatedDeliveryTimeMinutes: 18,
+      routePolyline: 'persisted-route',
+    })
+    getDriverLocation.mockResolvedValue(null)
+    getCachedRoute.mockResolvedValue(null)
+
+    await expect(controller.getTracking(
+      { sub: 'customer-1', role: 'customer' },
+      'order-4',
+    )).resolves.toMatchObject({
+      orderId: 'order-4',
+      routePhase: 'dropoff',
+      etaMinutes: null,
+      routePolyline: 'persisted-route',
+    })
+  })
+
   it('returns persisted tracking metadata without fabricating a driver location', async () => {
     getTracking.mockResolvedValue({
       id: 'order-2',

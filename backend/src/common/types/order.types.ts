@@ -20,6 +20,7 @@ export interface CreateOrderInput {
 export interface OrderTrackingData {
   orderId: string
   status: OrderStatus
+  routePhase: 'pickup' | 'dropoff'
   driverLocation: {
     lat: number
     lng: number

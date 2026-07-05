@@ -220,4 +220,45 @@ describe('DispatchService', () => {
       )
     })
   })
+
+  describe('assignDriver', () => {
+    it('does not broadcast a speed-based ETA before route telemetry is available', async () => {
+      mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce({
+        restaurantId: '00000000-0000-0000-0000-000000000001',
+        deliveryAddressId: '00000000-0000-0000-0000-000000000002',
+      })
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{
+        restLng: 106.7001,
+        restLat: 10.8001,
+        custLng: 106.7101,
+        custLat: 10.8101,
+      }])
+
+      await (service as unknown as {
+        assignDriver: (
+          orderId: string,
+          candidate: {
+            driverId: string
+            distKm: number
+            rating: number
+            totalDeliveries: number
+            score: number
+          },
+        ) => Promise<void>
+      }).assignDriver('order-1', {
+        driverId: 'driver-1',
+        distKm: 4,
+        rating: 4.8,
+        totalDeliveries: 120,
+        score: 0.9,
+      })
+
+      expect(mockGateway.sendAssignedOrder).toHaveBeenCalledWith('driver-1', { orderId: 'order-1' })
+      expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(
+        'order-1',
+        'driver:assigned',
+        { driverId: 'driver-1', etaMinutes: null },
+      )
+    })
+  })
 })

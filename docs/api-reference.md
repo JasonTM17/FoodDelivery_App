@@ -328,7 +328,7 @@ Connect to `ws://localhost:3001` with namespace:
 | `/dispatch: driver:order_assigned` | `{ orderId }` |
 | `driver:location_changed` | `{ orderId, driverId, lat, lng, bearing, timestamp }` |
 | `/events: admin:driver_location_changed` | `{ driverId, lat, lng, orderId, status, timestamp }` |
-| `driver:assigned` | `{ driverId, driverName, eta_minutes }` |
+| `driver:assigned` | `{ driverId, etaMinutes: null }`; routed ETA is emitted later through `delivery:eta_updated` only after Google/OSRM route data is available. |
 | `delivery:eta_updated` | `{ orderId, etaMinutes, source, degraded, routePolyline, routePhase }` where `source` is `google`, `osrm`, or `route_unavailable`; when no routed provider result is available, `etaMinutes` and `routePolyline` are `null`, `degraded=true`, and the backend must not fabricate a straight-line ETA. |
 
 ## Error Format

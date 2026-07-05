@@ -13,8 +13,7 @@ export interface WsOrderSubscription {
 
 export interface WsDriverAssigned {
   driverId: string
-  driverName: string
-  etaMinutes: number
+  etaMinutes: number | null
 }
 
 export interface WsOrderStatusChanged {

@@ -218,7 +218,7 @@ export class DispatchService {
     this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
     this.dispatchGateway.broadcastToOrder(orderId, 'driver:assigned', {
       driverId: candidate.driverId,
-      etaMinutes: Math.round(candidate.distKm / 20 * 60),
+      etaMinutes: null,
     })
   }
 }

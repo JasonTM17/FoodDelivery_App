@@ -43,7 +43,7 @@ export class TrackingController {
         : null,
       etaMinutes: cachedRoute
         ? Math.max(1, Math.round(cachedRoute.durationSeconds / 60))
-        : order.estimatedDeliveryTimeMinutes,
+        : null,
       routePolyline: cachedRoute?.polyline ?? order.routePolyline,
     }
   }
