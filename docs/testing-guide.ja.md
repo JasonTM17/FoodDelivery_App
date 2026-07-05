@@ -70,7 +70,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-最新の local E2E evidence: 2026-07-04 `14268da` / `codex/batch4-integration` で、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を使いました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。`pnpm test:e2e --project=chromium` は 35/35 tests pass、`pnpm test:e2e --project=firefox` も 35/35 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、tenant isolation coverage を含みます。
+最新の local E2E evidence: 2026-07-05、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を使いました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。Chromium + Firefox は 70/70 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation coverage を含みます。Current head `161ce9a` は backend route/ETA fix と refreshed backend/web/mobile gates を追加しているため、deployment approval 前に Playwright を rerun します。
 
 Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。`web/e2e/tests/tenant-isolation.spec.ts` は、restaurant user が別 restaurant tenant の order を list/read/update できないことを検証します。
 
@@ -121,7 +121,7 @@ Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Li
 
 ## 最新 local evidence (2026-07-05)
 
-Runtime code head は `3857433` / `master` です。`codex/batch4-integration` は fast-forward 後に remote integration branch が削除されました。Clean local worktree は local `codex/batch4-integration` を使う場合がありますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
+Runtime code head は `161ce9a` / `master` です。Remote `codex/batch4-integration` は `3857433` で patch-equivalence 確認後に削除されました。Clean local worktree は local `codex/batch4-integration` を使う場合がありますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
 
 - Backend と web の frozen install は pinned `pnpm 11.7.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
 - Backend は `pnpm typecheck`、`pnpm lint`、full `pnpm test`（107 suites / 760 tests）、`pnpm build` が pass。dispatch/order-code focused regressions は 3 suites / 46 tests、最新 route/ETA regressions は 2 suites / 16 tests が pass。

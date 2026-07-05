@@ -12,7 +12,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Landed on `master`
 
-- `codex/batch4-integration` was fast-forwarded into `master` at `3857433`; the remote integration branch was deleted after patch-equivalence was verified.
+- `codex/batch4-integration` was fast-forwarded into `master` at `3857433`; the remote integration branch was deleted after patch-equivalence was verified. Current `master` head is `161ce9a`.
 - Web response contract documented as `{ success: true, data, meta? }`.
 - Error contract documented as RFC 7807 Problem Details.
 - OpenAPI validation workflow and Spectral rules added.

@@ -2,7 +2,7 @@
 
 ## Latest local evidence (2026-07-05)
 
-Runtime code head: `3857433` on `master` after `codex/batch4-integration` was fast-forwarded and the remote integration branch was deleted. The clean local worktree may still use local branch `codex/batch4-integration`, but it tracks `origin/master`. Remote CI/Actions remains pending because the GitHub token/auth/billing state is unavailable.
+Runtime code head: `161ce9a` on `master`. The remote `codex/batch4-integration` branch was deleted earlier after patch-equivalence at `3857433`; the clean local worktree may still use local branch `codex/batch4-integration`, but it tracks `origin/master`. Remote CI/Actions remains pending because the GitHub token/auth/billing state is unavailable.
 
 - Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
 - Backend passed `pnpm typecheck`, `pnpm lint`, full `pnpm test` (107 suites / 760 tests), and `pnpm build`; focused dispatch/order-code regressions passed 3 suites / 46 tests, and the latest route/ETA regressions passed 2 suites / 16 tests.
@@ -91,7 +91,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Latest local E2E evidence: 2026-07-05 at `3857433`, Docker Compose had healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation.
+Latest local E2E evidence: 2026-07-05 at `3857433`, Docker Compose had healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation. The current head `161ce9a` has an additional backend route/ETA fix plus refreshed backend, web, and mobile gates; rerun Playwright after GitHub Actions/auth is restored or before deployment approval.
 
 Batch 4 E2E coverage should include:
 

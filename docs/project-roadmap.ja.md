@@ -12,7 +12,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## `master` に landed
 
-- `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みです。patch-equivalence 確認後、remote integration branch は削除されました。
+- `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みです。patch-equivalence 確認後、remote integration branch は削除されました。現在の `master` head は `161ce9a` です。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。

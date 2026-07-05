@@ -12,7 +12,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Đã landing trên `master`
 
-- `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`; remote integration branch đã xoá sau khi xác minh patch-equivalent.
+- `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`; remote integration branch đã xoá sau khi xác minh patch-equivalent. Current `master` head là `161ce9a`.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.

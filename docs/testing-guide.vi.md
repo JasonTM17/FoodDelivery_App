@@ -70,7 +70,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Evidence E2E local mới nhất: 2026-07-04 tại `14268da` trên `codex/batch4-integration`, Docker Compose có Backend/Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. `pnpm test:e2e --project=chromium` pass 35/35 test và `pnpm test:e2e --project=firefox` pass 35/35 test, bao phủ axe serious/critical smoke, visual contract, điều hướng admin driver map, tracking endpoint availability và tenant isolation.
+Evidence E2E local mới nhất: 2026-07-05, Docker Compose có Backend/Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Chromium + Firefox pass 70/70 test, bao phủ axe serious/critical smoke, visual contract, điều hướng admin driver map, tracking endpoint availability, realtime status flows và tenant isolation. Current head `161ce9a` có thêm fix backend route/ETA và gate backend/web/mobile mới; rerun Playwright trước deployment approval.
 
 Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation. Spec `web/e2e/tests/tenant-isolation.spec.ts` phải chứng minh user nhà hàng không thể list, đọc hoặc update order thuộc tenant nhà hàng khác.
 
@@ -121,7 +121,7 @@ Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, 
 
 ## Evidence local mới nhất (2026-07-05)
 
-Runtime code head: `3857433` trên `master` sau khi `codex/batch4-integration` được fast-forward và remote integration branch đã xoá. Worktree sạch local có thể vẫn dùng branch `codex/batch4-integration`, nhưng branch này tracking `origin/master`. Remote CI/Actions vẫn pending vì token/auth/billing GitHub chưa khả dụng.
+Runtime code head: `161ce9a` trên `master`. Remote `codex/batch4-integration` đã xoá trước đó sau khi xác minh patch-equivalence tại `3857433`; worktree sạch local có thể vẫn dùng branch `codex/batch4-integration`, nhưng branch này tracking `origin/master`. Remote CI/Actions vẫn pending vì token/auth/billing GitHub chưa khả dụng.
 
 - Frozen install pass cho backend và web với `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` pass.
 - Backend pass `pnpm typecheck`, `pnpm lint`, full `pnpm test` (107 suite / 760 test) và `pnpm build`; focused dispatch/order-code regressions pass 3 suite / 46 test, route/ETA regressions mới nhất pass 2 suite / 16 test.
