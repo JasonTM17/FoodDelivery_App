@@ -1,16 +1,18 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Inject, Logger } from '@nestjs/common'
+import { PaymentMethod, PaymentStatus } from '@prisma/client'
 import { Job } from 'bullmq'
 import type Redis from 'ioredis'
 import { PrismaService } from '../database/prisma.service'
 import { SepayProvider } from './providers/sepay.provider'
-import { PayoutLedgerService } from './payout-ledger.service'
 
 export interface PaymentRefundJobData {
+  refundId: string
   orderId: string
-  transactionRef: string
+  transactionRef?: string
   amount: number
   reason: string
+  kind: 'full' | 'partial'
   attemptNo: number
 }
 
@@ -24,15 +26,15 @@ export class RefundProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sepay: SepayProvider,
-    private readonly ledger: PayoutLedgerService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {
     super()
   }
 
   async process(job: Job<PaymentRefundJobData>): Promise<void> {
-    const { orderId, transactionRef, amount, reason, attemptNo } = job.data
-    const dedupeKey = `refund:${orderId}:${attemptNo}`
+    const { refundId, orderId, amount, reason, kind, attemptNo } = job.data
+    const normalizedAmount = Math.trunc(amount)
+    const dedupeKey = `refund:${refundId}:attempt:${attemptNo}`
 
     const alreadyProcessed = await this.redis.get(dedupeKey)
     if (alreadyProcessed) {
@@ -45,20 +47,93 @@ export class RefundProcessor extends WorkerHost {
       return
     }
 
+    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+      throw new Error(`Invalid refund amount for order ${orderId}`)
+    }
+
+    const payment = await this.prisma.payment.findUnique({
+      where: { orderId },
+      include: { order: { select: { customerId: true, status: true } } },
+    })
+    if (!payment) {
+      throw new Error(`No payment found for order ${orderId}`)
+    }
+    if (payment.status === PaymentStatus.refunded && kind === 'full') {
+      await this.redis.set(dedupeKey, '1', 'EX', 7 * 24 * 3600)
+      this.logger.log(`Refund ${refundId} already reflected in payment status — skipping duplicate`)
+      return
+    }
+    if (payment.status !== PaymentStatus.completed) {
+      throw new Error(`Cannot refund payment with status ${payment.status}`)
+    }
+    if (normalizedAmount > Number(payment.amount)) {
+      throw new Error(`Refund amount exceeds captured payment for order ${orderId}`)
+    }
+
     try {
-      await this.sepay.refund(transactionRef, amount, reason)
+      if (payment.method === PaymentMethod.sepay) {
+        const transactionRef = job.data.transactionRef ?? payment.transactionId
+        if (!transactionRef) {
+          throw new Error(`Missing SePay transaction reference for order ${orderId}`)
+        }
+        await this.sepay.refund(transactionRef, normalizedAmount, reason)
+      } else if (payment.method !== PaymentMethod.wallet) {
+        throw new Error(`Refund is not supported for ${payment.method} payments`)
+      }
 
-      await this.prisma.payment.update({
-        where: { orderId },
-        data: { status: 'refunded' },
-      })
+      await this.prisma.$transaction(async (tx) => {
+        if (payment.method === PaymentMethod.wallet) {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${payment.order.customerId}))`
+          await tx.walletTransaction.create({
+            data: {
+              userId: payment.order.customerId,
+              amountDelta: normalizedAmount,
+              type: 'credit',
+              reason: 'order_refund',
+              refId: orderId,
+              status: 'CONFIRMED',
+            },
+          })
+        }
 
-      // Ledger reversal entry — negative amount records the outflow
-      await this.ledger.insertEntry({
-        orderId,
-        recipientType: 'platform',
-        amount: -amount,
-        currency: 'VND',
+        if (kind === 'full') {
+          await tx.payment.update({
+            where: { orderId },
+            data: { status: PaymentStatus.refunded },
+          })
+          await tx.order.update({
+            where: { id: orderId },
+            data: { status: 'refunded' },
+          })
+          await tx.orderStatusHistory.create({
+            data: {
+              orderId,
+              status: 'refunded',
+              changedBy: 'system',
+              note: `Refund processed: ${reason}`,
+            },
+          })
+        } else {
+          await tx.orderStatusHistory.create({
+            data: {
+              orderId,
+              status: payment.order.status,
+              changedBy: 'system',
+              note: `Partial refund processed: ${normalizedAmount} VND. Reason: ${reason}`,
+            },
+          })
+        }
+
+        await tx.payoutLedger.create({
+          data: {
+            orderId,
+            recipientType: 'platform',
+            recipientId: null,
+            amount: -normalizedAmount,
+            currency: 'VND',
+            status: 'pending',
+          },
+        })
       })
 
       // Idempotency key — TTL 7 days to cover settlement window

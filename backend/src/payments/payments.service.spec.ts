@@ -169,22 +169,4 @@ describe('PaymentsService', () => {
     expect(result!.status).toBe('completed')
   })
 
-  it('refunds a completed payment', async () => {
-    mockPrisma.payment.findUnique.mockResolvedValueOnce({
-      id: 'pay-1',
-      orderId: 'order-1',
-      status: 'completed',
-    })
-    mockPrisma.payment.update.mockResolvedValueOnce({
-      id: 'pay-1',
-      status: 'refunded',
-    })
-
-    await service.refundPayment('order-1')
-
-    expect(mockPrisma.payment.update).toHaveBeenCalledWith({
-      where: { id: 'pay-1' },
-      data: { status: 'refunded' },
-    })
-  })
 })

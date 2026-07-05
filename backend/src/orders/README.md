@@ -43,7 +43,7 @@ npx jest orders
 ## Runbook
 
 - **Stuck order (status not transitioning):** Check `order_audit` table for last transition timestamp. Manual transition via admin endpoint với audit reason.
-- **Refund failed:** Inspect BullMQ `order-refund` queue. Failed jobs có retry max 5; sau đó move to DLQ.
+- **Refund failed:** Inspect BullMQ `payment-refund` queue. Failed jobs retry with exponential backoff; successful full refunds update the payment and order only after the provider or wallet ledger reversal succeeds.
 - **Idempotency collision:** Customer retry → backend dedup. Stale key sau `IDEMPOTENCY_TTL_HOURS`.
 - **Auto-timeout misfire:** Verify worker `order-timeout` queue consumer running.
 - **Partial fulfill price recalc:** Dùng `prisma.$transaction` đảm bảo atomic.

@@ -30,7 +30,7 @@ describe('PartialFulfillmentService', () => {
     restaurantId,
     status: 'restaurant_accepted',
     total: 100000,
-    payment: null as null | { status: string },
+    payment: null as null | { status: string; transactionId: string },
     orderItems: [
       { id: 'item-1', quantity: 1, unitPrice: 30000 },
       { id: 'item-2', quantity: 2, unitPrice: 20000 },
@@ -70,14 +70,24 @@ describe('PartialFulfillmentService', () => {
   it('enqueues refund job when payment is completed', async () => {
     mockPrisma.order.findUnique.mockResolvedValue({
       ...baseOrder,
-      payment: { status: 'completed' },
+      payment: { status: 'completed', transactionId: 'TXN-001' },
     })
     await service.markItemsUnavailable(orderId, restaurantUserId, { unavailableItemIds: ['item-1'] })
     expect(mockRefundQueue.add).toHaveBeenCalledTimes(1)
     expect(mockRefundQueue.add).toHaveBeenCalledWith(
-      'refund.partial',
-      expect.objectContaining({ orderId }),
-      expect.objectContaining({ attempts: 3 }),
+      'payment-refund.partial',
+      expect.objectContaining({
+        refundId: `partial-${orderId}-item-1`,
+        orderId,
+        transactionRef: 'TXN-001',
+        amount: 30_000,
+        kind: 'partial',
+        attemptNo: 1,
+      }),
+      expect.objectContaining({
+        attempts: 3,
+        jobId: `payment-refund-partial-${orderId}-item-1`,
+      }),
     )
   })
 
@@ -87,7 +97,7 @@ describe('PartialFulfillmentService', () => {
   })
 
   it('does not enqueue refund when payment is pending', async () => {
-    mockPrisma.order.findUnique.mockResolvedValue({ ...baseOrder, payment: { status: 'pending' } })
+    mockPrisma.order.findUnique.mockResolvedValue({ ...baseOrder, payment: { status: 'pending', transactionId: 'TXN-001' } })
     await service.markItemsUnavailable(orderId, restaurantUserId, { unavailableItemIds: ['item-1'] })
     expect(mockRefundQueue.add).not.toHaveBeenCalled()
   })

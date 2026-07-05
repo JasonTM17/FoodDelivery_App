@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Standalone BullMQ worker process for background jobs. Runs in separate container alongside main API. Consumes queues: order-timeout, order-refund, dispatch, dispatch-retry, payment-refund, commission-split, payout-disbursement, notif-fcm, notif-smtp, notif-twilio, tracking-eta. Each processor idempotent; failures retry with exponential backoff.
+Standalone BullMQ worker process for background jobs. Runs in separate container alongside main API. Consumes queues: order-timeout, dispatch, dispatch-retry, payment-refund, commission-split, payout-disbursement, notif-fcm, notif-smtp, notif-twilio, tracking-eta. Each processor idempotent; failures retry with exponential backoff.
 
 ## API surface
 

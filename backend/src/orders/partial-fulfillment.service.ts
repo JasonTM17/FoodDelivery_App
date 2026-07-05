@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../database/prisma.service'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
-import { RefundJobData } from './refund.processor'
+import { PaymentRefundJobData } from '../payments/refund.processor'
 
 export interface MarkUnavailableDto {
   unavailableItemIds: string[]
@@ -13,7 +13,7 @@ export interface MarkUnavailableDto {
 export class PartialFulfillmentService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('refund') private readonly refundQueue: Queue,
+    @InjectQueue('payment-refund') private readonly refundQueue: Queue,
   ) {}
 
   async markItemsUnavailable(
@@ -74,11 +74,19 @@ export class PartialFulfillmentService {
 
     // Enqueue refund for the delta if payment was already captured
     if (refundDelta > 0 && order.payment?.status === 'completed') {
-      const idempotencyKey = `partial-${orderId}-${dto.unavailableItemIds.sort().join('-')}`
+      const refundId = `partial-${orderId}-${dto.unavailableItemIds.sort().join('-')}`
       await this.refundQueue.add(
-        'refund.partial',
-        { orderId, idempotencyKey } satisfies RefundJobData,
-        { attempts: 3, backoff: { type: 'exponential', delay: 1000 }, jobId: idempotencyKey },
+        'payment-refund.partial',
+        {
+          refundId,
+          orderId,
+          transactionRef: order.payment.transactionId,
+          amount: Math.trunc(refundDelta),
+          reason: dto.reason ?? 'Partial fulfillment adjustment',
+          kind: 'partial',
+          attemptNo: 1,
+        } satisfies PaymentRefundJobData,
+        { attempts: 3, backoff: { type: 'exponential', delay: 1000 }, jobId: `payment-refund-${refundId}` },
       )
     }
 

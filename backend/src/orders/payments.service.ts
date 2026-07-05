@@ -67,24 +67,6 @@ export class PaymentsService {
     return this.prisma.payment.findUnique({ where: { orderId } })
   }
 
-  async refundPayment(orderId: string): Promise<void> {
-    const payment = await this.prisma.payment.findUnique({ where: { orderId } })
-    if (!payment) {
-      throw new Error(`No payment found for order ${orderId}`)
-    }
-    if (payment.status !== PaymentStatus.completed) {
-      throw new Error(`Cannot refund payment with status ${payment.status}`)
-    }
-
-    await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: PaymentStatus.refunded },
-    })
-    await this.recordStatusChange(orderId, 'refunded', 'system')
-
-    this.logger.log(`Payment refunded for order ${orderId}`)
-  }
-
   private async releaseCashOnDeliveryOrder(orderId: string): Promise<void> {
     await this.recordStatusChange(
       orderId,

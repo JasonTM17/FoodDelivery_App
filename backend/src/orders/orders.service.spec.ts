@@ -19,6 +19,7 @@ describe('OrdersService', () => {
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockPaymentsService: { processPayment: jest.Mock }
   let mockPromotionsService: { claimInTransaction: jest.Mock }
+  let mockRedis: { get: jest.Mock; del: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
     order: { findUniqueOrThrow: jest.Mock; update: jest.Mock; create: jest.Mock }
@@ -70,6 +71,10 @@ describe('OrdersService', () => {
     mockPromotionsService = {
       claimInTransaction: jest.fn().mockResolvedValue({ discountAmount: 0 }),
     }
+    mockRedis = {
+      get: jest.fn().mockResolvedValue(null),
+      del: jest.fn().mockResolvedValue(1),
+    }
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
     mockRefundQueue = { add: jest.fn().mockResolvedValue({}) }
     mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
@@ -80,6 +85,7 @@ describe('OrdersService', () => {
       mockGateway as unknown as OrdersGateway,
       mockCancellationService as unknown as CancellationService,
       mockPromotionsService as unknown as PromotionsService,
+      mockRedis as never,
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
@@ -295,22 +301,66 @@ describe('OrdersService', () => {
       })
     })
 
-    it('marks payment refunded and enqueues refund job when cancelled with completed payment', async () => {
+    it('enqueues real payment refund without marking payment refunded before provider success', async () => {
       mockTx.order.findUniqueOrThrow.mockResolvedValue({ id: orderId, status: 'paid' })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'cancelled' })
-      mockTx.payment.findUnique.mockResolvedValue({ id: 'pay-1', status: 'completed' })
+      mockTx.payment.findUnique.mockResolvedValue({
+        id: 'pay-1',
+        status: 'completed',
+        transactionId: 'TXN-001',
+        amount: 50_000,
+      })
 
       await service.transition(orderId, 'cancelled', userId, 'customer', 'reason')
 
-      expect(mockTx.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'refunded' } }),
-      )
+      expect(mockTx.payment.update).not.toHaveBeenCalled()
       expect(mockRefundQueue.add).toHaveBeenCalledTimes(1)
       expect(mockRefundQueue.add).toHaveBeenCalledWith(
-        'refund.order',
-        expect.objectContaining({ orderId }),
-        expect.objectContaining({ attempts: 3 }),
+        'payment-refund.full',
+        expect.objectContaining({
+          refundId: `full-${orderId}`,
+          orderId,
+          transactionRef: 'TXN-001',
+          amount: 50_000,
+          reason: 'reason',
+          kind: 'full',
+          attemptNo: 1,
+        }),
+        expect.objectContaining({
+          attempts: 3,
+          jobId: `payment-refund-full-${orderId}`,
+        }),
       )
+    })
+
+    it('releases driver current order when a terminal order still owns the redis assignment', async () => {
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({
+        id: orderId,
+        status: 'delivering',
+        driverId: 'driver-1',
+      })
+      mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockRedis.get.mockResolvedValueOnce(orderId)
+
+      await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')
+
+      expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:current_order')
+      expect(mockRedis.del).toHaveBeenCalledWith('driver:driver-1:current_order')
+    })
+
+    it('does not release a driver assignment that has already moved to another order', async () => {
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({
+        id: orderId,
+        status: 'delivering',
+        driverId: 'driver-1',
+      })
+      mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockRedis.get.mockResolvedValueOnce('other-order')
+
+      await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')
+
+      expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:current_order')
+      expect(mockRedis.del).not.toHaveBeenCalled()
     })
 
     it('does not enqueue refund job when cancelled with no payment', async () => {

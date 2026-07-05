@@ -6,7 +6,6 @@ import { OrdersGateway } from './orders.gateway'
 import { PaymentsService } from './payments.service'
 import { IdempotencyInterceptor } from './idempotency.interceptor'
 import { CancellationService } from './cancellation.service'
-import { RefundProcessor } from './refund.processor'
 import { AutoTimeoutProcessor } from './auto-timeout.processor'
 import { PartialFulfillmentService } from './partial-fulfillment.service'
 import { CartModule } from '../cart/cart.module'
@@ -24,7 +23,7 @@ import { PromotionsModule } from '../promotions/promotions.module'
     PaymentsModule,
     PromotionsModule,
     BullModule.registerQueue({ name: 'dispatch' }),
-    BullModule.registerQueue({ name: 'refund' }),
+    BullModule.registerQueue({ name: 'payment-refund' }),
     BullModule.registerQueue({ name: 'order-timeout' }),
   ],
   controllers: [OrdersController],
@@ -35,7 +34,6 @@ import { PromotionsModule } from '../promotions/promotions.module'
     OrdersGateway,
     IdempotencyInterceptor,
     CancellationService,
-    RefundProcessor,
     AutoTimeoutProcessor,
     PartialFulfillmentService,
     OrderChatService,

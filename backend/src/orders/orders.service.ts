@@ -1,6 +1,7 @@
-import { Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { Inject, Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
+import type Redis from 'ioredis'
 import { PrismaService } from '../database/prisma.service'
 import { OrderStateMachine, OrderStatus } from './order-state-machine'
 import { PaymentsService } from './payments.service'
@@ -13,6 +14,7 @@ import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
 import { PromotionsService } from '../promotions/promotions.service'
 import { routePhaseForStatus } from '../tracking/tracking.service'
+import { PaymentRefundJobData } from '../payments/refund.processor'
 
 @Injectable()
 export class OrdersService {
@@ -22,8 +24,9 @@ export class OrdersService {
     private readonly ordersGateway: OrdersGateway,
     private readonly cancellationService: CancellationService,
     private readonly promotionsService: PromotionsService,
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
-    @InjectQueue('refund') private readonly refundQueue: Queue,
+    @InjectQueue('payment-refund') private readonly refundQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
   ) {}
 
@@ -35,7 +38,11 @@ export class OrdersService {
     reason?: string,
     ip?: string,
   ) {
-    type SideEffects = { needsRefundJob: boolean; needsDispatch: boolean }
+    type SideEffects = {
+      refundJob: PaymentRefundJobData | null
+      needsDispatch: boolean
+      releaseDriverId: string | null
+    }
 
     const { order: result, fx } = await this.prisma.$transaction(async (tx) => {
       // Serialise concurrent transitions for the same order
@@ -75,19 +82,29 @@ export class OrdersService {
         data: { orderId, status: toStatus, changedBy: actorId, note: noteText },
       })
 
-      // Cancelled + payment completed → mark refunded inside txn
-      let needsRefundJob = false
+      let refundJob: PaymentRefundJobData | null = null
       if (toStatus === 'cancelled') {
         const payment = await tx.payment.findUnique({ where: { orderId } })
         if (payment?.status === 'completed') {
-          await tx.payment.update({ where: { id: payment.id }, data: { status: 'refunded' } })
-          needsRefundJob = true
+          refundJob = {
+            refundId: `full-${orderId}`,
+            orderId,
+            transactionRef: payment.transactionId,
+            amount: Math.trunc(Number(payment.amount)),
+            reason: reason ?? 'Order cancelled',
+            kind: 'full',
+            attemptNo: 1,
+          }
         }
       }
 
       return {
         order: updated,
-        fx: { needsRefundJob, needsDispatch: toStatus === 'restaurant_accepted' } as SideEffects,
+        fx: {
+          refundJob,
+          needsDispatch: toStatus === 'restaurant_accepted',
+          releaseDriverId: isDriverReleaseStatus(toStatus) ? order.driverId : null,
+        } as SideEffects,
       }
     })
 
@@ -99,11 +116,15 @@ export class OrdersService {
       orderId, status: toStatus, timestamp: new Date().toISOString(),
     })
 
-    if (fx.needsRefundJob) {
-      const jobId = `refund-${orderId}`
+    if (fx.releaseDriverId) {
+      await this.releaseDriverAssignmentIfCurrent(fx.releaseDriverId, orderId)
+    }
+
+    if (fx.refundJob) {
+      const jobId = `payment-refund-${fx.refundJob.refundId}`
       await this.refundQueue.add(
-        'refund.order',
-        { orderId, idempotencyKey: jobId },
+        'payment-refund.full',
+        fx.refundJob,
         { attempts: 3, backoff: { type: 'exponential', delay: 1000 }, jobId },
       )
     }
@@ -113,6 +134,14 @@ export class OrdersService {
     }
 
     return result
+  }
+
+  private async releaseDriverAssignmentIfCurrent(driverId: string, orderId: string): Promise<void> {
+    const key = `driver:${driverId}:current_order`
+    const currentOrder = await this.redis.get(key)
+    if (currentOrder === orderId) {
+      await this.redis.del(key)
+    }
   }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
@@ -444,4 +473,8 @@ function serializeSelectedOptions(value: Prisma.JsonValue) {
       price: Number(record.price ?? record.priceModifier ?? 0),
     }]
   })
+}
+
+function isDriverReleaseStatus(status: OrderStatus): boolean {
+  return ['delivered', 'completed', 'cancelled', 'refunded'].includes(status)
 }

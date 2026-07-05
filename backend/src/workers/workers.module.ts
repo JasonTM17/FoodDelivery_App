@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq'
 import { PrismaModule } from '../database/prisma.module'
 import { RedisModule } from '../redis/redis.module'
 import { DispatchModule } from '../dispatch/dispatch.module'
+import { OrdersModule } from '../orders/orders.module'
 import { validateEnv } from '../config/env.validation'
 
 @Module({
@@ -20,6 +21,7 @@ import { validateEnv } from '../config/env.validation'
     PrismaModule,
     RedisModule,
     DispatchModule,
+    OrdersModule,
   ],
 })
 export class WorkersModule {}
