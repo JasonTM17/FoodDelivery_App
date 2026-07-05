@@ -4,7 +4,7 @@ Playwright test suite covering the four critical user flows: admin dashboard, re
 
 ## Prerequisites
 
-- Node 18+ and pnpm 10+
+- Node 18+ and pnpm 11+
 - Docker Compose (for backend stack)
 - `@playwright/test` installed (see below)
 - Seed data applied (`pnpm db:big-seed` from `backend/`)

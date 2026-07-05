@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`web/` is a pnpm 10 Turborepo for the FoodFlow dashboards:
+`web/` is a pnpm 11 Turborepo for the FoodFlow dashboards:
 
 - `apps/admin`: platform operations, live driver map, restaurants, users, orders, promotions, support, audit logs, exports, settings, and AI monitor.
 - `apps/restaurant`: merchant order queue, menu, categories, reviews, revenue, promotions, staff, profile, operating hours, insights, and notifications.

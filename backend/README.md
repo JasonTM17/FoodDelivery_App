@@ -56,7 +56,7 @@ Copy `.env.example` to `.env` and fill in the required values.
 ## 4. Run Locally
 
 ```bash
-# Prerequisites: Docker Desktop, Node.js 20+, pnpm 10+
+# Prerequisites: Docker Desktop, Node.js 20+, pnpm 11+
 
 # 1. Start infrastructure
 docker compose up -d

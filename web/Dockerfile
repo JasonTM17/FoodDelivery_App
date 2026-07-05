@@ -11,7 +11,7 @@ ARG BUILD_SHA=dev
 # =============================================================================
 FROM node:22-alpine AS deps
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 WORKDIR /app
 
 # Copy workspace config files for pnpm install

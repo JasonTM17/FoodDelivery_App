@@ -49,7 +49,7 @@ Quy tắc:
 
 ## Web: Next.js Admin và Restaurant
 
-- Giữ Next.js 14, React 18, ESLint 8 và pnpm 10 cho đến khi có migration riêng.
+- Giữ Next.js 14, React 18, ESLint 8 và pnpm 11.7.0 đã pin cho đến khi có migration riêng.
 - Route nằm dưới `app/[locale]`; route không locale chỉ redirect tương thích.
 - Dùng next-intl cho `vi`, `en`, `ja`.
 - Segment route mới cần `loading.tsx`, `error.tsx`, `not-found.tsx`.

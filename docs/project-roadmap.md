@@ -6,7 +6,7 @@ This roadmap reflects the integration branch direction. It separates what is alr
 
 ## Current priority: Batch 4 web/backend parity and mobile stabilization
 
-Goal: make Admin and Restaurant dashboards production-grade against real backend data, then keep mobile/customer apps aligned with the stabilized Batch 4 contract while staying on Next.js 14, React 18, ESLint 8, pnpm 10, and the current Flutter constraints.
+Goal: make Admin and Restaurant dashboards production-grade against real backend data, then keep mobile/customer apps aligned with the stabilized Batch 4 contract while staying on Next.js 14, React 18, ESLint 8, pinned pnpm 11.7.0, and the current Flutter constraints.
 
 Batch 4 is not complete until local gates, E2E, accessibility, visual checks, tenant-isolation checks, and deployment validation pass.
 

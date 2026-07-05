@@ -6,7 +6,7 @@
 
 ## 現在の優先事項: Batch 4 web/backend parity と mobile stabilization
 
-Goal: Admin と Restaurant dashboard を real backend data で production-grade にし、その後 mobile/customer apps を安定した Batch 4 contract に合わせます。Next.js 14、React 18、ESLint 8、pnpm 10、現行 Flutter constraints は維持します。
+Goal: Admin と Restaurant dashboard を real backend data で production-grade にし、その後 mobile/customer apps を安定した Batch 4 contract に合わせます。Next.js 14、React 18、ESLint 8、固定済み pnpm 11.7.0、現行 Flutter constraints は維持します。
 
 Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、deployment validation が通るまで完了ではありません。
 

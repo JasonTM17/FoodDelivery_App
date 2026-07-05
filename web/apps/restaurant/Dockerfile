@@ -1,7 +1,7 @@
 # web/apps/restaurant/Dockerfile — Multi-stage Next.js standalone runtime
 FROM node:22-alpine AS deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/restaurant/package.json ./apps/restaurant/
 COPY packages ./packages
@@ -9,7 +9,7 @@ RUN pnpm install --frozen-lockfile
 
 FROM node:22-alpine AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./

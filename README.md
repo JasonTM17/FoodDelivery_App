@@ -50,7 +50,7 @@ Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and
 ## Prerequisites
 
 - Node.js 20+ or 22+ compatible with the checked-in lockfiles
-- pnpm 10
+- pnpm 11.7.0 (or pnpm 11+)
 - Docker Desktop or Docker Engine
 - Flutter SDK for mobile work
 - Google Maps, SePay, DeepSeek, Supabase, and Vercel credentials only when enabling those integrations
