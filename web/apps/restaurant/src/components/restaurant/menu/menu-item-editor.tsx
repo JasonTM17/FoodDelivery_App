@@ -18,9 +18,13 @@ interface MenuItemEditorProps {
 export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const router = useRouter();
   const t = useTranslations('menu.editPage');
+  const tBoard = useTranslations('menu.board');
   const tForm = useTranslations('menu.form');
+  const loadErrorMessage = t('loadError');
 
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedItem, setHasLoadedItem] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -35,11 +39,14 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const [schedule, setSchedule] = useState<{ open: string; close: string }>({ open: '', close: '' });
 
   useEffect(() => {
+    setIsLoading(true);
+    setHasLoadedItem(false);
+    setError('');
     api
       .get<MenuItem & { allergens?: string[] }>(`/restaurant/menu/items/${id}`)
       .then((data) => {
         setName(data.name);
-        setDescription(data.description);
+        setDescription(data.description ?? '');
         setPrice(data.price.toString());
         setCategory(data.category);
         setImage(data.image || '');
@@ -50,12 +57,13 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         } else {
           setAvailabilityMode('always');
         }
+        setHasLoadedItem(true);
       })
       .catch((err: unknown) =>
-        setError((err as { message?: string }).message || t('loadError'))
+        setError((err as { message?: string }).message || loadErrorMessage)
       )
       .finally(() => setIsLoading(false));
-  }, [id, t]);
+  }, [id, loadErrorMessage, reloadKey]);
 
   const toggleAllergen = (allergen: string) =>
     setAllergens((prev) =>
@@ -90,6 +98,29 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   };
 
   if (isLoading) return null;
+
+  if (!hasLoadedItem) {
+    return (
+      <div>
+        <button type="button" onClick={() => router.push('/menu')} className="btn-ghost mb-4 -ml-2">
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
+          {t('back')}
+        </button>
+
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6" role="alert">
+          <h1 className="text-base font-semibold text-red-900">{loadErrorMessage}</h1>
+          <p className="mt-2 text-sm text-red-700">{error || loadErrorMessage}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((current) => current + 1)}
+            className="btn-secondary mt-4"
+          >
+            {tBoard('retry')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
