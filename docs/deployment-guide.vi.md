@@ -6,7 +6,7 @@ Ngôn ngữ: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.
 
 Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ gate xanh. Không deploy từ dirty root worktree, không dùng key đã lộ, không deploy khi Batch 4 còn gate đỏ.
 
-Trạng thái Batch 4 ngày 2026-07-05: `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`, remote integration branch đã xoá sau khi xác minh patch-equivalence, và current `master` head là `161ce9a`. Đây là mốc cleanup branch và hardening local, không phải approval deploy production. Deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, và production secrets/CLI auth hợp lệ.
+Trạng thái Batch 4 ngày 2026-07-05: `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`, và remote integration branch đã xoá sau khi xác minh patch-equivalence. Runtime code đã verify gồm `161ce9a`, Docker/E2E đã rerun sau docs head `e24631c`; dùng `git ls-remote --heads origin` để lấy SHA `master` hiện tại chính xác sau các commit docs-only. Đây là mốc cleanup branch và hardening local, không phải approval deploy production. Deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, và production secrets/CLI auth hợp lệ.
 
 ## Docker local
 

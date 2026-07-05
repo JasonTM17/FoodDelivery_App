@@ -70,7 +70,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-最新の local E2E evidence: 2026-07-05、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を使いました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。Chromium + Firefox は 70/70 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation coverage を含みます。Current head `161ce9a` は backend route/ETA fix と refreshed backend/web/mobile gates を追加しているため、deployment approval 前に Playwright を rerun します。
+最新の local E2E evidence: 2026-07-05、route/ETA fix 後かつ docs head `e24631c` で、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を rebuild しました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。Chromium + Firefox は 70/70 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation coverage を含みます。
 
 Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。`web/e2e/tests/tenant-isolation.spec.ts` は、restaurant user が別 restaurant tenant の order を list/read/update できないことを検証します。
 
@@ -121,13 +121,13 @@ Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Li
 
 ## 最新 local evidence (2026-07-05)
 
-Runtime code head は `161ce9a` / `master` です。Remote `codex/batch4-integration` は `3857433` で patch-equivalence 確認後に削除されました。Clean local worktree は local `codex/batch4-integration` を使う場合がありますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
+Verified runtime code includes `161ce9a`; Docker/E2E was rerun after docs head `e24631c`。Remote `codex/batch4-integration` は `3857433` で patch-equivalence 確認後に削除されました。Clean local worktree は local `codex/batch4-integration` を使う場合がありますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。docs-only evidence commits 後の正確な current `master` SHA は `git ls-remote --heads origin` で確認します。
 
 - Backend と web の frozen install は pinned `pnpm 11.7.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
 - Backend は `pnpm typecheck`、`pnpm lint`、full `pnpm test`（107 suites / 760 tests）、`pnpm build` が pass。dispatch/order-code focused regressions は 3 suites / 46 tests、最新 route/ETA regressions は 2 suites / 16 tests が pass。
 - Web は `pnpm typecheck`、`pnpm lint`、`pnpm test`（Admin 35 files / 144 tests、Restaurant 28 files / 83 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
-- Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。`http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
-- Playwright は IPv6 loopback URL で Chromium + Firefox together 70/70 tests が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
+- Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。rebuild 後に `http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
+- Playwright は docs head `e24631c` と IPv6 loopback URL で Chromium + Firefox together 70/70 tests が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
 - Mobile は `flutter pub get --enforce-lockfile`、`flutter analyze`、full `flutter test`（166 tests）、`dart analyze mobile/packages/api_client`、customer/driver 両方の Android debug APK build が pass。APK build には `share_plus` の Kotlin Gradle Plugin future-compatibility warning のみが出ており、fail はしていません。
 - Tracking contract refresh は backend `pnpm exec jest src/tracking --runInBand`（5 suites / 41 tests）と focused dispatch/tracking regression tests（2 suites / 16 tests）を pass。OpenAPI YAML parse は以前 137 paths と `OrderTrackingResponse.routePhase` required で pass 済みです。
 - Dispatch/map evidence: restaurant acceptance は restaurant latitude/longitude と attempt metadata を含む route-aware dispatch jobs を enqueue します。Worker は legacy malformed jobs を skip し、ioredis `GEOSEARCH WITHDIST` tuple rows を parse し、`raw[i].replace is not a function` で fail しません。Customer `driver:assigned` event は `etaMinutes: null` を返すため、tracking が Google/OSRM route を得る前に speed-based ETA を捏造しません。

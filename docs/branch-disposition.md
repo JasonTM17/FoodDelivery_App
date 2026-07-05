@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-05. Branch cleanup was performed after `codex/batch4-integration` was fast-forwarded into `master` at `3857433`; the current remote `master` head is `161ce9a`.
+Last audited: 2026-07-05. Branch cleanup was performed after `codex/batch4-integration` was fast-forwarded into `master` at `3857433`. The latest verified runtime code includes `161ce9a`; exact remote `master` SHA should be checked with `git ls-remote --heads origin` after docs-only evidence commits.
 
 This record documents the branch state used for Batch 4 salvage and cleanup decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -20,7 +20,7 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship | Disposition |
 |---|---:|---|---|
-| `origin/master` | `161ce9a` | Contains the tested Batch 4 integration work plus the route/ETA follow-up. `git ls-remote --heads origin` returns only `refs/heads/master`. | Keep as the only live remote branch. |
+| `origin/master` | See `git ls-remote --heads origin` | Contains the tested Batch 4 integration work plus the route/ETA follow-up. `git ls-remote --heads origin` returns only `refs/heads/master`. | Keep as the only live remote branch. |
 
 `origin/codex/batch4-integration` was deleted only after `origin/master` and `origin/codex/batch4-integration` both pointed at `3857433` and `git rev-list --left-right --count origin/master...origin/codex/batch4-integration` returned `0 0`.
 
@@ -28,7 +28,7 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | `161ce9a` | Current clean worktree branch in `D:\Food_Delivery-worktrees\batch4-integration`, now tracking `origin/master` after the remote integration branch was deleted. | Safe local worktree branch for continued Batch 4 work; push future commits explicitly to `master` unless a new review branch is intentionally opened. |
+| `codex/batch4-integration` | Tracks `origin/master` | Current clean worktree branch in `D:\Food_Delivery-worktrees\batch4-integration`, now tracking `origin/master` after the remote integration branch was deleted. | Safe local worktree branch for continued Batch 4 work; push future commits explicitly to `master` unless a new review branch is intentionally opened. |
 | `master` | `4fb2799` | Checked out in dirty root worktree `D:\Food_Delivery`; behind `origin/master` after Batch 4 was merged. | Do not switch, reset, delete, or mutate from the Batch 4 clean worktree. |
 
 ## Cleaned-up branch refs
