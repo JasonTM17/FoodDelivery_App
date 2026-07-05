@@ -39,6 +39,23 @@ interface IRouteProvider {
   fetchRoute(origin: GeoPoint, destination: GeoPoint): Promise<RouteResult>
 }
 
+const DIRECTIONS_TIMEOUT_MS = Number.parseInt(process.env.DIRECTIONS_TIMEOUT_MS ?? '5000', 10)
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), DIRECTIONS_TIMEOUT_MS)
+  try {
+    return await fetch(url, { signal: controller.signal })
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      throw new Error(`Directions provider timed out after ${DIRECTIONS_TIMEOUT_MS}ms`)
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 class GoogleDirectionsProvider implements IRouteProvider {
   private readonly logger = new Logger('GoogleDirectionsProvider')
 
@@ -52,7 +69,7 @@ class GoogleDirectionsProvider implements IRouteProvider {
       `&departure_time=now&traffic_model=best_guess` +
       `&key=${this.apiKey}`
 
-    const res = await fetch(url)
+    const res = await fetchWithTimeout(url)
     if (!res.ok) throw new Error(`Google Directions HTTP ${res.status}`)
 
     const json = (await res.json()) as GoogleDirectionsResponse
@@ -85,7 +102,7 @@ class OsrmRouteProvider implements IRouteProvider {
       `${origin.lng},${origin.lat};${destination.lng},${destination.lat}` +
       `?overview=full&geometries=polyline&steps=true`
 
-    const res = await fetch(url)
+    const res = await fetchWithTimeout(url)
     if (!res.ok) throw new Error(`OSRM HTTP ${res.status}`)
 
     const json = (await res.json()) as OsrmResponse

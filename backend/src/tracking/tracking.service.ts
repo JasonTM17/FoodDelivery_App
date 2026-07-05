@@ -31,6 +31,7 @@ interface LocationData {
 
 interface LocationRecord {
   driverId: string
+  orderId: string | null
   lng: number
   lat: number
   recordedAt: Date
@@ -72,9 +73,8 @@ export class TrackingService implements OnModuleDestroy {
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
     await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt.toISOString())
 
-    this.batchBuffer.push({ driverId, lng: data.lng, lat: data.lat, recordedAt })
-
     const orderId = await this.redis.get(`driver:${driverId}:current_order`)
+    this.batchBuffer.push({ driverId, orderId: orderId || null, lng: data.lng, lat: data.lat, recordedAt })
     return orderId || null
   }
 
@@ -194,9 +194,9 @@ export class TrackingService implements OnModuleDestroy {
     this.batchBuffer = []
     try {
       await this.prisma.$executeRawUnsafe(
-        `INSERT INTO driver_location_history (driver_id, location, recorded_at)
-         VALUES ${batch.map((_, i) => `($${i * 4 + 1}::uuid, ST_SetSRID(ST_MakePoint($${i * 4 + 2}::float8, $${i * 4 + 3}::float8), 4326), $${i * 4 + 4}::timestamptz)`).join(', ')}`,
-        ...batch.flatMap((r) => [r.driverId, r.lng, r.lat, r.recordedAt]),
+        `INSERT INTO driver_location_history (driver_id, order_id, location, recorded_at)
+         VALUES ${batch.map((_, i) => `($${i * 5 + 1}::uuid, $${i * 5 + 2}::uuid, ST_SetSRID(ST_MakePoint($${i * 5 + 3}::float8, $${i * 5 + 4}::float8), 4326), $${i * 5 + 5}::timestamptz)`).join(', ')}`,
+        ...batch.flatMap((r) => [r.driverId, r.orderId, r.lng, r.lat, r.recordedAt]),
       )
     } catch (err) {
       this.logger.error(`Failed to flush location batch: ${(err as Error).message}`)

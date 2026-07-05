@@ -87,8 +87,10 @@ describe('TrackingService', () => {
   })
 
   describe('location history flush', () => {
-    it('binds one uuid/lng/lat/timestamp parameter group per buffered location', async () => {
-      mockRedis.get.mockResolvedValue(null)
+    it('binds one driver/order/lng/lat/timestamp parameter group per buffered location', async () => {
+      mockRedis.get
+        .mockResolvedValueOnce('10000000-0000-0000-0000-000000000001')
+        .mockResolvedValueOnce(null)
 
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000001', {
         lat: 10.8,
@@ -104,18 +106,22 @@ describe('TrackingService', () => {
       expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledTimes(1)
       const [sql, ...params] = mockPrisma.$executeRawUnsafe.mock.calls[0]
       expect(sql).toContain('$1::uuid')
-      expect(sql).toContain('$4::timestamptz')
-      expect(sql).toContain('$5::uuid')
-      expect(sql).toContain('$8::timestamptz')
-      expect(params).toHaveLength(8)
+      expect(sql).toContain('order_id')
+      expect(sql).toContain('$2::uuid')
+      expect(sql).toContain('$5::timestamptz')
+      expect(sql).toContain('$6::uuid')
+      expect(sql).toContain('$10::timestamptz')
+      expect(params).toHaveLength(10)
       expect(params[0]).toBe('00000000-0000-0000-0000-000000000001')
-      expect(params[1]).toBe(106.7)
-      expect(params[2]).toBe(10.8)
-      expect(params[3]).toBeInstanceOf(Date)
-      expect(params[4]).toBe('00000000-0000-0000-0000-000000000002')
-      expect(params[5]).toBe(106.71)
-      expect(params[6]).toBe(10.81)
-      expect(params[7]).toBeInstanceOf(Date)
+      expect(params[1]).toBe('10000000-0000-0000-0000-000000000001')
+      expect(params[2]).toBe(106.7)
+      expect(params[3]).toBe(10.8)
+      expect(params[4]).toBeInstanceOf(Date)
+      expect(params[5]).toBe('00000000-0000-0000-0000-000000000002')
+      expect(params[6]).toBeNull()
+      expect(params[7]).toBe(106.71)
+      expect(params[8]).toBe(10.81)
+      expect(params[9]).toBeInstanceOf(Date)
     })
   })
 

@@ -429,6 +429,7 @@ export class DriversService {
         recorded_at AS "timestamp"
       FROM driver_location_history
       WHERE driver_id = CAST(${driverId} AS uuid)
+        AND order_id = CAST(${order.id} AS uuid)
         AND recorded_at >= ${start}
         AND recorded_at <= ${end}
       ORDER BY recorded_at ASC

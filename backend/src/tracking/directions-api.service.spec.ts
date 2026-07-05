@@ -71,6 +71,26 @@ describe('DirectionsApiService (no API key)', () => {
     expect(result.distanceMeters).toBe(5000)
     expect(global.fetch).toHaveBeenCalledTimes(1)
   })
+
+  it('aborts a hung OSRM request instead of waiting forever', async () => {
+    jest.useFakeTimers()
+    global.fetch = jest.fn((_url, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          const error = new Error('aborted')
+          error.name = 'AbortError'
+          reject(error)
+        })
+      }),
+    )
+
+    const expectation = expect(service.fetchRoute(origin, dest))
+      .rejects.toThrow('Directions provider timed out after 5000ms')
+    await jest.advanceTimersByTimeAsync(5000)
+
+    await expectation
+    jest.useRealTimers()
+  })
 })
 
 // ─── Suite 2: Google API key configured ───────────────────────────────────────
