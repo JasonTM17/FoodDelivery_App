@@ -209,35 +209,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
     final currentTracking = state.currentTrackingOrder;
     if (currentTracking?.id == orderId) {
       state = state.copyWith(
-        currentTrackingOrder: OrderModel(
-          id: currentTracking!.id,
-          userId: currentTracking.userId,
-          restaurantId: currentTracking.restaurantId,
-          restaurantName: currentTracking.restaurantName,
-          restaurantLogoUrl: currentTracking.restaurantLogoUrl,
-          restaurantPhone: currentTracking.restaurantPhone,
-          customerName: currentTracking.customerName,
-          customerPhone: currentTracking.customerPhone,
-          items: currentTracking.items,
-          subtotal: currentTracking.subtotal,
-          deliveryFee: currentTracking.deliveryFee,
-          discount: currentTracking.discount,
-          total: currentTracking.total,
+        currentTrackingOrder: currentTracking!.copyWith(
           status: newStatus,
-          deliveryAddress: currentTracking.deliveryAddress,
-          paymentMethod: currentTracking.paymentMethod,
-          createdAt: currentTracking.createdAt,
           updatedAt: DateTime.now(),
-          driverId: currentTracking.driverId,
-          driverName: currentTracking.driverName,
-          driverPhone: currentTracking.driverPhone,
-          driverLatitude: currentTracking.driverLatitude,
-          driverLongitude: currentTracking.driverLongitude,
-          restaurantLatitude: currentTracking.restaurantLatitude,
-          restaurantLongitude: currentTracking.restaurantLongitude,
-          estimatedDeliveryTimeMinutes:
-              currentTracking.estimatedDeliveryTimeMinutes,
-          routePolyline: currentTracking.routePolyline,
         ),
       );
     }
@@ -247,35 +221,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
     final currentTracking = state.currentTrackingOrder;
     if (currentTracking?.id == orderId) {
       state = state.copyWith(
-        currentTrackingOrder: OrderModel(
-          id: currentTracking!.id,
-          userId: currentTracking.userId,
-          restaurantId: currentTracking.restaurantId,
-          restaurantName: currentTracking.restaurantName,
-          restaurantLogoUrl: currentTracking.restaurantLogoUrl,
-          restaurantPhone: currentTracking.restaurantPhone,
-          customerName: currentTracking.customerName,
-          customerPhone: currentTracking.customerPhone,
-          items: currentTracking.items,
-          subtotal: currentTracking.subtotal,
-          deliveryFee: currentTracking.deliveryFee,
-          discount: currentTracking.discount,
-          total: currentTracking.total,
-          status: currentTracking.status,
-          deliveryAddress: currentTracking.deliveryAddress,
-          paymentMethod: currentTracking.paymentMethod,
-          createdAt: currentTracking.createdAt,
-          updatedAt: currentTracking.updatedAt,
-          driverId: currentTracking.driverId,
-          driverName: currentTracking.driverName,
-          driverPhone: currentTracking.driverPhone,
+        currentTrackingOrder: currentTracking!.copyWith(
           driverLatitude: lat,
           driverLongitude: lng,
-          restaurantLatitude: currentTracking.restaurantLatitude,
-          restaurantLongitude: currentTracking.restaurantLongitude,
-          estimatedDeliveryTimeMinutes:
-              currentTracking.estimatedDeliveryTimeMinutes,
-          routePolyline: currentTracking.routePolyline,
         ),
       );
     }

@@ -123,7 +123,7 @@ Get order detail with items, status history, payment.
 ### GET /orders/:id/tracking
 Get real-time driver location and ETA.
 
-The response combines the customer-owned order snapshot with the assigned driver's live Redis position. `driverLocation`, `etaMinutes`, and `routePolyline` are nullable when no real telemetry or route has been recorded; the API does not synthesize coordinates or ETA values.
+The response combines the customer-owned order snapshot with the assigned driver's live Redis position. `routePhase` is `pickup` while the driver is heading to the restaurant and `dropoff` after pickup. `driverLocation`, `etaMinutes`, and `routePolyline` are nullable when no real telemetry or route has been recorded; the API does not synthesize coordinates or ETA values.
 
 ### POST /orders/:id/cancel
 Cancel order if allowed by current status.

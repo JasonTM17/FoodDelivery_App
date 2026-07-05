@@ -662,7 +662,8 @@ components:
             - type: "null"
         etaMinutes: { type: [integer, "null"], minimum: 1 }
         routePolyline: { type: [string, "null"] }
-      required: [orderId, status, driverLocation, etaMinutes, routePolyline]
+        routePhase: { type: string, enum: [pickup, dropoff] }
+      required: [orderId, status, driverLocation, etaMinutes, routePolyline, routePhase]
 
     RestaurantOrderChatMessage:
       type: object

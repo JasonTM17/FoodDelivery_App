@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:api_client/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../api/api_client.dart';
 import '../api/socket_client.dart';
 import '../maps/lat_lng_validation.dart';
 import 'order_provider.dart';
@@ -86,14 +88,52 @@ String? resolveTrackingRoutePolyline(
       : persistedRoutePolyline;
 }
 
+TrackingState mergeTrackingSnapshot(
+  TrackingState current,
+  TrackingResponse snapshot,
+) {
+  final driverLocation = snapshot.driverLocation;
+  final hasDriverLocation = isValidDeliveryLatLng(
+    driverLocation?.lat,
+    driverLocation?.lng,
+  );
+  final driverLocations = hasDriverLocation
+      ? _appendDriverLocation(
+          current.driverLocations,
+          driverLocation!.lat,
+          driverLocation.lng,
+          driverLocation.lastUpdated,
+        )
+      : current.driverLocations;
+
+  return current.copyWith(
+    driverLatitude: hasDriverLocation ? driverLocation!.lat : null,
+    driverLongitude: hasDriverLocation ? driverLocation!.lng : null,
+    driverLocations: driverLocations,
+    etaMinutes: snapshot.etaMinutes,
+    etaSource: snapshot.etaMinutes == null ? null : 'snapshot',
+    etaDegraded: snapshot.etaMinutes == null,
+    routePolyline: snapshot.routePolyline,
+    routePhase: snapshot.routePhase,
+    routeUpdateReceived: true,
+  );
+}
+
 class TrackingNotifier extends StateNotifier<TrackingState> {
   final OrderNotifier _orderNotifier;
-  final SocketClient _socketClient = SocketClient.instance;
+  final ApiClient _api;
+  final SocketClient _socketClient;
   StreamSubscription<Map<String, dynamic>>? _locationSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _statusSub;
 
-  TrackingNotifier(this._orderNotifier) : super(const TrackingState());
+  TrackingNotifier(
+    this._orderNotifier, {
+    ApiClient? apiClient,
+    SocketClient? socketClient,
+  }) : _api = apiClient ?? ApiClient.instance,
+       _socketClient = socketClient ?? SocketClient.instance,
+       super(const TrackingState());
 
   Future<void> startTracking(String orderId) async {
     _locationSub?.cancel();
@@ -101,6 +141,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _statusSub?.cancel();
     state = TrackingState(currentOrderId: orderId);
 
+    await _loadTrackingSnapshot(orderId);
     await _socketClient.connect();
 
     _socketClient.subscribeOrder(orderId);
@@ -176,4 +217,45 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     }
     super.dispose();
   }
+
+  Future<void> _loadTrackingSnapshot(String orderId) async {
+    try {
+      final response = await _api.get('/orders/$orderId/tracking');
+      final data = response.data;
+      if (data is! Map<String, dynamic>) return;
+
+      final snapshot = TrackingResponse.fromJson(data);
+      if (snapshot.orderId != orderId) return;
+
+      state = mergeTrackingSnapshot(state, snapshot);
+      _orderNotifier.updateOrderStatus(orderId, snapshot.status);
+
+      final driverLocation = snapshot.driverLocation;
+      if (isValidDeliveryLatLng(driverLocation?.lat, driverLocation?.lng)) {
+        _orderNotifier.updateDriverLocation(
+          orderId,
+          driverLocation!.lat,
+          driverLocation.lng,
+        );
+      }
+    } catch (_) {
+      // Tracking remains realtime-first when the snapshot endpoint is temporarily unavailable.
+    }
+  }
+}
+
+List<Map<String, dynamic>> _appendDriverLocation(
+  List<Map<String, dynamic>> current,
+  double lat,
+  double lng,
+  String? timestamp,
+) {
+  final updated = [
+    ...current,
+    {'lat': lat, 'lng': lng, 'timestamp': timestamp},
+  ];
+  if (updated.length > 50) {
+    return updated.sublist(updated.length - 50);
+  }
+  return updated;
 }

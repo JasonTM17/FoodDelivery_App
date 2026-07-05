@@ -1,6 +1,6 @@
 # @foodflow/api_client (Dart)
 
-Generated Dart client from the FoodFlow OpenAPI contract at `../../docs/openapi.yaml`.
+Generated Dart client from the FoodFlow OpenAPI contract at `../../../docs/openapi.yaml`.
 
 ## Purpose
 

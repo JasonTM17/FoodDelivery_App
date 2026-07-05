@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-05: Added required `routePhase` to `GET /orders/{id}/tracking` so customer/mobile clients can distinguish pickup and dropoff route geometry from the initial REST snapshot before realtime ETA events arrive.
 - 2026-07-04: Covered all literal Admin/Restaurant web API calls in `docs/openapi.yaml` (`MISSING_ENDPOINTS=0` in the local coverage scanner), including Admin KPI/recent-order feeds, dispatch heatmap coordinates, resource detail panels, support replies/agents, driver KYC review, and admin promotion analytics. Shared web API-client types now mirror these backend contracts.
 - 2026-07-04: Aligned customer promotion endpoints with backend/mobile: added `/promotions/available` and `/promotions/my`, changed `/promotions/validate` to accept `subtotal`, and documented validation as a preview-only response before atomic order-time claim.
 - 2026-07-04: Aligned `/users/wallet` with the confirmed wallet ledger (`amountDelta`, `credit|debit`, `reason`, optional `refId`) and removed the unimplemented `/users/wallet/topup` contract; mobile no longer exposes fake top-up/withdraw actions.

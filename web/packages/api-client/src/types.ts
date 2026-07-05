@@ -134,6 +134,7 @@ export interface AdminAiMonitorStats {
 export type AdminDriverStatus = 'online' | 'offline' | 'delivering';
 export type AdminDriverVehicleType = 'motorbike' | 'car' | 'bicycle';
 export type AdminDriverLocationStatus = 'online' | 'free' | 'delivering' | 'busy';
+export type DeliveryRoutePhase = 'pickup' | 'dropoff';
 
 export interface AdminDriver {
   id: string;
@@ -163,6 +164,36 @@ export interface AdminDriverLocation {
   vehicleType?: string;
   vehiclePlate?: string | null;
   lastSeenAt: string;
+}
+
+export interface OrderTrackingDriverLocation {
+  lat: number;
+  lng: number;
+  lastUpdated: string;
+}
+
+export interface OrderTrackingResponse {
+  orderId: string;
+  status:
+    | 'created'
+    | 'pending_payment'
+    | 'paid'
+    | 'restaurant_pending'
+    | 'restaurant_accepted'
+    | 'preparing'
+    | 'ready_for_pickup'
+    | 'driver_assigned'
+    | 'driver_arriving_restaurant'
+    | 'picked_up'
+    | 'delivering'
+    | 'delivered'
+    | 'completed'
+    | 'cancelled'
+    | 'refunded';
+  driverLocation: OrderTrackingDriverLocation | null;
+  etaMinutes: number | null;
+  routePolyline: string | null;
+  routePhase: DeliveryRoutePhase;
 }
 
 export interface AdminDispatchHeatmapPoint {

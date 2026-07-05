@@ -103,11 +103,11 @@ class DriverLocation {
   });
 
   factory DriverLocation.fromJson(Map<String, dynamic> json) => DriverLocation(
-    lat: (json['lat'] as num).toDouble(),
-    lng: (json['lng'] as num).toDouble(),
-    heading: (json['heading'] as num?)?.toDouble(),
-    lastUpdated: json['lastUpdated'] as String,
-  );
+        lat: (json['lat'] as num).toDouble(),
+        lng: (json['lng'] as num).toDouble(),
+        heading: (json['heading'] as num?)?.toDouble(),
+        lastUpdated: json['lastUpdated'] as String,
+      );
 }
 
 class TrackingResponse {
@@ -116,6 +116,7 @@ class TrackingResponse {
   final int? etaMinutes;
   final String status;
   final String? routePolyline;
+  final String routePhase;
 
   const TrackingResponse({
     required this.orderId,
@@ -123,6 +124,7 @@ class TrackingResponse {
     this.etaMinutes,
     required this.status,
     this.routePolyline,
+    required this.routePhase,
   });
 
   factory TrackingResponse.fromJson(Map<String, dynamic> json) =>
@@ -132,9 +134,10 @@ class TrackingResponse {
             ? DriverLocation.fromJson(
                 json['driverLocation'] as Map<String, dynamic>)
             : null,
-        etaMinutes: json['etaMinutes'] as int?,
+        etaMinutes: (json['etaMinutes'] as num?)?.toInt(),
         status: json['status'] as String,
         routePolyline: json['routePolyline'] as String?,
+        routePhase: json['routePhase'] as String,
       );
 }
 
@@ -167,13 +170,14 @@ class HealthResponse {
   });
 
   factory HealthResponse.fromJson(Map<String, dynamic> json) => HealthResponse(
-    status: json['status'] as String,
-    uptime: json['uptime'] as int,
-    timestamp: json['timestamp'] as String,
-    components: (json['components'] as Map<String, dynamic>).map(
-      (k, v) => MapEntry(k, ComponentStatus.fromJson(v as Map<String, dynamic>)),
-    ),
-  );
+        status: json['status'] as String,
+        uptime: json['uptime'] as int,
+        timestamp: json['timestamp'] as String,
+        components: (json['components'] as Map<String, dynamic>).map(
+          (k, v) =>
+              MapEntry(k, ComponentStatus.fromJson(v as Map<String, dynamic>)),
+        ),
+      );
 }
 
 // ── Analytics ──
