@@ -119,6 +119,18 @@ Evidence mobile local mới nhất: 2026-07-04 trên `codex/batch4-integration`,
 
 Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Các head sau đó, gồm những commit local Batch 4 mới nhất, chưa thể start hoặc hoàn tất remote jobs vì GitHub Actions báo blocker billing/spending-limit hoặc token/auth. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests và Integration Smoke Gate sau khi billing/auth được xử lý.
 
+## Evidence local mới nhất (2026-07-05)
+
+Branch: `codex/batch4-integration`. Remote CI/Actions vẫn pending vì token/auth/billing GitHub chưa khả dụng.
+
+- Frozen install pass cho backend và web với `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` pass.
+- Backend pass `pnpm typecheck`, `pnpm lint`, full `pnpm test` (105 suite / 750 test) và `pnpm build`; targeted refund/tracking/driver route regressions pass 8 suite / 82 test.
+- Web pass `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 file / 139 test; Restaurant 27 file / 79 test) và `pnpm build` (Admin 70 page localized; Restaurant 55 page localized).
+- Docker Compose rebuild image Backend/Admin/Restaurant từ source hiện tại với frozen install; health check pass cho `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, `http://[::1]:3002/api/healthz`.
+- Playwright pass `pnpm test:e2e --project=chromium` 35/35 và `pnpm test:e2e --project=firefox` 35/35 với IPv6 loopback URL. Coverage gồm axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows và tenant isolation.
+- Mobile pass `flutter analyze`, full `flutter test` (146 test), `flutter build apk --debug --flavor customer -t lib/main_customer.dart` và `flutter build apk --debug --flavor driver -t lib/main_driver.dart`.
+- Security evidence: high-confidence tracked secret scan không có match. Native Firebase/provisioning artifacts đã được ignore. Legacy fake refund processor đã xoá; refund hiện enqueue `payment-refund` và full refund chỉ đánh dấu sau khi SePay hoặc wallet ledger reversal thành công. Mobile idempotency key là UUID v4, HTTP body log mobile chỉ bật trong debug và đã redact.
+
 ## Security checks
 
 ```bash

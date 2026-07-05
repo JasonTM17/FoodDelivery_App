@@ -119,6 +119,18 @@ Batch 4 mobile gate は frozen install、`flutter analyze` issue 0、Flutter tes
 
 Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。その後の head（最新 Batch 4 local commits を含む）は GitHub Actions account billing/spending-limit または token/auth blocker により remote jobs が start/complete できませんでした。Billing/auth 修正後、Mobile CI、CI、Build Check、Lint、Gitleaks、CodeQL、Trivy、SBOM、E2E Tests、Integration Smoke Gate を rerun してください。
 
+## 最新 local evidence (2026-07-05)
+
+Branch: `codex/batch4-integration`。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
+
+- Backend と web の frozen install は pinned `pnpm 11.7.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
+- Backend は `pnpm typecheck`、`pnpm lint`、full `pnpm test`（105 suites / 750 tests）、`pnpm build` が pass。refund/tracking/driver route の targeted regression は 8 suites / 82 tests が pass。
+- Web は `pnpm typecheck`、`pnpm lint`、`pnpm test`（Admin 34 files / 139 tests、Restaurant 27 files / 79 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
+- Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。`http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
+- Playwright は IPv6 loopback URL で `pnpm test:e2e --project=chromium` 35/35、`pnpm test:e2e --project=firefox` 35/35 が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
+- Mobile は `flutter analyze`、full `flutter test`（146 tests）、`flutter build apk --debug --flavor customer -t lib/main_customer.dart`、`flutter build apk --debug --flavor driver -t lib/main_driver.dart` が pass。
+- Security evidence: high-confidence tracked secret scan は match なし。Native Firebase/provisioning artifacts は ignore 済み。Legacy fake refund processor は削除済み。Refund は `payment-refund` に enqueue され、full refund は SePay または wallet ledger reversal 成功後のみ反映されます。Mobile idempotency key は UUID v4、mobile HTTP body logging は debug-only かつ redacted です。
+
 ## Security checks
 
 ```bash

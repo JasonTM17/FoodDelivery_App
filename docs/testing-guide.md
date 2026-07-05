@@ -1,5 +1,17 @@
 # FoodFlow Testing Guide
 
+## Latest local evidence (2026-07-05)
+
+Branch: `codex/batch4-integration`. Remote CI/Actions remains pending because the GitHub token/auth/billing state is unavailable.
+
+- Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
+- Backend passed `pnpm typecheck`, `pnpm lint`, full `pnpm test` (105 suites / 750 tests), and `pnpm build`; targeted refund/tracking/driver route regressions passed 8 suites / 82 tests.
+- Web passed `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 files / 139 tests; Restaurant 27 files / 79 tests), and `pnpm build` (Admin 70 localized pages; Restaurant 55 localized pages).
+- Docker Compose rebuilt Backend/Admin/Restaurant images from the current source with frozen installs; health checks passed for `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, and `http://[::1]:3002/api/healthz`.
+- Playwright passed `pnpm test:e2e --project=chromium` 35/35 and `pnpm test:e2e --project=firefox` 35/35 with IPv6 loopback URLs. Coverage includes axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation.
+- Mobile passed `flutter analyze`, full `flutter test` (146 tests), `flutter build apk --debug --flavor customer -t lib/main_customer.dart`, and `flutter build apk --debug --flavor driver -t lib/main_driver.dart`.
+- Security evidence: high-confidence tracked secret scan returned no matches. Native Firebase/provisioning artifacts are ignored. The legacy fake refund processor was removed; refunds now enqueue `payment-refund` and full refunds are marked only after SePay or wallet ledger reversal succeeds. Mobile idempotency keys are UUID v4, and mobile HTTP body logging is debug-only with redaction.
+
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
 ## Backend
