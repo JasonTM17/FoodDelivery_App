@@ -1,7 +1,9 @@
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
 
 export function isProductionDeployment(env: Record<string, string | undefined>): boolean {
-  return env.VERCEL_ENV === 'production' || env.NEXT_PUBLIC_APP_ENV === 'production';
+  const appEnv = env.NEXT_PUBLIC_APP_ENV?.trim().toLowerCase();
+  if (appEnv === 'development' || appEnv === 'test' || appEnv === 'local') return false;
+  return env.VERCEL_ENV === 'production' || appEnv === 'production' || env.NODE_ENV === 'production';
 }
 
 function isLocalHostname(hostname: string): boolean {

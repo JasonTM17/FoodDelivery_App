@@ -28,16 +28,20 @@ Each app uses an ignored `.env.local` copied from its example file.
 
 | Name | Required | Description |
 |---|---|---|
+| `NEXT_PUBLIC_APP_ENV` | Yes | Use `development` for local/CI localhost builds; use `production` for real public deployments |
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
 | `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
+| `NEXT_PUBLIC_ADMIN_URL` | Yes | Public Admin base URL for metadata and canonical links |
 | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Only for live map | Browser Google Maps key. Restrict by HTTP referrer. |
 
 ### Restaurant
 
 | Name | Required | Description |
 |---|---|---|
+| `NEXT_PUBLIC_APP_ENV` | Yes | Use `development` for local/CI localhost builds; use `production` for real public deployments |
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
 | `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
+| `NEXT_PUBLIC_RESTAURANT_URL` | Yes | Public Restaurant base URL for metadata and canonical links |
 
 ## Run Locally
 
@@ -62,6 +66,8 @@ pnpm build
 pnpm test:e2e -- --project=chromium
 pnpm test:e2e -- --project=firefox
 ```
+
+`NODE_ENV=production` is treated as a real production build unless `NEXT_PUBLIC_APP_ENV` is explicitly `development`, `test`, or `local`. Keep that override for localhost Docker/E2E builds; remove it for Vercel or production Docker images so missing/insecure public URLs fail closed.
 
 Install Playwright browsers once:
 

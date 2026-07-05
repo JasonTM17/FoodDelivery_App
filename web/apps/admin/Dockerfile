@@ -15,9 +15,17 @@ COPY --from=deps /app/packages ./packages
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/admin ./apps/admin
 COPY --from=deps /app/apps/admin/node_modules ./apps/admin/node_modules
-ARG NEXT_PUBLIC_API_URL=http://localhost:3001/api
+ARG NEXT_PUBLIC_APP_ENV
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_ADMIN_URL
+ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
+ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_KEY
 RUN pnpm --filter foodflow-admin build
 
 FROM gcr.io/distroless/nodejs22-debian12 AS runner

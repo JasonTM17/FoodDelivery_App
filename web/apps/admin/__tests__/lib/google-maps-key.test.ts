@@ -13,8 +13,21 @@ describe('admin Google Maps key', () => {
     expect(resolveGoogleMapsApiKey({ NODE_ENV: 'development' })).toBe('');
   });
 
+  it('allows the missing-key guidance state for explicit local Docker builds', () => {
+    expect(resolveGoogleMapsApiKey({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_APP_ENV: 'development',
+    })).toBe('');
+  });
+
   it('fails closed in production when the browser key is not configured', () => {
     expect(() => resolveGoogleMapsApiKey({ VERCEL_ENV: 'production' })).toThrow(
+      'NEXT_PUBLIC_GOOGLE_MAPS_KEY is required',
+    );
+  });
+
+  it('also fails closed for non-Vercel production builds', () => {
+    expect(() => resolveGoogleMapsApiKey({ NODE_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_GOOGLE_MAPS_KEY is required',
     );
   });

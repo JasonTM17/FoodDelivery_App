@@ -24,11 +24,20 @@ jobs:
             dockerfile: ./web/apps/admin/Dockerfile
             build-args: |
               BUILD_SHA=${{ github.sha }}
+              NEXT_PUBLIC_APP_ENV=production
+              NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
+              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
+              NEXT_PUBLIC_ADMIN_URL=https://admin.foodflow.vn
+              NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
           - image: nguyenson1710/foodflow-restaurant
             context: ./web
             dockerfile: ./web/apps/restaurant/Dockerfile
             build-args: |
               BUILD_SHA=${{ github.sha }}
+              NEXT_PUBLIC_APP_ENV=production
+              NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
+              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
+              NEXT_PUBLIC_RESTAURANT_URL=https://restaurant.foodflow.vn
 
     steps:
       - uses: actions/checkout@v6

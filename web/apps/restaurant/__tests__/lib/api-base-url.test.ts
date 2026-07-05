@@ -13,8 +13,21 @@ describe('restaurant API base URL', () => {
     expect(resolveApiBaseUrl({ NODE_ENV: 'development' })).toBe('http://localhost:3001/api');
   });
 
+  it('keeps the localhost default for explicit local Docker builds', () => {
+    expect(resolveApiBaseUrl({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_APP_ENV: 'development',
+    })).toBe('http://localhost:3001/api');
+  });
+
   it('fails closed in production when the API URL is not configured', () => {
     expect(() => resolveApiBaseUrl({ VERCEL_ENV: 'production' })).toThrow(
+      'NEXT_PUBLIC_API_URL is required',
+    );
+  });
+
+  it('also fails closed for non-Vercel production builds', () => {
+    expect(() => resolveApiBaseUrl({ NODE_ENV: 'production' })).toThrow(
       'NEXT_PUBLIC_API_URL is required',
     );
   });
