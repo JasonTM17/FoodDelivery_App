@@ -130,7 +130,7 @@ describe('DispatchService', () => {
     })
 
     it('filters out busy drivers (current_order set)', async () => {
-      mockRedis.call.mockResolvedValueOnce(['driver:1', '0.5', 'driver:2', '1.2'])
+      mockRedis.call.mockResolvedValueOnce([['driver:1', '0.5'], ['driver:2', '1.2']])
       mockRedis.pipeline
         .mockReturnValueOnce({
           set: jest.fn().mockReturnThis(),
@@ -154,7 +154,7 @@ describe('DispatchService', () => {
     })
 
     it('excludes drivers in cooldown', async () => {
-      mockRedis.call.mockResolvedValueOnce(['driver:1', '0.5'])
+      mockRedis.call.mockResolvedValueOnce([['driver:1', '0.5']])
       mockRedis.pipeline.mockReturnValueOnce({
         set: jest.fn().mockReturnThis(),
         get: jest.fn().mockReturnThis(),
@@ -169,7 +169,7 @@ describe('DispatchService', () => {
     })
 
     it('sorts candidates by descending score (higher score first)', async () => {
-      mockRedis.call.mockResolvedValueOnce(['driver:1', '2.0', 'driver:2', '2.0'])
+      mockRedis.call.mockResolvedValueOnce([['driver:1', '2.0'], ['driver:2', '2.0']])
       // driver:1 gets score 0.5, driver:2 gets score 0.8 → driver:2 should come first
       mockScoring.score.mockReturnValueOnce(0.5).mockReturnValueOnce(0.8)
       mockRedis.pipeline
@@ -191,6 +191,23 @@ describe('DispatchService', () => {
         })
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result[0].score).toBeGreaterThan(result[1].score)
+    })
+
+    it('keeps compatibility with flat GEOSEARCH replies', async () => {
+      mockRedis.call.mockResolvedValueOnce(['driver:1', '0.5'])
+      mockRedis.pipeline.mockReturnValueOnce({
+        set: jest.fn().mockReturnThis(),
+        get: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([
+          [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
+          [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
+        ]),
+      })
+
+      const result = await service.findCandidates(10.8231, 106.6297, 5)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({ driverId: '1', distKm: 0.5 })
     })
   })
 

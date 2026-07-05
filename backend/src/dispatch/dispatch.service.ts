@@ -44,9 +44,9 @@ export class DispatchService {
 
     const eligible: DriverCandidate[] = []
 
-    for (let i = 0; i < raw.length; i += 2) {
-      const driverId = (raw[i] as string).replace('driver:', '')
-      const distKm = parseFloat(raw[i + 1] as string)
+    for (const candidate of parseGeoSearchWithDistance(raw)) {
+      const driverId = candidate.member.replace('driver:', '')
+      const { distKm } = candidate
 
       const p = this.redis.pipeline()
       p.get(`driver:${driverId}:status`)
@@ -221,6 +221,32 @@ export class DispatchService {
       etaMinutes: Math.round(candidate.distKm / 20 * 60),
     })
   }
+}
+
+function parseGeoSearchWithDistance(raw: Array<unknown>): Array<{ member: string; distKm: number }> {
+  const tupleRows = raw.flatMap((entry) => {
+    if (!Array.isArray(entry) || entry.length < 2) return []
+    const member = normalizeGeoMember(entry[0])
+    const distKm = parseFiniteNumber(entry[1])
+    return member && distKm !== undefined ? [{ member, distKm }] : []
+  })
+  if (tupleRows.length > 0) return tupleRows
+
+  const flatRows: Array<{ member: string; distKm: number }> = []
+  for (let i = 0; i < raw.length; i += 2) {
+    const member = normalizeGeoMember(raw[i])
+    const distKm = parseFiniteNumber(raw[i + 1])
+    if (member && distKm !== undefined) {
+      flatRows.push({ member, distKm })
+    }
+  }
+  return flatRows
+}
+
+function normalizeGeoMember(value: unknown): string | null {
+  if (typeof value === 'string') return value
+  if (Buffer.isBuffer(value)) return value.toString('utf8')
+  return null
 }
 
 function parseFiniteNumber(value: unknown): number | undefined {

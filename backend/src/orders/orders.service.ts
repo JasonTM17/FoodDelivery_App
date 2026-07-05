@@ -8,13 +8,15 @@ import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto } from './orders.dto'
-import { OrderStatus as PrismaOrderStatus, Prisma } from '@prisma/client'
+import { OrderStatus as PrismaOrderStatus, Prisma, type Order } from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
 import { PromotionsService } from '../promotions/promotions.service'
 import { routePhaseForStatus } from '../tracking/tracking.service'
 import { PaymentRefundJobData } from '../payments/refund.processor'
+
+const ORDER_CODE_CREATE_ATTEMPTS = 8
 
 @Injectable()
 export class OrdersService {
@@ -130,7 +132,7 @@ export class OrdersService {
     }
 
     if (fx.needsDispatch) {
-      await this.dispatchQueue.add('dispatch.driver', { orderId }, { delay: 0, jobId: `dispatch-${orderId}` })
+      await this.enqueueDispatch(orderId)
     }
 
     return result
@@ -142,6 +144,36 @@ export class OrdersService {
     if (currentOrder === orderId) {
       await this.redis.del(key)
     }
+  }
+
+  private async enqueueDispatch(orderId: string): Promise<void> {
+    const locations = await this.prisma.$queryRawUnsafe<Array<{ restaurantLat: number; restaurantLng: number }>>(
+      `SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+              ST_X(r.location::geometry)::float8 AS "restaurantLng"
+         FROM orders o
+         JOIN restaurants r ON r.id = o.restaurant_id
+        WHERE o.id = $1::uuid`,
+      orderId,
+    )
+    const location = locations[0]
+    if (
+      !location ||
+      !Number.isFinite(Number(location.restaurantLat)) ||
+      !Number.isFinite(Number(location.restaurantLng))
+    ) {
+      throw new NotFoundException('ORDER_RESTAURANT_LOCATION_NOT_FOUND')
+    }
+
+    await this.dispatchQueue.add(
+      'dispatch.driver',
+      {
+        orderId,
+        restaurantLat: Number(location.restaurantLat),
+        restaurantLng: Number(location.restaurantLng),
+        attempt: 1,
+      },
+      { delay: 0, jobId: `dispatch-${orderId}` },
+    )
   }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
@@ -171,66 +203,76 @@ export class OrdersService {
       throw new UnprocessableEntityException('MIN_ORDER_NOT_MET')
     }
 
-    const orderCode = generateOrderCode()
     const code = (dto.promotionCode ?? cart.promotionCode)?.trim()
     const paymentMethod = normalizeOrderPaymentMethod(dto.paymentMethod)
 
-    const order = await this.prisma.$transaction(async (tx) => {
-      const baseTotal = subtotal + deliveryFee
-      let order = await tx.order.create({
-        data: {
-          orderCode,
-          customerId: userId,
-          restaurantId: cart.restaurantId!,
-          deliveryAddressId: dto.addressId,
-          status: 'created',
-          subtotal,
-          deliveryFee,
-          promotionDiscount: 0,
-          total: baseTotal,
-          paymentMethod,
-          notes: dto.notes,
-          estimatedPrepTimeMinutes: restaurant.prepTimeAvgMinutes,
-          orderItems: {
-            create: cart.items.map(item => ({
-              menuItemId: item.menuItemId,
-              nameSnapshot: item.menuItem.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              selectedOptions: item.selectedOptions as object[],
-              notes: item.notes,
-            })),
-          },
-        },
-      })
+    let order: Order | null = null
+    for (let attempt = 1; attempt <= ORDER_CODE_CREATE_ATTEMPTS; attempt += 1) {
+      const orderCode = generateOrderCode()
+      try {
+        order = await this.prisma.$transaction(async (tx) => {
+          const baseTotal = subtotal + deliveryFee
+          let createdOrder = await tx.order.create({
+            data: {
+              orderCode,
+              customerId: userId,
+              restaurantId: cart.restaurantId!,
+              deliveryAddressId: dto.addressId,
+              status: 'created',
+              subtotal,
+              deliveryFee,
+              promotionDiscount: 0,
+              total: baseTotal,
+              paymentMethod,
+              notes: dto.notes,
+              estimatedPrepTimeMinutes: restaurant.prepTimeAvgMinutes,
+              orderItems: {
+                create: cart.items.map(item => ({
+                  menuItemId: item.menuItemId,
+                  nameSnapshot: item.menuItem.name,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  selectedOptions: item.selectedOptions as object[],
+                  notes: item.notes,
+                })),
+              },
+            },
+          })
 
-      await tx.orderStatusHistory.create({
-        data: { orderId: order.id, status: 'created', changedBy: userId },
-      })
+          await tx.orderStatusHistory.create({
+            data: { orderId: createdOrder.id, status: 'created', changedBy: userId },
+          })
 
-      if (code) {
-        const { discountAmount } = await this.promotionsService.claimInTransaction(
-          tx,
-          code,
-          { subtotal, restaurantId: cart.restaurantId! },
-          userId,
-          order.id,
-        )
-        order = await tx.order.update({
-          where: { id: order.id },
-          data: {
-            promotionDiscount: discountAmount,
-            total: baseTotal - discountAmount,
-          },
+          if (code) {
+            const { discountAmount } = await this.promotionsService.claimInTransaction(
+              tx,
+              code,
+              { subtotal, restaurantId: cart.restaurantId! },
+              userId,
+              createdOrder.id,
+            )
+            createdOrder = await tx.order.update({
+              where: { id: createdOrder.id },
+              data: {
+                promotionDiscount: discountAmount,
+                total: baseTotal - discountAmount,
+              },
+            })
+          }
+
+          // Clean up cart atomically
+          await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
+          await tx.cart.delete({ where: { id: cart.id } })
+
+          return createdOrder
         })
+        break
+      } catch (error) {
+        if (attempt < ORDER_CODE_CREATE_ATTEMPTS && isOrderCodeCollision(error)) continue
+        throw error
       }
-
-      // Clean up cart atomically
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
-      await tx.cart.delete({ where: { id: cart.id } })
-
-      return order
-    })
+    }
+    if (!order) throw new Error('ORDER_CREATE_FAILED')
     const orderTotal = Number(order.total)
 
     // Payment must settle or create a real provider intent before side effects run.
@@ -261,7 +303,7 @@ export class OrdersService {
 
       this.ordersGateway.notifyRestaurant(restaurant.id, {
         orderId: order.id,
-        orderCode,
+        orderCode: order.orderCode,
         total: orderTotal,
         items: cart.items.map(i => ({ name: i.menuItem.name, quantity: i.quantity })),
       })
@@ -270,7 +312,7 @@ export class OrdersService {
       paymentResult.failureCode ? 'admin:order_payment_failed' : 'admin:new_order',
       {
         orderId: order.id,
-        orderCode,
+        orderCode: order.orderCode,
         restaurantId: restaurant.id,
         total: orderTotal,
         status,
@@ -477,4 +519,19 @@ function serializeSelectedOptions(value: Prisma.JsonValue) {
 
 function isDriverReleaseStatus(status: OrderStatus): boolean {
   return ['delivered', 'completed', 'cancelled', 'refunded'].includes(status)
+}
+
+function isOrderCodeCollision(error: unknown): boolean {
+  const candidate = error as { code?: unknown; meta?: { target?: unknown } } | null | undefined
+  if (candidate?.code !== 'P2002') return false
+
+  const target = candidate.meta?.target
+  if (Array.isArray(target)) {
+    return target.some(entry => isOrderCodeConstraint(String(entry)))
+  }
+  return isOrderCodeConstraint(String(target ?? ''))
+}
+
+function isOrderCodeConstraint(target: string): boolean {
+  return target.includes('orderCode') || target.includes('order_code') || target.includes('orders_order_code_key')
 }

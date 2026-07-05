@@ -35,6 +35,7 @@ describe('OrdersService', () => {
     restaurant: { findUniqueOrThrow: jest.Mock }
     address: { findFirst: jest.Mock }
     $transaction: jest.Mock
+    $queryRawUnsafe: jest.Mock
   }
 
   const orderId = 'order-uuid-1'
@@ -62,6 +63,7 @@ describe('OrdersService', () => {
       $transaction: jest.fn().mockImplementation(
         (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       ),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([{ restaurantLat: 10.8, restaurantLng: 106.7 }]),
     }
     mockGateway = { broadcastToOrder: jest.fn(), notifyRestaurant: jest.fn(), notifyAdmins: jest.fn() }
     mockCancellationService = { assertCanCancel: jest.fn() }
@@ -166,6 +168,22 @@ describe('OrdersService', () => {
       expect(mockPaymentsService.processPayment).toHaveBeenCalledWith('order-new', 115000, 'cash')
       expect(mockTx.cartItem.deleteMany).toHaveBeenCalledWith({ where: { cartId: 'cart-1' } })
       expect(mockTx.cart.delete).toHaveBeenCalledWith({ where: { id: 'cart-1' } })
+    })
+
+    it('retries order code collisions before charging payment', async () => {
+      const collision = Object.assign(new Error('duplicate order code'), {
+        code: 'P2002',
+        meta: { target: ['order_code'] },
+      })
+      mockTx.order.create
+        .mockRejectedValueOnce(collision)
+        .mockResolvedValueOnce({ id: 'order-new', total: 115000 })
+
+      await service.placeOrder(userId, { addressId: 'address-1', paymentMethod: PaymentMethodDto.cash })
+
+      expect(mockTx.order.create).toHaveBeenCalledTimes(2)
+      expect(mockPaymentsService.processPayment).toHaveBeenCalledTimes(1)
+      expect(mockPaymentsService.processPayment).toHaveBeenCalledWith('order-new', 115000, 'cash')
     })
 
     it('claims promotion inside the order transaction and charges the discounted total', async () => {
@@ -379,9 +397,10 @@ describe('OrdersService', () => {
 
       await service.transition(orderId, 'restaurant_accepted', userId, 'restaurant')
 
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(expect.stringContaining('ST_Y'), orderId)
       expect(mockDispatchQueue.add).toHaveBeenCalledWith(
         'dispatch.driver',
-        { orderId },
+        { orderId, restaurantLat: 10.8, restaurantLng: 106.7, attempt: 1 },
         expect.objectContaining({ jobId: `dispatch-${orderId}` }),
       )
     })

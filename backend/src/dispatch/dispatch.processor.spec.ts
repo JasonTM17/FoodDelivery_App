@@ -89,5 +89,14 @@ describe('DispatchProcessor', () => {
       const result = await processor.process({ id: 'j1', data: baseData } as never)
       expect(result).toEqual({ assigned: true, driverId: 'd-xyz' })
     })
+
+    it('skips malformed legacy jobs without requeueing', async () => {
+      const result = await processor.process({ id: 'legacy-job', data: { orderId: 'order-1' } } as never)
+
+      expect(result).toEqual({ assigned: false })
+      expect(mockDispatchService.dispatchOrder).not.toHaveBeenCalled()
+      expect(mockDispatchService.autoCancelOrder).not.toHaveBeenCalled()
+      expect(mockQueue.add).not.toHaveBeenCalled()
+    })
   })
 })

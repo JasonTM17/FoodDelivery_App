@@ -5,9 +5,9 @@ import { DispatchService } from './dispatch.service'
 
 interface DispatchJobData {
   orderId: string
-  restaurantLat: number
-  restaurantLng: number
-  attempt: number
+  restaurantLat?: number
+  restaurantLng?: number
+  attempt?: number
 }
 
 // Radius per attempt: 3km → 5km → 8km (stays at 8km for attempts 4+)
@@ -35,7 +35,16 @@ export class DispatchProcessor extends WorkerHost {
   }
 
   async process(job: Job<DispatchJobData>): Promise<{ assigned: boolean; driverId?: string }> {
-    const { orderId, restaurantLat, restaurantLng, attempt } = job.data
+    const { orderId } = job.data
+    const restaurantLat = Number(job.data.restaurantLat)
+    const restaurantLng = Number(job.data.restaurantLng)
+    if (!Number.isFinite(restaurantLat) || !Number.isFinite(restaurantLng)) {
+      this.logger.warn(`Skipping malformed dispatch job ${job.id} for order ${orderId}: missing restaurant coordinates`)
+      return { assigned: false }
+    }
+
+    const rawAttempt = Number(job.data.attempt)
+    const attempt = Number.isInteger(rawAttempt) && rawAttempt > 0 ? rawAttempt : 1
     const radius = DISPATCH_RADII_KM[attempt - 1] ?? 8
 
     this.logger.log(`Dispatch attempt ${attempt}/${MAX_ATTEMPTS} for order ${orderId} (radius: ${radius}km)`)
