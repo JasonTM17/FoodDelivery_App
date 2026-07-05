@@ -5110,7 +5110,7 @@ paths:
 
   /admin/restaurants/{restaurantId}/reviews:
     get:
-      tags: [reviews]
+      tags: [restaurants]
       summary: List reviews for one restaurant as admin
       description: Returns real review rows for one restaurant with pagination.
       operationId: admin_getRestaurantReviews
