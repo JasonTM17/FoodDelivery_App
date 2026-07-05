@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../api/socket_client.dart';
 import '../maps/lat_lng_validation.dart';
+import '../utils/backend_date_time.dart';
 import 'order_provider.dart';
 
 const _trackingUnset = Object();
@@ -195,7 +196,11 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       if (data['orderId'] != null && data['orderId'] != orderId) return;
       final status = data['status'] as String?;
       if (status != null) {
-        _orderNotifier.updateOrderStatus(orderId, status);
+        _orderNotifier.updateOrderStatus(
+          orderId,
+          status,
+          updatedAt: parseBackendDateTimeOrNull(data['timestamp']),
+        );
       }
     });
   }

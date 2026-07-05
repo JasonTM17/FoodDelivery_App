@@ -206,13 +206,17 @@ class OrderNotifier extends StateNotifier<OrderState> {
     state = state.copyWith(currentTrackingOrder: order);
   }
 
-  void updateOrderStatus(String orderId, String newStatus) {
+  void updateOrderStatus(
+    String orderId,
+    String newStatus, {
+    DateTime? updatedAt,
+  }) {
     final currentTracking = state.currentTrackingOrder;
     if (currentTracking?.id == orderId) {
       state = state.copyWith(
         currentTrackingOrder: currentTracking!.copyWith(
           status: newStatus,
-          updatedAt: DateTime.now(),
+          updatedAt: updatedAt,
         ),
       );
     }
