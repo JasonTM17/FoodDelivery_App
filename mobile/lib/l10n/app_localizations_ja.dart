@@ -1483,6 +1483,41 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_heatmap_legend => 'カラー凡例';
 
   @override
+  String get driver_heatmap_window_now => '現在';
+
+  @override
+  String get driver_heatmap_window_next_hour => '次の1時間';
+
+  @override
+  String get driver_heatmap_window_next_three_hours => '次の3時間';
+
+  @override
+  String get driver_heatmap_window_today => '今日';
+
+  @override
+  String get driver_heatmap_missing_location_title => 'ドライバーの位置情報がありません';
+
+  @override
+  String get driver_heatmap_missing_location_description =>
+      '実際の現在地周辺の需要を読み込むには、オンラインにするかGPSの更新を待ってください。';
+
+  @override
+  String get driver_heatmap_empty_title => '需要データはまだありません';
+
+  @override
+  String get driver_heatmap_empty_description => '現在のエリアに注文があると需要データが表示されます。';
+
+  @override
+  String driver_heatmap_order_count(int count) {
+    return '$count件の注文';
+  }
+
+  @override
+  String driver_heatmap_avg_payout(String amount) {
+    return '平均 $amountđ/件';
+  }
+
+  @override
   String get driver_bank_title => '銀行口座';
 
   @override

@@ -2944,6 +2944,66 @@ abstract class AppLocalizations {
   /// **'Chú giải màu sắc'**
   String get driver_heatmap_legend;
 
+  /// No description provided for @driver_heatmap_window_now.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện tại'**
+  String get driver_heatmap_window_now;
+
+  /// No description provided for @driver_heatmap_window_next_hour.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 giờ tới'**
+  String get driver_heatmap_window_next_hour;
+
+  /// No description provided for @driver_heatmap_window_next_three_hours.
+  ///
+  /// In vi, this message translates to:
+  /// **'3 giờ tới'**
+  String get driver_heatmap_window_next_three_hours;
+
+  /// No description provided for @driver_heatmap_window_today.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driver_heatmap_window_today;
+
+  /// No description provided for @driver_heatmap_missing_location_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vị trí tài xế'**
+  String get driver_heatmap_missing_location_title;
+
+  /// No description provided for @driver_heatmap_missing_location_description.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy bật trực tuyến hoặc chờ GPS cập nhật để xem nhu cầu quanh vị trí thật của bạn.'**
+  String get driver_heatmap_missing_location_description;
+
+  /// No description provided for @driver_heatmap_empty_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu nhu cầu'**
+  String get driver_heatmap_empty_title;
+
+  /// No description provided for @driver_heatmap_empty_description.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dữ liệu sẽ hiển thị khi có đơn hàng trong khu vực hiện tại.'**
+  String get driver_heatmap_empty_description;
+
+  /// No description provided for @driver_heatmap_order_count.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đơn hàng'**
+  String driver_heatmap_order_count(int count);
+
+  /// No description provided for @driver_heatmap_avg_payout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung bình {amount}đ/đơn'**
+  String driver_heatmap_avg_payout(String amount);
+
   /// No description provided for @driver_bank_title.
   ///
   /// In vi, this message translates to:

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/api/api_client.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 
 class HeatmapPoint {
   final double lat;
@@ -17,9 +18,14 @@ class HeatmapPoint {
   });
 
   factory HeatmapPoint.fromJson(Map<String, dynamic> json) {
+    final lat = _readDoubleOrNull(json['lat']);
+    final lng = _readDoubleOrNull(json['lng']);
+    if (!isValidDeliveryLatLng(lat, lng)) {
+      throw const FormatException('Invalid heatmap coordinates');
+    }
     return HeatmapPoint(
-      lat: _readDouble(json['lat']),
-      lng: _readDouble(json['lng']),
+      lat: lat!,
+      lng: lng!,
       demandLevel: _readInt(json['demandLevel']).clamp(0, 2).toInt(),
       orderCount: _readInt(json['orderCount']),
       avgPayout: _readDouble(json['avgPayout']),
@@ -68,6 +74,15 @@ class HeatmapNotifier extends StateNotifier<HeatmapState> {
     String window = 'now',
     double radiusKm = 5,
   }) async {
+    if (!isValidDeliveryLatLng(lat, lng)) {
+      state = state.copyWith(
+        isLoading: false,
+        points: const [],
+        error: 'DRIVER_HEATMAP_LOCATION_REQUIRED',
+        selectedWindow: window,
+      );
+      return;
+    }
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -85,7 +100,8 @@ class HeatmapNotifier extends StateNotifier<HeatmapState> {
       );
       final points = (response.data ?? const [])
           .whereType<Map<String, dynamic>>()
-          .map(HeatmapPoint.fromJson)
+          .map(_tryReadHeatmapPoint)
+          .whereType<HeatmapPoint>()
           .toList(growable: false);
       state = state.copyWith(isLoading: false, points: points, error: null);
     } catch (_) {
@@ -107,6 +123,23 @@ final heatmapProvider = StateNotifierProvider<HeatmapNotifier, HeatmapState>((
 ) {
   return HeatmapNotifier();
 });
+
+HeatmapPoint? _tryReadHeatmapPoint(Map<String, dynamic> json) {
+  try {
+    return HeatmapPoint.fromJson(json);
+  } on FormatException {
+    return null;
+  }
+}
+
+double? _readDoubleOrNull(dynamic value) {
+  if (value is num && value.isFinite) return value.toDouble();
+  if (value is String) {
+    final parsed = double.tryParse(value);
+    if (parsed != null && parsed.isFinite) return parsed;
+  }
+  return null;
+}
 
 double _readDouble(dynamic value) {
   if (value is num) return value.toDouble();

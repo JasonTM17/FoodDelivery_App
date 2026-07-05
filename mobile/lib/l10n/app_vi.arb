@@ -591,6 +591,22 @@
   "driver_heatmap_medium": "Nhu cầu trung bình",
   "driver_heatmap_low": "Nhu cầu thấp",
   "driver_heatmap_legend": "Chú giải màu sắc",
+  "driver_heatmap_window_now": "Hiện tại",
+  "driver_heatmap_window_next_hour": "1 giờ tới",
+  "driver_heatmap_window_next_three_hours": "3 giờ tới",
+  "driver_heatmap_window_today": "Hôm nay",
+  "driver_heatmap_missing_location_title": "Chưa có vị trí tài xế",
+  "driver_heatmap_missing_location_description": "Hãy bật trực tuyến hoặc chờ GPS cập nhật để xem nhu cầu quanh vị trí thật của bạn.",
+  "driver_heatmap_empty_title": "Chưa có dữ liệu nhu cầu",
+  "driver_heatmap_empty_description": "Dữ liệu sẽ hiển thị khi có đơn hàng trong khu vực hiện tại.",
+  "driver_heatmap_order_count": "{count} đơn hàng",
+  "@driver_heatmap_order_count": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driver_heatmap_avg_payout": "Trung bình {amount}đ/đơn",
+  "@driver_heatmap_avg_payout": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "driver_bank_title": "Tài khoản ngân hàng",
   "driver_bank_subtitle": "Thêm tài khoản để nhận thanh toán hàng tuần",
   "driver_bank_name_label": "Tên ngân hàng",

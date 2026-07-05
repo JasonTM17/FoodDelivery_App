@@ -1512,6 +1512,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_heatmap_legend => 'Chú giải màu sắc';
 
   @override
+  String get driver_heatmap_window_now => 'Hiện tại';
+
+  @override
+  String get driver_heatmap_window_next_hour => '1 giờ tới';
+
+  @override
+  String get driver_heatmap_window_next_three_hours => '3 giờ tới';
+
+  @override
+  String get driver_heatmap_window_today => 'Hôm nay';
+
+  @override
+  String get driver_heatmap_missing_location_title => 'Chưa có vị trí tài xế';
+
+  @override
+  String get driver_heatmap_missing_location_description =>
+      'Hãy bật trực tuyến hoặc chờ GPS cập nhật để xem nhu cầu quanh vị trí thật của bạn.';
+
+  @override
+  String get driver_heatmap_empty_title => 'Chưa có dữ liệu nhu cầu';
+
+  @override
+  String get driver_heatmap_empty_description =>
+      'Dữ liệu sẽ hiển thị khi có đơn hàng trong khu vực hiện tại.';
+
+  @override
+  String driver_heatmap_order_count(int count) {
+    return '$count đơn hàng';
+  }
+
+  @override
+  String driver_heatmap_avg_payout(String amount) {
+    return 'Trung bình $amountđ/đơn';
+  }
+
+  @override
   String get driver_bank_title => 'Tài khoản ngân hàng';
 
   @override

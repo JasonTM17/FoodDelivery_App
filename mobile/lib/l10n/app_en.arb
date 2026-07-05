@@ -585,6 +585,22 @@
   "driver_heatmap_medium": "Medium demand",
   "driver_heatmap_low": "Low demand",
   "driver_heatmap_legend": "Color legend",
+  "driver_heatmap_window_now": "Now",
+  "driver_heatmap_window_next_hour": "Next 1h",
+  "driver_heatmap_window_next_three_hours": "Next 3h",
+  "driver_heatmap_window_today": "Today",
+  "driver_heatmap_missing_location_title": "Driver location unavailable",
+  "driver_heatmap_missing_location_description": "Go online or wait for GPS to update before loading demand around your real location.",
+  "driver_heatmap_empty_title": "No demand data yet",
+  "driver_heatmap_empty_description": "Demand data appears when orders are available around your current area.",
+  "driver_heatmap_order_count": "{count} orders",
+  "@driver_heatmap_order_count": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driver_heatmap_avg_payout": "Average {amount}đ/order",
+  "@driver_heatmap_avg_payout": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "driver_bank_title": "Bank Account",
   "driver_bank_subtitle": "Add an account to receive weekly payouts",
   "driver_bank_name_label": "Bank name",

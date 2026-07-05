@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_localizations.dart';
+import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
+import '../providers/driver_provider.dart';
 import '../providers/heatmap_provider.dart';
 import '../widgets/heatmap_canvas.dart';
-import '../../l10n/app_localizations.dart';
 
 class HeatmapScreen extends ConsumerStatefulWidget {
   const HeatmapScreen({super.key});
@@ -15,21 +18,7 @@ class HeatmapScreen extends ConsumerStatefulWidget {
 class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   String _selectedWindow = 'now';
   HeatmapPoint? _selectedPoint;
-
-  static const _windows = [
-    ('now', 'Hiện tại'),
-    ('1h', '1h tới'),
-    ('3h', '3h tới'),
-    ('today', 'Hôm nay'),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(heatmapProvider.notifier).loadHeatmap(10.8231, 106.6297);
-    });
-  }
+  String _lastHeatmapSignature = '';
 
   Color _demandColor(int level) => switch (level) {
     2 => const Color(0xFFEF4444),
@@ -40,7 +29,15 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = ref.watch(heatmapProvider);
+    final heatmapState = ref.watch(heatmapProvider);
+    final driverState = ref.watch(driverProvider);
+    final centerLat = driverState.currentLat;
+    final centerLng = driverState.currentLng;
+    final hasDriverLocation = isValidDeliveryLatLng(centerLat, centerLng);
+
+    if (hasDriverLocation) {
+      _scheduleHeatmapLoad(centerLat!, centerLng!);
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -57,13 +54,15 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
       ),
       body: Column(
         children: [
-          _buildWindowSelector(),
+          _buildWindowSelector(l10n, centerLat, centerLng),
           Expanded(
-            child: state.isLoading
+            child: !hasDriverLocation
+                ? _buildMissingLocationState(l10n)
+                : heatmapState.isLoading
                 ? const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                : state.points.isEmpty
+                : heatmapState.points.isEmpty
                 ? _buildEmptyState(l10n)
                 : Stack(
                     children: [
@@ -77,9 +76,9 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: HeatmapCanvas(
-                            points: state.points,
-                            centerLat: 10.8231,
-                            centerLng: 106.6297,
+                            points: heatmapState.points,
+                            centerLat: centerLat!,
+                            centerLng: centerLng!,
                             onPointTap: (point) {
                               setState(() => _selectedPoint = point);
                             },
@@ -102,24 +101,52 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
     );
   }
 
-  Widget _buildWindowSelector() {
+  void _scheduleHeatmapLoad(double lat, double lng) {
+    final signature =
+        '${lat.toStringAsFixed(5)}|${lng.toStringAsFixed(5)}|$_selectedWindow';
+    if (signature == _lastHeatmapSignature) return;
+    _lastHeatmapSignature = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(heatmapProvider.notifier)
+          .loadHeatmap(lat, lng, window: _selectedWindow);
+    });
+  }
+
+  List<(String, String)> _windows(AppLocalizations l10n) => [
+    ('now', l10n.driver_heatmap_window_now),
+    ('1h', l10n.driver_heatmap_window_next_hour),
+    ('3h', l10n.driver_heatmap_window_next_three_hours),
+    ('today', l10n.driver_heatmap_window_today),
+  ];
+
+  Widget _buildWindowSelector(
+    AppLocalizations l10n,
+    double? centerLat,
+    double? centerLng,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
-        children: _windows.map((w) {
-          final isActive = _selectedWindow == w.$1;
+        children: _windows(l10n).map((window) {
+          final isActive = _selectedWindow == window.$1;
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
               child: GestureDetector(
                 onTap: () {
                   setState(() {
-                    _selectedWindow = w.$1;
+                    _selectedWindow = window.$1;
                     _selectedPoint = null;
                   });
-                  ref
-                      .read(heatmapProvider.notifier)
-                      .setWindow(w.$1, 10.8231, 106.6297);
+                  if (isValidDeliveryLatLng(centerLat, centerLng)) {
+                    ref
+                        .read(heatmapProvider.notifier)
+                        .setWindow(window.$1, centerLat!, centerLng!);
+                    _lastHeatmapSignature =
+                        '${centerLat.toStringAsFixed(5)}|${centerLng.toStringAsFixed(5)}|${window.$1}';
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -135,7 +162,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     ),
                   ),
                   child: Text(
-                    w.$2,
+                    window.$2,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -155,7 +182,8 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   }
 
   Widget _buildPointDetail() {
-    final p = _selectedPoint!;
+    final l10n = AppLocalizations.of(context);
+    final point = _selectedPoint!;
     return GestureDetector(
       onTap: () => setState(() => _selectedPoint = null),
       child: Container(
@@ -177,12 +205,12 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _demandColor(p.demandLevel).withValues(alpha: 0.15),
+                color: _demandColor(point.demandLevel).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.location_on,
-                color: _demandColor(p.demandLevel),
+                color: _demandColor(point.demandLevel),
               ),
             ),
             const SizedBox(width: 12),
@@ -192,7 +220,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${p.orderCount} đơn hàng',
+                    l10n.driver_heatmap_order_count(point.orderCount),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -200,7 +228,9 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     ),
                   ),
                   Text(
-                    'Trung bình ${p.avgPayout.toStringAsFixed(0)}đ/đơn',
+                    l10n.driver_heatmap_avg_payout(
+                      point.avgPayout.toStringAsFixed(0),
+                    ),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF6B7280),
@@ -212,19 +242,19 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: _demandColor(p.demandLevel).withValues(alpha: 0.15),
+                color: _demandColor(point.demandLevel).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                p.demandLevel == 2
-                    ? 'Cao'
-                    : p.demandLevel == 1
-                    ? 'TB'
-                    : 'Thấp',
+                point.demandLevel == 2
+                    ? l10n.driver_heatmap_high
+                    : point.demandLevel == 1
+                    ? l10n.driver_heatmap_medium
+                    : l10n.driver_heatmap_low,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: _demandColor(p.demandLevel),
+                  color: _demandColor(point.demandLevel),
                 ),
               ),
             ),
@@ -282,16 +312,47 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
             color: const Color(0xFF6B7280).withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Chưa có dữ liệu nhu cầu',
-            style: TextStyle(fontSize: 16, color: Color(0xFF9CA3AF)),
+          Text(
+            l10n.driver_heatmap_empty_title,
+            style: const TextStyle(fontSize: 16, color: Color(0xFF9CA3AF)),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Dữ liệu sẽ hiển thị khi có đơn hàng trong khu vực',
-            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          Text(
+            l10n.driver_heatmap_empty_description,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMissingLocationState(AppLocalizations l10n) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.my_location_outlined,
+              size: 64,
+              color: const Color(0xFF6B7280).withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.driver_heatmap_missing_location_title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Color(0xFF9CA3AF)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.driver_heatmap_missing_location_description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
       ),
     );
   }

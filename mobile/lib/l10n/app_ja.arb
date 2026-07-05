@@ -585,6 +585,22 @@
   "driver_heatmap_medium": "需要中",
   "driver_heatmap_low": "需要低",
   "driver_heatmap_legend": "カラー凡例",
+  "driver_heatmap_window_now": "現在",
+  "driver_heatmap_window_next_hour": "次の1時間",
+  "driver_heatmap_window_next_three_hours": "次の3時間",
+  "driver_heatmap_window_today": "今日",
+  "driver_heatmap_missing_location_title": "ドライバーの位置情報がありません",
+  "driver_heatmap_missing_location_description": "実際の現在地周辺の需要を読み込むには、オンラインにするかGPSの更新を待ってください。",
+  "driver_heatmap_empty_title": "需要データはまだありません",
+  "driver_heatmap_empty_description": "現在のエリアに注文があると需要データが表示されます。",
+  "driver_heatmap_order_count": "{count}件の注文",
+  "@driver_heatmap_order_count": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driver_heatmap_avg_payout": "平均 {amount}đ/件",
+  "@driver_heatmap_avg_payout": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "driver_bank_title": "銀行口座",
   "driver_bank_subtitle": "毎週の報酬受取用口座を追加",
   "driver_bank_name_label": "銀行名",

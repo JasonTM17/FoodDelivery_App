@@ -35,5 +35,42 @@ void main() {
         expect(point.avgPayout, 21000);
       },
     );
+
+    test('rejects missing coordinates instead of defaulting to zero', () {
+      expect(
+        () => HeatmapPoint.fromJson({
+          'demandLevel': 1,
+          'orderCount': 4,
+          'avgPayout': 21000,
+        }),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('rejects coordinates outside the Vietnam delivery map', () {
+      expect(
+        () => HeatmapPoint.fromJson({
+          'lat': 13.7563,
+          'lng': 100.5018,
+          'demandLevel': 1,
+          'orderCount': 4,
+          'avgPayout': 21000,
+        }),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
+  group('HeatmapNotifier', () {
+    test('does not load demand with invalid driver location', () async {
+      final notifier = HeatmapNotifier();
+
+      await notifier.loadHeatmap(0, 0);
+
+      expect(notifier.state.points, isEmpty);
+      expect(notifier.state.error, 'DRIVER_HEATMAP_LOCATION_REQUIRED');
+      expect(notifier.state.selectedWindow, 'now');
+      expect(notifier.state.isLoading, isFalse);
+    });
   });
 }

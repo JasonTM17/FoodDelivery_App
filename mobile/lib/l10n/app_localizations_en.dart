@@ -1510,6 +1510,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_heatmap_legend => 'Color legend';
 
   @override
+  String get driver_heatmap_window_now => 'Now';
+
+  @override
+  String get driver_heatmap_window_next_hour => 'Next 1h';
+
+  @override
+  String get driver_heatmap_window_next_three_hours => 'Next 3h';
+
+  @override
+  String get driver_heatmap_window_today => 'Today';
+
+  @override
+  String get driver_heatmap_missing_location_title =>
+      'Driver location unavailable';
+
+  @override
+  String get driver_heatmap_missing_location_description =>
+      'Go online or wait for GPS to update before loading demand around your real location.';
+
+  @override
+  String get driver_heatmap_empty_title => 'No demand data yet';
+
+  @override
+  String get driver_heatmap_empty_description =>
+      'Demand data appears when orders are available around your current area.';
+
+  @override
+  String driver_heatmap_order_count(int count) {
+    return '$count orders';
+  }
+
+  @override
+  String driver_heatmap_avg_payout(String amount) {
+    return 'Average $amountđ/order';
+  }
+
+  @override
   String get driver_bank_title => 'Bank Account';
 
   @override
