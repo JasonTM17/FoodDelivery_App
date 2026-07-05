@@ -10,7 +10,9 @@ RUN pnpm install --frozen-lockfile
 COPY prisma/ ./prisma/
 COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 COPY src/ ./src/
-RUN pnpm prisma generate && pnpm build
+RUN DATABASE_URL=postgresql://foodflow:foodflow_dev@localhost:5432/foodflow \
+  DIRECT_URL=postgresql://foodflow:foodflow_dev@localhost:5432/foodflow \
+  pnpm prisma generate && pnpm build
 
 FROM builder AS migrator
 CMD ["pnpm", "prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"]

@@ -14,10 +14,13 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: '20' }
       - uses: pnpm/action-setup@v6
-        with: { version: '10' }
+        with: { version: '11.7.0' }
       - run: pnpm install --frozen-lockfile
         working-directory: backend
       - run: pnpm prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
       - run: pnpm build
         working-directory: backend
