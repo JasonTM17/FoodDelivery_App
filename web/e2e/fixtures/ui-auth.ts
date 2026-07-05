@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 import { getRestaurantIdViaApi, loginViaApi } from './api-helpers'
-import { ADMIN_URL, RESTAURANT_URL, TEST_USERS } from './test-users'
+import { adminUrl, restaurantUrl, TEST_USERS } from './test-users'
 
 const loginButtonName = /sign in|log in|login|đăng nhập|ログイン/i
 
@@ -32,7 +32,7 @@ export async function loginAdminApp(page: Page, request: APIRequestContext): Pro
     }),
   })
 
-  await page.goto(`${ADMIN_URL}/overview`)
+  await page.goto(adminUrl('/overview'))
   await expect(page).toHaveURL(/\/overview/, { timeout: 15_000 })
 }
 
@@ -49,7 +49,7 @@ export async function loginRestaurantApp(page: Page, request: APIRequestContext)
     restaurant_data: JSON.stringify({ id: restaurantId, name: 'FoodFlow E2E Restaurant' }),
   })
 
-  await page.goto(`${RESTAURANT_URL}/orders`)
+  await page.goto(restaurantUrl('/orders'))
   await expect(page).toHaveURL(/\/orders/, { timeout: 15_000 })
 }
 

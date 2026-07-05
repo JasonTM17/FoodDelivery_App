@@ -37,10 +37,12 @@ async function createPendingOrder(
 test.describe('Restaurant order management', () => {
   test('login renders kanban status columns', async ({ page, request }) => {
     await loginRestaurantApp(page, request)
-    await expect(page.getByRole('heading', { name: /order queue/i })).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByRole('heading', { name: /^new$/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /^preparing$/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /^ready$/i })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /order queue|quản lý đơn hàng|注文/i }),
+    ).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: /^new$|^mới$|新規/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^preparing$|^đang chuẩn bị$|準備中/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^ready$|^sẵn sàng$|準備完了/i })).toBeVisible()
   })
 
   test('accepting a pending order moves it forward', async ({ page, request }) => {
@@ -66,13 +68,15 @@ test.describe('Restaurant order management', () => {
 
     await loginRestaurantApp(page, request)
     const readyBtn = page
-      .getByRole('button', { name: /complete|ready|ready for pickup|mark ready|chuẩn bị xong|sẵn sàng/i })
+      .getByRole('button', {
+        name: /complete|ready|ready for pickup|mark ready|start cooking|hoàn thành|bắt đầu nấu|chuẩn bị xong|sẵn sàng|調理開始|準備完了/i,
+      })
       .first()
     await expect(readyBtn).toBeVisible({ timeout: 10_000 })
     await readyBtn.click()
 
     await expect(
-      page.getByText(/ready|sẵn sàng giao|đã sẵn sàng/i).first(),
+      page.getByText(/ready|sẵn sàng|sẵn sàng giao|đã sẵn sàng|準備完了/i).first(),
     ).toBeVisible({ timeout: 10_000 })
   })
 

@@ -81,9 +81,11 @@ test.describe('Customer order flow', () => {
     expect(orderId).toBeTruthy()
 
     await loginRestaurantApp(page, request)
-    await expect(page.getByRole('heading', { name: /order queue/i })).toBeVisible({ timeout: 10_000 })
     await expect(
-      page.getByRole('heading', { name: /new/i }).first(),
+      page.getByRole('heading', { name: /order queue|quản lý đơn hàng|注文/i }),
+    ).toBeVisible({ timeout: 10_000 })
+    await expect(
+      page.getByRole('heading', { name: /^new$|^mới$|新規/i }).first(),
     ).toBeVisible({ timeout: 10_000 })
   })
 })

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { ADMIN_URL, API_URL, TEST_USERS } from '../fixtures/test-users';
+import { API_URL, adminUrl, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
 
 interface Envelope<T> {
@@ -165,7 +165,7 @@ test.describe('Batch 4 accessibility smoke', () => {
       },
     );
 
-    await page.goto(`${ADMIN_URL}/vi/export-jobs`);
+    await page.goto(adminUrl('/export-jobs'));
     await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
 
     await page.keyboard.press('Tab');

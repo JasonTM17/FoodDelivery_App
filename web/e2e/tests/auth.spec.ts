@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { API_URL, ADMIN_URL, RESTAURANT_URL, TEST_USERS, uniqueEmail } from '../fixtures/test-users'
+import { API_URL, adminUrl, restaurantUrl, TEST_USERS, uniqueEmail } from '../fixtures/test-users'
 import { loginViaApi } from '../fixtures/api-helpers'
 import { submitAdminLogin, submitRestaurantLogin } from '../fixtures/ui-auth'
 
 test.describe('Admin auth', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${ADMIN_URL}/login`)
+    await page.goto(adminUrl('/login'))
   })
 
   test('successful login redirects to overview and logout returns to login', async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('Admin auth', () => {
 
 test.describe('Restaurant auth', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${RESTAURANT_URL}/login`)
+    await page.goto(restaurantUrl('/login'))
   })
 
   test('unknown email shows an error', async ({ page }) => {

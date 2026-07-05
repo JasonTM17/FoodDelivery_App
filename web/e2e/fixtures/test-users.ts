@@ -2,6 +2,23 @@
 export const ADMIN_URL = process.env.ADMIN_URL ?? 'http://localhost:3000'
 export const RESTAURANT_URL = process.env.RESTAURANT_URL ?? 'http://localhost:3002'
 export const API_URL = process.env.API_URL ?? 'http://localhost:3001/api'
+export const E2E_LOCALE = normalizeLocale(process.env.E2E_LOCALE)
+
+function normalizeLocale(locale: string | undefined): 'vi' | 'en' | 'ja' {
+  return locale === 'en' || locale === 'ja' || locale === 'vi' ? locale : 'vi'
+}
+
+function normalizePath(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+export function adminUrl(path: string, locale = E2E_LOCALE): string {
+  return `${ADMIN_URL}/${normalizeLocale(locale)}${normalizePath(path)}`
+}
+
+export function restaurantUrl(path: string, locale = E2E_LOCALE): string {
+  return `${RESTAURANT_URL}/${normalizeLocale(locale)}${normalizePath(path)}`
+}
 
 // Credentials match big-seed.ts (run `pnpm db:big-seed` before tests)
 const seedPassword = (role: 'Admin' | 'Partner' | 'Customer' | 'Driver') => `${role}@${'123'}`
