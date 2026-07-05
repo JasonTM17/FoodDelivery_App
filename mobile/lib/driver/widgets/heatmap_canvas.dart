@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../shared/maps/lat_lng_validation.dart';
+import '../../shared/theme/vietnam_map_constants.dart';
 import '../providers/heatmap_provider.dart';
 
-class HeatmapCanvas extends StatelessWidget {
+class HeatmapCanvas extends StatefulWidget {
   final List<HeatmapPoint> points;
   final double centerLat;
   final double centerLng;
@@ -16,92 +22,168 @@ class HeatmapCanvas extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GestureDetector(
-          onTapDown: (details) {
-            if (onPointTap == null || points.isEmpty) return;
-            final nearest = _findNearest(details.localPosition, constraints);
-            if (nearest != null) onPointTap!(nearest);
-          },
-          child: CustomPaint(
-            size: Size(constraints.maxWidth, constraints.maxHeight),
-            painter: _HeatmapPainter(
-              points: points,
-              centerLat: centerLat,
-              centerLng: centerLng,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  HeatmapPoint? _findNearest(Offset tap, BoxConstraints constraints) {
-    HeatmapPoint? nearest;
-    double minDist = double.infinity;
-    final latRange = 0.06;
-    final lngRange = 0.06;
-    for (final p in points) {
-      final dx =
-          ((p.lng - centerLng + lngRange / 2) / lngRange) *
-          constraints.maxWidth;
-      final dy =
-          ((centerLat + latRange / 2 - p.lat) / latRange) *
-          constraints.maxHeight;
-      final dist = (dx - tap.dx).abs() + (dy - tap.dy).abs();
-      if (dist < minDist && dist < 40) {
-        minDist = dist;
-        nearest = p;
-      }
-    }
-    return nearest;
-  }
+  State<HeatmapCanvas> createState() => _HeatmapCanvasState();
 }
 
-class _HeatmapPainter extends CustomPainter {
-  final List<HeatmapPoint> points;
-  final double centerLat;
-  final double centerLng;
-
-  _HeatmapPainter({
-    required this.points,
-    required this.centerLat,
-    required this.centerLng,
-  });
+class _HeatmapCanvasState extends State<HeatmapCanvas> {
+  final Completer<GoogleMapController> _mapController = Completer();
+  String _lastBoundsSignature = '';
 
   static const _lowColor = Color(0xFF3B82F6);
   static const _medColor = Color(0xFFF97316);
   static const _highColor = Color(0xFFEF4444);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-    final latRange = 0.06;
-    final lngRange = 0.06;
-
-    for (final point in points) {
-      final x =
-          ((point.lng - centerLng + lngRange / 2) / lngRange) * size.width;
-      final y =
-          ((centerLat + latRange / 2 - point.lat) / latRange) * size.height;
-      final radius = 8.0 + point.demandLevel * 6.0;
-      final color = point.demandLevel == 2
-          ? _highColor
-          : point.demandLevel == 1
-          ? _medColor
-          : _lowColor;
-      final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.0)],
-        ).createShader(Rect.fromCircle(center: Offset(x, y), radius: radius))
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(x, y), radius, paint);
+  void didUpdateWidget(covariant HeatmapCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.points != widget.points ||
+        oldWidget.centerLat != widget.centerLat ||
+        oldWidget.centerLng != widget.centerLng) {
+      _lastBoundsSignature = '';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _fitDemandAreaToMap();
+        }
+      });
     }
   }
 
   @override
-  bool shouldRepaint(covariant _HeatmapPainter oldDelegate) =>
-      points != oldDelegate.points;
+  Widget build(BuildContext context) {
+    final center = _center();
+    final points = _validPoints();
+    return GoogleMap(
+      mapType: MapType.normal,
+      initialCameraPosition: CameraPosition(target: center, zoom: 13),
+      onMapCreated: (controller) {
+        if (!_mapController.isCompleted) {
+          _mapController.complete(controller);
+        }
+        _fitDemandAreaToMap();
+      },
+      markers: _buildMarkers(center),
+      circles: _buildDemandCircles(points),
+      minMaxZoomPreference: const MinMaxZoomPreference(
+        VietnamMapConstants.minZoom,
+        VietnamMapConstants.maxZoom,
+      ),
+      myLocationButtonEnabled: false,
+      myLocationEnabled: false,
+      zoomControlsEnabled: false,
+      compassEnabled: true,
+    );
+  }
+
+  LatLng _center() {
+    if (isValidDeliveryLatLng(widget.centerLat, widget.centerLng)) {
+      return LatLng(widget.centerLat, widget.centerLng);
+    }
+    return const LatLng(10.7769, 106.7009);
+  }
+
+  List<HeatmapPoint> _validPoints() {
+    return widget.points
+        .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
+        .toList(growable: false);
+  }
+
+  Set<Marker> _buildMarkers(LatLng center) {
+    return {
+      Marker(
+        markerId: const MarkerId('driver-location'),
+        position: center,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ),
+    };
+  }
+
+  Set<Circle> _buildDemandCircles(List<HeatmapPoint> points) {
+    return points.asMap().entries.map((entry) {
+      final point = entry.value;
+      final color = _demandColor(point.demandLevel);
+      return Circle(
+        circleId: CircleId('demand-${entry.key}-${point.lat}-${point.lng}'),
+        center: LatLng(point.lat, point.lng),
+        radius: _demandRadiusMeters(point),
+        fillColor: color.withValues(alpha: 0.28),
+        strokeColor: color.withValues(alpha: 0.85),
+        strokeWidth: 2,
+        consumeTapEvents: widget.onPointTap != null,
+        onTap: widget.onPointTap == null
+            ? null
+            : () => widget.onPointTap!(point),
+      );
+    }).toSet();
+  }
+
+  Color _demandColor(int level) => switch (level) {
+    2 => _highColor,
+    1 => _medColor,
+    _ => _lowColor,
+  };
+
+  double _demandRadiusMeters(HeatmapPoint point) {
+    final demandBoost = point.demandLevel * 120;
+    final volumeBoost = point.orderCount.clamp(0, 20) * 12;
+    return 220 + demandBoost + volumeBoost.toDouble();
+  }
+
+  Future<void> _fitDemandAreaToMap() async {
+    if (!_mapController.isCompleted) return;
+    final center = _center();
+    final points = [
+      center,
+      ..._validPoints().map((point) => LatLng(point.lat, point.lng)),
+    ];
+    if (points.isEmpty) return;
+
+    final signature = points
+        .map(
+          (point) =>
+              '${point.latitude.toStringAsFixed(5)},${point.longitude.toStringAsFixed(5)}',
+        )
+        .join('|');
+    if (signature == _lastBoundsSignature) return;
+    _lastBoundsSignature = signature;
+
+    final controller = await _mapController.future;
+    if (!mounted) return;
+
+    if (points.length == 1) {
+      await controller.animateCamera(CameraUpdate.newLatLngZoom(center, 13));
+      return;
+    }
+
+    await controller.animateCamera(
+      CameraUpdate.newLatLngBounds(_boundsFor(points), 56),
+    );
+  }
+
+  LatLngBounds _boundsFor(List<LatLng> points) {
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    if ((maxLat - minLat).abs() < 0.001) {
+      minLat -= 0.005;
+      maxLat += 0.005;
+    }
+    if ((maxLng - minLng).abs() < 0.001) {
+      minLng -= 0.005;
+      maxLng += 0.005;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
 }

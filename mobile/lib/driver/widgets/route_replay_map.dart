@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../../shared/theme/app_colors.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../l10n/app_localizations.dart';
+import '../../shared/maps/lat_lng_validation.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/vietnam_map_constants.dart';
 
 class RouteReplayMap extends StatefulWidget {
   final List<RoutePointData> points;
@@ -35,8 +41,10 @@ class RoutePointData {
 
 class _RouteReplayMapState extends State<RouteReplayMap>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+  final Completer<GoogleMapController> _mapController = Completer();
+  String _lastBoundsSignature = '';
 
   @override
   void initState() {
@@ -46,6 +54,26 @@ class _RouteReplayMapState extends State<RouteReplayMap>
       vsync: this,
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _controller.addStatusListener((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant RouteReplayMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.points != widget.points ||
+        oldWidget.fromLat != widget.fromLat ||
+        oldWidget.fromLng != widget.fromLng ||
+        oldWidget.toLat != widget.toLat ||
+        oldWidget.toLng != widget.toLng) {
+      _lastBoundsSignature = '';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _fitRouteToMap();
+        }
+      });
+    }
   }
 
   @override
@@ -57,19 +85,21 @@ class _RouteReplayMapState extends State<RouteReplayMap>
   void _toggleReplay() {
     if (_controller.isAnimating) {
       _controller.stop();
-    } else if (_controller.isCompleted) {
+      setState(() {});
+      return;
+    }
+    if (_controller.isCompleted) {
       _controller.reset();
     }
-    if (_controller.isCompleted || _controller.isDismissed) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
+    _controller.forward();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final routePoints = _validRoutePoints();
+
     return Column(
       children: [
         Container(
@@ -85,16 +115,29 @@ class _RouteReplayMapState extends State<RouteReplayMap>
             child: AnimatedBuilder(
               animation: _animation,
               builder: (context, _) {
-                return CustomPaint(
-                  size: Size(widget.width, widget.height),
-                  painter: _RoutePainter(
-                    points: widget.points,
-                    progress: _animation.value,
-                    fromLat: widget.fromLat,
-                    fromLng: widget.fromLng,
-                    toLat: widget.toLat,
-                    toLng: widget.toLng,
+                final currentPoint = _currentReplayPoint(routePoints);
+                return GoogleMap(
+                  mapType: MapType.normal,
+                  initialCameraPosition: CameraPosition(
+                    target: _initialCameraTarget(routePoints),
+                    zoom: routePoints.length > 1 ? 13 : 15,
                   ),
+                  onMapCreated: (controller) {
+                    if (!_mapController.isCompleted) {
+                      _mapController.complete(controller);
+                    }
+                    _fitRouteToMap();
+                  },
+                  markers: _buildMarkers(routePoints, currentPoint),
+                  polylines: _buildPolylines(routePoints, currentPoint),
+                  minMaxZoomPreference: const MinMaxZoomPreference(
+                    VietnamMapConstants.minZoom,
+                    VietnamMapConstants.maxZoom,
+                  ),
+                  myLocationButtonEnabled: false,
+                  myLocationEnabled: false,
+                  zoomControlsEnabled: false,
+                  compassEnabled: true,
                 );
               },
             ),
@@ -113,12 +156,12 @@ class _RouteReplayMapState extends State<RouteReplayMap>
                 icon: Icon(
                   _controller.isAnimating
                       ? Icons.pause
-                      : _controller.isDismissed
-                      ? Icons.play_arrow
-                      : Icons.replay,
+                      : _controller.isCompleted
+                      ? Icons.replay
+                      : Icons.play_arrow,
                   color: AppColors.primary,
                 ),
-                onPressed: _toggleReplay,
+                onPressed: routePoints.length >= 2 ? _toggleReplay : null,
                 tooltip: l10n.driverRouteReplayTooltip,
               ),
             ),
@@ -135,106 +178,177 @@ class _RouteReplayMapState extends State<RouteReplayMap>
 
   String _replayStatus(AppLocalizations l10n) {
     if (_controller.isAnimating) return l10n.driverRouteReplayPlaying;
-    if (_controller.isDismissed) return l10n.driverRouteReplayReady;
-    return l10n.driverRouteReplayCompleted;
+    if (_controller.isCompleted) return l10n.driverRouteReplayCompleted;
+    return l10n.driverRouteReplayReady;
   }
-}
 
-class _RoutePainter extends CustomPainter {
-  final List<RoutePointData> points;
-  final double progress;
-  final double fromLat;
-  final double fromLng;
-  final double toLat;
-  final double toLng;
+  List<LatLng> _validRoutePoints() {
+    return widget.points
+        .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
+        .map((point) => LatLng(point.lat, point.lng))
+        .toList(growable: false);
+  }
 
-  _RoutePainter({
-    required this.points,
-    required this.progress,
-    required this.fromLat,
-    required this.fromLng,
-    required this.toLat,
-    required this.toLng,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    final padding = 30.0;
-    final drawWidth = size.width - padding * 2;
-    final drawHeight = size.height - padding * 2;
-    final latRange = (toLat - fromLat).abs().clamp(0.001, 0.1);
-    final lngRange = (toLng - fromLng).abs().clamp(0.001, 0.1);
-
-    Offset toDraw(double lat, double lng) {
-      final x = padding + ((lng - fromLng) / lngRange) * drawWidth;
-      final y = padding + ((toLat - lat) / latRange) * drawHeight;
-      return Offset(x, y);
+  LatLng _initialCameraTarget(List<LatLng> routePoints) {
+    if (routePoints.isNotEmpty) return routePoints.first;
+    if (isValidDeliveryLatLng(widget.fromLat, widget.fromLng)) {
+      return LatLng(widget.fromLat, widget.fromLng);
     }
+    if (isValidDeliveryLatLng(widget.toLat, widget.toLng)) {
+      return LatLng(widget.toLat, widget.toLng);
+    }
+    return const LatLng(10.7769, 106.7009);
+  }
 
-    // Path
-    final pathPaint = Paint()
-      ..color = const Color(0xFF3B82F6)
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+  LatLng? _currentReplayPoint(List<LatLng> routePoints) {
+    if (routePoints.isEmpty) return null;
+    if (routePoints.length == 1) return routePoints.first;
 
-    final path = Path();
-    final animatedCount = (points.length * progress).ceil().clamp(
-      0,
-      points.length,
+    final scaledIndex = _animation.value * (routePoints.length - 1);
+    final startIndex = scaledIndex.floor().clamp(0, routePoints.length - 2);
+    final endIndex = startIndex + 1;
+    final segmentProgress = scaledIndex - startIndex;
+    final start = routePoints[startIndex];
+    final end = routePoints[endIndex];
+
+    return LatLng(
+      start.latitude + (end.latitude - start.latitude) * segmentProgress,
+      start.longitude + (end.longitude - start.longitude) * segmentProgress,
     );
-    for (int i = 0; i < animatedCount; i++) {
-      final pt = toDraw(points[i].lat, points[i].lng);
-      if (i == 0) {
-        path.moveTo(pt.dx, pt.dy);
-      } else {
-        path.lineTo(pt.dx, pt.dy);
-      }
-    }
-    canvas.drawPath(path, pathPaint);
-
-    // Pickup pin (green dot)
-    if (points.isNotEmpty) {
-      final pickupPt = toDraw(points.first.lat, points.first.lng);
-      canvas.drawCircle(pickupPt, 6, Paint()..color = AppColors.primary);
-      final pickupBorder = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawCircle(pickupPt, 6, pickupBorder);
-    }
-
-    // Delivery pin (orange dot)
-    if (points.isNotEmpty) {
-      final deliveryPt = toDraw(points.last.lat, points.last.lng);
-      canvas.drawCircle(
-        deliveryPt,
-        6,
-        Paint()..color = const Color(0xFFF97316),
-      );
-      final deliveryBorder = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawCircle(deliveryPt, 6, deliveryBorder);
-    }
-
-    // Animated marker at current position
-    if (animatedCount > 0 && animatedCount <= points.length) {
-      final idx = (animatedCount - 1).clamp(0, points.length - 1);
-      final currentPt = toDraw(points[idx].lat, points[idx].lng);
-      canvas.drawCircle(currentPt, 8, Paint()..color = const Color(0xFF3B82F6));
-      final markerBorder = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawCircle(currentPt, 8, markerBorder);
-    }
   }
 
-  @override
-  bool shouldRepaint(covariant _RoutePainter oldDelegate) =>
-      progress != oldDelegate.progress || points != oldDelegate.points;
+  Set<Marker> _buildMarkers(List<LatLng> routePoints, LatLng? currentPoint) {
+    final markers = <Marker>{};
+    if (routePoints.isEmpty) return markers;
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId('pickup'),
+        position: routePoints.first,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+    );
+
+    if (routePoints.length > 1) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('dropoff'),
+          position: routePoints.last,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
+        ),
+      );
+    }
+
+    if (currentPoint != null && routePoints.length > 1) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('replay-current'),
+          position: currentPoint,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
+          zIndexInt: 10,
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  Set<Polyline> _buildPolylines(
+    List<LatLng> routePoints,
+    LatLng? currentPoint,
+  ) {
+    final polylines = <Polyline>{};
+    if (routePoints.length < 2) return polylines;
+
+    polylines.add(
+      Polyline(
+        polylineId: const PolylineId('actual-route'),
+        points: routePoints,
+        color: const Color(0xFF64748B),
+        width: 4,
+      ),
+    );
+
+    final replayPoints = _replayedPoints(routePoints, currentPoint);
+    if (replayPoints.length >= 2) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('replayed-route'),
+          points: replayPoints,
+          color: AppColors.primary,
+          width: 6,
+        ),
+      );
+    }
+
+    return polylines;
+  }
+
+  List<LatLng> _replayedPoints(List<LatLng> routePoints, LatLng? currentPoint) {
+    if (routePoints.length < 2 || currentPoint == null) return const [];
+    final scaledIndex = _animation.value * (routePoints.length - 1);
+    final endIndex = scaledIndex.floor().clamp(0, routePoints.length - 2);
+    return [...routePoints.take(endIndex + 1), currentPoint];
+  }
+
+  Future<void> _fitRouteToMap() async {
+    if (!_mapController.isCompleted) return;
+    final routePoints = _validRoutePoints();
+    if (routePoints.isEmpty) return;
+
+    final signature = routePoints
+        .map(
+          (point) =>
+              '${point.latitude.toStringAsFixed(5)},${point.longitude.toStringAsFixed(5)}',
+        )
+        .join('|');
+    if (signature == _lastBoundsSignature) return;
+    _lastBoundsSignature = signature;
+
+    final controller = await _mapController.future;
+    if (!mounted) return;
+
+    if (routePoints.length == 1) {
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(routePoints.first, 15),
+      );
+      return;
+    }
+
+    await controller.animateCamera(
+      CameraUpdate.newLatLngBounds(_boundsFor(routePoints), 48),
+    );
+  }
+
+  LatLngBounds _boundsFor(List<LatLng> points) {
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    if ((maxLat - minLat).abs() < 0.001) {
+      minLat -= 0.005;
+      maxLat += 0.005;
+    }
+    if ((maxLng - minLng).abs() < 0.001) {
+      minLng -= 0.005;
+      maxLng += 0.005;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
 }
