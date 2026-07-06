@@ -1,4 +1,5 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { UserRole } from '@prisma/client'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
@@ -19,9 +20,9 @@ export class TrackingController {
   ) {}
 
   @Get('orders/:id/tracking')
-  @Roles('customer')
+  @Roles(UserRole.customer, UserRole.restaurant, UserRole.driver, UserRole.admin)
   async getTracking(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    const order = await this.ordersService.getTracking(id, user.sub)
+    const order = await this.ordersService.getTracking(id, user.sub, user.role)
     const routePhase = routePhaseForStatus(order.status)
     const [driverLocation, cachedRoute] = await Promise.all([
       order.driverId

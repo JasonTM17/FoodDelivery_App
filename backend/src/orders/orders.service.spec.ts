@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { Queue } from 'bullmq'
 import dayjs from 'dayjs'
-import { Prisma } from '@prisma/client'
+import { Prisma, UserRole } from '@prisma/client'
 import { generateOrderCode, OrdersService } from './orders.service'
 import { PrismaService } from '../database/prisma.service'
 import { PaymentsService } from './payments.service'
@@ -31,6 +31,7 @@ describe('OrdersService', () => {
   }
   let mockPrisma: {
     order: { findUniqueOrThrow: jest.Mock; findFirst: jest.Mock }
+    restaurantProfile: { findFirst: jest.Mock }
     cart: { findUnique: jest.Mock }
     restaurant: { findUniqueOrThrow: jest.Mock }
     address: { findFirst: jest.Mock }
@@ -57,6 +58,7 @@ describe('OrdersService', () => {
     }
     mockPrisma = {
       order: { findUniqueOrThrow: jest.fn(), findFirst: jest.fn() },
+      restaurantProfile: { findFirst: jest.fn() },
       cart: { findUnique: jest.fn() },
       restaurant: { findUniqueOrThrow: jest.fn() },
       address: { findFirst: jest.fn() },
@@ -115,7 +117,7 @@ describe('OrdersService', () => {
       }
       mockPrisma.order.findFirst.mockResolvedValue(snapshot)
 
-      await expect(service.getTracking(orderId, userId)).resolves.toBe(snapshot)
+      await expect(service.getTracking(orderId, userId, UserRole.customer)).resolves.toBe(snapshot)
       expect(mockPrisma.order.findFirst).toHaveBeenCalledWith({
         where: { id: orderId, customerId: userId },
         select: {
@@ -131,8 +133,91 @@ describe('OrdersService', () => {
     it('does not disclose whether another customer order exists', async () => {
       mockPrisma.order.findFirst.mockResolvedValue(null)
 
-      await expect(service.getTracking(orderId, 'other-customer'))
+      await expect(service.getTracking(orderId, 'other-customer', UserRole.customer))
         .rejects.toThrow(NotFoundException)
+    })
+
+    it('allows active restaurant staff to read tracking only for their restaurant order', async () => {
+      const snapshot = {
+        id: orderId,
+        status: 'ready_for_pickup',
+        driverId: 'driver-1',
+        estimatedDeliveryTimeMinutes: null,
+        routePolyline: 'encoded-pickup-route',
+      }
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue({ restaurantId: 'restaurant-1' })
+      mockPrisma.order.findFirst.mockResolvedValue(snapshot)
+
+      await expect(service.getTracking(orderId, 'restaurant-user-1', UserRole.restaurant))
+        .resolves.toBe(snapshot)
+      expect(mockPrisma.restaurantProfile.findFirst).toHaveBeenCalledWith({
+        where: { userId: 'restaurant-user-1', isActive: true },
+        select: { restaurantId: true },
+      })
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith({
+        where: { id: orderId, restaurantId: 'restaurant-1' },
+        select: {
+          id: true,
+          status: true,
+          driverId: true,
+          estimatedDeliveryTimeMinutes: true,
+          routePolyline: true,
+        },
+      })
+    })
+
+    it('rejects inactive or missing restaurant staff without probing the order', async () => {
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(service.getTracking(orderId, 'inactive-staff', UserRole.restaurant))
+        .rejects.toThrow(NotFoundException)
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled()
+    })
+
+    it('allows drivers to read tracking only for their assigned order', async () => {
+      const snapshot = {
+        id: orderId,
+        status: 'picked_up',
+        driverId: 'driver-1',
+        estimatedDeliveryTimeMinutes: 8,
+        routePolyline: 'encoded-dropoff-route',
+      }
+      mockPrisma.order.findFirst.mockResolvedValue(snapshot)
+
+      await expect(service.getTracking(orderId, 'driver-1', UserRole.driver)).resolves.toBe(snapshot)
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith({
+        where: { id: orderId, driverId: 'driver-1' },
+        select: {
+          id: true,
+          status: true,
+          driverId: true,
+          estimatedDeliveryTimeMinutes: true,
+          routePolyline: true,
+        },
+      })
+    })
+
+    it('allows admins to read a tracking snapshot without tenant filters', async () => {
+      const snapshot = {
+        id: orderId,
+        status: 'delivering',
+        driverId: 'driver-1',
+        estimatedDeliveryTimeMinutes: 6,
+        routePolyline: 'encoded-route',
+      }
+      mockPrisma.order.findFirst.mockResolvedValue(snapshot)
+
+      await expect(service.getTracking(orderId, 'admin-1', UserRole.admin)).resolves.toBe(snapshot)
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith({
+        where: { id: orderId },
+        select: {
+          id: true,
+          status: true,
+          driverId: true,
+          estimatedDeliveryTimeMinutes: true,
+          routePolyline: true,
+        },
+      })
     })
   })
 

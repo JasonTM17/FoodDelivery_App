@@ -8,7 +8,7 @@ import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto } from './orders.dto'
-import { OrderStatus as PrismaOrderStatus, Prisma, type Order } from '@prisma/client'
+import { OrderStatus as PrismaOrderStatus, Prisma, UserRole, type Order } from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
@@ -428,16 +428,36 @@ export class OrdersService {
     return this.transition(orderId, newStatus as OrderStatus, userId, role, note)
   }
 
-  async getTracking(orderId: string, userId: string) {
+  async getTracking(orderId: string, userId: string, role: string) {
+    const select = {
+      id: true,
+      status: true,
+      driverId: true,
+      estimatedDeliveryTimeMinutes: true,
+      routePolyline: true,
+    } satisfies Prisma.OrderSelect
+
+    let where: Prisma.OrderWhereInput
+    if (role === UserRole.customer) {
+      where = { id: orderId, customerId: userId }
+    } else if (role === UserRole.driver) {
+      where = { id: orderId, driverId: userId }
+    } else if (role === UserRole.admin) {
+      where = { id: orderId }
+    } else if (role === UserRole.restaurant) {
+      const profile = await this.prisma.restaurantProfile.findFirst({
+        where: { userId, isActive: true },
+        select: { restaurantId: true },
+      })
+      if (!profile) throw new NotFoundException('ORDER_NOT_FOUND')
+      where = { id: orderId, restaurantId: profile.restaurantId }
+    } else {
+      throw new NotFoundException('ORDER_NOT_FOUND')
+    }
+
     const order = await this.prisma.order.findFirst({
-      where: { id: orderId, customerId: userId },
-      select: {
-        id: true,
-        status: true,
-        driverId: true,
-        estimatedDeliveryTimeMinutes: true,
-        routePolyline: true,
-      },
+      where,
+      select,
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
     return order

@@ -1,4 +1,4 @@
-import { OrderStatus } from '@prisma/client'
+import { OrderStatus, UserRole } from '@prisma/client'
 import { TrackingController } from './tracking.controller'
 
 describe('TrackingController', () => {
@@ -33,7 +33,7 @@ describe('TrackingController', () => {
     })
 
     await expect(controller.getTracking(
-      { sub: 'customer-1', role: 'customer' },
+      { sub: 'customer-1', role: UserRole.customer },
       'order-1',
     )).resolves.toEqual({
       orderId: 'order-1',
@@ -47,7 +47,7 @@ describe('TrackingController', () => {
       etaMinutes: 10,
       routePolyline: 'live-route',
     })
-    expect(getTracking).toHaveBeenCalledWith('order-1', 'customer-1')
+    expect(getTracking).toHaveBeenCalledWith('order-1', 'customer-1', UserRole.customer)
     expect(getDriverLocation).toHaveBeenCalledWith('driver-1')
     expect(getCachedRoute).toHaveBeenCalledWith('order-1', 'dropoff')
   })
@@ -64,7 +64,7 @@ describe('TrackingController', () => {
     getCachedRoute.mockResolvedValue(null)
 
     await expect(controller.getTracking(
-      { sub: 'customer-1', role: 'customer' },
+      { sub: 'customer-1', role: UserRole.customer },
       'order-3',
     )).resolves.toMatchObject({
       orderId: 'order-3',
@@ -87,7 +87,7 @@ describe('TrackingController', () => {
     getCachedRoute.mockResolvedValue(null)
 
     await expect(controller.getTracking(
-      { sub: 'customer-1', role: 'customer' },
+      { sub: 'customer-1', role: UserRole.customer },
       'order-4',
     )).resolves.toMatchObject({
       orderId: 'order-4',
@@ -108,7 +108,7 @@ describe('TrackingController', () => {
     getCachedRoute.mockResolvedValue(null)
 
     await expect(controller.getTracking(
-      { sub: 'customer-1', role: 'customer' },
+      { sub: 'customer-1', role: UserRole.customer },
       'order-2',
     )).resolves.toEqual({
       orderId: 'order-2',
@@ -119,5 +119,24 @@ describe('TrackingController', () => {
       routePolyline: null,
     })
     expect(getDriverLocation).not.toHaveBeenCalled()
+  })
+
+  it('passes restaurant identity through so the service can enforce tenant ownership', async () => {
+    getTracking.mockResolvedValue({
+      id: 'order-5',
+      status: OrderStatus.ready_for_pickup,
+      driverId: 'driver-2',
+      estimatedDeliveryTimeMinutes: null,
+      routePolyline: null,
+    })
+    getDriverLocation.mockResolvedValue(null)
+    getCachedRoute.mockResolvedValue(null)
+
+    await controller.getTracking(
+      { sub: 'restaurant-user-1', role: UserRole.restaurant },
+      'order-5',
+    )
+
+    expect(getTracking).toHaveBeenCalledWith('order-5', 'restaurant-user-1', UserRole.restaurant)
   })
 })
