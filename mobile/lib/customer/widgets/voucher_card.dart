@@ -51,7 +51,6 @@ class VoucherCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Left colored strip
           Container(
             width: 4,
             height: 110,
@@ -63,7 +62,6 @@ class VoucherCard extends StatelessWidget {
               ),
             ),
           ),
-          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -100,7 +98,6 @@ class VoucherCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Code badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -125,22 +122,20 @@ class VoucherCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  if (voucher.minOrderAmount != null)
-                    Text(
-                      minOrderLabel ??
-                          'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
-                      style: AppTextStyles.caption,
+                  Text(
+                    minOrderLabel ??
+                        'Đơn tối thiểu ${currencyFmt.format(voucher.minOrderAmount)}',
+                    style: AppTextStyles.caption,
+                  ),
+                  Text(
+                    expiresAtLabel ??
+                        'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt)}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: voucher.expiresAt.isBefore(DateTime.now())
+                          ? AppColors.error
+                          : AppColors.textHint,
                     ),
-                  if (voucher.expiresAt != null)
-                    Text(
-                      expiresAtLabel ??
-                          'HSD: ${DateFormat('dd/MM/yyyy').format(voucher.expiresAt!)}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: voucher.expiresAt!.isBefore(DateTime.now())
-                            ? AppColors.error
-                            : AppColors.textHint,
-                      ),
-                    ),
+                  ),
                   const SizedBox(height: 8),
                   if (!isExpired && onUse != null)
                     SizedBox(

@@ -140,14 +140,12 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen>
           percentOffLabel: voucher.percentOff != null
               ? l10nCard.vouchersPercentOff(voucher.percentOff!)
               : null,
-          minOrderLabel: voucher.minOrderAmount != null
-              ? l10nCard.vouchersMinOrder(_formatVnd(voucher.minOrderAmount!))
-              : null,
-          expiresAtLabel: voucher.expiresAt != null
-              ? l10nCard.vouchersExpiresAt(
-                  DateFormat('dd/MM/yyyy').format(voucher.expiresAt!),
-                )
-              : null,
+          minOrderLabel: l10nCard.vouchersMinOrder(
+            _formatVnd(voucher.minOrderAmount),
+          ),
+          expiresAtLabel: l10nCard.vouchersExpiresAt(
+            DateFormat('dd/MM/yyyy').format(voucher.expiresAt),
+          ),
           useNowLabel: l10nCard.vouchersUseNow,
         );
       },
