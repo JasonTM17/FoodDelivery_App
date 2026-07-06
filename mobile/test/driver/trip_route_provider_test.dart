@@ -54,10 +54,21 @@ void main() {
     });
 
     test(
-      'defaults missing route data to empty values without local generated points',
+      'accepts explicit no-route backend responses without local points',
       () {
-        final route = TripRouteDetail.fromJson({});
+        final route = TripRouteDetail.fromJson({
+          'tripId': 'order-2',
+          'points': [],
+          'segments': [],
+          'routeSource': 'none',
+          'timestampsEstimated': false,
+          'totalDistanceKm': 0,
+          'totalDurationSeconds': 0,
+          'avgSpeedKmh': 0,
+          'payout': 0,
+        });
 
+        expect(route.tripId, 'order-2');
         expect(route.points, isEmpty);
         expect(route.segments, isEmpty);
         expect(route.routeSource, 'none');
@@ -69,50 +80,77 @@ void main() {
       },
     );
 
-    test('drops invalid route points instead of defaulting them to zero', () {
-      final route = TripRouteDetail.fromJson({
-        'tripId': 'order-1',
-        'points': [
-          {
-            'lat': 10.7769,
-            'lng': 106.7009,
-            'timestamp': '2026-07-03T08:00:00.000Z',
-          },
-          {'timestamp': '2026-07-03T08:05:00.000Z'},
-          {
-            'lat': 13.7563,
-            'lng': 100.5018,
-            'timestamp': '2026-07-03T08:10:00.000Z',
-          },
-        ],
-      });
+    test(
+      'rejects missing route contract fields instead of faking no-route data',
+      () {
+        expect(
+          () => TripRouteDetail.fromJson({}),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
 
-      expect(route.points, hasLength(1));
-      expect(route.points.single.lat, 10.7769);
-      expect(route.points.single.lng, 106.7009);
+    test('rejects invalid route points instead of drawing partial paths', () {
+      expect(
+        () => TripRouteDetail.fromJson({
+          'tripId': 'order-1',
+          'points': [
+            {
+              'lat': 10.7769,
+              'lng': 106.7009,
+              'timestamp': '2026-07-03T08:00:00.000Z',
+              'source': 'telemetry',
+              'timestampEstimated': false,
+            },
+            {
+              'lat': 13.7563,
+              'lng': 100.5018,
+              'timestamp': '2026-07-03T08:10:00.000Z',
+              'source': 'telemetry',
+              'timestampEstimated': false,
+            },
+          ],
+          'segments': [],
+          'routeSource': 'telemetry',
+          'timestampsEstimated': false,
+          'totalDistanceKm': 3.5,
+          'totalDurationSeconds': 600,
+          'avgSpeedKmh': 21,
+          'payout': 25000,
+        }),
+        throwsA(isA<FormatException>()),
+      );
     });
 
-    test('parses persisted geometry metadata without treating it as telemetry', () {
-      final route = TripRouteDetail.fromJson({
-        'tripId': 'order-1',
-        'routeSource': 'persisted_geometry',
-        'timestampsEstimated': true,
-        'points': [
-          {
-            'lat': 10.7769,
-            'lng': 106.7009,
-            'timestamp': '2026-07-03T08:00:00.000Z',
-            'source': 'persisted_geometry',
-            'timestampEstimated': true,
-          },
-        ],
-      });
+    test(
+      'parses persisted geometry metadata without treating it as telemetry',
+      () {
+        final route = TripRouteDetail.fromJson({
+          'tripId': 'order-1',
+          'points': [
+            {
+              'lat': 10.7769,
+              'lng': 106.7009,
+              'timestamp': '2026-07-03T08:00:00.000Z',
+              'source': 'persisted_geometry',
+              'timestampEstimated': true,
+            },
+          ],
+          'segments': [],
+          'routeSource': 'persisted_geometry',
+          'timestampsEstimated': true,
+          'totalDistanceKm': 1.2,
+          'totalDurationSeconds': 240,
+          'avgSpeedKmh': 18,
+          'payout': 25000,
+        });
 
-      expect(route.routeSource, 'persisted_geometry');
-      expect(route.timestampsEstimated, isTrue);
-      expect(route.points.single.source, 'persisted_geometry');
-      expect(route.points.single.timestampEstimated, isTrue);
-    });
+        expect(route.routeSource, 'persisted_geometry');
+        expect(route.timestampsEstimated, isTrue);
+        expect(route.points.single.source, 'persisted_geometry');
+        expect(route.points.single.timestampEstimated, isTrue);
+      },
+    );
 
     test('RoutePoint rejects invalid coordinates explicitly', () {
       expect(
@@ -120,6 +158,8 @@ void main() {
           'lat': 0,
           'lng': 0,
           'timestamp': '2026-07-03T08:00:00.000Z',
+          'source': 'telemetry',
+          'timestampEstimated': false,
         }),
         throwsA(isA<FormatException>()),
       );

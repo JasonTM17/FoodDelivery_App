@@ -29,8 +29,8 @@ class RoutePoint {
       lat: lat!,
       lng: lng!,
       timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
-      source: json['source']?.toString() ?? 'telemetry',
-      timestampEstimated: json['timestampEstimated'] == true,
+      source: _readRequiredRoutePointSource(json['source']),
+      timestampEstimated: _readRequiredBool(json['timestampEstimated']),
     );
   }
 }
@@ -52,11 +52,14 @@ class RouteSegment {
 
   factory RouteSegment.fromJson(Map<String, dynamic> json) {
     return RouteSegment(
-      distanceKm: _readDouble(json['distanceKm']),
-      durationSeconds: _readInt(json['durationSeconds']),
-      instruction: json['instruction']?.toString() ?? '',
-      startIndex: _readInt(json['startIndex']),
-      endIndex: _readInt(json['endIndex']),
+      distanceKm: _readRequiredDouble(json['distanceKm'], 'distanceKm'),
+      durationSeconds: _readRequiredInt(
+        json['durationSeconds'],
+        'durationSeconds',
+      ),
+      instruction: _readRequiredString(json['instruction'], 'instruction'),
+      startIndex: _readRequiredInt(json['startIndex'], 'startIndex'),
+      endIndex: _readRequiredInt(json['endIndex'], 'endIndex'),
     );
   }
 }
@@ -86,19 +89,26 @@ class TripRouteDetail {
 
   factory TripRouteDetail.fromJson(Map<String, dynamic> json) {
     return TripRouteDetail(
-      tripId: json['tripId']?.toString() ?? '',
-      points: _readList(
+      tripId: _readRequiredString(json['tripId'], 'tripId'),
+      points: _readRequiredList(
         json['points'],
-      ).map(_tryReadRoutePoint).whereType<RoutePoint>().toList(growable: false),
-      segments: _readList(json['segments'])
+        'points',
+      ).map((point) => RoutePoint.fromJson(point)).toList(growable: false),
+      segments: _readRequiredList(json['segments'], 'segments')
           .map((segment) => RouteSegment.fromJson(segment))
           .toList(growable: false),
-      routeSource: json['routeSource']?.toString() ?? 'none',
-      timestampsEstimated: json['timestampsEstimated'] == true,
-      totalDistanceKm: _readDouble(json['totalDistanceKm']),
-      totalDurationSeconds: _readInt(json['totalDurationSeconds']),
-      avgSpeedKmh: _readDouble(json['avgSpeedKmh']),
-      payout: _readDouble(json['payout']),
+      routeSource: _readRequiredRouteSource(json['routeSource']),
+      timestampsEstimated: _readRequiredBool(json['timestampsEstimated']),
+      totalDistanceKm: _readRequiredDouble(
+        json['totalDistanceKm'],
+        'totalDistanceKm',
+      ),
+      totalDurationSeconds: _readRequiredInt(
+        json['totalDurationSeconds'],
+        'totalDurationSeconds',
+      ),
+      avgSpeedKmh: _readRequiredDouble(json['avgSpeedKmh'], 'avgSpeedKmh'),
+      payout: _readRequiredDouble(json['payout'], 'payout'),
     );
   }
 }
@@ -178,26 +188,18 @@ final tripRouteProvider =
       return TripRouteNotifier();
     });
 
-List<Map<String, dynamic>> _readList(Object? value) {
-  if (value is! List) return const [];
-  return value
-      .whereType<Map>()
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList(growable: false);
-}
-
-int _readInt(Object? value) {
-  if (value is int) return value;
-  if (value is num) return value.toInt();
-  return int.tryParse(value?.toString() ?? '') ?? 0;
-}
-
-RoutePoint? _tryReadRoutePoint(Map<String, dynamic> json) {
-  try {
-    return RoutePoint.fromJson(json);
-  } on FormatException {
-    return null;
+List<Map<String, dynamic>> _readRequiredList(Object? value, String field) {
+  if (value is! List) {
+    throw FormatException('Invalid route list field: $field');
   }
+  return value
+      .map((item) {
+        if (item is Map) {
+          return Map<String, dynamic>.from(item);
+        }
+        throw FormatException('Invalid route list item: $field');
+      })
+      .toList(growable: false);
 }
 
 double? _readDoubleOrNull(Object? value) {
@@ -207,8 +209,48 @@ double? _readDoubleOrNull(Object? value) {
   return null;
 }
 
-double _readDouble(Object? value) {
-  if (value is double) return value;
-  if (value is num) return value.toDouble();
-  return double.tryParse(value?.toString() ?? '') ?? 0;
+String _readRequiredString(Object? value, String field) {
+  final text = value?.toString().trim();
+  if (text != null && text.isNotEmpty) {
+    return text;
+  }
+  throw FormatException('Missing required route string field: $field');
+}
+
+bool _readRequiredBool(Object? value) {
+  if (value is bool) return value;
+  throw const FormatException('Invalid route boolean field');
+}
+
+int _readRequiredInt(Object? value, String field) {
+  if (value is int && value >= 0) return value;
+  if (value is num && value.isFinite && value >= 0 && value % 1 == 0) {
+    return value.toInt();
+  }
+  final parsed = int.tryParse(value?.toString() ?? '');
+  if (parsed != null && parsed >= 0) return parsed;
+  throw FormatException('Invalid route integer field: $field');
+}
+
+double _readRequiredDouble(Object? value, String field) {
+  if (value is num && value.isFinite) return value.toDouble();
+  final parsed = double.tryParse(value?.toString() ?? '');
+  if (parsed != null && parsed.isFinite) return parsed;
+  throw FormatException('Invalid route numeric field: $field');
+}
+
+String _readRequiredRoutePointSource(Object? value) {
+  final source = _readRequiredString(value, 'source');
+  if (source == 'telemetry' || source == 'persisted_geometry') return source;
+  throw FormatException('Invalid route point source: $source');
+}
+
+String _readRequiredRouteSource(Object? value) {
+  final source = _readRequiredString(value, 'routeSource');
+  if (source == 'telemetry' ||
+      source == 'persisted_geometry' ||
+      source == 'none') {
+    return source;
+  }
+  throw FormatException('Invalid route source: $source');
 }
