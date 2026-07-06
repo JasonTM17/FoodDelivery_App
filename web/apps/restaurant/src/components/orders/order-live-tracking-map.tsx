@@ -45,14 +45,12 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<TrackingConnectionStatus>('connecting');
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
   const loadTracking = useCallback(async (options: { background?: boolean } = {}) => {
     if (!options.background) setIsLoading(true);
     try {
       const snapshot = await api.get<OrderTrackingResponse>(`/orders/${orderId}/tracking`);
       setTracking(snapshot);
-      setLastUpdatedAt(snapshot.driverLocation?.lastUpdated ?? new Date().toISOString());
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loadError'));
@@ -83,7 +81,6 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
         },
       };
     });
-    setLastUpdatedAt(event.timestamp);
   }, [loadTracking, orderId]);
 
   const applyEtaUpdate = useCallback((event: DeliveryEtaUpdatedEvent) => {
@@ -101,7 +98,6 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
         routePhase: event.routePhase,
       };
     });
-    setLastUpdatedAt(new Date().toISOString());
   }, [loadTracking, orderId]);
 
   useEffect(() => {
@@ -273,7 +269,7 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
           )}
 
           <div className="border-t border-gray-100 pt-4 text-xs text-gray-500">
-            {t('lastUpdated', { time: formatTimestamp(lastUpdatedAt ?? tracking?.driverLocation?.lastUpdated) })}
+            {t('driverLocationUpdated', { time: formatTimestamp(tracking?.driverLocation?.lastUpdated) })}
           </div>
         </div>
       </div>

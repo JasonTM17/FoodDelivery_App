@@ -53,7 +53,7 @@ const mocks = vi.hoisted(() => {
         customerAddressLabel: 'Customer address',
         routeAvailable: 'Route geometry comes from backend.',
         routeUnavailable: 'No routed geometry yet.',
-        lastUpdated: `Last updated: ${values?.time ?? ''}`,
+        driverLocationUpdated: `Driver location updated: ${values?.time ?? ''}`,
         unavailable: 'Unavailable',
         'connection.connecting': 'Connecting',
         'connection.connected': 'Live',
@@ -156,6 +156,7 @@ describe('OrderLiveTrackingMap', () => {
     await waitFor(() => expect(screen.getByText('4 min')).toBeInTheDocument());
     expect(screen.getByText('No routed geometry yet.')).toBeInTheDocument();
     expect(screen.getByText('Driver to restaurant')).toBeInTheDocument();
+    expect(screen.getByText('Driver location updated: Unavailable')).toBeInTheDocument();
   });
 
   it('ignores driver location events for other orders', async () => {

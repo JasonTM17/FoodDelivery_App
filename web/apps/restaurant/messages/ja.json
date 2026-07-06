@@ -177,7 +177,7 @@
     "customerAddressLabel": "顧客住所",
     "routeAvailable": "ルート形状はバックエンドのDirections/OSRM providerから取得しています。",
     "routeUnavailable": "ルート形状はまだありません。バックエンドが返すとマップが更新されます。",
-    "lastUpdated": "最終更新: {time}",
+    "driverLocationUpdated": "ドライバー位置更新: {time}",
     "unavailable": "利用不可",
     "connection": {
       "connecting": "接続中",

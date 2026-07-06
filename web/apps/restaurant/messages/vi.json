@@ -177,7 +177,7 @@
     "customerAddressLabel": "Địa chỉ khách",
     "routeAvailable": "Route geometry đến từ provider Directions/OSRM của backend.",
     "routeUnavailable": "Chưa có geometry tuyến đường; bản đồ sẽ cập nhật khi backend trả về.",
-    "lastUpdated": "Cập nhật lần cuối: {time}",
+    "driverLocationUpdated": "GPS shipper cập nhật: {time}",
     "unavailable": "Chưa có",
     "connection": {
       "connecting": "Đang kết nối",

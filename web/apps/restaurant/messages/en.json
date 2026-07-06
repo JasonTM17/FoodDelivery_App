@@ -177,7 +177,7 @@
     "customerAddressLabel": "Customer address",
     "routeAvailable": "Route geometry comes from the backend Directions/OSRM provider.",
     "routeUnavailable": "No routed geometry yet; the map will update when the backend provides one.",
-    "lastUpdated": "Last updated: {time}",
+    "driverLocationUpdated": "Driver location updated: {time}",
     "unavailable": "Unavailable",
     "connection": {
       "connecting": "Connecting",
