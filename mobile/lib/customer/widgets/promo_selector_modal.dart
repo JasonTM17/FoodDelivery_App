@@ -5,37 +5,10 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
-
-class PromoCode {
-  final String code;
-  final String description;
-  final double discountPercent;
-  final double? maxDiscount;
-  final double minOrderAmount;
-
-  const PromoCode({
-    required this.code,
-    required this.description,
-    required this.discountPercent,
-    this.maxDiscount,
-    required this.minOrderAmount,
-  });
-
-  factory PromoCode.fromJson(Map<String, dynamic> json) {
-    return PromoCode(
-      code: json['code'] as String,
-      description: json['description'] as String? ?? '',
-      discountPercent: (json['discountPercent'] as num).toDouble(),
-      maxDiscount: json['maxDiscount'] != null
-          ? (json['maxDiscount'] as num).toDouble()
-          : null,
-      minOrderAmount: (json['minOrderAmount'] as num? ?? 0).toDouble(),
-    );
-  }
-}
+import '../providers/vouchers_provider.dart';
 
 final _promoLoadingProvider = StateProvider<bool>((ref) => false);
-final _promosProvider = StateProvider<List<PromoCode>>((ref) => []);
+final _promosProvider = StateProvider<List<Voucher>>((ref) => []);
 final _promoErrorProvider = StateProvider<String?>((ref) => null);
 
 Future<void> _fetchPromos(WidgetRef ref) async {
@@ -43,19 +16,40 @@ Future<void> _fetchPromos(WidgetRef ref) async {
   ref.read(_promoErrorProvider.notifier).state = null;
   try {
     final response = await ApiClient.instance.get('/promotions/available');
-    final list = (response.data as List<dynamic>? ?? [])
-        .map((e) => PromoCode.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final list = _parsePromotionList(response.data);
     ref.read(_promosProvider.notifier).state = list;
   } on DioException catch (e) {
+    ref.read(_promosProvider.notifier).state = const [];
     ref.read(_promoErrorProvider.notifier).state =
         e.response?.data?['message'] as String? ??
         'Không thể tải mã khuyến mãi.';
+  } on FormatException {
+    ref.read(_promosProvider.notifier).state = const [];
+    ref.read(_promoErrorProvider.notifier).state =
+        'PROMOTIONS_CONTRACT_INVALID_RESPONSE';
   } catch (_) {
+    ref.read(_promosProvider.notifier).state = const [];
     ref.read(_promoErrorProvider.notifier).state = 'Có lỗi xảy ra.';
   } finally {
     ref.read(_promoLoadingProvider.notifier).state = false;
   }
+}
+
+List<Voucher> _parsePromotionList(dynamic value) {
+  if (value is! List) {
+    throw const FormatException('Invalid promotions list response');
+  }
+
+  return value
+      .map((item) => Voucher.fromJson(_requiredObject(item, 'promotions[]')))
+      .toList();
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Invalid promotion object field: $field');
 }
 
 class PromoSelectorModal extends ConsumerStatefulWidget {
@@ -93,7 +87,6 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
       ),
       child: Column(
         children: [
-          // Handle bar
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -159,7 +152,6 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
               ),
             ),
 
-          // Apply button
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -183,7 +175,7 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
     );
   }
 
-  Widget _buildPromoTile(PromoCode promo) {
+  Widget _buildPromoTile(Voucher promo) {
     final l10n = AppLocalizations.of(context);
     final isSelected = _selectedCode == promo.code;
     return GestureDetector(
@@ -224,13 +216,15 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.vouchersPercentOff(promo.discountPercent.round()),
+                    _promoHeadline(l10n, promo),
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    promo.description,
+                    promo.description.trim().isNotEmpty
+                        ? promo.description
+                        : promo.code,
                     style: AppTextStyles.caption,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -248,5 +242,12 @@ class _PromoSelectorModalState extends ConsumerState<PromoSelectorModal> {
         ),
       ),
     );
+  }
+
+  String _promoHeadline(AppLocalizations l10n, Voucher promo) {
+    if (promo.percentOff != null) {
+      return l10n.vouchersPercentOff(promo.percentOff!);
+    }
+    return promo.title;
   }
 }
