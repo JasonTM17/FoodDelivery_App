@@ -271,58 +271,48 @@ components:
       properties:
         id:        { type: string, format: uuid }
         label:     { type: string, description: "e.g. Nhà riêng, Công ty" }
-        street:    { type: string }
-        ward:      { type: string }
-        district:  { type: string }
-        city:      { type: string }
-        lat:       { type: number }
-        lng:       { type: number }
+        addressLine: { type: string }
+        latitude:  { type: number, minimum: 3.8, maximum: 23.5 }
+        longitude: { type: number, minimum: 102.0, maximum: 117.5 }
         isDefault: { type: boolean }
-      required: [id, label, street, district, city, lat, lng]
+        createdAt: { type: string, format: date-time }
+      required: [id, label, addressLine, latitude, longitude, isDefault, createdAt]
       example:
         id: "11111111-1111-4111-8111-111111111111"
         label: "Nhà riêng"
-        street: "123 Nguyễn Huệ"
-        ward: "Phường Bến Nghé"
-        district: "Quận 1"
-        city: "TP. Hồ Chí Minh"
-        lat: 10.7769
-        lng: 106.7009
+        addressLine: "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh"
+        latitude: 10.7769
+        longitude: 106.7009
         isDefault: true
+        createdAt: "2026-07-06T00:00:00Z"
 
     CreateAddressRequest:
       type: object
       properties:
-        label:    { type: string }
-        street:   { type: string }
-        ward:     { type: string }
-        district: { type: string }
-        city:     { type: string }
-        lat:      { type: number }
-        lng:      { type: number }
-      required: [label, street, district, city, lat, lng]
+        label:       { type: string }
+        addressLine: { type: string }
+        latitude:    { type: number, minimum: 3.8, maximum: 23.5 }
+        longitude:   { type: number, minimum: 102.0, maximum: 117.5 }
+        isDefault:   { type: boolean, default: false }
+      required: [label, addressLine, latitude, longitude]
       example:
         label: "Công ty"
-        street: "456 Lê Lợi"
-        ward: "Phường Bến Thành"
-        district: "Quận 1"
-        city: "TP. Hồ Chí Minh"
-        lat: 10.7730
-        lng: 106.6984
+        addressLine: "456 Lê Lợi, Quận 1, TP. Hồ Chí Minh"
+        latitude: 10.7730
+        longitude: 106.6984
+        isDefault: false
 
     UpdateAddressRequest:
       type: object
       properties:
-        label:    { type: string }
-        street:   { type: string }
-        ward:     { type: string }
-        district: { type: string }
-        city:     { type: string }
-        lat:      { type: number }
-        lng:      { type: number }
+        label:       { type: string }
+        addressLine: { type: string }
+        latitude:    { type: number, minimum: 3.8, maximum: 23.5 }
+        longitude:   { type: number, minimum: 102.0, maximum: 117.5 }
+        isDefault:   { type: boolean }
       example:
         label: "Nhà mới"
-        street: "789 Võ Văn Kiệt"
+        addressLine: "789 Võ Văn Kiệt, Quận 1, TP. Hồ Chí Minh"
 
     WalletSnapshot:
       type: object
@@ -2691,7 +2681,7 @@ paths:
         "200": { description: "Avatar uploaded", content: { application/json: { schema: { $ref: "#/components/schemas/AvatarUploadResponse" } } } }
         "400": { description: "Invalid file", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /users/me/addresses:
+  /users/addresses:
     get:
       tags: [users]
       summary: List saved addresses
@@ -2699,7 +2689,7 @@ paths:
       operationId: users_listAddresses
       x-foo-actor: user
       responses:
-        "200": { description: "Address list", content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: "#/components/schemas/Address" } } } } } } }
+        "200": { description: "Address list", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Address" } } } } }
     post:
       tags: [users]
       summary: Add a new address
@@ -2715,8 +2705,8 @@ paths:
         "201": { description: "Address created", content: { application/json: { schema: { $ref: "#/components/schemas/Address" } } } }
         "422": { description: "Validation error", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /users/me/addresses/{addressId}:
-    patch:
+  /users/addresses/{addressId}:
+    put:
       tags: [users]
       summary: Update an address
       description: Updates one saved delivery address when it belongs to the authenticated user.

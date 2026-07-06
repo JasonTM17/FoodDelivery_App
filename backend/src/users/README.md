@@ -10,8 +10,8 @@ User profile, address book, preferred locale, FCM tokens, notification preferenc
 - `PATCH /users/me` — Update name, phone, preferredLocale
 - `GET /users/addresses` — List user addresses
 - `POST /users/addresses` — Create address
-- `PATCH /users/addresses/:id` — Update + setDefault
-- `DELETE /users/addresses/:id` — Soft-delete
+- `PUT|PATCH /users/addresses/:id` — Update + setDefault
+- `DELETE /users/addresses/:id` — Delete an owned address
 - `POST /users/notifications/fcm-token` — Register device token
 - `GET /admin/users` — Admin list with filters
 - `PATCH /admin/users/:id/status` — Suspend/activate
@@ -32,5 +32,5 @@ npx jest users
 ## Runbook
 
 - **Suspended user:** Sets `User.status = 'suspended'`, JWT validation rejects. Refresh tokens revoked.
-- **Address geocoding fail:** Save without lat/lng if Google Geocode API down — flagged for retry batch job.
+- **Address geocoding fail:** Reject address saves without valid Vietnam delivery coordinates; clients must provide a geocoded `latitude`/`longitude` pair instead of saving Null Island or placeholder data.
 - **Locale change:** `PATCH /users/me { preferredLocale }` propagates next request via `User.preferredLocale` field; in-flight BullMQ jobs use stale locale until next event.

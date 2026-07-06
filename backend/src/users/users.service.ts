@@ -1,7 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { UpdateUserDto } from './users.dto'
-import { UserRole } from '@prisma/client'
+import { CreateAddressDto, UpdateAddressDto, UpdateUserDto } from './users.dto'
+import { Prisma, UserRole } from '@prisma/client'
+import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
+
+type AddressRow = {
+  id: string
+  label: string
+  addressLine: string
+  latitude: number
+  longitude: number
+  isDefault: boolean
+  createdAt: Date
+}
 
 @Injectable()
 export class UsersService {
@@ -22,17 +33,105 @@ export class UsersService {
   }
 
   async listAddresses(userId: string) {
-    return this.prisma.address.findMany({
-      where: { userId },
-      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
-      select: {
-        id: true,
-        label: true,
-        addressLine: true,
-        isDefault: true,
-        createdAt: true,
-      },
+    const rows = await this.prisma.$queryRaw<AddressRow[]>(Prisma.sql`
+      SELECT
+        id::text AS "id",
+        label,
+        address_line AS "addressLine",
+        ST_Y(location::geometry)::float8 AS "latitude",
+        ST_X(location::geometry)::float8 AS "longitude",
+        is_default AS "isDefault",
+        created_at AS "createdAt"
+      FROM addresses
+      WHERE user_id = CAST(${userId} AS uuid)
+      ORDER BY is_default DESC, created_at DESC
+    `)
+    return rows.map(serializeAddress)
+  }
+
+  async createAddress(userId: string, dto: CreateAddressDto) {
+    const { latitude, longitude } = requireAddressCoordinates(dto)
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.isDefault === true) {
+        await tx.address.updateMany({
+          where: { userId },
+          data: { isDefault: false },
+        })
+      }
+
+      const rows = await tx.$queryRaw<AddressRow[]>(Prisma.sql`
+        INSERT INTO addresses (user_id, label, address_line, location, is_default)
+        VALUES (
+          CAST(${userId} AS uuid),
+          ${dto.label.trim()},
+          ${dto.addressLine.trim()},
+          ST_SetSRID(
+            ST_MakePoint(CAST(${longitude} AS double precision), CAST(${latitude} AS double precision)),
+            4326
+          )::geography,
+          ${dto.isDefault === true}
+        )
+        RETURNING
+          id::text AS "id",
+          label,
+          address_line AS "addressLine",
+          ST_Y(location::geometry)::float8 AS "latitude",
+          ST_X(location::geometry)::float8 AS "longitude",
+          is_default AS "isDefault",
+          created_at AS "createdAt"
+      `)
+      return serializeAddress(rows[0])
     })
+  }
+
+  async updateAddress(userId: string, addressId: string, dto: UpdateAddressDto) {
+    const coordinates = optionalAddressCoordinates(dto)
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.isDefault === true) {
+        await tx.address.updateMany({
+          where: { userId, id: { not: addressId } },
+          data: { isDefault: false },
+        })
+      }
+
+      const rows = await tx.$queryRaw<AddressRow[]>(Prisma.sql`
+        UPDATE addresses
+        SET
+          label = COALESCE(${trimmedOrNull(dto.label)}, label),
+          address_line = COALESCE(${trimmedOrNull(dto.addressLine)}, address_line),
+          is_default = COALESCE(${dto.isDefault ?? null}, is_default),
+          location = CASE
+            WHEN ${coordinates !== null} THEN ST_SetSRID(
+              ST_MakePoint(
+                CAST(${coordinates?.longitude ?? null} AS double precision),
+                CAST(${coordinates?.latitude ?? null} AS double precision)
+              ),
+              4326
+            )::geography
+            ELSE location
+          END
+        WHERE id = CAST(${addressId} AS uuid)
+          AND user_id = CAST(${userId} AS uuid)
+        RETURNING
+          id::text AS "id",
+          label,
+          address_line AS "addressLine",
+          ST_Y(location::geometry)::float8 AS "latitude",
+          ST_X(location::geometry)::float8 AS "longitude",
+          is_default AS "isDefault",
+          created_at AS "createdAt"
+      `)
+      if (!rows[0]) throw new NotFoundException('ADDRESS_NOT_FOUND')
+      return serializeAddress(rows[0])
+    })
+  }
+
+  async deleteAddress(userId: string, addressId: string) {
+    const result = await this.prisma.address.deleteMany({
+      where: { id: addressId, userId },
+    })
+    if (result.count === 0) throw new NotFoundException('ADDRESS_NOT_FOUND')
+    return { success: true }
   }
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
@@ -68,5 +167,42 @@ export class UsersService {
         role: data.role as UserRole,
       },
     })
+  }
+}
+
+function requireAddressCoordinates(dto: CreateAddressDto): { latitude: number; longitude: number } {
+  const coordinates = optionalAddressCoordinates(dto)
+  if (!coordinates) throw new BadRequestException('ADDRESS_LOCATION_REQUIRED')
+  return coordinates
+}
+
+function optionalAddressCoordinates(
+  dto: Pick<CreateAddressDto | UpdateAddressDto, 'latitude' | 'longitude' | 'lat' | 'lng'>,
+): { latitude: number; longitude: number } | null {
+  const latitude = dto.latitude ?? dto.lat
+  const longitude = dto.longitude ?? dto.lng
+  const hasAnyCoordinate = latitude !== undefined || longitude !== undefined
+
+  if (!hasAnyCoordinate) return null
+  if (!isWithinVietnamDeliveryBounds(latitude, longitude)) {
+    throw new BadRequestException('ADDRESS_LOCATION_INVALID')
+  }
+  return { latitude: latitude!, longitude: longitude! }
+}
+
+function trimmedOrNull(value: string | undefined): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
+
+function serializeAddress(row: AddressRow) {
+  return {
+    id: row.id,
+    label: row.label,
+    addressLine: row.addressLine,
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+    isDefault: row.isDefault,
+    createdAt: row.createdAt,
   }
 }

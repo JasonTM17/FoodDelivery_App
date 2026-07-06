@@ -1,13 +1,23 @@
 import {
-  Controller, Get, Patch, Post, Body, UseGuards,
-  UseInterceptors, UploadedFile,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { UsersService } from './users.service'
-import { UpdateUserDto } from './users.dto'
+import { CreateAddressDto, UpdateAddressDto, UpdateUserDto } from './users.dto'
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard'
 import { CurrentUser } from '@/auth/current-user.decorator'
 import { StorageService, UploadedFile as UploadedFileType } from '@/storage/storage.service'
+import type { JwtPayload } from '@/auth/jwt-payload.interface'
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -18,34 +28,57 @@ export class UsersController {
   ) {}
 
   @Get('me')
-  getProfile(@CurrentUser() user: { id: string }) {
-    return this.usersService.getProfile(user.id)
+  getProfile(@CurrentUser() user: JwtPayload) {
+    return this.usersService.getProfile(user.sub)
   }
 
   @Get('addresses')
-  listAddresses(@CurrentUser() user: { id: string }) {
-    return this.usersService.listAddresses(user.id)
+  listAddresses(@CurrentUser() user: JwtPayload) {
+    return this.usersService.listAddresses(user.sub)
+  }
+
+  @Post('addresses')
+  createAddress(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateAddressDto,
+  ) {
+    return this.usersService.createAddress(user.sub, dto)
+  }
+
+  @Put('addresses/:id')
+  @Patch('addresses/:id')
+  updateAddress(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdateAddressDto,
+  ) {
+    return this.usersService.updateAddress(user.sub, id, dto)
+  }
+
+  @Delete('addresses/:id')
+  deleteAddress(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.usersService.deleteAddress(user.sub, id)
   }
 
   @Patch('me')
   updateProfile(
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateUserDto,
   ) {
-    return this.usersService.updateProfile(user.id, dto)
+    return this.usersService.updateProfile(user.sub, dto)
   }
 
   @Post('me/avatar')
   @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: JwtPayload,
     @UploadedFile() file: UploadedFileType,
   ) {
     if (!file) {
       return { url: '' }
     }
 
-    const { url } = await this.storageService.uploadAvatar(user.id, file)
+    const { url } = await this.storageService.uploadAvatar(user.sub, file)
     return { url }
   }
 }

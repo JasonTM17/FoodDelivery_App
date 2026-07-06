@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: Aligned saved-address APIs with the implemented `/users/addresses` contract: controllers use `JwtPayload.sub`, CRUD persists required PostGIS coordinates, mobile rejects malformed address rows, and OpenAPI now documents `addressLine` with `latitude`/`longitude`.
 - 2026-07-06: Tightened dispatch/tracking route safety: driver assignment clears persisted ETA/route metadata plus pickup/dropoff route caches, and pickup-phase REST snapshots no longer reuse persisted route geometry without a phase-matched cache.
 - 2026-07-06: Aligned `GET /notifications` with the implemented backend envelope `{ notifications, unreadCount, meta }`, documented persisted `Notification.data`, and removed legacy mobile list/message/read fallbacks from the notification contract.
 - 2026-07-06: Aligned public `GET /restaurants/{restaurantId}/menu` with the documented categories/items contract; backend now serializes visible categories and available items instead of raw Prisma `menuItems`, and mobile rejects legacy list/blank menu item fallbacks.

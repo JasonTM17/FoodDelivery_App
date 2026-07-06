@@ -1,5 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../shared/api/api_client.dart';
 import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/models/user.dart';
@@ -35,22 +36,20 @@ class AddressState {
 }
 
 class AddressNotifier extends StateNotifier<AddressState> {
-  final ApiClient _api = ApiClient.instance;
+  final ApiClient _api;
 
-  AddressNotifier() : super(const AddressState());
+  AddressNotifier({ApiClient? apiClient})
+    : _api = apiClient ?? ApiClient.instance,
+      super(const AddressState());
 
   Future<void> fetchAddresses() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.get('/users/addresses');
-      final List<dynamic> dataList = response.data is List
-          ? response.data as List<dynamic>
-          : (response.data as Map<String, dynamic>)['addresses']
-                    as List<dynamic>? ??
-                [];
-      final addresses = dataList
-          .map((e) => AddressModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final response = await _api.get<dynamic>('/users/addresses');
+      final addresses = _requiredList(
+        response.data,
+        'addresses',
+      ).map(_parseSavedAddress).toList(growable: false);
       state = state.copyWith(isLoading: false, addresses: addresses);
     } on DioException catch (e) {
       final message =
@@ -58,7 +57,13 @@ class AddressNotifier extends StateNotifier<AddressState> {
           e.response?.data?['error'] as String? ??
           'Không thể tải danh sách địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
-    } catch (e) {
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        addresses: const [],
+        error: 'ADDRESSES_CONTRACT_INVALID_RESPONSE',
+      );
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
         error: 'Có lỗi xảy ra khi tải địa chỉ.',
@@ -84,7 +89,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       return false;
     }
     try {
-      final response = await _api.post(
+      final response = await _api.post<dynamic>(
         '/users/addresses',
         data: {
           'label': label,
@@ -96,9 +101,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
           'isDefault': isDefault,
         },
       );
-      final newAddress = AddressModel.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final newAddress = _parseSavedAddress(response.data);
       final updatedAddresses = isDefault
           ? state.addresses.map((a) => a.copyWith(isDefault: false)).toList()
           : List<AddressModel>.from(state.addresses);
@@ -112,7 +115,13 @@ class AddressNotifier extends StateNotifier<AddressState> {
           'Không thể thêm địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
-    } catch (e) {
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'ADDRESSES_CONTRACT_INVALID_RESPONSE',
+      );
+      return false;
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
         error: 'Có lỗi xảy ra khi thêm địa chỉ.',
@@ -151,22 +160,17 @@ class AddressNotifier extends StateNotifier<AddressState> {
       if (note != null) data['note'] = note;
       if (isDefault != null) data['isDefault'] = isDefault;
 
-      await _api.put('/users/addresses/$id', data: data);
+      final response = await _api.put<dynamic>(
+        '/users/addresses/$id',
+        data: data,
+      );
+      final updatedAddress = _parseSavedAddress(response.data);
       final updatedAddresses = state.addresses.map((a) {
         if (a.id != id) {
-          if (isDefault == true) return a.copyWith(isDefault: false);
+          if (updatedAddress.isDefault) return a.copyWith(isDefault: false);
           return a;
         }
-        return AddressModel(
-          id: a.id,
-          label: label ?? a.label,
-          address: address ?? a.address,
-          latitude: latitude ?? a.latitude,
-          longitude: longitude ?? a.longitude,
-          apartmentNumber: apartmentNumber ?? a.apartmentNumber,
-          note: note ?? a.note,
-          isDefault: isDefault ?? a.isDefault,
-        );
+        return updatedAddress;
       }).toList();
       state = state.copyWith(isLoading: false, addresses: updatedAddresses);
       return true;
@@ -177,7 +181,13 @@ class AddressNotifier extends StateNotifier<AddressState> {
           'Không thể cập nhật địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
-    } catch (e) {
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'ADDRESSES_CONTRACT_INVALID_RESPONSE',
+      );
+      return false;
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
         error: 'Có lỗi xảy ra khi cập nhật địa chỉ.',
@@ -202,7 +212,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
           'Không thể xóa địa chỉ.';
       state = state.copyWith(isLoading: false, error: message);
       return false;
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
         error: 'Có lỗi xảy ra khi xóa địa chỉ.',
@@ -214,4 +224,23 @@ class AddressNotifier extends StateNotifier<AddressState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+}
+
+List<dynamic> _requiredList(dynamic value, String field) {
+  if (value is List) return value;
+  throw FormatException('Missing required address list field: $field');
+}
+
+AddressModel _parseSavedAddress(dynamic value) {
+  if (value is! Map) {
+    throw const FormatException('Invalid address row');
+  }
+  final address = AddressModel.fromJson(Map<String, dynamic>.from(value));
+  if (address.id.trim().isEmpty || address.address.trim().isEmpty) {
+    throw const FormatException('Missing required saved address fields');
+  }
+  if (!isValidDeliveryLatLng(address.latitude, address.longitude)) {
+    throw const FormatException('Missing required saved address coordinates');
+  }
+  return address;
 }
