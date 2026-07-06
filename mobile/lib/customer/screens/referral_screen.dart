@@ -69,7 +69,14 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
     AppLocalizations l10n,
     ReferralState state,
   ) {
-    final code = state.referralCode ?? '---';
+    final code = state.referralCode;
+    if (code == null) {
+      return ErrorState(
+        message: 'REFERRAL_CONTRACT_INVALID_RESPONSE',
+        onRetry: () => ref.read(referralProvider.notifier).fetchReferral(),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

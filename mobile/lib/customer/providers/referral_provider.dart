@@ -43,26 +43,57 @@ final referralProvider = StateNotifierProvider<ReferralNotifier, ReferralState>(
 class ReferralNotifier extends StateNotifier<ReferralState> {
   final ApiClient _api = ApiClient.instance;
 
-  ReferralNotifier() : super(const ReferralState());
+  ReferralNotifier() : super(const ReferralState(isLoading: true));
 
   Future<void> fetchReferral() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get('/users/referral');
-      final data = response.data as Map<String, dynamic>;
+      final data = _requiredObject(response.data, 'referral');
       state = state.copyWith(
         isLoading: false,
-        referralCode: data['code'] as String?,
-        inviteCount: data['inviteCount'] as int? ?? 0,
-        bonusPoints: data['bonusPoints'] as int? ?? 0,
+        referralCode: _requiredString(data, 'code'),
+        inviteCount: _requiredInt(data, 'inviteesCount'),
+        bonusPoints: _requiredInt(data, 'rewardsEarned'),
       );
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] as String? ??
           'Không thể tải thông tin giới thiệu.';
       state = state.copyWith(isLoading: false, error: msg);
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'REFERRAL_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra.');
     }
   }
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Invalid referral object field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) {
+    return value;
+  }
+  throw FormatException('Missing required referral string field: $field');
+}
+
+int _requiredInt(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is int && value >= 0) {
+    return value;
+  }
+  if (value is num && value.isFinite && value >= 0 && value % 1 == 0) {
+    return value.toInt();
+  }
+  throw FormatException('Invalid referral integer field: $field');
 }
