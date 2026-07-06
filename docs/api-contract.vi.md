@@ -100,6 +100,7 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 - Phòng nhà hàng yêu cầu restaurant profile đang active và thuộc đúng tenant được yêu cầu.
 - Phòng đơn hàng chỉ cho admin hoặc người tham gia đơn: khách hàng, tài xế được gán, hoặc nhân viên nhà hàng đang active.
 - `/tracking` chỉ nhận cập nhật vị trí từ tài khoản `driver` đã xác thực.
+- `driver:location.timestamp` là thời điểm GPS thật được thiết bị ghi nhận theo ISO UTC. Mobile phải giữ nguyên timestamp này khi flush các ping đã buffer offline sau khi reconnect, không thay bằng thời điểm flush.
 - `/notifications` suy ra phòng user từ token đã verify; client không được tự chọn phòng của user khác.
 - `/dispatch` chỉ nhận tài khoản `driver`, chỉ join `driver:<authenticated-user-id>` và từ chối phản hồi offer có driver ID khác user đã xác thực.
 - Production origin lấy từ `CORS_ORIGINS`; mặc định local hỗ trợ các port 3000, 3002 và 3003.

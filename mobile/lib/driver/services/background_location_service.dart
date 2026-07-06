@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../shared/api/socket_client.dart';
 
@@ -57,7 +58,12 @@ class _LocationPing {
 /// Offline buffer: up to [_kMaxBuffer] pings are queued and flushed on
 /// reconnect so no location data is silently dropped.
 class BackgroundLocationService {
-  BackgroundLocationService._();
+  BackgroundLocationService._({LocationPingEmitter? socket})
+    : _socket = socket ?? SocketClient.instance;
+
+  @visibleForTesting
+  BackgroundLocationService.forTesting({required LocationPingEmitter socket})
+    : _socket = socket;
 
   static BackgroundLocationService? _instance;
   static BackgroundLocationService get instance =>
@@ -70,6 +76,7 @@ class BackgroundLocationService {
   bool _hasActiveOrder = false;
   DateTime? _lastEmit;
   Position? _lastPosition;
+  final LocationPingEmitter _socket;
 
   final _offlineBuffer = Queue<_LocationPing>();
   final _positionController = StreamController<Position>.broadcast();
@@ -182,7 +189,7 @@ class BackgroundLocationService {
     _emitPosition(
       pos.latitude,
       pos.longitude,
-      now,
+      pos.timestamp,
       bearing: normalizeGpsBearingDegrees(pos.heading),
       speed: normalizeGpsSpeedKmh(pos.speed),
       accuracy: normalizeGpsAccuracyMeters(pos.accuracy),
@@ -209,15 +216,15 @@ class BackgroundLocationService {
     double? speed,
     double? accuracy,
   }) {
-    final socket = SocketClient.instance;
-    if (socket.isConnected) {
+    if (_socket.isConnected) {
       _flushBuffer();
-      socket.emitLocationPing(
+      _socket.emitLocationPing(
         lat,
         lng,
         bearing: bearing,
         speed: speed,
         accuracy: accuracy,
+        timestamp: ts,
       );
     } else {
       // Buffer so pings survive brief disconnects.
@@ -239,17 +246,42 @@ class BackgroundLocationService {
 
   void _flushBuffer() {
     if (_offlineBuffer.isEmpty) return;
-    final socket = SocketClient.instance;
-    if (!socket.isConnected) return;
+    if (!_socket.isConnected) return;
     while (_offlineBuffer.isNotEmpty) {
       final ping = _offlineBuffer.removeFirst();
-      socket.emitLocationPing(
+      _socket.emitLocationPing(
         ping.lat,
         ping.lng,
         bearing: ping.bearing,
         speed: ping.speed,
         accuracy: ping.accuracy,
+        timestamp: ping.timestamp,
+        bypassThrottle: true,
       );
     }
+  }
+
+  @visibleForTesting
+  void bufferLocationPingForTesting(
+    double lat,
+    double lng, {
+    required DateTime timestamp,
+    double? bearing,
+    double? speed,
+    double? accuracy,
+  }) {
+    _emitPosition(
+      lat,
+      lng,
+      timestamp,
+      bearing: bearing,
+      speed: speed,
+      accuracy: accuracy,
+    );
+  }
+
+  @visibleForTesting
+  void flushBufferForTesting() {
+    _flushBuffer();
   }
 }

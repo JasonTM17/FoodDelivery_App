@@ -314,6 +314,8 @@ Connect to `ws://localhost:3001` with namespace:
 | `/events: restaurant:unsubscribe` | `{ restaurantId }` |
 | `driver:go_online` | `{ lat, lng }` |
 | `driver:go_offline` | `{}` |
+
+`driver:location.timestamp` is the GPS sample capture time in ISO UTC. Mobile clients must preserve that value when flushing offline-buffered pings after reconnect.
 | `/dispatch: dispatch:accept` | `{ orderId, offerToken }` |
 | `/dispatch: dispatch:reject` | `{ orderId, offerToken }` |
 | `/events: admin:subscribe_drivers` | `{}` |

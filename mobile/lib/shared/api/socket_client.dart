@@ -1,7 +1,40 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
+
+Map<String, dynamic> buildDriverLocationPingPayload(
+  double lat,
+  double lng, {
+  double? bearing,
+  double? speed,
+  double? accuracy,
+  required DateTime timestamp,
+}) {
+  return {
+    'lat': lat,
+    'lng': lng,
+    if (bearing != null && bearing.isFinite) 'bearing': bearing,
+    if (speed != null && speed.isFinite) 'speed': speed,
+    if (accuracy != null && accuracy.isFinite) 'accuracy': accuracy,
+    'timestamp': timestamp.toUtc().toIso8601String(),
+  };
+}
+
+abstract interface class LocationPingEmitter {
+  bool get isConnected;
+
+  void emitLocationPing(
+    double lat,
+    double lng, {
+    double? bearing,
+    double? speed,
+    double? accuracy,
+    DateTime? timestamp,
+    bool bypassThrottle = false,
+  });
+}
 
 class _BufferedEvent {
   final String namespace;
@@ -10,7 +43,7 @@ class _BufferedEvent {
   const _BufferedEvent(this.namespace, this.name, this.data);
 }
 
-class SocketClient {
+class SocketClient implements LocationPingEmitter {
   static SocketClient? _instance;
   final _sockets = <String, io.Socket>{};
   final _connectedNamespaces = <String>{};
@@ -200,21 +233,36 @@ class SocketClient {
     double? bearing,
     double? speed,
     double? accuracy,
+    DateTime? timestamp,
+    bool bypassThrottle = false,
   }) {
     final now = DateTime.now();
-    if (_lastLocationEmit != null &&
+    if (!bypassThrottle &&
+        _lastLocationEmit != null &&
         now.difference(_lastLocationEmit!) <
             const Duration(milliseconds: 250)) {
       return;
     }
-    _lastLocationEmit = now;
-    _emitToNamespace(_trackingNamespace, 'driver:location', {
-      'lat': lat,
-      'lng': lng,
-      if (bearing != null && bearing.isFinite) 'bearing': bearing,
-      if (speed != null && speed.isFinite) 'speed': speed,
-      if (accuracy != null && accuracy.isFinite) 'accuracy': accuracy,
-    });
+    if (!bypassThrottle) {
+      _lastLocationEmit = now;
+    }
+    _emitToNamespace(
+      _trackingNamespace,
+      'driver:location',
+      buildDriverLocationPingPayload(
+        lat,
+        lng,
+        bearing: bearing,
+        speed: speed,
+        accuracy: accuracy,
+        timestamp: timestamp ?? now,
+      ),
+    );
+  }
+
+  @visibleForTesting
+  void resetLocationThrottleForTesting() {
+    _lastLocationEmit = null;
   }
 
   void respondToDispatchOffer({

@@ -115,6 +115,7 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 - Restaurant rooms require an active restaurant profile for the requested tenant.
 - Order rooms require an admin or an order participant: the customer, assigned driver, or active restaurant staff member.
 - `/tracking` accepts driver location updates only from an authenticated `driver` account.
+- `driver:location.timestamp` is the original GPS sample capture time in ISO UTC. Offline-buffered mobile pings must preserve that timestamp when flushed after reconnect instead of replacing it with flush time.
 - `/notifications` derives the user room from the verified token; clients cannot select another user's room.
 - `/dispatch` accepts only `driver` accounts, joins only `driver:<authenticated-user-id>`, and rejects offer responses whose driver ID differs from the authenticated user.
 - Production origins come from `CORS_ORIGINS`; local defaults cover ports 3000, 3002, and 3003.

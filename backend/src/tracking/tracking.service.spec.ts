@@ -107,6 +107,27 @@ describe('TrackingService', () => {
       expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:current_order', 'order-from-db')
       expect(mockRedis.del).toHaveBeenCalledWith('driver:driver-1:idle_since')
     })
+
+    it('preserves the driver GPS sample timestamp for Redis and location history', async () => {
+      const sampledAt = '2026-07-06T01:02:03.456Z'
+      mockRedis.get.mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst.mockResolvedValueOnce(null)
+
+      await service.handleLocationUpdate('00000000-0000-0000-0000-000000000001', {
+        lat: 10.8,
+        lng: 106.7,
+        timestamp: sampledAt,
+      })
+      await (service as unknown as { flush: () => Promise<void> }).flush()
+
+      expect(mockRedis.setex).toHaveBeenCalledWith(
+        'driver:00000000-0000-0000-0000-000000000001:last_seen_at',
+        35,
+        sampledAt,
+      )
+      const [query] = mockPrisma.$executeRaw.mock.calls[0]
+      expect((query.values[4] as Date).toISOString()).toBe(sampledAt)
+    })
   })
 
   describe('getDriverLocation', () => {

@@ -51,7 +51,7 @@ export class TrackingGateway implements OnGatewayConnection {
   @SubscribeMessage('driver:location')
   async handleLocationUpdate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { lat: number; lng: number; bearing?: number; speed?: number; accuracy?: number },
+    @MessageBody() data: { lat: number; lng: number; bearing?: number; speed?: number; accuracy?: number; timestamp?: string },
   ): Promise<void> {
     const user = this.socketAuth.getUser(client)
     if (user?.role !== UserRole.driver) return
@@ -69,19 +69,25 @@ export class TrackingGateway implements OnGatewayConnection {
       client.emit('driver:location_rejected', { reason: 'speed_exceeded' })
       return
     }
-    if (await this.isTeleportation(driverId, data.lat, data.lng)) {
+    const sampleTimestamp = parseDriverLocationTimestamp(data.timestamp)
+    if (!sampleTimestamp) {
+      client.emit('driver:location_rejected', { reason: 'invalid_timestamp' })
+      return
+    }
+    const timestamp = sampleTimestamp.toISOString()
+    if (await this.isTeleportation(driverId, data.lat, data.lng, sampleTimestamp)) {
       client.emit('driver:location_rejected', { reason: 'teleportation' })
       return
     }
 
-    const orderId = await this.trackingService.handleLocationUpdate(driverId, data)
+    const orderId = await this.trackingService.handleLocationUpdate(driverId, { ...data, timestamp })
     this.emitAdminDriverLocation(driverId, {
       driverId,
       lat: data.lat,
       lng: data.lng,
       ...(orderId ? { orderId } : {}),
       status: orderId ? 'delivering' : 'online',
-      timestamp: new Date().toISOString(),
+      timestamp,
     })
 
     if (!orderId) return
@@ -118,7 +124,7 @@ export class TrackingGateway implements OnGatewayConnection {
         bearing: typeof data.bearing === 'number' && Number.isFinite(data.bearing)
           ? data.bearing
           : null,
-        timestamp: new Date().toISOString(),
+        timestamp,
       })
 
       const routePhase = routePhaseForStatus(target.status)
@@ -174,10 +180,10 @@ export class TrackingGateway implements OnGatewayConnection {
     return isWithinVietnamDeliveryBounds(lat, lng)
   }
 
-  private async isTeleportation(driverId: string, lat: number, lng: number): Promise<boolean> {
+  private async isTeleportation(driverId: string, lat: number, lng: number, sampleTimestamp: Date): Promise<boolean> {
     const last = await this.trackingService.getDriverLocation(driverId)
     if (!last) return false
-    const elapsedMs = Date.now() - new Date(last.timestamp).getTime()
+    const elapsedMs = sampleTimestamp.getTime() - new Date(last.timestamp).getTime()
     if (elapsedMs <= 0 || elapsedMs > 60_000) return false
     const distKm = haversineDistance(last.lat, last.lng, lat, lng)
     const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
@@ -197,4 +203,10 @@ export class TrackingGateway implements OnGatewayConnection {
     this.server.to('admin:drivers:all').emit('admin:driver_location_changed', data)
     this.ordersGateway.notifyAdminDriverLocation(data)
   }
+}
+
+function parseDriverLocationTimestamp(timestamp: string | undefined): Date | null {
+  if (!timestamp) return new Date()
+  const parsed = new Date(timestamp)
+  return Number.isFinite(parsed.getTime()) ? parsed : null
 }

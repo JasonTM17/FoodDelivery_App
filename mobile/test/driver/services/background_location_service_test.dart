@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/services/background_location_service.dart';
+import 'package:foodflow_customer/shared/api/socket_client.dart';
 
 void main() {
   // Reset singleton between tests so state doesn't bleed across cases.
@@ -85,4 +86,98 @@ void main() {
       expect(normalizeGpsAccuracyMeters(8.5), 8.5);
     });
   });
+
+  group('BackgroundLocationService — offline buffer', () {
+    test('flush preserves the original GPS timestamp in socket payload', () {
+      final socket = _RecordingLocationPingEmitter();
+      final service = BackgroundLocationService.forTesting(socket: socket);
+      addTearDown(service.dispose);
+
+      final capturedAt = DateTime.utc(2026, 7, 6, 1, 2, 3, 456);
+      service.bufferLocationPingForTesting(
+        10.7769,
+        106.7009,
+        timestamp: capturedAt,
+        bearing: 90,
+        speed: 36,
+        accuracy: 5,
+      );
+
+      expect(socket.sentPayloads, isEmpty);
+
+      socket.connected = true;
+      service.flushBufferForTesting();
+
+      expect(socket.sentPayloads, hasLength(1));
+      expect(socket.sentPayloads.single, {
+        'lat': 10.7769,
+        'lng': 106.7009,
+        'bearing': 90,
+        'speed': 36,
+        'accuracy': 5,
+        'timestamp': '2026-07-06T01:02:03.456Z',
+      });
+    });
+
+    test('flush bypasses realtime throttle for buffered GPS pings', () {
+      final socket = _RecordingLocationPingEmitter();
+      final service = BackgroundLocationService.forTesting(socket: socket);
+      addTearDown(service.dispose);
+
+      final firstCapturedAt = DateTime.utc(2026, 7, 6, 1, 2, 3);
+      final secondCapturedAt = DateTime.utc(2026, 7, 6, 1, 2, 7);
+      service.bufferLocationPingForTesting(
+        10.7769,
+        106.7009,
+        timestamp: firstCapturedAt,
+      );
+      service.bufferLocationPingForTesting(
+        10.7770,
+        106.7010,
+        timestamp: secondCapturedAt,
+      );
+
+      socket.connected = true;
+      service.flushBufferForTesting();
+
+      expect(socket.sentPayloads, hasLength(2));
+      expect(socket.bypassThrottleValues, [true, true]);
+      expect(socket.sentPayloads.map((payload) => payload['timestamp']), [
+        '2026-07-06T01:02:03.000Z',
+        '2026-07-06T01:02:07.000Z',
+      ]);
+    });
+  });
+}
+
+class _RecordingLocationPingEmitter implements LocationPingEmitter {
+  bool connected = false;
+  final sentPayloads = <Map<String, dynamic>>[];
+  final bypassThrottleValues = <bool>[];
+
+  @override
+  bool get isConnected => connected;
+
+  @override
+  void emitLocationPing(
+    double lat,
+    double lng, {
+    double? bearing,
+    double? speed,
+    double? accuracy,
+    DateTime? timestamp,
+    bool bypassThrottle = false,
+  }) {
+    bypassThrottleValues.add(bypassThrottle);
+    sentPayloads.add(
+      buildDriverLocationPingPayload(
+        lat,
+        lng,
+        bearing: bearing,
+        speed: speed,
+        accuracy: accuracy,
+        timestamp: timestamp ?? DateTime.now(),
+      ),
+    );
+  }
 }

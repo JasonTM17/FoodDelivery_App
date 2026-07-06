@@ -34,6 +34,7 @@ interface LocationData {
   bearing?: number
   speed?: number
   accuracy?: number
+  timestamp?: string
 }
 
 interface LocationRecord {
@@ -75,7 +76,7 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   async handleLocationUpdate(driverId: string, data: LocationData): Promise<string | null> {
-    const recordedAt = new Date()
+    const recordedAt = parseLocationRecordedAt(data.timestamp)
     await this.redis.geoadd('drivers:active', data.lng, data.lat, `driver:${driverId}`)
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
     await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt.toISOString())
@@ -264,4 +265,13 @@ export class TrackingService implements OnModuleDestroy {
 function normalizeRedisOrderId(value: string | null): string | null {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
+}
+
+function parseLocationRecordedAt(timestamp?: string): Date {
+  if (!timestamp) return new Date()
+  const recordedAt = new Date(timestamp)
+  if (!Number.isFinite(recordedAt.getTime())) {
+    throw new Error('INVALID_DRIVER_LOCATION_TIMESTAMP')
+  }
+  return recordedAt
 }

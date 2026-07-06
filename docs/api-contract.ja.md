@@ -113,6 +113,7 @@ Cursor-based endpoint は `meta` に cursor field を追加できますが、col
 - Restaurant room は要求された tenant に属する active restaurant profile が必要です。
 - Order room は admin または注文参加者（customer、担当 driver、active restaurant staff）のみ join できます。
 - `/tracking` の位置更新は認証済み `driver` account からのみ受け付けます。
+- `driver:location.timestamp` は ISO UTC の実 GPS サンプル取得時刻です。Mobile は reconnect 後に offline-buffered ping を flush するとき、この timestamp を保持し、flush 時刻で置き換えてはいけません。
 - `/notifications` は検証済み token から user room を決定し、client が別 user の room を選ぶことはできません。
 - `/dispatch` は `driver` account のみ受け付け、`driver:<authenticated-user-id>` のみに join し、認証 user と異なる driver ID の offer response を拒否します。
 - Production origin は `CORS_ORIGINS` を使用し、local default は port 3000、3002、3003 を許可します。

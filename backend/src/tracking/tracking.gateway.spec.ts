@@ -75,6 +75,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue(null)
+    const sampledAt = '2026-07-06T01:02:03.456Z'
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -82,20 +83,42 @@ describe('TrackingGateway authorization', () => {
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: sampledAt,
     })
 
+    expect(handleLocationUpdate).toHaveBeenCalledWith('driver-1', expect.objectContaining({
+      timestamp: sampledAt,
+    }))
     expect(emitToRoom).toHaveBeenCalledWith('admin:driver_location_changed', expect.objectContaining({
       driverId: 'driver-1',
       lat: 10.8,
       lng: 106.7,
       status: 'online',
+      timestamp: sampledAt,
     }))
     expect(notifyAdminDriverLocation).toHaveBeenCalledWith(expect.objectContaining({
       driverId: 'driver-1',
       status: 'online',
+      timestamp: sampledAt,
     }))
     expect(queryRaw).not.toHaveBeenCalled()
     expect(getOrFetchRoute).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid driver GPS timestamps before mutating tracking state', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp: 'not-a-date',
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'invalid_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
   })
 
   it('marks routed ETA updates as non-degraded provider values', async () => {
@@ -117,12 +140,14 @@ describe('TrackingGateway authorization', () => {
       provider: 'google',
     })
 
+    const sampledAt = '2026-07-06T01:02:04.456Z'
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
       lng: 106.7,
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: sampledAt,
     })
 
     expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
@@ -149,6 +174,7 @@ describe('TrackingGateway authorization', () => {
       driverId: 'driver-1',
       lat: 10.8,
       lng: 106.7,
+      timestamp: sampledAt,
     }))
   })
 
