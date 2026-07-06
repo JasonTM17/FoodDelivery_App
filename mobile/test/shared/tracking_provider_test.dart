@@ -4,14 +4,17 @@ import 'package:foodflow_customer/shared/providers/tracking_provider.dart';
 
 void main() {
   group('resolveTrackingRoutePolyline', () {
-    test('uses persisted route until a realtime route update arrives', () {
-      const tracking = TrackingState();
+    test(
+      'does not draw persisted order geometry before tracking confirms route',
+      () {
+        const tracking = TrackingState();
 
-      expect(
-        resolveTrackingRoutePolyline(tracking, 'persisted-route'),
-        'persisted-route',
-      );
-    });
+        expect(
+          resolveTrackingRoutePolyline(tracking, 'persisted-route'),
+          isNull,
+        );
+      },
+    );
 
     test('lets realtime null clear a stale persisted route', () {
       const tracking = TrackingState(routeUpdateReceived: true);

@@ -84,13 +84,8 @@ class TrackingState {
   }
 }
 
-String? resolveTrackingRoutePolyline(
-  TrackingState tracking,
-  String? persistedRoutePolyline,
-) {
-  return tracking.routeUpdateReceived
-      ? tracking.routePolyline
-      : persistedRoutePolyline;
+String? resolveTrackingRoutePolyline(TrackingState tracking, String? _) {
+  return tracking.routeUpdateReceived ? tracking.routePolyline : null;
 }
 
 TrackingState mergeTrackingSnapshot(
