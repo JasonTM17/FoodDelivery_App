@@ -472,9 +472,6 @@
   "loyaltyHistory": "Lịch sử điểm",
   "loyaltyHistoryEmpty": "Chưa có lịch sử điểm thưởng",
   "loyaltyRedeem": "Đổi điểm",
-  "loyaltyEarnPoints": "Cách kiếm điểm",
-  "loyaltyEarnOrderDesc": "Mỗi đơn hàng hoàn thành = 10 điểm",
-  "loyaltyEarnReferralDesc": "Mỗi lần giới thiệu thành công = 50 điểm",
 
   "walletTitle": "Ví điện tử",
   "walletBalance": "Số dư",
@@ -511,7 +508,7 @@
   "referralHowItWorks": "Cách thức hoạt động",
   "referralStep1": "Chia sẻ mã giới thiệu của bạn",
   "referralStep2": "Bạn bè đăng ký và đặt đơn đầu tiên",
-  "referralStep3": "Cả hai cùng nhận 50 điểm thưởng",
+  "referralStep3": "Phần thưởng hợp lệ sẽ hiển thị sau khi xác minh",
 
   "helpTitle": "Trung tâm hỗ trợ",
   "helpSearchHint": "Tìm kiếm câu hỏi...",
@@ -764,7 +761,7 @@
   "helpFaqMissingOrderQ": "Tôi không nhận được đơn hàng, phải làm gì?",
   "helpFaqMissingOrderA": "Nếu tài xế đã đánh dấu giao thành công nhưng bạn chưa nhận được, hãy liên hệ hỗ trợ ngay.",
   "helpFaqRewardPointsQ": "Điểm thưởng được tích như thế nào?",
-  "helpFaqRewardPointsA": "Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.",
+  "helpFaqRewardPointsA": "Số điểm được tính từ sổ cái điểm thưởng đã xác nhận. Ưu đãi tích điểm hoặc giới thiệu sẽ hiển thị sau khi FoodFlow ghi nhận.",
   "helpFaqTrackOrderQ": "Làm sao để theo dõi đơn hàng real-time?",
   "helpFaqTrackOrderA": "Sau khi đặt hàng thành công, vào \"Đơn hàng\" → chọn đơn đang hoạt động → nhấn \"Theo dõi\"."
 }

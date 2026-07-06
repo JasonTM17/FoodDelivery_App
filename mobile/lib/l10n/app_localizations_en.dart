@@ -1215,15 +1215,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loyaltyRedeem => 'Redeem Points';
 
   @override
-  String get loyaltyEarnPoints => 'How to Earn Points';
-
-  @override
-  String get loyaltyEarnOrderDesc => 'Each completed order = 10 points';
-
-  @override
-  String get loyaltyEarnReferralDesc => 'Each successful referral = 50 points';
-
-  @override
   String get walletTitle => 'Wallet';
 
   @override
@@ -1312,7 +1303,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referralStep2 => 'Friend signs up and places first order';
 
   @override
-  String get referralStep3 => 'Both of you earn 50 points';
+  String get referralStep3 => 'Eligible rewards appear after verification';
 
   @override
   String get helpTitle => 'Help Center';
@@ -1977,7 +1968,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFaqRewardPointsA =>
-      'You earn 10 points for every completed order. Successfully referring a friend gives you an extra 50 points.';
+      'Your balance is calculated from the confirmed loyalty ledger. Active earning or referral rewards appear after they are recorded by FoodFlow.';
 
   @override
   String get helpFaqTrackOrderQ => 'How do I track my order in real-time?';

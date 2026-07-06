@@ -466,9 +466,6 @@
   "loyaltyHistory": "Points History",
   "loyaltyHistoryEmpty": "No points history yet",
   "loyaltyRedeem": "Redeem Points",
-  "loyaltyEarnPoints": "How to Earn Points",
-  "loyaltyEarnOrderDesc": "Each completed order = 10 points",
-  "loyaltyEarnReferralDesc": "Each successful referral = 50 points",
 
   "walletTitle": "Wallet",
   "walletBalance": "Balance",
@@ -505,7 +502,7 @@
   "referralHowItWorks": "How It Works",
   "referralStep1": "Share your referral code",
   "referralStep2": "Friend signs up and places first order",
-  "referralStep3": "Both of you earn 50 points",
+  "referralStep3": "Eligible rewards appear after verification",
 
   "helpTitle": "Help Center",
   "helpSearchHint": "Search questions...",
@@ -758,7 +755,7 @@
   "helpFaqMissingOrderQ": "I didn't receive my order, what should I do?",
   "helpFaqMissingOrderA": "If the driver marked the order as delivered but you haven't received it, contact support immediately.",
   "helpFaqRewardPointsQ": "How are reward points earned?",
-  "helpFaqRewardPointsA": "You earn 10 points for every completed order. Successfully referring a friend gives you an extra 50 points.",
+  "helpFaqRewardPointsA": "Your balance is calculated from the confirmed loyalty ledger. Active earning or referral rewards appear after they are recorded by FoodFlow.",
   "helpFaqTrackOrderQ": "How do I track my order in real-time?",
   "helpFaqTrackOrderA": "After placing an order, go to \"Orders\" → select the active order → tap \"Track\"."
 }

@@ -2392,24 +2392,6 @@ abstract class AppLocalizations {
   /// **'Đổi điểm'**
   String get loyaltyRedeem;
 
-  /// No description provided for @loyaltyEarnPoints.
-  ///
-  /// In vi, this message translates to:
-  /// **'Cách kiếm điểm'**
-  String get loyaltyEarnPoints;
-
-  /// No description provided for @loyaltyEarnOrderDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mỗi đơn hàng hoàn thành = 10 điểm'**
-  String get loyaltyEarnOrderDesc;
-
-  /// No description provided for @loyaltyEarnReferralDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mỗi lần giới thiệu thành công = 50 điểm'**
-  String get loyaltyEarnReferralDesc;
-
   /// No description provided for @walletTitle.
   ///
   /// In vi, this message translates to:
@@ -2581,7 +2563,7 @@ abstract class AppLocalizations {
   /// No description provided for @referralStep3.
   ///
   /// In vi, this message translates to:
-  /// **'Cả hai cùng nhận 50 điểm thưởng'**
+  /// **'Phần thưởng hợp lệ sẽ hiển thị sau khi xác minh'**
   String get referralStep3;
 
   /// No description provided for @helpTitle.
@@ -3805,7 +3787,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpFaqRewardPointsA.
   ///
   /// In vi, this message translates to:
-  /// **'Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.'**
+  /// **'Số điểm được tính từ sổ cái điểm thưởng đã xác nhận. Ưu đãi tích điểm hoặc giới thiệu sẽ hiển thị sau khi FoodFlow ghi nhận.'**
   String get helpFaqRewardPointsA;
 
   /// No description provided for @helpFaqTrackOrderQ.

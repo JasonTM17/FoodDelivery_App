@@ -466,9 +466,6 @@
   "loyaltyHistory": "ポイント履歴",
   "loyaltyHistoryEmpty": "ポイント履歴がありません",
   "loyaltyRedeem": "ポイント交換",
-  "loyaltyEarnPoints": "ポイントの獲得方法",
-  "loyaltyEarnOrderDesc": "注文完了ごとに10pt獲得",
-  "loyaltyEarnReferralDesc": "紹介成功ごとに50pt獲得",
 
   "walletTitle": "ウォレット",
   "walletBalance": "残高",
@@ -505,7 +502,7 @@
   "referralHowItWorks": "仕組み",
   "referralStep1": "招待コードを友達に共有",
   "referralStep2": "友達が登録して初回注文",
-  "referralStep3": "二人とも50ptゲット",
+  "referralStep3": "対象の特典は確認後に表示されます",
 
   "helpTitle": "ヘルプセンター",
   "helpSearchHint": "質問を検索...",
@@ -758,7 +755,7 @@
   "helpFaqMissingOrderQ": "注文を受け取っていない場合は？",
   "helpFaqMissingOrderA": "ドライバーが配達完了とマークしたのに受け取っていない場合は、すぐにサポートにご連絡ください。",
   "helpFaqRewardPointsQ": "ポイントはどのように貯まりますか？",
-  "helpFaqRewardPointsA": "注文完了ごとに10ポイント、友達紹介成功で50ポイントが付与されます。",
+  "helpFaqRewardPointsA": "ポイント残高は確認済みのロイヤルティ台帳から計算されます。獲得特典や紹介特典はFoodFlowで記録された後に表示されます。",
   "helpFaqTrackOrderQ": "注文をリアルタイムで追跡するには？",
   "helpFaqTrackOrderA": "注文後、「注文」→アクティブな注文を選択→「追跡」をタップしてください。"
 }

@@ -1216,16 +1216,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loyaltyRedeem => 'Đổi điểm';
 
   @override
-  String get loyaltyEarnPoints => 'Cách kiếm điểm';
-
-  @override
-  String get loyaltyEarnOrderDesc => 'Mỗi đơn hàng hoàn thành = 10 điểm';
-
-  @override
-  String get loyaltyEarnReferralDesc =>
-      'Mỗi lần giới thiệu thành công = 50 điểm';
-
-  @override
   String get walletTitle => 'Ví điện tử';
 
   @override
@@ -1314,7 +1304,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get referralStep2 => 'Bạn bè đăng ký và đặt đơn đầu tiên';
 
   @override
-  String get referralStep3 => 'Cả hai cùng nhận 50 điểm thưởng';
+  String get referralStep3 => 'Phần thưởng hợp lệ sẽ hiển thị sau khi xác minh';
 
   @override
   String get helpTitle => 'Trung tâm hỗ trợ';
@@ -1979,7 +1969,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get helpFaqRewardPointsA =>
-      'Mỗi đơn hàng hoàn thành bạn nhận được 10 điểm. Giới thiệu bạn bè thành công nhận thêm 50 điểm.';
+      'Số điểm được tính từ sổ cái điểm thưởng đã xác nhận. Ưu đãi tích điểm hoặc giới thiệu sẽ hiển thị sau khi FoodFlow ghi nhận.';
 
   @override
   String get helpFaqTrackOrderQ => 'Làm sao để theo dõi đơn hàng real-time?';

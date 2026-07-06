@@ -116,7 +116,9 @@ void main() {
       expect(find.byType(LoyaltyScreen), findsOneWidget);
     });
 
-    testWidgets('renders earn points section', (tester) async {
+    testWidgets('does not render hardcoded earning-rule claims', (
+      tester,
+    ) async {
       final fakeNotifier = _FakeLoyaltyNotifier(
         const LoyaltyState(isLoading: false, totalPoints: 50),
       );
@@ -128,8 +130,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.people_outline), findsOneWidget);
+      expect(find.byIcon(Icons.receipt_long_outlined), findsNothing);
+      expect(find.byIcon(Icons.people_outline), findsNothing);
     });
   });
 }

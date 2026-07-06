@@ -1192,15 +1192,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loyaltyRedeem => 'ポイント交換';
 
   @override
-  String get loyaltyEarnPoints => 'ポイントの獲得方法';
-
-  @override
-  String get loyaltyEarnOrderDesc => '注文完了ごとに10pt獲得';
-
-  @override
-  String get loyaltyEarnReferralDesc => '紹介成功ごとに50pt獲得';
-
-  @override
   String get walletTitle => 'ウォレット';
 
   @override
@@ -1289,7 +1280,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get referralStep2 => '友達が登録して初回注文';
 
   @override
-  String get referralStep3 => '二人とも50ptゲット';
+  String get referralStep3 => '対象の特典は確認後に表示されます';
 
   @override
   String get helpTitle => 'ヘルプセンター';
@@ -1930,7 +1921,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get helpFaqRewardPointsQ => 'ポイントはどのように貯まりますか？';
 
   @override
-  String get helpFaqRewardPointsA => '注文完了ごとに10ポイント、友達紹介成功で50ポイントが付与されます。';
+  String get helpFaqRewardPointsA =>
+      'ポイント残高は確認済みのロイヤルティ台帳から計算されます。獲得特典や紹介特典はFoodFlowで記録された後に表示されます。';
 
   @override
   String get helpFaqTrackOrderQ => '注文をリアルタイムで追跡するには？';

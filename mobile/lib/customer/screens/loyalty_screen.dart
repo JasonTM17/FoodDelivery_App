@@ -176,55 +176,12 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Earn points section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.loyaltyEarnPoints, style: AppTextStyles.headline4),
-                const SizedBox(height: 12),
-                _buildEarnRow(
-                  Icons.receipt_long_outlined,
-                  l10n.loyaltyEarnOrderDesc,
-                ),
-                const SizedBox(height: 8),
-                _buildEarnRow(
-                  Icons.people_outline,
-                  l10n.loyaltyEarnReferralDesc,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
           // Transaction history
           Text(l10n.loyaltyHistory, style: AppTextStyles.headline4),
           const SizedBox(height: 12),
           LoyaltyPointsLedger(transactions: state.transactions),
         ],
       ),
-    );
-  }
-
-  Widget _buildEarnRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.primary, size: 20),
-        const SizedBox(width: 12),
-        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
-      ],
     );
   }
 }
