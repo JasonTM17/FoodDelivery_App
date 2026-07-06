@@ -20,7 +20,7 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `GET /driver/ratings?star=1|2|3|4|5` — Visible delivery reviews and rating stats for the authenticated driver
 - `GET /driver/trips/:tripId/route` — Real telemetry or persisted route geometry for the authenticated driver's trip; marks `routeSource` and `timestampEstimated` so clients can distinguish GPS history from persisted geometry
 - `GET /driver/heatmap?lat=...&lng=...&radius=...&window=now|1h|3h|today` — Real demand heatmap near driver location
-- `GET /driver/incentives` — Driver incentive campaigns; returns empty arrays when no campaign source is configured
+- `GET /driver/incentives` — Driver incentive campaigns; currently returns `501 DRIVER_INCENTIVES_NOT_MODELLED` until a durable campaign source is modelled, so clients do not receive fake-empty campaign data
 - `POST /driver/kyc/upload` — Submit KYC documents
 - `GET /admin/drivers/pending-kyc` — Admin approval queue
 - `POST /admin/drivers/:id/approve-kyc`

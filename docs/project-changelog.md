@@ -9,6 +9,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed (Batch 4 — Web/Backend Integration)
 - Registered the backend AI module so `POST /ai/chat` is available in the runtime app.
+- Changed `GET /driver/incentives` to fail explicitly until a durable campaign source exists instead of returning fake-empty campaign data.
+- Hardened referral snapshots so generated codes are returned only after persistence, and referral stat database errors are no longer masked as zero totals.
 - Scoped menu, cart, and order Zod validation pipes to request bodies so authenticated user and route params are not validated as payload objects.
 - Added authenticated `GET /users/addresses` support for real cart-to-order checkout flows.
 - Constrained generated order codes to the existing 12-character database column width.
@@ -30,8 +32,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Backend `LoyaltyModule` — `GET /users/loyalty` returns points + tier + transactions
 - Backend `WalletModule` — `GET /users/wallet` returns balance + transactions
 - Backend `ReferralModule` — `GET /users/referral` returns code + invitees + rewards
-- Backend `DriverIncentivesController` — `GET /driver/incentives` (stub data)
-- Admin endpoints `GET /admin/dispatch/heatmap` + `GET /admin/restaurants/:id/kpi` (stub data)
+- Backend `DriverIncentivesController` — `GET /driver/incentives` (later changed to explicit unsupported response until campaign storage exists)
+- Admin endpoints `GET /admin/dispatch/heatmap` + `GET /admin/restaurants/:id/kpi` (later backed by aggregate database queries)
 - Prisma `LoyaltyTransaction` model + `LoyaltyTxnType` enum
 - Admin overview heatmap widget consuming `/admin/dispatch/heatmap` (auto-refresh 30s)
 - Admin restaurant detail KPI card consuming `/admin/restaurants/:id/kpi` (7-day stats)

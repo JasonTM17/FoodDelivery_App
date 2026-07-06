@@ -3813,11 +3813,12 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver incentives
-      description: Returns active and completed driver incentive campaigns. Empty arrays are valid when no campaign source is configured.
+      description: Returns active and completed driver incentive campaigns when a durable campaign source exists. Until then, the endpoint fails explicitly instead of returning fake-empty campaign data.
       operationId: drivers_getIncentives
       x-foo-actor: driver
       responses:
         "200": { description: "Driver incentives", content: { application/json: { schema: { $ref: "#/components/schemas/DriverIncentivesResponse" } } } }
+        "501": { description: "Driver incentives are not modelled yet", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/trips:
     get:

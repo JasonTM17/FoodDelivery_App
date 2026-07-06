@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotImplementedException } from '@nestjs/common'
 
 export interface IncentiveItem {
   id: string
@@ -17,9 +17,6 @@ export interface IncentivesResponse {
 @Injectable()
 export class IncentivesService {
   getDriverIncentives(_driverId: string): IncentivesResponse {
-    return {
-      active: [],
-      completed: [],
-    }
+    throw new NotImplementedException('DRIVER_INCENTIVES_NOT_MODELLED')
   }
 }
