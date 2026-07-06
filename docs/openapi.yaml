@@ -477,12 +477,13 @@ components:
         items:
           type: array
           items: { $ref: "#/components/schemas/MenuItem" }
-      required: [id, name]
+      required: [id, name, sortOrder, items]
 
     MenuItem:
       type: object
       properties:
         id:          { type: string, format: uuid }
+        restaurantId: { type: string, format: uuid }
         name:        { type: string }
         description: { type: string }
         imageUrl:    { type: string }
@@ -492,9 +493,10 @@ components:
         options:
           type: array
           items: { $ref: "#/components/schemas/MenuItemOption" }
-      required: [id, name, basePrice, isAvailable]
+      required: [id, restaurantId, name, description, imageUrl, basePrice, isAvailable, isPopular, options]
       example:
         id: "44444444-4444-4444-8444-444444444444"
+        restaurantId: "33333333-3333-4333-8333-333333333333"
         name: "Phở bò tái chín"
         description: "Phở bò với thịt tái và chín, kèm rau thơm"
         imageUrl: "https://cdn.foodflow.vn/menu/pho-bo-tai-chin.jpg"
@@ -517,6 +519,8 @@ components:
             properties:
               value:         { type: string }
               priceModifier: { type: integer, description: "Additional VND" }
+            required: [value, priceModifier]
+      required: [id, name, isRequired, isMultiple, values]
       example:
         id: "55555555-5555-4555-8555-555555555555"
         name: "Size"

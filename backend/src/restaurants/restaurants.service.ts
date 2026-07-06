@@ -120,16 +120,18 @@ export class RestaurantsService {
   async getMenu(id: string) {
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { id },
-      include: {
-        openingHours: {
-          orderBy: { dayOfWeek: 'asc' },
-        },
+      select: {
+        id: true,
         categories: {
+          where: { isVisible: true },
           orderBy: { sortOrder: 'asc' },
           include: {
             menuItems: {
+              where: { isAvailable: true },
+              orderBy: { sortOrder: 'asc' },
               include: {
                 options: {
+                  orderBy: { createdAt: 'asc' },
                   include: { values: true },
                 },
               },
@@ -139,7 +141,34 @@ export class RestaurantsService {
       },
     })
     if (!restaurant) throw new NotFoundException('Restaurant not found')
-    return restaurant
+    return {
+      categories: restaurant.categories.map(category => ({
+        id: category.id,
+        name: category.name,
+        sortOrder: category.sortOrder,
+        items: category.menuItems.map(item => ({
+          id: item.id,
+          restaurantId: restaurant.id,
+          name: item.name,
+          description: item.description ?? '',
+          imageUrl: item.imageUrl ?? '',
+          basePrice: Number(item.basePrice),
+          isAvailable: item.isAvailable,
+          isPopular: item.isPopular,
+          options: item.options.map(option => ({
+            id: option.id,
+            name: option.name,
+            isRequired: option.isRequired,
+            isMultiple: option.isMultiple,
+            values: option.values.map(value => ({
+              id: value.id,
+              value: value.value,
+              priceModifier: Number(value.priceModifier),
+            })),
+          })),
+        })),
+      })),
+    }
   }
 
   async getReviews(id: string, page: number, limit: number) {

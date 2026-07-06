@@ -118,20 +118,24 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     state = state.copyWith(isLoadingMenu: true, error: null);
     try {
       final response = await _api.get('/restaurants/$restaurantId/menu');
-      final dataList = response.data as List<dynamic>;
-      final menuItems = dataList
-          .map((e) => MenuItemModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final menuItems = _parseRestaurantMenu(response.data, restaurantId);
 
       state = state.copyWith(isLoadingMenu: false, menuItems: menuItems);
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ?? 'Không thể tải thực đơn.';
       state = state.copyWith(isLoadingMenu: false, error: message);
+    } on FormatException {
+      state = state.copyWith(
+        isLoadingMenu: false,
+        error: 'MENU_CONTRACT_INVALID_RESPONSE',
+        menuItems: const [],
+      );
     } catch (e) {
       state = state.copyWith(
         isLoadingMenu: false,
         error: 'Có lỗi xảy ra khi tải thực đơn.',
+        menuItems: const [],
       );
     }
   }
@@ -164,4 +168,47 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+}
+
+List<MenuItemModel> _parseRestaurantMenu(dynamic value, String restaurantId) {
+  if (value is! Map) {
+    throw const FormatException('Restaurant menu response must be an object');
+  }
+  final data = Map<String, dynamic>.from(value);
+  final categories = data['categories'];
+  if (categories is! List) {
+    throw const FormatException('Restaurant menu categories must be a list');
+  }
+
+  return categories.expand((categoryValue) {
+    final category = _requiredObject(categoryValue, 'categories[]');
+    final categoryName = _requiredString(category, 'categories[].name');
+    final items = category['items'];
+    if (items is! List) {
+      throw const FormatException(
+        'Restaurant menu category items must be a list',
+      );
+    }
+    return items.map((itemValue) {
+      final item = _requiredObject(itemValue, 'categories[].items[]');
+      return MenuItemModel.fromJson({
+        ...item,
+        'restaurantId': item['restaurantId'] ?? restaurantId,
+        'category': item['category'] ?? categoryName,
+      });
+    });
+  }).toList();
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Invalid restaurant menu object field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json['name'];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing restaurant menu string field: $field');
 }
