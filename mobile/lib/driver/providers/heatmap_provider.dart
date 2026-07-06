@@ -26,9 +26,9 @@ class HeatmapPoint {
     return HeatmapPoint(
       lat: lat!,
       lng: lng!,
-      demandLevel: _readInt(json['demandLevel']).clamp(0, 2).toInt(),
-      orderCount: _readInt(json['orderCount']),
-      avgPayout: _readDouble(json['avgPayout']),
+      demandLevel: _requiredDemandLevel(json, 'demandLevel'),
+      orderCount: _requiredNonNegativeInt(json, 'orderCount'),
+      avgPayout: _requiredNonNegativeDouble(json, 'avgPayout'),
     );
   }
 }
@@ -98,12 +98,25 @@ class HeatmapNotifier extends StateNotifier<HeatmapState> {
           'window': window,
         },
       );
-      final points = (response.data ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(_tryReadHeatmapPoint)
-          .whereType<HeatmapPoint>()
+      final data = response.data;
+      if (data is! List) {
+        throw const FormatException('Invalid heatmap response');
+      }
+      final points = data
+          .map((item) {
+            if (item is! Map) {
+              throw const FormatException('Invalid heatmap point');
+            }
+            return HeatmapPoint.fromJson(Map<String, dynamic>.from(item));
+          })
           .toList(growable: false);
       state = state.copyWith(isLoading: false, points: points, error: null);
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        points: const [],
+        error: 'DRIVER_HEATMAP_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
@@ -124,14 +137,6 @@ final heatmapProvider = StateNotifierProvider<HeatmapNotifier, HeatmapState>((
   return HeatmapNotifier();
 });
 
-HeatmapPoint? _tryReadHeatmapPoint(Map<String, dynamic> json) {
-  try {
-    return HeatmapPoint.fromJson(json);
-  } on FormatException {
-    return null;
-  }
-}
-
 double? _readDoubleOrNull(dynamic value) {
   if (value is num && value.isFinite) return value.toDouble();
   if (value is String) {
@@ -141,14 +146,25 @@ double? _readDoubleOrNull(dynamic value) {
   return null;
 }
 
-double _readDouble(dynamic value) {
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0;
-  return 0;
+double _requiredNonNegativeDouble(Map<String, dynamic> json, String field) {
+  final parsed = _readDoubleOrNull(json[field]);
+  if (parsed != null && parsed >= 0) return parsed;
+  throw FormatException('Missing required heatmap numeric field: $field');
 }
 
-int _readInt(dynamic value) {
-  if (value is num) return value.round();
-  if (value is String) return int.tryParse(value) ?? 0;
-  return 0;
+int _requiredNonNegativeInt(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  final parsed = value is int
+      ? value
+      : value is String
+      ? int.tryParse(value)
+      : null;
+  if (parsed != null && parsed >= 0) return parsed;
+  throw FormatException('Missing required heatmap integer field: $field');
+}
+
+int _requiredDemandLevel(Map<String, dynamic> json, String field) {
+  final parsed = _requiredNonNegativeInt(json, field);
+  if (parsed <= 2) return parsed;
+  throw FormatException('Invalid heatmap demand level: $parsed');
 }

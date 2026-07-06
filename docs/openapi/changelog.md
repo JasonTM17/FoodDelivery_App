@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: Tightened driver heatmap mobile parsing so malformed `demandLevel`, `orderCount`, or `avgPayout` rows fail the contract instead of rendering fake zero-demand business data.
 - 2026-07-06: Aligned saved-address APIs with the implemented `/users/addresses` contract: controllers use `JwtPayload.sub`, CRUD persists required PostGIS coordinates, mobile rejects malformed address rows, and OpenAPI now documents `addressLine` with `latitude`/`longitude`.
 - 2026-07-06: Tightened dispatch/tracking route safety: driver assignment clears persisted ETA/route metadata plus pickup/dropoff route caches, and pickup-phase REST snapshots no longer reuse persisted route geometry without a phase-matched cache.
 - 2026-07-06: Aligned `GET /notifications` with the implemented backend envelope `{ notifications, unreadCount, meta }`, documented persisted `Notification.data`, and removed legacy mobile list/message/read fallbacks from the notification contract.
