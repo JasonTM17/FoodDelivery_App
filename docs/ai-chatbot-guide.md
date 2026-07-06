@@ -13,6 +13,7 @@ FoodFlow uses an LLM-first chatbot path in Batch 4. The backend AI module owns t
 - Tool calls are scoped to the authenticated `user.sub`; user-supplied order IDs are never trusted alone.
 - Chat turns are persisted best-effort to `ChatSession`/`ChatMessage` for real Admin monitoring; order links are only stored after customer-scoped ownership checks.
 - AI-created support tickets use `channel: ai_chat` plus an `ai_session:<uuid>` tag so escalations can be attributed without guessing.
+- High-severity AI escalations create persisted notifications for active admin users. If no active admin exists, the tool returns `notified: false` with `notifiedAdminCount: 0` instead of reporting fake notification success.
 - Missing or failing model configuration returns `action: "degraded"` instead of a fabricated answer.
 
 ## Required configuration

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { Prisma, SupportChannel, TicketIssueType, TicketPriority, TicketStatus } from '@prisma/client'
+import { Prisma, SupportChannel, TicketIssueType, TicketPriority, TicketStatus, UserRole } from '@prisma/client'
+import { NotificationsService } from '../notifications/notifications.service'
 import {
   availableRecommendationWhere,
   isAvailableRecommendedMenuItem,
@@ -15,7 +16,10 @@ function maskPhone(phone: string | null | undefined): string | null {
 
 @Injectable()
 export class AiToolsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async getOrderStatus(orderReference: string, customerId: string) {
     const order = await this.prisma.order.findFirst({
@@ -166,7 +170,32 @@ export class AiToolsService {
       data: { priority },
     })
     if (updated.count !== 1) throw new NotFoundException('SUPPORT_TICKET_NOT_FOUND')
-    return { notified: true, ticketId, severity, timestamp: new Date().toISOString() }
+
+    const admins = await this.prisma.user.findMany({
+      where: { role: UserRole.admin, isActive: true },
+      select: { id: true },
+    })
+    const createdNotifications = await Promise.all(admins.map(admin => this.notifications.create({
+      userId: admin.id,
+      title: 'AI support escalation',
+      body: `Ticket ${ticketId} was escalated with ${priority} priority.`,
+      type: 'support.escalation',
+      payload: {
+        ticketId,
+        customerId: userId,
+        severity,
+        priority,
+        source: 'ai_chat',
+      },
+    })))
+
+    return {
+      notified: createdNotifications.length > 0,
+      notifiedAdminCount: createdNotifications.length,
+      ticketId,
+      severity,
+      timestamp: new Date().toISOString(),
+    }
   }
 }
 

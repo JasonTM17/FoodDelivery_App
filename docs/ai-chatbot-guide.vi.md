@@ -13,6 +13,7 @@ FoodFlow dùng hướng LLM-first cho chatbot trong Batch 4. Backend AI module s
 - Tool call luôn scope theo `user.sub` đã xác thực; không tin riêng order ID do user nhập.
 - Chat turn được persist best-effort vào `ChatSession`/`ChatMessage` cho Admin monitor thật; order link chỉ lưu sau khi check customer-scoped ownership.
 - Support ticket do AI tạo dùng `channel: ai_chat` và tag `ai_session:<uuid>` để attribution escalation không phải đoán.
+- Escalation AI mức cao tạo notification đã persist cho các admin đang active. Nếu không có admin active, tool trả `notified: false` với `notifiedAdminCount: 0` thay vì báo thành công giả.
 - Thiếu hoặc lỗi cấu hình model trả `action: "degraded"` thay vì bịa câu trả lời thành công.
 
 ## Cấu hình bắt buộc

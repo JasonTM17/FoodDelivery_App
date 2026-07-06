@@ -23,7 +23,7 @@ describe('AiGroundingService', () => {
     tools.getRefundEligibility.mockResolvedValue({ eligible: false })
     tools.getRecommendedFoods.mockResolvedValue([{ menuItemName: 'Pho' }])
     tools.createSupportTicket.mockResolvedValue({ id: 'ticket-1' })
-    tools.notifyAdmin.mockResolvedValue({ notified: true })
+    tools.notifyAdmin.mockResolvedValue({ notified: true, notifiedAdminCount: 1 })
   })
 
   it('collects customer-scoped order context and passes the authenticated user id to every tool', async () => {
@@ -69,6 +69,9 @@ describe('AiGroundingService', () => {
       toolCalls: expect.arrayContaining([
         { name: 'createSupportTicket', args: { orderReference: 'FD0000000001' } },
         { name: 'notifyAdmin', args: { ticketId: 'ticket-1', severity: 'HIGH' } },
+      ]),
+      entries: expect.arrayContaining([
+        { tool: 'notifyAdmin', data: { notified: true, notifiedAdminCount: 1 } },
       ]),
     })
   })

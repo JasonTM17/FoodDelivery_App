@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: AI high-severity support escalation now creates persisted admin notifications through `NotificationsService` and reports `notifiedAdminCount`; it no longer returns fake `notified: true` when no admin notification was created.
 - 2026-07-06: Customer mobile tracking now waits for `/orders/{orderId}/tracking` or realtime ETA route confirmation before drawing a planned route, so stale `Order.routePolyline` geometry is not shown before route phase is known.
 - 2026-07-06: Added `offline` to the admin driver map status contract so Redis-present drivers whose database profile is offline render as offline instead of being coerced to green/online.
 - 2026-07-06: Tightened driver heatmap mobile parsing so malformed `demandLevel`, `orderCount`, or `avgPayout` rows fail the contract instead of rendering fake zero-demand business data.

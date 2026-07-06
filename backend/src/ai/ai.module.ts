@@ -9,8 +9,10 @@ import { ConversationMemoryService } from './conversation-memory.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
 import { ToolJustificationService } from './tool-justification.service'
 import { OutputFilterService } from './output-filter.service'
+import { NotificationsModule } from '../notifications/notifications.module'
 
 @Module({
+  imports: [NotificationsModule],
   controllers: [AiController, AiChatController],
   providers: [
     AiToolsService,

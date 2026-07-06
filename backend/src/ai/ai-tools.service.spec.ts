@@ -12,12 +12,16 @@ describe('AiToolsService', () => {
     },
     menuItem: { findMany: jest.fn() },
     orderItem: { findMany: jest.fn() },
+    user: { findMany: jest.fn() },
     $queryRaw: jest.fn(),
   }
-  const service = new AiToolsService(prisma as never)
+  const notifications = { create: jest.fn() }
+  const service = new AiToolsService(prisma as never, notifications as never)
 
   beforeEach(() => {
     jest.clearAllMocks()
+    prisma.user.findMany.mockResolvedValue([])
+    notifications.create.mockResolvedValue({ id: 'notification-1' })
   })
 
   it('scopes order status lookups to the authenticated customer and order code', async () => {
@@ -143,6 +147,57 @@ describe('AiToolsService', () => {
     expect(prisma.aiSupportTicket.updateMany).toHaveBeenCalledWith({
       where: { id: 'ticket-1', userId: 'customer-1' },
       data: { priority: TicketPriority.high },
+    })
+    expect(notifications.create).not.toHaveBeenCalled()
+  })
+
+  it('creates real admin notifications for high-severity AI escalations', async () => {
+    prisma.aiSupportTicket.updateMany.mockResolvedValue({ count: 1 })
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'admin-1' },
+      { id: 'admin-2' },
+    ])
+    notifications.create
+      .mockResolvedValueOnce({ id: 'notification-1' })
+      .mockResolvedValueOnce({ id: 'notification-2' })
+
+    const result = await service.notifyAdmin('ticket-1', 'HIGH', 'customer-1')
+
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { role: 'admin', isActive: true },
+      select: { id: true },
+    })
+    expect(notifications.create).toHaveBeenCalledTimes(2)
+    expect(notifications.create).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'admin-1',
+      title: 'AI support escalation',
+      type: 'support.escalation',
+      payload: expect.objectContaining({
+        ticketId: 'ticket-1',
+        customerId: 'customer-1',
+        severity: 'HIGH',
+        source: 'ai_chat',
+      }),
+    }))
+    expect(result).toMatchObject({
+      notified: true,
+      notifiedAdminCount: 2,
+      ticketId: 'ticket-1',
+      severity: 'HIGH',
+    })
+  })
+
+  it('does not invent notification success when no active admin accounts exist', async () => {
+    prisma.aiSupportTicket.updateMany.mockResolvedValue({ count: 1 })
+    prisma.user.findMany.mockResolvedValue([])
+
+    const result = await service.notifyAdmin('ticket-1', 'HIGH', 'customer-1')
+
+    expect(notifications.create).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      notified: false,
+      notifiedAdminCount: 0,
+      ticketId: 'ticket-1',
     })
   })
 
