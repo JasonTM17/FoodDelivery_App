@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets'
 import { UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
-import { routePhaseForStatus, TrackingService } from './tracking.service'
+import { type DeliveryRoutePhase, routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
 import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
@@ -16,6 +16,14 @@ import { OrdersGateway, type AdminDriverLocationChangedEvent } from '../orders/o
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { RealtimeRoomAccessService } from '../orders/realtime-room-access.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+
+export interface DeliveryEtaUpdatedEvent {
+  etaMinutes: number | null
+  source: string
+  degraded: boolean
+  routePolyline: string | null
+  routePhase: DeliveryRoutePhase
+}
 
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: websocketCorsOrigins() } })
 export class TrackingGateway implements OnGatewayConnection {
@@ -84,14 +92,6 @@ export class TrackingGateway implements OnGatewayConnection {
     if (now - lastTime < 2000) return
     this.lastBroadcast.set(room, now)
 
-    this.server.to(room).emit('driver:location_changed', {
-      orderId, driverId, lat: data.lat, lng: data.lng,
-      bearing: typeof data.bearing === 'number' && Number.isFinite(data.bearing)
-        ? data.bearing
-        : null,
-      timestamp: new Date().toISOString(),
-    })
-
     const routeTarget = await this.prisma.$queryRawUnsafe<Array<{
       status: string
       restaurantLng: number
@@ -108,11 +108,21 @@ export class TrackingGateway implements OnGatewayConnection {
        JOIN restaurants r ON r.id = o.restaurant_id
        JOIN addresses a ON a.id = o.delivery_address_id
        WHERE o.id = $1::uuid
+         AND o.driver_id = $2::uuid
        LIMIT 1`,
       orderId,
+      driverId,
     )
     const target = routeTarget[0]
     if (target) {
+      this.server.to(room).emit('driver:location_changed', {
+        orderId, driverId, lat: data.lat, lng: data.lng,
+        bearing: typeof data.bearing === 'number' && Number.isFinite(data.bearing)
+          ? data.bearing
+          : null,
+        timestamp: new Date().toISOString(),
+      })
+
       const routePhase = routePhaseForStatus(target.status)
       const destLat = routePhase === 'pickup' ? target.restaurantLat : target.deliveryLat
       const destLng = routePhase === 'pickup' ? target.restaurantLng : target.deliveryLng
@@ -124,8 +134,7 @@ export class TrackingGateway implements OnGatewayConnection {
       )
       const etaMinutes = route ? Math.max(1, Math.round(route.durationSeconds / 60)) : null
 
-      this.server.to(room).emit('delivery:eta_updated', {
-        orderId,
+      this.emitEtaUpdate(orderId, {
         etaMinutes,
         source: route?.provider ?? 'route_unavailable',
         degraded: !route,
@@ -136,6 +145,13 @@ export class TrackingGateway implements OnGatewayConnection {
       // Non-blocking: enqueue recompute when driver deviates >100m from cached polyline
       void this.trackingService.maybeEnqueueRecompute(orderId, data.lat, data.lng, routePhase)
     }
+  }
+
+  emitEtaUpdate(orderId: string, data: DeliveryEtaUpdatedEvent): void {
+    this.server.to(`order:${orderId}`).emit('delivery:eta_updated', {
+      orderId,
+      ...data,
+    })
   }
 
   @SubscribeMessage('order:subscribe')

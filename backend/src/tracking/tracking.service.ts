@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger, OnModuleDestroy } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
-import type { Prisma } from '@prisma/client'
+import { OrderStatus, type Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
@@ -10,6 +10,13 @@ import { RouteResult } from '../common/types/location.types'
 import Redis from 'ioredis'
 
 export type DeliveryRoutePhase = 'pickup' | 'dropoff'
+
+const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
+  OrderStatus.driver_assigned,
+  OrderStatus.driver_arriving_restaurant,
+  OrderStatus.picked_up,
+  OrderStatus.delivering,
+]
 
 export function routePhaseForStatus(status: string): DeliveryRoutePhase {
   return status === 'driver_assigned' || status === 'driver_arriving_restaurant'
@@ -73,7 +80,7 @@ export class TrackingService implements OnModuleDestroy {
     await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
     await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt.toISOString())
 
-    const orderId = await this.redis.get(`driver:${driverId}:current_order`)
+    const orderId = await this.resolveActiveOrderForDriver(driverId)
     this.batchBuffer.push({ driverId, orderId: orderId || null, lng: data.lng, lat: data.lat, recordedAt })
     return orderId || null
   }
@@ -153,6 +160,43 @@ export class TrackingService implements OnModuleDestroy {
     return this.etaCache.getRoute(routeCacheKey(orderId, phase))
   }
 
+  async resolveActiveOrderForDriver(driverId: string): Promise<string | null> {
+    const currentOrderKey = `driver:${driverId}:current_order`
+    const redisOrderId = normalizeRedisOrderId(await this.redis.get(currentOrderKey))
+
+    if (redisOrderId) {
+      const verified = await this.prisma.order.findFirst({
+        where: {
+          id: redisOrderId,
+          driverId,
+          status: { in: ACTIVE_DRIVER_ORDER_STATUSES },
+        },
+        select: { id: true },
+      })
+      if (verified) return verified.id
+
+      this.logger.warn(`Ignoring stale current_order ${redisOrderId} for driver ${driverId}`)
+      await this.redis.del(currentOrderKey)
+    }
+
+    const activeOrder = await this.prisma.order.findFirst({
+      where: {
+        driverId,
+        status: { in: ACTIVE_DRIVER_ORDER_STATUSES },
+      },
+      select: { id: true },
+      orderBy: { updatedAt: 'desc' },
+    })
+    if (!activeOrder) return null
+
+    await Promise.all([
+      this.redis.set(`driver:${driverId}:status`, 'busy'),
+      this.redis.set(currentOrderKey, activeOrder.id),
+      this.redis.del(`driver:${driverId}:idle_since`),
+    ])
+    return activeOrder.id
+  }
+
   async findNearbyDriversPostGIS(
     lat: number, lng: number, radiusKm: number,
   ): Promise<Array<{ driverId: string; distKm: number; rating: number }>> {
@@ -202,4 +246,9 @@ export class TrackingService implements OnModuleDestroy {
       this.logger.error(`Failed to flush location batch: ${(err as Error).message}`)
     }
   }
+}
+
+function normalizeRedisOrderId(value: string | null): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
 }

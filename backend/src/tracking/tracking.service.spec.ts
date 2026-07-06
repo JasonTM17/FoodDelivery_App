@@ -9,8 +9,19 @@ describe('TrackingService', () => {
   let service: TrackingService
   let module: TestingModule
 
-  const mockRedis = { geoadd: jest.fn(), setex: jest.fn(), get: jest.fn(), geopos: jest.fn() }
+  const mockRedis = {
+    geoadd: jest.fn(),
+    setex: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    get: jest.fn(),
+    geopos: jest.fn(),
+  }
   const mockPrisma = {
+    order: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({ id: 'order-1' }),
+    },
     $executeRawUnsafe: jest.fn().mockResolvedValue(1),
     $queryRawUnsafe: jest.fn().mockResolvedValue([]),
   }
@@ -44,6 +55,7 @@ describe('TrackingService', () => {
   describe('handleLocationUpdate', () => {
     it('stores driver location in Redis and returns orderId', async () => {
       mockRedis.get.mockResolvedValueOnce('order-123')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-123' })
       const orderId = await service.handleLocationUpdate('d1', {
         lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
       })
@@ -59,10 +71,41 @@ describe('TrackingService', () => {
 
     it('returns null when driver has no current order', async () => {
       mockRedis.get.mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst.mockResolvedValueOnce(null)
       const orderId = await service.handleLocationUpdate('d1', {
         lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
       })
       expect(orderId).toBeNull()
+    })
+
+    it('ignores and clears stale Redis current_order values not assigned to the driver', async () => {
+      mockRedis.get.mockResolvedValueOnce('stale-order')
+      mockPrisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+
+      const orderId = await service.handleLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+      })
+
+      expect(orderId).toBeNull()
+      expect(mockRedis.del).toHaveBeenCalledWith('driver:driver-1:current_order')
+    })
+
+    it('repairs Redis assignment from the DB active order when current_order is missing', async () => {
+      mockRedis.get.mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-from-db' })
+
+      const orderId = await service.handleLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+      })
+
+      expect(orderId).toBe('order-from-db')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:status', 'busy')
+      expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:current_order', 'order-from-db')
+      expect(mockRedis.del).toHaveBeenCalledWith('driver:driver-1:idle_since')
     })
   })
 
@@ -90,6 +133,9 @@ describe('TrackingService', () => {
     it('binds one driver/order/lng/lat/timestamp parameter group per buffered location', async () => {
       mockRedis.get
         .mockResolvedValueOnce('10000000-0000-0000-0000-000000000001')
+        .mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst
+        .mockResolvedValueOnce({ id: '10000000-0000-0000-0000-000000000001' })
         .mockResolvedValueOnce(null)
 
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000001', {

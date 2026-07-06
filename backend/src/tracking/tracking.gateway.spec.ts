@@ -141,6 +141,11 @@ describe('TrackingGateway authorization', () => {
       106.65,
       'dropoff',
     )
+    expect(queryRawUnsafe).toHaveBeenCalledWith(
+      expect.stringContaining('AND o.driver_id = $2::uuid'),
+      'order-1',
+      'driver-1',
+    )
     expect(emitToRoom).toHaveBeenCalledWith('driver:location_changed', expect.objectContaining({
       orderId: 'order-1',
       driverId: 'driver-1',
@@ -223,6 +228,32 @@ describe('TrackingGateway authorization', () => {
       routePolyline: 'pickup-route',
       routePhase: 'pickup',
     })
+  })
+
+  it('does not broadcast into an order room when the active order is not assigned to the driver', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue('order-owned-by-other-driver')
+    queryRawUnsafe.mockResolvedValue([])
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 0,
+      speed: 20,
+      accuracy: 5,
+    })
+
+    expect(getOrFetchRoute).not.toHaveBeenCalled()
+    expect(maybeEnqueueRecompute).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalledWith(
+      'driver:location_changed',
+      expect.objectContaining({ orderId: 'order-owned-by-other-driver' }),
+    )
+    expect(emitToRoom).not.toHaveBeenCalledWith(
+      'delivery:eta_updated',
+      expect.objectContaining({ orderId: 'order-owned-by-other-driver' }),
+    )
   })
 
   it('checks order participation before joining tracking rooms', async () => {

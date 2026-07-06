@@ -6,6 +6,7 @@ import { PrismaService } from '../database/prisma.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
 import { RecomputeJobData, routeCacheKey } from './tracking.service'
+import { TrackingGateway } from './tracking.gateway'
 
 interface DestCoords {
   restaurantLat: number
@@ -22,6 +23,7 @@ export class EtaRecomputeProcessor extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly directionsApi: DirectionsApiService,
     private readonly etaCache: EtaCacheService,
+    private readonly trackingGateway: TrackingGateway,
   ) {
     super()
   }
@@ -75,6 +77,13 @@ export class EtaRecomputeProcessor extends WorkerHost {
         routePolyline: route.polyline,
         routeWaypoints: route.waypoints as unknown as Prisma.InputJsonValue,
       },
+    })
+    this.trackingGateway.emitEtaUpdate(orderId, {
+      etaMinutes: Math.max(1, Math.round(route.durationSeconds / 60)),
+      source: route.provider,
+      degraded: false,
+      routePolyline: route.polyline,
+      routePhase: phase,
     })
 
     this.logger.log(

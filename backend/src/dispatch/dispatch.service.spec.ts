@@ -10,17 +10,22 @@ import { DispatchMetrics } from './dispatch.metrics'
 describe('DispatchService', () => {
   let service: DispatchService
 
+  function mockPipelineResult(results: Array<[Error | null, unknown]> = [[null, 'OK'], [null, 'OK'], [null, 1]]) {
+    return {
+      set: jest.fn().mockReturnThis(),
+      del: jest.fn().mockReturnThis(),
+      get: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(results),
+    }
+  }
+
   const mockRedis = {
     call: jest.fn(),
     set: jest.fn(),
     del: jest.fn(),
     setex: jest.fn(),
     eval: jest.fn(),
-    pipeline: jest.fn(() => ({
-      set: jest.fn().mockReturnThis(),
-      get: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([]),
-    })),
+    pipeline: jest.fn(() => mockPipelineResult()),
   }
 
   const mockMetrics = {
@@ -60,11 +65,7 @@ describe('DispatchService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
-    mockRedis.pipeline.mockReturnValue({
-      set: jest.fn().mockReturnThis(),
-      get: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([]),
-    })
+    mockRedis.pipeline.mockReturnValue(mockPipelineResult())
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -132,22 +133,14 @@ describe('DispatchService', () => {
     it('filters out busy drivers (current_order set)', async () => {
       mockRedis.call.mockResolvedValueOnce([['driver:1', '0.5'], ['driver:2', '1.2']])
       mockRedis.pipeline
-        .mockReturnValueOnce({
-          set: jest.fn().mockReturnThis(),
-          get: jest.fn().mockReturnThis(),
-          exec: jest.fn().mockResolvedValue([
-            [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
-            [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
-          ]),
-        })
-        .mockReturnValueOnce({
-          set: jest.fn().mockReturnThis(),
-          get: jest.fn().mockReturnThis(),
-          exec: jest.fn().mockResolvedValue([
-            [null, 'online'], [null, 'order:123'], [null, '4.0'], [null, '1'],
-            [null, '0.8'], [null, '0.9'], [null, null], [null, '30'],
-          ]),
-        })
+        .mockReturnValueOnce(mockPipelineResult([
+          [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
+          [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
+        ]))
+        .mockReturnValueOnce(mockPipelineResult([
+          [null, 'online'], [null, 'order:123'], [null, '4.0'], [null, '1'],
+          [null, '0.8'], [null, '0.9'], [null, null], [null, '30'],
+        ]))
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result).toHaveLength(1)
       expect(result[0].driverId).toBe('1')
@@ -155,14 +148,10 @@ describe('DispatchService', () => {
 
     it('excludes drivers in cooldown', async () => {
       mockRedis.call.mockResolvedValueOnce([['driver:1', '0.5']])
-      mockRedis.pipeline.mockReturnValueOnce({
-        set: jest.fn().mockReturnThis(),
-        get: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([
-          [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
-          [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
-        ]),
-      })
+      mockRedis.pipeline.mockReturnValueOnce(mockPipelineResult([
+        [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
+        [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
+      ]))
       mockCooldown.isInCooldown.mockResolvedValueOnce(true)
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result).toHaveLength(0)
@@ -173,36 +162,24 @@ describe('DispatchService', () => {
       // driver:1 gets score 0.5, driver:2 gets score 0.8 → driver:2 should come first
       mockScoring.score.mockReturnValueOnce(0.5).mockReturnValueOnce(0.8)
       mockRedis.pipeline
-        .mockReturnValueOnce({
-          set: jest.fn().mockReturnThis(),
-          get: jest.fn().mockReturnThis(),
-          exec: jest.fn().mockResolvedValue([
-            [null, 'online'], [null, ''], [null, '4.2'], [null, '1'],
-            [null, '0.7'], [null, '0.8'], [null, null], [null, '50'],
-          ]),
-        })
-        .mockReturnValueOnce({
-          set: jest.fn().mockReturnThis(),
-          get: jest.fn().mockReturnThis(),
-          exec: jest.fn().mockResolvedValue([
-            [null, 'online'], [null, ''], [null, '4.8'], [null, '1'],
-            [null, '0.95'], [null, '0.98'], [null, null], [null, '80'],
-          ]),
-        })
+        .mockReturnValueOnce(mockPipelineResult([
+          [null, 'online'], [null, ''], [null, '4.2'], [null, '1'],
+          [null, '0.7'], [null, '0.8'], [null, null], [null, '50'],
+        ]))
+        .mockReturnValueOnce(mockPipelineResult([
+          [null, 'online'], [null, ''], [null, '4.8'], [null, '1'],
+          [null, '0.95'], [null, '0.98'], [null, null], [null, '80'],
+        ]))
       const result = await service.findCandidates(10.8231, 106.6297, 5)
       expect(result[0].score).toBeGreaterThan(result[1].score)
     })
 
     it('keeps compatibility with flat GEOSEARCH replies', async () => {
       mockRedis.call.mockResolvedValueOnce(['driver:1', '0.5'])
-      mockRedis.pipeline.mockReturnValueOnce({
-        set: jest.fn().mockReturnThis(),
-        get: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([
-          [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
-          [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
-        ]),
-      })
+      mockRedis.pipeline.mockReturnValueOnce(mockPipelineResult([
+        [null, 'online'], [null, ''], [null, '4.5'], [null, '1'],
+        [null, '0.9'], [null, '0.95'], [null, null], [null, '50'],
+      ]))
 
       const result = await service.findCandidates(10.8231, 106.6297, 5)
 
@@ -258,6 +235,51 @@ describe('DispatchService', () => {
         'order-1',
         'driver:assigned',
         { driverId: 'driver-1', etaMinutes: null },
+      )
+    })
+
+    it('does not commit DB assignment when Redis driver assignment fails', async () => {
+      mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce({
+        restaurantId: '00000000-0000-0000-0000-000000000001',
+        deliveryAddressId: '00000000-0000-0000-0000-000000000002',
+      })
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{
+        restLng: 106.7001,
+        restLat: 10.8001,
+        custLng: 106.7101,
+        custLat: 10.8101,
+      }])
+      mockRedis.pipeline.mockReturnValueOnce(mockPipelineResult([
+        [new Error('redis down'), null],
+        [null, 'OK'],
+        [null, 1],
+      ]))
+
+      await expect((service as unknown as {
+        assignDriver: (
+          orderId: string,
+          candidate: {
+            driverId: string
+            distKm: number
+            rating: number
+            totalDeliveries: number
+            score: number
+          },
+        ) => Promise<void>
+      }).assignDriver('order-1', {
+        driverId: 'driver-1',
+        distKm: 4,
+        rating: 4.8,
+        totalDeliveries: 120,
+        score: 0.9,
+      })).rejects.toThrow('REDIS_DRIVER_ASSIGNMENT_FAILED')
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+      expect(mockGateway.sendAssignedOrder).not.toHaveBeenCalled()
+      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalledWith(
+        'order-1',
+        'driver:assigned',
+        expect.any(Object),
       )
     })
   })

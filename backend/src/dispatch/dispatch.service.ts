@@ -183,10 +183,6 @@ export class DispatchService {
   }
 
   private async assignDriver(orderId: string, candidate: DriverCandidate): Promise<void> {
-    const pipeline = this.redis.pipeline()
-    pipeline.set(`driver:${candidate.driverId}:status`, 'busy')
-    pipeline.set(`driver:${candidate.driverId}:current_order`, orderId)
-
     const order = await this.prisma.order.findUniqueOrThrow({
       where: { id: orderId },
       select: { deliveryAddressId: true, restaurantId: true },
@@ -201,25 +197,52 @@ export class DispatchService {
     const location = coords[0]
     if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
 
-    await this.prisma.$transaction([
-      this.prisma.order.update({ where: { id: orderId }, data: { driverId: candidate.driverId, status: 'driver_assigned' } }),
-      this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
-      this.prisma.$executeRawUnsafe(
-        `INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
-         VALUES ($1::uuid, $2::uuid, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326), ST_SetSRID(ST_MakePoint($5::float8, $6::float8), 4326), 'assigned', $7::numeric, NOW())`,
-        orderId, candidate.driverId,
-        location.restLng, location.restLat,
-        location.custLng, location.custLat,
-        candidate.rating.toString(),
-      ),
-    ])
-
-    await pipeline.exec()
+    await this.writeDriverAssignmentToRedis(candidate.driverId, orderId)
+    try {
+      await this.prisma.$transaction([
+        this.prisma.order.update({ where: { id: orderId }, data: { driverId: candidate.driverId, status: 'driver_assigned' } }),
+        this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
+        this.prisma.$executeRawUnsafe(
+          `INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
+           VALUES ($1::uuid, $2::uuid, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326), ST_SetSRID(ST_MakePoint($5::float8, $6::float8), 4326), 'assigned', $7::numeric, NOW())`,
+          orderId, candidate.driverId,
+          location.restLng, location.restLat,
+          location.custLng, location.custLat,
+          candidate.rating.toString(),
+        ),
+      ])
+    } catch (err) {
+      await this.releaseRedisAssignment(candidate.driverId, orderId)
+      throw err
+    }
     this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
     this.dispatchGateway.broadcastToOrder(orderId, 'driver:assigned', {
       driverId: candidate.driverId,
       etaMinutes: null,
     })
+  }
+
+  private async writeDriverAssignmentToRedis(driverId: string, orderId: string): Promise<void> {
+    const pipeline = this.redis.pipeline()
+    pipeline.set(`driver:${driverId}:status`, 'busy')
+    pipeline.set(`driver:${driverId}:current_order`, orderId)
+    pipeline.del(`driver:${driverId}:idle_since`)
+    const results = await pipeline.exec()
+    if (!results || results.length !== 3 || results.some(([error]) => error)) {
+      throw new Error('REDIS_DRIVER_ASSIGNMENT_FAILED')
+    }
+  }
+
+  private async releaseRedisAssignment(driverId: string, orderId: string): Promise<void> {
+    await this.redis.eval(
+      `if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("del", KEYS[1]); redis.call("set", KEYS[2], "online"); redis.call("set", KEYS[3], ARGV[2]); return 1 else return 0 end`,
+      3,
+      `driver:${driverId}:current_order`,
+      `driver:${driverId}:status`,
+      `driver:${driverId}:idle_since`,
+      orderId,
+      Date.now().toString(),
+    )
   }
 }
 
