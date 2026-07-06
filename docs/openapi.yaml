@@ -1772,9 +1772,10 @@ components:
         id:        { type: string, format: uuid }
         title:     { type: string }
         body:      { type: string }
-        type:      { type: string, enum: [order_update, promotion, driver_alert, system] }
+        type:      { type: string, description: "Backend notification event type such as order_update, promotion.broadcast, support.reply, or driver_alert" }
         isRead:    { type: boolean }
-        payload:   { type: object, description: "Arbitrary JSON payload" }
+        data:      { type: object, description: "Arbitrary JSON payload persisted on the notification row" }
+        deepLink:  { type: string, nullable: true, description: "Optional client navigation target when supplied by the event producer" }
         createdAt: { type: string, format: date-time }
       required: [id, title, body, type, isRead, createdAt]
       example:
@@ -1783,7 +1784,8 @@ components:
         body: "Nhà hàng Phở 24 đã nhận đơn và đang chế biến món ăn của bạn"
         type: "order_update"
         isRead: false
-        payload: { orderId: "66666666-6666-4666-8666-666666666666", event: "preparing" }
+        data: { orderId: "66666666-6666-4666-8666-666666666666", event: "preparing" }
+        deepLink: "/orders/66666666-6666-4666-8666-666666666666"
         createdAt: "2026-06-09T11:05:00Z"
 
     RegisterFcmTokenRequest:
@@ -2402,9 +2404,10 @@ components:
     PaginatedNotifications:
       type: object
       properties:
-        data: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        notifications: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        unreadCount: { type: integer, minimum: 0 }
         meta: { $ref: "#/components/schemas/PaginationMeta" }
-      required: [data, meta]
+      required: [notifications, unreadCount, meta]
     PaginatedAuditLogs:
       type: object
       properties:

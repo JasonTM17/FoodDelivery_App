@@ -18,12 +18,12 @@ export class InAppChannel implements NotificationChannel {
       this.logger.warn(`Gateway unavailable; skipping in-app for user ${userId}`)
       return { success: false, error: 'Gateway unavailable' }
     }
+    if (!payload.notification) {
+      this.logger.error(`Canonical notification payload missing for user ${userId}`)
+      return { success: false, error: 'CANONICAL_NOTIFICATION_REQUIRED' }
+    }
     try {
-      this.gateway.sendToUser(userId, {
-        title: payload.title,
-        body: payload.body,
-        data: payload.data ?? {},
-      })
+      this.gateway.sendToUser(userId, payload.notification)
       return { success: true }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)

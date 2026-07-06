@@ -198,6 +198,7 @@ void main() {
         title: 'Đơn hàng đã xác nhận',
         body: 'Nhà hàng đang chuẩn bị đơn của bạn',
         createdAt: DateTime(2026, 1, 1),
+        isRead: false,
       );
 
       await tester.pumpWidget(

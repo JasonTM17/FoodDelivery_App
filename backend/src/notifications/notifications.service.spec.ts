@@ -105,6 +105,36 @@ describe('NotificationsService', () => {
       dateSpy.mockRestore()
     })
 
+    it('sends canonical persisted notification rows over in-app realtime', async () => {
+      mockRedis.set.mockResolvedValueOnce('OK')
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+
+      await service.fanout(userId, eventType, payload)
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          type: eventType,
+          data: expect.objectContaining({ eventType }),
+        }),
+      })
+      expect(mockInApp.send).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({
+          notification: expect.objectContaining({
+            id: 'n1',
+            title: 't',
+            body: 'b',
+            type: 'order_accepted',
+            data: {},
+            isRead: false,
+            createdAt: expect.any(String),
+          }),
+        }),
+      )
+      dateSpy.mockRestore()
+    })
+
     it('skips on dedup (redis.set returns null)', async () => {
       mockRedis.set.mockResolvedValueOnce(null)
 

@@ -33,20 +33,17 @@ class DriverNotification {
 
   factory DriverNotification.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
-    final payload = data is Map
-        ? Map<String, dynamic>.from(data)
-        : const <String, dynamic>{};
+    final payload = data == null ? null : _requiredObject(data, 'data');
     return DriverNotification(
-      id: json['id'] as String? ?? '',
-      type:
-          json['type'] as String? ??
-          payload['eventType'] as String? ??
-          'system',
-      title: json['title'] as String? ?? '',
-      body: json['body'] as String? ?? json['message'] as String? ?? '',
+      id: _requiredString(json, 'id'),
+      type: _requiredString(json, 'type'),
+      title: _requiredString(json, 'title'),
+      body: _requiredString(json, 'body'),
       createdAt: parseBackendDateTimeOrUnknown(json['createdAt']),
-      isRead: json['isRead'] as bool? ?? json['read'] as bool? ?? false,
-      deepLink: json['deepLink'] as String? ?? payload['deepLink'] as String?,
+      isRead: _requiredBool(json, 'isRead'),
+      deepLink:
+          _optionalString(json, 'deepLink') ??
+          (payload == null ? null : _optionalString(payload, 'deepLink')),
     );
   }
 
@@ -103,12 +100,18 @@ class DriverNotificationsNotifier
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get<dynamic>('/notifications');
-      final notifications = _parseNotifications(response.data);
-      final unreadCount = _parseUnreadCount(response.data, notifications);
+      final envelope = _parseNotificationEnvelope(response.data);
       state = state.copyWith(
         isLoading: false,
-        notifications: notifications,
-        unreadCount: unreadCount,
+        notifications: envelope.notifications,
+        unreadCount: envelope.unreadCount,
+      );
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        notifications: const [],
+        unreadCount: 0,
+        error: 'NOTIFICATIONS_CONTRACT_INVALID_RESPONSE',
       );
     } catch (error) {
       state = state.copyWith(isLoading: false, error: _errorMessage(error));
@@ -149,22 +152,78 @@ class DriverNotificationsNotifier
   }
 }
 
-List<DriverNotification> _parseNotifications(dynamic data) {
-  final list = data is Map ? data['notifications'] : data;
-  if (list is! List) return const [];
-  return list
+class _NotificationEnvelope {
+  final List<DriverNotification> notifications;
+  final int unreadCount;
+
+  const _NotificationEnvelope({
+    required this.notifications,
+    required this.unreadCount,
+  });
+}
+
+_NotificationEnvelope _parseNotificationEnvelope(dynamic data) {
+  final envelope = _requiredObject(data, 'notifications envelope');
+  final rows = _requiredList(envelope, 'notifications');
+  final notifications = rows
       .whereType<Map>()
       .map(
         (item) => DriverNotification.fromJson(Map<String, dynamic>.from(item)),
       )
-      .toList();
+      .toList(growable: false);
+  if (notifications.length != rows.length) {
+    throw const FormatException('Invalid notification row');
+  }
+  _validatePaginationMeta(envelope['meta']);
+  return _NotificationEnvelope(
+    notifications: notifications,
+    unreadCount: _requiredNonNegativeInt(envelope, 'unreadCount'),
+  );
 }
 
-int _parseUnreadCount(dynamic data, List<DriverNotification> notifications) {
-  if (data is Map && data['unreadCount'] is num) {
-    return (data['unreadCount'] as num).toInt();
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
   }
-  return notifications.where((notification) => !notification.isRead).length;
+  throw FormatException('Missing required notification object field: $field');
+}
+
+List<dynamic> _requiredList(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is List) return value;
+  throw FormatException('Missing required notification list field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing required notification string field: $field');
+}
+
+String? _optionalString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value == null) return null;
+  if (value is String) return value;
+  throw FormatException('Invalid optional notification string field: $field');
+}
+
+bool _requiredBool(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is bool) return value;
+  throw FormatException('Missing required notification boolean field: $field');
+}
+
+int _requiredNonNegativeInt(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is int && value >= 0) return value;
+  throw FormatException('Missing required notification integer field: $field');
+}
+
+void _validatePaginationMeta(dynamic value) {
+  final meta = _requiredObject(value, 'meta');
+  _requiredNonNegativeInt(meta, 'page');
+  _requiredNonNegativeInt(meta, 'limit');
+  _requiredNonNegativeInt(meta, 'total');
 }
 
 String _errorMessage(Object error) {

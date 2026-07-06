@@ -2,6 +2,7 @@ export interface ChannelPayload {
   title: string
   body: string
   data?: Record<string, unknown>
+  notification?: Record<string, unknown>
   critical?: boolean
 }
 

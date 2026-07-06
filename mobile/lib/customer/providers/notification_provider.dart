@@ -25,19 +25,23 @@ class NotificationModel {
     required this.title,
     required this.body,
     required this.createdAt,
-    this.isRead = false,
+    required this.isRead,
     this.deepLink,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    final payload = data == null ? null : _requiredObject(data, 'data');
     return NotificationModel(
-      id: json['id'] as String? ?? '',
-      type: json['type'] as String? ?? 'system',
-      title: json['title'] as String? ?? '',
-      body: json['body'] as String? ?? json['message'] as String? ?? '',
+      id: _requiredString(json, 'id'),
+      type: _requiredString(json, 'type'),
+      title: _requiredString(json, 'title'),
+      body: _requiredString(json, 'body'),
       createdAt: parseBackendDateTimeOrUnknown(json['createdAt']),
-      isRead: json['isRead'] as bool? ?? json['read'] as bool? ?? false,
-      deepLink: json['deepLink'] as String?,
+      isRead: _requiredBool(json, 'isRead'),
+      deepLink:
+          _optionalString(json, 'deepLink') ??
+          (payload == null ? null : _optionalString(payload, 'deepLink')),
     );
   }
 
@@ -81,41 +85,52 @@ class NotificationState {
 }
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
-  final ApiClient _api = ApiClient.instance;
+  final ApiClient _api;
   StreamSubscription<Map<String, dynamic>>? _notifSub;
 
-  NotificationNotifier() : super(const NotificationState()) {
+  NotificationNotifier({ApiClient? apiClient})
+    : _api = apiClient ?? ApiClient.instance,
+      super(const NotificationState()) {
     _subscribeToWs();
   }
 
   void _subscribeToWs() {
     _notifSub = SocketClient.instance.onNotification.listen((data) {
-      final notif = NotificationModel.fromJson(data);
-      state = state.copyWith(
-        notifications: [notif, ...state.notifications],
-        unreadCount: state.unreadCount + 1,
-      );
+      try {
+        final notif = NotificationModel.fromJson(data);
+        state = state.copyWith(
+          notifications: [notif, ...state.notifications],
+          unreadCount: state.unreadCount + (notif.isRead ? 0 : 1),
+        );
+      } on FormatException {
+        state = state.copyWith(
+          error: 'NOTIFICATIONS_CONTRACT_INVALID_RESPONSE',
+        );
+      }
     });
   }
 
   Future<void> fetchNotifications() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.get('/notifications');
-      final dataList = response.data as List<dynamic>;
-      final notifications = dataList
-          .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final unread = notifications.where((n) => !n.isRead).length;
+      final response = await _api.get<dynamic>('/notifications');
+      final envelope = _parseNotificationEnvelope(response.data);
       state = state.copyWith(
         isLoading: false,
-        notifications: notifications,
-        unreadCount: unread,
+        notifications: envelope.notifications,
+        unreadCount: envelope.unreadCount,
       );
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ?? 'Không thể tải thông báo.';
       state = state.copyWith(isLoading: false, error: message);
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        notifications: const [],
+        unreadCount: 0,
+        error: 'NOTIFICATIONS_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
@@ -160,4 +175,76 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     _notifSub?.cancel();
     super.dispose();
   }
+}
+
+class _NotificationEnvelope {
+  final List<NotificationModel> notifications;
+  final int unreadCount;
+
+  const _NotificationEnvelope({
+    required this.notifications,
+    required this.unreadCount,
+  });
+}
+
+_NotificationEnvelope _parseNotificationEnvelope(dynamic data) {
+  final envelope = _requiredObject(data, 'notifications envelope');
+  final rows = _requiredList(envelope, 'notifications');
+  final notifications = rows
+      .map(
+        (item) => NotificationModel.fromJson(
+          _requiredObject(item, 'notifications[]'),
+        ),
+      )
+      .toList(growable: false);
+  _validatePaginationMeta(envelope['meta']);
+  return _NotificationEnvelope(
+    notifications: notifications,
+    unreadCount: _requiredNonNegativeInt(envelope, 'unreadCount'),
+  );
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Missing required notification object field: $field');
+}
+
+List<dynamic> _requiredList(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is List) return value;
+  throw FormatException('Missing required notification list field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing required notification string field: $field');
+}
+
+String? _optionalString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value == null) return null;
+  if (value is String) return value;
+  throw FormatException('Invalid optional notification string field: $field');
+}
+
+bool _requiredBool(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is bool) return value;
+  throw FormatException('Missing required notification boolean field: $field');
+}
+
+int _requiredNonNegativeInt(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is int && value >= 0) return value;
+  throw FormatException('Missing required notification integer field: $field');
+}
+
+void _validatePaginationMeta(dynamic value) {
+  final meta = _requiredObject(value, 'meta');
+  _requiredNonNegativeInt(meta, 'page');
+  _requiredNonNegativeInt(meta, 'limit');
+  _requiredNonNegativeInt(meta, 'total');
 }

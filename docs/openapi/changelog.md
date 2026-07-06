@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: Aligned `GET /notifications` with the implemented backend envelope `{ notifications, unreadCount, meta }`, documented persisted `Notification.data`, and removed legacy mobile list/message/read fallbacks from the notification contract.
 - 2026-07-06: Aligned public `GET /restaurants/{restaurantId}/menu` with the documented categories/items contract; backend now serializes visible categories and available items instead of raw Prisma `menuItems`, and mobile rejects legacy list/blank menu item fallbacks.
 - 2026-07-06: `/admin/kpis` now returns database-backed deltas and populated sparklines for users, restaurants, and drivers; `period=today` uses hourly buckets so dashboard KPI cards do not render blank charts.
 - 2026-07-06: Tightened `GET /admin/dispatch/heatmap` so `since` is required and invalid timestamps return `400` instead of silently falling back to a synthetic last-24-hours window.

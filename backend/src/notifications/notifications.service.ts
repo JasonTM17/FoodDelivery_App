@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { Prisma } from '@prisma/client'
+import { Prisma, type Notification } from '@prisma/client'
 import Redis from 'ioredis'
 import { NotificationsGateway } from './notifications.gateway'
 import { InAppChannel } from './channels/in-app.channel'
@@ -28,6 +28,8 @@ interface NotificationSettingRow {
   channels: string[]
   enabled: boolean
 }
+
+type RealtimeNotification = Pick<Notification, 'id' | 'title' | 'body' | 'type' | 'data' | 'isRead' | 'createdAt'>
 
 @Injectable()
 export class NotificationsService {
@@ -77,6 +79,15 @@ export class NotificationsService {
       critical: isCritical,
     }
 
+    const notification = await this.insertAuditRecord({
+      userId,
+      title: rendered.title,
+      body: rendered.body,
+      type: eventType,
+      payload: channelPayload.data,
+    })
+    channelPayload.notification = this.toRealtimeNotification(notification)
+
     const results = await Promise.allSettled(
       effectiveChannels.map(ch => this.dispatchChannel(ch, userId, channelPayload)),
     )
@@ -85,14 +96,6 @@ export class NotificationsService {
     if (failCount > 0) {
       this.logger.warn(`${failCount}/${results.length} channels failed for userId=${userId} event=${eventType}`)
     }
-
-    await this.insertAuditRecord({
-      userId,
-      title: rendered.title,
-      body: rendered.body,
-      type: eventType,
-      payload: payload.data,
-    })
 
     return { sent: true }
   }
@@ -203,15 +206,19 @@ export class NotificationsService {
     userId: string; title: string; body: string; type: string; payload?: Record<string, unknown>
   }) {
     const notification = await this.insertAuditRecord(data)
-    this.gateway?.sendToUser(data.userId, {
+    this.gateway?.sendToUser(data.userId, this.toRealtimeNotification(notification))
+    return notification
+  }
+
+  private toRealtimeNotification(notification: RealtimeNotification) {
+    return {
       id: notification.id,
       title: notification.title,
       body: notification.body,
       type: notification.type,
-      data: notification.data,
+      data: notification.data ?? {},
       isRead: notification.isRead,
-      createdAt: notification.createdAt,
-    })
-    return notification
+      createdAt: notification.createdAt.toISOString(),
+    }
   }
 }
