@@ -268,13 +268,10 @@ export type RestaurantInsightSuggestionParams = Record<string, string | number |
 export interface RestaurantInsightSuggestion {
   id: string;
   type: RestaurantInsightSuggestionType;
-  title?: string;
-  description?: string;
-  predictedImpact?: string;
-  titleKey?: string;
-  descriptionKey?: string;
-  predictedImpactKey?: string;
-  params?: RestaurantInsightSuggestionParams;
+  titleKey: string;
+  descriptionKey: string;
+  predictedImpactKey: string;
+  params: RestaurantInsightSuggestionParams;
   actionable: boolean;
 }
 

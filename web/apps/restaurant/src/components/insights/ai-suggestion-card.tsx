@@ -22,14 +22,9 @@ const TYPE_ICONS: Record<SuggestionType, React.ReactNode> = {
 export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: AiSuggestionCardProps) {
   const t = useTranslations('insights.suggestions');
   const values = suggestion.params ?? {};
-  const title = getSuggestionText(t, suggestion.titleKey, suggestion.title, values);
-  const description = getSuggestionText(t, suggestion.descriptionKey, suggestion.description, values);
-  const predictedImpact = getSuggestionText(
-    t,
-    suggestion.predictedImpactKey,
-    suggestion.predictedImpact,
-    values,
-  );
+  const title = t(suggestion.titleKey, toTranslationValues(values));
+  const description = t(suggestion.descriptionKey, toTranslationValues(values));
+  const predictedImpact = t(suggestion.predictedImpactKey, toTranslationValues(values));
 
   return (
     <div className="card space-y-3" data-testid="ai-suggestion-card">
@@ -82,17 +77,6 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
       )}
     </div>
   );
-}
-
-type SuggestionTranslator = ReturnType<typeof useTranslations>;
-
-function getSuggestionText(
-  t: SuggestionTranslator,
-  key: string | undefined,
-  fallback: string | undefined,
-  values: AiSuggestionParams,
-): string {
-  return key ? t(key, toTranslationValues(values)) : fallback ?? '';
 }
 
 function toTranslationValues(values: AiSuggestionParams): Record<string, string | number | Date> {

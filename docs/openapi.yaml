@@ -1497,19 +1497,16 @@ components:
 
     RestaurantInsightSuggestion:
       type: object
-      description: Recommendation payload. New runtime responses prefer i18n keys plus params; legacy text fields remain optional for one compatibility cycle.
+      description: Recommendation payload. Runtime responses carry i18n keys plus params; localized text is resolved by the client.
       properties:
         id: { type: string }
         type: { type: string, enum: [pricing, menu_mix, marketing, operations] }
-        title: { type: string }
-        description: { type: string }
-        predictedImpact: { type: string }
         titleKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
         descriptionKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
         predictedImpactKey: { type: string, description: "Key under restaurant web `insights.suggestions` messages" }
         params: { $ref: "#/components/schemas/RestaurantInsightSuggestionParams" }
         actionable: { type: boolean }
-      required: [id, type, actionable]
+      required: [id, type, titleKey, descriptionKey, predictedImpactKey, params, actionable]
       example:
         id: "menu-availability"
         type: "menu_mix"

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { AiSuggestion } from '@/lib/types';
 import { describe, expect, it, vi } from 'vitest';
 import { AiSuggestionCard } from '@/components/insights/ai-suggestion-card';
 
@@ -37,7 +38,7 @@ describe('AiSuggestionCard', () => {
     expect(screen.getByText('Reduce failed orders')).toBeVisible();
   });
 
-  it('keeps legacy text fallback for older insight payloads', () => {
+  it('ignores legacy text fields when a payload carries extra stale properties', () => {
     render(
       <AiSuggestionCard
         suggestion={{
@@ -46,14 +47,19 @@ describe('AiSuggestionCard', () => {
           title: 'Legacy title',
           description: 'Legacy description',
           predictedImpact: 'Legacy impact',
+          titleKey: 'catalog.menuAvailability.title',
+          descriptionKey: 'catalog.menuAvailability.description',
+          predictedImpactKey: 'catalog.menuAvailability.impact',
+          params: { count: 1 },
           actionable: false,
-        }}
+        } as unknown as AiSuggestion}
       />,
     );
 
-    expect(screen.getByText('Legacy title')).toBeVisible();
-    expect(screen.getByText('Legacy description')).toBeVisible();
-    expect(screen.getByText('Legacy impact')).toBeVisible();
+    expect(screen.queryByText('Legacy title')).not.toBeInTheDocument();
+    expect(screen.queryByText('Legacy description')).not.toBeInTheDocument();
+    expect(screen.queryByText('Legacy impact')).not.toBeInTheDocument();
+    expect(screen.getByText('Review hidden menu items')).toBeVisible();
   });
 });
 
