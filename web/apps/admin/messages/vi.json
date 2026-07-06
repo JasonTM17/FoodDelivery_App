@@ -961,6 +961,8 @@
     "notFound": "Không tìm thấy yêu cầu hỗ trợ",
     "replyPlaceholder": "Nhập phản hồi...",
     "markdownSupported": "Hỗ trợ Markdown",
+    "macrosLoading": "Đang tải macro...",
+    "macrosError": "Không thể tải macro",
     "send": "Gửi",
     "sending": "Đang gửi...",
     "replyError": "Không thể gửi phản hồi",
@@ -981,8 +983,10 @@
     }
   },
   "macros": {
+    "trigger": "/macro",
     "searchPlaceholder": "Tìm macro...",
-    "empty": "Không tìm thấy macro"
+    "empty": "Không tìm thấy macro",
+    "uncategorized": "Chưa phân loại"
   },
   "bulkActions": {
     "selectedCount": "Đã chọn {selected}/{total} ticket",

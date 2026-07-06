@@ -15,6 +15,7 @@ import TicketPriorityBadge from '@/components/support/ticket-priority-badge';
 import SupportTicketDetailSidebar from '@/components/support/support-ticket-detail-sidebar';
 import SupportTicketReplyComposer from '@/components/support/support-ticket-reply-composer';
 import type { TicketDetail } from '@/components/support/support-ticket-detail-types';
+import type { MacroContext, MacroTemplate } from '@/lib/macro-engine';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
@@ -30,6 +31,15 @@ export default function SupportTicketDetailPage() {
   const { data: ticket, isLoading } = useQuery<TicketDetail>({
     queryKey: ['support-ticket', id],
     queryFn: () => apiGet<TicketDetail>(`/admin/support-tickets/${id}`),
+  });
+
+  const {
+    data: macros,
+    isLoading: macrosLoading,
+    isError: macrosError,
+  } = useQuery<MacroTemplate[]>({
+    queryKey: ['support-macros'],
+    queryFn: () => apiGet<MacroTemplate[]>('/admin/support-macros'),
   });
 
   const sendReply = async () => {
@@ -76,6 +86,18 @@ export default function SupportTicketDetailPage() {
     closed: t('status.closed'),
   };
   const statusLabel = statusLabels[ticket.status] ?? ticket.status;
+  const macroContext: MacroContext = {
+    customer: {
+      id: ticket.userId,
+      name: ticket.userName,
+      email: ticket.userEmail,
+    },
+    order: ticket.orderId ? { id: ticket.orderId } : undefined,
+    ticket: {
+      id: ticket.id,
+      subject: ticket.subject || ticket.issueType,
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -117,6 +139,11 @@ export default function SupportTicketDetailPage() {
             value={replyText}
             replying={replying}
             error={replyError}
+            macros={macros ?? []}
+            macroContext={macroContext}
+            macroStatus={
+              macrosLoading ? t('macrosLoading') : macrosError ? t('macrosError') : ''
+            }
             copy={{
               placeholder: t('replyPlaceholder'),
               markdownSupported: t('markdownSupported'),

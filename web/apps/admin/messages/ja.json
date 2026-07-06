@@ -961,6 +961,8 @@
     "notFound": "サポートチケットが見つかりません",
     "replyPlaceholder": "返信を入力...",
     "markdownSupported": "Markdown対応",
+    "macrosLoading": "マクロを読み込み中...",
+    "macrosError": "マクロを読み込めません",
     "send": "送信",
     "sending": "送信中...",
     "replyError": "返信を送信できません",
@@ -981,8 +983,10 @@
     }
   },
   "macros": {
+    "trigger": "/macro",
     "searchPlaceholder": "マクロを検索...",
-    "empty": "マクロが見つかりません"
+    "empty": "マクロが見つかりません",
+    "uncategorized": "未分類"
   },
   "bulkActions": {
     "selectedCount": "{selected}/{total} 件を選択中",

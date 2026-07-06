@@ -31,16 +31,23 @@ export default function TicketMacroPicker({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
+  const uncategorizedLabel = t('uncategorized');
   const filtered = macros.filter(
-    (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.shortcut.toLowerCase().includes(search.toLowerCase()) ||
-      m.category.toLowerCase().includes(search.toLowerCase())
+    (m) => {
+      const normalizedSearch = search.toLowerCase();
+      const tags = normalizeTags(m);
+      return (
+        m.name.toLowerCase().includes(normalizedSearch) ||
+        m.body.toLowerCase().includes(normalizedSearch) ||
+        tags.some((tag) => tag.toLowerCase().includes(normalizedSearch))
+      );
+    }
   );
 
   const grouped = filtered.reduce<Record<string, MacroTemplate[]>>((acc, m) => {
-    if (!acc[m.category]) acc[m.category] = [];
-    acc[m.category].push(m);
+    const category = normalizeTags(m)[0] ?? uncategorizedLabel;
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(m);
     return acc;
   }, {});
 
@@ -56,7 +63,7 @@ export default function TicketMacroPicker({
           data-testid="macro-picker-trigger"
         >
           <Zap className="h-3 w-3" />
-          /macro
+          {t('trigger')}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
@@ -97,13 +104,12 @@ export default function TicketMacroPicker({
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">{m.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{m.shortcut}</span>
                         </div>
                         <div className="flex items-center gap-1 mt-1">
                           <p className="text-xs text-muted-foreground truncate">{preview}...</p>
                         </div>
                         <div className="flex gap-1 mt-1">
-                          {m.tags.map((tag) => (
+                          {normalizeTags(m).map((tag) => (
                             <Badge key={tag} variant="outline" className="text-[10px] py-0 h-4">
                               {tag}
                             </Badge>
@@ -120,4 +126,8 @@ export default function TicketMacroPicker({
       </PopoverContent>
     </Popover>
   );
+}
+
+function normalizeTags(macro: MacroTemplate): string[] {
+  return Array.isArray(macro.tags) ? macro.tags.filter(Boolean) : [];
 }

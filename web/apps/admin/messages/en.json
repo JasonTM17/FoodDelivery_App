@@ -961,6 +961,8 @@
     "notFound": "Support ticket not found",
     "replyPlaceholder": "Write a reply...",
     "markdownSupported": "Markdown supported",
+    "macrosLoading": "Loading macros...",
+    "macrosError": "Could not load macros",
     "send": "Send",
     "sending": "Sending...",
     "replyError": "Could not send reply",
@@ -981,8 +983,10 @@
     }
   },
   "macros": {
+    "trigger": "/macro",
     "searchPlaceholder": "Search macros...",
-    "empty": "No macros found"
+    "empty": "No macros found",
+    "uncategorized": "Uncategorized"
   },
   "bulkActions": {
     "selectedCount": "Selected {selected}/{total} tickets",
