@@ -41,4 +41,51 @@ void main() {
       },
     );
   });
+
+  group('RestaurantModel ratings', () {
+    test(
+      'does not fabricate aggregate restaurant ratings when API omits them',
+      () {
+        final restaurant = RestaurantModel.fromJson({
+          'id': 'restaurant-1',
+          'name': 'Real Bistro',
+        });
+
+        expect(restaurant.rating, isNull);
+        expect(restaurant.toJson()['rating'], isNull);
+      },
+    );
+
+    test('does not fabricate perfect review ratings when API omits them', () {
+      final review = ReviewModel.fromJson({
+        'id': 'review-1',
+        'userId': 'user-1',
+        'createdAt': '2026-07-06T00:00:00.000Z',
+      });
+
+      expect(review.foodRating, isNull);
+      expect(review.deliveryRating, isNull);
+      expect(review.toJson()['foodRating'], isNull);
+      expect(review.toJson()['deliveryRating'], isNull);
+    });
+
+    test('keeps valid backend rating values', () {
+      final restaurant = RestaurantModel.fromJson({
+        'id': 'restaurant-1',
+        'name': 'Real Bistro',
+        'rating': '4.6',
+      });
+      final review = ReviewModel.fromJson({
+        'id': 'review-1',
+        'userId': 'user-1',
+        'foodRating': 4,
+        'deliveryRating': 5,
+        'createdAt': '2026-07-06T00:00:00.000Z',
+      });
+
+      expect(restaurant.rating, 4.6);
+      expect(review.foodRating, 4);
+      expect(review.deliveryRating, 5);
+    });
+  });
 }

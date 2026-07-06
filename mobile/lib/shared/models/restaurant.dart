@@ -7,7 +7,7 @@ class RestaurantModel {
   final String? description;
   final String? coverImageUrl;
   final String? logoUrl;
-  final double rating;
+  final double? rating;
   final int reviewCount;
   final String? distance;
   final int estimatedPrepTime;
@@ -26,7 +26,7 @@ class RestaurantModel {
     this.description,
     this.coverImageUrl,
     this.logoUrl,
-    this.rating = 0.0,
+    this.rating,
     this.reviewCount = 0,
     this.distance,
     this.estimatedPrepTime = 0,
@@ -49,7 +49,7 @@ class RestaurantModel {
           json['coverImageUrl'] as String? ??
           json['cover_image_url'] as String?,
       logoUrl: json['logoUrl'] as String? ?? json['logo_url'] as String?,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      rating: _readRating(json['rating'], min: 0),
       reviewCount:
           json['reviewCount'] as int? ?? json['review_count'] as int? ?? 0,
       distance: json['distance'] as String?,
@@ -115,8 +115,8 @@ class ReviewModel {
   final String userId;
   final String? userName;
   final String? userAvatarUrl;
-  final double foodRating;
-  final double deliveryRating;
+  final double? foodRating;
+  final double? deliveryRating;
   final String? comment;
   final DateTime createdAt;
 
@@ -125,8 +125,8 @@ class ReviewModel {
     required this.userId,
     this.userName,
     this.userAvatarUrl,
-    this.foodRating = 5.0,
-    this.deliveryRating = 5.0,
+    this.foodRating,
+    this.deliveryRating,
     this.comment,
     required this.createdAt,
   });
@@ -139,8 +139,8 @@ class ReviewModel {
       userAvatarUrl:
           json['userAvatarUrl'] as String? ??
           json['user_avatar_url'] as String?,
-      foodRating: (json['foodRating'] as num?)?.toDouble() ?? 5.0,
-      deliveryRating: (json['deliveryRating'] as num?)?.toDouble() ?? 5.0,
+      foodRating: _readRating(json['foodRating'], min: 1),
+      deliveryRating: _readRating(json['deliveryRating'], min: 1),
       comment: json['comment'] as String?,
       createdAt: parseBackendDateTimeOrUnknown(
         json['createdAt'] ?? json['created_at'],
@@ -155,4 +155,14 @@ class ReviewModel {
       'comment': comment,
     };
   }
+}
+
+double? _readRating(Object? value, {required double min}) {
+  final parsed = value is num
+      ? value.toDouble()
+      : double.tryParse(value?.toString() ?? '');
+  if (parsed == null || !parsed.isFinite || parsed < min || parsed > 5) {
+    return null;
+  }
+  return parsed;
 }

@@ -105,21 +105,35 @@ class RestaurantCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 16, color: AppColors.accent),
-                      const SizedBox(width: 4),
-                      Text(
-                        restaurant.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                      if (restaurant.rating != null) ...[
+                        const Icon(
+                          Icons.star,
+                          size: 16,
+                          color: AppColors.accent,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${restaurant.reviewCount})',
-                        style: AppTextStyles.caption,
-                      ),
+                        const SizedBox(width: 4),
+                        Text(
+                          restaurant.rating!.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${restaurant.reviewCount})',
+                          style: AppTextStyles.caption,
+                        ),
+                      ] else ...[
+                        const Icon(
+                          Icons.star_border,
+                          size: 16,
+                          color: AppColors.textHint,
+                        ),
+                        const SizedBox(width: 4),
+                        Text('—', style: AppTextStyles.caption),
+                      ],
                       const SizedBox(width: 12),
                       if (restaurant.distance != null) ...[
                         const Icon(

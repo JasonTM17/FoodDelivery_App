@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: Mobile restaurant/review rating parsing now preserves missing ratings as unknown instead of rendering fabricated `0.0` restaurant scores or perfect `5.0` review scores.
 - 2026-07-06: Tightened `GET /restaurant/insights` suggestions to require i18n keys plus `params`; legacy localized text fields are no longer part of the OpenAPI or shared web API-client contract.
 - 2026-07-06: Admin support replies now load macros from `GET /admin/support-macros`; the web composer no longer ships default runtime macro templates.
 - 2026-07-06: AI high-severity support escalation now creates persisted admin notifications through `NotificationsService` and reports `notifiedAdminCount`; it no longer returns fake `notified: true` when no admin notification was created.

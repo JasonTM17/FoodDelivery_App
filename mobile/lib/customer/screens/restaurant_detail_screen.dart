@@ -196,24 +196,36 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.star, size: 16, color: AppColors.accent),
-              const SizedBox(width: 4),
-              Text(
-                restaurant.rating.toStringAsFixed(1),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+              if (restaurant.rating != null) ...[
+                const Icon(Icons.star, size: 16, color: AppColors.accent),
+                const SizedBox(width: 4),
+                Text(
+                  restaurant.rating!.toStringAsFixed(1),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '(${restaurant.reviewCount})',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 12,
+                const SizedBox(width: 4),
+                Text(
+                  '(${restaurant.reviewCount})',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
                 ),
-              ),
+              ] else ...[
+                const Icon(Icons.star_border, size: 16, color: Colors.white70),
+                const SizedBox(width: 4),
+                Text(
+                  '—',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
               if (restaurant.distance != null) ...[
                 const SizedBox(width: 12),
                 const Icon(Icons.location_on, size: 14, color: Colors.white70),
@@ -391,12 +403,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
 
   Widget _buildReviewSummary(List<ReviewModel> reviews) {
     final l10n = AppLocalizations.of(context);
-    final avgFood =
-        reviews.fold<double>(0.0, (sum, r) => sum + r.foodRating) /
-        reviews.length;
-    final avgDelivery =
-        reviews.fold<double>(0.0, (sum, r) => sum + r.deliveryRating) /
-        reviews.length;
+    final avgFood = _averageRating(reviews.map((review) => review.foodRating));
+    final avgDelivery = _averageRating(
+      reviews.map((review) => review.deliveryRating),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -417,7 +427,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
           Column(
             children: [
               Text(
-                avgFood.toStringAsFixed(1),
+                _formatRating(avgFood),
                 style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w700,
@@ -437,7 +447,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
           Column(
             children: [
               Text(
-                avgDelivery.toStringAsFixed(1),
+                _formatRating(avgDelivery),
                 style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w700,
@@ -524,10 +534,14 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               ),
               Row(
                 children: [
-                  const Icon(Icons.star, size: 14, color: AppColors.accent),
+                  Icon(
+                    review.foodRating == null ? Icons.star_border : Icons.star,
+                    size: 14,
+                    color: AppColors.accent,
+                  ),
                   const SizedBox(width: 2),
                   Text(
-                    review.foodRating.toStringAsFixed(1),
+                    _formatRating(review.foodRating),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -608,7 +622,9 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                 _buildInfoRow(
                   Icons.star,
                   'Đánh giá',
-                  '${restaurant.rating.toStringAsFixed(1)} (${restaurant.reviewCount} đánh giá)',
+                  restaurant.rating == null
+                      ? '—'
+                      : '${restaurant.rating!.toStringAsFixed(1)} (${restaurant.reviewCount} đánh giá)',
                 ),
               ],
             ),
@@ -678,6 +694,14 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
     final minute = date.minute.toString().padLeft(2, '0');
     return '$day/$month/$year $hour:$minute';
   }
+
+  double? _averageRating(Iterable<double?> ratings) {
+    final valid = ratings.whereType<double>().toList();
+    if (valid.isEmpty) return null;
+    return valid.reduce((sum, rating) => sum + rating) / valid.length;
+  }
+
+  String _formatRating(double? rating) => rating?.toStringAsFixed(1) ?? '—';
 }
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
