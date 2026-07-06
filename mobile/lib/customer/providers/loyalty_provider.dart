@@ -18,12 +18,17 @@ class LoyaltyTransaction {
   });
 
   factory LoyaltyTransaction.fromJson(Map<String, dynamic> json) {
+    final type = _requiredString(json, 'type');
+    if (type != 'credit' && type != 'debit') {
+      throw FormatException('Invalid loyalty transaction type: $type');
+    }
+
     return LoyaltyTransaction(
-      id: json['id'] as String,
-      points: json['points'] as int,
-      isCredit: (json['type'] as String?) == 'credit',
-      description: json['description'] as String? ?? '',
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: _requiredString(json, 'id'),
+      points: _requiredInt(json, 'points'),
+      isCredit: type == 'credit',
+      description: _requiredString(json, 'description'),
+      createdAt: DateTime.parse(_requiredString(json, 'createdAt')),
     );
   }
 }
@@ -79,15 +84,19 @@ class LoyaltyNotifier extends StateNotifier<LoyaltyState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get('/users/loyalty');
-      final data = response.data as Map<String, dynamic>;
-      final txList = (data['transactions'] as List<dynamic>? ?? [])
-          .map((e) => LoyaltyTransaction.fromJson(e as Map<String, dynamic>))
+      final data = _requiredObject(response.data, 'loyalty');
+      final txList = _requiredList(data, 'transactions')
+          .map(
+            (e) => LoyaltyTransaction.fromJson(
+              _requiredObject(e, 'transactions[]'),
+            ),
+          )
           .toList();
       state = state.copyWith(
         isLoading: false,
-        totalPoints: data['totalPoints'] as int? ?? 0,
-        tier: data['tier'] as String? ?? 'bronze',
-        pointsToNextTier: data['pointsToNextTier'] as int? ?? 100,
+        totalPoints: _requiredInt(data, 'totalPoints'),
+        tier: _requiredString(data, 'tier'),
+        pointsToNextTier: _requiredInt(data, 'pointsToNextTier'),
         transactions: txList,
       );
     } on DioException catch (e) {
@@ -95,8 +104,44 @@ class LoyaltyNotifier extends StateNotifier<LoyaltyState> {
           e.response?.data?['message'] as String? ??
           'Không thể tải thông tin điểm thưởng.';
       state = state.copyWith(isLoading: false, error: msg);
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'LOYALTY_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra.');
     }
   }
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Invalid object field: $field');
+}
+
+List<dynamic> _requiredList(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is List) {
+    return value;
+  }
+  throw FormatException('Invalid list field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) {
+    return value;
+  }
+  throw FormatException('Missing required string field: $field');
+}
+
+int _requiredInt(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is int) {
+    return value;
+  }
+  throw FormatException('Invalid integer field: $field');
 }
