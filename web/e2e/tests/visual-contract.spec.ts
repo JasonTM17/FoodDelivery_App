@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { ADMIN_URL, RESTAURANT_URL } from '../fixtures/test-users'
+import { gotoAdminRoute, gotoRestaurantRoute } from '../fixtures/ui-auth'
 
 const ADMIN_LOGIN_HEADING = /login|admin|quản trị|管理者/i
 const RESTAURANT_LOGIN_HEADING = /login|restaurant|quản lý nhà hàng|nhà hàng|レストラン/i
@@ -82,7 +82,7 @@ async function expectCenteredLoginForm(page: Page, submitButton: Locator): Promi
 
 test.describe('Batch 4 visual contract regression', () => {
   test('admin login keeps FoodFlow brand shell responsive @visual', async ({ page }, testInfo) => {
-    await page.goto(`${ADMIN_URL}/en/login`)
+    await gotoAdminRoute(page, '/login', 'en')
     await disableMotion(page)
 
     await expect(page.getByRole('heading', { name: ADMIN_LOGIN_HEADING }).first()).toBeVisible()
@@ -96,7 +96,7 @@ test.describe('Batch 4 visual contract regression', () => {
   })
 
   test('restaurant login keeps FoodFlow brand shell responsive @visual', async ({ page }, testInfo) => {
-    await page.goto(`${RESTAURANT_URL}/en/login`)
+    await gotoRestaurantRoute(page, '/login', 'en')
     await disableMotion(page)
 
     await expect(page.getByRole('heading', { name: RESTAURANT_LOGIN_HEADING }).first()).toBeVisible()

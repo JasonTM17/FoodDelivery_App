@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { API_URL, adminUrl, TEST_USERS } from '../fixtures/test-users'
+import { API_URL, TEST_USERS } from '../fixtures/test-users'
 import {
   getFirstMenuItemIdViaApi,
   getOrderStatusViaApi,
@@ -8,7 +8,7 @@ import {
   placeOrderViaApi,
   updateOrderStatusViaApi,
 } from '../fixtures/api-helpers'
-import { loginAdminApp } from '../fixtures/ui-auth'
+import { gotoAdminRoute, loginAdminApp } from '../fixtures/ui-auth'
 
 async function waitForOrderStatus(
   request: Parameters<typeof getOrderStatusViaApi>[0],
@@ -79,7 +79,7 @@ test.describe('Realtime order status updates', () => {
     await waitForOrderStatus(request, customerToken, orderId, 'restaurant_accepted')
 
     await loginAdminApp(page, request)
-    await page.goto(adminUrl(`/orders/${orderId}`))
+    await gotoAdminRoute(page, `/orders/${orderId}`)
 
     await expect(
       page.getByText(/accepted|confirmed|restaurant accepted|đã xác nhận|nhà hàng đã nhận|確認済み|処理中/i).first(),

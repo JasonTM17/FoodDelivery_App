@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { loginViaApi } from '../fixtures/api-helpers'
-import { loginAdminApp } from '../fixtures/ui-auth'
-import { API_URL, adminUrl, TEST_USERS } from '../fixtures/test-users'
+import { gotoAdminRoute, loginAdminApp } from '../fixtures/ui-auth'
+import { API_URL, TEST_USERS } from '../fixtures/test-users'
 
 test.describe('Admin Dashboard', () => {
   test('overview renders KPI cards', async ({ page, request }) => {
@@ -35,7 +35,7 @@ test.describe('Admin Dashboard', () => {
 
   test('orders status filter is interactive', async ({ page, request }) => {
     await loginAdminApp(page, request)
-    await page.goto(adminUrl('/orders'))
+    await gotoAdminRoute(page, '/orders')
 
     const filterEl = page.getByRole('combobox', {
       name: /filter by status|lọc theo trạng thái|ステータスで絞り込む/i,

@@ -20,6 +20,20 @@ async function seedLocalStorage(page: Page, values: Record<string, string>): Pro
   }, Object.entries(values))
 }
 
+async function gotoAppRoute(page: Page, targetUrl: string): Promise<void> {
+  const response = await page.goto(targetUrl)
+  expect(response?.status(), `${targetUrl} should not return the Next.js 404 shell`).not.toBe(404)
+  await expect(page.getByRole('heading', { name: /^404$/ })).toHaveCount(0)
+}
+
+export function gotoAdminRoute(page: Page, path: string, locale?: 'vi' | 'en' | 'ja'): Promise<void> {
+  return gotoAppRoute(page, adminUrl(path, locale))
+}
+
+export function gotoRestaurantRoute(page: Page, path: string, locale?: 'vi' | 'en' | 'ja'): Promise<void> {
+  return gotoAppRoute(page, restaurantUrl(path, locale))
+}
+
 export async function loginAdminApp(page: Page, request: APIRequestContext): Promise<void> {
   const auth = await loginViaApi(request, TEST_USERS.admin.email, TEST_USERS.admin.password)
   await seedLocalStorage(page, {
@@ -32,7 +46,7 @@ export async function loginAdminApp(page: Page, request: APIRequestContext): Pro
     }),
   })
 
-  await page.goto(adminUrl('/overview'))
+  await gotoAdminRoute(page, '/overview')
   await expect(page).toHaveURL(/\/overview/, { timeout: 15_000 })
 }
 
@@ -49,7 +63,7 @@ export async function loginRestaurantApp(page: Page, request: APIRequestContext)
     restaurant_data: JSON.stringify({ id: restaurantId, name: 'FoodFlow E2E Restaurant' }),
   })
 
-  await page.goto(restaurantUrl('/orders'))
+  await gotoRestaurantRoute(page, '/orders')
   await expect(page).toHaveURL(/\/orders/, { timeout: 15_000 })
 }
 

@@ -1,7 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { API_URL, adminUrl, TEST_USERS } from '../fixtures/test-users';
+import { API_URL, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
+import { gotoAdminRoute } from '../fixtures/ui-auth';
 
 interface Envelope<T> {
   success?: boolean;
@@ -26,6 +27,28 @@ function unwrap<T>(body: unknown): T {
 
 function authHeaders(token: string): { Authorization: string } {
   return { Authorization: `Bearer ${token}` };
+}
+
+async function focusFirstVisibleAppControl(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await page.keyboard.press('Tab');
+    const hasVisibleAppFocus = await page.evaluate(() => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement)) return false;
+      if (active.closest('nextjs-portal')) return false;
+      if (active.matches('[data-nextjs-dev-tools-button="true"]')) return false;
+      if (!active.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')) {
+        return false;
+      }
+
+      const rect = active.getBoundingClientRect();
+      const style = window.getComputedStyle(active);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    });
+    if (hasVisibleAppFocus) return;
+  }
+
+  throw new Error('Expected keyboard Tab to focus a visible in-app control');
 }
 
 test.describe('Batch 4 API contracts', () => {
@@ -165,11 +188,10 @@ test.describe('Batch 4 accessibility smoke', () => {
       },
     );
 
-    await page.goto(adminUrl('/export-jobs'));
+    await gotoAdminRoute(page, '/export-jobs');
     await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
 
-    await page.keyboard.press('Tab');
-    await expect(page.locator(':focus')).toBeVisible();
+    await focusFirstVisibleAppControl(page);
     await expect(
       page.getByRole('table').or(page.getByRole('combobox')).or(page.getByRole('button')).first(),
     ).toBeVisible();
