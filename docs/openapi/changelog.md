@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: `/admin/kpis` now returns database-backed deltas and populated sparklines for users, restaurants, and drivers; `period=today` uses hourly buckets so dashboard KPI cards do not render blank charts.
 - 2026-07-06: Tightened `GET /admin/dispatch/heatmap` so `since` is required and invalid timestamps return `400` instead of silently falling back to a synthetic last-24-hours window.
 - 2026-07-06: Added `GET /orders/delivery-pricing` so mobile checkout reads the backend-configured base delivery fee instead of hardcoding local free-delivery thresholds or fallback fees; the same cleanup removes the fake FoodFlow Pro surface and static customer home promotions from runtime mobile UI.
 - 2026-07-06: Expanded `GET /orders/{orderId}/tracking` from customer-only to tenant-safe order participants (customer, assigned driver, active restaurant staff, admin) and wired Restaurant web live maps to the same real telemetry contract.
