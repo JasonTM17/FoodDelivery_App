@@ -2,16 +2,16 @@
 
 ## Latest local evidence (2026-07-06)
 
-Verified current head: `64e46c795c9c15ae52bb0112f91e93a6f3851645` on `origin/master`. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
+Verified code head: `33e90ea` on `origin/master` before this docs-only refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
 - Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
-- Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (108 suites / 773 tests), and `pnpm build`.
-- Web passed `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), and `pnpm build` (Admin 70 localized pages; Restaurant 55 localized pages).
+- Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (110 suites / 795 tests), and `pnpm build`.
+- Web passed `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 153 tests; Restaurant 31 files / 100 tests), and `pnpm build` (Admin 70 localized pages; Restaurant 55 localized pages).
 - Docker Compose rebuilt Backend/Admin/Restaurant images from the current source with frozen installs; health checks passed for `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, and `http://[::1]:3002/api/healthz` after the rebuild.
 - Playwright passed Chromium + Firefox together: 70/70 tests with IPv6 loopback URLs. Coverage includes axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation.
-- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (168 tests), and `flutter build apk --debug`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin.
+- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (224 tests), focused tracking/driver route/heatmap tests 22/22, and `flutter build apk --debug`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin.
 - OpenAPI/Spectral passed with `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
-- Security evidence: fallback high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
+- Security evidence: high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
 
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
@@ -69,7 +69,7 @@ pnpm --filter restaurant test
 pnpm --filter restaurant build
 ```
 
-Latest local web/API-contract evidence: 2026-07-06 on `64e46c795c9c15ae52bb0112f91e93a6f3851645`, OpenAPI Spectral lint passed with `--fail-severity error`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 36 files / 150 tests and Restaurant 31 files / 100 tests. Backend validation passed Prisma validate, `pnpm typecheck`, `pnpm lint`, full Jest (108 suites / 773 tests), and build.
+Latest local web/API-contract evidence: 2026-07-06 on `33e90ea`, OpenAPI Spectral lint passed with `--fail-severity error`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 37 files / 153 tests and Restaurant 31 files / 100 tests. Backend validation passed Prisma validate, `pnpm typecheck`, `pnpm lint`, full Jest (110 suites / 795 tests), and build.
 Earlier map/tracking evidence remains useful for history, but the current-head verification is the 2026-07-06 matrix in [Batch 4 release report](batch4-release-report.md).
 Latest current-head Restaurant web evidence: 2026-07-04 at `2cd87e5`, `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, `pnpm --filter restaurant test` (27 files / 79 tests), and `pnpm --filter restaurant build` all passed. The production build generated the localized `vi`, `en`, and `ja` route set plus `/api/healthz`.
 Latest current-head backend/web gate evidence: 2026-07-04 after `ad3b730`, backend `pnpm install --frozen-lockfile`, `pnpm prisma generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 752 tests), and `pnpm build` all passed. Web workspace `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 files / 139 tests; Restaurant 27 files / 79 tests), and `pnpm build` all passed. The Admin build generated 70 localized pages and the Restaurant build generated 55 localized pages across `vi`, `en`, and `ja`. Remote CI/Actions evidence for this head is still pending because account token/auth is unavailable.
@@ -90,7 +90,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Latest local E2E evidence: 2026-07-06 on `64e46c795c9c15ae52bb0112f91e93a6f3851645`, Docker Compose rebuilt healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation.
+Latest local E2E evidence: 2026-07-06 on `33e90ea`, Docker Compose rebuilt healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation. The E2E harness now fails fast if a local route resolves to a Next.js 404 shell.
 
 Batch 4 E2E coverage should include:
 
@@ -147,7 +147,7 @@ flutter test
 
 Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
 The Batch 4 mobile gate currently requires frozen install, `flutter analyze` with zero issues, the full Flutter test suite passing, and Android debug APK compilation for both customer and driver entrypoints.
-Latest local mobile evidence: 2026-07-06 on `64e46c795c9c15ae52bb0112f91e93a6f3851645`. `flutter pub get --enforce-lockfile` passed, `flutter analyze` found no issues, full `flutter test` passed 168 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin. Google Maps native keys are env/local-xcconfig only, and Android release signing fails closed until `FOODFLOW_UPLOAD_*` signing secrets are provided.
+Latest local mobile evidence: 2026-07-06 on `33e90ea`. `flutter pub get --enforce-lockfile` passed, `flutter analyze` found no issues, full `flutter test` passed 224 tests, focused tracking/driver route/heatmap tests passed 22/22, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin. Google Maps native keys are env/local-xcconfig only, and Android release signing fails closed until `FOODFLOW_UPLOAD_*` signing secrets are provided.
 
 Remote CI last fully ran green for `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252`, and Integration Smoke Gate `28704171294`. Subsequent heads, including the latest Batch 4 local commits, could not start or complete remote jobs because GitHub Actions reported account billing/spending-limit or token/auth blockers. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after billing/auth is fixed.
 
