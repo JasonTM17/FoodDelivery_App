@@ -1046,7 +1046,7 @@
     "retry": "再試行",
     "refresh": "更新",
     "fallbackPolling": "Realtimeを利用できないため15秒ごとにポーリングしています",
-    "lastUpdated": "{time} 更新",
+    "refreshedAt": "{time} 更新済み",
     "lastSeen": "最終確認",
     "mapRegionLabel": "ベトナム境界レイヤー付きライブドライバーマップ",
     "order": "注文",

@@ -1046,7 +1046,7 @@
     "retry": "Thử lại",
     "refresh": "Làm mới",
     "fallbackPolling": "Realtime không khả dụng — polling mỗi 15 giây",
-    "lastUpdated": "Cập nhật {time}",
+    "refreshedAt": "Làm mới {time}",
     "lastSeen": "Lần cuối",
     "mapRegionLabel": "Bản đồ tài xế trực tiếp với lớp biên giới Việt Nam",
     "order": "Đơn",

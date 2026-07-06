@@ -84,7 +84,7 @@ function DriverInfoWindow({
 export default function DriverMapPage() {
   const t = useTranslations('driverMap');
   const locale = useLocale();
-  const { drivers, isLoading, error, connectionStatus, isFallbackPolling, lastUpdatedAt, refetch } = useRealtimeDriverLocations();
+  const { drivers, isLoading, error, connectionStatus, isFallbackPolling, lastRefreshedAt, refetch } = useRealtimeDriverLocations();
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const selectedDriver = useMemo(
     () => findSelectedDriver(drivers, selectedDriverId),
@@ -152,9 +152,9 @@ export default function DriverMapPage() {
               {t('fallbackPolling')}
             </Badge>
           ) : null}
-          {lastUpdatedAt ? (
+          {lastRefreshedAt ? (
             <Badge variant="outline" className="bg-background/90">
-              {t('lastUpdated', { time: formatTimestamp(lastUpdatedAt) })}
+              {t('refreshedAt', { time: formatTimestamp(lastRefreshedAt) })}
             </Badge>
           ) : null}
           <Button variant="secondary" size="sm" onClick={() => void refetch()} disabled={isLoading}>

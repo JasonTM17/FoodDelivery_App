@@ -114,7 +114,7 @@ describe('useRealtimeDriverLocations', () => {
       status: 'delivering',
       lastSeenAt: '2026-07-02T09:00:00.000Z',
     });
-    expect(result.current.lastUpdatedAt).toBe('2026-07-02T09:00:00.000Z');
+    expect(result.current.lastRefreshedAt).not.toBe('2026-07-02T09:00:00.000Z');
   });
 
   it('keeps the existing heartbeat timestamp when realtime omits timestamp', async () => {
@@ -124,7 +124,7 @@ describe('useRealtimeDriverLocations', () => {
     await waitFor(() => {
       expect(result.current.drivers).toHaveLength(1);
     });
-    const previousLastUpdatedAt = result.current.lastUpdatedAt;
+    const previousLastRefreshedAt = result.current.lastRefreshedAt;
 
     act(() => {
       socketMock.trigger('admin:driver_location_changed', {
@@ -143,7 +143,7 @@ describe('useRealtimeDriverLocations', () => {
       status: 'delivering',
       lastSeenAt: '2026-07-02T08:30:00.000Z',
     });
-    expect(result.current.lastUpdatedAt).toBe(previousLastUpdatedAt);
+    expect(result.current.lastRefreshedAt).toBe(previousLastRefreshedAt);
   });
 
   it('clears the current order when realtime explicitly reports no active order', async () => {
@@ -195,7 +195,7 @@ describe('useRealtimeDriverLocations', () => {
     });
 
     expect(result.current.drivers[0]).toEqual(location);
-    expect(result.current.lastUpdatedAt).not.toBe('2026-07-02T09:05:00.000Z');
+    expect(result.current.lastRefreshedAt).not.toBe('2026-07-02T09:05:00.000Z');
     expect(mockedApiGet).toHaveBeenCalledTimes(1);
   });
 
@@ -241,7 +241,7 @@ describe('useRealtimeDriverLocations', () => {
     });
 
     expect(result.current.drivers[0]).toEqual(location);
-    expect(result.current.lastUpdatedAt).not.toBe('2026-07-02T09:10:00.000Z');
+    expect(result.current.lastRefreshedAt).not.toBe('2026-07-02T09:10:00.000Z');
   });
 
   it('uses controlled polling when the websocket disconnects', async () => {

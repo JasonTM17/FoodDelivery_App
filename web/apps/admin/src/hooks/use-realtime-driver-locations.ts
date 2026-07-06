@@ -23,7 +23,7 @@ export interface DriverLocationsState {
   error: string | null;
   connectionStatus: DriverMapConnectionStatus;
   isFallbackPolling: boolean;
-  lastUpdatedAt: string | null;
+  lastRefreshedAt: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -42,7 +42,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<DriverMapConnectionStatus>('connecting');
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
 
   const loadDrivers = useCallback(async (options: { background?: boolean } = {}) => {
     setError(null);
@@ -50,7 +50,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
     try {
       const locations = await apiGet<DriverLocation[]>('/admin/online-drivers');
       setDrivers(locations.filter(isValidDriverLocation));
-      setLastUpdatedAt(new Date().toISOString());
+      setLastRefreshedAt(new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'DRIVER_MAP_LOAD_FAILED');
     } finally {
@@ -92,9 +92,6 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
       };
       return next;
     });
-    if (update.timestamp) {
-      setLastUpdatedAt(update.timestamp);
-    }
   }, [loadDrivers]);
 
   useEffect(() => {
@@ -141,7 +138,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
     error,
     connectionStatus,
     isFallbackPolling: connectionStatus !== 'connected',
-    lastUpdatedAt,
+    lastRefreshedAt,
     refetch: () => loadDrivers(),
   };
 }

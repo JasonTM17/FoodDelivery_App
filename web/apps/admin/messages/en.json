@@ -1046,7 +1046,7 @@
     "retry": "Retry",
     "refresh": "Refresh",
     "fallbackPolling": "Realtime unavailable — polling every 15 seconds",
-    "lastUpdated": "Updated {time}",
+    "refreshedAt": "Refreshed {time}",
     "lastSeen": "Last seen",
     "mapRegionLabel": "Live driver map with Vietnam boundary overlay",
     "order": "Order",
