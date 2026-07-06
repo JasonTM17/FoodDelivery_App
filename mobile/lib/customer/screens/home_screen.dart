@@ -13,6 +13,7 @@ import '../../shared/widgets/restaurant_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../providers/vouchers_provider.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/promo_banner.dart';
 import '../router/route_names.dart';
@@ -42,24 +43,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     'Đồ uống',
   ];
 
-  final List<_BannerItem> _banners = [
-    _BannerItem(
-      'Giảm 50% đơn đầu',
-      'Cho đơn hàng đầu tiên từ 50k',
-      AppColors.primary,
-    ),
-    _BannerItem(
-      'Miễn phí giao hàng',
-      'Cho đơn từ 100k trong giờ vàng',
-      AppColors.accent,
-    ),
-    _BannerItem(
-      'Mới ra mắt',
-      'Ưu đãi đặc biệt cuối tuần',
-      AppColors.orderPreparing,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -67,6 +50,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadData() async {
+    final promotionsFuture = ref
+        .read(vouchersProvider.notifier)
+        .fetchVouchers();
     try {
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -87,6 +73,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(restaurantProvider.notifier).fetchNearbyRestaurants();
       }
     }
+    await promotionsFuture;
   }
 
   @override
@@ -387,12 +374,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildBannerCarousel() {
+    final voucherState = ref.watch(vouchersProvider);
+    final banners = voucherState.availableVouchers
+        .take(5)
+        .toList()
+        .asMap()
+        .entries
+        .map((entry) => _BannerItem.fromVoucher(entry.value, entry.key))
+        .toList();
+    if (banners.isEmpty) return const SizedBox.shrink();
+    final selectedIndex = _currentBannerIndex.clamp(0, banners.length - 1);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
         children: [
           CarouselSlider(
-            items: _banners
+            items: banners
                 .map(
                   (b) => PromoBanner(
                     title: b.title,
@@ -414,13 +412,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: _banners.asMap().entries.map((entry) {
+            children: banners.asMap().entries.map((entry) {
               return Container(
-                width: _currentBannerIndex == entry.key ? 20 : 8,
+                width: selectedIndex == entry.key ? 20 : 8,
                 height: 8,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
-                  color: _currentBannerIndex == entry.key
+                  color: selectedIndex == entry.key
                       ? AppColors.primary
                       : AppColors.border,
                   borderRadius: BorderRadius.circular(4),
@@ -566,4 +564,19 @@ class _BannerItem {
   final Color color;
 
   _BannerItem(this.title, this.subtitle, this.color);
+
+  factory _BannerItem.fromVoucher(Voucher voucher, int index) {
+    const colors = [
+      AppColors.primary,
+      AppColors.accent,
+      AppColors.orderPreparing,
+    ];
+    return _BannerItem(
+      voucher.title.trim().isNotEmpty ? voucher.title : voucher.code,
+      voucher.description.trim().isNotEmpty
+          ? voucher.description
+          : voucher.code,
+      colors[index % colors.length],
+    );
+  }
 }

@@ -15,7 +15,6 @@ class Routes {
   static const search = '/search';
   static const favorites = '/favorites';
   static const vouchers = '/vouchers';
-  static const foodflowPro = '/foodflow-pro';
 
   // Restaurants
   static const restaurants = '/restaurants';

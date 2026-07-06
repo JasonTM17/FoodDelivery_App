@@ -29,7 +29,6 @@ import '../screens/address_picker_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/search_results_screen.dart';
 import '../screens/vouchers_screen.dart';
-import '../screens/foodflow_pro_screen.dart';
 import '../screens/cancel_order_screen.dart';
 import '../../shared/models/menu_item.dart';
 import 'route_guards.dart';
@@ -168,11 +167,6 @@ final appRouter = GoRouter(
       path: '/vouchers',
       name: 'vouchers',
       builder: (context, state) => const VouchersScreen(),
-    ),
-    GoRoute(
-      path: '/foodflow-pro',
-      name: 'foodflow-pro',
-      builder: (context, state) => const FoodflowProScreen(),
     ),
     GoRoute(
       path: '/cancel-order',

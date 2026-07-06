@@ -415,6 +415,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cartDeliveryFee => 'Delivery fee';
 
   @override
+  String get cartDeliveryFeeLoading => 'Loading from server…';
+
+  @override
+  String get cartDeliveryFeeUnavailable => 'Unavailable';
+
+  @override
   String get cartFreeDelivery => 'Free';
 
   @override
@@ -1873,81 +1879,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String vouchersExpiresAt(String date) {
     return 'Expires: $date';
   }
-
-  @override
-  String get membershipTitle => 'FoodFlow Pro';
-
-  @override
-  String get membershipFreeLabel => 'Free';
-
-  @override
-  String get membershipProTier => 'Pro';
-
-  @override
-  String get membershipProPlusTier => 'Pro+';
-
-  @override
-  String membershipProPrice(String price) {
-    return '$price/month';
-  }
-
-  @override
-  String get membershipCurrentBadge => 'Current plan';
-
-  @override
-  String get membershipUpgradeCta => 'Upgrade now';
-
-  @override
-  String get membershipChoosePlan => 'Choose a plan that fits you';
-
-  @override
-  String get membershipUpgradeBenefit => 'Upgrade to unlock more benefits';
-
-  @override
-  String membershipUpgradedMessage(String tier) {
-    return 'Upgraded to $tier!';
-  }
-
-  @override
-  String get membershipUpgradeFailed => 'Unable to upgrade';
-
-  @override
-  String membershipValidUntil(String date) {
-    return 'Valid until $date';
-  }
-
-  @override
-  String get membershipPerMonth => '/month';
-
-  @override
-  String get membershipBenefitBasicDelivery => 'Basic delivery';
-
-  @override
-  String get membershipBenefitBasicPoints => 'Earn 1% reward points';
-
-  @override
-  String get membershipBenefitFreeDelivery => 'Unlimited free delivery';
-
-  @override
-  String get membershipBenefitPriorityDriver => 'Priority premium drivers';
-
-  @override
-  String get membershipBenefitBonusPoints3 => 'Earn 3% reward points';
-
-  @override
-  String get membershipBenefitVipDriver => 'Top-tier priority drivers';
-
-  @override
-  String get membershipBenefitBonusPoints5 => 'Earn 5% reward points';
-
-  @override
-  String get membershipBenefitVoucher100k => 'Birthday voucher 100K₫';
-
-  @override
-  String get membershipBenefitVoucher200k => 'Birthday voucher 200K₫';
-
-  @override
-  String get membershipBenefitVipSupport => '24/7 VIP support';
 
   @override
   String get cancelOrderTitle => 'Cancel Order';

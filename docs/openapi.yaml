@@ -561,6 +561,15 @@ components:
         promotionCode: "WELCOME2026"
         notes: "Không hành, thêm ớt"
 
+    DeliveryPricingResponse:
+      type: object
+      description: Configured checkout delivery pricing returned by the backend so clients do not invent local delivery-fee business rules.
+      properties:
+        baseDeliveryFeeVnd: { type: integer, minimum: 0, description: "Configured base delivery fee in VND" }
+      required: [baseDeliveryFeeVnd]
+      example:
+        baseDeliveryFeeVnd: 15000
+
     OrderDetail:
       type: object
       properties:
@@ -3250,6 +3259,17 @@ paths:
         - $ref: "#/components/parameters/LimitParam"
       responses:
         "200": { description: "My orders", content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedOrders" } } } }
+
+  /orders/delivery-pricing:
+    get:
+      tags: [orders]
+      summary: Get configured delivery pricing
+      description: Returns the backend-configured delivery base fee for checkout preview UI. Clients must use this endpoint instead of local free-delivery thresholds or hardcoded fees; order placement remains authoritative.
+      operationId: orders_getDeliveryPricing
+      x-foo-actor: user
+      responses:
+        "200": { description: "Configured delivery pricing", content: { application/json: { schema: { $ref: "#/components/schemas/DeliveryPricingResponse" } } } }
+        "503": { description: "Delivery pricing not configured", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /orders/{orderId}:
     get:

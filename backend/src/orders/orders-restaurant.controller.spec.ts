@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
 import { OrderChatService } from './order-chat.service'
+import { DeliveryPricingService } from './delivery-pricing.service'
 
 describe('OrdersController — Restaurant', () => {
   let controller: OrdersController
@@ -22,6 +23,9 @@ describe('OrdersController — Restaurant', () => {
     getRestaurantOrderMessages: jest.fn().mockResolvedValue({ messages: [], canReply: false }),
     createRestaurantOrderMessage: jest.fn().mockResolvedValue({ id: 'message-1', content: 'Ready' }),
   }
+  const mockDeliveryPricing = {
+    getBaseDeliveryFeeVnd: jest.fn().mockReturnValue(15_000),
+  }
 
   const mockRedis = {
     get: jest.fn().mockResolvedValue(null),
@@ -34,6 +38,7 @@ describe('OrdersController — Restaurant', () => {
       providers: [
         { provide: OrdersService, useValue: mockOrdersService },
         { provide: OrderChatService, useValue: mockOrderChatService },
+        { provide: DeliveryPricingService, useValue: mockDeliveryPricing },
         { provide: 'REDIS_CLIENT', useValue: mockRedis },
       ],
     }).compile()
@@ -51,6 +56,11 @@ describe('OrdersController — Restaurant', () => {
     const user = { sub: 'restaurant-1', role: 'restaurant' }
     await controller.getRestaurantOrders(user, 'preparing')
     expect(mockOrdersService.getRestaurantOrders).toHaveBeenCalledWith('restaurant-1', 'preparing')
+  })
+
+  it('returns configured delivery pricing for customer checkout UI', () => {
+    expect(controller.getDeliveryPricing()).toEqual({ baseDeliveryFeeVnd: 15_000 })
+    expect(mockDeliveryPricing.getBaseDeliveryFeeVnd).toHaveBeenCalled()
   })
 
   it('should update order status as restaurant', async () => {

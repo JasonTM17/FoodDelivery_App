@@ -414,6 +414,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cartDeliveryFee => 'Phí giao hàng';
 
   @override
+  String get cartDeliveryFeeLoading => 'Đang lấy từ máy chủ…';
+
+  @override
+  String get cartDeliveryFeeUnavailable => 'Chưa xác định';
+
+  @override
   String get cartFreeDelivery => 'Miễn phí';
 
   @override
@@ -1874,82 +1880,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String vouchersExpiresAt(String date) {
     return 'HSD: $date';
   }
-
-  @override
-  String get membershipTitle => 'FoodFlow Pro';
-
-  @override
-  String get membershipFreeLabel => 'Miễn phí';
-
-  @override
-  String get membershipProTier => 'Pro';
-
-  @override
-  String get membershipProPlusTier => 'Pro+';
-
-  @override
-  String membershipProPrice(String price) {
-    return '$price/tháng';
-  }
-
-  @override
-  String get membershipCurrentBadge => 'Gói hiện tại';
-
-  @override
-  String get membershipUpgradeCta => 'Nâng cấp ngay';
-
-  @override
-  String get membershipChoosePlan => 'Chọn gói phù hợp với bạn';
-
-  @override
-  String get membershipUpgradeBenefit => 'Nâng cấp để nhận thêm đặc quyền';
-
-  @override
-  String membershipUpgradedMessage(String tier) {
-    return 'Đã nâng cấp lên $tier!';
-  }
-
-  @override
-  String get membershipUpgradeFailed => 'Không thể nâng cấp';
-
-  @override
-  String membershipValidUntil(String date) {
-    return 'Có hiệu lực đến $date';
-  }
-
-  @override
-  String get membershipPerMonth => '/tháng';
-
-  @override
-  String get membershipBenefitBasicDelivery => 'Giao hàng cơ bản';
-
-  @override
-  String get membershipBenefitBasicPoints => 'Tích điểm thưởng 1%';
-
-  @override
-  String get membershipBenefitFreeDelivery =>
-      'Miễn phí giao hàng không giới hạn';
-
-  @override
-  String get membershipBenefitPriorityDriver => 'Ưu tiên tài xế cao cấp';
-
-  @override
-  String get membershipBenefitBonusPoints3 => 'Tích điểm thưởng 3%';
-
-  @override
-  String get membershipBenefitVipDriver => 'Ưu tiên tài xế cao cấp nhất';
-
-  @override
-  String get membershipBenefitBonusPoints5 => 'Tích điểm thưởng 5%';
-
-  @override
-  String get membershipBenefitVoucher100k => 'Voucher sinh nhật 100K₫';
-
-  @override
-  String get membershipBenefitVoucher200k => 'Voucher sinh nhật 200K₫';
-
-  @override
-  String get membershipBenefitVipSupport => 'Hỗ trợ 24/7 VIP';
 
   @override
   String get cancelOrderTitle => 'Hủy đơn hàng';

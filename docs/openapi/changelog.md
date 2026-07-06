@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-06: Added `GET /orders/delivery-pricing` so mobile checkout reads the backend-configured base delivery fee instead of hardcoding local free-delivery thresholds or fallback fees; the same cleanup removes the fake FoodFlow Pro surface and static customer home promotions from runtime mobile UI.
 - 2026-07-06: Expanded `GET /orders/{orderId}/tracking` from customer-only to tenant-safe order participants (customer, assigned driver, active restaurant staff, admin) and wired Restaurant web live maps to the same real telemetry contract.
 - 2026-07-05: Restricted public `POST /auth/register` to customer-only signup, removed the `role` request field, and clarified that driver, restaurant, and admin accounts require controlled onboarding or invitation flows.
 - 2026-07-05: Aligned `GET /admin/restaurants/{restaurantId}/reviews` with the existing `restaurants` tag so Spectral OpenAPI lint is clean at warning severity.

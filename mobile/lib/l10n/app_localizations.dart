@@ -898,6 +898,18 @@ abstract class AppLocalizations {
   /// **'Phí giao hàng'**
   String get cartDeliveryFee;
 
+  /// No description provided for @cartDeliveryFeeLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lấy từ máy chủ…'**
+  String get cartDeliveryFeeLoading;
+
+  /// No description provided for @cartDeliveryFeeUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác định'**
+  String get cartDeliveryFeeUnavailable;
+
   /// No description provided for @cartFreeDelivery.
   ///
   /// In vi, this message translates to:
@@ -3615,144 +3627,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'HSD: {date}'**
   String vouchersExpiresAt(String date);
-
-  /// No description provided for @membershipTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'FoodFlow Pro'**
-  String get membershipTitle;
-
-  /// No description provided for @membershipFreeLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Miễn phí'**
-  String get membershipFreeLabel;
-
-  /// No description provided for @membershipProTier.
-  ///
-  /// In vi, this message translates to:
-  /// **'Pro'**
-  String get membershipProTier;
-
-  /// No description provided for @membershipProPlusTier.
-  ///
-  /// In vi, this message translates to:
-  /// **'Pro+'**
-  String get membershipProPlusTier;
-
-  /// No description provided for @membershipProPrice.
-  ///
-  /// In vi, this message translates to:
-  /// **'{price}/tháng'**
-  String membershipProPrice(String price);
-
-  /// No description provided for @membershipCurrentBadge.
-  ///
-  /// In vi, this message translates to:
-  /// **'Gói hiện tại'**
-  String get membershipCurrentBadge;
-
-  /// No description provided for @membershipUpgradeCta.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nâng cấp ngay'**
-  String get membershipUpgradeCta;
-
-  /// No description provided for @membershipChoosePlan.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn gói phù hợp với bạn'**
-  String get membershipChoosePlan;
-
-  /// No description provided for @membershipUpgradeBenefit.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nâng cấp để nhận thêm đặc quyền'**
-  String get membershipUpgradeBenefit;
-
-  /// No description provided for @membershipUpgradedMessage.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã nâng cấp lên {tier}!'**
-  String membershipUpgradedMessage(String tier);
-
-  /// No description provided for @membershipUpgradeFailed.
-  ///
-  /// In vi, this message translates to:
-  /// **'Không thể nâng cấp'**
-  String get membershipUpgradeFailed;
-
-  /// No description provided for @membershipValidUntil.
-  ///
-  /// In vi, this message translates to:
-  /// **'Có hiệu lực đến {date}'**
-  String membershipValidUntil(String date);
-
-  /// No description provided for @membershipPerMonth.
-  ///
-  /// In vi, this message translates to:
-  /// **'/tháng'**
-  String get membershipPerMonth;
-
-  /// No description provided for @membershipBenefitBasicDelivery.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giao hàng cơ bản'**
-  String get membershipBenefitBasicDelivery;
-
-  /// No description provided for @membershipBenefitBasicPoints.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tích điểm thưởng 1%'**
-  String get membershipBenefitBasicPoints;
-
-  /// No description provided for @membershipBenefitFreeDelivery.
-  ///
-  /// In vi, this message translates to:
-  /// **'Miễn phí giao hàng không giới hạn'**
-  String get membershipBenefitFreeDelivery;
-
-  /// No description provided for @membershipBenefitPriorityDriver.
-  ///
-  /// In vi, this message translates to:
-  /// **'Ưu tiên tài xế cao cấp'**
-  String get membershipBenefitPriorityDriver;
-
-  /// No description provided for @membershipBenefitBonusPoints3.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tích điểm thưởng 3%'**
-  String get membershipBenefitBonusPoints3;
-
-  /// No description provided for @membershipBenefitVipDriver.
-  ///
-  /// In vi, this message translates to:
-  /// **'Ưu tiên tài xế cao cấp nhất'**
-  String get membershipBenefitVipDriver;
-
-  /// No description provided for @membershipBenefitBonusPoints5.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tích điểm thưởng 5%'**
-  String get membershipBenefitBonusPoints5;
-
-  /// No description provided for @membershipBenefitVoucher100k.
-  ///
-  /// In vi, this message translates to:
-  /// **'Voucher sinh nhật 100K₫'**
-  String get membershipBenefitVoucher100k;
-
-  /// No description provided for @membershipBenefitVoucher200k.
-  ///
-  /// In vi, this message translates to:
-  /// **'Voucher sinh nhật 200K₫'**
-  String get membershipBenefitVoucher200k;
-
-  /// No description provided for @membershipBenefitVipSupport.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hỗ trợ 24/7 VIP'**
-  String get membershipBenefitVipSupport;
 
   /// No description provided for @cancelOrderTitle.
   ///

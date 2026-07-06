@@ -12,17 +12,23 @@ class CartState {
   final CartModel? currentCart;
   final List<CartModel> pendingCarts;
   final bool isApplyingPromo;
+  final bool isPricingLoading;
   final String? promoCode;
   final double discount;
+  final double? deliveryFee;
   final String? error;
+  final String? pricingError;
 
   const CartState({
     this.currentCart,
     this.pendingCarts = const [],
     this.isApplyingPromo = false,
+    this.isPricingLoading = false,
     this.promoCode,
     this.discount = 0.0,
+    this.deliveryFee,
     this.error,
+    this.pricingError,
   });
 
   int get totalItemCount {
@@ -33,14 +39,10 @@ class CartState {
     return currentCart?.subtotal ?? 0.0;
   }
 
-  double get deliveryFee {
-    final subtotal = this.subtotal;
-    if (subtotal >= 100000) return 0.0;
-    return 15000.0;
-  }
+  bool get hasDeliveryPricing => deliveryFee != null;
 
   double get total {
-    return subtotal + deliveryFee - discount;
+    return subtotal + (deliveryFee ?? 0.0) - discount;
   }
 
   bool get isEmpty => currentCart == null || currentCart!.isEmpty;
@@ -49,17 +51,26 @@ class CartState {
     CartModel? currentCart,
     List<CartModel>? pendingCarts,
     bool? isApplyingPromo,
+    bool? isPricingLoading,
     String? promoCode,
     double? discount,
+    double? deliveryFee,
     String? error,
+    String? pricingError,
+    bool clearPricingError = false,
   }) {
     return CartState(
       currentCart: currentCart ?? this.currentCart,
       pendingCarts: pendingCarts ?? this.pendingCarts,
       isApplyingPromo: isApplyingPromo ?? this.isApplyingPromo,
+      isPricingLoading: isPricingLoading ?? this.isPricingLoading,
       promoCode: promoCode ?? this.promoCode,
       discount: discount ?? this.discount,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
       error: error,
+      pricingError: clearPricingError
+          ? null
+          : pricingError ?? this.pricingError,
     );
   }
 }
@@ -90,6 +101,8 @@ class CartNotifier extends StateNotifier<CartState> {
             ),
           ],
         ),
+        deliveryFee: state.deliveryFee,
+        pricingError: state.pricingError,
       );
       return;
     }
@@ -110,6 +123,8 @@ class CartNotifier extends StateNotifier<CartState> {
             ),
           ],
         ),
+        deliveryFee: state.deliveryFee,
+        pricingError: state.pricingError,
       );
       return;
     }
@@ -151,6 +166,8 @@ class CartNotifier extends StateNotifier<CartState> {
       ),
       promoCode: state.promoCode,
       discount: state.discount,
+      deliveryFee: state.deliveryFee,
+      pricingError: state.pricingError,
     );
   }
 
@@ -180,6 +197,8 @@ class CartNotifier extends StateNotifier<CartState> {
       ),
       promoCode: state.promoCode,
       discount: _recalculateDiscount(state.promoCode, updatedItems),
+      deliveryFee: state.deliveryFee,
+      pricingError: state.pricingError,
     );
   }
 
@@ -204,6 +223,8 @@ class CartNotifier extends StateNotifier<CartState> {
       ),
       promoCode: state.promoCode,
       discount: _recalculateDiscount(state.promoCode, updatedItems),
+      deliveryFee: state.deliveryFee,
+      pricingError: state.pricingError,
     );
   }
 
@@ -264,6 +285,38 @@ class CartNotifier extends StateNotifier<CartState> {
         ),
         promoCode: state.promoCode,
         discount: state.discount,
+        deliveryFee: state.deliveryFee,
+        pricingError: state.pricingError,
+      );
+    }
+  }
+
+  Future<void> fetchDeliveryPricing({bool force = false}) async {
+    if (!force && state.deliveryFee != null) return;
+
+    state = state.copyWith(isPricingLoading: true, clearPricingError: true);
+    try {
+      final response = await ApiClient.instance.get('/orders/delivery-pricing');
+      final data = response.data as Map<String, dynamic>;
+      final fee = (data['baseDeliveryFeeVnd'] as num?)?.toDouble();
+      if (fee == null || fee < 0) {
+        throw const FormatException('DELIVERY_PRICING_INVALID_RESPONSE');
+      }
+      state = state.copyWith(
+        isPricingLoading: false,
+        deliveryFee: fee,
+        clearPricingError: true,
+      );
+    } on DioException catch (e) {
+      final message =
+          e.response?.data?['message'] as String? ??
+          e.response?.data?['error'] as String? ??
+          'Không thể tải phí giao hàng từ máy chủ.';
+      state = state.copyWith(isPricingLoading: false, pricingError: message);
+    } catch (_) {
+      state = state.copyWith(
+        isPricingLoading: false,
+        pricingError: 'Không thể tải phí giao hàng từ máy chủ.',
       );
     }
   }

@@ -412,6 +412,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cartDeliveryFee => '配達料';
 
   @override
+  String get cartDeliveryFeeLoading => 'サーバーから取得中…';
+
+  @override
+  String get cartDeliveryFeeUnavailable => '未取得';
+
+  @override
   String get cartFreeDelivery => '無料';
 
   @override
@@ -1832,81 +1838,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String vouchersExpiresAt(String date) {
     return '有効期限: $date';
   }
-
-  @override
-  String get membershipTitle => 'FoodFlow Pro';
-
-  @override
-  String get membershipFreeLabel => '無料';
-
-  @override
-  String get membershipProTier => 'Pro';
-
-  @override
-  String get membershipProPlusTier => 'Pro+';
-
-  @override
-  String membershipProPrice(String price) {
-    return '$price/月';
-  }
-
-  @override
-  String get membershipCurrentBadge => '現在のプラン';
-
-  @override
-  String get membershipUpgradeCta => '今すぐアップグレード';
-
-  @override
-  String get membershipChoosePlan => 'あなたに合ったプランを選びましょう';
-
-  @override
-  String get membershipUpgradeBenefit => 'アップグレードして特典をもっと受ける';
-
-  @override
-  String membershipUpgradedMessage(String tier) {
-    return '$tierにアップグレードしました！';
-  }
-
-  @override
-  String get membershipUpgradeFailed => 'アップグレードできません';
-
-  @override
-  String membershipValidUntil(String date) {
-    return '$dateまで有効';
-  }
-
-  @override
-  String get membershipPerMonth => '/月';
-
-  @override
-  String get membershipBenefitBasicDelivery => '基本配送';
-
-  @override
-  String get membershipBenefitBasicPoints => '1%ポイント還元';
-
-  @override
-  String get membershipBenefitFreeDelivery => '配送料無制限無料';
-
-  @override
-  String get membershipBenefitPriorityDriver => '優先プレミアムドライバー';
-
-  @override
-  String get membershipBenefitBonusPoints3 => '3%ポイント還元';
-
-  @override
-  String get membershipBenefitVipDriver => '最優先トップドライバー';
-
-  @override
-  String get membershipBenefitBonusPoints5 => '5%ポイント還元';
-
-  @override
-  String get membershipBenefitVoucher100k => '誕生日バウチャー100K₫';
-
-  @override
-  String get membershipBenefitVoucher200k => '誕生日バウチャー200K₫';
-
-  @override
-  String get membershipBenefitVipSupport => '24時間365日VIPサポート';
 
   @override
   String get cancelOrderTitle => '注文をキャンセル';

@@ -49,16 +49,16 @@ void main() {
       expect(state.isEmpty, true);
     });
 
-    test('deliveryFee is 15000 when subtotal is below 100000', () {
-      // Cart is empty → subtotal = 0 < 100000 → fee = 15000
+    test('deliveryFee is unknown until backend pricing is loaded', () {
       const state = CartState();
-      expect(state.deliveryFee, 15000.0);
+      expect(state.deliveryFee, isNull);
+      expect(state.hasDeliveryPricing, isFalse);
     });
 
-    test('total equals subtotal + deliveryFee - discount', () {
-      const state = CartState(discount: 5000.0);
-      // subtotal = 0, deliveryFee = 15000, discount = 5000
+    test('total uses the backend delivery fee after pricing is loaded', () {
+      const state = CartState(discount: 5000.0, deliveryFee: 15000.0);
       expect(state.total, 0.0 + 15000.0 - 5000.0);
+      expect(state.hasDeliveryPricing, isTrue);
     });
   });
 

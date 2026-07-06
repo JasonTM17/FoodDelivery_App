@@ -22,6 +22,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   bool _isApplyingPromo = false;
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (!ref.read(cartProvider).isEmpty) {
+        return ref.read(cartProvider.notifier).fetchDeliveryPricing();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _promoController.dispose();
     super.dispose();
@@ -307,10 +317,21 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       const SizedBox(height: 8),
                       _buildPriceRow(
                         l10n.cartDeliveryFee,
-                        cartState.deliveryFee > 0
-                            ? _formatPrice(cartState.deliveryFee)
-                            : l10n.cartFreeDelivery,
+                        _deliveryFeeLabel(cartState, l10n),
                       ),
+                      if (cartState.pricingError != null) ...[
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            cartState.pricingError!,
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                       if (cartState.discount > 0) ...[
                         const SizedBox(height: 8),
                         _buildPriceRow(
@@ -325,7 +346,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                       _buildPriceRow(
                         l10n.cartGrandTotal,
-                        _formatPrice(cartState.total),
+                        _totalLabel(cartState, l10n),
                         isTotal: true,
                       ),
                     ],
@@ -353,9 +374,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () => context.push(Routes.checkout),
+                  onPressed: cartState.hasDeliveryPricing
+                      ? () => context.push(Routes.checkout)
+                      : null,
                   child: Text(
-                    '${l10n.cartPlaceOrder} · ${_formatPrice(cartState.total)}',
+                    cartState.hasDeliveryPricing
+                        ? '${l10n.cartPlaceOrder} · ${_formatPrice(cartState.total)}'
+                        : '${l10n.cartPlaceOrder} · ${cartState.isPricingLoading ? l10n.cartDeliveryFeeLoading : l10n.cartDeliveryFeeUnavailable}',
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
@@ -396,5 +421,21 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   String _formatPrice(double price) {
     return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
+  }
+
+  String _deliveryFeeLabel(CartState cartState, AppLocalizations l10n) {
+    if (cartState.isPricingLoading) return l10n.cartDeliveryFeeLoading;
+    final deliveryFee = cartState.deliveryFee;
+    if (deliveryFee == null) return l10n.cartDeliveryFeeUnavailable;
+    return deliveryFee > 0 ? _formatPrice(deliveryFee) : l10n.cartFreeDelivery;
+  }
+
+  String _totalLabel(CartState cartState, AppLocalizations l10n) {
+    if (!cartState.hasDeliveryPricing) {
+      return cartState.isPricingLoading
+          ? l10n.cartDeliveryFeeLoading
+          : l10n.cartDeliveryFeeUnavailable;
+    }
+    return _formatPrice(cartState.total);
   }
 }

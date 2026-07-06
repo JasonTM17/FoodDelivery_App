@@ -6,6 +6,7 @@ import { RolesGuard } from '../auth/roles.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { OrdersService } from './orders.service'
+import { DeliveryPricingService } from './delivery-pricing.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto, UpdateOrderStatusDto, CreateOrderChatMessageDto } from './orders.dto'
 import { OrderChatService } from './order-chat.service'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
@@ -19,6 +20,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly orderChatService: OrderChatService,
+    private readonly deliveryPricing: DeliveryPricingService,
   ) {}
 
   @Post('orders')
@@ -42,6 +44,12 @@ export class OrdersController {
     return this.ordersService.getCustomerOrders(
       user.sub, parseInt(page ?? '1'), parseInt(limit ?? '20'), status,
     )
+  }
+
+  @Get('orders/delivery-pricing')
+  @Roles('customer')
+  getDeliveryPricing() {
+    return { baseDeliveryFeeVnd: this.deliveryPricing.getBaseDeliveryFeeVnd() }
   }
 
   @Get('orders/:id')

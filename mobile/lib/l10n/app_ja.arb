@@ -147,6 +147,8 @@
   },
   "cartSubtotal": "小計",
   "cartDeliveryFee": "配達料",
+  "cartDeliveryFeeLoading": "サーバーから取得中…",
+  "cartDeliveryFeeUnavailable": "未取得",
   "cartFreeDelivery": "無料",
   "cartDiscountLabel": "割引",
   "cartGrandTotal": "合計",
@@ -721,39 +723,6 @@
   "@vouchersExpiresAt": {
     "placeholders": { "date": { "type": "String" } }
   },
-
-  "membershipTitle": "FoodFlow Pro",
-  "membershipFreeLabel": "無料",
-  "membershipProTier": "Pro",
-  "membershipProPlusTier": "Pro+",
-  "membershipProPrice": "{price}/月",
-  "@membershipProPrice": {
-    "placeholders": { "price": { "type": "String" } }
-  },
-  "membershipCurrentBadge": "現在のプラン",
-  "membershipUpgradeCta": "今すぐアップグレード",
-  "membershipChoosePlan": "あなたに合ったプランを選びましょう",
-  "membershipUpgradeBenefit": "アップグレードして特典をもっと受ける",
-  "membershipUpgradedMessage": "{tier}にアップグレードしました！",
-  "@membershipUpgradedMessage": {
-    "placeholders": { "tier": { "type": "String" } }
-  },
-  "membershipUpgradeFailed": "アップグレードできません",
-  "membershipValidUntil": "{date}まで有効",
-  "@membershipValidUntil": {
-    "placeholders": { "date": { "type": "String" } }
-  },
-  "membershipPerMonth": "/月",
-  "membershipBenefitBasicDelivery": "基本配送",
-  "membershipBenefitBasicPoints": "1%ポイント還元",
-  "membershipBenefitFreeDelivery": "配送料無制限無料",
-  "membershipBenefitPriorityDriver": "優先プレミアムドライバー",
-  "membershipBenefitBonusPoints3": "3%ポイント還元",
-  "membershipBenefitVipDriver": "最優先トップドライバー",
-  "membershipBenefitBonusPoints5": "5%ポイント還元",
-  "membershipBenefitVoucher100k": "誕生日バウチャー100K₫",
-  "membershipBenefitVoucher200k": "誕生日バウチャー200K₫",
-  "membershipBenefitVipSupport": "24時間365日VIPサポート",
 
   "cancelOrderTitle": "注文をキャンセル",
   "cancelOrderSuccess": "注文をキャンセルしました",

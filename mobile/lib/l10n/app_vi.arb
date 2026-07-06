@@ -153,6 +153,8 @@
   },
   "cartSubtotal": "Tạm tính",
   "cartDeliveryFee": "Phí giao hàng",
+  "cartDeliveryFeeLoading": "Đang lấy từ máy chủ…",
+  "cartDeliveryFeeUnavailable": "Chưa xác định",
   "cartFreeDelivery": "Miễn phí",
   "cartDiscountLabel": "Giảm giá",
   "cartGrandTotal": "Tổng cộng",
@@ -727,39 +729,6 @@
   "@vouchersExpiresAt": {
     "placeholders": { "date": { "type": "String" } }
   },
-
-  "membershipTitle": "FoodFlow Pro",
-  "membershipFreeLabel": "Miễn phí",
-  "membershipProTier": "Pro",
-  "membershipProPlusTier": "Pro+",
-  "membershipProPrice": "{price}/tháng",
-  "@membershipProPrice": {
-    "placeholders": { "price": { "type": "String" } }
-  },
-  "membershipCurrentBadge": "Gói hiện tại",
-  "membershipUpgradeCta": "Nâng cấp ngay",
-  "membershipChoosePlan": "Chọn gói phù hợp với bạn",
-  "membershipUpgradeBenefit": "Nâng cấp để nhận thêm đặc quyền",
-  "membershipUpgradedMessage": "Đã nâng cấp lên {tier}!",
-  "@membershipUpgradedMessage": {
-    "placeholders": { "tier": { "type": "String" } }
-  },
-  "membershipUpgradeFailed": "Không thể nâng cấp",
-  "membershipValidUntil": "Có hiệu lực đến {date}",
-  "@membershipValidUntil": {
-    "placeholders": { "date": { "type": "String" } }
-  },
-  "membershipPerMonth": "/tháng",
-  "membershipBenefitBasicDelivery": "Giao hàng cơ bản",
-  "membershipBenefitBasicPoints": "Tích điểm thưởng 1%",
-  "membershipBenefitFreeDelivery": "Miễn phí giao hàng không giới hạn",
-  "membershipBenefitPriorityDriver": "Ưu tiên tài xế cao cấp",
-  "membershipBenefitBonusPoints3": "Tích điểm thưởng 3%",
-  "membershipBenefitVipDriver": "Ưu tiên tài xế cao cấp nhất",
-  "membershipBenefitBonusPoints5": "Tích điểm thưởng 5%",
-  "membershipBenefitVoucher100k": "Voucher sinh nhật 100K₫",
-  "membershipBenefitVoucher200k": "Voucher sinh nhật 200K₫",
-  "membershipBenefitVipSupport": "Hỗ trợ 24/7 VIP",
 
   "cancelOrderTitle": "Hủy đơn hàng",
   "cancelOrderSuccess": "Đã hủy đơn hàng thành công",

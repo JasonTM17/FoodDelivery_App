@@ -31,6 +31,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       if (addrState.addresses.isEmpty && !addrState.isLoading) {
         ref.read(addressProvider.notifier).fetchAddresses();
       }
+      if (!ref.read(cartProvider).isEmpty) {
+        ref.read(cartProvider.notifier).fetchDeliveryPricing();
+      }
     });
   }
 
@@ -341,10 +344,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 6),
                   _buildSummaryRow(
                     l10n.cartDeliveryFee,
-                    cartState.deliveryFee > 0
-                        ? _formatPrice(cartState.deliveryFee)
-                        : l10n.cartFreeDelivery,
+                    _deliveryFeeLabel(cartState, l10n),
                   ),
+                  if (cartState.pricingError != null) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        cartState.pricingError!,
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                   if (cartState.discount > 0) ...[
                     const SizedBox(height: 6),
                     _buildSummaryRow(
@@ -356,7 +370,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 6),
                   _buildSummaryRow(
                     l10n.cartGrandTotal,
-                    _formatPrice(cartState.total),
+                    _totalLabel(cartState, l10n),
                     isTotal: true,
                   ),
                 ],
@@ -384,7 +398,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: (_isPlacing || orderState.isPlacingOrder)
+              onPressed:
+                  (_isPlacing ||
+                      orderState.isPlacingOrder ||
+                      !cartState.hasDeliveryPricing)
                   ? null
                   : _placeOrder,
               child: (_isPlacing || orderState.isPlacingOrder)
@@ -397,7 +414,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       ),
                     )
                   : Text(
-                      '${l10n.checkoutConfirmOrder} · ${_formatPrice(cartState.total)}',
+                      cartState.hasDeliveryPricing
+                          ? '${l10n.checkoutConfirmOrder} · ${_formatPrice(cartState.total)}'
+                          : '${l10n.checkoutConfirmOrder} · ${cartState.isPricingLoading ? l10n.cartDeliveryFeeLoading : l10n.cartDeliveryFeeUnavailable}',
                       style: const TextStyle(fontSize: 16),
                     ),
             ),
@@ -482,5 +501,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   String _formatPrice(double price) {
     return '${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
+  }
+
+  String _deliveryFeeLabel(CartState cartState, AppLocalizations l10n) {
+    if (cartState.isPricingLoading) return l10n.cartDeliveryFeeLoading;
+    final deliveryFee = cartState.deliveryFee;
+    if (deliveryFee == null) return l10n.cartDeliveryFeeUnavailable;
+    return deliveryFee > 0 ? _formatPrice(deliveryFee) : l10n.cartFreeDelivery;
+  }
+
+  String _totalLabel(CartState cartState, AppLocalizations l10n) {
+    if (!cartState.hasDeliveryPricing) {
+      return cartState.isPricingLoading
+          ? l10n.cartDeliveryFeeLoading
+          : l10n.cartDeliveryFeeUnavailable;
+    }
+    return _formatPrice(cartState.total);
   }
 }

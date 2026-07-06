@@ -147,6 +147,8 @@
   },
   "cartSubtotal": "Subtotal",
   "cartDeliveryFee": "Delivery fee",
+  "cartDeliveryFeeLoading": "Loading from server…",
+  "cartDeliveryFeeUnavailable": "Unavailable",
   "cartFreeDelivery": "Free",
   "cartDiscountLabel": "Discount",
   "cartGrandTotal": "Total",
@@ -721,39 +723,6 @@
   "@vouchersExpiresAt": {
     "placeholders": { "date": { "type": "String" } }
   },
-
-  "membershipTitle": "FoodFlow Pro",
-  "membershipFreeLabel": "Free",
-  "membershipProTier": "Pro",
-  "membershipProPlusTier": "Pro+",
-  "membershipProPrice": "{price}/month",
-  "@membershipProPrice": {
-    "placeholders": { "price": { "type": "String" } }
-  },
-  "membershipCurrentBadge": "Current plan",
-  "membershipUpgradeCta": "Upgrade now",
-  "membershipChoosePlan": "Choose a plan that fits you",
-  "membershipUpgradeBenefit": "Upgrade to unlock more benefits",
-  "membershipUpgradedMessage": "Upgraded to {tier}!",
-  "@membershipUpgradedMessage": {
-    "placeholders": { "tier": { "type": "String" } }
-  },
-  "membershipUpgradeFailed": "Unable to upgrade",
-  "membershipValidUntil": "Valid until {date}",
-  "@membershipValidUntil": {
-    "placeholders": { "date": { "type": "String" } }
-  },
-  "membershipPerMonth": "/month",
-  "membershipBenefitBasicDelivery": "Basic delivery",
-  "membershipBenefitBasicPoints": "Earn 1% reward points",
-  "membershipBenefitFreeDelivery": "Unlimited free delivery",
-  "membershipBenefitPriorityDriver": "Priority premium drivers",
-  "membershipBenefitBonusPoints3": "Earn 3% reward points",
-  "membershipBenefitVipDriver": "Top-tier priority drivers",
-  "membershipBenefitBonusPoints5": "Earn 5% reward points",
-  "membershipBenefitVoucher100k": "Birthday voucher 100K₫",
-  "membershipBenefitVoucher200k": "Birthday voucher 200K₫",
-  "membershipBenefitVipSupport": "24/7 VIP support",
 
   "cancelOrderTitle": "Cancel Order",
   "cancelOrderSuccess": "Order cancelled successfully",
