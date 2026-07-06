@@ -39,7 +39,7 @@ curl http://localhost:3002/api/healthz
 | Storage | MinIO/S3 access key và secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` hoặc key của LLM provider được cấu hình |
-| Maps | backend `GOOGLE_MAPS_API_KEY` và `OSRM_URL` riêng; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` và `OSRM_URL` riêng; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLI | Vercel token, Supabase access token |
 
 Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history phải rotate trước production.
@@ -81,9 +81,9 @@ Public env:
 | App | Variable |
 |---|---|
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 
-Admin và Restaurant cố ý fail-closed ở production khi thiếu API, realtime hoặc canonical app URL env. Giá trị localhost chỉ dành cho dev. Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel; biến này chỉ dùng proxy local cho Restaurant khi dev.
+Admin và Restaurant cố ý fail-closed ở production khi thiếu API, realtime, canonical app URL hoặc map key bắt buộc. Giá trị localhost chỉ dành cho dev. Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel; biến này chỉ dùng proxy local cho Restaurant khi dev.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` bằng HTTP referrer.
 
@@ -108,7 +108,7 @@ Checks khuyến nghị:
 - Backend: `GET /api/healthz`
 - Admin: `GET /api/healthz`
 - Restaurant: `GET /api/healthz`
-- Synthetic flows: login, restaurant order queue, admin exports, AI configured/degraded state, driver map
+- Synthetic flows: login, restaurant order queue và live tracking map, admin exports, AI configured/degraded state, driver map
 
 Không dùng keep-alive để che migration fail, thiếu secret hoặc realtime lỗi.
 

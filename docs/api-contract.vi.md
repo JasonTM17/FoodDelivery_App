@@ -106,10 +106,10 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 
 ## Snapshot REST tracking đơn hàng
 
-- `GET /orders/{id}/tracking` scope theo customer và chỉ trả telemetry thật từ Redis/cache/database cho đơn của customer đã xác thực.
+- `GET /orders/{id}/tracking` scope theo order participant: customer sở hữu đơn, driver được gán, staff nhà hàng active đúng tenant của đơn, hoặc admin. Endpoint chỉ trả telemetry thật từ Redis/cache/database cho đơn mà actor đã xác thực được phép truy cập.
 - `driverLocation`, `etaMinutes` và `routePolyline` có thể null; client phải xem null là dữ liệu chưa khả dụng, không tự bịa ETA đường thẳng hoặc route geometry.
 - `routePhase` là field bắt buộc, giá trị `pickup` trước khi lấy món và `dropoff` sau khi lấy món. Mobile/web client phải dùng field này để tránh tái sử dụng geometry pickup stale cho chặng giao tới khách.
-- Customer mobile hydrate snapshot này trước khi subscribe realtime events, sau đó cho realtime `delivery:eta_updated` thay thế hoặc xoá planned route.
+- Customer mobile và Restaurant web hydrate snapshot này trước khi subscribe realtime events, sau đó cho realtime `delivery:eta_updated` thay thế hoặc xoá planned route.
 
 ## Quy ước HMAC
 

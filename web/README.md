@@ -5,7 +5,7 @@
 `web/` is a pnpm 11 Turborepo for the FoodFlow dashboards:
 
 - `apps/admin`: platform operations, live driver map, restaurants, users, orders, promotions, support, audit logs, exports, settings, and AI monitor.
-- `apps/restaurant`: merchant order queue, menu, categories, reviews, revenue, promotions, staff, profile, operating hours, insights, and notifications.
+- `apps/restaurant`: merchant order queue, live delivery tracking map, menu, categories, reviews, revenue, promotions, staff, profile, operating hours, insights, and notifications.
 - `packages/api-client`: shared web API client and generated/contract types.
 - `packages/ui` and `packages/i18n`: shared UI and localization utilities.
 
@@ -42,6 +42,7 @@ Each app uses an ignored `.env.local` copied from its example file.
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
 | `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
 | `NEXT_PUBLIC_RESTAURANT_URL` | Yes | Public Restaurant base URL for metadata and canonical links |
+| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Only for live map locally; required in production | Browser Google Maps key for order tracking. Restrict by HTTP referrer. |
 
 ## Run Locally
 

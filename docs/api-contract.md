@@ -121,10 +121,10 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 
 ## Order tracking REST snapshot
 
-- `GET /orders/{id}/tracking` is customer-scoped and returns only real Redis/cache/database telemetry for the authenticated customer's order.
+- `GET /orders/{id}/tracking` is order-participant scoped: customer-owned orders, assigned driver orders, active restaurant staff for the order's restaurant tenant, or admin. It returns only real Redis/cache/database telemetry for an order the authenticated actor can access.
 - `driverLocation`, `etaMinutes`, and `routePolyline` are nullable; clients must treat nulls as unavailable data, not fabricate straight-line ETA or route geometry.
 - `routePhase` is required and is `pickup` before pickup, `dropoff` after pickup. Mobile and web clients must use it to avoid reusing stale pickup geometry for customer-bound delivery.
-- Customer mobile hydrates this snapshot before subscribing to realtime events, then lets realtime `delivery:eta_updated` replace or clear the planned route.
+- Customer mobile and Restaurant web hydrate this snapshot before subscribing to realtime events, then let realtime `delivery:eta_updated` replace or clear the planned route.
 
 ## HMAC conventions
 

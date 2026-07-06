@@ -27,3 +27,25 @@ export function assertProductionPublicUrl(
 
   return parsed.toString().replace(/\/$/, rawUrl.endsWith('/') ? '/' : '');
 }
+
+export function assertProductionPublicValue(
+  envName: string,
+  value: string,
+  env: Record<string, string | undefined>,
+  forbiddenValues: readonly string[],
+): string {
+  if (!isProductionDeployment(env)) return value;
+
+  const normalized = value.trim().toLowerCase();
+  const isPlaceholder =
+    normalized.startsWith('your-') ||
+    normalized.includes('placeholder') ||
+    normalized.includes('example') ||
+    forbiddenValues.includes(normalized);
+
+  if (isPlaceholder) {
+    throw new Error(`${envName} must be configured with a real production value`);
+  }
+
+  return value;
+}

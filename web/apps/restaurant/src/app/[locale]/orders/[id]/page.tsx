@@ -9,6 +9,7 @@ import { OrderTimeline } from '@/components/orders/order-timeline';
 import { OrderDriverChat } from '@/components/orders/order-driver-chat';
 import { OrderActions } from '@/components/orders/order-actions';
 import { OrderPrepTimePicker } from '@/components/orders/order-prep-time-picker';
+import { OrderLiveTrackingMap, shouldShowOrderLiveTracking } from '@/components/orders/order-live-tracking-map';
 import {
   CustomerInfoCard,
   OrderDetailSkeleton,
@@ -102,6 +103,7 @@ export default function OrderDetailPage() {
 
   const shouldShowPrepPicker = order.status === 'restaurant_accepted' || order.status === 'preparing';
   const shouldShowDriverChat = order.status === 'ready_for_pickup' || order.status === 'delivering';
+  const shouldShowLiveTracking = shouldShowOrderLiveTracking(order.status);
 
   return (
     <div className="space-y-6">
@@ -141,6 +143,14 @@ export default function OrderDetailPage() {
             <h2 className="mb-4 text-base font-semibold text-gray-900">{t('timelineTitle')}</h2>
             <OrderTimeline currentStatus={order.status} steps={timelineSteps} />
           </div>
+
+          {shouldShowLiveTracking && (
+            <OrderLiveTrackingMap
+              orderId={order.id}
+              orderStatus={order.status}
+              customerAddress={order.customerAddress}
+            />
+          )}
 
           {shouldShowDriverChat && <OrderDriverChat orderId={order.id} />}
         </div>

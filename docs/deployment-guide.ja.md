@@ -39,7 +39,7 @@ curl http://localhost:3002/api/healthz
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` または設定済み LLM provider key |
-| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLI | Vercel token, Supabase access token |
 
 チャット、ログ、スクリーンショット、チケット、git history に出た key は production 前に rotate してください。
@@ -81,9 +81,9 @@ Public env:
 | App | Variable |
 |---|---|
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 
-Admin と Restaurant は production で API、realtime、canonical app URL の env が未設定の場合、明示的に失敗します。localhost の既定値は dev 専用です。`FOODFLOW_ENABLE_DEV_API_REWRITE` は local Restaurant dev proxy 専用なので、Vercel では有効化しないでください。
+Admin と Restaurant は production で API、realtime、canonical app URL、または必須 map key の env が未設定の場合、明示的に失敗します。localhost の既定値は dev 専用です。`FOODFLOW_ENABLE_DEV_API_REWRITE` は local Restaurant dev proxy 専用なので、Vercel では有効化しないでください。
 
 `NEXT_PUBLIC_GOOGLE_MAPS_KEY` は HTTP referrer で制限してください。
 
@@ -109,7 +109,7 @@ Keep-alive は health を監視するためのもので、runtime failure を隠
 - Backend: `GET /api/healthz`
 - Admin: `GET /api/healthz`
 - Restaurant: `GET /api/healthz`
-- Synthetic flows: login, restaurant order queue, admin exports, AI configured/degraded state, driver map
+- Synthetic flows: login, restaurant order queue and live tracking map, admin exports, AI configured/degraded state, driver map
 
 Migration failure、missing secrets、realtime failure を keep-alive で隠さないでください。
 

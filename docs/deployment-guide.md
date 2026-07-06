@@ -41,7 +41,7 @@ Use provider secret managers, not committed files:
 | Storage | MinIO/S3 access key and secret key |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
-| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; admin browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLIs | Vercel token, Supabase access token |
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
@@ -87,9 +87,9 @@ Required public env:
 | App | Variable |
 |---|---|
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 
-Both web apps intentionally fail closed in production when API, realtime, or canonical app URL env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
+Both web apps intentionally fail closed in production when API, realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.
 
@@ -118,7 +118,7 @@ Recommended checks:
 - Backend: `GET /api/healthz`
 - Admin: `GET /api/healthz`
 - Restaurant: `GET /api/healthz`
-- Synthetic flows after release: login, restaurant order queue, admin exports, AI degraded/configured state, driver map loading
+- Synthetic flows after release: login, restaurant order queue and live tracking map, admin exports, AI degraded/configured state, driver map loading
 
 Alert on repeated failures. Do not use keep-alive to mask failed migrations, missing secrets, or broken realtime connections.
 

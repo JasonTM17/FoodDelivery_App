@@ -150,13 +150,46 @@
       "cancel": "キャンセル",
       "actionFailed": "操作に失敗しました"
     },
-    "prepTime": {
-      "title": "準備時間",
-      "minutes": "{minutes}分",
-      "customPlaceholder": "カスタム（分）",
-      "set": "設定"
-    }
+  "prepTime": {
+    "title": "準備時間",
+    "minutes": "{minutes}分",
+    "customPlaceholder": "カスタム（分）",
+    "set": "設定"
   },
+  "tracking": {
+    "title": "ライブ配達追跡",
+    "description": "バックエンドの実ルートとテレメトリで担当ドライバーを追跡します。",
+    "mapRegionLabel": "注文のライブ追跡マップ",
+    "refresh": "更新",
+    "loading": "ライブ追跡を読み込み中",
+    "loadError": "ライブ追跡を読み込めませんでした",
+    "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
+    "missingKeyDescription": "ライブ配達マップを表示するには、Restaurant環境に公開Google Mapsキーを追加してください。",
+    "telemetryUnavailable": "実際のドライバーGPSまたはルートはまだ記録されていません。FoodFlowはETAを捏造しません。",
+    "noSnapshotDescription": "バックエンドがドライバー割り当てと実テレメトリを記録すると追跡が表示されます。",
+    "etaLabel": "ETA",
+    "etaMinutes": "{minutes}分",
+    "etaUnavailable": "ルート済みテレメトリが届くまで利用不可",
+    "routePhaseLabel": "ルート段階",
+    "driverLocationLabel": "ドライバーGPS",
+    "locationAvailable": "ライブ位置情報あり",
+    "locationUnavailable": "実ドライバーGPS待ち",
+    "customerAddressLabel": "顧客住所",
+    "routeAvailable": "ルート形状はバックエンドのDirections/OSRM providerから取得しています。",
+    "routeUnavailable": "ルート形状はまだありません。バックエンドが返すとマップが更新されます。",
+    "lastUpdated": "最終更新: {time}",
+    "unavailable": "利用不可",
+    "connection": {
+      "connecting": "接続中",
+      "connected": "ライブ",
+      "disconnected": "再接続中"
+    },
+    "phase": {
+      "pickup": "ドライバーが店舗へ移動中",
+      "dropoff": "ドライバーが顧客へ配達中"
+    }
+  }
+},
   "menu": {
     "title": "メニュー",
     "description": "メニューアイテムとカテゴリを管理",

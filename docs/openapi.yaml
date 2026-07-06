@@ -651,7 +651,7 @@ components:
 
     OrderTrackingResponse:
       type: object
-      description: Customer-scoped tracking snapshot. Nullable fields remain null until real telemetry exists.
+      description: Order-participant-scoped tracking snapshot. Nullable fields remain null until real telemetry exists.
       properties:
         orderId: { type: string, format: uuid }
         status: { type: string, enum: [created, pending_payment, paid, restaurant_pending, restaurant_accepted, preparing, ready_for_pickup, driver_assigned, driver_arriving_restaurant, picked_up, delivering, delivered, completed, cancelled, refunded] }
@@ -3271,7 +3271,7 @@ paths:
     get:
       tags: [orders]
       summary: Get the current order tracking snapshot
-      description: Returns a customer-owned order's status plus real assigned-driver GPS, cached or persisted ETA, and route data. Telemetry fields remain null until recorded and are never replaced with synthetic coordinates.
+      description: Returns an accessible order's status plus real assigned-driver GPS, cached or persisted ETA, and route data. Customers, assigned drivers, active restaurant staff for the order tenant, and admins may read the snapshot. Telemetry fields remain null until recorded and are never replaced with synthetic coordinates.
       operationId: orders_getTracking
       x-foo-actor: user
       parameters:
@@ -3282,8 +3282,8 @@ paths:
       responses:
         "200": { description: "Current tracking snapshot", content: { application/json: { schema: { $ref: "#/components/schemas/OrderTrackingResponse" } } } }
         "401": { description: "Authentication required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
-        "403": { description: "Customer role required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
-        "404": { description: "Order not found for this customer", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Order participant role required", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Order not found for this actor", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /orders/{orderId}/cancel:
     post:

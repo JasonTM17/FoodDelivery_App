@@ -15,6 +15,7 @@
     "@foodflow/api-client": "workspace:^",
     "@foodflow/i18n": "workspace:^",
     "@foodflow/ui": "workspace:^",
+    "@vis.gl/react-google-maps": "^1.0.0",
     "@dnd-kit/core": "^6.3.1",
     "next-intl": "^4.13.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -31,6 +32,7 @@
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.65.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
