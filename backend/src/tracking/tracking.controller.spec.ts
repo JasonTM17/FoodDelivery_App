@@ -75,6 +75,28 @@ describe('TrackingController', () => {
     expect(getCachedRoute).toHaveBeenCalledWith('order-3', 'pickup')
   })
 
+  it('does not reuse persisted route geometry while waiting for a pickup-phase route cache', async () => {
+    getTracking.mockResolvedValue({
+      id: 'order-6',
+      status: OrderStatus.driver_assigned,
+      driverId: 'driver-1',
+      estimatedDeliveryTimeMinutes: 18,
+      routePolyline: 'stale-dropoff-route',
+    })
+    getDriverLocation.mockResolvedValue(null)
+    getCachedRoute.mockResolvedValue(null)
+
+    await expect(controller.getTracking(
+      { sub: 'customer-1', role: UserRole.customer },
+      'order-6',
+    )).resolves.toMatchObject({
+      orderId: 'order-6',
+      routePhase: 'pickup',
+      etaMinutes: null,
+      routePolyline: null,
+    })
+  })
+
   it('does not surface persisted estimated minutes when no routed cache exists', async () => {
     getTracking.mockResolvedValue({
       id: 'order-4',

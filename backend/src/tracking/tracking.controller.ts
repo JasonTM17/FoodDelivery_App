@@ -45,7 +45,7 @@ export class TrackingController {
       etaMinutes: cachedRoute
         ? Math.max(1, Math.round(cachedRoute.durationSeconds / 60))
         : null,
-      routePolyline: cachedRoute?.polyline ?? order.routePolyline,
+      routePolyline: cachedRoute?.polyline ?? (routePhase === 'dropoff' ? order.routePolyline : null),
     }
   }
 }

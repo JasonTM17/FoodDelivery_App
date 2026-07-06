@@ -7,6 +7,7 @@ import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
 import Redis from 'ioredis'
 import { Prisma } from '@prisma/client'
+import { type DeliveryRoutePhase, routeCacheKey } from '../tracking/tracking.service'
 
 interface DriverCandidate {
   driverId: string
@@ -201,8 +202,18 @@ export class DispatchService {
 
     await this.writeDriverAssignmentToRedis(candidate.driverId, orderId)
     try {
+      await this.invalidateRouteCaches(orderId)
       await this.prisma.$transaction([
-        this.prisma.order.update({ where: { id: orderId }, data: { driverId: candidate.driverId, status: 'driver_assigned' } }),
+        this.prisma.order.update({
+          where: { id: orderId },
+          data: {
+            driverId: candidate.driverId,
+            status: 'driver_assigned',
+            estimatedDeliveryTimeMinutes: null,
+            routePolyline: null,
+            routeWaypoints: Prisma.DbNull,
+          },
+        }),
         this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
         this.prisma.$executeRaw(Prisma.sql`
           INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
@@ -245,6 +256,13 @@ export class DispatchService {
     }
   }
 
+  private invalidateRouteCaches(orderId: string): Promise<number> {
+    return this.redis.del(
+      routeRedisKey(orderId, 'pickup'),
+      routeRedisKey(orderId, 'dropoff'),
+    )
+  }
+
   private async releaseRedisAssignment(driverId: string, orderId: string): Promise<void> {
     await this.redis.eval(
       `if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("del", KEYS[1]); redis.call("set", KEYS[2], "online"); redis.call("set", KEYS[3], ARGV[2]); return 1 else return 0 end`,
@@ -256,6 +274,10 @@ export class DispatchService {
       Date.now().toString(),
     )
   }
+}
+
+function routeRedisKey(orderId: string, phase: DeliveryRoutePhase): string {
+  return `route:${routeCacheKey(orderId, phase)}`
 }
 
 function parseGeoSearchWithDistance(raw: Array<unknown>): Array<{ member: string; distKm: number }> {

@@ -6,6 +6,7 @@ import { DriverScoringService } from './driver-scoring.service'
 import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
+import { Prisma } from '@prisma/client'
 
 describe('DispatchService', () => {
   let service: DispatchService
@@ -230,6 +231,17 @@ describe('DispatchService', () => {
         score: 0.9,
       })
 
+      expect(mockRedis.del).toHaveBeenCalledWith('route:order-1:pickup', 'route:order-1:dropoff')
+      expect(mockPrisma.order.update).toHaveBeenCalledWith({
+        where: { id: 'order-1' },
+        data: expect.objectContaining({
+          driverId: 'driver-1',
+          status: 'driver_assigned',
+          estimatedDeliveryTimeMinutes: null,
+          routePolyline: null,
+          routeWaypoints: Prisma.DbNull,
+        }),
+      })
       expect(mockGateway.sendAssignedOrder).toHaveBeenCalledWith('driver-1', { orderId: 'order-1' })
       expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(
         'order-1',
