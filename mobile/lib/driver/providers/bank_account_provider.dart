@@ -45,6 +45,12 @@ class BankAccountsNotifier extends StateNotifier<BankAccountsState> {
         isLoading: false,
         accounts: _parseAccountList(response.data),
       );
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        accounts: const [],
+        error: 'BANK_ACCOUNTS_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (error) {
       state = state.copyWith(isLoading: false, error: _errorMessage(error));
     }
@@ -62,6 +68,12 @@ class BankAccountsNotifier extends StateNotifier<BankAccountsState> {
         isLoading: false,
         accounts: _upsertAccount(state.accounts, created),
       );
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'BANK_ACCOUNTS_CONTRACT_INVALID_RESPONSE',
+      );
+      rethrow;
     } catch (error) {
       state = state.copyWith(isLoading: false, error: _errorMessage(error));
       rethrow;
@@ -101,6 +113,12 @@ class BankAccountsNotifier extends StateNotifier<BankAccountsState> {
             )
             .toList(),
       );
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'BANK_ACCOUNTS_CONTRACT_INVALID_RESPONSE',
+      );
+      rethrow;
     } catch (error) {
       state = state.copyWith(isLoading: false, error: _errorMessage(error));
       rethrow;
@@ -115,21 +133,15 @@ final bankAccountsProvider =
 
 List<BankAccount> _parseAccountList(dynamic data) {
   if (data is List) {
-    return data
-        .whereType<Map>()
-        .map((item) => BankAccount.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+    return data.map((item) => BankAccount.fromJson(_asMap(item))).toList();
   }
-  if (data is Map && data['data'] is List) {
-    return _parseAccountList(data['data']);
-  }
-  return const [];
+  throw const FormatException('Driver bank accounts response must be a list');
 }
 
 Map<String, dynamic> _asMap(dynamic data) {
   if (data is Map<String, dynamic>) return data;
   if (data is Map) return Map<String, dynamic>.from(data);
-  return const {};
+  throw const FormatException('Driver bank account response must be an object');
 }
 
 List<BankAccount> _upsertAccount(

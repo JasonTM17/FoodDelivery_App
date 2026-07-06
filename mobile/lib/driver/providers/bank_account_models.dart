@@ -17,12 +17,12 @@ class BankAccount {
 
   factory BankAccount.fromJson(Map<String, dynamic> json) {
     return BankAccount(
-      id: json['id'] as String? ?? '',
-      bankCode: json['bankCode'] as String? ?? '',
-      bankName: json['bankName'] as String? ?? '',
-      accountNumber: json['accountNumber'] as String? ?? '',
-      accountHolderName: json['accountHolderName'] as String? ?? '',
-      isDefault: json['isDefault'] as bool? ?? false,
+      id: _requiredString(json, 'id'),
+      bankCode: _requiredString(json, 'bankCode'),
+      bankName: _requiredString(json, 'bankName'),
+      accountNumber: _requiredString(json, 'accountNumber'),
+      accountHolderName: _requiredString(json, 'accountHolderName'),
+      isDefault: _requiredBool(json, 'isDefault'),
     );
   }
 
@@ -52,6 +52,18 @@ class BankAccount {
       isDefault: isDefault ?? this.isDefault,
     );
   }
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing required bank account string field: $field');
+}
+
+bool _requiredBool(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is bool) return value;
+  throw FormatException('Missing required bank account boolean field: $field');
 }
 
 class VnBank {
