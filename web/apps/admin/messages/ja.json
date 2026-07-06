@@ -1067,6 +1067,7 @@
     },
     "status": {
       "online": "待機中",
+      "offline": "オフライン",
       "free": "待機中",
       "delivering": "配達中",
       "busy": "対応中"

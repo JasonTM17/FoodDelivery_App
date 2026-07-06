@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-type DriverStatus = 'online' | 'free' | 'delivering' | 'busy';
+type DriverStatus = 'online' | 'offline' | 'free' | 'delivering' | 'busy';
 
 interface DriverMarkerProps {
   map: google.maps.Map | null;
@@ -14,6 +14,7 @@ interface DriverMarkerProps {
 
 const markerColors: Record<DriverStatus, string> = {
   online: '#22c55e',
+  offline: '#64748b',
   free: '#22c55e',
   delivering: '#f97316',
   busy: '#ef4444',

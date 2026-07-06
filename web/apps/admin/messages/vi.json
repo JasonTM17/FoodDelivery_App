@@ -1067,6 +1067,7 @@
     },
     "status": {
       "online": "Rảnh",
+      "offline": "Ngoại tuyến",
       "free": "Rảnh",
       "delivering": "Đang giao",
       "busy": "Bận"

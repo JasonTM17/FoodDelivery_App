@@ -92,6 +92,36 @@ describe('AdminTrackingService', () => {
     })
   })
 
+  it('marks Redis-present drivers offline when the database profile is offline', async () => {
+    redis.call.mockResolvedValue([['driver:driver-1', ['106.7001', '10.8001']]])
+    redis.mget.mockResolvedValue([
+      '1', 'free', 'order-1', '2026-07-03T01:00:00.000Z',
+    ])
+    prisma.driverProfile.findMany.mockResolvedValue([
+      {
+        userId: 'driver-1',
+        vehicleType: 'motorbike',
+        vehiclePlate: '59A1-12345',
+        isOnline: false,
+        rating: { toString: () => '4.8' },
+        user: { fullName: 'Driver One' },
+      },
+    ])
+    prisma.order.findMany.mockResolvedValue([
+      { id: 'order-1', orderCode: 'FF0001', driverId: 'driver-1', status: OrderStatus.delivering },
+    ])
+
+    const result = await service.getOnlineDrivers()
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      id: 'driver-1',
+      status: 'offline',
+      currentOrder: 'FF0001',
+      lastSeenAt: '2026-07-03T01:00:00.000Z',
+    })
+  })
+
   it('drops stale Redis geo entries when the alive key expired', async () => {
     redis.call.mockResolvedValue([['driver:driver-1', ['106.7001', '10.8001']]])
     redis.mget.mockResolvedValue([null, 'online', ''])

@@ -220,6 +220,19 @@ describe('useRealtimeDriverLocations', () => {
     expect(result.current.drivers).toEqual([location]);
   });
 
+  it('keeps offline database-backed drivers when Redis still has a fresh map position', async () => {
+    const offlineDriver = makeLocation({ status: 'offline' });
+    mockedApiGet.mockResolvedValueOnce([offlineDriver]);
+
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.drivers).toEqual([offlineDriver]);
+  });
+
   it('ignores realtime coordinates outside the Vietnam delivery map', async () => {
     const location = makeLocation();
     mockedApiGet.mockResolvedValueOnce([location]);

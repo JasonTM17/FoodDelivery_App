@@ -9,6 +9,7 @@ import type { DriverLocation } from '@/hooks/use-realtime-driver-locations';
 
 const statusColors: Record<string, string> = {
   online: 'bg-green-500',
+  offline: 'bg-slate-500',
   free: 'bg-green-500',
   delivering: 'bg-orange-500',
   busy: 'bg-red-500',

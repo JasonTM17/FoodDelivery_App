@@ -13,7 +13,7 @@ const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.delivering,
 ]
 
-type AdminDriverMapStatus = 'online' | 'free' | 'delivering' | 'busy'
+type AdminDriverMapStatus = 'online' | 'offline' | 'free' | 'delivering' | 'busy'
 
 interface GeoMember {
   driverId: string
@@ -170,10 +170,11 @@ function resolveMapStatus(
   isOnline: boolean,
   hasActiveOrder: boolean,
 ): AdminDriverMapStatus {
+  if (!isOnline) return 'offline'
   if (hasActiveOrder) return 'delivering'
   if (redisStatus === 'busy') return 'busy'
   if (redisStatus === 'free') return 'free'
-  return isOnline ? 'online' : 'online'
+  return 'online'
 }
 
 function isWithinVietnamBounds(member: GeoMember): boolean {

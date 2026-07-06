@@ -1067,6 +1067,7 @@
     },
     "status": {
       "online": "Available",
+      "offline": "Offline",
       "free": "Available",
       "delivering": "Delivering",
       "busy": "Busy"

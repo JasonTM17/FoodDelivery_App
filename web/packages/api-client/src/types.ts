@@ -133,7 +133,7 @@ export interface AdminAiMonitorStats {
 
 export type AdminDriverStatus = 'online' | 'offline' | 'delivering';
 export type AdminDriverVehicleType = 'motorbike' | 'car' | 'bicycle';
-export type AdminDriverLocationStatus = 'online' | 'free' | 'delivering' | 'busy';
+export type AdminDriverLocationStatus = 'online' | 'offline' | 'free' | 'delivering' | 'busy';
 export type DeliveryRoutePhase = 'pickup' | 'dropoff';
 
 export interface AdminDriver {

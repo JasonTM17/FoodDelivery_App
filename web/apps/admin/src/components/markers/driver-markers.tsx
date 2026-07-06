@@ -7,6 +7,7 @@ import { buildDriverInfoWindowHtml, type DriverMarkerCopy } from './driver-marke
 
 const statusColors: Record<string, string> = {
   online: '#22c55e',
+  offline: '#64748b',
   free: '#22c55e',
   delivering: '#f97316',
   busy: '#ef4444',

@@ -55,7 +55,9 @@ function DriverInfoWindow({
               ? 'success'
               : driver.status === 'delivering'
                 ? 'warning'
-                : 'destructive'
+                : driver.status === 'busy'
+                  ? 'destructive'
+                  : 'secondary'
           }
           className="text-[10px]"
         >
@@ -96,6 +98,7 @@ export default function DriverMapPage() {
 
   const statusLabels = useMemo<Record<DriverLocation['status'], string>>(() => ({
     online: t('status.online'),
+    offline: t('status.offline'),
     free: t('status.free'),
     delivering: t('status.delivering'),
     busy: t('status.busy'),

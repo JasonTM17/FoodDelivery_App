@@ -2354,7 +2354,7 @@ components:
         driverId: { type: string, format: uuid, description: Driver user ID, example: 4d2b9fb7-8aa4-49f5-96f9-77d931f8f5a1 }
         name: { type: string, example: Nguyen Van Tai }
         rating: { type: number, minimum: 0, maximum: 5, example: 4.8 }
-        status: { type: string, enum: [online, free, delivering, busy] }
+        status: { type: string, enum: [online, offline, free, delivering, busy] }
         lat: { type: number, format: double, example: 10.7769 }
         lng: { type: number, format: double, example: 106.7009 }
         currentOrder: { type: string, nullable: true, description: Active order code or ID when driver has an active order. }
