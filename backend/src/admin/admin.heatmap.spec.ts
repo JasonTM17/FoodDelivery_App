@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { BadRequestException } from '@nestjs/common'
 import { AdminService } from './admin.service'
 import { PrismaService } from '../database/prisma.service'
 
@@ -52,19 +53,26 @@ describe('AdminService — analytics resources', () => {
     it('returns district heatmap rows from the aggregate query', async () => {
       mockPrisma.$queryRaw.mockResolvedValueOnce(heatmapRows)
 
-      const result = await service.getDispatchHeatmap('2026-06-01')
+      const result = await service.getDispatchHeatmap('2026-06-01T00:00:00.000Z')
 
       expect(result).toEqual(heatmapRows)
       expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
     })
 
-    it('uses a fallback date when the since query is invalid', async () => {
-      mockPrisma.$queryRaw.mockResolvedValueOnce(heatmapRows)
+    it('rejects an invalid since query instead of falling back to a synthetic window', () => {
+      expect(() => service.getDispatchHeatmap('not-a-date')).toThrow(BadRequestException)
+      expect(() => service.getDispatchHeatmap('not-a-date')).toThrow('ADMIN_DISPATCH_HEATMAP_SINCE_INVALID')
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
+    })
 
-      const result = await service.getDispatchHeatmap('not-a-date')
+    it('rejects a missing since query instead of silently using the last 24 hours', () => {
+      expect(() => service.getDispatchHeatmap('')).toThrow(BadRequestException)
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
+    })
 
-      expect(result).toHaveLength(2)
-      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+    it('rejects repeated since query values instead of throwing a TypeError', () => {
+      expect(() => service.getDispatchHeatmap(['2026-06-01T00:00:00.000Z'])).toThrow(BadRequestException)
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
     })
   })
 

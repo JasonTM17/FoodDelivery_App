@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, UserRole, OrderStatus, TicketStatus } from '@prisma/client'
 import { CreatePromotionDto, UpdatePromotionDto } from './dto/promotion.dto'
@@ -324,10 +324,8 @@ export class AdminService {
     }
   }
 
-  getDispatchHeatmap(since: string) {
-    const sinceDate = Number.isNaN(Date.parse(since))
-      ? new Date(Date.now() - 24 * 60 * 60 * 1000)
-      : new Date(since)
+  getDispatchHeatmap(since: unknown) {
+    const sinceDate = parseRequiredIsoDateTime(since, 'ADMIN_DISPATCH_HEATMAP_SINCE_INVALID')
 
     return this.prisma.$queryRaw<Array<{
       districtCode: string
@@ -393,4 +391,20 @@ export class AdminService {
       revenueByDay,
     }
   }
+}
+
+function parseRequiredIsoDateTime(value: unknown, errorCode: string): Date {
+  if (typeof value !== 'string') {
+    throw new BadRequestException(errorCode)
+  }
+  const trimmed = value.trim()
+  const isoDateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/
+  if (!isoDateTimePattern.test(trimmed)) {
+    throw new BadRequestException(errorCode)
+  }
+  const date = new Date(trimmed)
+  if (Number.isNaN(date.getTime())) {
+    throw new BadRequestException(errorCode)
+  }
+  return date
 }

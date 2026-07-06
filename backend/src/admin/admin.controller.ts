@@ -99,7 +99,7 @@ export class AdminController {
   }
 
   @Get('dispatch/heatmap')
-  getDispatchHeatmap(@Query('since') since: string = '') {
+  getDispatchHeatmap(@Query('since') since: unknown) {
     return this.adminService.getDispatchHeatmap(since)
   }
 

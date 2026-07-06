@@ -4768,9 +4768,11 @@ paths:
       parameters:
         - name: since
           in: query
+          required: true
           schema: { type: string, format: date-time }
       responses:
         "200": { description: "Dispatch map heatmap points", content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/HeatmapPoint" } } } } }
+        "400": { description: "Invalid or missing since query", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/restaurants/{restaurantId}/kpi:
     get:
