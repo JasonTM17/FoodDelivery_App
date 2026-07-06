@@ -18,12 +18,17 @@ class WalletTransaction {
   });
 
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
+    final type = _requiredString(json, 'type');
+    if (type != 'credit' && type != 'debit') {
+      throw FormatException('Invalid wallet transaction type: $type');
+    }
+
     return WalletTransaction(
-      id: json['id'] as String,
-      amount: (json['amountDelta'] as num).toDouble(),
-      isCredit: (json['type'] as String?) == 'credit',
-      description: json['reason'] as String? ?? '',
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: _requiredString(json, 'id'),
+      amount: _requiredDouble(json, 'amountDelta'),
+      isCredit: type == 'credit',
+      description: _requiredString(json, 'reason'),
+      createdAt: DateTime.parse(_requiredString(json, 'createdAt')),
     );
   }
 }
@@ -71,13 +76,17 @@ class WalletNotifier extends StateNotifier<WalletState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get('/users/wallet');
-      final data = response.data as Map<String, dynamic>;
-      final txList = (data['transactions'] as List<dynamic>? ?? [])
-          .map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>))
+      final data = _requiredObject(response.data, 'wallet');
+      final txList = _requiredList(data, 'transactions')
+          .map(
+            (e) => WalletTransaction.fromJson(
+              _requiredObject(e, 'transactions[]'),
+            ),
+          )
           .toList();
       state = state.copyWith(
         isLoading: false,
-        balance: (data['balance'] as num? ?? 0).toDouble(),
+        balance: _requiredDouble(data, 'balance'),
         transactions: txList,
       );
     } on DioException catch (e) {
@@ -85,8 +94,44 @@ class WalletNotifier extends StateNotifier<WalletState> {
           e.response?.data?['message'] as String? ??
           'Không thể tải thông tin ví.';
       state = state.copyWith(isLoading: false, error: msg);
+    } on FormatException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'WALLET_CONTRACT_INVALID_RESPONSE',
+      );
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra.');
     }
   }
+}
+
+Map<String, dynamic> _requiredObject(dynamic value, String field) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  throw FormatException('Invalid wallet object field: $field');
+}
+
+List<dynamic> _requiredList(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is List) {
+    return value;
+  }
+  throw FormatException('Invalid wallet list field: $field');
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is String && value.trim().isNotEmpty) {
+    return value;
+  }
+  throw FormatException('Missing required wallet string field: $field');
+}
+
+double _requiredDouble(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is num && value.isFinite) {
+    return value.toDouble();
+  }
+  throw FormatException('Invalid wallet numeric field: $field');
 }
