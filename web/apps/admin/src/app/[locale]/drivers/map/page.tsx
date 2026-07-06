@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { APIProvider, Map } from '@vis.gl/react-google-maps';
 import { useLocale, useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -12,6 +12,7 @@ import { useRealtimeDriverLocations, type DriverLocation } from '@/hooks/use-rea
 import { resolveGoogleMapsApiKey } from '@/lib/google-maps-key';
 import { Car, MapPin, Navigation, RefreshCw, Star, Wifi, WifiOff } from 'lucide-react';
 import DriverListSidebar from './driver-list-sidebar';
+import { findSelectedDriver } from './driver-map-selection';
 
 const GOOGLE_MAPS_KEY = resolveGoogleMapsApiKey();
 const VIETNAM_BOUNDS = { north: 23.5, south: 3.8, west: 102.0, east: 117.5 };
@@ -84,7 +85,14 @@ export default function DriverMapPage() {
   const t = useTranslations('driverMap');
   const locale = useLocale();
   const { drivers, isLoading, error, connectionStatus, isFallbackPolling, lastUpdatedAt, refetch } = useRealtimeDriverLocations();
-  const [selectedDriver, setSelectedDriver] = useState<DriverLocation | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const selectedDriver = useMemo(
+    () => findSelectedDriver(drivers, selectedDriverId),
+    [drivers, selectedDriverId],
+  );
+  const handleSelectDriver = useCallback((driver: DriverLocation) => {
+    setSelectedDriverId(driver.id);
+  }, []);
 
   const statusLabels = useMemo<Record<DriverLocation['status'], string>>(() => ({
     online: t('status.online'),
@@ -125,7 +133,7 @@ export default function DriverMapPage() {
           lastSeen: t('lastSeen'),
         }}
         formatTimestamp={formatTimestamp}
-        onSelect={setSelectedDriver}
+        onSelect={handleSelectDriver}
         onRetry={() => void refetch()}
       />
 
@@ -169,7 +177,7 @@ export default function DriverMapPage() {
                 statusLabels={statusLabels}
                 selectedDriverId={selectedDriver?.id}
                 copy={markerCopy}
-                onSelect={setSelectedDriver}
+                onSelect={handleSelectDriver}
               />
             </Map>
           </APIProvider>
