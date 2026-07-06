@@ -158,12 +158,18 @@ class OrderModel {
         const [];
 
     return OrderModel(
-      id: json['_id'] as String? ?? json['id'] as String? ?? '',
-      userId: json['userId'] as String? ?? json['user_id'] as String? ?? '',
-      restaurantId:
-          json['restaurantId'] as String? ??
-          json['restaurant_id'] as String? ??
-          '',
+      id: _requiredStringFrom([json['_id'], json['id']], 'id'),
+      userId: _requiredStringFrom([
+        json['userId'],
+        json['user_id'],
+        json['customerId'],
+        json['customer_id'],
+      ], 'customerId'),
+      restaurantId: _requiredStringFrom([
+        json['restaurantId'],
+        json['restaurant_id'],
+        restaurant?['id'],
+      ], 'restaurantId'),
       restaurantName:
           json['restaurantName'] as String? ??
           json['restaurant_name'] as String? ??
@@ -181,14 +187,14 @@ class OrderModel {
       items: itemPayload
           .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
           .toList(),
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
-      deliveryFee:
-          (json['deliveryFee'] as num?)?.toDouble() ??
-          (json['delivery_fee'] as num?)?.toDouble() ??
-          0.0,
+      subtotal: _requiredDoubleFrom([json['subtotal']], 'subtotal'),
+      deliveryFee: _requiredDoubleFrom([
+        json['deliveryFee'],
+        json['delivery_fee'],
+      ], 'deliveryFee'),
       discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] as String? ?? 'pending',
+      total: _requiredDoubleFrom([json['total']], 'total'),
+      status: _requiredStringFrom([json['status']], 'status'),
       driverId: json['driverId'] as String? ?? json['driver_id'] as String?,
       driverName:
           json['driverName'] as String? ?? json['driver_name'] as String?,
@@ -205,10 +211,10 @@ class OrderModel {
             json['delivery_address'] as Map<String, dynamic>? ??
             {},
       ),
-      paymentMethod:
-          json['paymentMethod'] as String? ??
-          json['payment_method'] as String? ??
-          'cash',
+      paymentMethod: _requiredStringFrom([
+        json['paymentMethod'],
+        json['payment_method'],
+      ], 'paymentMethod'),
       note: json['note'] as String? ?? json['notes'] as String?,
       promoCode:
           json['promoCode'] as String? ??
@@ -419,9 +425,27 @@ class StatusHistory {
 
   factory StatusHistory.fromJson(Map<String, dynamic> json) {
     return StatusHistory(
-      status: json['status'] as String? ?? '',
+      status: _requiredStringFrom([json['status']], 'statusHistory.status'),
       timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
       note: json['note'] as String?,
     );
   }
+}
+
+String _requiredStringFrom(Iterable<dynamic> values, String field) {
+  for (final value in values) {
+    if (value is String && value.trim().isNotEmpty) {
+      return value;
+    }
+  }
+  throw FormatException('Missing required string field: $field');
+}
+
+double _requiredDoubleFrom(Iterable<dynamic> values, String field) {
+  for (final value in values) {
+    if (value is num) {
+      return value.toDouble();
+    }
+  }
+  throw FormatException('Invalid numeric field: $field');
 }

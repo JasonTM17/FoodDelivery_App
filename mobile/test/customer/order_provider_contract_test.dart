@@ -139,6 +139,45 @@ void main() {
     expect(notifier.state.currentTrackingOrder?.status, 'delivered');
     expect(notifier.state.currentTrackingOrder?.updatedAt, backendTimestamp);
   });
+
+  test(
+    'OrderModel rejects missing required backend money and state fields',
+    () {
+      final missingDeliveryFee = Map<String, dynamic>.from(
+        _orderPayload(id: 'order-active', status: 'preparing'),
+      )..remove('deliveryFee');
+      final missingStatus = Map<String, dynamic>.from(
+        _orderPayload(id: 'order-active', status: 'preparing'),
+      )..remove('status');
+      final missingPaymentMethod = Map<String, dynamic>.from(
+        _orderPayload(id: 'order-active', status: 'preparing'),
+      )..remove('paymentMethod');
+      final missingTimelineStatus =
+          Map<String, dynamic>.from(
+              _orderPayload(id: 'order-active', status: 'preparing'),
+            )
+            ..['statusHistory'] = [
+              {'timestamp': '2026-07-05T10:01:00.000Z'},
+            ];
+
+      expect(
+        () => OrderModel.fromJson(missingDeliveryFee),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => OrderModel.fromJson(missingStatus),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => OrderModel.fromJson(missingPaymentMethod),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => OrderModel.fromJson(missingTimelineStatus),
+        throwsA(isA<FormatException>()),
+      );
+    },
+  );
 }
 
 class _OrderApiInterceptor extends Interceptor {
@@ -215,7 +254,7 @@ Map<String, dynamic> _orderPayload({
   required String status,
 }) => {
   'id': id,
-  'userId': 'customer-1',
+  'customerId': 'customer-1',
   'restaurantId': 'restaurant-1',
   'restaurant': {
     'name': 'Pho 24',
