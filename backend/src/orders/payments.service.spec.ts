@@ -40,7 +40,7 @@ describe('PaymentsService', () => {
         amount: 50_000,
         method: PaymentMethod.wallet,
         status: PaymentStatus.pending,
-        transactionId: expect.stringMatching(/^WALLET-/),
+        transactionId: 'WALLET-order-1',
       }),
     })
     expect(walletCapture.capture).toHaveBeenCalledWith({

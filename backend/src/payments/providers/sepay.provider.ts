@@ -1,4 +1,4 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
+import { Injectable, Logger, NotImplementedException, ServiceUnavailableException } from '@nestjs/common'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 export interface PaymentIntentResult {
@@ -28,7 +28,7 @@ export class SepayProvider {
       throw new ServiceUnavailableException('SEPAY_PROVIDER_NOT_CONFIGURED')
     }
 
-    const transactionRef = `FF-${orderId.slice(0, 8).toUpperCase()}-${Date.now()}`
+    const transactionRef = this.buildTransactionRef(orderId)
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
 
     try {
@@ -81,23 +81,22 @@ export class SepayProvider {
     }
   }
 
-  async refund(transactionRef: string, amount: number, reason: string): Promise<void> {
+  async refund(transactionRef: string, amount: number, _reason: string): Promise<void> {
     if (!this.apiKey) {
       throw new ServiceUnavailableException('SEPAY_PROVIDER_NOT_CONFIGURED')
     }
 
-    const res = await fetch(`${this.baseUrl}/transactions/refund`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ transaction_ref: transactionRef, amount, reason }),
-    })
+    this.logger.warn(
+      `SePay refund requested for ${transactionRef} (${amount} VND) but bank-transfer refund confirmation is not modelled`,
+    )
+    throw new NotImplementedException('SEPAY_REFUND_NOT_MODELLED')
+  }
 
-    if (!res.ok) {
-      const text = await res.text()
-      throw new Error(`SePay refund ${res.status}: ${text}`)
+  private buildTransactionRef(orderId: string): string {
+    const normalizedOrderId = orderId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+    if (!normalizedOrderId) {
+      throw new Error('SEPAY_ORDER_ID_INVALID')
     }
+    return `FF-${normalizedOrderId.slice(0, 48)}`
   }
 }

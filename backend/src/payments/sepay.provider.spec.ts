@@ -54,6 +54,10 @@ describe('SepayProvider', () => {
       expect(result.transaction_ref).toBe('REAL-REF-001')
       expect(result.qr_code_url).toBe('https://qr.sepay.vn/real-ref')
       expect(result.expires_at.getTime()).toBeGreaterThan(Date.now())
+      const request = mockFetch.mock.calls[0][1] as RequestInit
+      expect(JSON.parse(request.body as string)).toMatchObject({
+        transaction_ref: 'FF-ORDERXYZ',
+      })
     })
 
     it('throws instead of creating a fallback intent when API omits QR fields', async () => {
@@ -121,30 +125,15 @@ describe('SepayProvider', () => {
         .rejects.toThrow(ServiceUnavailableException)
     })
 
-    it('calls SePay refund endpoint successfully', async () => {
+    it('fails closed instead of calling an unmodelled bank-transfer refund endpoint', async () => {
       process.env.SEPAY_API_KEY = 'test-key'
       provider = new SepayProvider()
 
-      global.fetch = jest.fn().mockResolvedValueOnce({ ok: true }) as typeof fetch
+      global.fetch = jest.fn() as typeof fetch
 
-      await expect(provider.refund('TXN-001', 50_000, 'test reason')).resolves.toBeUndefined()
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/transactions/refund'),
-        expect.objectContaining({ method: 'POST' }),
-      )
-    })
-
-    it('throws when refund API returns error', async () => {
-      process.env.SEPAY_API_KEY = 'test-key'
-      provider = new SepayProvider()
-
-      global.fetch = jest.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        text: async () => 'Internal Server Error',
-      }) as typeof fetch
-
-      await expect(provider.refund('TXN-001', 50_000, 'reason')).rejects.toThrow('500')
+      await expect(provider.refund('TXN-001', 50_000, 'test reason'))
+        .rejects.toThrow('SEPAY_REFUND_NOT_MODELLED')
+      expect(global.fetch).not.toHaveBeenCalled()
     })
   })
 })

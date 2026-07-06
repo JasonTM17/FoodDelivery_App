@@ -41,7 +41,7 @@ export class PaymentsService {
         amount,
         method,
         status: PaymentStatus.pending,
-        transactionId: this.generateTransactionId(method),
+        transactionId: this.generateTransactionId(orderId, method),
       },
     })
 
@@ -154,7 +154,11 @@ export class PaymentsService {
     })
   }
 
-  private generateTransactionId(method: PaymentMethod): string {
-    return `${toPublicPaymentMethod(method).toUpperCase()}-${crypto.randomUUID()}`
+  private generateTransactionId(orderId: string, method: PaymentMethod): string {
+    const normalizedOrderId = orderId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80)
+    if (!normalizedOrderId) {
+      throw new Error('PAYMENT_ORDER_ID_INVALID')
+    }
+    return `${toPublicPaymentMethod(method).toUpperCase()}-${normalizedOrderId}`
   }
 }

@@ -18,6 +18,7 @@ Payment intent lifecycle, SePay VietQR provider integration, webhook handling vá
 - `cash` releases the order to `restaurant_pending` with payment still pending; cash is collected after fulfillment.
 - `wallet` is the only wallet API and database value; capture uses confirmed wallet balance and a debit `wallet_transactions` row. New wallet transaction references use the public `WALLET-*` prefix.
 - `sepay` creates a real provider payment intent and keeps the order in `pending_payment` until the signed SePay webhook confirms payment.
+- SePay bank-transfer refunds fail closed with `SEPAY_REFUND_NOT_MODELLED` until FoodFlow has a provider-confirmed refund/void contract. Runtime must not mark a SePay payment or order as `refunded` from an undocumented HTTP 200.
 - Missing `SEPAY_API_KEY` or `SEPAY_WEBHOOK_SECRET` is a degraded configuration error. Runtime must not create mock intents, mock refunds, or accept unsigned SePay webhooks.
 
 ## Env vars
