@@ -6,7 +6,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { UserRole } from '@prisma/client'
+import { Prisma, UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
 import { type DeliveryRoutePhase, routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
@@ -92,14 +92,14 @@ export class TrackingGateway implements OnGatewayConnection {
     if (now - lastTime < 2000) return
     this.lastBroadcast.set(room, now)
 
-    const routeTarget = await this.prisma.$queryRawUnsafe<Array<{
+    const routeTarget = await this.prisma.$queryRaw<Array<{
       status: string
       restaurantLng: number
       restaurantLat: number
       deliveryLng: number
       deliveryLat: number
-    }>>(
-      `SELECT o.status::text AS "status",
+    }>>(Prisma.sql`
+      SELECT o.status::text AS "status",
               ST_X(r.location::geometry)::float8 AS "restaurantLng",
               ST_Y(r.location::geometry)::float8 AS "restaurantLat",
               ST_X(a.location::geometry)::float8 AS "deliveryLng",
@@ -107,12 +107,10 @@ export class TrackingGateway implements OnGatewayConnection {
        FROM orders o
        JOIN restaurants r ON r.id = o.restaurant_id
        JOIN addresses a ON a.id = o.delivery_address_id
-       WHERE o.id = $1::uuid
-         AND o.driver_id = $2::uuid
-       LIMIT 1`,
-      orderId,
-      driverId,
-    )
+       WHERE o.id = CAST(${orderId} AS uuid)
+         AND o.driver_id = CAST(${driverId} AS uuid)
+       LIMIT 1
+    `)
     const target = routeTarget[0]
     if (target) {
       this.server.to(room).emit('driver:location_changed', {

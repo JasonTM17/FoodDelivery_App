@@ -11,7 +11,7 @@ describe('TrackingGateway authorization', () => {
   const getUser = jest.fn()
   const canAccessOrder = jest.fn()
   const orderFindUnique = jest.fn()
-  const queryRawUnsafe = jest.fn()
+  const queryRaw = jest.fn()
   const notifyAdminDriverLocation = jest.fn()
   const emitToRoom = jest.fn()
   const to = jest.fn(() => ({ emit: emitToRoom }))
@@ -28,7 +28,7 @@ describe('TrackingGateway authorization', () => {
       } as never,
       {
         order: { findUnique: orderFindUnique },
-        $queryRawUnsafe: queryRawUnsafe,
+        $queryRaw: queryRaw,
       } as never,
       { notifyAdminDriverLocation } as never,
       { authenticate, getUser } as never,
@@ -94,7 +94,7 @@ describe('TrackingGateway authorization', () => {
       driverId: 'driver-1',
       status: 'online',
     }))
-    expect(queryRawUnsafe).not.toHaveBeenCalled()
+    expect(queryRaw).not.toHaveBeenCalled()
     expect(getOrFetchRoute).not.toHaveBeenCalled()
   })
 
@@ -102,7 +102,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-1')
-    queryRawUnsafe.mockResolvedValue([{
+    queryRaw.mockResolvedValue([{
       status: 'delivering',
       restaurantLat: 10.77,
       restaurantLng: 106.68,
@@ -141,11 +141,9 @@ describe('TrackingGateway authorization', () => {
       106.65,
       'dropoff',
     )
-    expect(queryRawUnsafe).toHaveBeenCalledWith(
-      expect.stringContaining('AND o.driver_id = $2::uuid'),
-      'order-1',
-      'driver-1',
-    )
+    expect(queryRaw).toHaveBeenCalledWith(expect.objectContaining({
+      values: expect.arrayContaining(['order-1', 'driver-1']),
+    }))
     expect(emitToRoom).toHaveBeenCalledWith('driver:location_changed', expect.objectContaining({
       orderId: 'order-1',
       driverId: 'driver-1',
@@ -158,7 +156,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-1')
-    queryRawUnsafe.mockResolvedValue([{
+    queryRaw.mockResolvedValue([{
       status: 'delivering',
       restaurantLat: 10.77,
       restaurantLng: 106.68,
@@ -189,7 +187,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-1')
-    queryRawUnsafe.mockResolvedValue([{
+    queryRaw.mockResolvedValue([{
       status: 'driver_assigned',
       restaurantLat: 10.77,
       restaurantLng: 106.68,
@@ -234,7 +232,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue('order-owned-by-other-driver')
-    queryRawUnsafe.mockResolvedValue([])
+    queryRaw.mockResolvedValue([])
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,

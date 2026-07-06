@@ -4,7 +4,7 @@ import type { RecomputeJobData } from './tracking.service'
 
 describe('EtaRecomputeProcessor', () => {
   const mockPrisma = {
-    $queryRawUnsafe: jest.fn(),
+    $queryRaw: jest.fn(),
     order: { update: jest.fn() },
   }
   const mockDirectionsApi = { fetchRoute: jest.fn() }
@@ -27,7 +27,7 @@ describe('EtaRecomputeProcessor', () => {
   })
 
   it('emits a fresh ETA update after recomputing and persisting the route', async () => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{
+    mockPrisma.$queryRaw.mockResolvedValueOnce([{
       restaurantLat: 10.77,
       restaurantLng: 106.68,
       deliveryLat: 10.75,

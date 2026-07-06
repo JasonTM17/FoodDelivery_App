@@ -59,8 +59,8 @@ describe('DispatchService', () => {
     order: { findUnique: jest.fn(), update: jest.fn(), findUniqueOrThrow: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
     $transaction: jest.fn().mockResolvedValue([]),
-    $executeRawUnsafe: jest.fn(),
-    $queryRawUnsafe: jest.fn(),
+    $executeRaw: jest.fn(),
+    $queryRaw: jest.fn(),
   }
 
   beforeEach(async () => {
@@ -204,7 +204,7 @@ describe('DispatchService', () => {
         restaurantId: '00000000-0000-0000-0000-000000000001',
         deliveryAddressId: '00000000-0000-0000-0000-000000000002',
       })
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{
         restLng: 106.7001,
         restLat: 10.8001,
         custLng: 106.7101,
@@ -243,7 +243,7 @@ describe('DispatchService', () => {
         restaurantId: '00000000-0000-0000-0000-000000000001',
         deliveryAddressId: '00000000-0000-0000-0000-000000000002',
       })
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{
         restLng: 106.7001,
         restLat: 10.8001,
         custLng: 106.7101,

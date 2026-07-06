@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger, OnModuleDestroy } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
-import { OrderStatus, type Prisma } from '@prisma/client'
+import { OrderStatus, Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
@@ -200,20 +200,25 @@ export class TrackingService implements OnModuleDestroy {
   async findNearbyDriversPostGIS(
     lat: number, lng: number, radiusKm: number,
   ): Promise<Array<{ driverId: string; distKm: number; rating: number }>> {
-    return this.prisma.$queryRawUnsafe<Array<{ driverId: string; distKm: number; rating: number }>>(
-      `SELECT d.user_id AS "driverId",
-              ST_Distance(dl.location, ST_SetSRID(ST_MakePoint($1::float8, $2::float8), 4326)::geography) / 1000 AS "distKm",
+    const point = () => Prisma.sql`
+      ST_SetSRID(
+        ST_MakePoint(CAST(${lng} AS double precision), CAST(${lat} AS double precision)),
+        4326
+      )::geography
+    `
+    return this.prisma.$queryRaw<Array<{ driverId: string; distKm: number; rating: number }>>(Prisma.sql`
+      SELECT d.user_id AS "driverId",
+              ST_Distance(dl.location, ${point()}) / 1000 AS "distKm",
               d.rating::float8 AS "rating"
        FROM driver_profiles d
        JOIN driver_location_history dl ON dl.driver_id = d.user_id
        WHERE d.is_online = true
-         AND ST_DWithin(dl.location, ST_SetSRID(ST_MakePoint($1::float8, $2::float8), 4326)::geography, $3::float8)
+         AND ST_DWithin(dl.location, ${point()}, CAST(${radiusKm * 1000} AS double precision))
          AND dl.recorded_at > NOW() - INTERVAL '30 seconds'
          AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.driver_id = d.user_id
              AND o.status IN ('driver_assigned','driver_arriving_restaurant','picked_up','delivering'))
-       ORDER BY "distKm", rating DESC LIMIT 10`,
-      lng, lat, radiusKm * 1000,
-    )
+       ORDER BY "distKm", rating DESC LIMIT 10
+    `)
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
@@ -237,11 +242,19 @@ export class TrackingService implements OnModuleDestroy {
     const batch = [...this.batchBuffer]
     this.batchBuffer = []
     try {
-      await this.prisma.$executeRawUnsafe(
-        `INSERT INTO driver_location_history (driver_id, order_id, location, recorded_at)
-         VALUES ${batch.map((_, i) => `($${i * 5 + 1}::uuid, $${i * 5 + 2}::uuid, ST_SetSRID(ST_MakePoint($${i * 5 + 3}::float8, $${i * 5 + 4}::float8), 4326), $${i * 5 + 5}::timestamptz)`).join(', ')}`,
-        ...batch.flatMap((r) => [r.driverId, r.orderId, r.lng, r.lat, r.recordedAt]),
-      )
+      const rows = batch.map((r) => Prisma.sql`(
+        CAST(${r.driverId} AS uuid),
+        CAST(${r.orderId} AS uuid),
+        ST_SetSRID(
+          ST_MakePoint(CAST(${r.lng} AS double precision), CAST(${r.lat} AS double precision)),
+          4326
+        ),
+        CAST(${r.recordedAt} AS timestamptz)
+      )`)
+      await this.prisma.$executeRaw(Prisma.sql`
+        INSERT INTO driver_location_history (driver_id, order_id, location, recorded_at)
+        VALUES ${Prisma.join(rows)}
+      `)
     } catch (err) {
       this.logger.error(`Failed to flush location batch: ${(err as Error).message}`)
     }

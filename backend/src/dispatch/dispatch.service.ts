@@ -6,6 +6,7 @@ import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
 import Redis from 'ioredis'
+import { Prisma } from '@prisma/client'
 
 interface DriverCandidate {
   driverId: string
@@ -188,12 +189,13 @@ export class DispatchService {
       select: { deliveryAddressId: true, restaurantId: true },
     })
 
-    const coords = await this.prisma.$queryRawUnsafe<Array<{ restLng: number; restLat: number; custLng: number; custLat: number }>>(
-      `SELECT ST_X(r.location::geometry)::float8 AS "restLng", ST_Y(r.location::geometry)::float8 AS "restLat",
+    const coords = await this.prisma.$queryRaw<Array<{ restLng: number; restLat: number; custLng: number; custLat: number }>>(Prisma.sql`
+      SELECT ST_X(r.location::geometry)::float8 AS "restLng", ST_Y(r.location::geometry)::float8 AS "restLat",
               ST_X(a.location::geometry)::float8 AS "custLng", ST_Y(a.location::geometry)::float8 AS "custLat"
-       FROM restaurants r, addresses a WHERE r.id = $1::uuid AND a.id = $2::uuid`,
-      order.restaurantId, order.deliveryAddressId,
-    )
+       FROM restaurants r, addresses a
+       WHERE r.id = CAST(${order.restaurantId} AS uuid)
+         AND a.id = CAST(${order.deliveryAddressId} AS uuid)
+    `)
     const location = coords[0]
     if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
 
@@ -202,14 +204,24 @@ export class DispatchService {
       await this.prisma.$transaction([
         this.prisma.order.update({ where: { id: orderId }, data: { driverId: candidate.driverId, status: 'driver_assigned' } }),
         this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
-        this.prisma.$executeRawUnsafe(
-          `INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
-           VALUES ($1::uuid, $2::uuid, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326), ST_SetSRID(ST_MakePoint($5::float8, $6::float8), 4326), 'assigned', $7::numeric, NOW())`,
-          orderId, candidate.driverId,
-          location.restLng, location.restLat,
-          location.custLng, location.custLat,
-          candidate.rating.toString(),
-        ),
+        this.prisma.$executeRaw(Prisma.sql`
+          INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
+          VALUES (
+            CAST(${orderId} AS uuid),
+            CAST(${candidate.driverId} AS uuid),
+            ST_SetSRID(
+              ST_MakePoint(CAST(${location.restLng} AS double precision), CAST(${location.restLat} AS double precision)),
+              4326
+            ),
+            ST_SetSRID(
+              ST_MakePoint(CAST(${location.custLng} AS double precision), CAST(${location.custLat} AS double precision)),
+              4326
+            ),
+            'assigned',
+            CAST(${candidate.rating.toString()} AS numeric),
+            NOW()
+          )
+        `),
       ])
     } catch (err) {
       await this.releaseRedisAssignment(candidate.driverId, orderId)

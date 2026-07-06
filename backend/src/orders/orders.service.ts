@@ -158,14 +158,13 @@ export class OrdersService {
   }
 
   private async enqueueDispatch(orderId: string): Promise<void> {
-    const locations = await this.prisma.$queryRawUnsafe<Array<{ restaurantLat: number; restaurantLng: number }>>(
-      `SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+    const locations = await this.prisma.$queryRaw<Array<{ restaurantLat: number; restaurantLng: number }>>(Prisma.sql`
+      SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
               ST_X(r.location::geometry)::float8 AS "restaurantLng"
          FROM orders o
          JOIN restaurants r ON r.id = o.restaurant_id
-        WHERE o.id = $1::uuid`,
-      orderId,
-    )
+        WHERE o.id = CAST(${orderId} AS uuid)
+    `)
     const location = locations[0]
     if (
       !location ||

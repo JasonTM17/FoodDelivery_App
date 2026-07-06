@@ -36,7 +36,7 @@ describe('OrdersService', () => {
     restaurant: { findUniqueOrThrow: jest.Mock }
     address: { findFirst: jest.Mock }
     $transaction: jest.Mock
-    $queryRawUnsafe: jest.Mock
+    $queryRaw: jest.Mock
   }
 
   const orderId = 'order-uuid-1'
@@ -65,7 +65,7 @@ describe('OrdersService', () => {
       $transaction: jest.fn().mockImplementation(
         (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       ),
-      $queryRawUnsafe: jest.fn().mockResolvedValue([{ restaurantLat: 10.8, restaurantLng: 106.7 }]),
+      $queryRaw: jest.fn().mockResolvedValue([{ restaurantLat: 10.8, restaurantLng: 106.7 }]),
     }
     mockGateway = { broadcastToOrder: jest.fn(), notifyRestaurant: jest.fn(), notifyAdmins: jest.fn() }
     mockCancellationService = { assertCanCancel: jest.fn() }
@@ -486,7 +486,9 @@ describe('OrdersService', () => {
 
       await service.transition(orderId, 'restaurant_accepted', userId, 'restaurant')
 
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(expect.stringContaining('ST_Y'), orderId)
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledWith(expect.objectContaining({
+        values: expect.arrayContaining([orderId]),
+      }))
       expect(mockDispatchQueue.add).toHaveBeenCalledWith(
         'dispatch.driver',
         { orderId, restaurantLat: 10.8, restaurantLng: 106.7, attempt: 1 },

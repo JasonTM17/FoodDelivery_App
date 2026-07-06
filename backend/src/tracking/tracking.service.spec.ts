@@ -22,8 +22,8 @@ describe('TrackingService', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({ id: 'order-1' }),
     },
-    $executeRawUnsafe: jest.fn().mockResolvedValue(1),
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $executeRaw: jest.fn().mockResolvedValue(1),
+    $queryRaw: jest.fn().mockResolvedValue([]),
   }
   const mockDirectionsApi = { fetchRoute: jest.fn() }
   const mockEtaCache = {
@@ -149,14 +149,11 @@ describe('TrackingService', () => {
 
       await (service as unknown as { flush: () => Promise<void> }).flush()
 
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledTimes(1)
-      const [sql, ...params] = mockPrisma.$executeRawUnsafe.mock.calls[0]
-      expect(sql).toContain('$1::uuid')
-      expect(sql).toContain('order_id')
-      expect(sql).toContain('$2::uuid')
-      expect(sql).toContain('$5::timestamptz')
-      expect(sql).toContain('$6::uuid')
-      expect(sql).toContain('$10::timestamptz')
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+      const [query] = mockPrisma.$executeRaw.mock.calls[0]
+      expect(query.sql).toContain('INSERT INTO driver_location_history')
+      expect(query.sql).toContain('order_id')
+      const params = query.values
       expect(params).toHaveLength(10)
       expect(params[0]).toBe('00000000-0000-0000-0000-000000000001')
       expect(params[1]).toBe('10000000-0000-0000-0000-000000000001')

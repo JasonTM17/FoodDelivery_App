@@ -5,7 +5,7 @@ import { PrismaService } from '../database/prisma.service'
 describe('RestaurantsService', () => {
   let service: RestaurantsService
   const mockPrisma = {
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $queryRaw: jest.fn().mockResolvedValue([]),
     restaurant: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn() },
     review: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
     category: { findMany: jest.fn().mockResolvedValue([]) },

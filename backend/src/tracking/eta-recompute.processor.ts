@@ -1,7 +1,7 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
 import { Job } from 'bullmq'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
@@ -41,18 +41,17 @@ export class EtaRecomputeProcessor extends WorkerHost {
   async process(job: Job<RecomputeJobData>): Promise<void> {
     const { orderId, lat, lng, phase } = job.data
 
-    const coords = await this.prisma.$queryRawUnsafe<DestCoords[]>(
-      `SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+    const coords = await this.prisma.$queryRaw<DestCoords[]>(Prisma.sql`
+      SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
               ST_X(r.location::geometry)::float8 AS "restaurantLng",
               ST_Y(a.location::geometry)::float8 AS "deliveryLat",
               ST_X(a.location::geometry)::float8 AS "deliveryLng"
        FROM orders o
        JOIN restaurants r ON r.id = o.restaurant_id
        JOIN addresses a ON a.id = o.delivery_address_id
-       WHERE o.id = $1::uuid
-       LIMIT 1`,
-      orderId,
-    )
+       WHERE o.id = CAST(${orderId} AS uuid)
+       LIMIT 1
+    `)
 
     if (!coords.length) {
       this.logger.warn(`No delivery address found for order ${orderId} — skipping recompute`)

@@ -170,23 +170,26 @@ export class AdminService {
 
   async getTopRestaurants(days: number = 7) {
     const since = new Date(); since.setDate(since.getDate() - days)
-    return this.prisma.$queryRawUnsafe<Array<{ name: string; orderCount: number; revenue: number }>>(
-      `SELECT r.name, COUNT(o.id)::int AS "orderCount", COALESCE(SUM(p.amount)::float8, 0) AS "revenue"
+    return this.prisma.$queryRaw<Array<{ name: string; orderCount: number; revenue: number }>>(Prisma.sql`
+      SELECT r.name, COUNT(o.id)::int AS "orderCount", COALESCE(SUM(p.amount)::float8, 0) AS "revenue"
        FROM restaurants r JOIN orders o ON o.restaurant_id = r.id
        JOIN payments p ON p.order_id = o.id AND p.status = 'completed'
-       WHERE o.created_at >= $1 GROUP BY r.id, r.name ORDER BY "revenue" DESC LIMIT 10`,
-      since,
-    )
+       WHERE o.created_at >= ${since}
+       GROUP BY r.id, r.name
+       ORDER BY "revenue" DESC
+       LIMIT 10
+    `)
   }
 
   async getRevenueChart(days: number = 7) {
     const since = new Date(); since.setDate(since.getDate() - days)
-    return this.prisma.$queryRawUnsafe<Array<{ date: string; revenue: number; orders: number }>>(
-      `SELECT DATE(o.created_at)::text AS "date", COALESCE(SUM(p.amount)::float8, 0) AS "revenue", COUNT(o.id)::int AS "orders"
+    return this.prisma.$queryRaw<Array<{ date: string; revenue: number; orders: number }>>(Prisma.sql`
+      SELECT DATE(o.created_at)::text AS "date", COALESCE(SUM(p.amount)::float8, 0) AS "revenue", COUNT(o.id)::int AS "orders"
        FROM orders o JOIN payments p ON p.order_id = o.id AND p.status = 'completed'
-       WHERE o.created_at >= $1 GROUP BY DATE(o.created_at) ORDER BY "date"`,
-      since,
-    )
+       WHERE o.created_at >= ${since}
+       GROUP BY DATE(o.created_at)
+       ORDER BY "date"
+    `)
   }
 
   // ─── Promotions CRUD ───
