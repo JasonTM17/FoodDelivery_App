@@ -105,7 +105,7 @@ Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、vi
 
 ## ブランチ方針
 
-- `codex/batch4-integration` は 2026-07-05 に `master` へ fast-forward され、remote branch は削除済みです。remote は `master` のみを維持します。
+- Remote は `master` のみです。2026-07-06 の audit では `origin/master` は `64e46c795c9c15ae52bb0112f91e93a6f3851645` でした。
 - Clean worktree は Codex の継続用に local `codex/batch4-integration` を使う場合がありますが、この branch は `origin/master` を tracking します。意図した review branch でない限り、削除済み remote branch は再作成しません。
 - 古い routes、runtime mock、誤った package manager、誤った generated mobile client を含む stale branch は raw-merge しない。
 - 必要な変更だけを hunk-by-hunk で salvage し、focused test と小さな conventional commit を付ける。

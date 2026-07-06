@@ -105,7 +105,7 @@ Batch 4 chỉ được coi là xong khi backend, web, Playwright Chromium/Firefo
 
 ## Chính sách branch
 
-- Remote hiện chỉ còn `master` sau khi `codex/batch4-integration` được fast-forward và xoá ngày 2026-07-05.
+- Remote hiện chỉ còn `master`; audit ngày 2026-07-06 ghi nhận `origin/master` tại `64e46c795c9c15ae52bb0112f91e93a6f3851645`.
 - Worktree sạch có thể vẫn dùng local branch `codex/batch4-integration` để giữ ngữ cảnh Codex, nhưng branch này tracking `origin/master`; không tạo lại remote branch đã xoá nếu không chủ ý mở review branch.
 - Không raw-merge branch cũ kéo routes cũ, mock runtime, package manager sai hoặc generated mobile client sai contract.
 - Salvage theo từng hunk, có focused test và conventional commit nhỏ.

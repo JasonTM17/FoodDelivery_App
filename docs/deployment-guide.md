@@ -6,7 +6,7 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
 
-Current Batch 4 status on 2026-07-05: `codex/batch4-integration` was fast-forwarded into `master` at `3857433`, and the remote integration branch was deleted after patch-equivalence was verified. The latest verified runtime code includes `d201ce1`, with Docker/E2E rerun after docs head `e24631c` and mobile driver map overlays verified at `d201ce1`; use `git ls-remote --heads origin` for the exact current `master` SHA after docs-only evidence commits. This is a branch cleanup and local-hardening milestone, not a production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, and production secrets/CLI auth are valid.
+Current Batch 4 status on 2026-07-06: `origin/master` is `64e46c795c9c15ae52bb0112f91e93a6f3851645`, and `git ls-remote --heads origin` returns only `refs/heads/master`. Local backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose, and fallback secret-scan gates passed for this head; see [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, production secrets are rotated/valid, Supabase CLI/auth is available, and this repo is linked to the intended Vercel projects.
 
 ## Local Docker Stack
 
@@ -45,6 +45,8 @@ Use provider secret managers, not committed files:
 | Deploy CLIs | Vercel token, Supabase access token |
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
+
+Latest deploy-readiness check: Vercel CLI auth is present, but this repository is not linked to a Vercel project and the account project list did not show FoodFlow projects. Supabase CLI was not installed in the local PATH. No production deployment was performed.
 
 ## Supabase Deployment
 

@@ -150,6 +150,8 @@ flutter analyze
 
 Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe serious/critical, visual regression, tenant isolation, frozen install, and secret scans are all green.
 
+Latest local Batch 4 evidence is recorded in [docs/batch4-release-report.md](docs/batch4-release-report.md) for `64e46c795c9c15ae52bb0112f91e93a6f3851645`. Local backend, web, Docker, Playwright, mobile, OpenAPI Spectral, compose, and fallback secret-scan gates passed; production deploy is still blocked by missing current-head remote CI approval, missing Supabase CLI/auth, an unlinked Vercel project, and unverified production secrets.
+
 ## Deployment Path
 
 Deployment is intentionally gated:
@@ -180,10 +182,11 @@ No deploy should happen from a dirty worktree or with unverified secrets.
 - [i18n guide](docs/i18n-guide.md)
 - [Roadmap](docs/project-roadmap.md)
 - [Branch disposition](docs/branch-disposition.md)
+- [Batch 4 release report](docs/batch4-release-report.md)
 
 ## Branch and integration policy
 
-- `master` is now the only live remote branch after `codex/batch4-integration` was fast-forwarded and deleted on 2026-07-05.
+- `master` is the only live remote branch; latest audit on 2026-07-06 showed `origin/master` at `64e46c795c9c15ae52bb0112f91e93a6f3851645`.
 - The clean worktree may still use a local `codex/batch4-integration` branch for Codex continuity, but it tracks `origin/master`; do not recreate the deleted remote branch unless an intentional review branch is needed.
 - Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
 - Salvage branch work hunk-by-hunk with focused tests and small conventional commits.

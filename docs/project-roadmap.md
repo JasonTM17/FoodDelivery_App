@@ -12,7 +12,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 
 ## Landed on `master`
 
-- `codex/batch4-integration` was fast-forwarded into `master` at `3857433`; the remote integration branch was deleted after patch-equivalence was verified. The latest verified runtime code includes `d201ce1`, with Docker/E2E rerun after docs head `e24631c` and mobile driver map overlays verified at `d201ce1`; use `git ls-remote --heads origin` for the exact current `master` SHA after docs-only evidence commits.
+- `origin/master` is verified locally at `64e46c795c9c15ae52bb0112f91e93a6f3851645`; `git ls-remote --heads origin` exposes only `master`. The local `codex/batch4-integration` branch remains for worktree continuity and tracks `origin/master`.
 - Web response contract documented as `{ success: true, data, meta? }`.
 - Error contract documented as RFC 7807 Problem Details.
 - OpenAPI validation workflow and Spectral rules added.
@@ -21,12 +21,12 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
 - Vietnamese AI chat fast paths covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
-- Mobile Flutter gate was rechecked locally on 2026-07-05 with `flutter analyze` clean, `flutter test` passing 166 tests, `dart analyze mobile/packages/api_client` clean, and customer/driver Android debug APK builds passing. GitHub Actions is blocked by account token/auth or billing status, so remote checks must be rerun after that is fixed.
+- Mobile Flutter gate was rechecked locally on 2026-07-06 with `flutter pub get --enforce-lockfile`, `flutter analyze` clean, `flutter test` passing 168 tests, and `flutter build apk --debug` passing. GitHub Actions is blocked by account token/auth or billing status, so remote checks must be rerun after that is fixed.
 - Mobile runtime UI now has no remaining hardcoded presentation strings found by the targeted mobile scanner for the touched dispatch/cancel flows, no runtime "coming soon" actions, deterministic backend timestamp parsing instead of current-time payload fallbacks, and release builds require explicit `API_BASE_URL`.
 - Driver/customer/Restaurant tracking maps now consume backend-routed `routePolyline` values, hydrate the initial `/orders/:id/tracking` REST snapshot before realtime events, keep telemetry trails separate from planned routes, support pickup/dropoff route phases, clear stale route geometry when the phase or snapshot changes, normalize driver GPS metadata to the backend km/h contract, and do not fabricate straight-line ETA minutes when route providers are unavailable. The initial `driver:assigned` event now leaves `etaMinutes` null until tracking has Google/OSRM route data.
 - Dispatch now enqueues route-aware driver jobs with restaurant coordinates and attempt metadata, handles legacy malformed queue jobs safely, and parses ioredis `GEOSEARCH WITHDIST` tuple rows without crashing.
 - Admin shared tag input no longer invents default English placeholder copy; callers must provide localized placeholder text.
-- Latest local evidence for the merged Batch 4 worktree: backend typecheck/lint/build and Jest (107 suites / 760 tests), web typecheck/lint/build and Vitest (Admin 35 files / 144 tests; Restaurant 28 files / 83 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, axe serious/critical smoke, mobile Flutter tests (166), and customer/driver Android debug APK builds all passed.
+- Latest local evidence for the merged Batch 4 worktree: backend Prisma validate/typecheck/lint/build and Jest (108 suites / 773 tests), web typecheck/lint/build and Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, axe serious/critical smoke, mobile Flutter tests (168), Android debug APK build, OpenAPI Spectral lint, and fallback secret scan all passed.
 - Remote CI is last fully green for `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests, and Integration Smoke Gate. Current-head CI is blocked by GitHub token/auth or billing status before jobs start.
 
 ### Mobile
@@ -112,8 +112,8 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 1. Keep `master` clean and pushed.
 2. Restore GitHub Actions token/auth/billing access and rerun the blocked CI/security workflows.
 3. Attach branch disposition, test matrix, rejected changes, and known degraded states to the release report.
-4. Deploy database/realtime resources to Supabase only with valid rotated secrets.
-5. Deploy web surfaces to Vercel only after local and remote gates are green.
+4. Install/authenticate Supabase CLI, verify project access, and deploy database/realtime resources only with valid rotated secrets.
+5. Link the repo to the intended Vercel projects, verify env values, and deploy web surfaces only after local and remote gates are green.
 6. Run production smoke tests, realtime checks, map checks, AI chatbot checks, export checks, mobile API checks, and keep-alive monitoring.
 
 ## Deferred out of Batch 4

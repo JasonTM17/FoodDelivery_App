@@ -6,7 +6,7 @@ Ngôn ngữ: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.
 
 Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ gate xanh. Không deploy từ dirty root worktree, không dùng key đã lộ, không deploy khi Batch 4 còn gate đỏ.
 
-Trạng thái Batch 4 ngày 2026-07-05: `codex/batch4-integration` đã được fast-forward vào `master` tại `3857433`, và remote integration branch đã xoá sau khi xác minh patch-equivalence. Runtime code đã verify gồm `d201ce1`, Docker/E2E đã rerun sau docs head `e24631c` và mobile driver map overlays đã verify tại `d201ce1`; dùng `git ls-remote --heads origin` để lấy SHA `master` hiện tại chính xác sau các commit docs-only. Đây là mốc cleanup branch và hardening local, không phải approval deploy production. Deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, và production secrets/CLI auth hợp lệ.
+Trạng thái Batch 4 ngày 2026-07-06: `origin/master` đang ở `64e46c795c9c15ae52bb0112f91e93a6f3851645`, và `git ls-remote --heads origin` chỉ trả `refs/heads/master`. Các gate local cho backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose và fallback secret scan đã pass cho head này; xem [Batch 4 release report](batch4-release-report.md). Đây là bằng chứng verify local, không phải approval deploy production. Deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, production secrets đã rotate/hợp lệ, Supabase CLI/auth khả dụng, và repo được link tới đúng Vercel projects.
 
 ## Docker local
 
@@ -43,6 +43,8 @@ curl http://localhost:3002/api/healthz
 | Deploy CLI | Vercel token, Supabase access token |
 
 Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history phải rotate trước production.
+
+Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth, nhưng repo chưa link tới Vercel project và danh sách project của account chưa có FoodFlow. Supabase CLI chưa có trong local PATH. Chưa deploy production.
 
 ## Supabase
 

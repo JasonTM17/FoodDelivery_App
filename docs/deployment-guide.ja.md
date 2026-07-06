@@ -6,7 +6,7 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 Integration branch が clean で、push/review/verification が完了し、すべての gate が green になってから deploy します。dirty root worktree、漏えい済み key、赤い Batch 4 gate がある状態では deploy しません。
 
-2026-07-05 時点の Batch 4 状態: `codex/batch4-integration` は `3857433` で `master` に fast-forward 済みで、patch-equivalence 確認後に remote integration branch は削除されました。Verified runtime code includes `d201ce1`, Docker/E2E was rerun after docs head `e24631c`, and mobile driver map overlays were verified at `d201ce1`; docs-only evidence commits 後の正確な current `master` SHA は `git ls-remote --heads origin` で確認します。これは branch cleanup と local-hardening milestone であり、production deployment approval ではありません。Supabase と Vercel の deploy は、GitHub Actions access が復旧し、current-head remote checks が green になり、production secrets/CLI auth が有効になるまで blocked です。
+2026-07-06 時点の Batch 4 状態: `origin/master` は `64e46c795c9c15ae52bb0112f91e93a6f3851645` で、`git ls-remote --heads origin` は `refs/heads/master` のみを返します。この head で backend、web、Docker、Playwright Chromium/Firefox、mobile、OpenAPI、compose、fallback secret scan の local gates は pass 済みです。詳細は [Batch 4 release report](batch4-release-report.md) を参照してください。これは local verification evidence であり、production deployment approval ではありません。Supabase と Vercel の deploy は、GitHub Actions access が復旧し、current-head remote checks が green になり、production secrets が rotate 済みで有効になり、Supabase CLI/auth が利用可能になり、この repo が対象 Vercel projects に link されるまで blocked です。
 
 ## Local Docker
 
@@ -43,6 +43,8 @@ curl http://localhost:3002/api/healthz
 | Deploy CLI | Vercel token, Supabase access token |
 
 チャット、ログ、スクリーンショット、チケット、git history に出た key は production 前に rotate してください。
+
+最新の deploy-readiness check: Vercel CLI auth は有効ですが、この repo は Vercel project に link されておらず、account の project list に FoodFlow project はありません。Supabase CLI は local PATH にありません。Production deploy は実行していません。
 
 ## Supabase
 
