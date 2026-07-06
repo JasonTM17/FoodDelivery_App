@@ -12,6 +12,7 @@ import { CartModule } from '../cart/cart.module'
 import { PaymentsModule } from '../payments/payments.module'
 import { WalletPaymentCaptureService } from './wallet-payment-capture.service'
 import { OrderChatService } from './order-chat.service'
+import { DeliveryPricingService } from './delivery-pricing.service'
 import { AuthModule } from '../auth/auth.module'
 import { RealtimeRoomAccessService } from './realtime-room-access.service'
 import { PromotionsModule } from '../promotions/promotions.module'
@@ -37,6 +38,7 @@ import { PromotionsModule } from '../promotions/promotions.module'
     AutoTimeoutProcessor,
     PartialFulfillmentService,
     OrderChatService,
+    DeliveryPricingService,
     RealtimeRoomAccessService,
   ],
   exports: [OrdersService, OrdersGateway, RealtimeRoomAccessService],

@@ -9,6 +9,7 @@ import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PromotionsService } from '../promotions/promotions.service'
 import { PaymentMethodDto } from './orders.dto'
+import { DeliveryPricingService } from './delivery-pricing.service'
 
 describe('OrdersService', () => {
   let service: OrdersService
@@ -19,6 +20,7 @@ describe('OrdersService', () => {
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockPaymentsService: { processPayment: jest.Mock }
   let mockPromotionsService: { claimInTransaction: jest.Mock }
+  let mockDeliveryPricingService: { getBaseDeliveryFeeVnd: jest.Mock }
   let mockRedis: { get: jest.Mock; set: jest.Mock; del: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
@@ -75,6 +77,9 @@ describe('OrdersService', () => {
     mockPromotionsService = {
       claimInTransaction: jest.fn().mockResolvedValue({ discountAmount: 0 }),
     }
+    mockDeliveryPricingService = {
+      getBaseDeliveryFeeVnd: jest.fn().mockReturnValue(15_000),
+    }
     mockRedis = {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn().mockResolvedValue('OK'),
@@ -90,6 +95,7 @@ describe('OrdersService', () => {
       mockGateway as unknown as OrdersGateway,
       mockCancellationService as unknown as CancellationService,
       mockPromotionsService as unknown as PromotionsService,
+      mockDeliveryPricingService as unknown as DeliveryPricingService,
       mockRedis as never,
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
@@ -251,6 +257,7 @@ describe('OrdersService', () => {
       await service.placeOrder(userId, { addressId: 'address-1', paymentMethod: PaymentMethodDto.cash })
 
       expect(mockPromotionsService.claimInTransaction).not.toHaveBeenCalled()
+      expect(mockDeliveryPricingService.getBaseDeliveryFeeVnd).toHaveBeenCalledTimes(1)
       expect(mockPaymentsService.processPayment).toHaveBeenCalledWith('order-new', 115000, 'cash')
       expect(mockTx.cartItem.deleteMany).toHaveBeenCalledWith({ where: { cartId: 'cart-1' } })
       expect(mockTx.cart.delete).toHaveBeenCalledWith({ where: { id: 'cart-1' } })

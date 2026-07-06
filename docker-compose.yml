@@ -79,6 +79,7 @@ services:
       DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
+      DELIVERY_BASE_FEE_VND: "${DELIVERY_BASE_FEE_VND:-15000}"
       AUTH_PUBLIC_THROTTLE_LIMIT: "500"
       THROTTLER_TTL_MS: "${THROTTLER_TTL_MS:-60000}"
       THROTTLER_LIMIT: "${THROTTLER_LIMIT:-100}"

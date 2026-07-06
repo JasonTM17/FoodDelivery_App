@@ -44,6 +44,8 @@ curl http://localhost:3002/api/healthz
 
 Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history phải rotate trước production.
 
+Production config không phải secret nhưng bắt buộc: cấu hình `DELIVERY_BASE_FEE_VND` theo base delivery fee đã duyệt. Backend boot validation sẽ chặn khi thiếu pricing config để không tạo đơn với phí MVP hardcoded.
+
 Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth, nhưng repo chưa link tới Vercel project và danh sách project của account chưa có FoodFlow. Supabase CLI chưa có trong local PATH. Chưa deploy production.
 
 ## Supabase

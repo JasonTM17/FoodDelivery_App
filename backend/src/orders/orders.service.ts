@@ -15,6 +15,7 @@ import { normalizeOrderPaymentMethod } from './payment-methods'
 import { PromotionsService } from '../promotions/promotions.service'
 import { routePhaseForStatus } from '../tracking/tracking.service'
 import { PaymentRefundJobData } from '../payments/refund.processor'
+import { DeliveryPricingService } from './delivery-pricing.service'
 
 const ORDER_CODE_CREATE_ATTEMPTS = 8
 
@@ -26,6 +27,7 @@ export class OrdersService {
     private readonly ordersGateway: OrdersGateway,
     private readonly cancellationService: CancellationService,
     private readonly promotionsService: PromotionsService,
+    private readonly deliveryPricing: DeliveryPricingService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
     @InjectQueue('payment-refund') private readonly refundQueue: Queue,
@@ -207,7 +209,7 @@ export class OrdersService {
     if (!address) throw new NotFoundException('ADDRESS_NOT_FOUND')
 
     const subtotal = cart.items.reduce((sum, i) => sum + Number(i.unitPrice) * i.quantity, 0)
-    const deliveryFee = 15000 // flat fee for MVP
+    const deliveryFee = this.deliveryPricing.getBaseDeliveryFeeVnd()
 
     if (Number(subtotal) < Number(restaurant.minOrderAmount)) {
       throw new UnprocessableEntityException('MIN_ORDER_NOT_MET')

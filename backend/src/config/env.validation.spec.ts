@@ -9,6 +9,7 @@ const productionEnv = {
   JWT_REFRESH_SECRET: 'b'.repeat(64),
   PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.vn/reset-password',
   CORS_ORIGINS: 'https://admin.foodflow.vn,https://restaurant.foodflow.vn',
+  DELIVERY_BASE_FEE_VND: '15000',
   MINIO_ENDPOINT: 's3.foodflow.vn',
   MINIO_ACCESS_KEY: 'foodflow-production-access-key',
   MINIO_SECRET_KEY: 'c'.repeat(64),
@@ -33,7 +34,7 @@ const productionEnv = {
 
 describe('validateEnv', () => {
   it('keeps local defaults for development and test environments only', () => {
-    const env = validateEnv({ NODE_ENV: 'test' })
+    const env = validateEnv({ NODE_ENV: 'test', DELIVERY_BASE_FEE_VND: '15000' })
 
     expect(env.DATABASE_URL).toBe('postgresql://foodflow:foodflow_dev@localhost:5432/foodflow')
     expect(env.DIRECT_URL).toBe('postgresql://foodflow:foodflow_dev@localhost:5432/foodflow')
@@ -43,11 +44,13 @@ describe('validateEnv', () => {
     expect(env.THROTTLER_MEMORY_FALLBACK).toBe('false')
     expect(env.THROTTLER_TTL_MS).toBe(60_000)
     expect(env.THROTTLER_LIMIT).toBe(100)
+    expect(env.DELIVERY_BASE_FEE_VND).toBe(15_000)
   })
 
   it('accepts bounded non-production throttle overrides for load-test runs', () => {
     const env = validateEnv({
       NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
       THROTTLER_TTL_MS: '60000',
       THROTTLER_LIMIT: '50000',
     })

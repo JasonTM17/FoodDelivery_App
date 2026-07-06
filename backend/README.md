@@ -33,6 +33,7 @@ Full reference: [Swagger UI](http://localhost:3001/api/docs) when running, or se
 | `JWT_REFRESH_SECRET` | Yes | — | Refresh token signing key |
 | `PASSWORD_RESET_URL_BASE` | No | `http://localhost:3000/reset-password` | Admin/web reset URL used when composing password reset email links |
 | `PASSWORD_RESET_TOKEN_TTL_MINUTES` | No | `60` | One-time password reset token lifetime |
+| `DELIVERY_BASE_FEE_VND` | Yes | — | Configured base checkout delivery fee in VND; required so runtime does not use hardcoded business data |
 | `MINIO_ENDPOINT` | Yes | `localhost` | MinIO host |
 | `MINIO_PORT` | Yes | `9000` | MinIO API port |
 | `MINIO_ACCESS_KEY` | Yes | `minioadmin` | MinIO access key |

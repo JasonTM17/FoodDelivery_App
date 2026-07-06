@@ -46,6 +46,8 @@ Use provider secret managers, not committed files:
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
 
+Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
+
 Latest deploy-readiness check: Vercel CLI auth is present, but this repository is not linked to a Vercel project and the account project list did not show FoodFlow projects. Supabase CLI was not installed in the local PATH. No production deployment was performed.
 
 ## Supabase Deployment

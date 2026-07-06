@@ -44,6 +44,8 @@ curl http://localhost:3002/api/healthz
 
 チャット、ログ、スクリーンショット、チケット、git history に出た key は production 前に rotate してください。
 
+Secret ではないが production で必須の config: `DELIVERY_BASE_FEE_VND` に承認済みのチェックアウト base delivery fee を設定します。Backend boot validation は pricing config 不足を拒否し、MVP hardcoded fee で order を作成しません。
+
 最新の deploy-readiness check: Vercel CLI auth は有効ですが、この repo は Vercel project に link されておらず、account の project list に FoodFlow project はありません。Supabase CLI は local PATH にありません。Production deploy は実行していません。
 
 ## Supabase
