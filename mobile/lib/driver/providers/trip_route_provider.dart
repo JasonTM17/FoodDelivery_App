@@ -8,11 +8,15 @@ class RoutePoint {
   final double lat;
   final double lng;
   final DateTime timestamp;
+  final String source;
+  final bool timestampEstimated;
 
   const RoutePoint({
     required this.lat,
     required this.lng,
     required this.timestamp,
+    this.source = 'telemetry',
+    this.timestampEstimated = false,
   });
 
   factory RoutePoint.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class RoutePoint {
       lat: lat!,
       lng: lng!,
       timestamp: parseBackendDateTimeOrUnknown(json['timestamp']),
+      source: json['source']?.toString() ?? 'telemetry',
+      timestampEstimated: json['timestampEstimated'] == true,
     );
   }
 }
@@ -59,6 +65,8 @@ class TripRouteDetail {
   final String tripId;
   final List<RoutePoint> points;
   final List<RouteSegment> segments;
+  final String routeSource;
+  final bool timestampsEstimated;
   final double totalDistanceKm;
   final int totalDurationSeconds;
   final double avgSpeedKmh;
@@ -68,6 +76,8 @@ class TripRouteDetail {
     required this.tripId,
     this.points = const [],
     this.segments = const [],
+    this.routeSource = 'none',
+    this.timestampsEstimated = false,
     this.totalDistanceKm = 0,
     this.totalDurationSeconds = 0,
     this.avgSpeedKmh = 0,
@@ -83,6 +93,8 @@ class TripRouteDetail {
       segments: _readList(json['segments'])
           .map((segment) => RouteSegment.fromJson(segment))
           .toList(growable: false),
+      routeSource: json['routeSource']?.toString() ?? 'none',
+      timestampsEstimated: json['timestampsEstimated'] == true,
       totalDistanceKm: _readDouble(json['totalDistanceKm']),
       totalDurationSeconds: _readInt(json['totalDurationSeconds']),
       avgSpeedKmh: _readDouble(json['avgSpeedKmh']),

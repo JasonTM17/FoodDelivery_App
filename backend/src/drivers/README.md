@@ -18,7 +18,7 @@ Driver entity: profile, KYC documents, vehicle info, online/offline status, real
 - `POST /driver/onboarding/agreement` — Persist authenticated driver terms acceptance before KYC submission
 - `POST /driver/trips/:tripId/tip-report` — Driver-reported cash tip audit record for completed trips; does not mutate payout ledger settlement
 - `GET /driver/ratings?star=1|2|3|4|5` — Visible delivery reviews and rating stats for the authenticated driver
-- `GET /driver/trips/:tripId/route` — Real telemetry or persisted route geometry for the authenticated driver's trip
+- `GET /driver/trips/:tripId/route` — Real telemetry or persisted route geometry for the authenticated driver's trip; marks `routeSource` and `timestampEstimated` so clients can distinguish GPS history from persisted geometry
 - `GET /driver/heatmap?lat=...&lng=...&radius=...&window=now|1h|3h|today` — Real demand heatmap near driver location
 - `GET /driver/incentives` — Driver incentive campaigns; returns empty arrays when no campaign source is configured
 - `POST /driver/kyc/upload` — Submit KYC documents

@@ -77,6 +77,8 @@ export interface DriverTripRoutePoint {
   lat: number
   lng: number
   timestamp: string
+  source: 'telemetry' | 'persisted_geometry'
+  timestampEstimated: boolean
 }
 
 export interface DriverTripRouteSegment {
@@ -91,6 +93,8 @@ export interface DriverTripRouteResponse {
   tripId: string
   points: DriverTripRoutePoint[]
   segments: DriverTripRouteSegment[]
+  routeSource: 'telemetry' | 'persisted_geometry' | 'none'
+  timestampsEstimated: boolean
   totalDistanceKm: number
   totalDurationSeconds: number
   avgSpeedKmh: number
@@ -446,8 +450,11 @@ export class DriversService {
         lat: Number(row.lat),
         lng: Number(row.lng),
         timestamp: row.timestamp.toISOString(),
+        source: 'telemetry' as const,
+        timestampEstimated: false,
       }))
       : persistedRoutePoints(order.routeWaypoints, order.routePolyline, start, end)
+    const routeSource = points[0]?.source ?? 'none'
 
     const distanceKm = routeDistanceKm(points)
     const storedDistanceKm =
@@ -462,6 +469,8 @@ export class DriversService {
       tripId: order.id,
       points,
       segments: [],
+      routeSource,
+      timestampsEstimated: points.some(point => point.timestampEstimated),
       totalDistanceKm,
       totalDurationSeconds,
       avgSpeedKmh: totalDurationSeconds > 0 ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600)) : 0,
@@ -698,6 +707,8 @@ function persistedRoutePoints(
     lat: point.lat,
     lng: point.lng,
     timestamp: interpolateTimestamp(start, end, index, geometryPoints.length),
+    source: 'persisted_geometry',
+    timestampEstimated: true,
   }))
 }
 

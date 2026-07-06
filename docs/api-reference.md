@@ -235,6 +235,7 @@ Query: star (1|2|3|4|5, optional)
 
 ### GET /driver/trips/:tripId/route
 Get real telemetry or persisted route geometry for a trip owned by the authenticated driver. Returns empty arrays when no route data has been recorded.
+Route points include `source` (`telemetry` or `persisted_geometry`) and `timestampEstimated`; the response also includes `routeSource` (`telemetry`, `persisted_geometry`, or `none`) and `timestampsEstimated` so clients do not present persisted geometry as GPS telemetry.
 
 ### GET /driver/heatmap
 Get real demand heatmap points near the authenticated driver's location.

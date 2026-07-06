@@ -381,10 +381,24 @@ describe('DriversService', () => {
       expect(route).toEqual({
         tripId: 'order-1',
         points: [
-          { lat: 10.7769, lng: 106.7009, timestamp: assignedAt.toISOString() },
-          { lat: 10.7869, lng: 106.7109, timestamp: deliveredAt.toISOString() },
+          {
+            lat: 10.7769,
+            lng: 106.7009,
+            timestamp: assignedAt.toISOString(),
+            source: 'telemetry',
+            timestampEstimated: false,
+          },
+          {
+            lat: 10.7869,
+            lng: 106.7109,
+            timestamp: deliveredAt.toISOString(),
+            source: 'telemetry',
+            timestampEstimated: false,
+          },
         ],
         segments: [],
+        routeSource: 'telemetry',
+        timestampsEstimated: false,
         totalDistanceKm: 3.5,
         totalDurationSeconds: 600,
         avgSpeedKmh: 21,
@@ -412,11 +426,59 @@ describe('DriversService', () => {
         tripId: 'order-2',
         points: [],
         segments: [],
+        routeSource: 'none',
+        timestampsEstimated: false,
         totalDistanceKm: 0,
         totalDurationSeconds: 0,
         avgSpeedKmh: 0,
         payout: 0,
       })
+    })
+
+    it('marks persisted route geometry timestamps as estimated instead of telemetry', async () => {
+      const assignedAt = new Date('2026-07-03T08:00:00Z')
+      const deliveredAt = new Date('2026-07-03T08:10:00Z')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({
+        id: 'order-3',
+        orderCode: 'FD0000000003',
+        createdAt: assignedAt,
+        updatedAt: deliveredAt,
+        routePolyline: null,
+        routeWaypoints: [
+          { lat: 10.7769, lng: 106.7009 },
+          { lat: 10.7869, lng: 106.7109 },
+        ],
+        deliveryTask: {
+          assignedAt,
+          deliveredAt,
+          pickupDistanceKm: null,
+          deliveryDistanceKm: null,
+          durationInTraffic: null,
+        },
+        payoutLedgers: [],
+      })
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+
+      const route = await service.getTripRoute('driver-1', 'order-3')
+
+      expect(route.routeSource).toBe('persisted_geometry')
+      expect(route.timestampsEstimated).toBe(true)
+      expect(route.points).toEqual([
+        {
+          lat: 10.7769,
+          lng: 106.7009,
+          timestamp: assignedAt.toISOString(),
+          source: 'persisted_geometry',
+          timestampEstimated: true,
+        },
+        {
+          lat: 10.7869,
+          lng: 106.7109,
+          timestamp: deliveredAt.toISOString(),
+          source: 'persisted_geometry',
+          timestampEstimated: true,
+        },
+      ])
     })
   })
 })

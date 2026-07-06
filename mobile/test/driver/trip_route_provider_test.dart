@@ -11,11 +11,15 @@ void main() {
             'lat': 10.7769,
             'lng': 106.7009,
             'timestamp': '2026-07-03T08:00:00.000Z',
+            'source': 'telemetry',
+            'timestampEstimated': false,
           },
           {
             'lat': '10.7869',
             'lng': '106.7109',
             'timestamp': '2026-07-03T08:10:00.000Z',
+            'source': 'telemetry',
+            'timestampEstimated': false,
           },
         ],
         'segments': [
@@ -27,6 +31,8 @@ void main() {
             'endIndex': 1,
           },
         ],
+        'routeSource': 'telemetry',
+        'timestampsEstimated': false,
         'totalDistanceKm': '3.5',
         'totalDurationSeconds': 600,
         'avgSpeedKmh': 21,
@@ -36,7 +42,11 @@ void main() {
       expect(route.tripId, 'order-1');
       expect(route.points, hasLength(2));
       expect(route.points.last.lat, 10.7869);
+      expect(route.points.last.source, 'telemetry');
+      expect(route.points.last.timestampEstimated, isFalse);
       expect(route.segments.single.instruction, 'Head to pickup');
+      expect(route.routeSource, 'telemetry');
+      expect(route.timestampsEstimated, isFalse);
       expect(route.totalDistanceKm, 3.5);
       expect(route.totalDurationSeconds, 600);
       expect(route.avgSpeedKmh, 21);
@@ -50,6 +60,8 @@ void main() {
 
         expect(route.points, isEmpty);
         expect(route.segments, isEmpty);
+        expect(route.routeSource, 'none');
+        expect(route.timestampsEstimated, isFalse);
         expect(route.totalDistanceKm, 0);
         expect(route.totalDurationSeconds, 0);
         expect(route.avgSpeedKmh, 0);
@@ -78,6 +90,28 @@ void main() {
       expect(route.points, hasLength(1));
       expect(route.points.single.lat, 10.7769);
       expect(route.points.single.lng, 106.7009);
+    });
+
+    test('parses persisted geometry metadata without treating it as telemetry', () {
+      final route = TripRouteDetail.fromJson({
+        'tripId': 'order-1',
+        'routeSource': 'persisted_geometry',
+        'timestampsEstimated': true,
+        'points': [
+          {
+            'lat': 10.7769,
+            'lng': 106.7009,
+            'timestamp': '2026-07-03T08:00:00.000Z',
+            'source': 'persisted_geometry',
+            'timestampEstimated': true,
+          },
+        ],
+      });
+
+      expect(route.routeSource, 'persisted_geometry');
+      expect(route.timestampsEstimated, isTrue);
+      expect(route.points.single.source, 'persisted_geometry');
+      expect(route.points.single.timestampEstimated, isTrue);
     });
 
     test('RoutePoint rejects invalid coordinates explicitly', () {
