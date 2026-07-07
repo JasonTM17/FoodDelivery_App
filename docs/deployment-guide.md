@@ -126,6 +126,20 @@ Required public env:
 | Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 
+Before deployment, run the web preflight from the repo root. It checks the linked Admin project settings, required production env names, and the required separate Restaurant project env list without printing env values or deploying:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-web-preflight.ps1
+```
+
+For POSIX shells with Node.js and Vercel CLI available:
+
+```bash
+./infra/scripts/vercel-web-preflight.sh
+```
+
+Set `RESTAURANT_VERCEL_PROJECT_ID` before running the preflight once the Restaurant project exists.
+
 Both web apps intentionally fail closed in production when API, realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.

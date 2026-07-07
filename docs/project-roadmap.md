@@ -113,7 +113,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 2. Restore GitHub Actions token/auth/billing access and rerun the blocked CI/security workflows.
 3. Attach branch disposition, test matrix, rejected changes, and known degraded states to the release report.
 4. Authenticate Supabase CLI/project access, run `infra/scripts/supabase-preflight.{sh,ps1}` with rotated production `DATABASE_URL`/`DIRECT_URL`, and deploy database/realtime resources only after the guard passes.
-5. Link the repo to the intended Vercel projects, verify env values, and deploy web surfaces only after local and remote gates are green.
+5. Link the repo to the intended Vercel projects, verify env values with `infra/scripts/vercel-web-preflight.{ps1,sh}`, and deploy web surfaces only after local and remote gates are green.
 6. Run production smoke tests, realtime checks, map checks, AI chatbot checks, export checks, mobile API checks, and keep-alive monitoring.
 
 ## Deferred out of Batch 4
