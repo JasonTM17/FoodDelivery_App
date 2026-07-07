@@ -71,6 +71,25 @@ void main() {
     },
   );
 
+  test(
+    'fetchOrders rejects malformed envelopes instead of faking empty orders',
+    () async {
+      final notifier = OrderNotifier();
+
+      await notifier.fetchOrders();
+      expect(notifier.state.activeOrders, hasLength(1));
+
+      apiInterceptor.ordersResponseOverride = {
+        'meta': {'total': 0},
+      };
+
+      await notifier.fetchOrders();
+
+      expect(notifier.state.error, isNotNull);
+      expect(notifier.state.activeOrders, hasLength(1));
+    },
+  );
+
   test('submitReview posts to singular backend review endpoint', () async {
     final notifier = OrderNotifier();
 
@@ -216,6 +235,7 @@ class _OrderApiInterceptor extends Interceptor {
   String? placeOrderIdempotencyKey;
   Map<String, dynamic>? reviewPayload;
   String? reviewPath;
+  Map<String, dynamic>? ordersResponseOverride;
   int ordersFetchCount = 0;
   int addressPostCount = 0;
 
@@ -243,14 +263,16 @@ class _OrderApiInterceptor extends Interceptor {
         Response<Map<String, dynamic>>(
           requestOptions: options,
           statusCode: 200,
-          data: {
-            'orders': [
-              _orderPayload(id: 'order-active', status: 'preparing'),
-              _orderPayload(id: 'order-complete', status: 'delivered'),
-              _orderPayload(id: 'order-cancelled', status: 'cancelled'),
-            ],
-            'meta': {'total': 3},
-          },
+          data:
+              ordersResponseOverride ??
+              {
+                'orders': [
+                  _orderPayload(id: 'order-active', status: 'preparing'),
+                  _orderPayload(id: 'order-complete', status: 'delivered'),
+                  _orderPayload(id: 'order-cancelled', status: 'cancelled'),
+                ],
+                'meta': {'total': 3},
+              },
         ),
       );
       return;
