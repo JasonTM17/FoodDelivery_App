@@ -18,10 +18,27 @@ import '../providers/restaurant_filter_provider.dart';
 import '../widgets/category_chip.dart';
 import '../../l10n/app_localizations.dart';
 
-const _defaultCamera = CameraPosition(
-  target: LatLng(10.7769, 106.7009),
-  zoom: 12.5,
-);
+@visibleForTesting
+CameraPosition? restaurantListInitialCameraPosition({
+  required double? currentLat,
+  required double? currentLng,
+  required List<RestaurantModel> restaurants,
+}) {
+  if (isValidDeliveryLatLng(currentLat, currentLng)) {
+    return CameraPosition(target: LatLng(currentLat!, currentLng!), zoom: 13);
+  }
+
+  for (final restaurant in restaurants) {
+    if (isValidDeliveryLatLng(restaurant.latitude, restaurant.longitude)) {
+      return CameraPosition(
+        target: LatLng(restaurant.latitude, restaurant.longitude),
+        zoom: 12.5,
+      );
+    }
+  }
+
+  return null;
+}
 
 class _RestaurantFilterOption {
   final String id;
@@ -119,7 +136,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
                   )
                 : filter.viewMode == RestaurantViewMode.list
                 ? _buildListView(visibleRestaurants, l10n)
-                : _buildMapView(visibleRestaurants),
+                : _buildMapView(visibleRestaurants, l10n),
           ),
         ],
       ),
@@ -271,7 +288,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     );
   }
 
-  Widget _buildMapView(List<RestaurantModel> list) {
+  Widget _buildMapView(List<RestaurantModel> list, AppLocalizations l10n) {
     final markers = list
         .where((r) => isValidDeliveryLatLng(r.latitude, r.longitude))
         .map(
@@ -282,11 +299,20 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
           ),
         )
         .toSet();
+    final camera = _initialCameraPosition(list);
+
+    if (camera == null) {
+      return EmptyState(
+        icon: Icons.location_off_outlined,
+        title: l10n.restaurantNoResults,
+        subtitle: l10n.restaurantLocationRequired,
+      );
+    }
 
     return Stack(
       children: [
         GoogleMap(
-          initialCameraPosition: _initialCameraPosition(),
+          initialCameraPosition: camera,
           polygons: _boundaryPolygons,
           markers: markers,
           myLocationButtonEnabled: false,
@@ -316,12 +342,12 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     );
   }
 
-  CameraPosition _initialCameraPosition() {
+  CameraPosition? _initialCameraPosition(List<RestaurantModel> restaurants) {
     final location = _currentLocation;
-    if (location == null) return _defaultCamera;
-    return CameraPosition(
-      target: LatLng(location.latitude, location.longitude),
-      zoom: 13,
+    return restaurantListInitialCameraPosition(
+      currentLat: location?.latitude,
+      currentLng: location?.longitude,
+      restaurants: restaurants,
     );
   }
 }
