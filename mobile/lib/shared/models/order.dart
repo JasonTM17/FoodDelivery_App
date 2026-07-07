@@ -35,6 +35,7 @@ class OrderModel {
   final double? restaurantLatitude;
   final double? restaurantLongitude;
   final int? estimatedDeliveryTimeMinutes;
+  final String? routePhase;
   final String? routePolyline;
 
   OrderModel({
@@ -70,6 +71,7 @@ class OrderModel {
     this.restaurantLatitude,
     this.restaurantLongitude,
     this.estimatedDeliveryTimeMinutes,
+    this.routePhase,
     this.routePolyline,
   });
 
@@ -106,6 +108,7 @@ class OrderModel {
     double? restaurantLatitude,
     double? restaurantLongitude,
     Object? estimatedDeliveryTimeMinutes = _orderModelUnset,
+    Object? routePhase = _orderModelUnset,
     Object? routePolyline = _orderModelUnset,
   }) {
     return OrderModel(
@@ -144,6 +147,9 @@ class OrderModel {
           identical(estimatedDeliveryTimeMinutes, _orderModelUnset)
           ? this.estimatedDeliveryTimeMinutes
           : estimatedDeliveryTimeMinutes as int?,
+      routePhase: identical(routePhase, _orderModelUnset)
+          ? this.routePhase
+          : routePhase as String?,
       routePolyline: identical(routePolyline, _orderModelUnset)
           ? this.routePolyline
           : routePolyline as String?,
@@ -242,6 +248,7 @@ class OrderModel {
       restaurantLongitude: (json['restaurantLongitude'] as num?)?.toDouble(),
       estimatedDeliveryTimeMinutes:
           (json['estimatedDeliveryTimeMinutes'] as num?)?.toInt(),
+      routePhase: json['routePhase'] as String?,
       routePolyline: json['routePolyline'] as String?,
     );
   }

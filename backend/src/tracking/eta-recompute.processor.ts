@@ -99,6 +99,7 @@ export class EtaRecomputeProcessor extends WorkerHost {
       this.logger.warn(`Skipping ETA emit for order ${orderId}: status changed during ${phase} recompute`)
       return
     }
+    await this.persistRouteToDeliveryTask(orderId, phase, route)
 
     this.trackingGateway.emitEtaUpdate(orderId, {
       etaMinutes: Math.max(1, Math.round(route.durationSeconds / 60)),
@@ -111,5 +112,46 @@ export class EtaRecomputeProcessor extends WorkerHost {
     this.logger.log(
       `Recomputed ${phase} route for order ${orderId}: ${Math.round(route.durationSeconds / 60)} min via ${route.provider}`,
     )
+  }
+
+  private async persistRouteToDeliveryTask(
+    orderId: string,
+    phase: DeliveryRoutePhase,
+    route: {
+      provider: 'google' | 'osrm'
+      polyline: string
+      distanceMeters: number
+      durationSeconds: number
+      waypoints: Array<{ lat: number; lng: number }>
+    },
+  ): Promise<void> {
+    const distanceKm = Number((route.distanceMeters / 1000).toFixed(2))
+    const otherPhase: DeliveryRoutePhase = phase === 'pickup' ? 'dropoff' : 'pickup'
+    const distanceUpdate = phase === 'pickup'
+      ? Prisma.sql`pickup_distance_km = CAST(${distanceKm} AS numeric)`
+      : Prisma.sql`delivery_distance_km = CAST(${distanceKm} AS numeric)`
+    const routeJson = JSON.stringify({
+      provider: route.provider,
+      polyline: route.polyline,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+      waypoints: route.waypoints,
+    })
+
+    await this.prisma.$executeRaw(Prisma.sql`
+      UPDATE delivery_tasks
+      SET
+        ${distanceUpdate},
+        duration_in_traffic =
+          COALESCE((route_geojson #>> ARRAY[CAST(${otherPhase} AS text), 'durationSeconds'])::int, 0)
+          + CAST(${route.durationSeconds} AS int),
+        route_geojson = jsonb_set(
+          COALESCE(route_geojson, '{}'::jsonb),
+          ARRAY[CAST(${phase} AS text)],
+          CAST(${routeJson} AS jsonb),
+          true
+        )
+      WHERE order_id = CAST(${orderId} AS uuid)
+    `)
   }
 }

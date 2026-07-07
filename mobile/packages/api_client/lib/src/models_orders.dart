@@ -174,6 +174,7 @@ class DriverOrderResponse {
   final double restaurantLatitude;
   final double restaurantLongitude;
   final int? estimatedDeliveryTimeMinutes;
+  final String? routePhase;
   final String? routePolyline;
 
   const DriverOrderResponse({
@@ -201,6 +202,7 @@ class DriverOrderResponse {
     required this.restaurantLatitude,
     required this.restaurantLongitude,
     this.estimatedDeliveryTimeMinutes,
+    this.routePhase,
     this.routePolyline,
   });
 
@@ -240,6 +242,7 @@ class DriverOrderResponse {
         restaurantLongitude: (json['restaurantLongitude'] as num).toDouble(),
         estimatedDeliveryTimeMinutes:
             (json['estimatedDeliveryTimeMinutes'] as num?)?.toInt(),
+        routePhase: json['routePhase'] as String?,
         routePolyline: json['routePolyline'] as String?,
       );
 }

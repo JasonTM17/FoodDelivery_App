@@ -240,6 +240,71 @@ describe('DriversService', () => {
       })
     })
 
+    it('returns only phase-matched route geometry for the active driver order', async () => {
+      mockPrisma.order.findFirst.mockResolvedValueOnce({
+        ...order,
+        routePolyline: 'legacy-pickup-route',
+        deliveryTask: {
+          routeGeojson: {
+            pickup: {
+              provider: 'google',
+              polyline: 'pickup-route',
+              distanceMeters: 1200,
+              durationSeconds: 360,
+              waypoints: [],
+            },
+            dropoff: {
+              provider: 'osrm',
+              polyline: 'dropoff-route',
+              distanceMeters: 4200,
+              durationSeconds: 840,
+              waypoints: [{ lat: 10.79, lng: 106.71 }],
+            },
+          },
+        },
+      })
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{
+        restaurantLat: 10.77,
+        restaurantLng: 106.69,
+        deliveryLat: 10.79,
+        deliveryLng: 106.71,
+      }])
+
+      const result = await service.getActiveOrder('driver-1')
+
+      expect(result?.routePhase).toBe('dropoff')
+      expect(result?.routePolyline).toBe('dropoff-route')
+    })
+
+    it('does not expose legacy order route when current phase geometry is missing', async () => {
+      mockPrisma.order.findFirst.mockResolvedValueOnce({
+        ...order,
+        routePolyline: 'legacy-pickup-route',
+        deliveryTask: {
+          routeGeojson: {
+            pickup: {
+              provider: 'google',
+              polyline: 'pickup-route',
+              distanceMeters: 1200,
+              durationSeconds: 360,
+              waypoints: [],
+            },
+          },
+        },
+      })
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{
+        restaurantLat: 10.77,
+        restaurantLng: 106.69,
+        deliveryLat: 10.79,
+        deliveryLng: 106.71,
+      }])
+
+      const result = await service.getActiveOrder('driver-1')
+
+      expect(result?.routePhase).toBe('dropoff')
+      expect(result?.routePolyline).toBeNull()
+    })
+
     it('returns null instead of generated order data when no active order exists', async () => {
       mockPrisma.order.findFirst.mockResolvedValueOnce(null)
 

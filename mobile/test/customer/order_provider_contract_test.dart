@@ -159,6 +159,25 @@ void main() {
     expect(notifier.state.currentTrackingOrder?.updatedAt, backendTimestamp);
   });
 
+  test('OrderModel preserves backend route phase metadata', () {
+    final order = OrderModel.fromJson({
+      ..._orderPayload(id: 'order-active', status: 'delivering'),
+      'routePhase': 'dropoff',
+      'routePolyline': 'dropoff-route',
+    });
+
+    expect(order.routePhase, 'dropoff');
+    expect(order.routePolyline, 'dropoff-route');
+    expect(
+      order.copyWith(routePhase: 'pickup', routePolyline: null).routePhase,
+      'pickup',
+    );
+    expect(
+      order.copyWith(routePhase: 'pickup', routePolyline: null).routePolyline,
+      isNull,
+    );
+  });
+
   test(
     'OrderModel rejects missing required backend money and state fields',
     () {

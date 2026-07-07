@@ -28,6 +28,33 @@ export function routeCacheKey(orderId: string, phase: DeliveryRoutePhase): strin
   return `${orderId}:${phase}`
 }
 
+export function routeResultFromPersistedPhase(
+  routeGeojson: Prisma.JsonValue | null | undefined,
+  phase: DeliveryRoutePhase,
+): RouteResult | null {
+  const routes = asJsonRecord(routeGeojson)
+  const route = asJsonRecord(routes?.[phase])
+  if (!route) return null
+
+  const polyline = typeof route.polyline === 'string' ? route.polyline.trim() : ''
+  const distanceMeters = finiteNumber(route.distanceMeters)
+  const durationSeconds = finiteNumber(route.durationSeconds)
+  const provider = route.provider
+
+  if (!polyline) return null
+  if (distanceMeters === null || distanceMeters < 0) return null
+  if (durationSeconds === null || durationSeconds <= 0) return null
+  if (provider !== 'google' && provider !== 'osrm') return null
+
+  return {
+    polyline,
+    distanceMeters,
+    durationSeconds,
+    waypoints: persistedWaypoints(route.waypoints),
+    provider,
+  }
+}
+
 interface LocationData {
   lat: number
   lng: number
@@ -159,6 +186,14 @@ export class TrackingService implements OnModuleDestroy {
 
   getCachedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {
     return this.etaCache.getRoute(routeCacheKey(orderId, phase))
+  }
+
+  async getPersistedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {
+    const task = await this.prisma.deliveryTask.findUnique({
+      where: { orderId },
+      select: { routeGeojson: true },
+    })
+    return routeResultFromPersistedPhase(task?.routeGeojson, phase)
   }
 
   async resolveActiveOrderForDriver(driverId: string): Promise<string | null> {
@@ -297,6 +332,31 @@ export class TrackingService implements OnModuleDestroy {
 function normalizeRedisOrderId(value: string | null): string | null {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
+}
+
+function asJsonRecord(value: Prisma.JsonValue | null | undefined): Record<string, Prisma.JsonValue> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as Record<string, Prisma.JsonValue>
+}
+
+function finiteNumber(value: Prisma.JsonValue | undefined): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return value
+}
+
+function persistedWaypoints(value: Prisma.JsonValue | undefined): RouteResult['waypoints'] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(point => {
+      const record = asJsonRecord(point)
+      if (!record) return null
+      const lat = finiteNumber(record.lat)
+      const lng = finiteNumber(record.lng)
+      if (lat === null || lng === null) return null
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+      return { lat, lng }
+    })
+    .filter((point): point is { lat: number; lng: number } => point !== null)
 }
 
 function parseLocationRecordedAt(timestamp?: string): Date {

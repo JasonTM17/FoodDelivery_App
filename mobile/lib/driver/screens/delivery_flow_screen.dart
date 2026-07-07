@@ -803,6 +803,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     return [
       order.id,
       order.status,
+      order.routePhase ?? '',
       order.routePolyline ?? '',
       driverLat?.toStringAsFixed(4) ?? '',
       driverLng?.toStringAsFixed(4) ?? '',

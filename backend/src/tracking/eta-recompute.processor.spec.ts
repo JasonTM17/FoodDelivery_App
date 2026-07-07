@@ -5,6 +5,7 @@ import type { RecomputeJobData } from './tracking.service'
 describe('EtaRecomputeProcessor', () => {
   const mockPrisma = {
     $queryRaw: jest.fn(),
+    $executeRaw: jest.fn(),
     order: { updateMany: jest.fn() },
   }
   const mockDirectionsApi = { fetchRoute: jest.fn() }
@@ -44,6 +45,7 @@ describe('EtaRecomputeProcessor', () => {
     mockEtaCache.invalidate.mockResolvedValueOnce(undefined)
     mockEtaCache.setRoute.mockResolvedValueOnce(undefined)
     mockPrisma.order.updateMany.mockResolvedValueOnce({ count: 1 })
+    mockPrisma.$executeRaw.mockResolvedValueOnce(1)
 
     await processor.process({
       data: {
@@ -66,6 +68,23 @@ describe('EtaRecomputeProcessor', () => {
       },
       data: expect.objectContaining({ routePolyline: 'recomputed-polyline' }),
     }))
+    expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+    const [routeTaskUpdate] = mockPrisma.$executeRaw.mock.calls[0]
+    expect(routeTaskUpdate.sql).toContain('UPDATE delivery_tasks')
+    expect(routeTaskUpdate.sql).toContain('delivery_distance_km')
+    expect(routeTaskUpdate.values).toEqual(
+      expect.arrayContaining([4.2, 'pickup', 780, 'dropoff', 'order-1']),
+    )
+    const routeJson = routeTaskUpdate.values.find(
+      (value: unknown) =>
+        typeof value === 'string' && value.includes('recomputed-polyline'),
+    ) as string
+    expect(JSON.parse(routeJson)).toMatchObject({
+      provider: 'google',
+      polyline: 'recomputed-polyline',
+      distanceMeters: 4200,
+      durationSeconds: 780,
+    })
     expect(mockTrackingGateway.emitEtaUpdate).toHaveBeenCalledWith('order-1', {
       etaMinutes: 13,
       source: 'google',
@@ -96,6 +115,7 @@ describe('EtaRecomputeProcessor', () => {
     expect(mockDirectionsApi.fetchRoute).not.toHaveBeenCalled()
     expect(mockEtaCache.invalidate).not.toHaveBeenCalled()
     expect(mockPrisma.order.updateMany).not.toHaveBeenCalled()
+    expect(mockPrisma.$executeRaw).not.toHaveBeenCalled()
     expect(mockTrackingGateway.emitEtaUpdate).not.toHaveBeenCalled()
   })
 
@@ -128,6 +148,7 @@ describe('EtaRecomputeProcessor', () => {
     } as Job<RecomputeJobData>)
 
     expect(mockPrisma.order.updateMany).toHaveBeenCalled()
+    expect(mockPrisma.$executeRaw).not.toHaveBeenCalled()
     expect(mockTrackingGateway.emitEtaUpdate).not.toHaveBeenCalled()
   })
 })

@@ -24,12 +24,14 @@ export class TrackingController {
   async getTracking(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     const order = await this.ordersService.getTracking(id, user.sub, user.role)
     const routePhase = routePhaseForStatus(order.status)
-    const [driverLocation, cachedRoute] = await Promise.all([
+    const [driverLocation, cachedRoute, persistedRoute] = await Promise.all([
       order.driverId
         ? this.trackingService.getDriverLocation(order.driverId)
         : Promise.resolve(null),
       this.trackingService.getCachedRoute(order.id, routePhase),
+      this.trackingService.getPersistedRoute(order.id, routePhase),
     ])
+    const route = cachedRoute ?? persistedRoute
 
     return {
       orderId: order.id,
@@ -42,10 +44,10 @@ export class TrackingController {
             lastUpdated: driverLocation.timestamp,
           }
         : null,
-      etaMinutes: cachedRoute
-        ? Math.max(1, Math.round(cachedRoute.durationSeconds / 60))
+      etaMinutes: route
+        ? Math.max(1, Math.round(route.durationSeconds / 60))
         : null,
-      routePolyline: cachedRoute?.polyline ?? (routePhase === 'dropoff' ? order.routePolyline : null),
+      routePolyline: route?.polyline ?? null,
     }
   }
 }

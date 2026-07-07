@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service'
 import { decodePolyline } from '../common/utils/route.utils'
 import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
 import { haversineDistance } from '../common/utils/geo.utils'
+import { routePhaseForStatus, routeResultFromPersistedPhase, type DeliveryRoutePhase } from '../tracking/tracking.service'
 import Redis from 'ioredis'
 
 export interface DriverHeatmapQuery {
@@ -107,6 +108,7 @@ const driverOrderInclude = Prisma.validator<Prisma.OrderInclude>()({
   },
   customer: { select: { fullName: true, phone: true } },
   deliveryAddress: { select: { label: true, addressLine: true } },
+  deliveryTask: { select: { routeGeojson: true } },
   orderItems: true,
   statusHistory: { orderBy: { createdAt: 'asc' } },
 })
@@ -157,6 +159,7 @@ export interface DriverOrderResponse {
   restaurantLatitude: number
   restaurantLongitude: number
   estimatedDeliveryTimeMinutes: number | null
+  routePhase: DeliveryRoutePhase
   routePolyline: string | null
 }
 
@@ -534,6 +537,8 @@ export class DriversService {
   }
 
   private async serializeDriverOrder(order: DriverOrderRecord): Promise<DriverOrderResponse> {
+    const routePhase = routePhaseForStatus(order.status)
+    const phaseRoute = routeResultFromPersistedPhase(order.deliveryTask?.routeGeojson, routePhase)
     const locations = await this.prisma.$queryRaw<DriverOrderLocationRow[]>(Prisma.sql`
       SELECT
         ST_Y(r.location::geometry)::float8 AS "restaurantLat",
@@ -590,7 +595,8 @@ export class DriversService {
       restaurantLatitude: Number(location.restaurantLat),
       restaurantLongitude: Number(location.restaurantLng),
       estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes,
-      routePolyline: order.routePolyline,
+      routePhase,
+      routePolyline: phaseRoute?.polyline ?? null,
     }
   }
 }

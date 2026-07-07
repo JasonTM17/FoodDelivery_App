@@ -709,11 +709,20 @@ class DriverNotifier extends StateNotifier<DriverState> {
       if (data['orderId'] != orderId || state.activeOrder?.id != orderId) {
         return;
       }
+      final activeOrder = state.activeOrder!;
+      final routePhase = data['routePhase'] as String?;
+      final activeRoutePhase =
+          activeOrder.routePhase ??
+          driverRoutePhaseForStatus(activeOrder.status);
+      if (routePhase == null || routePhase != activeRoutePhase) {
+        return;
+      }
       final eta = (data['etaMinutes'] as num?)?.toInt();
       final routePolyline = data['routePolyline'] as String?;
       state = state.copyWith(
-        activeOrder: state.activeOrder!.copyWith(
+        activeOrder: activeOrder.copyWith(
           estimatedDeliveryTimeMinutes: eta,
+          routePhase: routePhase,
           routePolyline: routePolyline,
         ),
       );
@@ -771,4 +780,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
     BackgroundLocationService.instance.stop();
     super.dispose();
   }
+}
+
+String driverRoutePhaseForStatus(String status) {
+  return status == 'driver_assigned' || status == 'driver_arriving_restaurant'
+      ? 'pickup'
+      : 'dropoff';
 }

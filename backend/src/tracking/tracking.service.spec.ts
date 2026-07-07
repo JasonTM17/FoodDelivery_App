@@ -22,6 +22,9 @@ describe('TrackingService', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({ id: 'order-1' }),
     },
+    deliveryTask: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     $executeRaw: jest.fn().mockResolvedValue(1),
     $queryRaw: jest.fn().mockResolvedValue([]),
   }
@@ -328,6 +331,62 @@ describe('TrackingService', () => {
       })
       await service.maybeEnqueueRecompute('ord-1', 38.5, -120.2)
       expect(mockEtaQueue.add).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getPersistedRoute', () => {
+    it('returns only the route geometry for the requested delivery phase', async () => {
+      mockPrisma.deliveryTask.findUnique.mockResolvedValueOnce({
+        routeGeojson: {
+          pickup: {
+            provider: 'google',
+            polyline: 'pickup-polyline',
+            distanceMeters: 1200,
+            durationSeconds: 360,
+            waypoints: [{ lat: 10.77, lng: 106.68 }],
+          },
+          dropoff: {
+            provider: 'osrm',
+            polyline: 'dropoff-polyline',
+            distanceMeters: 4200,
+            durationSeconds: 840,
+            waypoints: [{ lat: 10.78, lng: 106.69 }],
+          },
+        },
+      })
+
+      await expect(service.getPersistedRoute('ord-1', 'dropoff')).resolves.toEqual({
+        provider: 'osrm',
+        polyline: 'dropoff-polyline',
+        distanceMeters: 4200,
+        durationSeconds: 840,
+        waypoints: [{ lat: 10.78, lng: 106.69 }],
+      })
+      expect(mockPrisma.deliveryTask.findUnique).toHaveBeenCalledWith({
+        where: { orderId: 'ord-1' },
+        select: { routeGeojson: true },
+      })
+    })
+
+    it('returns null for missing or malformed phase geometry', async () => {
+      mockPrisma.deliveryTask.findUnique.mockResolvedValueOnce({
+        routeGeojson: {
+          pickup: {
+            provider: 'google',
+            polyline: 'pickup-polyline',
+            distanceMeters: 1200,
+            durationSeconds: 360,
+            waypoints: [],
+          },
+          dropoff: {
+            provider: 'google',
+            distanceMeters: 4200,
+            durationSeconds: 840,
+          },
+        },
+      })
+
+      await expect(service.getPersistedRoute('ord-1', 'dropoff')).resolves.toBeNull()
     })
   })
 })
