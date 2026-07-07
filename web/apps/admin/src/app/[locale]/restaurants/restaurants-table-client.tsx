@@ -15,6 +15,78 @@ import RestaurantDetailSheet, { type RestaurantDetail } from './restaurant-detai
 interface RestaurantsResponse {
   restaurants: RestaurantDetail[];
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface RawRestaurant {
+  id: string;
+  name: string;
+  owner?: RestaurantDetail['owner'];
+  profiles?: { user?: { fullName?: string | null; email?: string | null; phone?: string | null } }[];
+  cuisine?: string;
+  cuisineTypes?: string[];
+  rating?: number | string | null;
+  totalOrders?: number | null;
+  status?: string;
+  isActive?: boolean;
+  address?: string;
+  addressLine?: string;
+  createdAt: string;
+}
+
+interface RawRestaurantsResponse {
+  restaurants: RawRestaurant[];
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+}
+
+function normalizeRestaurantStatus(restaurant: RawRestaurant): string {
+  if (typeof restaurant.isActive === 'boolean') return restaurant.isActive ? 'active' : 'disabled';
+  return restaurant.status === 'active' ? 'active' : 'disabled';
+}
+
+export function normalizeRestaurantDetail(restaurant: RawRestaurant): RestaurantDetail {
+  const rating = restaurant.rating == null ? null : Number(restaurant.rating);
+  const owner = restaurant.owner ?? {
+    name: restaurant.profiles?.[0]?.user?.fullName ?? undefined,
+    email: restaurant.profiles?.[0]?.user?.email ?? undefined,
+    phone: restaurant.profiles?.[0]?.user?.phone ?? undefined,
+  };
+
+  return {
+    id: restaurant.id,
+    name: restaurant.name,
+    owner,
+    cuisine: restaurant.cuisine ?? restaurant.cuisineTypes?.join(', ') ?? '—',
+    rating: rating !== null && Number.isFinite(rating) ? rating : null,
+    totalOrders: restaurant.totalOrders ?? null,
+    status: normalizeRestaurantStatus(restaurant),
+    address: restaurant.address ?? restaurant.addressLine ?? '—',
+    createdAt: restaurant.createdAt,
+  };
+}
+
+export function normalizeRestaurantsResponse(response: RawRestaurantsResponse): RestaurantsResponse {
+  const page = response.meta?.page ?? response.page ?? 1;
+  const limit = response.meta?.limit ?? response.limit ?? 20;
+  const total = response.meta?.total ?? response.total ?? response.restaurants.length;
+  return {
+    restaurants: response.restaurants.map(normalizeRestaurantDetail),
+    total,
+    page,
+    limit,
+    totalPages: response.meta?.totalPages ?? response.totalPages ?? Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 export default function RestaurantsTableClient() {
@@ -28,7 +100,7 @@ export default function RestaurantsTableClient() {
 
   const { data, isLoading } = useQuery<RestaurantsResponse>({
     queryKey: ['restaurants'],
-    queryFn: () => apiGet<RestaurantsResponse>('/admin/restaurants'),
+    queryFn: async () => normalizeRestaurantsResponse(await apiGet<RawRestaurantsResponse>('/admin/restaurants')),
   });
 
   const handleViewRestaurant = async (restaurantId: string) => {
@@ -57,8 +129,9 @@ export default function RestaurantsTableClient() {
   };
 
   const toggleStatus = async (restaurantId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-    await apiPatch(`/admin/restaurants/${restaurantId}/status`, { status: newStatus });
+    const isActive = currentStatus !== 'active';
+    const newStatus = isActive ? 'active' : 'disabled';
+    await apiPatch(`/admin/restaurants/${restaurantId}/status`, { isActive });
     queryClient.invalidateQueries({ queryKey: ['restaurants'] });
     if (selectedRestaurant?.id === restaurantId) {
       setSelectedRestaurant((prev) => (prev ? { ...prev, status: newStatus } : null));
@@ -111,10 +184,10 @@ export default function RestaurantsTableClient() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span>{restaurant.rating.toFixed(1)}</span>
+                        <span>{restaurant.rating === null ? '—' : restaurant.rating.toFixed(1)}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{restaurant.totalOrders}</TableCell>
+                    <TableCell>{restaurant.totalOrders ?? '—'}</TableCell>
                     <TableCell>
                       <Badge variant={restaurant.status === 'active' ? 'success' : 'secondary'}>
                         {restaurant.status === 'active' ? t('statusActive') : t('statusDisabled')}

@@ -13,8 +13,8 @@ type BadgeVariant = 'default' | 'secondary' | 'destructive';
 interface UserDetailSummaryCardsProps {
   user: {
     status: 'active' | 'banned';
-    totalOrders: number;
-    totalSpent: number;
+    totalOrders: number | null;
+    totalSpent: number | null;
     kycStatus: 'none' | 'pending' | 'verified' | 'rejected';
   };
   onOpenKyc: () => void;
@@ -46,12 +46,14 @@ export function UserDetailSummaryCards({ user, onOpenKyc }: UserDetailSummaryCar
           <Separator />
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('totalOrders')}</span>
-            <span className="font-medium">{user.totalOrders}</span>
+            <span className="font-medium">{user.totalOrders ?? '—'}</span>
           </div>
           <Separator />
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('totalSpent')}</span>
-            <span className="font-medium">{formatCurrency(user.totalSpent ?? 0)}</span>
+            <span className="font-medium">
+              {user.totalSpent === null ? '—' : formatCurrency(user.totalSpent)}
+            </span>
           </div>
         </CardContent>
       </Card>

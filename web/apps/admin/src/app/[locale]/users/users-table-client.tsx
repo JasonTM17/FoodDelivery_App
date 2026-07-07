@@ -17,9 +17,21 @@ interface User {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   role: string;
-  status: string;
+  status: 'active' | 'banned';
+  createdAt: string;
+}
+
+interface RawUser {
+  id: string;
+  name?: string;
+  fullName?: string;
+  email: string;
+  phone?: string | null;
+  role: string;
+  status?: string;
+  isActive?: boolean;
   createdAt: string;
 }
 
@@ -31,12 +43,56 @@ interface UsersResponse {
   totalPages: number;
 }
 
+interface RawUsersResponse {
+  users: RawUser[];
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+}
+
 const roleVariants: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
   admin: 'destructive',
-  restaurant_owner: 'default',
+  restaurant: 'default',
   driver: 'secondary',
   customer: 'outline',
 };
+
+function userStatus(user: RawUser): 'active' | 'banned' {
+  if (typeof user.isActive === 'boolean') return user.isActive ? 'active' : 'banned';
+  return user.status === 'active' ? 'active' : 'banned';
+}
+
+function userRoleLabelKey(role: string): string {
+  return role === 'restaurant' ? 'restaurant_owner' : role;
+}
+
+export function normalizeUsersResponse(response: RawUsersResponse): UsersResponse {
+  const page = response.meta?.page ?? response.page ?? 1;
+  const limit = response.meta?.limit ?? response.limit ?? 15;
+  const total = response.meta?.total ?? response.total ?? response.users.length;
+  return {
+    users: response.users.map((user) => ({
+      id: user.id,
+      name: user.name ?? user.fullName ?? user.email,
+      email: user.email,
+      phone: user.phone ?? null,
+      role: user.role,
+      status: userStatus(user),
+      createdAt: user.createdAt,
+    })),
+    total,
+    page,
+    limit,
+    totalPages: response.meta?.totalPages ?? response.totalPages ?? Math.max(1, Math.ceil(total / limit)),
+  };
+}
 
 export default function UsersTableClient() {
   const t = useTranslations('users');
@@ -46,19 +102,18 @@ export default function UsersTableClient() {
 
   const { data, isLoading } = useQuery<UsersResponse>({
     queryKey: ['users', page, roleFilter],
-    queryFn: () =>
-      apiGet<UsersResponse>('/admin/users', {
+    queryFn: async () =>
+      normalizeUsersResponse(await apiGet<RawUsersResponse>('/admin/users', {
         params: {
           page,
           limit: 15,
           role: roleFilter !== 'all' ? roleFilter : undefined,
         },
-      }),
+      })),
   });
 
   const toggleBan = async (userId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'banned' : 'active';
-    await apiPatch(`/admin/users/${userId}/status`, { status: newStatus });
+    await apiPatch(`/admin/users/${userId}/status`, { isActive: currentStatus !== 'active' });
     queryClient.invalidateQueries({ queryKey: ['users'] });
   };
 
@@ -73,7 +128,7 @@ export default function UsersTableClient() {
             <SelectItem value="all">{t('roles.all')}</SelectItem>
             <SelectItem value="customer">{t('roles.customer')}</SelectItem>
             <SelectItem value="driver">{t('roles.driver')}</SelectItem>
-            <SelectItem value="restaurant_owner">{t('roles.restaurant_owner')}</SelectItem>
+            <SelectItem value="restaurant">{t('roles.restaurant_owner')}</SelectItem>
             <SelectItem value="admin">{t('roles.admin')}</SelectItem>
           </SelectContent>
         </Select>
@@ -115,7 +170,7 @@ export default function UsersTableClient() {
                       <TableCell>{user.phone || '—'}</TableCell>
                       <TableCell>
                         <Badge variant={roleVariants[user.role] || 'outline'}>
-                          {user.role in roleVariants ? t(`roles.${user.role}`) : user.role}
+                          {user.role in roleVariants ? t(`roles.${userRoleLabelKey(user.role)}`) : user.role}
                         </Badge>
                       </TableCell>
                       <TableCell>

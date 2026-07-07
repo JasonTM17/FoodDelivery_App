@@ -3,9 +3,9 @@ export interface Restaurant {
   name: string;
   owner?: { name?: string; email?: string; phone?: string };
   cuisine: string;
-  rating: number;
-  totalOrders: number;
-  revenue: number;
+  rating: number | null;
+  totalOrders: number | null;
+  revenue: number | null;
   status: string;
   address: string;
   description?: string;

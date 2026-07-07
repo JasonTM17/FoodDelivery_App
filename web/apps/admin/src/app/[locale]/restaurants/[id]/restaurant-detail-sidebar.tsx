@@ -57,13 +57,15 @@ function RestaurantStatisticsCard({ restaurant }: { restaurant: Restaurant }) {
         <StatisticRow label={t('rating')}>
           <div className="flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-            {restaurant.rating.toFixed(1)}
+            {restaurant.rating === null ? '—' : restaurant.rating.toFixed(1)}
           </div>
         </StatisticRow>
         <Separator />
-        <StatisticRow label={t('totalOrders')}>{restaurant.totalOrders}</StatisticRow>
+        <StatisticRow label={t('totalOrders')}>{restaurant.totalOrders ?? '—'}</StatisticRow>
         <Separator />
-        <StatisticRow label={t('revenue')}>{formatCurrency(restaurant.revenue || 0)}</StatisticRow>
+        <StatisticRow label={t('revenue')}>
+          {restaurant.revenue === null ? '—' : formatCurrency(restaurant.revenue)}
+        </StatisticRow>
         <Separator />
         <StatisticRow label={t('createdAt')}>{formatDate(restaurant.createdAt)}</StatisticRow>
       </CardContent>
