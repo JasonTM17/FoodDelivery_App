@@ -25,7 +25,6 @@ Three independent i18n layers, each using its ecosystem's canonical library:
 ```
 backend/src/i18n/
 ├── i18n.module.ts           NestJS module — registers resolvers
-├── fallback-translations.ts fallbackT() for unit-test context
 ├── i18n-locale.spec.ts      Resolution chain unit tests
 └── locales/
     ├── vi/
@@ -59,14 +58,13 @@ const msg = await this.i18n.t('errors.promotion_expired', { lang })
 const msg = await this.i18n.t('errors.promotion_min_order', { lang, args: { amount: 50000 } })
 ```
 
-For code that runs outside a request context (BullMQ processors, unit tests), use `fallbackT`:
+For code that runs outside a request context, pass the resolved locale explicitly and call `I18nService.t` with `lang`. Unit tests should use test-only stubs that read the real locale JSON files; production services must not silently fall back to hardcoded translation maps.
 
 ```typescript
-import { fallbackT } from '../i18n/fallback-translations'
-
-const msg = fallbackT('notifications.order_update_title')
-// with args
-const msg = fallbackT('notifications.order_update_body', { orderId: '123', event: 'accepted' })
+const msg = this.i18n.t('notifications.order_update_body', {
+  lang: job.data.locale,
+  args: { orderId: '123', event: 'accepted' },
+})
 ```
 
 ### Locale in Async Jobs
@@ -89,8 +87,7 @@ Processor reads `job.data.locale` — never infers from request context.
 1. Create `backend/src/i18n/locales/vi/<namespace>.json`
 2. Create matching `en/<namespace>.json` and `ja/<namespace>.json`
 3. Keys use snake_case. Template variables: `{varName}`.
-4. If keys need offline fallback, add entries to `fallback-translations.ts`.
-5. Run `npm run test` in `backend/` — `i18n-locale.spec.ts` validates all locale files have matching keys.
+4. Run `pnpm test` in `backend/` — `i18n-locale.spec.ts` validates service-required keys across locale files.
 
 ---
 
@@ -144,7 +141,7 @@ Text(l10n.orderStatusAccepted)
 ### File Layout
 
 ```
-packages/i18n/
+web/packages/i18n/
 └── messages/
     ├── vi.json
     ├── en.json
@@ -180,7 +177,7 @@ const t = await getTranslations('orders')
 
 ### Adding a New Message Key
 
-1. Add to `packages/i18n/messages/vi.json` (canonical).
+1. Add to `web/packages/i18n/messages/vi.json` (canonical).
 2. Add to `en.json` and `ja.json` with translations.
 3. TypeScript will error on missing keys at compile time if `next-intl` type generation is wired.
 
@@ -190,7 +187,7 @@ const t = await getTranslations('orders')
 
 1. **Backend**: create `backend/src/i18n/locales/<lang>/*.json` matching all existing namespaces. Add `<lang>` to `LocaleCode` enum in `backend/src/common/enums/`.
 2. **Mobile**: add `app_<lang>.arb`. Register locale in `MaterialApp.supportedLocales`. Run `flutter gen-l10n`.
-3. **Web**: add `packages/i18n/messages/<lang>.json`. Add locale to `routing.ts` `locales` array in both admin and restaurant apps.
+3. **Web**: add `web/packages/i18n/messages/<lang>.json`. Add locale to `routing.ts` `locales` array in both admin and restaurant apps.
 4. **Test**: run `backend` i18n spec to verify key parity. Run `flutter test` for mobile. Run `pnpm typecheck` for web.
 
 ---

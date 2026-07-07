@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-06. Remote cleanup has been rechecked at `64e46c795c9c15ae52bb0112f91e93a6f3851645`: `git ls-remote --heads origin` returns only `refs/heads/master`. The clean worktree still uses the local branch `codex/batch4-integration` for continuity, and that local branch is patch-identical to `origin/master`.
+Last audited: 2026-07-07. Remote cleanup has been rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`: `git ls-remote --heads origin` returns only `refs/heads/master`. The clean worktree still uses the local branch `codex/batch4-integration` for continuity and tracks `origin/master`; local hardening/docs commits may exist ahead of remote until deployment prerequisites are valid.
 
 This record documents the branch state used for Batch 4 salvage and cleanup decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -20,7 +20,7 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship | Disposition |
 |---|---:|---|---|
-| `origin/master` | `64e46c7` | Contains the tested Batch 4 integration work, tracking authorization fix, and Restaurant live delivery map. `git ls-remote --heads origin` returns only `refs/heads/master`. | Keep as the only live remote branch. |
+| `origin/master` | `118459e` | Contains the tested Batch 4 integration work, tracking authorization fix, Restaurant live delivery map, and validation-evidence docs refresh. `git ls-remote --heads origin` returns only `refs/heads/master`. | Keep as the only live remote branch. |
 
 `origin/codex/batch4-integration` was deleted only after `origin/master` and `origin/codex/batch4-integration` both pointed at `3857433` and `git rev-list --left-right --count origin/master...origin/codex/batch4-integration` returned `0 0`.
 
@@ -55,11 +55,11 @@ When those branches become available again, reconcile them with this workflow:
 
 ## Latest local evidence for merged Batch 4 worktree
 
-- Backend passed frozen install, Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (108 suites / 773 tests), and `pnpm build`.
-- Web passed frozen install, `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), and `pnpm build`.
+- Backend passed frozen install, Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 802 tests), and `pnpm build` before this hardening refresh. Current hardening targeted rerun: i18n/orders/promotions/tracking/drivers Jest suites passed (9 suites / 134 tests), plus backend `pnpm typecheck` and `pnpm lint`.
+- Web passed frozen install, `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and `pnpm build` before this hardening refresh. Current hardening targeted rerun: Admin driver-map hook/marker Vitest passed (2 files / 12 tests), plus Admin typecheck and lint.
 - Docker Compose rebuilt Backend/Admin/Restaurant from the current source and all three containers were healthy. Health endpoints returned OK for backend, Admin, and Restaurant.
 - Playwright passed Chromium + Firefox together: 70/70 tests. Coverage includes admin dashboard, Restaurant order management, customer order flow, realtime tracking, tenant isolation, visual contract, and the axe serious/critical smoke check. The verified local run used IPv6 loopback URLs because a separate local Node process was listening on `127.0.0.1:3000`.
-- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (168 tests), and `flutter build apk --debug`.
+- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (225 tests), targeted route/heatmap tests, and `flutter build apk --debug` before this hardening refresh. Current hardening targeted rerun: background location and trip-route provider tests passed (19 tests), plus `flutter analyze`.
 - OpenAPI/Spectral lint passed via `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
 - High-confidence tracked-file and staged-diff secret scans returned no live provider token or private key matches. `gitleaks` is not installed in the local PATH, so run Gitleaks again in CI when Actions auth is restored.
 
@@ -67,4 +67,4 @@ When those branches become available again, reconcile them with this workflow:
 
 GitHub should show only one remote branch: `master`. The former remote `codex/batch4-integration` branch was deleted after it was patch-equivalent to `master`.
 
-Batch 4 is not production-deployed yet. Remote GitHub Actions for the current master head have not produced fresh green workflow evidence because the user reported token/auth access issues. Deploy readiness is also blocked because Supabase CLI/auth is not available locally and this repo is not linked to a Vercel project. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after Actions access is restored and before any Supabase or Vercel deployment.
+Batch 4 is not production-deployed yet. Remote GitHub Actions for the current master head have not produced fresh green workflow evidence because the user reported token/auth access issues. The Vercel project `food-delivery-app` now exists and is linked, but its production env list is empty and Supabase CLI/auth is not available locally. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after Actions access is restored and before any Supabase or Vercel deployment.

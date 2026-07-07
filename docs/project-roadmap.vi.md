@@ -12,7 +12,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 
 ## Đã landing trên `master`
 
-- `origin/master` đã verify local tại `64e46c795c9c15ae52bb0112f91e93a6f3851645`; `git ls-remote --heads origin` hiện chỉ có `master`. Branch local `codex/batch4-integration` vẫn dùng cho worktree continuity và tracking `origin/master`.
+- `origin/master` đã được recheck local tại `118459e539eecb2dbd61e033431b7f4b5104f0e0`; `git ls-remote --heads origin` hiện chỉ có `master`. Branch local `codex/batch4-integration` vẫn dùng cho worktree continuity và tracking `origin/master`.
 - Web response contract `{ success: true, data, meta? }` đã document.
 - Error contract RFC 7807 Problem Details đã document.
 - OpenAPI validation workflow và Spectral rules đã thêm.
@@ -26,7 +26,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - Bản đồ tracking customer/driver/Restaurant hiện dùng `routePolyline` thật từ backend, hydrate snapshot REST `/orders/:id/tracking` trước realtime, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff, xoá route geometry stale khi đổi phase hoặc snapshot không có route, normalize GPS metadata của driver theo contract km/h của backend và không tự bịa ETA đường thẳng khi route provider không khả dụng. Event `driver:assigned` ban đầu để `etaMinutes` null cho tới khi tracking có route Google/OSRM thật.
 - Dispatch hiện enqueue job có tọa độ nhà hàng và attempt metadata, xử lý an toàn legacy malformed queue jobs và parse đúng ioredis `GEOSEARCH WITHDIST` tuple rows.
 - Shared tag input của Admin không còn tự sinh placeholder tiếng Anh mặc định; caller phải truyền placeholder đã localize.
-- Evidence local mới nhất cho Batch 4 merged worktree: backend Prisma validate/typecheck/lint/build và Jest (108 suites / 773 tests), web typecheck/lint/build và Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, axe serious/critical smoke, Flutter tests mobile (168), Android debug APK build, OpenAPI Spectral lint và fallback secret scan đều pass.
+- Evidence local mới nhất cho Batch 4 merged worktree: backend Prisma validate/typecheck/lint/build và Jest (110 suites / 802 tests), web typecheck/lint/build và Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, axe serious/critical smoke, Flutter tests mobile (225), Android debug APK build, OpenAPI Spectral lint và high-confidence secret scan đều pass trước hardening refresh này. Targeted rerun mới pass backend 9 suites / 134 tests, Admin 2 files / 12 tests, mobile 19 tests, backend/admin typecheck, backend/admin lint và Flutter analyze.
 - Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate. CI head hiện tại bị GitHub token/auth hoặc billing chặn trước khi jobs start.
 
 ### Mobile

@@ -12,7 +12,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 
 ## `master` に landed
 
-- `origin/master` は local で `64e46c795c9c15ae52bb0112f91e93a6f3851645` として verified です。`git ls-remote --heads origin` は `master` のみを返します。Local `codex/batch4-integration` branch は worktree continuity のため残り、`origin/master` を tracking しています。
+- `origin/master` は local で `118459e539eecb2dbd61e033431b7f4b5104f0e0` として recheck 済みです。`git ls-remote --heads origin` は `master` のみを返します。Local `codex/batch4-integration` branch は worktree continuity のため残り、`origin/master` を tracking しています。
 - Web response contract `{ success: true, data, meta? }` を document 済み。
 - Error contract RFC 7807 Problem Details を document 済み。
 - OpenAPI validation workflow と Spectral rules を追加済み。
@@ -21,12 +21,12 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - SePay runtime は必須設定がないと successful intent を捏造しません。
 - Vietnamese AI chat fast paths に focused tests を追加済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は 2026-07-06 に local 再確認済みです。`flutter pub get --enforce-lockfile`、`flutter analyze` clean、`flutter test` 168 tests passed、`flutter build apk --debug` が pass。GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
+- Mobile Flutter gate は local 再確認済みです。`flutter pub get --enforce-lockfile`、`flutter analyze` clean、`flutter test` 225 tests passed、`flutter build apk --debug` が pass。Current tracking hardening targeted mobile rerun は 19 tests と `flutter analyze` が pass。GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
 - Mobile runtime UI は touched dispatch/cancel flows の targeted scanner 上で hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。
 - Customer/driver/Restaurant tracking maps は backend-routed `routePolyline` を使い、realtime 前に REST snapshot `/orders/:id/tracking` を hydrate し、telemetry trail と planned route を分離し、pickup/dropoff route phase を扱い、phase 変更または route-less snapshot で stale route geometry を clear し、driver GPS metadata を backend の km/h contract に normalize します。Route provider が使えない場合も straight-line ETA minutes を捏造しません。初期 `driver:assigned` event は tracking が Google/OSRM route を得るまで `etaMinutes` を null のままにします。
 - Dispatch は restaurant coordinates と attempt metadata を含む route-aware driver jobs を enqueue し、legacy malformed queue jobs を安全に扱い、ioredis `GEOSEARCH WITHDIST` tuple rows を crash せず parse します。
 - Admin shared tag input は default English placeholder copy を生成しません。Caller が localized placeholder を渡す必要があります。
-- Batch 4 merged worktree の最新 local evidence: backend Prisma validate/typecheck/lint/build と Jest (108 suites / 773 tests)、web typecheck/lint/build と Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests)、Playwright Chromium + Firefox 70/70、Docker health checks、tenant isolation、visual contract、axe serious/critical smoke、mobile Flutter tests (168)、Android debug APK build、OpenAPI Spectral lint、fallback secret scan が pass。
+- Batch 4 merged worktree の最新 local evidence: backend Prisma validate/typecheck/lint/build と Jest (110 suites / 802 tests)、web typecheck/lint/build と Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests)、Playwright Chromium + Firefox 70/70、Docker health checks、tenant isolation、visual contract、axe serious/critical smoke、mobile Flutter tests (225)、Android debug APK build、OpenAPI Spectral lint、high-confidence secret scan が pass。Current targeted hardening reruns は backend 9 suites / 134 tests、Admin 2 files / 12 tests、mobile 19 tests、backend/admin typecheck、backend/admin lint、Flutter analyze が pass。
 - Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head CI は GitHub token/auth または billing status により job start 前に blocked されています。
 
 ### Mobile

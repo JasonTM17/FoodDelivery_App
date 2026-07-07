@@ -6,7 +6,7 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 Integration branch が clean で、push/review/verification が完了し、すべての gate が green になってから deploy します。dirty root worktree、漏えい済み key、赤い Batch 4 gate がある状態では deploy しません。
 
-2026-07-06 時点の Batch 4 状態: `origin/master` は `64e46c795c9c15ae52bb0112f91e93a6f3851645` で、`git ls-remote --heads origin` は `refs/heads/master` のみを返します。この head で backend、web、Docker、Playwright Chromium/Firefox、mobile、OpenAPI、compose、fallback secret scan の local gates は pass 済みです。詳細は [Batch 4 release report](batch4-release-report.md) を参照してください。これは local verification evidence であり、production deployment approval ではありません。Supabase と Vercel の deploy は、GitHub Actions access が復旧し、current-head remote checks が green になり、production secrets が rotate 済みで有効になり、Supabase CLI/auth が利用可能になり、この repo が対象 Vercel projects に link されるまで blocked です。
+2026-07-07 時点の Batch 4 状態: remote cleanup は `118459e539eecb2dbd61e033431b7f4b5104f0e0` で recheck 済みで、`git ls-remote --heads origin` は `refs/heads/master` のみを返します。validated code line では backend、web、Docker、Playwright Chromium/Firefox、mobile、OpenAPI、compose、high-confidence secret scan の local gates は pass 済みです。詳細は [Batch 4 release report](batch4-release-report.md) を参照してください。これは local verification evidence であり、production deployment approval ではありません。Vercel project `food-delivery-app` は link 済みで Admin app 用の root/build settings も修正済みですが、production env は空です。Supabase と Vercel の deploy は、GitHub Actions access が復旧し、current-head remote checks が green になり、production secrets が rotate 済みで有効になり、Supabase CLI/auth が利用可能になり、有効な backend/API URL と Vercel env が揃うまで blocked です。
 
 ## Local Docker
 

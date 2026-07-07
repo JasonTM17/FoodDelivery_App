@@ -8,6 +8,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed (Batch 4 — Web/Backend Integration)
+- Removed backend runtime hardcoded i18n fallback translations; services now require `I18nService`, while tests use a test-only locale JSON stub.
+- Hardened driver live tracking so stale buffered GPS pings cannot overwrite live map/ETA state.
+- Guarded ETA recompute jobs against stale route phases before persisting or emitting route updates.
+- Marked admin driver-map markers stale after prolonged refresh failure and clear the stale state on fresh realtime updates.
+- Blocked production execution of demo Prisma seed data and replaced the production seed script with migration-only bootstrap.
+- Marked driver persisted route geometry as estimated/planned instead of replaying it as actual GPS movement.
 - Registered the backend AI module so `POST /ai/chat` is available in the runtime app.
 - Changed `GET /driver/incentives` to fail explicitly until a durable campaign source exists instead of returning fake-empty campaign data.
 - Hardened referral snapshots so generated codes are returned only after persistence, and referral stat database errors are no longer masked as zero totals.
@@ -58,7 +64,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `User.preferredLocale` field — `LocaleCode` enum (`vi | en | ja`), default `vi`
 - Accept-Language → cookie → `User.preferredLocale` resolution chain
 - Locale threaded into BullMQ notification fanout jobs via explicit `job.data.locale`
-- `fallbackT` utility for offline-safe translation outside request context
+- Initial offline translation helper for request-external contexts; later Batch 4 hardening removed runtime hardcoded fallback maps in favor of required `I18nService` injection.
 - Flutter `flutter_localizations` with ARB files for vi/en/ja on customer + driver apps
 - Locale provider + locale switcher widget (Flutter)
 - `next-intl` routing with `[locale]` URL segments on admin and restaurant web apps

@@ -6,7 +6,9 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
 
-Current Batch 4 status on 2026-07-06: `origin/master` is `64e46c795c9c15ae52bb0112f91e93a6f3851645`, and `git ls-remote --heads origin` returns only `refs/heads/master`. Local backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose, and fallback secret-scan gates passed for this head; see [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, production secrets are rotated/valid, Supabase CLI/auth is available, and this repo is linked to the intended Vercel projects.
+Current Batch 4 status on 2026-07-07: remote cleanup was rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`, where `git ls-remote --heads origin` returned only `refs/heads/master`. Local backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose, and high-confidence secret-scan gates passed for the validated code line before this hardening refresh; see [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval.
+
+The Vercel project `food-delivery-app` now exists and is linked to the GitHub repo. Its project settings were corrected from repo root/`Other` to Admin's monorepo app root `web/apps/admin` with Next.js build settings. Deployment is still intentionally blocked until required production env vars are present, current-head checks are green, pasted keys are rotated, Supabase CLI/auth is available, and backend/API production endpoints are valid.
 
 ## Local Docker Stack
 
@@ -42,13 +44,14 @@ Use provider secret managers, not committed files:
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
 | Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Admin web public env | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
 | Deploy CLIs | Vercel token, Supabase access token |
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
 
 Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
 
-Latest deploy-readiness check: Vercel CLI auth is present, but this repository is not linked to a Vercel project and the account project list did not show FoodFlow projects. Supabase CLI was not installed in the local PATH. No production deployment was performed.
+Latest deploy-readiness check: Vercel CLI auth is present and `food-delivery-app` is linked, but `vercel env ls --format json` returned an empty `envs` array. Supabase CLI was not installed in the local PATH. No production deployment was performed.
 
 ## Supabase Deployment
 
@@ -85,6 +88,17 @@ Recommended project mapping:
 |---|---|---|
 | FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
 | FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+
+Current Vercel Admin project setting:
+
+| Setting | Value |
+|---|---|
+| Project | `food-delivery-app` |
+| Root Directory | `web/apps/admin` |
+| Framework | Next.js |
+| Install Command | `cd ../.. && pnpm install --frozen-lockfile` |
+| Build Command | `cd ../.. && pnpm --filter foodflow-admin build` |
+| Output Directory | `.next` |
 
 Required public env:
 
