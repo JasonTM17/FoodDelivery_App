@@ -339,8 +339,11 @@ export class OrdersService {
   }
 
   async getRestaurantOrders(userId: string, status?: string) {
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId }, select: { restaurantId: true } })
-    if (!profile) return { orders: [], meta: { page: 1, limit: 50, total: 0 } }
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+      select: { restaurantId: true },
+    })
+    if (!profile) throw new NotFoundException('RESTAURANT_PROFILE_NOT_FOUND')
 
     const where: Prisma.OrderWhereInput = { restaurantId: profile.restaurantId }
     if (status) where.status = status as PrismaOrderStatus
@@ -358,7 +361,10 @@ export class OrdersService {
   }
 
   async getRestaurantOrderDetail(orderId: string, userId: string) {
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+      select: { restaurantId: true },
+    })
     if (!profile) throw new NotFoundException('ORDER_NOT_FOUND')
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, restaurantId: profile.restaurantId },

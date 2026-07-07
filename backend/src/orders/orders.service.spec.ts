@@ -312,6 +312,21 @@ describe('OrdersService', () => {
     })
   })
 
+  describe('getRestaurantOrders()', () => {
+    it('fails closed instead of returning an empty order list when the active restaurant profile is missing', async () => {
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(service.getRestaurantOrders('restaurant-user-1'))
+        .rejects.toThrow(NotFoundException)
+
+      expect(mockPrisma.restaurantProfile.findFirst).toHaveBeenCalledWith({
+        where: { userId: 'restaurant-user-1', isActive: true },
+        select: { restaurantId: true },
+      })
+      expect(mockPrisma.order.findMany).not.toHaveBeenCalled()
+    })
+  })
+
   describe('placeOrder()', () => {
     beforeEach(() => {
       mockPrisma.cart.findUnique.mockResolvedValue({
