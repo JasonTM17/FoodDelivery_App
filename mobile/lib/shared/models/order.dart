@@ -256,6 +256,7 @@ class OrderModel {
       'promoCode': promoCode,
     };
   }
+
   bool get isActive {
     return !['delivered', 'cancelled'].contains(status);
   }
@@ -281,26 +282,32 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    final quantity = (json['quantity'] as num?)?.toInt() ?? 1;
+    final unitPrice = _requiredDoubleFrom([
+      json['unitPrice'],
+      json['unit_price'],
+      json['price'],
+    ], 'orderItem.unitPrice');
+    final totalPrice =
+        (json['totalPrice'] as num?)?.toDouble() ??
+        (json['total_price'] as num?)?.toDouble() ??
+        unitPrice * quantity;
+
     return OrderItem(
-      menuItemId:
-          json['menuItemId'] as String? ??
-          json['menu_item_id'] as String? ??
-          json['item_id'] as String? ??
-          '',
-      name:
-          json['name'] as String? ??
-          json['nameSnapshot'] as String? ??
-          json['name_snapshot'] as String? ??
-          '',
-      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      unitPrice:
-          (json['unitPrice'] as num?)?.toDouble() ??
-          (json['unit_price'] as num?)?.toDouble() ??
-          0.0,
-      totalPrice:
-          (json['totalPrice'] as num?)?.toDouble() ??
-          (json['price'] as num?)?.toDouble() ??
-          0.0,
+      menuItemId: _requiredStringFrom([
+        json['menuItemId'],
+        json['menu_item_id'],
+        json['item_id'],
+        json['id'],
+      ], 'orderItem.menuItemId'),
+      name: _requiredStringFrom([
+        json['name'],
+        json['nameSnapshot'],
+        json['name_snapshot'],
+      ], 'orderItem.name'),
+      quantity: quantity,
+      unitPrice: unitPrice,
+      totalPrice: totalPrice,
       selectedOptions:
           (json['selectedOptions'] ?? json['selected_options']) != null
           ? ((json['selectedOptions'] ?? json['selected_options'])

@@ -159,6 +159,13 @@ void main() {
             ..['statusHistory'] = [
               {'timestamp': '2026-07-05T10:01:00.000Z'},
             ];
+      final missingItemPrice =
+          Map<String, dynamic>.from(
+              _orderPayload(id: 'order-active', status: 'preparing'),
+            )
+            ..['orderItems'] = [
+              {'menuItemId': 'menu-1', 'nameSnapshot': 'Pho bo', 'quantity': 1},
+            ];
 
       expect(
         () => OrderModel.fromJson(missingDeliveryFee),
@@ -176,6 +183,30 @@ void main() {
         () => OrderModel.fromJson(missingTimelineStatus),
         throwsA(isA<FormatException>()),
       );
+      expect(
+        () => OrderModel.fromJson(missingItemPrice),
+        throwsA(isA<FormatException>()),
+      );
+    },
+  );
+
+  test(
+    'OrderItem computes line total from backend unit price and quantity',
+    () {
+      final order = OrderModel.fromJson(
+        _orderPayload(id: 'order-active', status: 'preparing')
+          ..['orderItems'] = [
+            {
+              'menuItemId': 'menu-1',
+              'nameSnapshot': 'Pho bo',
+              'quantity': 2,
+              'unitPrice': 95000,
+            },
+          ],
+      );
+
+      expect(order.items.single.unitPrice, 95000);
+      expect(order.items.single.totalPrice, 190000);
     },
   );
 }
