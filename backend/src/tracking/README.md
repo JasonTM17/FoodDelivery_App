@@ -16,6 +16,7 @@ Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSo
 - `driver_assigned` / `driver_arriving_restaurant` use `pickup` phase and route the driver to the restaurant.
 - `picked_up` / `delivering` use `dropoff` phase and route the driver to the customer address.
 - Redis route keys include the phase (`route:<orderId>:pickup` or `route:<orderId>:dropoff`) so a restaurant-bound polyline is never reused as the customer-bound route.
+- Provider routes persist to `delivery_tasks` by phase: pickup routes update `pickup_distance_km`, dropoff routes update `delivery_distance_km`, and both phases update real `duration_in_traffic` + `route_geojson`.
 - `delivery:eta_updated` includes `{ orderId, etaMinutes, source, degraded, routePolyline, routePhase }`; mobile must draw `routePolyline` only when present and keep telemetry trail separate.
 
 ## Env vars

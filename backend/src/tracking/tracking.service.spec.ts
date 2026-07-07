@@ -218,6 +218,43 @@ describe('TrackingService', () => {
       expect(result).toEqual(mockRoute)
     })
 
+    it('persists provider distance, duration and geometry to the delivery task by phase', async () => {
+      const orderId = '10000000-0000-0000-0000-000000000001'
+
+      await (service as unknown as {
+        persistRouteToOrder: (
+          orderId: string,
+          phase: 'pickup' | 'dropoff',
+          route: typeof mockRoute,
+        ) => Promise<void>
+      }).persistRouteToOrder(orderId, 'dropoff', mockRoute)
+
+      expect(mockPrisma.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: {
+          routePolyline: mockRoute.polyline,
+          routeWaypoints: mockRoute.waypoints,
+        },
+      })
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+      const [query] = mockPrisma.$executeRaw.mock.calls[0]
+      expect(query.sql).toContain('UPDATE delivery_tasks')
+      expect(query.sql).toContain('delivery_distance_km')
+      expect(query.values).toEqual(
+        expect.arrayContaining([5, 'pickup', 900, 'dropoff', orderId]),
+      )
+      const routeJson = query.values.find(
+        (value: unknown) =>
+          typeof value === 'string' && value.includes('"provider"'),
+      ) as string
+      expect(JSON.parse(routeJson)).toMatchObject({
+        provider: 'google',
+        polyline: 'abcd',
+        distanceMeters: 5000,
+        durationSeconds: 900,
+      })
+    })
+
     it('keeps pickup and dropoff route cache entries separate', async () => {
       mockEtaCache.getRoute.mockResolvedValueOnce(null)
       mockDirectionsApi.fetchRoute.mockResolvedValueOnce(mockRoute)

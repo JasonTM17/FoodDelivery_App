@@ -110,7 +110,7 @@ export class TrackingService implements OnModuleDestroy {
       )
       await this.etaCache.setRoute(cacheKey, route)
       // Persist to DB non-blocking; failure is logged, not thrown
-      void this.persistRouteToOrder(orderId, route)
+      void this.persistRouteToOrder(orderId, phase, route)
       return route
     } catch (err) {
       this.logger.error(`Route fetch failed for order ${orderId}: ${(err as Error).message}`)
@@ -224,7 +224,7 @@ export class TrackingService implements OnModuleDestroy {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private async persistRouteToOrder(orderId: string, route: RouteResult): Promise<void> {
+  private async persistRouteToOrder(orderId: string, phase: DeliveryRoutePhase, route: RouteResult): Promise<void> {
     try {
       await this.prisma.order.update({
         where: { id: orderId },
@@ -233,9 +233,41 @@ export class TrackingService implements OnModuleDestroy {
           routeWaypoints: route.waypoints as unknown as Prisma.InputJsonValue,
         },
       })
+      await this.persistRouteToDeliveryTask(orderId, phase, route)
     } catch (err) {
       this.logger.warn(`Failed to persist route for order ${orderId}: ${(err as Error).message}`)
     }
+  }
+
+  private async persistRouteToDeliveryTask(orderId: string, phase: DeliveryRoutePhase, route: RouteResult): Promise<void> {
+    const distanceKm = Number((route.distanceMeters / 1000).toFixed(2))
+    const otherPhase: DeliveryRoutePhase = phase === 'pickup' ? 'dropoff' : 'pickup'
+    const distanceUpdate = phase === 'pickup'
+      ? Prisma.sql`pickup_distance_km = CAST(${distanceKm} AS numeric)`
+      : Prisma.sql`delivery_distance_km = CAST(${distanceKm} AS numeric)`
+    const routeJson = JSON.stringify({
+      provider: route.provider,
+      polyline: route.polyline,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+      waypoints: route.waypoints,
+    })
+
+    await this.prisma.$executeRaw(Prisma.sql`
+      UPDATE delivery_tasks
+      SET
+        ${distanceUpdate},
+        duration_in_traffic =
+          COALESCE((route_geojson #>> ARRAY[CAST(${otherPhase} AS text), 'durationSeconds'])::int, 0)
+          + CAST(${route.durationSeconds} AS int),
+        route_geojson = jsonb_set(
+          COALESCE(route_geojson, '{}'::jsonb),
+          ARRAY[CAST(${phase} AS text)],
+          CAST(${routeJson} AS jsonb),
+          true
+        )
+      WHERE order_id = CAST(${orderId} AS uuid)
+    `)
   }
 
   private async flush(): Promise<void> {
