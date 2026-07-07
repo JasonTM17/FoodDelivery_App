@@ -7,6 +7,7 @@ import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
 import { Prisma } from '@prisma/client'
+import { OrdersGateway } from '../orders/orders.gateway'
 
 describe('DispatchService', () => {
   let service: DispatchService
@@ -56,6 +57,10 @@ describe('DispatchService', () => {
     broadcastToOrder: jest.fn(),
   }
 
+  const mockOrdersGateway = {
+    broadcastToOrder: jest.fn(),
+  }
+
   const mockPrisma = {
     order: { findUnique: jest.fn(), update: jest.fn(), findUniqueOrThrow: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
@@ -72,6 +77,7 @@ describe('DispatchService', () => {
       providers: [
         DispatchService,
         { provide: DispatchGateway, useValue: mockGateway },
+        { provide: OrdersGateway, useValue: mockOrdersGateway },
         { provide: PrismaService, useValue: mockPrisma },
         { provide: 'REDIS_CLIENT', useValue: mockRedis },
         { provide: DriverScoringService, useValue: mockScoring },
@@ -193,9 +199,10 @@ describe('DispatchService', () => {
     it('calls $transaction and emits order:auto_cancelled event', async () => {
       await service.autoCancelOrder('order-1')
       expect(mockPrisma.$transaction).toHaveBeenCalled()
-      expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(
+      expect(mockOrdersGateway.broadcastToOrder).toHaveBeenCalledWith(
         'order-1', 'order:auto_cancelled', expect.objectContaining({ orderId: 'order-1' }),
       )
+      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalled()
     })
   })
 
@@ -243,11 +250,12 @@ describe('DispatchService', () => {
         }),
       })
       expect(mockGateway.sendAssignedOrder).toHaveBeenCalledWith('driver-1', { orderId: 'order-1' })
-      expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(
+      expect(mockOrdersGateway.broadcastToOrder).toHaveBeenCalledWith(
         'order-1',
         'driver:assigned',
         { driverId: 'driver-1', etaMinutes: null },
       )
+      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalled()
     })
 
     it('does not commit DB assignment when Redis driver assignment fails', async () => {
@@ -288,7 +296,7 @@ describe('DispatchService', () => {
 
       expect(mockPrisma.$transaction).not.toHaveBeenCalled()
       expect(mockGateway.sendAssignedOrder).not.toHaveBeenCalled()
-      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalledWith(
+      expect(mockOrdersGateway.broadcastToOrder).not.toHaveBeenCalledWith(
         'order-1',
         'driver:assigned',
         expect.any(Object),

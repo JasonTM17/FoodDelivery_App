@@ -64,10 +64,6 @@ export class DispatchGateway implements OnGatewayConnection {
     return false
   }
 
-  broadcastToOrder(orderId: string, event: string, data: Record<string, unknown>): void {
-    this.server.to(`order:${orderId}`).emit(event, data)
-  }
-
   emitToAdmins(event: string, data: Record<string, unknown>): void {
     this.server.emit(event, data)
   }

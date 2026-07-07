@@ -8,6 +8,7 @@ import { DispatchMetrics } from './dispatch.metrics'
 import Redis from 'ioredis'
 import { Prisma } from '@prisma/client'
 import { type DeliveryRoutePhase, routeCacheKey } from '../tracking/tracking.service'
+import { OrdersGateway } from '../orders/orders.gateway'
 
 interface DriverCandidate {
   driverId: string
@@ -27,6 +28,7 @@ export class DispatchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly dispatchGateway: DispatchGateway,
+    private readonly ordersGateway: OrdersGateway,
     private readonly scoring: DriverScoringService,
     private readonly cooldown: CooldownService,
     private readonly surge: SurgePricingService,
@@ -141,7 +143,7 @@ export class DispatchService {
       this.prisma.order.update({ where: { id: orderId }, data: { status: 'cancelled' } }),
       this.prisma.orderStatusHistory.create({ data: { orderId, status: 'cancelled', changedBy: 'system' } }),
     ])
-    this.dispatchGateway.broadcastToOrder(orderId, 'order:auto_cancelled', { orderId, reason: 'no_driver_available' })
+    this.ordersGateway.broadcastToOrder(orderId, 'order:auto_cancelled', { orderId, reason: 'no_driver_available' })
     this.logger.warn(`Order ${orderId} auto-cancelled: no driver found after max attempts`)
   }
 
@@ -239,7 +241,7 @@ export class DispatchService {
       throw err
     }
     this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
-    this.dispatchGateway.broadcastToOrder(orderId, 'driver:assigned', {
+    this.ordersGateway.broadcastToOrder(orderId, 'driver:assigned', {
       driverId: candidate.driverId,
       etaMinutes: null,
     })

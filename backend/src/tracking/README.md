@@ -22,8 +22,8 @@ Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSo
 
 | Name | Required | Default | Description |
 |---|---|---|---|
-| `GOOGLE_MAPS_API_KEY` | no | — | Directions API key (preferred) |
-| `OSRM_URL` | no | `https://router.project-osrm.org` | Fallback router |
+| `GOOGLE_MAPS_API_KEY` | production | — | Directions API key (preferred) |
+| `OSRM_URL` | production | `https://router.project-osrm.org` in local/test only | Owned fallback router; production rejects the public OSRM demo |
 | `LOCATION_FLUSH_INTERVAL_MS` | no | `15000` | Batch DB flush cadence |
 | `ETA_CACHE_TTL_SEC` | no | `120` | Redis TTL for ETA snapshot |
 | `ROUTE_DEVIATION_THRESHOLD_M` | no | `100` | Trigger recompute if driver off route > N meters |
