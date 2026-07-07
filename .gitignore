@@ -175,5 +175,3 @@ session-state*.json
 *.dump
 *.backup
 backend/coverage-orders/
-
-.vercel

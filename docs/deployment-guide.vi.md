@@ -46,7 +46,7 @@ Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history ph
 
 Production config không phải secret nhưng bắt buộc: cấu hình `DELIVERY_BASE_FEE_VND` theo base delivery fee đã duyệt. Backend boot validation sẽ chặn khi thiếu pricing config để không tạo đơn với phí MVP hardcoded.
 
-Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth, nhưng repo chưa link tới Vercel project và danh sách project của account chưa có FoodFlow. Supabase CLI chưa có trong local PATH. Chưa deploy production.
+Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth và project `food-delivery-app` đã link/config cho Admin, nhưng production env vẫn trống. Supabase CLI chạy được qua `npx supabase`, nhưng chưa có `SUPABASE_ACCESS_TOKEN`/project auth và chưa có production `DATABASE_URL`/`DIRECT_URL`. Chưa deploy production.
 
 ## Supabase
 

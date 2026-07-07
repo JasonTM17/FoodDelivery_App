@@ -131,10 +131,10 @@ pnpm --filter foodflow-admin typecheck
 pnpm --filter foodflow-admin lint
 pnpm --filter foodflow-admin test
 pnpm --filter foodflow-admin build
-pnpm --filter foodflow-restaurant typecheck
-pnpm --filter foodflow-restaurant lint
-pnpm --filter foodflow-restaurant test
-pnpm --filter foodflow-restaurant build
+pnpm --filter restaurant typecheck
+pnpm --filter restaurant lint
+pnpm --filter restaurant test
+pnpm --filter restaurant build
 pnpm test:e2e --project=chromium --project=firefox
 ```
 
