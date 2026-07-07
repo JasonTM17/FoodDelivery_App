@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { KycStatus, RestaurantApprovalStatus } from '@prisma/client'
+import type { Promotion, PromotionUsage } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { OrdersService } from '../orders/orders.service'
 
@@ -151,6 +152,47 @@ export class AdminResourcesService {
     }
   }
 
+  async getUserVouchers(id: string) {
+    await this.assertUser(id)
+    const now = new Date()
+    const [promotions, usageCounts, orderCount, usages] = await Promise.all([
+      this.prisma.promotion.findMany({
+        where: {
+          isActive: true,
+          status: 'active',
+          startsAt: { lte: now },
+          expiresAt: { gt: now },
+        },
+        orderBy: { expiresAt: 'asc' },
+        take: 100,
+      }),
+      this.prisma.promotionUsage.groupBy({
+        by: ['promotionId'],
+        where: { userId: id },
+        _count: { _all: true },
+      }),
+      this.prisma.order.count({ where: { customerId: id } }),
+      this.prisma.promotionUsage.findMany({
+        where: { userId: id },
+        include: { promotion: true, order: { select: { orderCode: true } } },
+        orderBy: { usedAt: 'desc' },
+        take: 100,
+      }),
+    ])
+    const usageByPromotion = new Map(
+      usageCounts.map(row => [row.promotionId, row._count._all]),
+    )
+    const owned = promotions
+      .filter(promotion => promotion.currentUsageCount < promotion.usageLimit)
+      .filter(promotion => !promotion.firstOrderOnly || orderCount === 0)
+      .filter(promotion => promotion.maxPerUser == null || (usageByPromotion.get(promotion.id) ?? 0) < promotion.maxPerUser)
+      .map(promotion => serializeVoucher(promotion, null))
+    const used = usages.map(usage => serializeVoucher(usage.promotion, usage))
+    const totalSaved = usages.reduce((sum, usage) => sum + Number(usage.discountAmount), 0)
+
+    return { owned, used, totalSaved }
+  }
+
   async getUserRefunds(id: string) {
     await this.assertUser(id)
     return this.prisma.payment.findMany({
@@ -251,4 +293,23 @@ function serializeOrder<T extends object>(order: T) {
 }
 function serializePromotion<T extends { value: unknown; minOrderAmount: unknown; maxDiscount: unknown }>(promotion: T) {
   return { ...promotion, value: Number(promotion.value), minOrderAmount: Number(promotion.minOrderAmount), maxDiscount: promotion.maxDiscount == null ? null : Number(promotion.maxDiscount) }
+}
+
+function serializeVoucher(
+  promotion: Promotion,
+  usage: (PromotionUsage & { order?: { orderCode: string } | null }) | null,
+) {
+  return {
+    id: usage ? usage.id : promotion.id,
+    promotionId: promotion.id,
+    code: promotion.code,
+    description: promotion.description ?? promotion.name ?? promotion.code,
+    discountType: promotion.type,
+    discountValue: Number(promotion.value),
+    minOrder: Number(promotion.minOrderAmount),
+    maxDiscount: promotion.maxDiscount == null ? 0 : Number(promotion.maxDiscount),
+    validUntil: promotion.expiresAt.toISOString(),
+    usedAt: usage?.usedAt.toISOString() ?? null,
+    orderCode: usage?.order?.orderCode,
+  }
 }

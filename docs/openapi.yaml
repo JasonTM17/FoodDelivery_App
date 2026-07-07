@@ -4898,8 +4898,8 @@ paths:
   /admin/users/{userId}/vouchers:
     get:
       tags: [analytics]
-      summary: Get voucher wallet availability for one user
-      description: Returns an explicit unavailable contract until a voucher wallet model is added; the backend does not synthesize voucher rows.
+      summary: Get voucher and promotion usage for one user
+      description: Returns currently usable persisted promotions and real promotion usage history for the user. Empty arrays mean no matching persisted promotions/usages; no placeholder voucher rows are synthesized.
       operationId: admin_getUserVouchers
       x-foo-actor: admin
       parameters:
@@ -4909,16 +4909,49 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200":
-          description: "Voucher wallet status"
+          description: "User voucher and promotion usage summary"
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  available: { type: boolean, const: false }
-                  vouchers: { type: array, maxItems: 0, items: { type: object } }
-                  reason: { type: string, enum: [VOUCHER_WALLET_NOT_MODELLED] }
-                required: [available, vouchers, reason]
+                  owned:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        promotionId: { type: string, format: uuid }
+                        code: { type: string }
+                        description: { type: string }
+                        discountType: { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
+                        discountValue: { type: number }
+                        minOrder: { type: number }
+                        maxDiscount: { type: number }
+                        validUntil: { type: string, format: date-time }
+                        usedAt: { type: string, format: date-time, nullable: true }
+                        orderCode: { type: string, nullable: true }
+                      required: [id, promotionId, code, description, discountType, discountValue, minOrder, maxDiscount, validUntil, usedAt]
+                  used:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        promotionId: { type: string, format: uuid }
+                        code: { type: string }
+                        description: { type: string }
+                        discountType: { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
+                        discountValue: { type: number }
+                        minOrder: { type: number }
+                        maxDiscount: { type: number }
+                        validUntil: { type: string, format: date-time }
+                        usedAt: { type: string, format: date-time, nullable: true }
+                        orderCode: { type: string, nullable: true }
+                      required: [id, promotionId, code, description, discountType, discountValue, minOrder, maxDiscount, validUntil, usedAt]
+                  totalSaved: { type: number }
+                required: [owned, used, totalSaved]
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/refunds:
     get:

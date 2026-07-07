@@ -259,6 +259,12 @@ All orders with filters and pagination.
 ### GET /admin/users
 User management list.
 
+### GET /admin/users/:id/vouchers
+Get currently usable persisted promotions and real promotion usage for one user. Empty `owned` or `used` arrays mean no matching promotion rows or usage rows exist; the backend does not synthesize voucher placeholders.
+```
+Response: { owned: Voucher[], used: VoucherUsage[], totalSaved }
+```
+
 ### PATCH /admin/users/:id/status
 Ban or unban user.
 
