@@ -286,6 +286,7 @@
   "driverDashboardToday": "Hôm nay",
   "driverDashboardOrders": "Đơn gần đây",
   "driverDashboardNoOrders": "Chưa có đơn hàng nào",
+  "driverActiveOrderTitle": "Đơn đang thực hiện",
   "driverStatEarnings": "Thu nhập",
   "driverStatOnline": "Online",
   "driverStatusTitle": "Trạng thái hoạt động",

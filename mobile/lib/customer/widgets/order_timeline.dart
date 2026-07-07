@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/models/order.dart';
+import '../../shared/utils/order_status_labels.dart';
 
 class OrderTimeline extends StatelessWidget {
   final String currentStatus;
@@ -14,15 +16,16 @@ class OrderTimeline extends StatelessWidget {
   });
 
   static const _steps = [
-    _Step('pending', 'Chờ xác nhận', Icons.access_time_rounded),
-    _Step('confirmed', 'Đã xác nhận', Icons.check_circle_outline),
-    _Step('preparing', 'Đang chuẩn bị', Icons.restaurant_rounded),
-    _Step('delivering', 'Đang giao', Icons.delivery_dining_rounded),
-    _Step('delivered', 'Đã giao', Icons.check_circle_rounded),
+    _Step('pending', Icons.access_time_rounded),
+    _Step('confirmed', Icons.check_circle_outline),
+    _Step('preparing', Icons.restaurant_rounded),
+    _Step('delivering', Icons.delivery_dining_rounded),
+    _Step('delivered', Icons.check_circle_rounded),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isCancelled = currentStatus == 'cancelled';
     final activeIndex = isCancelled
         ? -1
@@ -35,13 +38,18 @@ class OrderTimeline extends StatelessWidget {
           final step = entry.value;
           return _TimelineRow(
             step: step,
+            label: localizedOrderStatus(l10n, step.status),
             isDone: !isCancelled && i < activeIndex,
             isActive: !isCancelled && i == activeIndex,
             isLast: i == _steps.length - 1 && !isCancelled,
             timestamp: _timestampFor(step.status),
           );
         }),
-        if (isCancelled) _CancelledRow(timestamp: _timestampFor('cancelled')),
+        if (isCancelled)
+          _CancelledRow(
+            label: localizedOrderStatus(l10n, 'cancelled'),
+            timestamp: _timestampFor('cancelled'),
+          ),
       ],
     );
   }
@@ -56,13 +64,13 @@ class OrderTimeline extends StatelessWidget {
 
 class _Step {
   final String status;
-  final String label;
   final IconData icon;
-  const _Step(this.status, this.label, this.icon);
+  const _Step(this.status, this.icon);
 }
 
 class _TimelineRow extends StatelessWidget {
   final _Step step;
+  final String label;
   final bool isDone;
   final bool isActive;
   final bool isLast;
@@ -70,6 +78,7 @@ class _TimelineRow extends StatelessWidget {
 
   const _TimelineRow({
     required this.step,
+    required this.label,
     required this.isDone,
     required this.isActive,
     required this.isLast,
@@ -130,7 +139,7 @@ class _TimelineRow extends StatelessWidget {
                 children: [
                   const SizedBox(height: 4),
                   Text(
-                    step.label,
+                    label,
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                       color: labelColor,
@@ -149,8 +158,9 @@ class _TimelineRow extends StatelessWidget {
 }
 
 class _CancelledRow extends StatelessWidget {
+  final String label;
   final String? timestamp;
-  const _CancelledRow({this.timestamp});
+  const _CancelledRow({required this.label, this.timestamp});
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +187,7 @@ class _CancelledRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Đã hủy',
+                  label,
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.error,

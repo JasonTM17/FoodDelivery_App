@@ -1570,6 +1570,12 @@ abstract class AppLocalizations {
   /// **'Chưa có đơn hàng nào'**
   String get driverDashboardNoOrders;
 
+  /// No description provided for @driverActiveOrderTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn đang thực hiện'**
+  String get driverActiveOrderTitle;
+
   /// No description provided for @driverStatEarnings.
   ///
   /// In vi, this message translates to:

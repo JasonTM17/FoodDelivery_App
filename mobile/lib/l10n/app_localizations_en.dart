@@ -764,6 +764,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverDashboardNoOrders => 'No orders yet';
 
   @override
+  String get driverActiveOrderTitle => 'Active order';
+
+  @override
   String get driverStatEarnings => 'Earnings';
 
   @override

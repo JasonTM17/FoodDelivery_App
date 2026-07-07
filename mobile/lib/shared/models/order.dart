@@ -256,26 +256,6 @@ class OrderModel {
       'promoCode': promoCode,
     };
   }
-
-  String get statusText {
-    switch (status) {
-      case 'pending':
-        return 'Chờ xác nhận';
-      case 'confirmed':
-        return 'Đã xác nhận';
-      case 'preparing':
-        return 'Đang chuẩn bị';
-      case 'delivering':
-        return 'Đang giao';
-      case 'delivered':
-        return 'Đã giao';
-      case 'cancelled':
-        return 'Đã hủy';
-      default:
-        return status;
-    }
-  }
-
   bool get isActive {
     return !['delivered', 'cancelled'].contains(status);
   }

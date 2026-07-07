@@ -764,6 +764,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverDashboardNoOrders => 'Chưa có đơn hàng nào';
 
   @override
+  String get driverActiveOrderTitle => 'Đơn đang thực hiện';
+
+  @override
   String get driverStatEarnings => 'Thu nhập';
 
   @override

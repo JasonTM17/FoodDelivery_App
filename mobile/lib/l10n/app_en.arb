@@ -280,6 +280,7 @@
   "driverDashboardToday": "Today",
   "driverDashboardOrders": "Recent orders",
   "driverDashboardNoOrders": "No orders yet",
+  "driverActiveOrderTitle": "Active order",
   "driverStatEarnings": "Earnings",
   "driverStatOnline": "Online",
   "driverStatusTitle": "Availability status",

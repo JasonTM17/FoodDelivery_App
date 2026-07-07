@@ -756,6 +756,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverDashboardNoOrders => '注文はまだありません';
 
   @override
+  String get driverActiveOrderTitle => '進行中の注文';
+
+  @override
   String get driverStatEarnings => '収益';
 
   @override

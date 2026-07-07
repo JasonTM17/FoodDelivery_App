@@ -280,6 +280,7 @@
   "driverDashboardToday": "今日",
   "driverDashboardOrders": "最近の注文",
   "driverDashboardNoOrders": "注文はまだありません",
+  "driverActiveOrderTitle": "進行中の注文",
   "driverStatEarnings": "収益",
   "driverStatOnline": "オンライン",
   "driverStatusTitle": "稼働ステータス",
