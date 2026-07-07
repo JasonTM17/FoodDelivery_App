@@ -7,6 +7,36 @@ import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
 import '../providers/heatmap_provider.dart';
 
+@visibleForTesting
+LatLng? heatmapDriverLocation(double? centerLat, double? centerLng) {
+  if (isValidDeliveryLatLng(centerLat, centerLng)) {
+    return LatLng(centerLat!, centerLng!);
+  }
+  return null;
+}
+
+@visibleForTesting
+List<HeatmapPoint> heatmapValidDemandPoints(List<HeatmapPoint> points) {
+  return points
+      .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
+      .toList(growable: false);
+}
+
+@visibleForTesting
+LatLng? heatmapInitialCameraTarget({
+  required double? centerLat,
+  required double? centerLng,
+  required List<HeatmapPoint> points,
+}) {
+  final driverLocation = heatmapDriverLocation(centerLat, centerLng);
+  if (driverLocation != null) return driverLocation;
+
+  final validPoints = heatmapValidDemandPoints(points);
+  if (validPoints.isEmpty) return null;
+  final firstPoint = validPoints.first;
+  return LatLng(firstPoint.lat, firstPoint.lng);
+}
+
 class HeatmapCanvas extends StatefulWidget {
   final List<HeatmapPoint> points;
   final double centerLat;
@@ -50,18 +80,33 @@ class _HeatmapCanvasState extends State<HeatmapCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    final center = _center();
     final points = _validPoints();
+    final driverLocation = _driverLocation();
+    final initialTarget = heatmapInitialCameraTarget(
+      centerLat: widget.centerLat,
+      centerLng: widget.centerLng,
+      points: points,
+    );
+
+    if (initialTarget == null) {
+      return const ColoredBox(
+        color: Color(0xFF1E1E1E),
+        child: Center(
+          child: Icon(Icons.map_outlined, color: Color(0xFF6B7280), size: 48),
+        ),
+      );
+    }
+
     return GoogleMap(
       mapType: MapType.normal,
-      initialCameraPosition: CameraPosition(target: center, zoom: 13),
+      initialCameraPosition: CameraPosition(target: initialTarget, zoom: 13),
       onMapCreated: (controller) {
         if (!_mapController.isCompleted) {
           _mapController.complete(controller);
         }
         _fitDemandAreaToMap();
       },
-      markers: _buildMarkers(center),
+      markers: _buildMarkers(driverLocation),
       circles: _buildDemandCircles(points),
       minMaxZoomPreference: const MinMaxZoomPreference(
         VietnamMapConstants.minZoom,
@@ -74,24 +119,17 @@ class _HeatmapCanvasState extends State<HeatmapCanvas> {
     );
   }
 
-  LatLng _center() {
-    if (isValidDeliveryLatLng(widget.centerLat, widget.centerLng)) {
-      return LatLng(widget.centerLat, widget.centerLng);
-    }
-    return const LatLng(10.7769, 106.7009);
-  }
+  LatLng? _driverLocation() =>
+      heatmapDriverLocation(widget.centerLat, widget.centerLng);
 
-  List<HeatmapPoint> _validPoints() {
-    return widget.points
-        .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
-        .toList(growable: false);
-  }
+  List<HeatmapPoint> _validPoints() => heatmapValidDemandPoints(widget.points);
 
-  Set<Marker> _buildMarkers(LatLng center) {
+  Set<Marker> _buildMarkers(LatLng? driverLocation) {
+    if (driverLocation == null) return {};
     return {
       Marker(
         markerId: const MarkerId('driver-location'),
-        position: center,
+        position: driverLocation,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       ),
     };
@@ -130,9 +168,9 @@ class _HeatmapCanvasState extends State<HeatmapCanvas> {
 
   Future<void> _fitDemandAreaToMap() async {
     if (!_mapController.isCompleted) return;
-    final center = _center();
+    final driverLocation = _driverLocation();
     final points = [
-      center,
+      if (driverLocation != null) driverLocation,
       ..._validPoints().map((point) => LatLng(point.lat, point.lng)),
     ];
     if (points.isEmpty) return;
@@ -150,7 +188,9 @@ class _HeatmapCanvasState extends State<HeatmapCanvas> {
     if (!mounted) return;
 
     if (points.length == 1) {
-      await controller.animateCamera(CameraUpdate.newLatLngZoom(center, 13));
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(points.single, 13),
+      );
       return;
     }
 
