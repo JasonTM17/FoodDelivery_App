@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { I18nService } from 'nestjs-i18n'
 import { FraudDetectionService } from './fraud-detection.service'
+import { createI18nTestService } from '../../test/i18n-test-utils'
 
 const redisMock = {
   zremrangebyscore: jest.fn().mockResolvedValue(0),
@@ -18,6 +20,7 @@ describe('FraudDetectionService', () => {
       providers: [
         FraudDetectionService,
         { provide: 'REDIS_CLIENT', useValue: redisMock },
+        { provide: I18nService, useValue: createI18nTestService() },
       ],
     }).compile()
 

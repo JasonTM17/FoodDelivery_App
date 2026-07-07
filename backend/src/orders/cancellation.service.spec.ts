@@ -1,12 +1,13 @@
 import { ForbiddenException } from '@nestjs/common'
 import { CancellationService } from './cancellation.service'
 import { OrderStatus } from './order-state-machine'
+import { createI18nTestService } from '../../test/i18n-test-utils'
 
 describe('CancellationService', () => {
   let service: CancellationService
 
   beforeEach(() => {
-    service = new CancellationService()
+    service = new CancellationService(createI18nTestService())
   })
 
   describe('customer cancellation', () => {

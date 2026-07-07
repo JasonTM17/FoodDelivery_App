@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { I18nService } from 'nestjs-i18n'
 import { EligibilityService } from './eligibility.service'
 import { PrismaService } from '../database/prisma.service'
 import { Promotion, PromotionType } from '@prisma/client'
+import { createI18nTestService } from '../../test/i18n-test-utils'
 
 function makePromo(overrides: Partial<Promotion> = {}): Promotion {
   const now = new Date()
@@ -44,6 +46,7 @@ describe('EligibilityService', () => {
             promotionUsage: { count: jest.fn().mockResolvedValue(0) },
           },
         },
+        { provide: I18nService, useValue: createI18nTestService() },
       ],
     }).compile()
 

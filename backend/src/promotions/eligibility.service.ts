@@ -1,20 +1,17 @@
-import { Injectable, Optional } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { I18nService, I18nContext } from 'nestjs-i18n'
 import type { Prisma, Promotion } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { CartContext, ValidationResult } from './promotions.types'
-import { fallbackT } from '../i18n/fallback-translations'
 
 @Injectable()
 export class EligibilityService {
   constructor(
     private readonly prisma: PrismaService,
-    @Optional() private readonly i18n?: I18nService,
+    private readonly i18n: I18nService,
   ) {}
 
-  // Translates key; falls back to vi strings when I18nService is absent (unit tests).
   private t(key: string, args?: Record<string, unknown>): string {
-    if (!this.i18n) return fallbackT(key, args)
     return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi', args })
   }
 
