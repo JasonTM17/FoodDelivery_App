@@ -83,11 +83,11 @@ void main() {
       expect(find.text('Hoàn thành'), findsOneWidget);
     });
 
-    testWidgets('active tab shows stub incentive cards', (tester) async {
+    testWidgets('active tab shows provided incentive cards', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      // First stub incentive title
+      // First provided incentive title
       expect(find.text('Giao 20 đơn trong tuần'), findsOneWidget);
 
       // Progress indicator should be visible

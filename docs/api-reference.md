@@ -244,7 +244,7 @@ Query: lat, lng, radius, window (now|1h|3h|today)
 ```
 
 ### GET /driver/incentives
-Get active and completed driver incentive campaigns. Until a durable campaign source is modelled, this endpoint returns `501 DRIVER_INCENTIVES_NOT_MODELLED` rather than fake-empty campaign data.
+Get active and completed driver incentive campaigns from persisted `driver_incentive_campaigns` records. Progress is computed from the authenticated driver's delivered tasks inside each campaign window; empty arrays mean no persisted campaigns match, not fabricated sample data.
 
 ## Admin
 

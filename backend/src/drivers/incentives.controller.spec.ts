@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { ExecutionContext, NotImplementedException } from '@nestjs/common'
+import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { IncentivesController } from './incentives.controller'
 import { IncentivesService } from './incentives.service'
@@ -31,20 +31,13 @@ describe('IncentivesController', () => {
 
     controller = module.get(IncentivesController)
     jest.clearAllMocks()
-    mockIncentivesService.getDriverIncentives.mockImplementation(() => {
-      throw new NotImplementedException('DRIVER_INCENTIVES_NOT_MODELLED')
-    })
+    mockIncentivesService.getDriverIncentives.mockResolvedValue({ active: [], completed: [] })
   })
 
-  it('GET /driver/incentives delegates to service with user sub', () => {
+  it('GET /driver/incentives delegates to service with user sub', async () => {
     const user: JwtPayload = { sub: 'driver-uuid-001', role: 'driver' }
-    expect(() => controller.getIncentives(user)).toThrow(NotImplementedException)
+    await expect(controller.getIncentives(user)).resolves.toEqual({ active: [], completed: [] })
     expect(mockIncentivesService.getDriverIncentives).toHaveBeenCalledWith('driver-uuid-001')
-  })
-
-  it('does not convert unsupported incentives into empty campaign data', () => {
-    const user: JwtPayload = { sub: 'driver-uuid-001', role: 'driver' }
-    expect(() => controller.getIncentives(user)).toThrow('DRIVER_INCENTIVES_NOT_MODELLED')
   })
 
   it('JwtAuthGuard is applied to the controller', () => {
