@@ -107,6 +107,11 @@
   "logoutConfirm": "Are you sure you want to logout?",
   "cancel": "Cancel",
   "commonRetry": "Retry",
+  "commonErrorTitle": "Something went wrong",
+  "commonErrorMessage": "Please try again.",
+  "commonEmptyTitle": "No data available",
+  "restaurantClosed": "Closed",
+  "foodSoldOut": "Sold out",
 
   "driverProfileTitle": "Profile",
   "defaultDriver": "Driver",

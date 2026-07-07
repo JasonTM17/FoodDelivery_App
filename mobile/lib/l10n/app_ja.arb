@@ -107,6 +107,11 @@
   "logoutConfirm": "ログアウトしてもよろしいですか？",
   "cancel": "キャンセル",
   "commonRetry": "再試行",
+  "commonErrorTitle": "問題が発生しました",
+  "commonErrorMessage": "もう一度お試しください。",
+  "commonEmptyTitle": "データがありません",
+  "restaurantClosed": "営業時間外",
+  "foodSoldOut": "売り切れ",
 
   "driverProfileTitle": "プロフィール",
   "defaultDriver": "ドライバー",

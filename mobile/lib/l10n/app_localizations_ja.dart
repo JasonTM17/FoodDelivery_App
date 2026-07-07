@@ -314,6 +314,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonRetry => '再試行';
 
   @override
+  String get commonErrorTitle => '問題が発生しました';
+
+  @override
+  String get commonErrorMessage => 'もう一度お試しください。';
+
+  @override
+  String get commonEmptyTitle => 'データがありません';
+
+  @override
+  String get restaurantClosed => '営業時間外';
+
+  @override
+  String get foodSoldOut => '売り切れ';
+
+  @override
   String get driverProfileTitle => 'プロフィール';
 
   @override

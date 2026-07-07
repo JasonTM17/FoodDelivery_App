@@ -316,6 +316,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get commonErrorTitle => 'Something went wrong';
+
+  @override
+  String get commonErrorMessage => 'Please try again.';
+
+  @override
+  String get commonEmptyTitle => 'No data available';
+
+  @override
+  String get restaurantClosed => 'Closed';
+
+  @override
+  String get foodSoldOut => 'Sold out';
+
+  @override
   String get driverProfileTitle => 'Profile';
 
   @override

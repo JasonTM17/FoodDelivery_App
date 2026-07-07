@@ -315,6 +315,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonRetry => 'Thử lại';
 
   @override
+  String get commonErrorTitle => 'Rất tiếc!';
+
+  @override
+  String get commonErrorMessage => 'Có lỗi xảy ra. Vui lòng thử lại.';
+
+  @override
+  String get commonEmptyTitle => 'Không có dữ liệu';
+
+  @override
+  String get restaurantClosed => 'Đóng cửa';
+
+  @override
+  String get foodSoldOut => 'Hết';
+
+  @override
   String get driverProfileTitle => 'Hồ sơ';
 
   @override

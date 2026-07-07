@@ -409,6 +409,32 @@ void main() {
     });
   });
 
+  group('shared common widget keys', () {
+    test('default error/empty/availability labels exist in vi/en/ja', () {
+      final vi = lookupAppLocalizations(const Locale('vi'));
+      final en = lookupAppLocalizations(const Locale('en'));
+      final ja = lookupAppLocalizations(const Locale('ja'));
+
+      expect(vi.commonErrorTitle, isNotEmpty);
+      expect(vi.commonErrorMessage, isNotEmpty);
+      expect(vi.commonEmptyTitle, isNotEmpty);
+      expect(vi.restaurantClosed, isNotEmpty);
+      expect(vi.foodSoldOut, isNotEmpty);
+
+      expect(en.commonErrorTitle, 'Something went wrong');
+      expect(en.commonErrorMessage, 'Please try again.');
+      expect(en.commonEmptyTitle, 'No data available');
+      expect(en.restaurantClosed, 'Closed');
+      expect(en.foodSoldOut, 'Sold out');
+
+      expect(ja.commonErrorTitle, isNotEmpty);
+      expect(ja.commonErrorMessage, isNotEmpty);
+      expect(ja.commonEmptyTitle, isNotEmpty);
+      expect(ja.restaurantClosed, isNotEmpty);
+      expect(ja.foodSoldOut, isNotEmpty);
+    });
+  });
+
   group('placeholder keys', () {
     testWidgets('cartPromoApplied renders with code placeholder', (
       tester,

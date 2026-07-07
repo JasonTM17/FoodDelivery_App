@@ -113,6 +113,11 @@
   "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
   "cancel": "Hủy",
   "commonRetry": "Thử lại",
+  "commonErrorTitle": "Rất tiếc!",
+  "commonErrorMessage": "Có lỗi xảy ra. Vui lòng thử lại.",
+  "commonEmptyTitle": "Không có dữ liệu",
+  "restaurantClosed": "Đóng cửa",
+  "foodSoldOut": "Hết",
 
   "driverProfileTitle": "Hồ sơ",
   "defaultDriver": "Tài xế",

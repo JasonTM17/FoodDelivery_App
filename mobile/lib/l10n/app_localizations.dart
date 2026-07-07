@@ -706,6 +706,36 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get commonRetry;
 
+  /// No description provided for @commonErrorTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rất tiếc!'**
+  String get commonErrorTitle;
+
+  /// No description provided for @commonErrorMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra. Vui lòng thử lại.'**
+  String get commonErrorMessage;
+
+  /// No description provided for @commonEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dữ liệu'**
+  String get commonEmptyTitle;
+
+  /// No description provided for @restaurantClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng cửa'**
+  String get restaurantClosed;
+
+  /// No description provided for @foodSoldOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết'**
+  String get foodSoldOut;
+
   /// No description provided for @driverProfileTitle.
   ///
   /// In vi, this message translates to:
