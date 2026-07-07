@@ -11,7 +11,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Backend tracking/route/dispatch tests verify route snapshots, admin tracking, heatmap, dispatch retries, Redis route cache invalidation, and route fetch failure behavior.
 - Mobile tracking/driver route tests verify realtime route confirmation, stale route clearing, invalid coordinate rejection, backend route telemetry parsing, and heatmap rows without invented fallback metrics.
 - The local hardening refresh removes runtime hardcoded i18n fallback maps, rejects stale/future GPS samples before they mutate live driver state, prevents stale queued ETA jobs from overwriting the current route phase, marks Admin driver markers stale when refreshes fail, blocks demo seed execution in production, and labels planned route geometry distinctly from telemetry replay.
-- A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so backend/web/mobile checks, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
+- A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
 
 ## Local verification
 

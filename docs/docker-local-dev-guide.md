@@ -104,9 +104,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-
 powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1 `
   -SkipBuild `
   -SkipDeployPreflight
+
+# Add browser E2E when the seeded local backend/Admin/Restaurant stack is running.
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1 `
+  -SkipBuild `
+  -SkipDeployPreflight `
+  -RunE2E
 ```
 
-The script runs git whitespace checks, high-confidence secret scans, backend Prisma/typecheck/lint/Jest/build, web typecheck/lint/Vitest/build, mobile analyze/test, and the Supabase/Vercel preflight guards unless the matching skip flag is used.
+The script runs git whitespace checks, high-confidence secret scans, backend Prisma/typecheck/lint/Jest/build, web typecheck/lint/Vitest/build, OpenAPI Spectral lint, Docker Compose config validation, mobile analyze/test, optional Playwright Chromium/Firefox E2E, and the Supabase/Vercel preflight guards unless the matching skip flag is used.
 
 ```powershell
 cd backend

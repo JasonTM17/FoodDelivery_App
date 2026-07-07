@@ -8,6 +8,9 @@ param(
   [switch]$SkipWeb,
   [switch]$SkipMobile,
   [switch]$SkipBuild,
+  [switch]$SkipOpenApi,
+  [switch]$SkipDockerConfig,
+  [switch]$RunE2E,
   [switch]$SkipDeployPreflight,
   [string]$AdminPublicUrl = $(if ($env:NEXT_PUBLIC_ADMIN_URL) { $env:NEXT_PUBLIC_ADMIN_URL } else { 'https://food-delivery-app-one-liard.vercel.app' })
 )
@@ -139,6 +142,32 @@ if (-not $SkipWeb) {
       Invoke-Native pnpm --filter restaurant build
     }
   }
+}
+
+if (-not $SkipOpenApi) {
+  Invoke-Step 'OpenAPI Spectral lint' $repoRoot {
+    Invoke-Native npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error
+  }
+}
+
+if (-not $SkipDockerConfig) {
+  Invoke-Step 'Docker Compose config' $repoRoot {
+    Invoke-Native docker compose -f docker-compose.yml config --quiet
+    Invoke-Native docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+    Invoke-Native docker compose -f docker-compose.yml -f docker-compose.local.yml config --quiet
+  } @{
+    POSTGRES_PASSWORD = 'compose-config-placeholder'
+    REDIS_PASSWORD = 'compose-config-placeholder'
+  }
+}
+
+if ($RunE2E) {
+  Invoke-Step 'Playwright Chromium and Firefox' (Join-Path $repoRoot 'web') {
+    Invoke-Native pnpm test:e2e --project=chromium --project=firefox
+  }
+} else {
+  Write-Host ''
+  Write-Host 'Skipping Playwright E2E. Re-run with -RunE2E when seeded local services are running.'
 }
 
 if (-not $SkipMobile) {
