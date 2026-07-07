@@ -110,6 +110,7 @@ export default function DriverMapPage() {
     order: t('order'),
     vehicle: t('info.vehicle'),
     lastSeen: t('info.lastSeen'),
+    stale: t('stale'),
   }), [t]);
 
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(locale, {

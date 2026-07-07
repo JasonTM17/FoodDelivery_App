@@ -25,6 +25,9 @@ export interface DeliveryEtaUpdatedEvent {
   routePhase: DeliveryRoutePhase
 }
 
+const MAX_LIVE_LOCATION_AGE_MS = 45_000
+const MAX_LOCATION_CLOCK_SKEW_FUTURE_MS = 15_000
+
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: websocketCorsOrigins() } })
 export class TrackingGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -72,6 +75,15 @@ export class TrackingGateway implements OnGatewayConnection {
     const sampleTimestamp = parseDriverLocationTimestamp(data.timestamp)
     if (!sampleTimestamp) {
       client.emit('driver:location_rejected', { reason: 'invalid_timestamp' })
+      return
+    }
+    const sampleAgeMs = Date.now() - sampleTimestamp.getTime()
+    if (sampleAgeMs > MAX_LIVE_LOCATION_AGE_MS) {
+      client.emit('driver:location_rejected', { reason: 'stale_timestamp' })
+      return
+    }
+    if (sampleAgeMs < -MAX_LOCATION_CLOCK_SKEW_FUTURE_MS) {
+      client.emit('driver:location_rejected', { reason: 'future_timestamp' })
       return
     }
     const timestamp = sampleTimestamp.toISOString()

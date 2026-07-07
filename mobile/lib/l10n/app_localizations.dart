@@ -1858,6 +1858,18 @@ abstract class AppLocalizations {
   /// **'Đã phát xong'**
   String get driverRouteReplayCompleted;
 
+  /// No description provided for @driverRouteReplayEstimated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ có tuyến dự kiến — chưa có GPS để phát lại'**
+  String get driverRouteReplayEstimated;
+
+  /// No description provided for @driverRouteReplayEstimatedTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyến này chưa có telemetry GPS'**
+  String get driverRouteReplayEstimatedTooltip;
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:

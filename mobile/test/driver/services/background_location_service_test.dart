@@ -93,7 +93,7 @@ void main() {
       final service = BackgroundLocationService.forTesting(socket: socket);
       addTearDown(service.dispose);
 
-      final capturedAt = DateTime.utc(2026, 7, 6, 1, 2, 3, 456);
+      final capturedAt = DateTime.now().toUtc();
       service.bufferLocationPingForTesting(
         10.7769,
         106.7009,
@@ -115,7 +115,7 @@ void main() {
         'bearing': 90,
         'speed': 36,
         'accuracy': 5,
-        'timestamp': '2026-07-06T01:02:03.456Z',
+        'timestamp': capturedAt.toIso8601String(),
       });
     });
 
@@ -124,8 +124,8 @@ void main() {
       final service = BackgroundLocationService.forTesting(socket: socket);
       addTearDown(service.dispose);
 
-      final firstCapturedAt = DateTime.utc(2026, 7, 6, 1, 2, 3);
-      final secondCapturedAt = DateTime.utc(2026, 7, 6, 1, 2, 7);
+      final firstCapturedAt = DateTime.now().toUtc();
+      final secondCapturedAt = firstCapturedAt.add(const Duration(seconds: 4));
       service.bufferLocationPingForTesting(
         10.7769,
         106.7009,
@@ -143,10 +143,32 @@ void main() {
       expect(socket.sentPayloads, hasLength(2));
       expect(socket.bypassThrottleValues, [true, true]);
       expect(socket.sentPayloads.map((payload) => payload['timestamp']), [
-        '2026-07-06T01:02:03.000Z',
-        '2026-07-06T01:02:07.000Z',
+        firstCapturedAt.toIso8601String(),
+        secondCapturedAt.toIso8601String(),
       ]);
     });
+
+    test(
+      'drops stale buffered pings instead of replaying them as live state',
+      () {
+        final socket = _RecordingLocationPingEmitter();
+        final service = BackgroundLocationService.forTesting(socket: socket);
+        addTearDown(service.dispose);
+
+        service.bufferLocationPingForTesting(
+          10.7769,
+          106.7009,
+          timestamp: DateTime.now().toUtc().subtract(
+            const Duration(minutes: 2),
+          ),
+        );
+
+        socket.connected = true;
+        service.flushBufferForTesting();
+
+        expect(socket.sentPayloads, isEmpty);
+      },
+    );
   });
 }
 

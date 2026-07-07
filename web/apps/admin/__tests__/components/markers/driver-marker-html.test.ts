@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { AdminDriverLocation } from '@foodflow/api-client';
 import { buildDriverInfoWindowHtml } from '@/components/markers/driver-marker-html';
+import type { DriverLocation } from '@/hooks/use-realtime-driver-locations';
 
 describe('buildDriverInfoWindowHtml', () => {
   it('escapes driver-controlled content before injecting it into a Google Maps InfoWindow', () => {
@@ -16,6 +16,7 @@ describe('buildDriverInfoWindowHtml', () => {
         order: 'Order',
         vehicle: 'Vehicle',
         lastSeen: 'Last seen',
+        stale: 'stale',
       },
     );
 
@@ -25,9 +26,26 @@ describe('buildDriverInfoWindowHtml', () => {
     expect(html).not.toContain('<img');
     expect(html).not.toContain('<script>');
   });
+
+  it('labels stale driver markers without trusting driver-controlled content', () => {
+    const html = buildDriverInfoWindowHtml(
+      makeDriver({ isStale: true }),
+      'Busy',
+      {
+        rating: 'Rating',
+        status: 'Status',
+        order: 'Order',
+        vehicle: 'Vehicle',
+        lastSeen: 'Last seen',
+        stale: 'stale',
+      },
+    );
+
+    expect(html).toContain('Busy (stale)');
+  });
 });
 
-function makeDriver(overrides: Partial<AdminDriverLocation> = {}): AdminDriverLocation {
+function makeDriver(overrides: Partial<DriverLocation> = {}): DriverLocation {
   return {
     id: 'driver-1',
     driverId: 'driver-1',

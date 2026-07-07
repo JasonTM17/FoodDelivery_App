@@ -11,8 +11,16 @@ const _kActiveInterval = Duration(seconds: 4);
 const _kIdleInterval = Duration(seconds: 30);
 
 /// Max location pings to buffer offline before dropping oldest.
+/// This cap does not authorize replaying stale GPS samples as live state.
 /// At 4s active rate: 200 × 4s ≈ 13 minutes of coverage.
 const _kMaxBuffer = 200;
+
+/// Buffered pings older than this are historical telemetry, not live map state.
+const _kMaxBufferedPingAge = Duration(seconds: 45);
+
+/// Accept a small future skew for device clocks, but do not replay impossible
+/// future locations as live driver state.
+const _kMaxLocationClockSkew = Duration(seconds: 15);
 
 double? normalizeGpsBearingDegrees(double? headingDegrees) {
   if (headingDegrees == null || !headingDegrees.isFinite) return null;
@@ -227,6 +235,9 @@ class BackgroundLocationService {
         timestamp: ts,
       );
     } else {
+      final now = DateTime.now();
+      if (!_isLiveReplaySafe(ts, now)) return;
+      _dropStaleBufferedPings(now);
       // Buffer so pings survive brief disconnects.
       if (_offlineBuffer.length >= _kMaxBuffer) {
         _offlineBuffer.removeFirst(); // drop oldest
@@ -247,8 +258,11 @@ class BackgroundLocationService {
   void _flushBuffer() {
     if (_offlineBuffer.isEmpty) return;
     if (!_socket.isConnected) return;
+    final now = DateTime.now();
+    _dropStaleBufferedPings(now);
     while (_offlineBuffer.isNotEmpty) {
       final ping = _offlineBuffer.removeFirst();
+      if (!_isLiveReplaySafe(ping.timestamp, now)) continue;
       _socket.emitLocationPing(
         ping.lat,
         ping.lng,
@@ -259,6 +273,20 @@ class BackgroundLocationService {
         bypassThrottle: true,
       );
     }
+  }
+
+  void _dropStaleBufferedPings(DateTime now) {
+    while (_offlineBuffer.isNotEmpty &&
+        !_isLiveReplaySafe(_offlineBuffer.first.timestamp, now)) {
+      _offlineBuffer.removeFirst();
+    }
+  }
+
+  bool _isLiveReplaySafe(DateTime timestamp, DateTime now) {
+    final age = now.difference(timestamp);
+    if (age > _kMaxBufferedPingAge) return false;
+    if (age < -_kMaxLocationClockSkew) return false;
+    return true;
   }
 
   @visibleForTesting

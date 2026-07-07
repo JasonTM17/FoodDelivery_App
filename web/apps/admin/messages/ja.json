@@ -1052,6 +1052,7 @@
     "fallbackPolling": "Realtimeを利用できないため15秒ごとにポーリングしています",
     "refreshedAt": "{time} 更新済み",
     "lastSeen": "最終確認",
+    "stale": "古い",
     "mapRegionLabel": "ベトナム境界レイヤー付きライブドライバーマップ",
     "order": "注文",
     "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",

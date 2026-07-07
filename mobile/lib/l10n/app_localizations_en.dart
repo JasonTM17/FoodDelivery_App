@@ -926,6 +926,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverRouteReplayCompleted => 'Replay finished';
 
   @override
+  String get driverRouteReplayEstimated =>
+      'Planned route only — GPS replay unavailable';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip =>
+      'GPS telemetry is unavailable for this trip';
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override

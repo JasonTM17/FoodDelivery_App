@@ -473,7 +473,9 @@ export class DriversService {
       timestampsEstimated: points.some(point => point.timestampEstimated),
       totalDistanceKm,
       totalDurationSeconds,
-      avgSpeedKmh: totalDurationSeconds > 0 ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600)) : 0,
+      avgSpeedKmh: routeSource === 'telemetry' && totalDurationSeconds > 0
+        ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600))
+        : 0,
       payout,
     }
   }

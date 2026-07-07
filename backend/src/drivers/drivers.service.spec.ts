@@ -463,6 +463,7 @@ describe('DriversService', () => {
 
       expect(route.routeSource).toBe('persisted_geometry')
       expect(route.timestampsEstimated).toBe(true)
+      expect(route.avgSpeedKmh).toBe(0)
       expect(route.points).toEqual([
         {
           lat: 10.7769,

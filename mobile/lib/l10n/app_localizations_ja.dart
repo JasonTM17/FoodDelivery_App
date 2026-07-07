@@ -916,6 +916,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverRouteReplayCompleted => '再生が完了しました';
 
   @override
+  String get driverRouteReplayEstimated => '予定ルートのみ — GPS再生は利用できません';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip => 'この配達のGPSテレメトリは利用できません';
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override

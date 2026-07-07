@@ -75,7 +75,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue(null)
-    const sampledAt = '2026-07-06T01:02:03.456Z'
+    const sampledAt = new Date().toISOString()
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -121,6 +121,38 @@ describe('TrackingGateway authorization', () => {
     expect(emitToRoom).not.toHaveBeenCalled()
   })
 
+  it('rejects stale buffered GPS timestamps before mutating live map state', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp: new Date(Date.now() - 60_000).toISOString(),
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'stale_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it('rejects GPS timestamps beyond the accepted future clock-skew window', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp: new Date(Date.now() + 20_000).toISOString(),
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'future_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
   it('marks routed ETA updates as non-degraded provider values', async () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
@@ -140,7 +172,7 @@ describe('TrackingGateway authorization', () => {
       provider: 'google',
     })
 
-    const sampledAt = '2026-07-06T01:02:04.456Z'
+    const sampledAt = new Date().toISOString()
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
       lng: 106.7,

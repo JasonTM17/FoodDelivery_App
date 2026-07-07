@@ -16,6 +16,7 @@ class RouteReplayMap extends StatefulWidget {
   final double toLng;
   final double width;
   final double height;
+  final bool isEstimated;
 
   const RouteReplayMap({
     super.key,
@@ -26,6 +27,7 @@ class RouteReplayMap extends StatefulWidget {
     required this.toLng,
     this.width = double.infinity,
     this.height = 280,
+    this.isEstimated = false,
   });
 
   @override
@@ -161,8 +163,12 @@ class _RouteReplayMapState extends State<RouteReplayMap>
                       : Icons.play_arrow,
                   color: AppColors.primary,
                 ),
-                onPressed: routePoints.length >= 2 ? _toggleReplay : null,
-                tooltip: l10n.driverRouteReplayTooltip,
+                onPressed: !widget.isEstimated && routePoints.length >= 2
+                    ? _toggleReplay
+                    : null,
+                tooltip: widget.isEstimated
+                    ? l10n.driverRouteReplayEstimatedTooltip
+                    : l10n.driverRouteReplayTooltip,
               ),
             ),
             const SizedBox(width: 12),
@@ -177,6 +183,7 @@ class _RouteReplayMapState extends State<RouteReplayMap>
   }
 
   String _replayStatus(AppLocalizations l10n) {
+    if (widget.isEstimated) return l10n.driverRouteReplayEstimated;
     if (_controller.isAnimating) return l10n.driverRouteReplayPlaying;
     if (_controller.isCompleted) return l10n.driverRouteReplayCompleted;
     return l10n.driverRouteReplayReady;
@@ -241,7 +248,7 @@ class _RouteReplayMapState extends State<RouteReplayMap>
       );
     }
 
-    if (currentPoint != null && routePoints.length > 1) {
+    if (!widget.isEstimated && currentPoint != null && routePoints.length > 1) {
       markers.add(
         Marker(
           markerId: const MarkerId('replay-current'),
@@ -266,12 +273,18 @@ class _RouteReplayMapState extends State<RouteReplayMap>
 
     polylines.add(
       Polyline(
-        polylineId: const PolylineId('actual-route'),
+        polylineId: PolylineId(
+          widget.isEstimated ? 'planned-route' : 'actual-route',
+        ),
         points: routePoints,
-        color: const Color(0xFF64748B),
-        width: 4,
+        color: widget.isEstimated
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF64748B),
+        width: widget.isEstimated ? 5 : 4,
       ),
     );
+
+    if (widget.isEstimated) return polylines;
 
     final replayPoints = _replayedPoints(routePoints, currentPoint);
     if (replayPoints.length >= 2) {

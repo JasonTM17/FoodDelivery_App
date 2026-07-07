@@ -356,6 +356,8 @@
   "driverRouteReplayPlaying": "再生中...",
   "driverRouteReplayReady": "タップして再生",
   "driverRouteReplayCompleted": "再生が完了しました",
+  "driverRouteReplayEstimated": "予定ルートのみ — GPS再生は利用できません",
+  "driverRouteReplayEstimatedTooltip": "この配達のGPSテレメトリは利用できません",
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",

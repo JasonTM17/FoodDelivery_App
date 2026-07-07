@@ -362,6 +362,8 @@
   "driverRouteReplayPlaying": "Đang phát...",
   "driverRouteReplayReady": "Nhấn để phát lại",
   "driverRouteReplayCompleted": "Đã phát xong",
+  "driverRouteReplayEstimated": "Chỉ có tuyến dự kiến — chưa có GPS để phát lại",
+  "driverRouteReplayEstimatedTooltip": "Chuyến này chưa có telemetry GPS",
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",

@@ -71,17 +71,18 @@ export default function DriverMarkers({
 
     const newEntries = drivers.map((driver) => {
       const color = statusColors[driver.status] || '#22c55e';
+      const isStale = driver.isStale === true;
       const marker = new google.maps.Marker({
         map,
         position: { lat: driver.lat, lng: driver.lng },
-        title: driver.name,
+        title: isStale ? `${driver.name} (${copy.stale})` : driver.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 10,
           fillColor: color,
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
+          fillOpacity: isStale ? 0.45 : 1,
+          strokeColor: isStale ? '#facc15' : '#ffffff',
+          strokeWeight: isStale ? 3 : 2,
         },
       });
 

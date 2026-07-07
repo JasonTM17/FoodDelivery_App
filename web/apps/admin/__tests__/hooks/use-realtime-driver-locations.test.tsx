@@ -285,6 +285,43 @@ describe('useRealtimeDriverLocations', () => {
       lastSeenAt: '2026-07-02T09:00:00.000Z',
     });
   });
+
+  it('marks existing map markers as stale when refresh has failed beyond the live threshold', async () => {
+    mockedApiGet.mockResolvedValueOnce([makeLocation()]);
+    const { result } = renderHook(() => useRealtimeDriverLocations());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const lastRefreshedAt = Date.parse(result.current.lastRefreshedAt!);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(lastRefreshedAt + 61_000));
+    mockedApiGet.mockRejectedValueOnce(new Error('backend down'));
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+
+    expect(result.current.error).toBe('backend down');
+    expect(result.current.drivers[0]).toMatchObject({
+      id: 'driver-1',
+      isStale: true,
+      staleReason: 'refresh_failed',
+    });
+
+    act(() => {
+      socketMock.trigger('admin:driver_location_changed', {
+        driverId: 'driver-1',
+        lat: 10.81,
+        lng: 106.81,
+        timestamp: '2026-07-07T00:01:02.000Z',
+      });
+    });
+
+    expect(result.current.drivers[0].isStale).toBeUndefined();
+    expect(result.current.drivers[0].staleReason).toBeUndefined();
+  });
 });
 
 function makeLocation(overrides: Partial<AdminDriverLocation> = {}): AdminDriverLocation {

@@ -1052,6 +1052,7 @@
     "fallbackPolling": "Realtime không khả dụng — polling mỗi 15 giây",
     "refreshedAt": "Làm mới {time}",
     "lastSeen": "Lần cuối",
+    "stale": "cũ",
     "mapRegionLabel": "Bản đồ tài xế trực tiếp với lớp biên giới Việt Nam",
     "order": "Đơn",
     "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",

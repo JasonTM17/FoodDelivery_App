@@ -927,6 +927,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverRouteReplayCompleted => 'Đã phát xong';
 
   @override
+  String get driverRouteReplayEstimated =>
+      'Chỉ có tuyến dự kiến — chưa có GPS để phát lại';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip =>
+      'Chuyến này chưa có telemetry GPS';
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override

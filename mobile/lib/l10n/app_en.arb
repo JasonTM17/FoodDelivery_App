@@ -356,6 +356,8 @@
   "driverRouteReplayPlaying": "Playing...",
   "driverRouteReplayReady": "Tap to replay",
   "driverRouteReplayCompleted": "Replay finished",
+  "driverRouteReplayEstimated": "Planned route only — GPS replay unavailable",
+  "driverRouteReplayEstimatedTooltip": "GPS telemetry is unavailable for this trip",
 
   "driverKycTitle": "KYC Verification",
   "driverKycUploadTitle": "Upload documents",

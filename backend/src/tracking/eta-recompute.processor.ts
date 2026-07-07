@@ -1,18 +1,24 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
 import { Job } from 'bullmq'
-import { Prisma } from '@prisma/client'
+import { OrderStatus, Prisma } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
-import { RecomputeJobData, routeCacheKey } from './tracking.service'
+import { RecomputeJobData, routeCacheKey, routePhaseForStatus, type DeliveryRoutePhase } from './tracking.service'
 import { TrackingGateway } from './tracking.gateway'
 
 interface DestCoords {
+  status: string
   restaurantLat: number
   restaurantLng: number
   deliveryLat: number
   deliveryLng: number
+}
+
+const STATUSES_BY_ROUTE_PHASE: Record<DeliveryRoutePhase, OrderStatus[]> = {
+  pickup: [OrderStatus.driver_assigned, OrderStatus.driver_arriving_restaurant],
+  dropoff: [OrderStatus.picked_up, OrderStatus.delivering],
 }
 
 @Processor('tracking-eta')
@@ -42,7 +48,8 @@ export class EtaRecomputeProcessor extends WorkerHost {
     const { orderId, lat, lng, phase } = job.data
 
     const coords = await this.prisma.$queryRaw<DestCoords[]>(Prisma.sql`
-      SELECT ST_Y(r.location::geometry)::float8 AS "restaurantLat",
+      SELECT o.status::text AS "status",
+              ST_Y(r.location::geometry)::float8 AS "restaurantLat",
               ST_X(r.location::geometry)::float8 AS "restaurantLng",
               ST_Y(a.location::geometry)::float8 AS "deliveryLat",
               ST_X(a.location::geometry)::float8 AS "deliveryLng"
@@ -59,6 +66,14 @@ export class EtaRecomputeProcessor extends WorkerHost {
     }
 
     const destination = coords[0]
+    const currentPhase = routePhaseForStatus(destination.status)
+    if (currentPhase !== phase) {
+      this.logger.warn(
+        `Skipping stale ETA recompute for order ${orderId}: queued ${phase}, current ${currentPhase} (${destination.status})`,
+      )
+      return
+    }
+
     const destLat = phase === 'pickup' ? destination.restaurantLat : destination.deliveryLat
     const destLng = phase === 'pickup' ? destination.restaurantLng : destination.deliveryLng
     const route = await this.directionsApi.fetchRoute(
@@ -70,13 +85,21 @@ export class EtaRecomputeProcessor extends WorkerHost {
     // Invalidate stale cache then write fresh entry
     await this.etaCache.invalidate(cacheKey)
     await this.etaCache.setRoute(cacheKey, route)
-    await this.prisma.order.update({
-      where: { id: orderId },
+    const updateResult = await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: { in: STATUSES_BY_ROUTE_PHASE[phase] },
+      },
       data: {
         routePolyline: route.polyline,
         routeWaypoints: route.waypoints as unknown as Prisma.InputJsonValue,
       },
     })
+    if (updateResult.count === 0) {
+      this.logger.warn(`Skipping ETA emit for order ${orderId}: status changed during ${phase} recompute`)
+      return
+    }
+
     this.trackingGateway.emitEtaUpdate(orderId, {
       etaMinutes: Math.max(1, Math.round(route.durationSeconds / 60)),
       source: route.provider,
