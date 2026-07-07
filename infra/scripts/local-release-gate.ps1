@@ -7,6 +7,7 @@ param(
   [switch]$SkipBackend,
   [switch]$SkipWeb,
   [switch]$SkipMobile,
+  [switch]$SkipInstall,
   [switch]$SkipBuild,
   [switch]$SkipOpenApi,
   [switch]$SkipDockerConfig,
@@ -112,6 +113,11 @@ Invoke-Step 'Git hygiene and secret scan' $repoRoot {
 }
 
 if (-not $SkipBackend) {
+  if (-not $SkipInstall) {
+    Invoke-Step 'Backend frozen install' (Join-Path $repoRoot 'backend') {
+      Invoke-Native pnpm install --frozen-lockfile
+    }
+  }
   Invoke-Step 'Backend Prisma validate' (Join-Path $repoRoot 'backend') {
     Invoke-Native pnpm exec prisma validate --schema prisma/schema.prisma
   } @{
@@ -127,6 +133,11 @@ if (-not $SkipBackend) {
 }
 
 if (-not $SkipWeb) {
+  if (-not $SkipInstall) {
+    Invoke-Step 'Web frozen install' (Join-Path $repoRoot 'web') {
+      Invoke-Native pnpm install --frozen-lockfile
+    }
+  }
   Invoke-Step 'Web typecheck' (Join-Path $repoRoot 'web') { Invoke-Native pnpm typecheck }
   Invoke-Step 'Web lint' (Join-Path $repoRoot 'web') { Invoke-Native pnpm lint }
   Invoke-Step 'Web Vitest' (Join-Path $repoRoot 'web') { Invoke-Native pnpm test }
@@ -171,6 +182,11 @@ if ($RunE2E) {
 }
 
 if (-not $SkipMobile) {
+  if (-not $SkipInstall) {
+    Invoke-Step 'Mobile frozen install' (Join-Path $repoRoot 'mobile') {
+      Invoke-Native flutter pub get --enforce-lockfile
+    }
+  }
   Invoke-Step 'Mobile analyze' (Join-Path $repoRoot 'mobile') { Invoke-Native flutter analyze }
   Invoke-Step 'Mobile test' (Join-Path $repoRoot 'mobile') { Invoke-Native flutter test }
 }
