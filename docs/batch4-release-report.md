@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest code hardening head `94d4e18` is a fast-forward candidate for `master` and `git rev-list --left-right --count origin/master...HEAD` returned `0 17` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest code hardening head `c825ad5` is a fast-forward candidate for `master` and `git rev-list --left-right --count origin/master...HEAD` returned `0 20` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
 
 ## What landed
 
@@ -14,6 +14,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so frozen installs, backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
 - Mobile order status labels and shared empty/error/availability labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
 - Mobile nearby browse now sends the backend `/restaurants/nearby` contract (`lat`/`lng` plus canonical cuisine values), fails closed when GPS is unavailable instead of using fake coordinates, builds list/map cuisine filters from real `cuisineTypes`, and localizes browse/search/driver-history error and filter labels through generated vi/en/ja strings.
+- Backend dispatch/tracking now routes customer/restaurant order-facing dispatch events through the `/events` orders gateway, keeps `/dispatch` driver-only, and persists real provider pickup/dropoff route distance, duration, and geometry into `delivery_tasks` without fabricated ETA fallbacks.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -23,7 +24,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | Backend install | `pnpm install --frozen-lockfile` passed |
 | Backend Prisma | `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public DIRECT_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public pnpm exec prisma validate --schema prisma/schema.prisma` passed |
 | Backend quality | `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 802 tests), and `pnpm build` passed. Latest 2026-07-07 hardening rerun after `17e4661` passed full Jest again: 110 suites / 802 tests. |
-| Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests |
+| Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests. Latest tracking/dispatch hardening through `c825ad5` passed 5 focused suites / 60 tests plus backend `pnpm typecheck` and `pnpm lint`. |
 | Web install | `pnpm install --frozen-lockfile` passed |
 | Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and prior full `pnpm build` passed. Latest 2026-07-07 hardening rerun after `17e4661` passed web typecheck, lint, and full Vitest again. `pnpm --filter foodflow-admin build` passes when `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app` is provided. Restaurant production build still correctly fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured. |
 | OpenAPI | Spectral lint passed with `--fail-severity error` |

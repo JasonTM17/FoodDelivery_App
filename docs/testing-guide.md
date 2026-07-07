@@ -2,7 +2,7 @@
 
 ## Latest local evidence (2026-07-07)
 
-Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
+Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`, with latest local code head `c825ad5` ahead of `origin/master` by 20 commits before this docs refresh. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
 - Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
 - Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 802 tests), and `pnpm build`.
@@ -13,6 +13,7 @@ Verified remote code head: `118459e` on `origin/master` before this local harden
 - OpenAPI/Spectral passed with `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
 - Security evidence: high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
 - Current local hardening evidence on 2026-07-07 after `94d4e18`: backend full `pnpm exec jest --runInBand` previously passed 110 suites / 802 tests; web `pnpm typecheck`, `pnpm lint`, and full Vitest previously passed Admin 37 files / 155 tests plus Restaurant 31 files / 100 tests; mobile `flutter analyze` passed with no issues, focused nearby+i18n tests passed 19/19, and full `flutter test` passed 229/229. High-confidence HEAD secret scan found no live provider token/private-key matches. Runtime keyword scan over `backend/src`, Admin source, Restaurant source, and `mobile/lib` found no `Math.random`, faker, or mock business-data generator in production source; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. Admin production build passed with `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app`; Restaurant production build intentionally fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured.
+- Current backend route/dispatch evidence after `c825ad5`: focused Jest passed 5 suites / 60 tests for tracking service/gateway, ETA recompute, drivers, and dispatch; backend `pnpm typecheck` and `pnpm lint` also passed. The new coverage verifies order-facing dispatch events use the orders gateway and provider route metrics persist to `delivery_tasks` by pickup/dropoff phase.
 
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
