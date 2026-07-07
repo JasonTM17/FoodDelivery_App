@@ -1,6 +1,6 @@
 # FoodFlow Testing Guide
 
-## Latest local evidence (2026-07-06)
+## Latest local evidence (2026-07-07)
 
 Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
@@ -12,7 +12,7 @@ Verified remote code head: `118459e` on `origin/master` before this local harden
 - Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (225 tests), focused tracking/driver route/heatmap tests 22/22, and `flutter build apk --debug`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin.
 - OpenAPI/Spectral passed with `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
 - Security evidence: high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
-- Current local hardening evidence on 2026-07-07: Prisma validate and backend build passed; targeted backend i18n/orders/promotions/tracking/drivers Jest suites passed 9 suites / 134 tests; Admin driver-map hook/marker Vitest passed 2 files / 12 tests; Admin production build passed with `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app`; Restaurant production build intentionally fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured; mobile background-location/trip-route targeted tests passed 19 tests.
+- Current local hardening evidence on 2026-07-07 after `17e4661`: backend full `pnpm exec jest --runInBand` passed 110 suites / 802 tests; web `pnpm typecheck`, `pnpm lint`, and full Vitest passed Admin 37 files / 155 tests plus Restaurant 31 files / 100 tests; mobile `flutter analyze` and full `flutter test` passed 225 tests. High-confidence HEAD secret scan found no live provider token/private-key matches. Runtime keyword scan over `backend/src`, Admin source, Restaurant source, and `mobile/lib` found no `Math.random`, faker, or mock business-data generator in production source; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. Admin production build passed with `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app`; Restaurant production build intentionally fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured.
 
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 

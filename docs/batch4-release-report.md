@@ -18,17 +18,17 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 |---|---|
 | Backend install | `pnpm install --frozen-lockfile` passed |
 | Backend Prisma | `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public DIRECT_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public pnpm exec prisma validate --schema prisma/schema.prisma` passed |
-| Backend quality | `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 802 tests), and `pnpm build` passed; current hardening also passed Prisma validate and targeted i18n/orders/promotions/tracking/drivers Jest suites (9 suites / 134 tests) |
+| Backend quality | `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 802 tests), and `pnpm build` passed. Latest 2026-07-07 hardening rerun after `17e4661` passed full Jest again: 110 suites / 802 tests. |
 | Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests |
 | Web install | `pnpm install --frozen-lockfile` passed |
-| Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and prior full `pnpm build` passed. Current hardening passed Admin driver-map Vitest (2 files / 12 tests), Admin typecheck/lint, and `pnpm --filter foodflow-admin build` when `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app` is provided. Restaurant production build still correctly fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured. |
+| Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and prior full `pnpm build` passed. Latest 2026-07-07 hardening rerun after `17e4661` passed web typecheck, lint, and full Vitest again. `pnpm --filter foodflow-admin build` passes when `NEXT_PUBLIC_ADMIN_URL=https://food-delivery-app-one-liard.vercel.app` is provided. Restaurant production build still correctly fails closed until `NEXT_PUBLIC_RESTAURANT_URL` is configured. |
 | OpenAPI | Spectral lint passed with `--fail-severity error` |
 | Docker | Backend/Admin/Restaurant rebuilt from current source and all health checks were healthy |
 | Playwright | Chromium + Firefox passed 70/70 tests, including realtime, tenant isolation, visual contract, and axe serious/critical smoke |
-| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk` |
+| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `17e4661` passed `flutter analyze` and full `flutter test` again: 225/225 tests. |
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
-| Secrets | High-confidence tracked/staged scans found no live provider tokens or private keys; no tracked dotenv files were found. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts |
+| Secrets/runtime data | High-confidence tracked/staged scans found no live provider tokens or private keys; no tracked dotenv files were found. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. Latest runtime keyword scan over production source found no `Math.random`, faker, or mock business-data generator; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. |
 
 Note: the verified Playwright run used `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, and `API_URL=http://[::1]:3001/api` because a separate local Node process is listening on `127.0.0.1:3000` outside the clean worktree.
 
