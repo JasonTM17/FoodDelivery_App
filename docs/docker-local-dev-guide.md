@@ -94,6 +94,20 @@ Use explicit `[::1]` loopback URLs for E2E if another local app is already bound
 
 Run the gates that match the area you touched. Before deploy, all gates must be green:
 
+For a scripted PowerShell gate from the repo root:
+
+```powershell
+# Full pre-deploy gate; requires production web/Supabase/Vercel env/auth.
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1
+
+# Partial local evidence refresh when production env/auth is intentionally absent.
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1 `
+  -SkipBuild `
+  -SkipDeployPreflight
+```
+
+The script runs git whitespace checks, high-confidence secret scans, backend Prisma/typecheck/lint/Jest/build, web typecheck/lint/Vitest/build, mobile analyze/test, and the Supabase/Vercel preflight guards unless the matching skip flag is used.
+
 ```powershell
 cd backend
 pnpm install --frozen-lockfile

@@ -175,6 +175,7 @@ Alert on repeated failures. Do not use keep-alive to mask failed migrations, mis
 
 ## Pre-Deploy Gates
 
+- From the repo root, run `powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1` after production env/auth is configured. This wraps the local quality gates, secret scan, and Supabase/Vercel preflight guards without printing secret values.
 - `pnpm install --frozen-lockfile` in a clean environment for backend and web.
 - Backend: Prisma validate/migrate checks, typecheck, lint, Jest, build.
 - Web: API client generation/typecheck, Spectral/OpenAPI lint, Admin and Restaurant typecheck/lint/Vitest/build.
