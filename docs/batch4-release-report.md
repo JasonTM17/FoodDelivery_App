@@ -17,6 +17,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Backend dispatch/tracking now routes customer/restaurant order-facing dispatch events through the `/events` orders gateway, keeps `/dispatch` driver-only, and persists real provider pickup/dropoff route distance, duration, and geometry into `delivery_tasks` without fabricated ETA fallbacks.
 - Driver incentives now use persisted `driver_incentive_campaigns` records and delivered driver tasks to compute active/completed campaign progress instead of returning `501 DRIVER_INCENTIVES_NOT_MODELLED`.
 - Admin user vouchers now return real persisted `Promotion` and `PromotionUsage` data for owned/used vouchers and total savings instead of the `VOUCHER_WALLET_NOT_MODELLED` placeholder contract.
+- Admin exports no longer advertise or accept Parquet create requests until a real Parquet writer/storage pipeline exists; CSV/XLSX remain completed inline from database rows, while legacy Parquet jobs still render as historical job rows and cannot be downloaded as fake files.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -29,6 +30,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests. Latest tracking/dispatch hardening through `c825ad5` passed 5 focused suites / 60 tests plus backend `pnpm typecheck` and `pnpm lint`. |
 | Backend driver incentives | `9c32d01` passed Prisma generate/validate, focused Jest for incentives/env validation (3 suites / 10 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, and focused mobile incentives tests 7/7 |
 | Admin user vouchers | `GET /admin/users/:id/vouchers` now reads persisted promotions/usages; focused backend Jest passed `src/admin/admin-resources.service.spec.ts` (7 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, Admin `pnpm --filter foodflow-admin typecheck`, Admin `pnpm --filter foodflow-admin lint`, focused Admin voucher Vitest, and full Admin Vitest 38 files / 156 tests. |
+| Admin export formats | Parquet create requests are rejected until real writer/storage support exists; focused backend Jest passed `src/admin/admin-export.service.spec.ts` (6 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, Admin export/report Vitest (8 tests), Admin `pnpm --filter foodflow-admin typecheck`, and Admin `pnpm --filter foodflow-admin lint`. |
 | Web install | `pnpm install --frozen-lockfile` passed |
 | Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and full Admin + Restaurant builds passed in the 2026-07-07 local release gate at `89f0d0e`. Restaurant build validation used an explicit secure public build-time URL; production deployment still correctly requires the real `NEXT_PUBLIC_RESTAURANT_URL` to be configured in Vercel. |
 | OpenAPI | Spectral lint passed with `--fail-severity error` |

@@ -5,7 +5,7 @@ import type {
   AdminExportStatus,
   CreateAdminExportRequest,
 } from '@foodflow/api-client';
-import { FileArchive, FileSpreadsheet, FileText } from 'lucide-react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 
 export type AdminExportPeriod = NonNullable<CreateAdminExportRequest['period']>;
 
@@ -30,11 +30,9 @@ export const datePresets: AdminExportPeriod[] = [
 export const exportFormats: Array<{
   value: AdminExportFormat;
   icon: typeof FileText;
-  disabled: boolean;
 }> = [
-  { value: 'csv', icon: FileSpreadsheet, disabled: false },
-  { value: 'xlsx', icon: FileText, disabled: false },
-  { value: 'parquet', icon: FileArchive, disabled: true },
+  { value: 'csv', icon: FileSpreadsheet },
+  { value: 'xlsx', icon: FileText },
 ];
 
 export const statusBadgeVariants: Record<

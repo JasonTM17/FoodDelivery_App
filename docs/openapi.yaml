@@ -1986,7 +1986,7 @@ components:
       properties:
         resource: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users] }
         type: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users], deprecated: true }
-        format: { type: string, enum: [csv, xlsx, parquet] }
+        format: { type: string, enum: [csv, xlsx], description: "Parquet is intentionally not accepted until a real parquet writer/storage pipeline exists." }
         period: { type: string, enum: [today, 7d, 30d, thisMonth, thisQuarter, custom] }
         dateFrom: { type: string, format: date }
         dateTo: { type: string, format: date }
@@ -4415,7 +4415,7 @@ paths:
     post:
       tags: [audit]
       summary: Create an admin export job
-      description: Creates a canonical export job for CSV/XLSX/Parquet. CSV and XLSX complete inline from real database rows; Parquet returns a failed degraded job until a real file worker/storage writer is configured.
+      description: Creates a canonical CSV or XLSX export job from real database rows. Parquet is not accepted until a real writer/storage pipeline exists.
       operationId: admin_exports_create
       x-foo-actor: admin
       requestBody:

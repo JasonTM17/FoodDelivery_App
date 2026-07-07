@@ -12,7 +12,7 @@ const EXPORT_RESOURCES: AdminExportResource[] = [
   'users',
 ]
 
-const EXPORT_FORMATS: ExportFormat[] = [ExportFormat.csv, ExportFormat.xlsx, ExportFormat.parquet]
+const EXPORT_FORMATS: ExportFormat[] = [ExportFormat.csv, ExportFormat.xlsx]
 
 export type CsvRow = Record<string, string | number | boolean | null | undefined>
 export type ExportFilters = Record<string, unknown>

@@ -73,22 +73,12 @@ describe('AdminExportService', () => {
     expect(result.errorMessage).toBeUndefined()
   })
 
-  it('marks Parquet as failed when export storage workers are unavailable', async () => {
-    adminExportJob.create.mockImplementation(({ data }) => ({
-      ...makeJob(),
-      ...data,
-      requestedBy: makeRequester(),
-    }))
-
-    const result = await service.create('admin-1', {
+  it('rejects Parquet create requests until a real writer is available', async () => {
+    await expect(service.create('admin-1', {
       resource: 'orders',
       format: ExportFormat.parquet,
-    })
-
-    expect(result.status).toBe(ExportJobStatus.failed)
-    expect(result.downloadUrl).toBeUndefined()
-    expect(result.rowCount).toBe(0)
-    expect(result.errorMessage).toContain('PARQUET export worker is not configured')
+    })).rejects.toThrow(BadRequestException)
+    expect(adminExportJob.create).not.toHaveBeenCalled()
   })
 
   it('downloads UTF-8 CSV and neutralizes spreadsheet formulas', async () => {

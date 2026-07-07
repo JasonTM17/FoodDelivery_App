@@ -64,10 +64,7 @@ export function ReportExportForm(props: ReportExportFormProps) {
           onValueChange={value => props.onFormatChange(value as AdminExportFormat)}
           options={exportFormats.map(option => ({
             value: option.value,
-            label: option.disabled
-              ? t('formatUnavailable', { format: option.value.toUpperCase() })
-              : option.value.toUpperCase(),
-            disabled: option.disabled,
+            label: option.value.toUpperCase(),
           }))}
         />
       </div>

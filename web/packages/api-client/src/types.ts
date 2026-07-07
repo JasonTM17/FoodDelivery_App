@@ -54,14 +54,15 @@ export type AdminExportResource =
   | 'revenue'
   | 'users';
 
-export type AdminExportFormat = 'csv' | 'xlsx' | 'parquet';
+export type AdminExportFormat = 'csv' | 'xlsx';
+export type AdminExportJobFormat = AdminExportFormat | 'parquet';
 export type AdminExportStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 export interface AdminExportJob {
   id: string;
   type: AdminExportResource;
   resource: AdminExportResource;
-  format: AdminExportFormat;
+  format: AdminExportJobFormat;
   status: AdminExportStatus;
   progress: number;
   rowCount: number;
