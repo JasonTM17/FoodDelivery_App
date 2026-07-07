@@ -2,7 +2,7 @@
 
 ## Latest local evidence (2026-07-07)
 
-Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`, with latest validated local head `89f0d0e` ahead of `origin/master` by 21 commits before this docs refresh. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
+Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`, with latest local code head `9c32d01` ahead of `origin/master` by 23 commits before this docs refresh. The latest whole-app non-deploy release gate remains `89f0d0e`, with focused driver-incentive validation added at `9c32d01`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
 - Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
 - Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 803 tests), and `pnpm build`.
@@ -14,6 +14,7 @@ Verified remote code head: `118459e` on `origin/master` before this local harden
 - Security evidence: high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
 - Earlier hardening evidence after `94d4e18`: mobile nearby+i18n tests passed 19/19 and full `flutter test` passed 229/229 after aligning nearby/filter calls with the backend contract. High-confidence HEAD secret scan found no live provider token/private-key matches. Runtime keyword scan over `backend/src`, Admin source, Restaurant source, and `mobile/lib` found no `Math.random`, faker, or mock business-data generator in production source; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata.
 - Current backend route/dispatch evidence after `c825ad5`: focused Jest passed 5 suites / 60 tests for tracking service/gateway, ETA recompute, drivers, and dispatch; backend `pnpm typecheck` and `pnpm lint` also passed. The new coverage verifies order-facing dispatch events use the orders gateway and provider route metrics persist to `delivery_tasks` by pickup/dropoff phase.
+- Current backend driver-incentives evidence after `9c32d01`: persisted `driver_incentive_campaigns` records now drive active/completed campaign progress from delivered driver tasks instead of a `501` placeholder. Prisma generate/validate, focused Jest for incentives/env validation (3 suites / 10 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, and focused mobile incentive tests (7/7) passed.
 - Current whole-app local gate at `89f0d0e`: `powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\local-release-gate.ps1 -SkipDeployPreflight` passed after setting an explicit secure Restaurant build-time URL, and `pnpm test:e2e --project=chromium --project=firefox` passed 70/70 against rebuilt Docker services. Deploy preflight was not bypassed for production readiness and remains blocked by missing Supabase/Vercel production configuration.
 
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
@@ -73,7 +74,7 @@ pnpm --filter restaurant build
 ```
 
 Latest local web/API-contract evidence: OpenAPI Spectral lint passed with `--fail-severity error`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 37 files / 155 tests and Restaurant 31 files / 100 tests. Backend validation passed Prisma validate, `pnpm typecheck`, `pnpm lint`, full Jest (110 suites / 803 tests), and build.
-Earlier map/tracking and 2026-07-04/2026-07-06 matrices remain useful for history, but the current local verification is the 2026-07-07 `89f0d0e` matrix in [Batch 4 release report](batch4-release-report.md).
+Earlier map/tracking and 2026-07-04/2026-07-06 matrices remain useful for history, but the current whole-app local verification is the 2026-07-07 `89f0d0e` matrix in [Batch 4 release report](batch4-release-report.md), with focused driver-incentive validation at `9c32d01`.
 
 ## Playwright E2E
 

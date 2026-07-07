@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest locally validated head `89f0d0e` includes backend route hardening and evidence docs, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 21` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest local code head `9c32d01` adds persisted driver incentive campaigns, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 23` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch. The latest whole-app non-deploy release gate remains `89f0d0e`, with focused validation added for `9c32d01`.
 
 ## What landed
 
@@ -15,6 +15,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Mobile order status labels and shared empty/error/availability labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
 - Mobile nearby browse now sends the backend `/restaurants/nearby` contract (`lat`/`lng` plus canonical cuisine values), fails closed when GPS is unavailable instead of using fake coordinates, builds list/map cuisine filters from real `cuisineTypes`, and localizes browse/search/driver-history error and filter labels through generated vi/en/ja strings.
 - Backend dispatch/tracking now routes customer/restaurant order-facing dispatch events through the `/events` orders gateway, keeps `/dispatch` driver-only, and persists real provider pickup/dropoff route distance, duration, and geometry into `delivery_tasks` without fabricated ETA fallbacks.
+- Driver incentives now use persisted `driver_incentive_campaigns` records and delivered driver tasks to compute active/completed campaign progress instead of returning `501 DRIVER_INCENTIVES_NOT_MODELLED`.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -25,6 +26,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | Backend Prisma | `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public DIRECT_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public pnpm exec prisma validate --schema prisma/schema.prisma` passed |
 | Backend quality | `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 803 tests), and `pnpm build` passed in the 2026-07-07 local release gate at `89f0d0e`. |
 | Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests. Latest tracking/dispatch hardening through `c825ad5` passed 5 focused suites / 60 tests plus backend `pnpm typecheck` and `pnpm lint`. |
+| Backend driver incentives | `9c32d01` passed Prisma generate/validate, focused Jest for incentives/env validation (3 suites / 10 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, and focused mobile incentives tests 7/7 |
 | Web install | `pnpm install --frozen-lockfile` passed |
 | Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and full Admin + Restaurant builds passed in the 2026-07-07 local release gate at `89f0d0e`. Restaurant build validation used an explicit secure public build-time URL; production deployment still correctly requires the real `NEXT_PUBLIC_RESTAURANT_URL` to be configured in Vercel. |
 | OpenAPI | Spectral lint passed with `--fail-severity error` |
