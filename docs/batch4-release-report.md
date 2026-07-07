@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. Local hardening changes may be ahead of remote until production prerequisites are valid.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The pre-docs audit found local HEAD `b507a1a` was 13 commits ahead of `origin/master` and a fast-forward candidate for `master`; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
 
 ## What landed
 
@@ -12,6 +12,8 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Mobile tracking/driver route tests verify realtime route confirmation, stale route clearing, invalid coordinate rejection, backend route telemetry parsing, and heatmap rows without invented fallback metrics.
 - The local hardening refresh removes runtime hardcoded i18n fallback maps, rejects stale/future GPS samples before they mutate live driver state, prevents stale queued ETA jobs from overwriting the current route phase, marks Admin driver markers stale when refreshes fail, blocks demo seed execution in production, and labels planned route geometry distinctly from telemetry replay.
 - A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so frozen installs, backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
+- Mobile order status labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
+- Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
 
@@ -26,9 +28,10 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | OpenAPI | Spectral lint passed with `--fail-severity error` |
 | Docker | Backend/Admin/Restaurant rebuilt from current source and all health checks were healthy |
 | Playwright | Chromium + Firefox passed 70/70 tests, including realtime, tenant isolation, visual contract, and axe serious/critical smoke |
-| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `17e4661` passed `flutter analyze` and full `flutter test` again: 225/225 tests. |
+| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `110bb2c` passed `flutter analyze` and full `flutter test` again: 225/225 tests. |
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
+| CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |
 | Secrets/runtime data | High-confidence tracked/staged scans found no live provider tokens or private keys; no tracked dotenv files were found. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. Latest runtime keyword scan over production source found no `Math.random`, faker, or mock business-data generator; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. |
 
 Note: the verified Playwright run used `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, and `API_URL=http://[::1]:3001/api` because a separate local Node process is listening on `127.0.0.1:3000` outside the clean worktree.
@@ -40,6 +43,7 @@ No production deploy was performed.
 Current blockers:
 
 - GitHub Actions cannot be treated as current-head green until the user restores token/auth/billing access and reruns CI/security/E2E workflows.
+- GitHub should already show only one remote branch, `master`. The local `codex/batch4-integration` branch must remain until all local commits are pushed to `master` and patch-equivalence is rechecked.
 - Supabase CLI is available through `npx supabase` (`2.109.0`), and the new `infra/scripts/supabase-preflight.{sh,ps1}` guard fails safely before deployment when `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, or `DIRECT_URL` is missing. Current environment still lacks Supabase auth and production DB URLs, so Supabase database/realtime project access and migration deployment are not verified.
 - Vercel CLI auth is present and the `food-delivery-app` project now exists. It is linked to the repo and configured for Admin's monorepo root `web/apps/admin`, but the new `infra/scripts/vercel-web-preflight.ps1` guard fails safely because the Admin production env list is missing `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, and `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Production deployment remains blocked until required public env and rotated secrets are configured.
 - Restaurant web needs a separate Vercel project/domain or explicit hosting decision plus `NEXT_PUBLIC_RESTAURANT_URL`; the existing `food-delivery-app` project is currently configured for Admin.

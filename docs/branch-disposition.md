@@ -1,6 +1,6 @@
 # Branch disposition — Batch 4 integration
 
-Last audited: 2026-07-07. Remote cleanup has been rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`: `git ls-remote --heads origin` returns only `refs/heads/master`. The clean worktree still uses the local branch `codex/batch4-integration` for continuity and tracks `origin/master`; local hardening/docs commits may exist ahead of remote until deployment prerequisites are valid.
+Last audited: 2026-07-07. Remote cleanup has been rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`: `git ls-remote --heads origin` returns only `refs/heads/master`. The clean worktree still uses the local branch `codex/batch4-integration` for continuity and tracks `origin/master`; the pre-docs audit found it is a fast-forward candidate with 13 local commits ahead of `origin/master` through `b507a1a`. Do not delete the local integration branch until those commits and any later docs/evidence commits are pushed to `master` and `git rev-list --left-right --count origin/master...codex/batch4-integration` returns `0 0`.
 
 This record documents the branch state used for Batch 4 salvage and cleanup decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
 
@@ -28,7 +28,7 @@ git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
 
 | Branch | Head at audit | Relationship | Disposition |
 |---|---:|---|---|
-| `codex/batch4-integration` | Tracks `origin/master` | Current clean worktree branch in `D:\Food_Delivery-worktrees\batch4-integration`, now tracking `origin/master` after the remote integration branch was deleted. | Safe local worktree branch for continued Batch 4 work; push future commits explicitly to `master` unless a new review branch is intentionally opened. |
+| `codex/batch4-integration` | `b507a1a` at pre-docs audit | Current clean worktree branch in `D:\Food_Delivery-worktrees\batch4-integration`, tracking `origin/master` after the remote integration branch was deleted. `git rev-list --left-right --count origin/master...HEAD` returned `0 13`, and `origin/master` is an ancestor of HEAD before this docs refresh. | Safe local worktree branch for continued Batch 4 work. The merge-to-single-branch step is `git push origin HEAD:master` only after production env/auth and gates are valid; delete the local branch only after patch-equivalence is rechecked. |
 | `master` | `4fb2799` | Checked out in dirty root worktree `D:\Food_Delivery`; behind `origin/master` after Batch 4 was merged. | Do not switch, reset, delete, or mutate from the Batch 4 clean worktree. |
 
 ## Cleaned-up branch refs
@@ -60,11 +60,13 @@ When those branches become available again, reconcile them with this workflow:
 - Docker Compose rebuilt Backend/Admin/Restaurant from the current source and all three containers were healthy. Health endpoints returned OK for backend, Admin, and Restaurant.
 - Playwright passed Chromium + Firefox together: 70/70 tests. Coverage includes admin dashboard, Restaurant order management, customer order flow, realtime tracking, tenant isolation, visual contract, and the axe serious/critical smoke check. The verified local run used IPv6 loopback URLs because a separate local Node process was listening on `127.0.0.1:3000`.
 - Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (225 tests), targeted route/heatmap tests, and `flutter build apk --debug` before this hardening refresh. Latest hardening rerun after `17e4661` passed `flutter analyze` and full `flutter test` again: 225 tests.
+- Latest mobile i18n hardening at `110bb2c` moved order status labels out of hardcoded model/UI strings into generated vi/en/ja localization, and reran `flutter analyze` plus full `flutter test` successfully: 225/225 tests.
+- Docker publish workflow now targets the live `master` branch at `b507a1a`; YAML parsed successfully and `branches = [master]`.
 - OpenAPI/Spectral lint passed via `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
 - High-confidence tracked-file and staged-diff secret scans returned no live provider token or private key matches. `gitleaks` is not installed in the local PATH, so run Gitleaks again in CI when Actions auth is restored.
 
 ## Current conclusion
 
-GitHub should show only one remote branch: `master`. The former remote `codex/batch4-integration` branch was deleted after it was patch-equivalent to `master`.
+GitHub should show only one remote branch: `master`. The former remote `codex/batch4-integration` branch was deleted after it was patch-equivalent to `master`. The local `codex/batch4-integration` branch is intentionally retained because it contains unpushed hardening commits; deleting it before `HEAD` reaches `origin/master` would lose that integration line.
 
 Batch 4 is not production-deployed yet. Remote GitHub Actions for the current master head have not produced fresh green workflow evidence because the user reported token/auth access issues. The Vercel project `food-delivery-app` now exists and is linked, but its production env list is empty. Supabase CLI is available through `npx supabase`, but project auth and production DB URLs are still missing, so the preflight guard stops before migration/deploy. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after Actions access is restored and before any Supabase or Vercel deployment.
