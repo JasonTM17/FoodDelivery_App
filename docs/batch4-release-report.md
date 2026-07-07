@@ -12,7 +12,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Mobile tracking/driver route tests verify realtime route confirmation, stale route clearing, invalid coordinate rejection, backend route telemetry parsing, and heatmap rows without invented fallback metrics.
 - The local hardening refresh removes runtime hardcoded i18n fallback maps, rejects stale/future GPS samples before they mutate live driver state, prevents stale queued ETA jobs from overwriting the current route phase, marks Admin driver markers stale when refreshes fail, blocks demo seed execution in production, and labels planned route geometry distinctly from telemetry replay.
 - A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so frozen installs, backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
-- Mobile order status labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
+- Mobile order status labels and shared empty/error/availability labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -28,7 +28,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | OpenAPI | Spectral lint passed with `--fail-severity error` |
 | Docker | Backend/Admin/Restaurant rebuilt from current source and all health checks were healthy |
 | Playwright | Chromium + Firefox passed 70/70 tests, including realtime, tenant isolation, visual contract, and axe serious/critical smoke |
-| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `110bb2c` passed `flutter analyze` and full `flutter test` again: 225/225 tests. |
+| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `d42d2d8` passed `flutter analyze`, focused `flutter test test/i18n/i18n_test.dart` 16/16, and full `flutter test` again: 226/226 tests. |
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
 | CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |
