@@ -14,4 +14,35 @@ void main() {
       expect(driverRoutePhaseForStatus('ready_for_pickup'), 'dropoff');
     });
   });
+
+  group('isFreshDriverOnlineSample', () {
+    test('accepts current GPS samples', () {
+      final now = DateTime.parse('2026-07-07T10:00:00Z');
+
+      expect(isFreshDriverOnlineSample(now, now), isTrue);
+      expect(
+        isFreshDriverOnlineSample(
+          now.subtract(const Duration(seconds: 30)),
+          now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects stale or impossible future samples', () {
+      final now = DateTime.parse('2026-07-07T10:00:00Z');
+
+      expect(
+        isFreshDriverOnlineSample(
+          now.subtract(const Duration(seconds: 46)),
+          now,
+        ),
+        isFalse,
+      );
+      expect(
+        isFreshDriverOnlineSample(now.add(const Duration(seconds: 16)), now),
+        isFalse,
+      );
+    });
+  });
 }

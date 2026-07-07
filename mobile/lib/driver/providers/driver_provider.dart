@@ -8,6 +8,9 @@ import '../../shared/models/order.dart';
 import '../../shared/services/secure_storage_service.dart';
 import '../services/background_location_service.dart';
 
+const _kMaxOnlineSampleAge = Duration(seconds: 45);
+const _kMaxOnlineSampleFutureSkew = Duration(seconds: 15);
+
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
@@ -439,10 +442,25 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> goOnline(double lat, double lng, {DateTime? sampledAt}) async {
     state = state.copyWith(isLoading: true, error: null);
+    final sample = sampledAt;
+    if (sample == null || !isFreshDriverOnlineSample(sample, DateTime.now())) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Không lấy được vị trí GPS mới',
+      );
+      return;
+    }
     try {
-      await _api.post('/driver/online', data: {'lat': lat, 'lng': lng});
+      await _api.post(
+        '/driver/online',
+        data: {
+          'lat': lat,
+          'lng': lng,
+          'sampledAt': sample.toUtc().toIso8601String(),
+        },
+      );
       state = state.copyWith(isLoading: false, isOnline: true);
-      _startLocationUpdates(lat, lng, sampledAt: sampledAt);
+      _startLocationUpdates(lat, lng, sampledAt: sample);
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] as String? ??
@@ -465,12 +483,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
   }
 
   /// Goes online after acquiring real device GPS.
-  /// Uses the last real device position when a fresh GPS read times out.
+  /// Requires a fresh GPS sample before publishing the driver as live.
   Future<void> goOnlineWithGps() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      double? lat = state.currentLat;
-      double? lng = state.currentLng;
+      double? lat;
+      double? lng;
       DateTime? sampledAt;
       final permitted = await BackgroundLocationService.instance
           .requestPermissions();
@@ -485,10 +503,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
           lng = pos.longitude;
           sampledAt = pos.timestamp;
         } catch (_) {
-          // GPS timed out — fall through to last-known coords if present.
+          // GPS timed out; do not reuse in-memory coordinates as live.
         }
       }
-      if (lat == null || lng == null) {
+      if (lat == null ||
+          lng == null ||
+          sampledAt == null ||
+          !isFreshDriverOnlineSample(sampledAt, DateTime.now())) {
         state = state.copyWith(
           isLoading: false,
           error: 'Không lấy được vị trí GPS',
@@ -786,4 +807,11 @@ String driverRoutePhaseForStatus(String status) {
   return status == 'driver_assigned' || status == 'driver_arriving_restaurant'
       ? 'pickup'
       : 'dropoff';
+}
+
+bool isFreshDriverOnlineSample(DateTime sampledAt, DateTime now) {
+  final age = now.difference(sampledAt);
+  if (age > _kMaxOnlineSampleAge) return false;
+  if (age < -_kMaxOnlineSampleFutureSkew) return false;
+  return true;
 }

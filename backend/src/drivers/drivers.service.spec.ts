@@ -31,9 +31,30 @@ describe('DriversService', () => {
 
   describe('goOnline', () => {
     it('rejects driver online coordinates outside the Vietnam delivery bounds', async () => {
-      await expect(service.goOnline('d1', 13.7563, 100.5018)).rejects.toThrow(
+      await expect(
+        service.goOnline('d1', 13.7563, 100.5018, new Date().toISOString()),
+      ).rejects.toThrow(
         new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA'),
       )
+      expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+    })
+
+    it('rejects stale online coordinates before writing live Redis state', async () => {
+      const staleSampledAt = new Date(Date.now() - 60_000).toISOString()
+
+      await expect(
+        service.goOnline('d1', 10.8, 106.7, staleSampledAt),
+      ).rejects.toThrow(new BadRequestException('STALE_DRIVER_LOCATION_TIMESTAMP'))
+      expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+      expect(mockRedis.setex).not.toHaveBeenCalled()
+    })
+
+    it('rejects malformed online coordinate timestamps before writing live Redis state', async () => {
+      await expect(
+        service.goOnline('d1', 10.8, 106.7, 'not-a-date'),
+      ).rejects.toThrow(new BadRequestException('INVALID_DRIVER_LOCATION_TIMESTAMP'))
       expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
       expect(mockRedis.geoadd).not.toHaveBeenCalled()
     })
@@ -44,17 +65,20 @@ describe('DriversService', () => {
         rating: '4.0',
         totalDeliveries: 0,
       })
-      await expect(service.goOnline('d1', 10.8, 106.7)).rejects.toThrow(BadRequestException)
+      await expect(
+        service.goOnline('d1', 10.8, 106.7, new Date().toISOString()),
+      ).rejects.toThrow(BadRequestException)
     })
 
     it('adds driver to Redis GEO and sets status', async () => {
+      const sampledAt = new Date().toISOString()
       mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
         isVerified: true,
         rating: '4.5',
         totalDeliveries: 37,
       })
       mockPrisma.driverProfile.update.mockResolvedValueOnce({})
-      await expect(service.goOnline('d1', 10.8, 106.7)).resolves.toEqual({
+      await expect(service.goOnline('d1', 10.8, 106.7, sampledAt)).resolves.toEqual({
         isOnline: true,
         lat: 10.8,
         lng: 106.7,
@@ -70,7 +94,7 @@ describe('DriversService', () => {
       expect(mockRedis.setex).toHaveBeenCalledWith(
         'driver:d1:last_seen_at',
         35,
-        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        sampledAt,
       )
     })
   })
