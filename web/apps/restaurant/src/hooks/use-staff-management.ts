@@ -34,7 +34,8 @@ export function useStaffManagement({
     setLoading(true);
     setError('');
     try {
-      const data = await api.get<StaffOverview>('/restaurant/staff');
+      const data = await api.get<unknown>('/restaurant/staff');
+      if (!isStaffOverview(data)) throw new Error(loadErrorMessage);
       setOverview(data);
       setSelectedStaffId(current => (
         data.staff.some(member => member.id === current)
@@ -144,4 +145,14 @@ export function useStaffManagement({
     setSelectedStaffId,
     clearActionError: () => setActionError(''),
   };
+}
+
+function isStaffOverview(value: unknown): value is StaffOverview {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<Record<keyof StaffOverview, unknown>>;
+  return (
+    Array.isArray(candidate.staff) &&
+    Array.isArray(candidate.invites) &&
+    Array.isArray(candidate.shifts)
+  );
 }

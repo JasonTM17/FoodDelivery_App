@@ -22,8 +22,9 @@ export function MenuBoard() {
     setIsLoading(true);
     setError('');
     try {
-      const data = await api.get<MenuItem[]>('/restaurant/menu/items');
-      setMenuItems(data);
+      const data = await api.get<unknown>('/restaurant/menu/items');
+      if (!Array.isArray(data)) throw new Error(loadErrorMessage);
+      setMenuItems(data as MenuItem[]);
     } catch (err: unknown) {
       setError((err as { message?: string }).message || loadErrorMessage);
     } finally {
@@ -37,9 +38,10 @@ export function MenuBoard() {
 
   const handleToggle = async (item: MenuItem) => {
     try {
-      const updated = await api.patch<MenuItem>(`/restaurant/menu/items/${item.id}`, {
+      const updated = await api.patch<unknown>(`/restaurant/menu/items/${item.id}`, {
         available: !item.available,
       });
+      if (!isMenuItem(updated)) throw new Error(updateErrorMessage);
       setMenuItems((prev) => prev.map((m) => (m.id === item.id ? updated : m)));
     } catch (err) {
       setError((err as { message?: string }).message || updateErrorMessage);
@@ -79,6 +81,30 @@ export function MenuBoard() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 skeleton rounded-xl" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error && menuItems.length === 0) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+              <UtensilsCrossed className="h-5 w-5 text-brand-600" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+              <p className="text-sm text-gray-500">{tBoard('loadError')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4" role="alert">
+          <p className="text-sm text-red-700">{error}</p>
+          <button type="button" onClick={() => void fetchMenuItems()} className="mt-3 btn-ghost text-xs text-red-700">
+            {tBoard('retry')}
+          </button>
         </div>
       </div>
     );
@@ -157,5 +183,15 @@ export function MenuBoard() {
         </div>
       )}
     </div>
+  );
+}
+
+function isMenuItem(value: unknown): value is MenuItem {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    typeof (value as { id?: unknown }).id === 'string' &&
+    typeof (value as { name?: unknown }).name === 'string' &&
+    typeof (value as { category?: unknown }).category === 'string',
   );
 }
