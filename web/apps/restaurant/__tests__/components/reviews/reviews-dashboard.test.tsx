@@ -64,6 +64,15 @@ describe('ReviewsDashboard', () => {
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
   });
 
+  it('shows a contract error instead of treating malformed reviews as an empty list', async () => {
+    vi.mocked(api.get).mockResolvedValue({});
+
+    render(<ReviewsDashboard />);
+
+    expect(await screen.findByText('REVIEWS_CONTRACT_MISMATCH')).toBeVisible();
+    expect(screen.queryByText('No reviews yet')).not.toBeInTheDocument();
+  });
+
   it('posts a merchant reply and renders the updated review without static fallback data', async () => {
     vi.mocked(api.get).mockResolvedValue({ reviews: [review] });
     vi.mocked(api.post).mockResolvedValue({});

@@ -10,7 +10,10 @@ import {
   ReviewSummaryCards,
   ReviewsEmptyState,
 } from './reviews-dashboard-sections';
-import type { RestaurantReview } from './reviews-dashboard-types';
+import {
+  parseRestaurantReviewsResponse,
+  type RestaurantReview,
+} from './reviews-dashboard-types';
 
 export function ReviewsDashboard() {
   const t = useTranslations('reviews');
@@ -28,7 +31,7 @@ export function ReviewsDashboard() {
 
   useEffect(() => {
     api.get<{ reviews: RestaurantReview[] }>('/restaurant/reviews')
-      .then((data) => setReviews(data.reviews ?? []))
+      .then((data) => setReviews(parseRestaurantReviewsResponse(data)))
       .catch((err: unknown) => {
         const e = err as { message?: string };
         setFetchError(e.message || loadErrorMessage);
