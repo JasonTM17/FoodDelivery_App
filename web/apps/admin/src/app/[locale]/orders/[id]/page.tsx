@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
+import { parseOrderItems, type OrderItem } from '../order-detail-contract';
 
 interface Order {
   id: string;
@@ -23,7 +24,7 @@ interface Order {
   total: number;
   deliveryFee: number;
   discount: number;
-  items: { name: string; quantity: number; price: number }[];
+  items: OrderItem[];
   note: string;
   deliveryAddress: string;
   createdAt: string;
@@ -73,6 +74,8 @@ export default function OrderDetailPage() {
       </div>
     );
   }
+
+  const orderItems = parseOrderItems(order.items);
 
   return (
     <div className="space-y-6">
@@ -133,20 +136,26 @@ export default function OrderDetailPage() {
           <CardTitle>{t('items')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {(order.items || []).map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm"
-              >
-                <div>
-                  <span className="font-medium">{item.name}</span>
-                  <span className="ml-2 text-muted-foreground">x{item.quantity}</span>
+          {orderItems === null ? (
+            <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+              {t('itemsUnavailable')}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {orderItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm"
+                >
+                  <div>
+                    <span className="font-medium">{item.name}</span>
+                    <span className="ml-2 text-muted-foreground">x{item.quantity}</span>
+                  </div>
+                  <span>{formatCurrency(item.price * item.quantity)}</span>
                 </div>
-                <span>{formatCurrency(item.price * item.quantity)}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <Separator className="my-4" />
 

@@ -271,6 +271,7 @@
       "phoneLabel": "Phone:",
       "addressLabel": "Address:",
       "items": "Items",
+      "itemsUnavailable": "Order items are unavailable. Refresh after the backend returns a valid item list.",
       "subtotal": "Subtotal",
       "deliveryFee": "Delivery fee",
       "discount": "Discount",
