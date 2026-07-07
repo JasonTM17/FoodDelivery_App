@@ -35,6 +35,29 @@ void main() {
     });
   });
 
+  group('parseTrackingSnapshotPayload', () {
+    test('rejects malformed snapshot payloads instead of swallowing them', () {
+      expect(
+        () => parseTrackingSnapshotPayload({
+          'orderId': 'order-1',
+          'status': 'delivering',
+        }, 'order-1'),
+        throwsFormatException,
+      );
+    });
+
+    test('rejects snapshots for a different order', () {
+      expect(
+        () => parseTrackingSnapshotPayload({
+          'orderId': 'order-2',
+          'status': 'delivering',
+          'routePhase': 'dropoff',
+        }, 'order-1'),
+        throwsFormatException,
+      );
+    });
+  });
+
   group('mergeTrackingSnapshot', () {
     test('hydrates initial ETA, route phase, route and driver location', () {
       const state = TrackingState(currentOrderId: 'order-1');
@@ -62,10 +85,28 @@ void main() {
       expect(merged.driverLatitude, 10.7769);
       expect(merged.driverLongitude, 106.7009);
       expect(merged.driverLocations, hasLength(1));
+      expect(merged.snapshotError, isNull);
       expect(
         merged.driverLocations.single['timestamp'],
         '2026-07-05T01:02:03Z',
       );
+    });
+
+    test('clears a previous snapshot error after a valid snapshot arrives', () {
+      const state = TrackingState(
+        currentOrderId: 'order-1',
+        snapshotError: trackingSnapshotMalformed,
+      );
+      const snapshot = TrackingResponse(
+        orderId: 'order-1',
+        status: 'delivering',
+        etaMinutes: 12,
+        routePhase: 'dropoff',
+      );
+
+      final merged = mergeTrackingSnapshot(state, snapshot);
+
+      expect(merged.snapshotError, isNull);
     });
 
     test('lets a snapshot without route clear stale order geometry', () {

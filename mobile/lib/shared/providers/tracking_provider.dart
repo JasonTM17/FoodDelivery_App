@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:api_client/api_client.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../api/socket_client.dart';
@@ -8,6 +10,9 @@ import '../utils/backend_date_time.dart';
 import 'order_provider.dart';
 
 const _trackingUnset = Object();
+const trackingSnapshotUnavailable = 'tracking_snapshot_unavailable';
+const trackingSnapshotMalformed = 'tracking_snapshot_malformed';
+const trackingSnapshotOrderMismatch = 'tracking_snapshot_order_mismatch';
 
 final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
   (ref) {
@@ -28,6 +33,7 @@ class TrackingState {
   final String? routePolyline;
   final String? routePhase;
   final bool routeUpdateReceived;
+  final String? snapshotError;
 
   const TrackingState({
     this.isConnected = false,
@@ -41,6 +47,7 @@ class TrackingState {
     this.routePolyline,
     this.routePhase,
     this.routeUpdateReceived = false,
+    this.snapshotError,
   });
 
   TrackingState copyWith({
@@ -55,6 +62,7 @@ class TrackingState {
     Object? routePolyline = _trackingUnset,
     Object? routePhase = _trackingUnset,
     bool? routeUpdateReceived,
+    Object? snapshotError = _trackingUnset,
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
@@ -80,6 +88,9 @@ class TrackingState {
           ? this.routePhase
           : routePhase as String?,
       routeUpdateReceived: routeUpdateReceived ?? this.routeUpdateReceived,
+      snapshotError: identical(snapshotError, _trackingUnset)
+          ? this.snapshotError
+          : snapshotError as String?,
     );
   }
 }
@@ -116,7 +127,28 @@ TrackingState mergeTrackingSnapshot(
     routePolyline: snapshot.routePolyline,
     routePhase: snapshot.routePhase,
     routeUpdateReceived: true,
+    snapshotError: null,
   );
+}
+
+@visibleForTesting
+TrackingResponse parseTrackingSnapshotPayload(Object? data, String orderId) {
+  if (data is! Map) {
+    throw const FormatException('Tracking snapshot response must be an object');
+  }
+
+  late final TrackingResponse snapshot;
+  try {
+    snapshot = TrackingResponse.fromJson(Map<String, dynamic>.from(data));
+  } catch (_) {
+    throw const FormatException('Tracking snapshot contract mismatch');
+  }
+
+  if (snapshot.orderId != orderId) {
+    throw const FormatException('Tracking snapshot orderId mismatch');
+  }
+
+  return snapshot;
 }
 
 class TrackingNotifier extends StateNotifier<TrackingState> {
@@ -225,11 +257,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   Future<void> _loadTrackingSnapshot(String orderId) async {
     try {
       final response = await _api.get('/orders/$orderId/tracking');
-      final data = response.data;
-      if (data is! Map<String, dynamic>) return;
-
-      final snapshot = TrackingResponse.fromJson(data);
-      if (snapshot.orderId != orderId) return;
+      final snapshot = parseTrackingSnapshotPayload(response.data, orderId);
 
       state = mergeTrackingSnapshot(state, snapshot);
       _orderNotifier.updateOrderStatus(orderId, snapshot.status);
@@ -242,8 +270,16 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
           driverLocation.lng,
         );
       }
+    } on DioException catch (_) {
+      state = state.copyWith(snapshotError: trackingSnapshotUnavailable);
+    } on FormatException catch (error) {
+      state = state.copyWith(
+        snapshotError: error.message.contains('orderId')
+            ? trackingSnapshotOrderMismatch
+            : trackingSnapshotMalformed,
+      );
     } catch (_) {
-      // Tracking remains realtime-first when the snapshot endpoint is temporarily unavailable.
+      state = state.copyWith(snapshotError: trackingSnapshotMalformed);
     }
   }
 }
