@@ -41,6 +41,33 @@ class RoutePointData {
   const RoutePointData({required this.lat, required this.lng});
 }
 
+@visibleForTesting
+List<LatLng> routeReplayValidRoutePoints(List<RoutePointData> points) {
+  return points
+      .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
+      .map((point) => LatLng(point.lat, point.lng))
+      .toList(growable: false);
+}
+
+@visibleForTesting
+LatLng? routeReplayInitialCameraTarget({
+  required List<RoutePointData> points,
+  required double fromLat,
+  required double fromLng,
+  required double toLat,
+  required double toLng,
+}) {
+  final routePoints = routeReplayValidRoutePoints(points);
+  if (routePoints.isNotEmpty) return routePoints.first;
+  if (isValidDeliveryLatLng(fromLat, fromLng)) {
+    return LatLng(fromLat, fromLng);
+  }
+  if (isValidDeliveryLatLng(toLat, toLng)) {
+    return LatLng(toLat, toLng);
+  }
+  return null;
+}
+
 class _RouteReplayMapState extends State<RouteReplayMap>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
@@ -101,6 +128,14 @@ class _RouteReplayMapState extends State<RouteReplayMap>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final routePoints = _validRoutePoints();
+    final initialCameraTarget = routeReplayInitialCameraTarget(
+      points: widget.points,
+      fromLat: widget.fromLat,
+      fromLng: widget.fromLng,
+      toLat: widget.toLat,
+      toLng: widget.toLng,
+    );
+    final hasReplayableRoute = routePoints.length >= 2;
 
     return Column(
       children: [
@@ -114,35 +149,39 @@ class _RouteReplayMapState extends State<RouteReplayMap>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, _) {
-                final currentPoint = _currentReplayPoint(routePoints);
-                return GoogleMap(
-                  mapType: MapType.normal,
-                  initialCameraPosition: CameraPosition(
-                    target: _initialCameraTarget(routePoints),
-                    zoom: routePoints.length > 1 ? 13 : 15,
+            child: initialCameraTarget == null
+                ? _RouteReplayUnavailable(
+                    message: l10n.driverNavDirectionsUnavailable,
+                  )
+                : AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, _) {
+                      final currentPoint = _currentReplayPoint(routePoints);
+                      return GoogleMap(
+                        mapType: MapType.normal,
+                        initialCameraPosition: CameraPosition(
+                          target: initialCameraTarget,
+                          zoom: hasReplayableRoute ? 13 : 15,
+                        ),
+                        onMapCreated: (controller) {
+                          if (!_mapController.isCompleted) {
+                            _mapController.complete(controller);
+                          }
+                          _fitRouteToMap();
+                        },
+                        markers: _buildMarkers(routePoints, currentPoint),
+                        polylines: _buildPolylines(routePoints, currentPoint),
+                        minMaxZoomPreference: const MinMaxZoomPreference(
+                          VietnamMapConstants.minZoom,
+                          VietnamMapConstants.maxZoom,
+                        ),
+                        myLocationButtonEnabled: false,
+                        myLocationEnabled: false,
+                        zoomControlsEnabled: false,
+                        compassEnabled: true,
+                      );
+                    },
                   ),
-                  onMapCreated: (controller) {
-                    if (!_mapController.isCompleted) {
-                      _mapController.complete(controller);
-                    }
-                    _fitRouteToMap();
-                  },
-                  markers: _buildMarkers(routePoints, currentPoint),
-                  polylines: _buildPolylines(routePoints, currentPoint),
-                  minMaxZoomPreference: const MinMaxZoomPreference(
-                    VietnamMapConstants.minZoom,
-                    VietnamMapConstants.maxZoom,
-                  ),
-                  myLocationButtonEnabled: false,
-                  myLocationEnabled: false,
-                  zoomControlsEnabled: false,
-                  compassEnabled: true,
-                );
-              },
-            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -163,17 +202,19 @@ class _RouteReplayMapState extends State<RouteReplayMap>
                       : Icons.play_arrow,
                   color: AppColors.primary,
                 ),
-                onPressed: !widget.isEstimated && routePoints.length >= 2
+                onPressed: !widget.isEstimated && hasReplayableRoute
                     ? _toggleReplay
                     : null,
                 tooltip: widget.isEstimated
                     ? l10n.driverRouteReplayEstimatedTooltip
-                    : l10n.driverRouteReplayTooltip,
+                    : hasReplayableRoute
+                    ? l10n.driverRouteReplayTooltip
+                    : l10n.driverNavDirectionsUnavailable,
               ),
             ),
             const SizedBox(width: 12),
             Text(
-              _replayStatus(l10n),
+              _replayStatus(l10n, hasReplayableRoute: hasReplayableRoute),
               style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
             ),
           ],
@@ -182,7 +223,11 @@ class _RouteReplayMapState extends State<RouteReplayMap>
     );
   }
 
-  String _replayStatus(AppLocalizations l10n) {
+  String _replayStatus(
+    AppLocalizations l10n, {
+    required bool hasReplayableRoute,
+  }) {
+    if (!hasReplayableRoute) return l10n.driverNavDirectionsUnavailable;
     if (widget.isEstimated) return l10n.driverRouteReplayEstimated;
     if (_controller.isAnimating) return l10n.driverRouteReplayPlaying;
     if (_controller.isCompleted) return l10n.driverRouteReplayCompleted;
@@ -190,21 +235,7 @@ class _RouteReplayMapState extends State<RouteReplayMap>
   }
 
   List<LatLng> _validRoutePoints() {
-    return widget.points
-        .where((point) => isValidDeliveryLatLng(point.lat, point.lng))
-        .map((point) => LatLng(point.lat, point.lng))
-        .toList(growable: false);
-  }
-
-  LatLng _initialCameraTarget(List<LatLng> routePoints) {
-    if (routePoints.isNotEmpty) return routePoints.first;
-    if (isValidDeliveryLatLng(widget.fromLat, widget.fromLng)) {
-      return LatLng(widget.fromLat, widget.fromLng);
-    }
-    if (isValidDeliveryLatLng(widget.toLat, widget.toLng)) {
-      return LatLng(widget.toLat, widget.toLng);
-    }
-    return const LatLng(10.7769, 106.7009);
+    return routeReplayValidRoutePoints(widget.points);
   }
 
   LatLng? _currentReplayPoint(List<LatLng> routePoints) {
@@ -362,6 +393,44 @@ class _RouteReplayMapState extends State<RouteReplayMap>
     return LatLngBounds(
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
+    );
+  }
+}
+
+class _RouteReplayUnavailable extends StatelessWidget {
+  final String message;
+
+  const _RouteReplayUnavailable({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFF111827),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.route_outlined,
+                size: 44,
+                color: Colors.white.withValues(alpha: 0.48),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFFD1D5DB),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

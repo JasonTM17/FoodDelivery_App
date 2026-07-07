@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest local code head `9c32d01` adds persisted driver incentive campaigns, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 23` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch. The latest whole-app non-deploy release gate remains `89f0d0e`, with focused validation added for `9c32d01`.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest committed local head before the mobile map hardening pass was `871cdd8`, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 26` before this docs evidence refresh; re-run the ahead/behind check after each evidence commit before deleting the local branch. The latest whole-app non-deploy release gate remains `89f0d0e`, with focused validation added for later hardening commits.
 
 ## What landed
 
@@ -18,6 +18,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Driver incentives now use persisted `driver_incentive_campaigns` records and delivered driver tasks to compute active/completed campaign progress instead of returning `501 DRIVER_INCENTIVES_NOT_MODELLED`.
 - Admin user vouchers now return real persisted `Promotion` and `PromotionUsage` data for owned/used vouchers and total savings instead of the `VOUCHER_WALLET_NOT_MODELLED` placeholder contract.
 - Admin exports no longer advertise or accept Parquet create requests until a real Parquet writer/storage pipeline exists; CSV/XLSX remain completed inline from database rows, while legacy Parquet jobs still render as historical job rows and cannot be downloaded as fake files.
+- Mobile customer tracking and driver route replay maps no longer fall back to a hardcoded Ho Chi Minh City camera when backend route/driver coordinates are missing; they render localized unavailable states until real valid delivery coordinates arrive.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -38,6 +39,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | Playwright | After the current-source Docker rebuild, Chromium + Firefox passed 70/70 tests, including realtime, tenant isolation, visual contract, and axe serious/critical smoke |
 | Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `94d4e18` passed `flutter analyze`, focused `flutter test test/shared/restaurant_provider_nearby_contract_test.dart test/i18n/i18n_test.dart` 19/19, and full `flutter test` again: 229/229 tests. |
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
+| Mobile map fail-closed | Focused `flutter test test\driver\route_replay_map_test.dart test\customer\order_tracking_camera_test.dart` passed 6/6 and `flutter analyze` passed after removing hardcoded fallback camera targets from customer tracking and driver route replay. |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
 | CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |
 | Secrets/runtime data | High-confidence tracked/staged scans found no live provider tokens or private keys; no tracked dotenv files were found. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. Latest runtime keyword scan over production source found no `Math.random`, faker, or mock business-data generator; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. |
@@ -52,7 +54,7 @@ Current blockers:
 
 - GitHub Actions cannot be treated as current-head green until the user restores token/auth/billing access and reruns CI/security/E2E workflows.
 - GitHub should already show only one remote branch, `master`. The local `codex/batch4-integration` branch must remain until all local commits are pushed to `master` and patch-equivalence is rechecked.
-- Supabase CLI is available through `npx supabase` (`2.109.0`), and the new `infra/scripts/supabase-preflight.{sh,ps1}` guard fails safely before deployment when `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, or `DIRECT_URL` is missing. Current environment still lacks Supabase auth and production DB URLs, so Supabase database/realtime project access and migration deployment are not verified.
+- Supabase MCP was added for project ref `lvanszgszzfopusboich` and OAuth login succeeded, but Supabase CLI deployment still requires `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL`. The `infra/scripts/supabase-preflight.{sh,ps1}` guard continues to fail safely because the CLI token/production DB URLs are not present, so migration deployment is not verified.
 - Vercel CLI auth is present and the `food-delivery-app` project now exists. It is linked to the repo and configured for Admin's monorepo root `web/apps/admin`, but the new `infra/scripts/vercel-web-preflight.ps1` guard fails safely because the Admin production env list is missing `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, and `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Production deployment remains blocked until required public env and rotated secrets are configured.
 - Restaurant web needs a separate Vercel project/domain or explicit hosting decision plus `NEXT_PUBLIC_RESTAURANT_URL`; the existing `food-delivery-app` project is currently configured for Admin.
 - Production secrets are not verified: Supabase database URLs, JWT secrets, Redis, storage, SePay, DeepSeek, Google Maps, Vercel env, and any key previously pasted in chat must be rotated and stored only in provider secret managers.

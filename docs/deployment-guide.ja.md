@@ -46,7 +46,7 @@ curl http://localhost:3002/api/healthz
 
 Secret ではないが production で必須の config: `DELIVERY_BASE_FEE_VND` に承認済みのチェックアウト base delivery fee を設定します。Backend boot validation は pricing config 不足を拒否し、MVP hardcoded fee で order を作成しません。
 
-最新の deploy-readiness check: Vercel CLI auth は有効ですが、この repo は Vercel project に link されておらず、account の project list に FoodFlow project はありません。Supabase CLI は local PATH にありません。Production deploy は実行していません。
+最新の deploy-readiness check: Vercel CLI auth は有効で、`food-delivery-app` は Admin 用に link/config 済みですが、production env は `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` が未設定です。Supabase MCP は project ref `lvanszgszzfopusboich` で追加/OAuth login 済みですが、Supabase CLI deploy には release shell の `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, `DIRECT_URL` が必要です。Production deploy は実行していません。
 
 ## Supabase
 
