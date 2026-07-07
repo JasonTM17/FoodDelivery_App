@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The pre-docs audit found local HEAD `b507a1a` was 13 commits ahead of `origin/master` and a fast-forward candidate for `master`; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest code hardening head `94d4e18` is a fast-forward candidate for `master` and `git rev-list --left-right --count origin/master...HEAD` returned `0 17` before this docs evidence refresh; re-run the ahead/behind check after each docs evidence commit before deleting the local branch.
 
 ## What landed
 
@@ -13,6 +13,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - The local hardening refresh removes runtime hardcoded i18n fallback maps, rejects stale/future GPS samples before they mutate live driver state, prevents stale queued ETA jobs from overwriting the current route phase, marks Admin driver markers stale when refreshes fail, blocks demo seed execution in production, and labels planned route geometry distinctly from telemetry replay.
 - A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so frozen installs, backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
 - Mobile order status labels and shared empty/error/availability labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
+- Mobile nearby browse now sends the backend `/restaurants/nearby` contract (`lat`/`lng` plus canonical cuisine values), fails closed when GPS is unavailable instead of using fake coordinates, builds list/map cuisine filters from real `cuisineTypes`, and localizes browse/search/driver-history error and filter labels through generated vi/en/ja strings.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -28,7 +29,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | OpenAPI | Spectral lint passed with `--fail-severity error` |
 | Docker | Backend/Admin/Restaurant rebuilt from current source and all health checks were healthy |
 | Playwright | Chromium + Firefox passed 70/70 tests, including realtime, tenant isolation, visual contract, and axe serious/critical smoke |
-| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `d42d2d8` passed `flutter analyze`, focused `flutter test test/i18n/i18n_test.dart` 16/16, and full `flutter test` again: 226/226 tests. |
+| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `94d4e18` passed `flutter analyze`, focused `flutter test test/shared/restaurant_provider_nearby_contract_test.dart test/i18n/i18n_test.dart` 19/19, and full `flutter test` again: 229/229 tests. |
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
 | CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |
