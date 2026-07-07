@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io'
 import { type DeliveryRoutePhase, routePhaseForStatus, TrackingService } from './tracking.service'
 import { PrismaService } from '../database/prisma.service'
 import { haversineDistance } from '../common/utils/geo.utils'
+import { estimateRemainingRouteMetrics } from '../common/utils/route.utils'
 import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
 import { OrdersGateway, type AdminDriverLocationChangedEvent } from '../orders/orders.gateway'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
@@ -148,7 +149,19 @@ export class TrackingGateway implements OnGatewayConnection {
       const route = await this.trackingService.getOrFetchRoute(
         orderId, data.lat, data.lng, destLat, destLng, routePhase,
       )
-      const etaMinutes = route ? Math.max(1, Math.round(route.durationSeconds / 60)) : null
+      const remainingRoute = route
+        ? estimateRemainingRouteMetrics(
+          route.polyline,
+          data.lat,
+          data.lng,
+          route.distanceMeters,
+          route.durationSeconds,
+        )
+        : null
+      const remainingDurationSeconds = remainingRoute?.remainingDurationSeconds ?? route?.durationSeconds
+      const etaMinutes = typeof remainingDurationSeconds === 'number'
+        ? Math.max(0, Math.round(remainingDurationSeconds / 60))
+        : null
 
       this.emitEtaUpdate(orderId, {
         etaMinutes,
@@ -218,7 +231,7 @@ export class TrackingGateway implements OnGatewayConnection {
 }
 
 function parseDriverLocationTimestamp(timestamp: string | undefined): Date | null {
-  if (!timestamp) return new Date()
+  if (!timestamp) return null
   const parsed = new Date(timestamp)
   return Number.isFinite(parsed.getTime()) ? parsed : null
 }

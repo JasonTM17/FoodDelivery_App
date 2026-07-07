@@ -187,7 +187,7 @@ class _RecordingLocationPingEmitter implements LocationPingEmitter {
     double? bearing,
     double? speed,
     double? accuracy,
-    DateTime? timestamp,
+    required DateTime timestamp,
     bool bypassThrottle = false,
   }) {
     bypassThrottleValues.add(bypassThrottle);
@@ -198,7 +198,7 @@ class _RecordingLocationPingEmitter implements LocationPingEmitter {
         bearing: bearing,
         speed: speed,
         accuracy: accuracy,
-        timestamp: timestamp ?? DateTime.now(),
+        timestamp: timestamp,
       ),
     );
   }

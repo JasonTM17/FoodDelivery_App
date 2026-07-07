@@ -69,9 +69,98 @@ export function snapToPolylineDistanceKm(
   return minDist
 }
 
+export interface RemainingRouteMetrics {
+  remainingDistanceMeters: number
+  remainingDurationSeconds: number
+  progressRatio: number
+}
+
+export function estimateRemainingRouteMetrics(
+  encoded: string,
+  lat: number,
+  lng: number,
+  routeDistanceMeters: number,
+  routeDurationSeconds: number,
+): RemainingRouteMetrics | null {
+  if (
+    !Number.isFinite(routeDistanceMeters) ||
+    routeDistanceMeters <= 0 ||
+    !Number.isFinite(routeDurationSeconds) ||
+    routeDurationSeconds < 0
+  ) {
+    return null
+  }
+
+  const progress = projectPointOntoPolyline(encoded, lat, lng)
+  if (!progress || progress.totalDistanceKm <= 0) return null
+
+  const remainingRatio = Math.max(
+    0,
+    Math.min(1, progress.remainingDistanceKm / progress.totalDistanceKm),
+  )
+  return {
+    remainingDistanceMeters: Math.round(routeDistanceMeters * remainingRatio),
+    remainingDurationSeconds: Math.round(routeDurationSeconds * remainingRatio),
+    progressRatio: Math.max(0, Math.min(1, 1 - remainingRatio)),
+  }
+}
+
+function projectPointOntoPolyline(
+  encoded: string,
+  lat: number,
+  lng: number,
+): { totalDistanceKm: number; remainingDistanceKm: number } | null {
+  const points = decodePolyline(encoded)
+  if (points.length < 2) return null
+
+  const point = { lat, lng }
+  const segmentDistancesKm: number[] = []
+  let totalDistanceKm = 0
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const segmentDistanceKm = haversineDistance(
+      points[i].lat,
+      points[i].lng,
+      points[i + 1].lat,
+      points[i + 1].lng,
+    )
+    segmentDistancesKm.push(segmentDistanceKm)
+    totalDistanceKm += segmentDistanceKm
+  }
+  if (totalDistanceKm <= 0) return null
+
+  let nearestDistanceKm = Infinity
+  let distanceAlongRouteKm = 0
+  let distanceBeforeSegmentKm = 0
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const projection = projectPointOntoSegment(point, points[i], points[i + 1])
+    if (projection.distanceKm < nearestDistanceKm) {
+      nearestDistanceKm = projection.distanceKm
+      distanceAlongRouteKm = distanceBeforeSegmentKm + (segmentDistancesKm[i] * projection.fraction)
+    }
+    distanceBeforeSegmentKm += segmentDistancesKm[i]
+  }
+
+  return {
+    totalDistanceKm,
+    remainingDistanceKm: Math.max(0, totalDistanceKm - distanceAlongRouteKm),
+  }
+}
+
 function distanceToSegmentKm(point: GeoPoint, start: GeoPoint, end: GeoPoint): number {
+  return projectPointOntoSegment(point, start, end).distanceKm
+}
+
+function projectPointOntoSegment(
+  point: GeoPoint,
+  start: GeoPoint,
+  end: GeoPoint,
+): { distanceKm: number; fraction: number } {
   if (start.lat === end.lat && start.lng === end.lng) {
-    return haversineDistance(point.lat, point.lng, start.lat, start.lng)
+    return {
+      distanceKm: haversineDistance(point.lat, point.lng, start.lat, start.lng),
+      fraction: 0,
+    }
   }
 
   const meanLatRad = toRadians((point.lat + start.lat + end.lat) / 3)
@@ -84,8 +173,9 @@ function distanceToSegmentKm(point: GeoPoint, start: GeoPoint, end: GeoPoint): n
   const pointY = (point.lat - start.lat) * metersPerDegreeLat
   const lengthSquared = segmentX ** 2 + segmentY ** 2
 
-  if (lengthSquared === 0) {
-    return haversineDistance(point.lat, point.lng, start.lat, start.lng)
+  if (lengthSquared === 0) return {
+    distanceKm: haversineDistance(point.lat, point.lng, start.lat, start.lng),
+    fraction: 0,
   }
 
   const projection = Math.max(
@@ -97,7 +187,10 @@ function distanceToSegmentKm(point: GeoPoint, start: GeoPoint, end: GeoPoint): n
   const dx = pointX - closestX
   const dy = pointY - closestY
 
-  return Math.sqrt(dx ** 2 + dy ** 2) / 1000
+  return {
+    distanceKm: Math.sqrt(dx ** 2 + dy ** 2) / 1000,
+    fraction: projection,
+  }
 }
 
 function toRadians(degrees: number): number {
@@ -106,7 +199,7 @@ function toRadians(degrees: number): number {
 
 /**
  * Returns true when the driver has moved more than `thresholdMeters` from
- * the nearest vertex of the cached route polyline.
+ * the nearest segment of the cached route polyline.
  */
 export function hasDeviatedFromRoute(
   encoded: string,

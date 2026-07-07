@@ -34,7 +34,7 @@ interface LocationData {
   bearing?: number
   speed?: number
   accuracy?: number
-  timestamp?: string
+  timestamp: string
 }
 
 interface LocationRecord {
@@ -300,7 +300,7 @@ function normalizeRedisOrderId(value: string | null): string | null {
 }
 
 function parseLocationRecordedAt(timestamp?: string): Date {
-  if (!timestamp) return new Date()
+  if (!timestamp) throw new Error('INVALID_DRIVER_LOCATION_TIMESTAMP')
   const recordedAt = new Date(timestamp)
   if (!Number.isFinite(recordedAt.getTime())) {
     throw new Error('INVALID_DRIVER_LOCATION_TIMESTAMP')

@@ -437,12 +437,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Online / Offline
   // -----------------------------------------------------------------------
 
-  Future<void> goOnline(double lat, double lng) async {
+  Future<void> goOnline(double lat, double lng, {DateTime? sampledAt}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await _api.post('/driver/online', data: {'lat': lat, 'lng': lng});
       state = state.copyWith(isLoading: false, isOnline: true);
-      _startLocationUpdates(lat, lng);
+      _startLocationUpdates(lat, lng, sampledAt: sampledAt);
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] as String? ??
@@ -471,6 +471,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
     try {
       double? lat = state.currentLat;
       double? lng = state.currentLng;
+      DateTime? sampledAt;
       final permitted = await BackgroundLocationService.instance
           .requestPermissions();
       if (permitted) {
@@ -482,6 +483,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
           ).timeout(const Duration(seconds: 8));
           lat = pos.latitude;
           lng = pos.longitude;
+          sampledAt = pos.timestamp;
         } catch (_) {
           // GPS timed out — fall through to last-known coords if present.
         }
@@ -498,7 +500,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         currentLat: lat,
         currentLng: lng,
       );
-      await goOnline(lat, lng);
+      await goOnline(lat, lng, sampledAt: sampledAt);
       startDispatchOfferListener();
     } catch (e) {
       state = state.copyWith(
@@ -512,9 +514,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Location
   // -----------------------------------------------------------------------
 
-  void _startLocationUpdates(double lat, double lng) {
-    // Emit initial known position immediately before the stream kicks in.
-    _socket.emitLocationPing(lat, lng);
+  void _startLocationUpdates(double lat, double lng, {DateTime? sampledAt}) {
+    // Emit the initial known position only when it came from a real GPS sample.
+    if (sampledAt != null) {
+      _socket.emitLocationPing(lat, lng, timestamp: sampledAt);
+    }
     BackgroundLocationService.instance.start(
       hasActiveOrder: state.activeOrder != null,
     );
@@ -524,10 +528,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
     BackgroundLocationService.instance.stop();
   }
 
-  void updateLocation(double lat, double lng) {
+  void updateLocation(double lat, double lng, {DateTime? sampledAt}) {
     state = state.copyWith(currentLat: lat, currentLng: lng);
-    if (state.isOnline) {
-      _socket.emitLocationPing(lat, lng);
+    if (state.isOnline && sampledAt != null) {
+      _socket.emitLocationPing(lat, lng, timestamp: sampledAt);
     }
   }
 

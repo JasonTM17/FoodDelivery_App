@@ -209,7 +209,7 @@ class BackgroundLocationService {
     _emitPosition(
       _lastPosition!.latitude,
       _lastPosition!.longitude,
-      DateTime.now(),
+      _lastPosition!.timestamp,
       bearing: normalizeGpsBearingDegrees(_lastPosition!.heading),
       speed: normalizeGpsSpeedKmh(_lastPosition!.speed),
       accuracy: normalizeGpsAccuracyMeters(_lastPosition!.accuracy),
@@ -224,6 +224,9 @@ class BackgroundLocationService {
     double? speed,
     double? accuracy,
   }) {
+    final now = DateTime.now();
+    if (!_isLiveReplaySafe(ts, now)) return;
+
     if (_socket.isConnected) {
       _flushBuffer();
       _socket.emitLocationPing(
@@ -235,8 +238,6 @@ class BackgroundLocationService {
         timestamp: ts,
       );
     } else {
-      final now = DateTime.now();
-      if (!_isLiveReplaySafe(ts, now)) return;
       _dropStaleBufferedPings(now);
       // Buffer so pings survive brief disconnects.
       if (_offlineBuffer.length >= _kMaxBuffer) {

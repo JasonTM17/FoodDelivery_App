@@ -56,15 +56,16 @@ describe('TrackingService', () => {
     it('stores driver location in Redis and returns orderId', async () => {
       mockRedis.get.mockResolvedValueOnce('order-123')
       mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-123' })
+      const sampledAt = '2026-07-06T01:02:03.456Z'
       const orderId = await service.handleLocationUpdate('d1', {
-        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
+        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10, timestamp: sampledAt,
       })
       expect(mockRedis.geoadd).toHaveBeenCalled()
       expect(mockRedis.setex).toHaveBeenCalledWith('driver:d1:alive', 35, '1')
       expect(mockRedis.setex).toHaveBeenCalledWith(
         'driver:d1:last_seen_at',
         35,
-        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        sampledAt,
       )
       expect(orderId).toBe('order-123')
     })
@@ -73,7 +74,7 @@ describe('TrackingService', () => {
       mockRedis.get.mockResolvedValueOnce(null)
       mockPrisma.order.findFirst.mockResolvedValueOnce(null)
       const orderId = await service.handleLocationUpdate('d1', {
-        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
+        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10, timestamp: '2026-07-06T01:02:03.456Z',
       })
       expect(orderId).toBeNull()
     })
@@ -87,6 +88,7 @@ describe('TrackingService', () => {
       const orderId = await service.handleLocationUpdate('driver-1', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
 
       expect(orderId).toBeNull()
@@ -100,6 +102,7 @@ describe('TrackingService', () => {
       const orderId = await service.handleLocationUpdate('driver-1', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
 
       expect(orderId).toBe('order-from-db')
@@ -127,6 +130,16 @@ describe('TrackingService', () => {
       )
       const [query] = mockPrisma.$executeRaw.mock.calls[0]
       expect((query.values[4] as Date).toISOString()).toBe(sampledAt)
+    })
+
+    it('rejects missing GPS sample timestamps instead of fabricating last-seen time', async () => {
+      await expect(service.handleLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+      } as never)).rejects.toThrow('INVALID_DRIVER_LOCATION_TIMESTAMP')
+
+      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+      expect(mockRedis.setex).not.toHaveBeenCalled()
     })
   })
 
@@ -162,10 +175,12 @@ describe('TrackingService', () => {
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000001', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000002', {
         lat: 10.81,
         lng: 106.71,
+        timestamp: '2026-07-06T01:02:07.456Z',
       })
 
       await (service as unknown as { flush: () => Promise<void> }).flush()

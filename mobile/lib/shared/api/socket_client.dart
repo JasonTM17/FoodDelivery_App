@@ -31,7 +31,7 @@ abstract interface class LocationPingEmitter {
     double? bearing,
     double? speed,
     double? accuracy,
-    DateTime? timestamp,
+    required DateTime timestamp,
     bool bypassThrottle = false,
   });
 }
@@ -233,7 +233,7 @@ class SocketClient implements LocationPingEmitter {
     double? bearing,
     double? speed,
     double? accuracy,
-    DateTime? timestamp,
+    required DateTime timestamp,
     bool bypassThrottle = false,
   }) {
     final now = DateTime.now();
@@ -255,7 +255,7 @@ class SocketClient implements LocationPingEmitter {
         bearing: bearing,
         speed: speed,
         accuracy: accuracy,
-        timestamp: timestamp ?? now,
+        timestamp: timestamp,
       ),
     );
   }
