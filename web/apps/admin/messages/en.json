@@ -923,6 +923,11 @@
     },
     "statusUpdateError": "Could not update status",
     "mutationError": "Could not update ticket",
+    "loadErrorTitle": "Unable to load support tickets",
+    "loadErrorDescription": "The support queue is temporarily unavailable. Retry before taking action so live tickets are not hidden.",
+    "contractErrorTitle": "Support response is incomplete",
+    "contractErrorDescription": "The API response did not include a tickets list, so FoodFlow will not display a fake empty queue.",
+    "retry": "Retry",
     "emptyColumn": "No tickets",
     "orderShort": "Order: #{id}",
     "assigned": "Claimed",
@@ -940,6 +945,11 @@
     "saveChanges": "Save changes",
     "thread": {
       "empty": "No messages yet",
+      "loadErrorTitle": "Unable to load conversation",
+      "loadErrorDescription": "The ticket thread could not be loaded. Retry to fetch the latest messages.",
+      "contractErrorTitle": "Conversation response is incomplete",
+      "contractErrorDescription": "The API response did not include a messages list, so no fake empty conversation is shown.",
+      "retry": "Retry",
       "agentRole": "(Agent)",
       "customerRole": "(Customer)",
       "internalNote": "Internal note"

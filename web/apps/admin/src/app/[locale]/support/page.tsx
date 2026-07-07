@@ -6,6 +6,7 @@ import { apiGet, apiPatch } from '@/lib/api';
 import { timeSince } from '@/lib/utils';
 import { useLocale, useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/layout/admin-page-header';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import TicketPriorityBadge from '@/components/badges/ticket-priority-badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,7 +34,7 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, UserCheck, CheckCircle, Archive, Clock, User } from 'lucide-react';
+import { AlertCircle, MessageSquare, UserCheck, CheckCircle, Archive, Clock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Ticket {
@@ -48,6 +49,10 @@ interface Ticket {
   createdAt: string;
   assignedTo: string | null;
   resolutionNotes: string;
+}
+
+interface SupportTicketsResponse {
+  tickets: Ticket[];
 }
 
 const statusConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
@@ -69,12 +74,15 @@ export default function SupportPage() {
   const [newStatus, setNewStatus] = useState('');
   const [mutationError, setMutationError] = useState('');
 
-  const { data, isLoading } = useQuery<{ tickets: Ticket[] }>({
+  const ticketsQuery = useQuery<unknown>({
     queryKey: ['support-tickets'],
     queryFn: () => apiGet('/admin/support-tickets'),
   });
 
-  const tickets = data?.tickets || [];
+  const response = parseSupportTicketsResponse(ticketsQuery.data);
+  const hasContractError =
+    !ticketsQuery.isLoading && !ticketsQuery.isError && ticketsQuery.data !== undefined && response === null;
+  const tickets = response?.tickets ?? [];
 
   const openDetail = (ticket: Ticket) => {
     setSelectedTicket(ticket);
@@ -107,7 +115,7 @@ export default function SupportPage() {
     queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
   };
 
-  if (isLoading) {
+  if (ticketsQuery.isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-8 w-48 animate-pulse rounded bg-muted" />
@@ -116,6 +124,26 @@ export default function SupportPage() {
             <div key={i} className="h-96 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (ticketsQuery.isError || hasContractError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={[{ label: 'Admin' }, { label: t('title') }]}
+          title={t('title')}
+          description={t('description')}
+        />
+        <EmptyState
+          icon={AlertCircle}
+          title={ticketsQuery.isError ? t('loadErrorTitle') : t('contractErrorTitle')}
+          description={ticketsQuery.isError ? t('loadErrorDescription') : t('contractErrorDescription')}
+          actionLabel={t('retry')}
+          onAction={() => void ticketsQuery.refetch()}
+          className="rounded-lg border border-destructive/20 bg-destructive/5"
+        />
       </div>
     );
   }
@@ -302,4 +330,11 @@ export default function SupportPage() {
       </Dialog>
     </div>
   );
+}
+
+function parseSupportTicketsResponse(value: unknown): SupportTicketsResponse | null {
+  if (!value || typeof value !== 'object') return null;
+  const tickets = (value as { tickets?: unknown }).tickets;
+  if (!Array.isArray(tickets)) return null;
+  return { tickets: tickets as Ticket[] };
 }

@@ -923,6 +923,11 @@
     },
     "statusUpdateError": "Không thể cập nhật trạng thái",
     "mutationError": "Không thể cập nhật ticket",
+    "loadErrorTitle": "Không thể tải ticket hỗ trợ",
+    "loadErrorDescription": "Hàng đợi hỗ trợ đang tạm thời không khả dụng. Hãy thử lại trước khi xử lý để không che mất ticket thật.",
+    "contractErrorTitle": "Phản hồi hỗ trợ chưa đầy đủ",
+    "contractErrorDescription": "API không trả về danh sách tickets, nên FoodFlow sẽ không hiển thị giả như hàng đợi trống.",
+    "retry": "Thử lại",
     "emptyColumn": "Không có ticket",
     "orderShort": "Đơn: #{id}",
     "assigned": "Đã nhận",
@@ -940,6 +945,11 @@
     "saveChanges": "Lưu thay đổi",
     "thread": {
       "empty": "Chưa có tin nhắn nào",
+      "loadErrorTitle": "Không thể tải hội thoại",
+      "loadErrorDescription": "Không tải được luồng trao đổi của ticket. Hãy thử lại để lấy tin nhắn mới nhất.",
+      "contractErrorTitle": "Phản hồi hội thoại chưa đầy đủ",
+      "contractErrorDescription": "API không trả về danh sách messages, nên không hiển thị giả như hội thoại trống.",
+      "retry": "Thử lại",
       "agentRole": "(Hỗ trợ viên)",
       "customerRole": "(Khách hàng)",
       "internalNote": "Ghi chú nội bộ"

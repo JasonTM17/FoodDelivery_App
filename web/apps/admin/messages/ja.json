@@ -923,6 +923,11 @@
     },
     "statusUpdateError": "ステータスを更新できません",
     "mutationError": "チケットを更新できません",
+    "loadErrorTitle": "サポートチケットを読み込めません",
+    "loadErrorDescription": "サポートキューは一時的に利用できません。実際のチケットを隠さないよう、操作前に再試行してください。",
+    "contractErrorTitle": "サポート応答が不完全です",
+    "contractErrorDescription": "API 応答に tickets リストが含まれていないため、空のキューとして偽表示しません。",
+    "retry": "再試行",
     "emptyColumn": "チケットはありません",
     "orderShort": "注文: #{id}",
     "assigned": "担当済み",
@@ -940,6 +945,11 @@
     "saveChanges": "変更を保存",
     "thread": {
       "empty": "メッセージはまだありません",
+      "loadErrorTitle": "会話を読み込めません",
+      "loadErrorDescription": "チケットの会話を読み込めませんでした。最新メッセージを取得するには再試行してください。",
+      "contractErrorTitle": "会話の応答が不完全です",
+      "contractErrorDescription": "API 応答に messages リストが含まれていないため、空の会話として偽表示しません。",
+      "retry": "再試行",
       "agentRole": "(サポート担当)",
       "customerRole": "(顧客)",
       "internalNote": "内部メモ"
