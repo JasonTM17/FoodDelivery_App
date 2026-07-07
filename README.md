@@ -150,7 +150,7 @@ flutter analyze
 
 Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe serious/critical, visual regression, tenant isolation, frozen install, and secret scans are all green.
 
-Latest local Batch 4 evidence is recorded in [docs/batch4-release-report.md](docs/batch4-release-report.md), with remote branch cleanup rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`. Local backend, web, Docker, Playwright, mobile, OpenAPI Spectral, compose, and high-confidence secret-scan gates passed before this hardening refresh; production deploy is still blocked by missing current-head remote CI approval, missing Supabase CLI/auth, empty Vercel production env, and unverified/rotated production secrets.
+Latest local Batch 4 evidence is recorded in [docs/batch4-release-report.md](docs/batch4-release-report.md), with remote branch cleanup rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`. Local backend, web, Docker, Playwright, mobile, OpenAPI Spectral, compose, and high-confidence secret-scan gates passed before this hardening refresh; production deploy is still blocked by missing current-head remote CI approval, missing Supabase project auth/production DB URLs, empty Vercel production env, and unverified/rotated production secrets.
 
 ## Deployment Path
 

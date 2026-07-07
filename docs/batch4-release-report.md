@@ -39,7 +39,7 @@ No production deploy was performed.
 Current blockers:
 
 - GitHub Actions cannot be treated as current-head green until the user restores token/auth/billing access and reruns CI/security/E2E workflows.
-- Supabase CLI is not installed in the local PATH, and no Supabase/DB production env is set in the shell, so Supabase database/realtime auth, project access, and migration deployment are not verified.
+- Supabase CLI is available through `npx supabase` (`2.109.0`), and the new `infra/scripts/supabase-preflight.{sh,ps1}` guard fails safely before deployment when `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, or `DIRECT_URL` is missing. Current environment still lacks Supabase auth and production DB URLs, so Supabase database/realtime project access and migration deployment are not verified.
 - Vercel CLI auth is present and the `food-delivery-app` project now exists. It is linked to the repo and configured for Admin's monorepo root `web/apps/admin`, but `vercel env ls --format json` currently returns an empty `envs` array, so production deployment remains blocked until required public env and rotated secrets are configured.
 - Restaurant web needs a separate Vercel project/domain or explicit hosting decision plus `NEXT_PUBLIC_RESTAURANT_URL`; the existing `food-delivery-app` project is currently configured for Admin.
 - Production secrets are not verified: Supabase database URLs, JWT secrets, Redis, storage, SePay, DeepSeek, Google Maps, Vercel env, and any key previously pasted in chat must be rotated and stored only in provider secret managers.

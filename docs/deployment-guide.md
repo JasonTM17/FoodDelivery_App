@@ -51,7 +51,7 @@ Any key pasted into chat, logs, screenshots, tickets, or git history must be rot
 
 Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
 
-Latest deploy-readiness check: Vercel CLI auth is present and `food-delivery-app` is linked, but `vercel env ls --format json` returned an empty `envs` array. Supabase CLI was not installed in the local PATH. No production deployment was performed.
+Latest deploy-readiness check: Vercel CLI auth is present and `food-delivery-app` is linked, but `vercel env ls` returned no project env vars. Supabase CLI is available through `npx supabase` (`2.109.0`), but Supabase project access is not authenticated: `npx supabase projects list` fails until `SUPABASE_ACCESS_TOKEN` or `supabase login` is provided. No production deployment was performed.
 
 ## Supabase Deployment
 
@@ -60,16 +60,35 @@ Supabase is used only after backend contracts and migrations are green.
 1. Create a Supabase project.
 2. Store the Supabase pooled transaction-mode Postgres URL as backend `DATABASE_URL`.
 3. Store the Supabase direct/session-mode Postgres URL as backend `DIRECT_URL`; Prisma uses it for migrations through `directUrl`.
-4. Run Prisma validation and migrations against a staging database first:
+4. Run the Supabase production preflight. It verifies CLI/auth/project visibility and Prisma schema readiness without printing secrets or deploying changes:
+
+   ```bash
+   export SUPABASE_ACCESS_TOKEN="..."
+   export SUPABASE_PROJECT_REF="..."
+   export DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   export DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+   ./infra/scripts/supabase-preflight.sh
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   $env:SUPABASE_ACCESS_TOKEN = "..."
+   $env:SUPABASE_PROJECT_REF = "..."
+   $env:DATABASE_URL = "postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   $env:DIRECT_URL = "postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+   powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-preflight.ps1
+   ```
+
+5. Run Prisma migrations only after preflight passes:
 
    ```bash
    cd backend
-   pnpm prisma validate
-   pnpm prisma migrate deploy
+   pnpm db:migrate:prod
    ```
 
-5. Enable realtime only for tables that require live updates. Keep tenant isolation checks enabled in E2E before exposing production data.
-6. Store Supabase service keys only in backend/server secret stores. Never expose service-role keys to web or mobile clients.
+6. Enable realtime only for tables that require live updates. Keep tenant isolation checks enabled in E2E before exposing production data.
+7. Store Supabase service keys only in backend/server secret stores. Never expose service-role keys to web or mobile clients.
 
 Example env shape:
 
