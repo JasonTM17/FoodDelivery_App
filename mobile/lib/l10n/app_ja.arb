@@ -67,6 +67,7 @@
   "cuisineJapanese": "日本料理",
   "cuisineKorean": "韓国料理",
   "cuisineChinese": "中華料理",
+  "cuisineItalian": "イタリア料理",
   "cuisineDessert": "デザート",
   "cuisineDrinks": "ドリンク",
 
@@ -181,6 +182,10 @@
   "restaurantViewMap": "マップ",
   "restaurantNoResults": "レストランが見つかりません",
   "restaurantNoResultsSubtitle": "別のフィルターをお試しください",
+  "restaurantLocationRequired": "近くのレストランを探すには位置情報を許可してください。",
+  "restaurantLoadFailed": "レストランを読み込めません。もう一度お試しください。",
+  "restaurantDetailLoadFailed": "レストラン情報を読み込めません。もう一度お試しください。",
+  "restaurantMenuLoadFailed": "メニューを読み込めません。もう一度お試しください。",
   "restaurantMenuTab": "メニュー",
   "restaurantReviewsTab": "レビュー",
   "restaurantInfoTab": "情報",
@@ -384,6 +389,9 @@
   "driverHistoryEmpty": "配達履歴はありません",
   "driverHistoryLoadError": "配達履歴を読み込めません。もう一度お試しください。",
   "driverHistoryRetry": "再試行",
+  "driverHistoryOrderNumberLabel": "注文",
+  "driverHistoryDeliveryAddressLabel": "配達先住所",
+  "driverHistoryNoteLabel": "メモ",
   "driverHistoryDeliveryFee": "配達料",
 
   "locationPermissionTitle": "位置情報へのアクセスを許可",
@@ -704,6 +712,7 @@
   "searchFilterTopRated": "評価が高い",
   "searchFilterPriceLowHigh": "価格が安い順",
   "searchFilterOpenNow": "営業中",
+  "searchLoadFailed": "現在検索できません。もう一度お試しください。",
 
   "vouchersTitle": "オファー＆バウチャー",
   "vouchersTabMine": "マイバウチャー",

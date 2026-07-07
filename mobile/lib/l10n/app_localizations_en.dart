@@ -198,6 +198,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cuisineChinese => 'Chinese';
 
   @override
+  String get cuisineItalian => 'Italian';
+
+  @override
   String get cuisineDessert => 'Dessert';
 
   @override
@@ -509,6 +512,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => 'Try a different filter';
+
+  @override
+  String get restaurantLocationRequired =>
+      'Allow location access to find nearby restaurants.';
+
+  @override
+  String get restaurantLoadFailed =>
+      'Could not load restaurants. Please try again.';
+
+  @override
+  String get restaurantDetailLoadFailed =>
+      'Could not load restaurant details. Please try again.';
+
+  @override
+  String get restaurantMenuLoadFailed =>
+      'Could not load this menu. Please try again.';
 
   @override
   String get restaurantMenuTab => 'Menu';
@@ -1007,6 +1026,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => 'Try again';
+
+  @override
+  String get driverHistoryOrderNumberLabel => 'Order';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => 'Delivery address';
+
+  @override
+  String get driverHistoryNoteLabel => 'Note';
 
   @override
   String get driverHistoryDeliveryFee => 'Delivery fee';
@@ -1847,6 +1875,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => 'Open now';
+
+  @override
+  String get searchLoadFailed =>
+      'Could not search right now. Please try again.';
 
   @override
   String get vouchersTitle => 'Offers & Vouchers';

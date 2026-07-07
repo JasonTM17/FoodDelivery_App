@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../shared/providers/restaurant_provider.dart';
+import '../../shared/models/restaurant.dart';
 import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/restaurant_card.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
+import '../../shared/utils/app_error_messages.dart';
+import '../../shared/utils/cuisine_labels.dart';
 import '../providers/restaurant_filter_provider.dart';
 import '../widgets/category_chip.dart';
 import '../../l10n/app_localizations.dart';
-
-const _filterLabels = [
-  'Tất cả',
-  'Gần nhất',
-  'Phở',
-  'Cơm',
-  'Đồ uống',
-  'Pizza',
-  'Đang mở',
-];
 
 const _defaultCamera = CameraPosition(
   target: LatLng(10.7769, 106.7009),
   zoom: 12.5,
 );
+
+class _RestaurantFilterOption {
+  final String id;
+  final String label;
+
+  const _RestaurantFilterOption({required this.id, required this.label});
+}
 
 class RestaurantListScreen extends ConsumerStatefulWidget {
   const RestaurantListScreen({super.key});
@@ -38,13 +40,14 @@ class RestaurantListScreen extends ConsumerStatefulWidget {
 
 class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
   Set<Polygon> _boundaryPolygons = {};
+  Position? _currentLocation;
 
   @override
   void initState() {
     super.initState();
     _loadBoundary();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(restaurantProvider.notifier).fetchNearbyRestaurants();
+      _loadNearbyRestaurants();
     });
   }
 
@@ -53,11 +56,33 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     if (mounted) setState(() => _boundaryPolygons = polygons);
   }
 
+  Future<void> _loadNearbyRestaurants() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      if (!mounted) return;
+      _currentLocation = position;
+      await ref
+          .read(restaurantProvider.notifier)
+          .fetchNearbyRestaurants(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      await ref.read(restaurantProvider.notifier).fetchNearbyRestaurants();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final filter = ref.watch(restaurantFilterProvider);
     final restaurants = ref.watch(restaurantProvider);
+    final visibleRestaurants = _filteredRestaurants(restaurants, filter);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,15 +102,46 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
       body: Column(
         children: [
           _buildViewToggle(filter.viewMode, l10n),
-          _buildFilterChips(filter.selectedFilter),
+          _buildFilterChips(
+            filter.selectedFilterId,
+            restaurants.nearbyRestaurants,
+            l10n,
+          ),
           Expanded(
-            child: filter.viewMode == RestaurantViewMode.list
-                ? _buildListView(restaurants, l10n)
-                : _buildMapView(restaurants),
+            child: restaurants.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : restaurants.error != null
+                ? ErrorState(
+                    message: localizeAppError(l10n, restaurants.error!),
+                    onRetry: _loadNearbyRestaurants,
+                  )
+                : filter.viewMode == RestaurantViewMode.list
+                ? _buildListView(visibleRestaurants, l10n)
+                : _buildMapView(visibleRestaurants),
           ),
         ],
       ),
     );
+  }
+
+  List<RestaurantModel> _filteredRestaurants(
+    RestaurantState state,
+    RestaurantFilterState filter,
+  ) {
+    final cuisine = RestaurantFilterIds.cuisineValue(filter.selectedFilterId);
+    if (cuisine != null) {
+      return state.nearbyRestaurants
+          .where((restaurant) => restaurant.cuisineTypes.contains(cuisine))
+          .toList(growable: false);
+    }
+    if (filter.selectedFilterId == RestaurantFilterIds.openNow) {
+      return state.nearbyRestaurants
+          .where((restaurant) => restaurant.isOpen)
+          .toList(growable: false);
+    }
+    return state.nearbyRestaurants;
   }
 
   Widget _buildViewToggle(RestaurantViewMode current, AppLocalizations l10n) {
@@ -136,32 +192,65 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     );
   }
 
-  Widget _buildFilterChips(String selected) {
+  Widget _buildFilterChips(
+    String selected,
+    List<RestaurantModel> restaurants,
+    AppLocalizations l10n,
+  ) {
+    final cuisines =
+        restaurants
+            .expand((restaurant) => restaurant.cuisineTypes)
+            .map((cuisine) => cuisine.trim())
+            .where((cuisine) => cuisine.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+    final filters = [
+      _RestaurantFilterOption(
+        id: RestaurantFilterIds.all,
+        label: l10n.cuisineAll,
+      ),
+      _RestaurantFilterOption(
+        id: RestaurantFilterIds.nearest,
+        label: l10n.searchFilterNearest,
+      ),
+      ...cuisines.map(
+        (cuisine) => _RestaurantFilterOption(
+          id: RestaurantFilterIds.cuisine(cuisine),
+          label: localizedCuisineLabel(l10n, cuisine),
+        ),
+      ),
+      _RestaurantFilterOption(
+        id: RestaurantFilterIds.openNow,
+        label: l10n.searchFilterOpenNow,
+      ),
+    ];
     return SizedBox(
       height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _filterLabels.length,
+        itemCount: filters.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => CategoryChip(
-          label: _filterLabels[i],
-          isSelected: _filterLabels[i] == selected,
-          onTap: () => ref
-              .read(restaurantFilterProvider.notifier)
-              .setFilter(_filterLabels[i]),
-        ),
+        itemBuilder: (_, i) {
+          final filter = filters[i];
+          return CategoryChip(
+            label: filter.label,
+            isSelected: filter.id == selected,
+            onTap: () => ref
+                .read(restaurantFilterProvider.notifier)
+                .setFilter(filter.id),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildListView(RestaurantState state, AppLocalizations l10n) {
-    if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-    if (state.nearbyRestaurants.isEmpty) {
+  Widget _buildListView(
+    List<RestaurantModel> restaurants,
+    AppLocalizations l10n,
+  ) {
+    if (restaurants.isEmpty) {
       return EmptyState(
         icon: Icons.store_mall_directory_outlined,
         title: l10n.restaurantNoResults,
@@ -169,24 +258,20 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
       );
     }
     return RefreshIndicator(
-      onRefresh: () async =>
-          ref.read(restaurantProvider.notifier).fetchNearbyRestaurants(),
+      onRefresh: _loadNearbyRestaurants,
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 8, bottom: 16),
-        itemCount: state.nearbyRestaurants.length,
+        itemCount: restaurants.length,
         itemBuilder: (_, i) => RestaurantCard(
-          restaurant: state.nearbyRestaurants[i],
-          onTap: () => context.push(
-            '/restaurant-detail',
-            extra: state.nearbyRestaurants[i].id,
-          ),
+          restaurant: restaurants[i],
+          onTap: () =>
+              context.push('/restaurant-detail', extra: restaurants[i].id),
         ),
       ),
     );
   }
 
-  Widget _buildMapView(RestaurantState state) {
-    final list = state.nearbyRestaurants;
+  Widget _buildMapView(List<RestaurantModel> list) {
     final markers = list
         .where((r) => isValidDeliveryLatLng(r.latitude, r.longitude))
         .map(
@@ -201,7 +286,7 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
     return Stack(
       children: [
         GoogleMap(
-          initialCameraPosition: _defaultCamera,
+          initialCameraPosition: _initialCameraPosition(),
           polygons: _boundaryPolygons,
           markers: markers,
           myLocationButtonEnabled: false,
@@ -228,6 +313,15 @@ class _RestaurantListScreenState extends ConsumerState<RestaurantListScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  CameraPosition _initialCameraPosition() {
+    final location = _currentLocation;
+    if (location == null) return _defaultCamera;
+    return CameraPosition(
+      target: LatLng(location.latitude, location.longitude),
+      zoom: 13,
     );
   }
 }

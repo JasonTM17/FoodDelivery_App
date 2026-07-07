@@ -13,10 +13,39 @@ import '../../shared/widgets/restaurant_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../../shared/utils/app_error_messages.dart';
+import '../../shared/utils/cuisine_labels.dart';
 import '../providers/vouchers_provider.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/promo_banner.dart';
 import '../router/route_names.dart';
+
+class _CuisineFilter {
+  final String id;
+  final String? cuisineValue;
+
+  const _CuisineFilter._(this.id, this.cuisineValue);
+  const _CuisineFilter.all() : this._('all', null);
+  const _CuisineFilter.cuisine(String value) : this._('cuisine:$value', value);
+
+  String label(AppLocalizations l10n) {
+    final value = cuisineValue;
+    if (value == null) return l10n.cuisineAll;
+    return localizedCuisineLabel(l10n, value);
+  }
+}
+
+const _homeCuisineFilters = [
+  _CuisineFilter.all(),
+  _CuisineFilter.cuisine('Fast Food'),
+  _CuisineFilter.cuisine('Vietnamese'),
+  _CuisineFilter.cuisine('Japanese'),
+  _CuisineFilter.cuisine('Korean'),
+  _CuisineFilter.cuisine('Chinese'),
+  _CuisineFilter.cuisine('Italian'),
+  _CuisineFilter.cuisine('Dessert'),
+  _CuisineFilter.cuisine('Drinks'),
+];
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -28,20 +57,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
-  String _selectedCuisine = 'Tất cả';
+  String _selectedCuisineId = 'all';
   int _currentBannerIndex = 0;
   Position? _currentLocation;
-
-  final List<String> _cuisines = [
-    'Tất cả',
-    'Đồ ăn nhanh',
-    'Việt Nam',
-    'Nhật Bản',
-    'Hàn Quốc',
-    'Trung Hoa',
-    'Tráng miệng',
-    'Đồ uống',
-  ];
 
   @override
   void initState() {
@@ -127,6 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       TextButton(
                         onPressed: () {
                           _searchController.clear();
+                          setState(() => _selectedCuisineId = 'all');
                           ref
                               .read(restaurantProvider.notifier)
                               .fetchNearbyRestaurants(
@@ -178,7 +197,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: ErrorState(
-                    message: restaurantState.error!,
+                    message: localizeAppError(
+                      AppLocalizations.of(context),
+                      restaurantState.error!,
+                    ),
                     onRetry: _loadData,
                   ),
                 )
@@ -342,28 +364,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCuisineChips() {
+    final l10n = AppLocalizations.of(context);
     return SizedBox(
       height: 48,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: _cuisines.length,
+        itemCount: _homeCuisineFilters.length,
         itemBuilder: (context, index) {
-          final cuisine = _cuisines[index];
+          final filter = _homeCuisineFilters[index];
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: CategoryChip(
-              label: cuisine,
-              isSelected: _selectedCuisine == cuisine,
+              label: filter.label(l10n),
+              isSelected: _selectedCuisineId == filter.id,
               onTap: () {
-                setState(() => _selectedCuisine = cuisine);
-                final cuisineParam = cuisine == 'Tất cả' ? null : cuisine;
+                setState(() => _selectedCuisineId = filter.id);
                 ref
                     .read(restaurantProvider.notifier)
                     .fetchNearbyRestaurants(
                       latitude: _currentLocation?.latitude,
                       longitude: _currentLocation?.longitude,
-                      cuisine: cuisineParam,
+                      cuisine: filter.cuisineValue,
                     );
               },
             ),

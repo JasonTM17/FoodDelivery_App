@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
 
+import '../../shared/utils/order_status_labels.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../providers/driver_provider.dart';
 import '../providers/trip_history_filter_provider.dart';
@@ -127,11 +128,12 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
   }
 
   Widget _buildStatusChips() {
+    final l10n = AppLocalizations.of(context);
     final filter = ref.watch(tripHistoryFilterProvider);
     final options = [
-      (TripStatusFilter.all, 'Tất cả'),
-      (TripStatusFilter.completed, 'Hoàn thành'),
-      (TripStatusFilter.cancelled, 'Đã huỷ'),
+      (TripStatusFilter.all, l10n.cuisineAll),
+      (TripStatusFilter.completed, localizedOrderStatus(l10n, 'delivered')),
+      (TripStatusFilter.cancelled, localizedOrderStatus(l10n, 'cancelled')),
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -171,6 +173,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
   }
 
   Widget _buildOrderCard(OrderModel order) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -214,7 +217,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'ĐH: ${order.id.substring(0, 8).toUpperCase()}',
+                        '${l10n.driverHistoryOrderNumberLabel}: ${order.id.substring(0, 8).toUpperCase()}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF6B7280),
@@ -325,6 +328,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
         return Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -359,18 +363,18 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'ĐH: ${order.id.substring(0, 8).toUpperCase()}',
+                '${l10n.driverHistoryOrderNumberLabel}: ${order.id.substring(0, 8).toUpperCase()}',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
               ),
               const Divider(color: Color(0xFF374151), height: 24),
               Text(
-                'Địa chỉ giao: ${order.deliveryAddress.address}',
+                '${l10n.driverHistoryDeliveryAddressLabel}: ${order.deliveryAddress.address}',
                 style: const TextStyle(fontSize: 14, color: Color(0xFFD1D5DB)),
               ),
               const SizedBox(height: 8),
               if (order.note != null)
                 Text(
-                  'Ghi chú: ${order.note}',
+                  '${l10n.driverHistoryNoteLabel}: ${order.note}',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF6B7280),
@@ -380,9 +384,12 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Phí giao hàng',
-                    style: TextStyle(fontSize: 14, color: Color(0xFFD1D5DB)),
+                  Text(
+                    l10n.driverHistoryDeliveryFee,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFD1D5DB),
+                    ),
                   ),
                   Text(
                     '${order.deliveryFee.toStringAsFixed(0)}đ',
@@ -394,9 +401,9 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Tổng',
-                    style: TextStyle(
+                  Text(
+                    l10n.driverNavOrderTotal,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,

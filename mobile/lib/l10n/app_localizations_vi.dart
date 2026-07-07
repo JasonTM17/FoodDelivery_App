@@ -198,6 +198,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cuisineChinese => 'Trung Hoa';
 
   @override
+  String get cuisineItalian => 'Ý';
+
+  @override
   String get cuisineDessert => 'Tráng miệng';
 
   @override
@@ -508,6 +511,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => 'Thử chọn bộ lọc khác';
+
+  @override
+  String get restaurantLocationRequired =>
+      'Cho phép truy cập vị trí để tìm nhà hàng gần bạn.';
+
+  @override
+  String get restaurantLoadFailed =>
+      'Không thể tải danh sách nhà hàng. Vui lòng thử lại.';
+
+  @override
+  String get restaurantDetailLoadFailed =>
+      'Không thể tải thông tin nhà hàng. Vui lòng thử lại.';
+
+  @override
+  String get restaurantMenuLoadFailed =>
+      'Không thể tải thực đơn. Vui lòng thử lại.';
 
   @override
   String get restaurantMenuTab => 'Thực đơn';
@@ -1008,6 +1027,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => 'Thử lại';
+
+  @override
+  String get driverHistoryOrderNumberLabel => 'Đơn hàng';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => 'Địa chỉ giao';
+
+  @override
+  String get driverHistoryNoteLabel => 'Ghi chú';
 
   @override
   String get driverHistoryDeliveryFee => 'Phí giao hàng';
@@ -1846,6 +1874,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => 'Đang mở';
+
+  @override
+  String get searchLoadFailed =>
+      'Không thể tìm kiếm lúc này. Vui lòng thử lại.';
 
   @override
   String get vouchersTitle => 'Ưu đãi & Voucher';

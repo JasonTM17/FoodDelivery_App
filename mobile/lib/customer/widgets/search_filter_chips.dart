@@ -56,7 +56,7 @@ class SearchFilterChips extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              labels[sort] ?? sort.labelVi(),
+              labels[sort] ?? sort.name,
               style: AppTextStyles.bodySmall.copyWith(
                 color: isSelected ? Colors.white : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

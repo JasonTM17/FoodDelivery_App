@@ -472,6 +472,12 @@ abstract class AppLocalizations {
   /// **'Trung Hoa'**
   String get cuisineChinese;
 
+  /// No description provided for @cuisineItalian.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ý'**
+  String get cuisineItalian;
+
   /// No description provided for @cuisineDessert.
   ///
   /// In vi, this message translates to:
@@ -1089,6 +1095,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử chọn bộ lọc khác'**
   String get restaurantNoResultsSubtitle;
+
+  /// No description provided for @restaurantLocationRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép truy cập vị trí để tìm nhà hàng gần bạn.'**
+  String get restaurantLocationRequired;
+
+  /// No description provided for @restaurantLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách nhà hàng. Vui lòng thử lại.'**
+  String get restaurantLoadFailed;
+
+  /// No description provided for @restaurantDetailLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông tin nhà hàng. Vui lòng thử lại.'**
+  String get restaurantDetailLoadFailed;
+
+  /// No description provided for @restaurantMenuLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thực đơn. Vui lòng thử lại.'**
+  String get restaurantMenuLoadFailed;
 
   /// No description provided for @restaurantMenuTab.
   ///
@@ -2013,6 +2043,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử lại'**
   String get driverHistoryRetry;
+
+  /// No description provided for @driverHistoryOrderNumberLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng'**
+  String get driverHistoryOrderNumberLabel;
+
+  /// No description provided for @driverHistoryDeliveryAddressLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ giao'**
+  String get driverHistoryDeliveryAddressLabel;
+
+  /// No description provided for @driverHistoryNoteLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú'**
+  String get driverHistoryNoteLabel;
 
   /// No description provided for @driverHistoryDeliveryFee.
   ///
@@ -3573,6 +3621,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đang mở'**
   String get searchFilterOpenNow;
+
+  /// No description provided for @searchLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tìm kiếm lúc này. Vui lòng thử lại.'**
+  String get searchLoadFailed;
 
   /// No description provided for @vouchersTitle.
   ///

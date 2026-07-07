@@ -67,6 +67,7 @@
   "cuisineJapanese": "Japanese",
   "cuisineKorean": "Korean",
   "cuisineChinese": "Chinese",
+  "cuisineItalian": "Italian",
   "cuisineDessert": "Dessert",
   "cuisineDrinks": "Drinks",
 
@@ -181,6 +182,10 @@
   "restaurantViewMap": "Map",
   "restaurantNoResults": "No restaurants found",
   "restaurantNoResultsSubtitle": "Try a different filter",
+  "restaurantLocationRequired": "Allow location access to find nearby restaurants.",
+  "restaurantLoadFailed": "Could not load restaurants. Please try again.",
+  "restaurantDetailLoadFailed": "Could not load restaurant details. Please try again.",
+  "restaurantMenuLoadFailed": "Could not load this menu. Please try again.",
   "restaurantMenuTab": "Menu",
   "restaurantReviewsTab": "Reviews",
   "restaurantInfoTab": "Info",
@@ -384,6 +389,9 @@
   "driverHistoryEmpty": "No delivery history",
   "driverHistoryLoadError": "Unable to load delivery history. Please try again.",
   "driverHistoryRetry": "Try again",
+  "driverHistoryOrderNumberLabel": "Order",
+  "driverHistoryDeliveryAddressLabel": "Delivery address",
+  "driverHistoryNoteLabel": "Note",
   "driverHistoryDeliveryFee": "Delivery fee",
 
   "locationPermissionTitle": "Allow location access",
@@ -704,6 +712,7 @@
   "searchFilterTopRated": "Top rated",
   "searchFilterPriceLowHigh": "Price low → high",
   "searchFilterOpenNow": "Open now",
+  "searchLoadFailed": "Could not search right now. Please try again.",
 
   "vouchersTitle": "Offers & Vouchers",
   "vouchersTabMine": "My vouchers",

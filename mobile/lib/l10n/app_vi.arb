@@ -73,6 +73,7 @@
   "cuisineJapanese": "Nhật Bản",
   "cuisineKorean": "Hàn Quốc",
   "cuisineChinese": "Trung Hoa",
+  "cuisineItalian": "Ý",
   "cuisineDessert": "Tráng miệng",
   "cuisineDrinks": "Đồ uống",
 
@@ -187,6 +188,10 @@
   "restaurantViewMap": "Bản đồ",
   "restaurantNoResults": "Không có nhà hàng nào",
   "restaurantNoResultsSubtitle": "Thử chọn bộ lọc khác",
+  "restaurantLocationRequired": "Cho phép truy cập vị trí để tìm nhà hàng gần bạn.",
+  "restaurantLoadFailed": "Không thể tải danh sách nhà hàng. Vui lòng thử lại.",
+  "restaurantDetailLoadFailed": "Không thể tải thông tin nhà hàng. Vui lòng thử lại.",
+  "restaurantMenuLoadFailed": "Không thể tải thực đơn. Vui lòng thử lại.",
   "restaurantMenuTab": "Thực đơn",
   "restaurantReviewsTab": "Đánh giá",
   "restaurantInfoTab": "Thông tin",
@@ -390,6 +395,9 @@
   "driverHistoryEmpty": "Chưa có lịch sử giao hàng",
   "driverHistoryLoadError": "Không thể tải lịch sử giao hàng. Vui lòng thử lại.",
   "driverHistoryRetry": "Thử lại",
+  "driverHistoryOrderNumberLabel": "Đơn hàng",
+  "driverHistoryDeliveryAddressLabel": "Địa chỉ giao",
+  "driverHistoryNoteLabel": "Ghi chú",
   "driverHistoryDeliveryFee": "Phí giao hàng",
 
   "locationPermissionTitle": "Cho phép truy cập vị trí",
@@ -710,6 +718,7 @@
   "searchFilterTopRated": "Đánh giá cao",
   "searchFilterPriceLowHigh": "Giá thấp → cao",
   "searchFilterOpenNow": "Đang mở",
+  "searchLoadFailed": "Không thể tìm kiếm lúc này. Vui lòng thử lại.",
 
   "vouchersTitle": "Ưu đãi & Voucher",
   "vouchersTabMine": "Của tôi",

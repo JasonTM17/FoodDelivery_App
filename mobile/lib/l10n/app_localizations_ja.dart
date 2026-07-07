@@ -197,6 +197,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cuisineChinese => '中華料理';
 
   @override
+  String get cuisineItalian => 'イタリア料理';
+
+  @override
   String get cuisineDessert => 'デザート';
 
   @override
@@ -506,6 +509,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => '別のフィルターをお試しください';
+
+  @override
+  String get restaurantLocationRequired => '近くのレストランを探すには位置情報を許可してください。';
+
+  @override
+  String get restaurantLoadFailed => 'レストランを読み込めません。もう一度お試しください。';
+
+  @override
+  String get restaurantDetailLoadFailed => 'レストラン情報を読み込めません。もう一度お試しください。';
+
+  @override
+  String get restaurantMenuLoadFailed => 'メニューを読み込めません。もう一度お試しください。';
 
   @override
   String get restaurantMenuTab => 'メニュー';
@@ -992,6 +1007,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => '再試行';
+
+  @override
+  String get driverHistoryOrderNumberLabel => '注文';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => '配達先住所';
+
+  @override
+  String get driverHistoryNoteLabel => 'メモ';
 
   @override
   String get driverHistoryDeliveryFee => '配達料';
@@ -1805,6 +1829,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => '営業中';
+
+  @override
+  String get searchLoadFailed => '現在検索できません。もう一度お試しください。';
 
   @override
   String get vouchersTitle => 'オファー＆バウチャー';

@@ -433,6 +433,36 @@ void main() {
       expect(ja.restaurantClosed, isNotEmpty);
       expect(ja.foodSoldOut, isNotEmpty);
     });
+
+    test('restaurant browse/search error labels exist in vi/en/ja', () {
+      final vi = lookupAppLocalizations(const Locale('vi'));
+      final en = lookupAppLocalizations(const Locale('en'));
+      final ja = lookupAppLocalizations(const Locale('ja'));
+
+      expect(vi.cuisineItalian, isNotEmpty);
+      expect(vi.restaurantLocationRequired, isNotEmpty);
+      expect(vi.restaurantLoadFailed, isNotEmpty);
+      expect(vi.restaurantDetailLoadFailed, isNotEmpty);
+      expect(vi.restaurantMenuLoadFailed, isNotEmpty);
+      expect(vi.searchLoadFailed, isNotEmpty);
+
+      expect(en.cuisineItalian, 'Italian');
+      expect(
+        en.restaurantLocationRequired,
+        'Allow location access to find nearby restaurants.',
+      );
+      expect(en.restaurantLoadFailed, isNotEmpty);
+      expect(en.restaurantDetailLoadFailed, isNotEmpty);
+      expect(en.restaurantMenuLoadFailed, isNotEmpty);
+      expect(en.searchLoadFailed, isNotEmpty);
+
+      expect(ja.cuisineItalian, isNotEmpty);
+      expect(ja.restaurantLocationRequired, isNotEmpty);
+      expect(ja.restaurantLoadFailed, isNotEmpty);
+      expect(ja.restaurantDetailLoadFailed, isNotEmpty);
+      expect(ja.restaurantMenuLoadFailed, isNotEmpty);
+      expect(ja.searchLoadFailed, isNotEmpty);
+    });
   });
 
   group('placeholder keys', () {
