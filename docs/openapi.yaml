@@ -580,11 +580,18 @@ components:
           items:
             type: object
             properties:
+              id:         { type: string, format: uuid }
+              menuItemId: { type: string, format: uuid }
               name:       { type: string }
+              nameSnapshot: { type: string }
               quantity:   { type: integer }
               unitPrice:  { type: integer, description: "VND" }
+              price:      { type: integer, description: "Alias of unitPrice for legacy clients" }
               options:    { type: array, items: { type: string }, description: "Selected option values" }
+              selectedOptions: { type: array, items: { type: object, additionalProperties: true }, description: "Persisted selected option JSON" }
+              totalPrice: { type: integer, description: "VND" }
               lineTotal:  { type: integer, description: "VND" }
+            required: [menuItemId, name, quantity, unitPrice, lineTotal]
         restaurant:
           type: object
           properties:
@@ -622,7 +629,7 @@ components:
         paymentMethod: "wallet"
         notes: "Không hành, thêm ớt"
         items:
-          - { name: "Phở bò tái chín", quantity: 2, unitPrice: 65000, options: ["Size Lớn"], lineTotal: 130000 }
+          - { menuItemId: "44444444-4444-4444-8444-444444444444", name: "Phở bò tái chín", nameSnapshot: "Phở bò tái chín", quantity: 2, unitPrice: 65000, price: 65000, selectedOptions: [{ groupName: "Size", optionName: "Lớn", price: 15000 }], lineTotal: 130000, totalPrice: 130000 }
         restaurant: { id: "33333333-3333-4333-8333-333333333333", name: "Phở 24" }
         deliveryAddress:
 

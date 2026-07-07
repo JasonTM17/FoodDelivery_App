@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-07.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. Before the docs-only deploy readiness refresh, the latest local code head was `889fe17`, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 30`; re-run the ahead/behind check after each evidence commit before deleting the local branch. The latest broad non-deploy release gate passed after `c7b791e` with install/build/E2E/deploy preflight intentionally skipped for speed and safety.
+Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. Remote branch audit showed only `refs/heads/master`; the local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. Before the customer order contract hardening, the latest local code head was `2f9746c`, is a fast-forward candidate for `master`, and `git rev-list --left-right --count origin/master...HEAD` returned `0 31`; re-run the ahead/behind check after each evidence commit before deleting the local branch. The latest broad non-deploy release gate passed after `c7b791e` with install/build/E2E/deploy preflight intentionally skipped for speed and safety.
 
 ## What landed
 
@@ -21,6 +21,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 - Admin user and restaurant lifecycle screens now consume the backend `isActive`/`meta` contract, send `{ isActive }` status toggles, use the canonical `restaurant` role filter, and render unavailable metrics as `—` instead of inventing zero order/revenue values.
 - Mobile customer tracking and driver route replay maps no longer fall back to a hardcoded Ho Chi Minh City camera when backend route/driver coordinates are missing; they render localized unavailable states until real valid delivery coordinates arrive.
 - Mobile order item parsing now requires real backend menu item identity, display name, and unit price, and computes missing line totals from backend unit price/quantity instead of rendering blank items or fake zero-value prices.
+- Customer order list/detail responses now serialize real `OrderDetail` item and money fields for mobile/OpenAPI clients, including `menuItemId`, unit price, line totals, and selected option metadata instead of leaking partial Prisma rows.
 - Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
 
 ## Local verification
@@ -44,6 +45,7 @@ Verified remote code head: `118459e` (`origin/master`) before this local hardeni
 | Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
 | Mobile map fail-closed | Focused `flutter test test\driver\route_replay_map_test.dart test\customer\order_tracking_camera_test.dart` passed 6/6 and `flutter analyze` passed after removing hardcoded fallback camera targets from customer tracking and driver route replay. |
 | Mobile order item contract | Focused `flutter test test\customer\order_provider_contract_test.dart` passed 8/8 and full `flutter test` passed 236/236 after requiring real order item identity/name/unit price and deriving line totals from unit price/quantity only when the backend omits an explicit total. |
+| Customer order contract | Backend `pnpm exec jest src/orders/orders.service.spec.ts --runInBand` passed 30/30, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed, full backend Jest passed 110 suites / 807 tests, OpenAPI Spectral passed, `dart analyze packages/api_client` passed, and focused mobile `flutter test test\customer\order_provider_contract_test.dart` passed 8/8 after serializing `/orders` list/detail item money fields and updating the Dart api-client. |
 | Post-Admin-contract non-deploy gate | After `c7b791e`, `infra/scripts/local-release-gate.ps1 -SkipInstall -SkipBuild -SkipDeployPreflight` passed: clean worktree, high-confidence secret scan, backend Prisma/typecheck/lint/full Jest 110 suites / 806 tests, web typecheck/lint/full Vitest (Admin 39 files / 160 tests; Restaurant 31 files / 100 tests), mobile analyze, and full mobile tests 235/235. E2E/build/install/deploy preflights were intentionally skipped in this quick gate. |
 | Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
 | CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |

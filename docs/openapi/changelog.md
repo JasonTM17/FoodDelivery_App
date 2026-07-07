@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-07: Customer `GET /orders` and `GET /orders/{orderId}` now serialize the documented `OrderDetail` item contract with `menuItemId`, real unit price, line totals, and selected option metadata; Prisma Decimal values are converted to JSON numbers so mobile/shared clients do not infer blank items or fake zero prices.
 - 2026-07-06: Mobile restaurant/review rating parsing now preserves missing ratings as unknown instead of rendering fabricated `0.0` restaurant scores or perfect `5.0` review scores.
 - 2026-07-06: Tightened `GET /restaurant/insights` suggestions to require i18n keys plus `params`; legacy localized text fields are no longer part of the OpenAPI or shared web API-client contract.
 - 2026-07-06: Admin support replies now load macros from `GET /admin/support-macros`; the web composer no longer ships default runtime macro templates.

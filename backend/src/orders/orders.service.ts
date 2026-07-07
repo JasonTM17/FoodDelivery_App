@@ -383,9 +383,20 @@ export class OrdersService {
       this.prisma.order.findMany({
         where,
         include: {
-          restaurant: { select: { id: true, name: true, logoUrl: true } },
-          orderItems: { select: { nameSnapshot: true, quantity: true } },
-          driver: { select: { id: true, fullName: true } },
+          restaurant: { select: { id: true, name: true, logoUrl: true, phone: true } },
+          orderItems: {
+            select: {
+              id: true,
+              menuItemId: true,
+              nameSnapshot: true,
+              quantity: true,
+              unitPrice: true,
+              selectedOptions: true,
+            },
+          },
+          driver: { select: { id: true, fullName: true, phone: true } },
+          deliveryAddress: true,
+          statusHistory: { orderBy: { createdAt: 'asc' } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -394,7 +405,10 @@ export class OrdersService {
       this.prisma.order.count({ where }),
     ])
 
-    return { orders, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    return {
+      orders: orders.map(serializeCustomerOrder),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
   }
 
   async getOrderDetail(orderId: string, userId: string, role: string) {
@@ -415,7 +429,7 @@ export class OrdersService {
       throw new NotFoundException('ORDER_NOT_FOUND')
     }
 
-    return order
+    return serializeCustomerOrder(order)
   }
 
   async cancelOrder(orderId: string, userId: string, role: string, dto?: CancelOrderDto) {
@@ -483,6 +497,126 @@ export class OrdersService {
       },
     })
   }
+}
+
+type CustomerOrderView = {
+  id: string
+  customerId: string
+  restaurantId: string
+  driverId?: string | null
+  status: string
+  subtotal: Prisma.Decimal | number
+  deliveryFee: Prisma.Decimal | number
+  promotionDiscount: Prisma.Decimal | number
+  total: Prisma.Decimal | number
+  paymentMethod: string
+  notes?: string | null
+  promotionCode?: string | null
+  estimatedDeliveryTimeMinutes?: number | null
+  routePolyline?: string | null
+  createdAt: Date
+  updatedAt: Date
+  deliveredAt?: Date | null
+  restaurant?: { id: string; name: string; logoUrl?: string | null; phone?: string | null } | null
+  driver?: { id: string; fullName?: string | null; phone?: string | null } | null
+  deliveryAddress?: Record<string, unknown> | null
+  orderItems: Array<{
+    id?: string
+    menuItemId: string
+    nameSnapshot: string
+    quantity: number
+    unitPrice: Prisma.Decimal | number
+    selectedOptions?: Prisma.JsonValue
+  }>
+  statusHistory?: Array<{
+    status: string
+    createdAt: Date
+    note?: string | null
+  }>
+}
+
+function serializeCustomerOrder(order: CustomerOrderView) {
+  const items = order.orderItems.map(item => {
+    const unitPrice = Number(item.unitPrice)
+    const lineTotal = unitPrice * item.quantity
+    const selectedOptions = Array.isArray(item.selectedOptions) ? item.selectedOptions : []
+    const options = selectedOptions.map(formatSelectedOptionLabel).filter(Boolean)
+
+    return {
+      id: item.id,
+      menuItemId: item.menuItemId,
+      name: item.nameSnapshot,
+      nameSnapshot: item.nameSnapshot,
+      quantity: item.quantity,
+      unitPrice,
+      price: unitPrice,
+      totalPrice: lineTotal,
+      lineTotal,
+      selectedOptions,
+      options,
+    }
+  })
+  const statusHistory = (order.statusHistory ?? []).map(entry => ({
+    status: entry.status,
+    timestamp: entry.createdAt,
+    note: entry.note ?? undefined,
+  }))
+
+  return {
+    id: order.id,
+    customerId: order.customerId,
+    userId: order.customerId,
+    restaurantId: order.restaurantId,
+    restaurantName: order.restaurant?.name,
+    restaurantLogoUrl: order.restaurant?.logoUrl ?? undefined,
+    restaurantPhone: order.restaurant?.phone ?? undefined,
+    restaurant: order.restaurant
+      ? {
+          id: order.restaurant.id,
+          name: order.restaurant.name,
+          logoUrl: order.restaurant.logoUrl,
+          phone: order.restaurant.phone,
+        }
+      : undefined,
+    driverId: order.driverId ?? undefined,
+    driverName: order.driver?.fullName ?? undefined,
+    driverPhone: order.driver?.phone ?? undefined,
+    driver: order.driver ?? undefined,
+    status: order.status,
+    subtotal: Number(order.subtotal),
+    deliveryFee: Number(order.deliveryFee),
+    discount: Number(order.promotionDiscount),
+    total: Number(order.total),
+    paymentMethod: order.paymentMethod,
+    note: order.notes ?? undefined,
+    notes: order.notes ?? undefined,
+    promoCode: order.promotionCode ?? undefined,
+    promotionCode: order.promotionCode ?? undefined,
+    deliveryAddress: order.deliveryAddress ?? undefined,
+    items,
+    orderItems: items,
+    timeline: statusHistory,
+    statusHistory,
+    estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes ?? undefined,
+    routePolyline: order.routePolyline ?? undefined,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+    deliveredAt: order.deliveredAt ?? undefined,
+  }
+}
+
+function formatSelectedOptionLabel(option: Prisma.JsonValue): string {
+  if (!option || typeof option !== 'object' || Array.isArray(option)) return ''
+  const record = option as Record<string, Prisma.JsonValue>
+  const group = typeof record.groupName === 'string' ? record.groupName.trim() : ''
+  const optionName =
+    typeof record.optionName === 'string'
+      ? record.optionName.trim()
+      : typeof record.value === 'string'
+        ? record.value.trim()
+        : ''
+  if (group && optionName) return `${group}: ${optionName}`
+  return optionName || group
 }
 
 type RestaurantOrderView = {
