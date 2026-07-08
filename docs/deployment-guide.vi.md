@@ -6,7 +6,7 @@ Ngôn ngữ: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.
 
 Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ gate xanh. Không deploy từ dirty root worktree, không dùng key đã lộ, không deploy khi Batch 4 còn gate đỏ.
 
-Trạng thái Batch 4 ngày 2026-07-07: remote cleanup đã recheck tại `118459e539eecb2dbd61e033431b7f4b5104f0e0`, và `git ls-remote --heads origin` chỉ trả `refs/heads/master`. Các gate local cho backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose và high-confidence secret scan đã pass cho validated code line trước hardening refresh này; xem [Batch 4 release report](batch4-release-report.md). Đây là bằng chứng verify local, không phải approval deploy production. Vercel project `food-delivery-app` đã được link và chỉnh root/build settings cho Admin app, nhưng production env đang trống; deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, production secrets đã rotate/hợp lệ, Supabase CLI/auth khả dụng, backend/API URL hợp lệ và Vercel env đầy đủ.
+Trạng thái Batch 4 ngày 2026-07-08: remote cleanup đã recheck tại `118459e539eecb2dbd61e033431b7f4b5104f0e0`, và `git ls-remote --heads origin` chỉ trả `refs/heads/master`. Local head mới nhất trước docs refresh hiện tại là `188a256`, vẫn ahead `origin/master` và là fast-forward candidate cho `master`. Docker stack mới đã rebuild Backend/Admin/Restaurant từ source hiện tại, health check pass cả 3 service, và Playwright Chromium/Firefox pass 70/70 gồm axe serious/critical smoke, visual contract, realtime và tenant isolation; xem [Batch 4 release report](batch4-release-report.md). Đây là bằng chứng verify local, không phải approval deploy production. Vercel project `food-delivery-app` đã được link và chỉnh root/build settings cho Admin app, nhưng production env vẫn thiếu biến bắt buộc; deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, production secrets đã rotate/hợp lệ, Supabase CLI/auth khả dụng, backend/API URL hợp lệ và Vercel env đầy đủ.
 
 ## Docker local
 
@@ -46,7 +46,7 @@ Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history ph
 
 Production config không phải secret nhưng bắt buộc: cấu hình `DELIVERY_BASE_FEE_VND` theo base delivery fee đã duyệt. Backend boot validation sẽ chặn khi thiếu pricing config để không tạo đơn với phí MVP hardcoded.
 
-Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth và project `food-delivery-app` đã link/config cho Admin, nhưng production env vẫn thiếu `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, và `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Supabase MCP đã add/login OAuth cho project ref `lvanszgszzfopusboich`, nhưng deploy bằng Supabase CLI vẫn cần `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, và `DIRECT_URL` trong release shell. Chưa deploy production.
+Kiểm tra deploy readiness mới nhất ngày 2026-07-08: Vercel CLI đã có auth và project `food-delivery-app` đã link/config cho Admin, nhưng production env vẫn thiếu `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, và `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Supabase MCP đã add/login OAuth cho project ref `lvanszgszzfopusboich`, nhưng deploy bằng Supabase CLI vẫn cần `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, và `DIRECT_URL` trong release shell. Chưa deploy production.
 
 ## Supabase
 
