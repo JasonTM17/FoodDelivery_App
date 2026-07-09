@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AdminDriverLocation } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
+import { resolveRealtimeProvider, subscribeToSupabaseOutbox } from '@/lib/supabase-realtime';
 
 export type DriverMapConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 export type DriverLocation = AdminDriverLocation & {
@@ -113,6 +114,20 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   }, [loadDrivers]);
 
   useEffect(() => {
+    if (resolveRealtimeProvider() === 'supabase') {
+      return subscribeToSupabaseOutbox({
+        channel: 'private:admin:drivers',
+        events: {
+          'admin:driver_location_changed': (payload) => applyLocationUpdate(payload as DriverLocationChangedEvent),
+        },
+        onStatus: (nextStatus) => {
+          if (nextStatus === 'connected') setConnectionStatus('connected');
+          else if (nextStatus === 'connecting') setConnectionStatus('connecting');
+          else setConnectionStatus('disconnected');
+        },
+      });
+    }
+
     const socket = getSocket();
     const subscribe = () => {
       setConnectionStatus('connected');

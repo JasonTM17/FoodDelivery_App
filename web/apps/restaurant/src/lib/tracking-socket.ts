@@ -3,8 +3,10 @@
 import { io, type Socket } from 'socket.io-client';
 import type { DeliveryRoutePhase } from '@foodflow/api-client';
 import { assertProductionPublicUrl, isProductionDeployment } from './public-env';
+import { createSupabaseSocketAdapter, resolveRealtimeProvider, type SupabaseSocketAdapter } from './supabase-realtime';
 
 let trackingSocket: Socket<TrackingServerToClientEvents, TrackingClientToServerEvents> | null = null;
+const supabaseTrackingSockets = new Map<string, SupabaseSocketAdapter>();
 
 export function resolveTrackingSocketUrl(): string {
   const configured =
@@ -32,6 +34,9 @@ export function resolveTrackingSocketUrl(): string {
 
 export function getTrackingSocket(): Socket<TrackingServerToClientEvents, TrackingClientToServerEvents> {
   if (!trackingSocket) {
+    if (resolveRealtimeProvider() === 'supabase') {
+      throw new Error('Use connectToTrackingOrder for Supabase realtime scopes');
+    }
     trackingSocket = io(resolveTrackingSocketUrl(), {
       autoConnect: false,
       transports: ['websocket', 'polling'],
@@ -47,6 +52,15 @@ export function getTrackingSocket(): Socket<TrackingServerToClientEvents, Tracki
 }
 
 export function connectToTrackingOrder(orderId: string): Socket<TrackingServerToClientEvents, TrackingClientToServerEvents> {
+  if (resolveRealtimeProvider() === 'supabase') {
+    const channel = `private:order:${orderId}`;
+    const adapter = supabaseTrackingSockets.get(channel) ?? createSupabaseSocketAdapter({
+      channel,
+      scope: { orderId },
+    });
+    supabaseTrackingSockets.set(channel, adapter);
+    return adapter as unknown as Socket<TrackingServerToClientEvents, TrackingClientToServerEvents>;
+  }
   const socket = getTrackingSocket();
   if (!socket.connected) socket.connect();
   socket.emit('order:subscribe', { orderId });
@@ -54,10 +68,18 @@ export function connectToTrackingOrder(orderId: string): Socket<TrackingServerTo
 }
 
 export function leaveTrackingOrder(orderId: string): void {
+  if (resolveRealtimeProvider() === 'supabase') {
+    const channel = `private:order:${orderId}`;
+    supabaseTrackingSockets.get(channel)?.disconnect();
+    supabaseTrackingSockets.delete(channel);
+    return;
+  }
   trackingSocket?.emit('order:unsubscribe', { orderId });
 }
 
 export function disconnectTrackingSocket(): void {
+  supabaseTrackingSockets.forEach(adapter => adapter.disconnect());
+  supabaseTrackingSockets.clear();
   if (trackingSocket) {
     trackingSocket.removeAllListeners();
     trackingSocket.disconnect();
