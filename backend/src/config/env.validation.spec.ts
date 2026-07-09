@@ -95,6 +95,39 @@ describe('validateEnv', () => {
     })
   })
 
+  it('does not require MinIO production secrets when storage uses Supabase', () => {
+    const supabaseStorageEnv: Record<string, unknown> = {
+      ...productionEnv,
+      STORAGE_PROVIDER: 'supabase',
+    }
+    delete supabaseStorageEnv.MINIO_ENDPOINT
+    delete supabaseStorageEnv.MINIO_ACCESS_KEY
+    delete supabaseStorageEnv.MINIO_SECRET_KEY
+    delete supabaseStorageEnv.MINIO_PUBLIC_URL
+
+    expect(validateEnv(supabaseStorageEnv)).toMatchObject({
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_STORAGE_BUCKET: productionEnv.SUPABASE_STORAGE_BUCKET,
+    })
+  })
+
+  it('requires a strong cron secret when production queues use Supabase/Postgres', () => {
+    expect(() => validateEnv({
+      ...productionEnv,
+      QUEUE_PROVIDER: 'supabase-postgres',
+      CRON_SECRET: 'short',
+    })).toThrow(/CRON_SECRET/)
+
+    expect(validateEnv({
+      ...productionEnv,
+      QUEUE_PROVIDER: 'supabase-postgres',
+      CRON_SECRET: 'e'.repeat(64),
+    })).toMatchObject({
+      QUEUE_PROVIDER: 'supabase-postgres',
+      CRON_SECRET: 'e'.repeat(64),
+    })
+  })
+
   it('fails closed in production when required values are missing', () => {
     expect(() => validateEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL: is required/)
   })

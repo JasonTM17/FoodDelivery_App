@@ -19,10 +19,6 @@ const productionRequiredKeys = [
   'PASSWORD_RESET_URL_BASE',
   'CORS_ORIGINS',
   'DELIVERY_BASE_FEE_VND',
-  'MINIO_ENDPOINT',
-  'MINIO_ACCESS_KEY',
-  'MINIO_SECRET_KEY',
-  'MINIO_PUBLIC_URL',
   'GOOGLE_MAPS_API_KEY',
   'OSRM_URL',
   'DEEPSEEK_API_KEY',
@@ -40,7 +36,19 @@ const productionRequiredKeys = [
   'TWILIO_FROM_NUMBER',
 ] as const
 
-const productionForbiddenValues: Partial<Record<(typeof productionRequiredKeys)[number], readonly string[]>> = {
+const minioProductionRequiredKeys = [
+  'MINIO_ENDPOINT',
+  'MINIO_ACCESS_KEY',
+  'MINIO_SECRET_KEY',
+  'MINIO_PUBLIC_URL',
+] as const
+
+type ProductionRequiredKey =
+  | (typeof productionRequiredKeys)[number]
+  | (typeof minioProductionRequiredKeys)[number]
+  | 'CRON_SECRET'
+
+const productionForbiddenValues: Partial<Record<ProductionRequiredKey, readonly string[]>> = {
   DATABASE_URL: [LOCAL_DEFAULTS.DATABASE_URL],
   DIRECT_URL: [LOCAL_DEFAULTS.DIRECT_URL],
   REDIS_URL: [LOCAL_DEFAULTS.REDIS_URL],
@@ -66,6 +74,7 @@ const productionForbiddenValues: Partial<Record<(typeof productionRequiredKeys)[
   TWILIO_ACCOUNT_SID: ['your-twilio-account-sid'],
   TWILIO_AUTH_TOKEN: ['your-twilio-auth-token'],
   TWILIO_FROM_NUMBER: ['your-twilio-from-number'],
+  CRON_SECRET: ['your-cron-secret'],
 }
 
 const supabaseForbiddenValues = {
@@ -100,8 +109,8 @@ export const envSchema = z.object({
   DELIVERY_BASE_FEE_VND: z.coerce.number().int().nonnegative().max(1_000_000),
   MINIO_ENDPOINT: z.string().default('localhost'),
   MINIO_PORT: z.coerce.number().int().positive().default(9000),
-  MINIO_ACCESS_KEY: z.string().min(3),
-  MINIO_SECRET_KEY: z.string().min(8),
+  MINIO_ACCESS_KEY: z.string().min(3).optional(),
+  MINIO_SECRET_KEY: z.string().min(8).optional(),
   MINIO_BUCKET: z.string().default('foodflow'),
   MINIO_PUBLIC_URL: z.string().url().default('http://localhost:9000'),
   STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(5),
@@ -122,6 +131,7 @@ export const envSchema = z.object({
   SEPAY_ACCOUNT_NUMBER: z.string().optional(),
   SEPAY_WEBHOOK_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().optional(),
   SMTP_SECURE: z.enum(['true', 'false']).optional(),
@@ -219,6 +229,19 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
     }
   }
 
+  if (storageProvider === 'minio') {
+    for (const key of minioProductionRequiredKeys) {
+      const value = config[key]
+      if (isBlank(value)) {
+        issues.push(`${key}: is required in production when STORAGE_PROVIDER=minio`)
+        continue
+      }
+      if (productionForbiddenValues[key]?.includes(String(value).trim())) {
+        issues.push(`${key}: must not use the local development default in production`)
+      }
+    }
+  }
+
   if (realtimeProvider === 'supabase') {
     const value = config.SUPABASE_JWT_SECRET
     if (isBlank(value)) {
@@ -232,6 +255,17 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
 
   if (storageProvider === 'supabase' && isBlank(config.SUPABASE_STORAGE_BUCKET)) {
     issues.push('SUPABASE_STORAGE_BUCKET: is required when STORAGE_PROVIDER=supabase')
+  }
+
+  if (queueProvider === 'supabase-postgres') {
+    const cronSecret = config.CRON_SECRET
+    if (isBlank(cronSecret)) {
+      issues.push('CRON_SECRET: is required when QUEUE_PROVIDER=supabase-postgres')
+    } else if (productionForbiddenValues.CRON_SECRET?.includes(String(cronSecret).trim())) {
+      issues.push('CRON_SECRET: must not use the example value in production')
+    } else if (String(cronSecret).trim().length < 32) {
+      issues.push('CRON_SECRET: must be at least 32 characters')
+    }
   }
 
   return issues

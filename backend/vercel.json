@@ -7,6 +7,12 @@
       "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/jobs/drain?limit=50",
+      "schedule": "0 17 * * *"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",

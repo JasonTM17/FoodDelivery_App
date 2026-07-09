@@ -35,6 +35,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
 import { QueueProviderModule } from './common/queue/queue-provider.module'
+import { JobOutboxModule } from './common/queue/job-outbox.module'
 import { ThrottlerStorageRedis } from './common/storage/throttler-storage-redis'
 import { validateEnv } from './config/env.validation'
 import Redis from 'ioredis'
@@ -68,6 +69,7 @@ import Redis from 'ioredis'
     HealthModule,
     MetricsModule,
     RealtimeModule,
+    JobOutboxModule,
     I18nSetupModule,
     AuthModule,
     UsersModule,
