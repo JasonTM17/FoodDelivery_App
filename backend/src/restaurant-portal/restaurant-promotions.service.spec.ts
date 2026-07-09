@@ -18,6 +18,9 @@ describe('RestaurantPromotionsService', () => {
   const findPromotionUsages = jest.fn()
   const countPromotions = jest.fn()
   const create = jest.fn()
+  const update = jest.fn()
+  const deleteManyPromotionItems = jest.fn()
+  const transaction = jest.fn()
   const createNotification = jest.fn()
   const resolveCustomerIds = jest.fn()
 
@@ -33,11 +36,19 @@ describe('RestaurantPromotionsService', () => {
     findPromotionUsages.mockResolvedValue([])
     countPromotions.mockResolvedValue(1)
     create.mockResolvedValue(makePromotion())
+    update.mockResolvedValue(makePromotion())
+    deleteManyPromotionItems.mockResolvedValue({ count: 1 })
+    transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({
+      promotionItem: { deleteMany: deleteManyPromotionItems },
+      promotion: { update },
+    }))
     resolveCustomerIds.mockResolvedValue([])
 
     service = new RestaurantPromotionsService(
       {
-        promotion: { findUnique, findMany, findFirstOrThrow, create, count: countPromotions },
+        $transaction: transaction,
+        promotion: { findUnique, findMany, findFirstOrThrow, create, update, count: countPromotions },
+        promotionItem: { deleteMany: deleteManyPromotionItems },
         promotionUsage: { findMany: findPromotionUsages },
         user: { findMany: findCustomers },
       } as unknown as PrismaService,
@@ -57,6 +68,26 @@ describe('RestaurantPromotionsService', () => {
 
     await expect(service.create(userId, makeDto({ itemIds: ['item-a'] }))).rejects.toThrow(ConflictException)
 
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('rejects category-scoped promotions without a category before writing a global promotion', async () => {
+    await expect(service.create(userId, makeDto({
+      appliesTo: 'category',
+      categoryId: undefined,
+      itemIds: undefined,
+    }))).rejects.toThrow('PROMOTION_CATEGORY_REQUIRED')
+    expect(findMany).not.toHaveBeenCalled()
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('rejects item-scoped promotions without selected items before writing a global promotion', async () => {
+    await expect(service.create(userId, makeDto({
+      appliesTo: 'items',
+      itemIds: [],
+    }))).rejects.toThrow('PROMOTION_ITEMS_REQUIRED')
+
+    expect(findMany).not.toHaveBeenCalled()
     expect(create).not.toHaveBeenCalled()
   })
 
@@ -98,6 +129,38 @@ describe('RestaurantPromotionsService', () => {
 
     expect(findMany).not.toHaveBeenCalled()
     expect(result.promotion.stackable).toBe(true)
+  })
+
+  it('rejects updates that change to category scope without a category before deleting the existing scope', async () => {
+    findFirstOrThrow.mockResolvedValue(makePromotion({
+      items: [{ menuItemId: 'item-a', categoryId: null }],
+    }))
+
+    await expect(service.update(userId, 'promotion-1', {
+      appliesTo: 'category',
+    })).rejects.toThrow('PROMOTION_CATEGORY_REQUIRED')
+
+    expect(deleteManyPromotionItems).not.toHaveBeenCalled()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('infers item scope when an update sends itemIds without appliesTo', async () => {
+    findFirstOrThrow.mockResolvedValue(makePromotion({ items: [] }))
+    update.mockResolvedValue(makePromotion({
+      items: [{ menuItemId: 'item-b', categoryId: null }],
+    }))
+
+    const result = await service.update(userId, 'promotion-1', {
+      itemIds: ['item-b'],
+    })
+
+    expect(deleteManyPromotionItems).toHaveBeenCalledWith({ where: { promotionId: 'promotion-1' } })
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        items: { create: [{ menuItemId: 'item-b' }] },
+      }),
+    }))
+    expect(result.promotion.itemIds).toEqual(['item-b'])
   })
 
   it('broadcasts only to customers resolved from the owned restaurant audience', async () => {

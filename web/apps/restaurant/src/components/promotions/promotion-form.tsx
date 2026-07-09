@@ -33,6 +33,7 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
   const [minOrderVnd, setMinOrderVnd] = useState(initialData?.minOrderVnd?.toString() || '');
   const [maxDiscountVnd, setMaxDiscountVnd] = useState(initialData?.maxDiscountVnd?.toString() || '');
   const [appliesTo, setAppliesTo] = useState<'all' | 'category' | 'items'>(initialData?.appliesTo || 'all');
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId || '');
   const [itemIds, setItemIds] = useState<string[]>(initialData?.itemIds || []);
   const [channels, setChannels] = useState<PromotionChannel[]>(initialData?.channels || ['in_app']);
   const [stackable, setStackable] = useState(initialData?.stackable ?? false);
@@ -62,6 +63,7 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
       minOrderVnd: minOrderVnd ? parseFloat(minOrderVnd) : undefined,
       maxDiscountVnd: maxDiscountVnd ? parseFloat(maxDiscountVnd) : undefined,
       appliesTo,
+      categoryId: appliesTo === 'category' ? categoryId : undefined,
       itemIds: appliesTo === 'items' ? itemIds : undefined,
       channels,
       stackable,
@@ -153,7 +155,14 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
         )}
       </section>
 
-      <PromotionApplyScopeSection appliesTo={appliesTo} setAppliesTo={setAppliesTo} itemIds={itemIds} setItemIds={setItemIds} />
+      <PromotionApplyScopeSection
+        appliesTo={appliesTo}
+        setAppliesTo={setAppliesTo}
+        categoryId={categoryId}
+        setCategoryId={setCategoryId}
+        itemIds={itemIds}
+        setItemIds={setItemIds}
+      />
 
       <section className="card space-y-4">
         <PromotionTargetSelector

@@ -67,7 +67,8 @@ export class RestaurantPromotionsService {
     if (await this.prisma.promotion.findUnique({ where: { code: dto.code } })) {
       throw new ConflictException('PROMOTION_CODE_EXISTS')
     }
-    await this.assertNoOverlap(restaurantId, dto)
+    const scope = buildPromotionScope(dto)
+    await this.assertNoOverlap(restaurantId, dto, scope)
     const promotion = await this.prisma.promotion.create({
       data: {
         restaurantId, createdById: userId, code: dto.code, name: dto.name,
@@ -80,7 +81,7 @@ export class RestaurantPromotionsService {
         targeting: dto.target as Prisma.InputJsonValue,
         recurrence: (dto.schedule.recurring ?? dto.comboConfig) as Prisma.InputJsonValue | undefined,
         channels: dto.channels,
-        items: { create: buildPromotionScope(dto) },
+        items: { create: scope },
       },
       include: { items: true },
     })
@@ -91,15 +92,18 @@ export class RestaurantPromotionsService {
     const existing = await this.findOwned(userId, id)
     const startsAt = dto.schedule?.validFrom ? new Date(dto.schedule.validFrom) : existing.startsAt
     const expiresAt = dto.schedule?.validUntil ? new Date(dto.schedule.validUntil) : existing.expiresAt
+    const scopeInput = this.resolvePromotionScopeInput(existing.items, dto)
+    const scope = buildPromotionScope(scopeInput)
     await this.assertNoOverlap(existing.restaurantId!, {
       startsAt, expiresAt,
       stackable: dto.stackable ?? existing.isStackable,
-      itemIds: dto.itemIds ?? existing.items.map(item => item.menuItemId).filter(Boolean) as string[],
-      categoryId: dto.categoryId ?? existing.items.find(item => item.categoryId)?.categoryId ?? undefined,
-      appliesTo: dto.appliesTo ?? (existing.items.length ? 'items' : 'all'),
-    }, id)
+      itemIds: scopeInput.itemIds ?? [],
+      categoryId: scopeInput.categoryId,
+      appliesTo: scopeInput.appliesTo ?? 'all',
+    }, scope, id)
+    const scopeTouched = dto.appliesTo !== undefined || dto.itemIds !== undefined || dto.categoryId !== undefined
     const promotion = await this.prisma.$transaction(async tx => {
-      if (dto.appliesTo || dto.itemIds || dto.categoryId) {
+      if (scopeTouched) {
         await tx.promotionItem.deleteMany({ where: { promotionId: id } })
       }
       return tx.promotion.update({
@@ -119,8 +123,8 @@ export class RestaurantPromotionsService {
           ...(dto.target !== undefined ? { targeting: dto.target as Prisma.InputJsonValue } : {}),
           ...(dto.channels !== undefined ? { channels: dto.channels } : {}),
           ...(dto.schedule ? { startsAt, expiresAt, recurrence: dto.schedule.recurring as Prisma.InputJsonValue | undefined } : {}),
-          ...(dto.appliesTo || dto.itemIds || dto.categoryId
-            ? { items: { create: buildPromotionScope(dto) } }
+          ...(scopeTouched
+            ? { items: { create: scope } }
             : {}),
         },
         include: { items: true },
@@ -192,6 +196,7 @@ export class RestaurantPromotionsService {
   private async assertNoOverlap(
     restaurantId: string,
     dto: CreateRestaurantPromotionDto | { startsAt: Date; expiresAt: Date; stackable: boolean; itemIds: string[]; categoryId?: string; appliesTo: string },
+    scope: Array<{ menuItemId?: string; categoryId?: string }>,
     excludeId?: string,
   ) {
     if (dto.stackable) return
@@ -204,9 +209,25 @@ export class RestaurantPromotionsService {
       },
       include: { items: true },
     })
-    const scope = buildPromotionScope(dto)
     const overlaps = candidates.some(candidate => promotionScopesIntersect(candidate.items, scope))
     if (overlaps) throw new ConflictException('PROMOTION_SCOPE_OVERLAP')
+  }
+
+  private resolvePromotionScopeInput(
+    existingItems: Array<{ menuItemId: string | null; categoryId: string | null }>,
+    dto: UpdateRestaurantPromotionDto,
+  ) {
+    const existingItemIds = existingItems.flatMap(item => item.menuItemId ? [item.menuItemId] : [])
+    const existingCategoryId = existingItems.find(item => item.categoryId)?.categoryId ?? undefined
+    const existingAppliesTo = existingCategoryId ? 'category' : existingItemIds.length ? 'items' : 'all'
+    const appliesTo = dto.appliesTo
+      ?? (dto.categoryId !== undefined ? 'category' : dto.itemIds !== undefined ? 'items' : existingAppliesTo)
+
+    return {
+      appliesTo,
+      itemIds: appliesTo === 'items' ? (dto.itemIds ?? existingItemIds) : [],
+      categoryId: appliesTo === 'category' ? (dto.categoryId ?? existingCategoryId) : undefined,
+    }
   }
 
   private serialize(promotion: Awaited<ReturnType<RestaurantPromotionsService['findOwned']>>) {

@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common'
 import { PromotionType } from '@prisma/client'
 import { PromotionTargetingPreviewQueryDto } from './restaurant-promotion.dto'
 
@@ -14,8 +15,15 @@ export function buildPromotionScope(dto: {
   itemIds?: string[]
   categoryId?: string
 }) {
-  if (dto.appliesTo === 'category' && dto.categoryId) return [{ categoryId: dto.categoryId }]
-  if (dto.appliesTo === 'items') return (dto.itemIds ?? []).map(menuItemId => ({ menuItemId }))
+  if (dto.appliesTo === 'category') {
+    if (!dto.categoryId?.trim()) throw new BadRequestException('PROMOTION_CATEGORY_REQUIRED')
+    return [{ categoryId: dto.categoryId }]
+  }
+  if (dto.appliesTo === 'items') {
+    const itemIds = [...new Set((dto.itemIds ?? []).map(itemId => itemId.trim()).filter(Boolean))]
+    if (!itemIds.length) throw new BadRequestException('PROMOTION_ITEMS_REQUIRED')
+    return itemIds.map(menuItemId => ({ menuItemId }))
+  }
   return []
 }
 
