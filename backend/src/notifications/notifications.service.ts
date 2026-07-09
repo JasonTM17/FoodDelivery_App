@@ -1,4 +1,4 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger, Optional } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, Optional } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, type Notification } from '@prisma/client'
 import Redis from 'ioredis'
@@ -15,7 +15,7 @@ import {
   QUIET_HOUR_START,
   QUIET_HOUR_END,
 } from './notifications.constants'
-import type { ChannelPayload } from './channels/notification-channel.interface'
+import type { ChannelPayload, ChannelResult } from './channels/notification-channel.interface'
 
 export interface FanoutPayload {
   sourceId: string
@@ -30,6 +30,13 @@ interface NotificationSettingRow {
 }
 
 type RealtimeNotification = Pick<Notification, 'id' | 'title' | 'body' | 'type' | 'data' | 'isRead' | 'createdAt'>
+interface FanoutResult {
+  sent: boolean
+  skipped?: boolean
+  attempted?: number
+  delivered?: number
+  failed?: number
+}
 
 @Injectable()
 export class NotificationsService {
@@ -52,7 +59,7 @@ export class NotificationsService {
     userId: string,
     eventType: string,
     payload: FanoutPayload,
-  ): Promise<{ sent: boolean; skipped?: boolean }> {
+  ): Promise<FanoutResult> {
     const dedupKey = `dedup:${userId}:${eventType}:${payload.sourceId}`
     const acquired = await this.redis.set(dedupKey, '1', 'EX', DEDUP_TTL_SECONDS, 'NX')
     if (acquired === null) {
@@ -71,6 +78,7 @@ export class NotificationsService {
       !isCritical && this.isQuietHours()
         ? channels.filter(c => c !== 'push')
         : channels
+    if (effectiveChannels.length === 0) return { sent: false, skipped: true }
 
     const channelPayload: ChannelPayload = {
       title: rendered.title,
@@ -92,22 +100,29 @@ export class NotificationsService {
       effectiveChannels.map(ch => this.dispatchChannel(ch, userId, channelPayload)),
     )
 
-    const failCount = results.filter(r => r.status === 'rejected').length
+    const delivered = results.filter(r => r.status === 'fulfilled' && r.value.success).length
+    const failCount = results.length - delivered
     if (failCount > 0) {
       this.logger.warn(`${failCount}/${results.length} channels failed for userId=${userId} event=${eventType}`)
     }
 
-    return { sent: true }
+    return {
+      sent: failCount === 0,
+      attempted: results.length,
+      delivered,
+      failed: failCount,
+    }
   }
 
-  private async dispatchChannel(channel: string, userId: string, payload: ChannelPayload): Promise<void> {
+  private async dispatchChannel(channel: string, userId: string, payload: ChannelPayload): Promise<ChannelResult> {
     switch (channel) {
-      case 'in_app': await this.inApp.send(userId, payload); break
-      case 'push':   await this.fcm.send(userId, payload); break
-      case 'email':  await this.smtp.send(userId, payload); break
-      case 'sms':    await this.twilio.send(userId, payload); break
+      case 'in_app': return this.inApp.send(userId, payload)
+      case 'push':   return this.fcm.send(userId, payload)
+      case 'email':  return this.smtp.send(userId, payload)
+      case 'sms':    return this.twilio.send(userId, payload)
       default:
         this.logger.warn(`Unknown channel: ${channel}`)
+        return { success: false, error: `UNKNOWN_CHANNEL:${channel}` }
     }
   }
 
@@ -121,8 +136,10 @@ export class NotificationsService {
       if (rows.length > 0) {
         return rows[0].enabled ? (rows[0].channels as string[]) : []
       }
-    } catch {
-      // Table may not exist before migration runs
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      this.logger.error(`Notification settings lookup failed for userId=${userId} event=${eventType}: ${message}`)
+      throw new InternalServerErrorException('NOTIFICATION_SETTINGS_UNAVAILABLE')
     }
     return DEFAULT_CHANNELS[eventType] ?? ['in_app']
   }
@@ -134,8 +151,10 @@ export class NotificationsService {
       `
       const value = rows[0]?.preferred_locale
       if (value === 'en' || value === 'ja') return value
-    } catch {
-      // Column may not exist before migration runs
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      this.logger.error(`Notification locale lookup failed for userId=${userId}: ${message}`)
+      throw new InternalServerErrorException('NOTIFICATION_LOCALE_UNAVAILABLE')
     }
     return 'vi'
   }

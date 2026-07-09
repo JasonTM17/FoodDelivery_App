@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import * as fs from 'fs'
 import * as path from 'path'
 import type { Locale } from '../../common/types/locale.types'
@@ -64,7 +64,7 @@ export class TemplateLoader {
         return this.getTemplate(eventType, 'vi')
       }
       this.logger.error(`Template not found for event: ${eventType}`)
-      return { title: eventType, body: '', channels: ['in_app'], critical: false }
+      throw new InternalServerErrorException('NOTIFICATION_TEMPLATE_NOT_FOUND')
     }
   }
 

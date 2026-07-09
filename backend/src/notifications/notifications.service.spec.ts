@@ -98,7 +98,7 @@ describe('NotificationsService', () => {
 
       const result = await service.fanout(userId, eventType, payload)
 
-      expect(result).toEqual({ sent: true })
+      expect(result).toEqual({ sent: true, attempted: 2, delivered: 2, failed: 0 })
       expect(mockInApp.send).toHaveBeenCalledWith(userId, expect.objectContaining({ title: expect.any(String) }))
       expect(mockFcm.send).toHaveBeenCalledWith(userId, expect.objectContaining({ title: expect.any(String) }))
       expect(mockPrisma.notification.create).toHaveBeenCalled()
@@ -192,7 +192,7 @@ describe('NotificationsService', () => {
       expect(mockInApp.send).not.toHaveBeenCalled()
     })
 
-    it('continues when a channel throws and still creates audit record', async () => {
+    it('reports partial channel failure instead of marking the fanout as sent', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
       const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
@@ -200,9 +200,45 @@ describe('NotificationsService', () => {
 
       const result = await service.fanout(userId, eventType, payload)
 
-      expect(result).toEqual({ sent: true })
+      expect(result).toEqual({ sent: false, attempted: 2, delivered: 1, failed: 1 })
       expect(mockPrisma.notification.create).toHaveBeenCalled()
       dateSpy.mockRestore()
+    })
+
+    it('treats channel success=false results as failed delivery', async () => {
+      mockRedis.set.mockResolvedValueOnce('OK')
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+      mockFcm.send.mockResolvedValueOnce({ success: false, error: 'queue unavailable' })
+
+      const result = await service.fanout(userId, eventType, payload)
+
+      expect(result).toEqual({ sent: false, attempted: 2, delivered: 1, failed: 1 })
+      expect(mockPrisma.notification.create).toHaveBeenCalled()
+      dateSpy.mockRestore()
+    })
+
+    it('fails closed when notification settings lookup fails instead of using default channels', async () => {
+      mockRedis.set.mockResolvedValueOnce('OK')
+      mockPrisma.$queryRaw.mockRejectedValueOnce(new Error('settings table unavailable'))
+
+      await expect(service.fanout(userId, eventType, payload)).rejects.toThrow('NOTIFICATION_SETTINGS_UNAVAILABLE')
+
+      expect(mockInApp.send).not.toHaveBeenCalled()
+      expect(mockFcm.send).not.toHaveBeenCalled()
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled()
+    })
+
+    it('fails closed when locale lookup fails instead of rendering Vietnamese fallback copy', async () => {
+      mockRedis.set.mockResolvedValueOnce('OK')
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([])
+        .mockRejectedValueOnce(new Error('users table unavailable'))
+
+      await expect(service.fanout(userId, eventType, payload)).rejects.toThrow('NOTIFICATION_LOCALE_UNAVAILABLE')
+
+      expect(mockTemplateLoader.render).not.toHaveBeenCalled()
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled()
     })
   })
 })
