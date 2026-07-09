@@ -70,6 +70,22 @@ customer/driver  ->  admin/restaurant   ->  REST + WebSocket + queues
 
 Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat is LLM-first through the backend provider adapter and returns an explicit degraded state when no model key is configured.
 
+## Repository layout
+
+| Path | Purpose |
+|---|---|
+| `backend/` | NestJS API, Prisma, BullMQ workers entry |
+| `web/` | pnpm monorepo: Admin + Restaurant, shared packages, Playwright e2e |
+| `mobile/` | Flutter customer + driver apps |
+| `infra/` | Nginx, monitoring, loadtest, release scripts |
+| `docs/` | Public docs, OpenAPI, ADRs |
+| `e2e/` | Cross-surface smoke / AI scenarios |
+| `docker-compose.yml` | Local full stack |
+| `docker-compose.prod.yml` | Deploy by pulling public Hub images |
+| `plans/` | Local-only private plans (**gitignored**) |
+
+Build artifacts (`dist/`, `coverage/`, `.turbo/`, Playwright reports) are gitignored and should not be committed.
+
 ## Prerequisites
 
 - Node.js 20+ or 22+ compatible with the checked-in lockfiles
