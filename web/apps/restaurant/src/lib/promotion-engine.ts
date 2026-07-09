@@ -26,6 +26,12 @@ export function validatePromotion(p: Partial<Promotion>): ValidationResult {
   if ((p.type === 'bogof' || p.type === 'combo') && !p.comboConfig) {
     errors.push('comboRequired');
   }
+  if (p.appliesTo === 'category' && !p.categoryId?.trim()) {
+    errors.push('categoryRequired');
+  }
+  if (p.appliesTo === 'items' && (!p.itemIds || p.itemIds.length === 0)) {
+    errors.push('itemsRequired');
+  }
   if (p.type === 'bogof' && p.comboConfig && p.comboConfig.buy < 1) {
     errors.push('buyQuantityPositive');
   }
