@@ -48,6 +48,19 @@ Backend coverage thresholds are enforced in `backend/jest.config.ts`; do not pas
 
 CI may set `AI_ALLOW_DEGRADED=true` when no LLM provider secret is available; this still verifies auth, tool grounding, tenant-scoped order lookup, support-ticket escalation, and hallucination guards. Release verification must run without degraded mode and with a rotated, valid `DEEPSEEK_API_KEY` from the secret manager.
 
+## Post-deploy production smoke
+
+After Supabase migrations/realtime/storage and Vercel API/Admin/Restaurant deployments are promoted, run the production smoke checks from a release shell. Tokens and smoke entity IDs must come from env or provider dashboards; do not paste them into chat or commit them:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\post-deploy-smoke.ps1 -PlanOnly `
+  -ApiUrl https://<api-domain>/api `
+  -AdminUrl https://<admin-domain> `
+  -RestaurantUrl https://<restaurant-domain>
+```
+
+For release approval, set `FOODFLOW_ADMIN_TOKEN`, `FOODFLOW_CUSTOMER_TOKEN`, `FOODFLOW_RESTAURANT_TOKEN`, `FOODFLOW_DRIVER_TOKEN`, `FOODFLOW_SMOKE_ORDER_ID`, and `FOODFLOW_SMOKE_RESTAURANT_ID`, then run with `-RequireAuthenticatedChecks`. Use `-CreateExportJob` to verify export creation/download readiness when a production smoke export side effect is approved, and `-RequireRoutePolyline` only for an assigned smoke order with real route geometry.
+
 ## Web
 
 ```bash
