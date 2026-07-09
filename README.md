@@ -9,10 +9,33 @@ Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.
   <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
   <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
   <img src="https://img.shields.io/badge/ai-LLM%20Chatbot-18e46a" alt="AI">
+  <img src="https://img.shields.io/badge/docker-Hub%20%2B%20GHCR-2496ED?logo=docker" alt="Docker packages">
   <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
 </p>
 
 FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
+
+## Packages (Docker)
+
+Public container images for deploy (`latest` and git SHA tags):
+
+| Package | Docker Hub | GHCR |
+|---|---|---|
+| API | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-backend` |
+| Worker | [`nguyenson1710/foodflow-worker`](https://hub.docker.com/r/nguyenson1710/foodflow-worker) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-worker` |
+| Migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-migrate` |
+| Admin | [`nguyenson1710/foodflow-admin`](https://hub.docker.com/r/nguyenson1710/foodflow-admin) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-admin` |
+| Restaurant | [`nguyenson1710/foodflow-restaurant`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-restaurant` |
+
+```bash
+# Pull from Docker Hub (default in docker-compose.prod.yml)
+docker pull nguyenson1710/foodflow-backend:latest
+
+# Or GitHub Container Registry
+docker pull ghcr.io/jasontm17/fooddelivery_app/foodflow-backend:latest
+```
+
+Deploy with compose: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d` (see [deployment guide](docs/deployment-guide.md)).
 
 FoodFlow does not use an external workflow automation runner in runtime. AI chat and food recommendations run through the backend LLM adapter, with explicit degraded responses when the model provider is unavailable.
 
