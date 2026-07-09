@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { CurrentUser } from '../auth/current-user.decorator'
@@ -53,11 +53,11 @@ export class AdminController {
     })
   }
 
+  // Zod only on @Body — method-level @UsePipes also validates @Param/@CurrentUser and 400s
   @Patch('users/:id/status')
-  @UsePipes(new ZodValidationPipe(toggleUserStatusSchema))
   toggleUserStatus(
     @Param('id') id: string,
-    @Body() body: { isActive?: boolean; status?: string },
+    @Body(new ZodValidationPipe(toggleUserStatusSchema)) body: { isActive?: boolean; status?: string },
   ) {
     return this.adminService.toggleUserStatus(id, body)
   }
@@ -71,10 +71,9 @@ export class AdminController {
   }
 
   @Patch('restaurants/:id/status')
-  @UsePipes(new ZodValidationPipe(toggleRestaurantStatusSchema))
   toggleRestaurantStatus(
     @Param('id') id: string,
-    @Body() body: { isActive?: boolean; status?: string },
+    @Body(new ZodValidationPipe(toggleRestaurantStatusSchema)) body: { isActive?: boolean; status?: string },
   ) {
     return this.adminService.toggleRestaurantStatus(id, body)
   }
@@ -96,11 +95,10 @@ export class AdminController {
   }
 
   @Patch('support-tickets/:id')
-  @UsePipes(new ZodValidationPipe(updateSupportTicketSchema))
   updateSupportTicket(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Body() body: {
+    @Body(new ZodValidationPipe(updateSupportTicketSchema)) body: {
       status?: string
       assignedAdminId?: string
       assignedTo?: string
@@ -123,14 +121,17 @@ export class AdminController {
   }
 
   @Post('promotions')
-  @UsePipes(new ZodValidationPipe(createPromotionSchema))
-  async createPromotion(@Body() dto: CreatePromotionDto) {
+  async createPromotion(
+    @Body(new ZodValidationPipe(createPromotionSchema)) dto: CreatePromotionDto,
+  ) {
     return this.adminService.createPromotion(dto)
   }
 
   @Patch('promotions/:id')
-  @UsePipes(new ZodValidationPipe(updatePromotionSchema))
-  async updatePromotion(@Param('id') id: string, @Body() dto: UpdatePromotionDto) {
+  async updatePromotion(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updatePromotionSchema)) dto: UpdatePromotionDto,
+  ) {
     return this.adminService.updatePromotion(id, dto)
   }
 
