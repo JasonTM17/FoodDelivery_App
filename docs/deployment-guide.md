@@ -79,23 +79,46 @@ DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supab
 
 Deploy web only after `pnpm --filter foodflow-admin build` and `pnpm --filter restaurant build` pass.
 
-Recommended project mapping:
+### Recommended project mapping
 
-| Vercel project | Root directory | Build command |
+| Vercel project | Root directory | Install command | Build command | Node |
+|---|---|---|---|---|
+| Admin (`food-delivery-app`) | **`web`** (not `web/apps/admin`) | `pnpm install --frozen-lockfile` | `pnpm --filter foodflow-admin build` | **22.x** |
+| Restaurant (`foodflow-restaurant`) | **`web`** | `pnpm install --frozen-lockfile` | `pnpm --filter restaurant build` | **22.x** |
+
+Do **not** deploy the NestJS API (`foodflow-api`) to Vercel. Socket.IO, BullMQ workers, Redis rate limits, and Prisma migrations need a long-running Docker/VPS process. Keep backend on Docker Compose / container host.
+
+### Required public env (Preview + Production)
+
+| App | Variable | Notes |
 |---|---|---|
-| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
-| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
-
-Required public env:
-
-| App | Variable |
-|---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Both | `NEXT_PUBLIC_APP_ENV=production` | Triggers fail-closed URL validation |
+| Both | `NEXT_PUBLIC_API_URL` | HTTPS public API, e.g. `https://api.example.com/api` |
+| Both | `NEXT_PUBLIC_WS_URL` | Public Socket.IO origin, e.g. `https://api.example.com` |
+| Both | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Real browser key (not `your-*` placeholder) |
+| Admin | `NEXT_PUBLIC_ADMIN_URL` | Canonical admin HTTPS URL |
+| Restaurant | `NEXT_PUBLIC_RESTAURANT_URL` | Canonical restaurant HTTPS URL |
 
 Both web apps intentionally fail closed in production when API, realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.
+
+### Why recent Codex deploys failed (2026-07-09)
+
+Observed on Vercel account projects:
+
+- `food-delivery-app` had many **Preview Error** deploys (~1m each); Production URL returned **404**.
+- Project root was `web/apps/admin` with `cd ../.. && pnpm ...` (fragile monorepo path).
+- Node was set to **24.x** while Docker/tooling targets **22**.
+- `foodflow-restaurant` and `foodflow-api` had **zero** successful deployments.
+- Local **production-mode** builds succeed when all `NEXT_PUBLIC_*` HTTPS vars are set.
+
+Checklist before `vercel --prod`:
+
+1. Clean git tree; push current `master`.
+2. Fix project Root Directory → `web`, Node → `22.x`.
+3. Set every required env on Preview and Production.
+4. Confirm public backend API is reachable from the browser (CORS + HTTPS). Without a public API, Vercel UI will build but login will fail.
 
 ## Backend Deployment
 
