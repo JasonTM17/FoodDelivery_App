@@ -79,6 +79,15 @@ DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.sup
 DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
 ```
 
+Supabase production preflight helper:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-env-prompt.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-env-prompt.ps1 -RunPreflight
+```
+
+This helper sets values only in the current process, clears them after preflight, never writes `.env`, never prints secrets, and never runs migrations.
+
 ## Vercel
 
 Admin と Restaurant の build が通った後に web を deploy します。

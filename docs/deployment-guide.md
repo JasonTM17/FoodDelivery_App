@@ -83,6 +83,15 @@ Supabase is used only after backend contracts and migrations are green.
    powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-preflight.ps1
    ```
 
+   To avoid pasting secrets into chat, docs, or shell history, use the local prompt helper for the release shell:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-env-prompt.ps1
+   powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-env-prompt.ps1 -RunPreflight
+   ```
+
+   The helper stores prompted values only in the current PowerShell process, clears them after preflight, never writes `.env` files, and never runs migrations.
+
 5. Run Prisma migrations only after preflight passes:
 
    ```bash
