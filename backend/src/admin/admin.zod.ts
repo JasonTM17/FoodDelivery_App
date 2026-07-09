@@ -42,9 +42,14 @@ export const updatePromotionSchema = z.object({
 
 export type UpdatePromotionInput = z.infer<typeof updatePromotionSchema>
 
-export const toggleUserStatusSchema = z.object({
-  isActive: z.boolean(),
-})
+export const toggleUserStatusSchema = z
+  .object({
+    isActive: z.boolean().optional(),
+    status: z.enum(['active', 'banned']).optional(),
+  })
+  .refine((v) => typeof v.isActive === 'boolean' || typeof v.status === 'string', {
+    message: 'isActive or status is required',
+  })
 
 export const toggleRestaurantStatusSchema = z
   .object({
@@ -56,7 +61,9 @@ export const toggleRestaurantStatusSchema = z
   })
 
 export const updateSupportTicketSchema = z.object({
-  status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+  status: z.enum(['open', 'in_progress', 'waiting_customer', 'resolved', 'closed']).optional(),
   assignedAdminId: z.string().optional(),
+  /** Admin UI assign-self shortcut; resolved to JWT sub in controller. */
+  assignedTo: z.enum(['self']).optional(),
   resolutionNotes: z.string().optional(),
 })

@@ -100,18 +100,51 @@ export class AdminService {
   async getUsers(params: { role?: string; page?: number; limit?: number }) {
     const { page, limit, skip } = this.pagination(params.page, params.limit)
     const where: Prisma.UserWhereInput = {}
-    if (params.role) where.role = params.role as UserRole
-    const [users, total] = await Promise.all([
+    // Admin UI filter uses restaurant_owner; Prisma role is restaurant
+    const roleFilter =
+      params.role === 'restaurant_owner' ? UserRole.restaurant : (params.role as UserRole | undefined)
+    if (roleFilter) where.role = roleFilter
+    const [rows, total] = await Promise.all([
       this.prisma.user.findMany({
         where, skip, take: limit, orderBy: { createdAt: 'desc' },
         select: { id: true, email: true, phone: true, fullName: true, role: true, isActive: true, createdAt: true },
       }),
       this.prisma.user.count({ where }),
     ])
-    return { users, total, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    const totalPages = Math.ceil(total / limit)
+    // Shape expected by Admin users table UI
+    const users = rows.map((u) => ({
+      id: u.id,
+      name: u.fullName,
+      fullName: u.fullName,
+      email: u.email,
+      phone: u.phone ?? '',
+      role: u.role === UserRole.restaurant ? 'restaurant_owner' : u.role,
+      status: u.isActive ? 'active' : 'banned',
+      isActive: u.isActive,
+      createdAt: u.createdAt.toISOString(),
+    }))
+    return {
+      users,
+      total,
+      page,
+      limit,
+      totalPages,
+      meta: { page, limit, total, totalPages },
+    }
   }
 
-  async toggleUserStatus(userId: string, isActive: boolean) {
+  async toggleUserStatus(
+    userId: string,
+    body: { isActive?: boolean; status?: string },
+  ) {
+    let isActive = body.isActive
+    if (typeof isActive !== 'boolean' && typeof body.status === 'string') {
+      isActive = body.status === 'active'
+    }
+    if (typeof isActive !== 'boolean') {
+      throw new BadRequestException('isActive or status is required')
+    }
     return this.prisma.user.update({ where: { id: userId }, data: { isActive } })
   }
 

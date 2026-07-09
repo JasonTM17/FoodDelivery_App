@@ -87,3 +87,53 @@ describe('AdminService list endpoints', () => {
     })
   })
 })
+
+describe('AdminService getUsers mapping', () => {
+  const prisma = {
+    user: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      update: jest.fn(),
+    },
+  }
+  let service: AdminService
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    service = new AdminService(prisma as never)
+  })
+
+  it('maps fullName→name and isActive→status for admin users table', async () => {
+    prisma.user.findMany.mockResolvedValue([
+      {
+        id: 'u1',
+        email: 'customer1@foodflow.vn',
+        phone: '0900000310',
+        fullName: 'Customer One',
+        role: 'customer',
+        isActive: true,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      },
+    ])
+    prisma.user.count.mockResolvedValue(1)
+
+    const result = await service.getUsers({})
+
+    expect(result.users[0]).toMatchObject({
+      name: 'Customer One',
+      status: 'active',
+      role: 'customer',
+    })
+    expect(result.total).toBe(1)
+    expect(result.page).toBe(1)
+  })
+
+  it('toggleUserStatus accepts status banned from web UI', async () => {
+    prisma.user.update.mockResolvedValue({ id: 'u1', isActive: false })
+    await service.toggleUserStatus('u1', { status: 'banned' })
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { isActive: false },
+    })
+  })
+})

@@ -42,9 +42,17 @@ Platform KPIs (revenue, orders, active users, restaurants, online drivers) plus 
 
 ![Admin orders](./screenshots/admin/03-orders.png)
 
+### Restaurants
+
+![Admin restaurants](./screenshots/admin/04-restaurants.png)
+
+Seeded partner list with owner, cuisine, rating, order totals, and active status.
+
 ### Users
 
 ![Admin users](./screenshots/admin/05-users.png)
+
+Real names and active/banned status mapped from backend `fullName` / `isActive`.
 
 ### Drivers
 
@@ -53,6 +61,12 @@ Platform KPIs (revenue, orders, active users, restaurants, online drivers) plus 
 ### Promotions
 
 ![Admin promotions](./screenshots/admin/07-promotions.png)
+
+### Support
+
+![Admin support](./screenshots/admin/08-support.png)
+
+Ticket inbox with SLA-aware status; assign-self maps to the signed-in admin.
 
 ### Analytics
 

@@ -44,9 +44,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const raw = cookieStore.get('NEXT_LOCALE')?.value ?? 'vi'
   const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi'
 
+  // Full app messages at root: RestaurantSidebar lives outside [locale] layout
+  // and must resolve sidebar.* keys (not only shared + rootStates).
   const messages = {
     ...getSharedMessages(locale),
-    rootStates: appMessages[locale].rootStates,
+    ...appMessages[locale],
   }
 
   return (

@@ -16,7 +16,19 @@ async function login(email, password) {
   return j.data;
 }
 
+async function hideDevChrome(page) {
+  await page.addStyleTag({
+    content: `
+      nextjs-portal, [data-nextjs-toast], [data-next-badge-root],
+      #__next-build-indicator, [data-nextjs-dialog-overlay] {
+        display: none !important; visibility: hidden !important;
+      }
+    `,
+  }).catch(() => {});
+}
+
 async function shot(page, file) {
+  await hideDevChrome(page);
   await page.waitForTimeout(2500);
   await page.screenshot({ path: path.join(SHOTS, file), type: "png" });
   console.log("shot", file);
@@ -47,9 +59,11 @@ async function shot(page, file) {
   for (const [f, r] of [
     ["admin/02-overview.png", "/vi/overview"],
     ["admin/03-orders.png", "/vi/orders"],
+    ["admin/04-restaurants.png", "/vi/restaurants"],
     ["admin/05-users.png", "/vi/users"],
     ["admin/06-drivers.png", "/vi/drivers"],
     ["admin/07-promotions.png", "/vi/promotions"],
+    ["admin/08-support.png", "/vi/support"],
     ["admin/09-analytics.png", "/vi/analytics"],
   ]) {
     await page.goto(ADMIN + r, { waitUntil: "networkidle", timeout: 60000 });

@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
+import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import { AdminService } from './admin.service'
@@ -53,8 +55,11 @@ export class AdminController {
 
   @Patch('users/:id/status')
   @UsePipes(new ZodValidationPipe(toggleUserStatusSchema))
-  toggleUserStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
-    return this.adminService.toggleUserStatus(id, body.isActive)
+  toggleUserStatus(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean; status?: string },
+  ) {
+    return this.adminService.toggleUserStatus(id, body)
   }
 
   @Get('restaurants')
@@ -92,8 +97,24 @@ export class AdminController {
 
   @Patch('support-tickets/:id')
   @UsePipes(new ZodValidationPipe(updateSupportTicketSchema))
-  updateSupportTicket(@Param('id') id: string, @Body() body: { status?: string; assignedAdminId?: string; resolutionNotes?: string }) {
-    return this.adminService.updateSupportTicket(id, body)
+  updateSupportTicket(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: {
+      status?: string
+      assignedAdminId?: string
+      assignedTo?: string
+      resolutionNotes?: string
+    },
+  ) {
+    const assignedAdminId =
+      body.assignedAdminId ??
+      (body.assignedTo === 'self' ? user.sub : undefined)
+    return this.adminService.updateSupportTicket(id, {
+      status: body.status,
+      assignedAdminId,
+      resolutionNotes: body.resolutionNotes,
+    })
   }
 
   @Get('promotions')
