@@ -19,7 +19,8 @@
     "description": "Sign in to manage your orders and menu",
     "emailPlaceholder": "restaurant@email.com",
     "loginButton": "Sign In",
-    "loggingIn": "Signing in..."
+    "loggingIn": "Signing in...",
+    "restaurantOnly": "This dashboard is available to restaurant accounts only."
   },
   "sidebar": {
     "defaultName": "Restaurant",

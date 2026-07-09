@@ -31,10 +31,14 @@ describe('Admin LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'login' }));
 
     await waitFor(() => {
-      expect(mockedApiPost).toHaveBeenCalledWith('/auth/login', {
-        email: 'admin@foodflow.vn',
-        password: credentialFixture('admin'),
-      });
+      expect(mockedApiPost).toHaveBeenCalledWith(
+        '/auth/login',
+        {
+          email: 'admin@foodflow.vn',
+          password: credentialFixture('admin'),
+        },
+        { requireAuth: false },
+      );
     });
     expect(localStorage.getItem('admin_token')).toBe(tokenFixture('admin-access'));
     expect(localStorage.getItem('admin_refresh_token')).toBe(tokenFixture('admin-refresh'));

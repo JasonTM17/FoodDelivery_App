@@ -18,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const t = useTranslations('login');
   const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +40,7 @@ export default function LoginPage() {
         accessToken: string;
         refreshToken: string;
         user: { name?: string; fullName?: string; email: string; role: string };
-      }>('/auth/login', { email, password });
+      }>('/auth/login', { email, password }, { requireAuth: false });
 
       if (res.user.role !== 'admin') {
         throw new Error(t('adminOnly'));
@@ -52,7 +53,7 @@ export default function LoginPage() {
       // The next-intl router preserves the active locale.
       router.replace('/overview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon('errors.generic'));
+      setError(err instanceof Error ? err.message : tErrors('generic'));
       setFailCount((c) => c + 1);
     } finally {
       setLoading(false);

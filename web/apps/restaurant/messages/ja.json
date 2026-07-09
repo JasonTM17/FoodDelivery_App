@@ -19,7 +19,8 @@
     "description": "注文とメニューを管理するためにログインしてください",
     "emailPlaceholder": "restaurant@email.com",
     "loginButton": "ログイン",
-    "loggingIn": "ログイン中..."
+    "loggingIn": "ログイン中...",
+    "restaurantOnly": "このダッシュボードはレストランアカウントのみ利用できます。"
   },
   "sidebar": {
     "defaultName": "レストラン",

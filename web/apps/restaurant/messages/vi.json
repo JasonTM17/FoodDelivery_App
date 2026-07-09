@@ -19,7 +19,8 @@
     "description": "Đăng nhập để quản lý đơn hàng và thực đơn",
     "emailPlaceholder": "nhahang@email.com",
     "loginButton": "Đăng nhập",
-    "loggingIn": "Đang đăng nhập..."
+    "loggingIn": "Đang đăng nhập...",
+    "restaurantOnly": "Bảng điều khiển này chỉ dành cho tài khoản nhà hàng."
   },
   "sidebar": {
     "defaultName": "Nhà hàng",
