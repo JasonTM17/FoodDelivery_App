@@ -271,6 +271,7 @@
       "phoneLabel": "SĐT:",
       "addressLabel": "Địa chỉ:",
       "items": "Món ăn",
+      "itemsUnavailable": "Không thể tải danh sách món của đơn hàng. Hãy làm mới sau khi backend trả về danh sách hợp lệ.",
       "subtotal": "Tạm tính",
       "deliveryFee": "Phí giao hàng",
       "discount": "Giảm giá",

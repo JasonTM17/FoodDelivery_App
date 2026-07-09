@@ -182,6 +182,34 @@ Recommended checks:
 - Restaurant: `GET /api/healthz`
 - Synthetic flows after release: login, restaurant order queue and live tracking map, admin exports, AI degraded/configured state, driver map loading
 
+Run the production health smoke immediately after Vercel promotes deployments:
+
+```powershell
+$env:API_URL = "https://<api-domain>/api"
+$env:ADMIN_URL = "https://<admin-domain>"
+$env:RESTAURANT_URL = "https://<restaurant-domain>"
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\production-health-check.ps1
+```
+
+Use `-PlanOnly` to inspect resolved health endpoints without network calls. Use `-AllowHttp -AllowLocal` only for local smoke checks.
+
+After health is green, run the authenticated post-deploy smoke. It verifies that the promoted apps do not serve a Vercel/Next.js 404 shell and that Supabase realtime token issuance, AI chatbot, admin exports, and tracking/map route contracts are working against production-like data. Bearer tokens and smoke IDs are read only from the release shell environment and are never printed or written to files:
+
+```powershell
+$env:API_URL = "https://<api-domain>/api"
+$env:ADMIN_URL = "https://<admin-domain>"
+$env:RESTAURANT_URL = "https://<restaurant-domain>"
+$env:FOODFLOW_ADMIN_TOKEN = "<short-lived admin JWT>"
+$env:FOODFLOW_CUSTOMER_TOKEN = "<short-lived customer JWT>"
+$env:FOODFLOW_RESTAURANT_TOKEN = "<short-lived restaurant JWT>"
+$env:FOODFLOW_DRIVER_TOKEN = "<short-lived driver JWT>"
+$env:FOODFLOW_SMOKE_ORDER_ID = "<assigned smoke order UUID>"
+$env:FOODFLOW_SMOKE_RESTAURANT_ID = "<restaurant UUID>"
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\post-deploy-smoke.ps1 -RequireAuthenticatedChecks
+```
+
+Use `-PlanOnly` before a release to inspect endpoints without network calls. Add `-CreateExportJob` when it is acceptable to create a short-lived admin audit-log export job. Add `-RequireRoutePolyline` only when the smoke order has an assigned driver and provider route geometry; otherwise the script still verifies the tracking contract without requiring a polyline. Do not pass `-AllowDegradedAi` for production approval because the chatbot must use a rotated, configured `DEEPSEEK_API_KEY`.
+
 Alert on repeated failures. Do not use keep-alive to mask failed migrations, missing secrets, or broken realtime connections.
 
 ## Pre-Deploy Gates

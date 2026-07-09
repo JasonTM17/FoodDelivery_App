@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { BadRequestException, Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { CurrentUser } from '../auth/current-user.decorator'
@@ -9,6 +9,9 @@ import { RolesGuard } from '../auth/roles.guard'
 import { RestaurantDashboardService } from './restaurant-dashboard.service'
 import { RestaurantInsightsService } from './restaurant-insights.service'
 import { RestaurantRevenueService } from './restaurant-revenue.service'
+
+const insightSections = ['suggestions', 'peak-hours', 'best-sellers', 'slow-movers', 'forecast'] as const
+type InsightSection = (typeof insightSections)[number]
 
 @ApiTags('restaurant-analytics')
 @ApiBearerAuth()
@@ -53,19 +56,31 @@ export class RestaurantAnalyticsController {
 
   @Get('analytics/:section')
   async getInsightSection(@CurrentUser() user: JwtPayload, @Param('section') section: string) {
+    if (!isInsightSection(section)) {
+      throw new BadRequestException({
+        code: 'UNKNOWN_RESTAURANT_ANALYTICS_SECTION',
+        message: `Unknown restaurant analytics section: ${section}`,
+        allowedSections: insightSections,
+      })
+    }
+
     const data = await this.insights.getInsights(user.sub)
-    const sections: Record<string, unknown> = {
+    const sections: Record<InsightSection, unknown> = {
       suggestions: data.suggestions,
       'peak-hours': data.peakHours,
       'best-sellers': data.bestSellers,
       'slow-movers': data.slowMovers,
       forecast: data.forecast,
     }
-    return sections[section] ?? []
+    return sections[section]
   }
 
   @Get('insights/best-sellers')
   async getBestSellers(@CurrentUser() user: JwtPayload) {
     return (await this.insights.getInsights(user.sub)).bestSellers
   }
+}
+
+function isInsightSection(section: string): section is InsightSection {
+  return (insightSections as readonly string[]).includes(section)
 }

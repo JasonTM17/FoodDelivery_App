@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OrdersTableClient from '@/app/[locale]/orders/orders-table-client';
+import { parseOrderItems } from '@/app/[locale]/orders/order-detail-contract';
 import RestaurantsTableClient from '@/app/[locale]/restaurants/restaurants-table-client';
 import { apiGet, apiGetEnvelope } from '@/lib/api';
 
@@ -52,6 +53,42 @@ describe('admin detail sheets', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('loadError');
     expect(screen.queryByText('Stale fallback delivery address')).not.toBeInTheDocument();
+  });
+
+  it('shows an order item contract error instead of rendering a fake empty item list', async () => {
+    mockedApiGetEnvelope.mockResolvedValueOnce({
+      data: [makeOrder()],
+      meta: { page: 1, limit: 15, total: 1 },
+    });
+    mockedApiGet.mockResolvedValueOnce({
+      ...makeOrder(),
+      items: undefined,
+      deliveryAddress: 'Fresh backend delivery address',
+    });
+
+    renderWithQueryClient(<OrdersTableClient />);
+
+    expect(await screen.findByText('ORD-STALE')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'viewOrder' }));
+
+    expect(await screen.findByText('itemsUnavailable')).toBeInTheDocument();
+    expect(screen.getByText('Fresh backend delivery address', { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText('Stale fallback item')).not.toBeInTheDocument();
+  });
+});
+
+describe('parseOrderItems', () => {
+  it('accepts real backend order item rows', () => {
+    expect(parseOrderItems([{ name: 'Pho', quantity: 2, price: 55000 }])).toEqual([
+      { name: 'Pho', quantity: 2, price: 55000 },
+    ]);
+  });
+
+  it('rejects missing or malformed item rows instead of fabricating an empty list', () => {
+    expect(parseOrderItems(undefined)).toBeNull();
+    expect(parseOrderItems([{ name: '', quantity: 1, price: 55000 }])).toBeNull();
+    expect(parseOrderItems([{ name: 'Pho', quantity: 0, price: 55000 }])).toBeNull();
+    expect(parseOrderItems([{ name: 'Pho', quantity: 1, price: Number.NaN }])).toBeNull();
   });
 });
 

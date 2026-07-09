@@ -13,6 +13,7 @@ import {
   type Notification,
   type NotificationCategory,
   type NotificationsResponse,
+  parseNotificationsResponse,
   typeConfig,
 } from './notifications-list-helpers';
 
@@ -30,7 +31,7 @@ export function NotificationsList() {
     setIsLoading(true);
     setError(null);
     api.get<NotificationsResponse>('/notifications')
-      .then(data => setNotifications(data.notifications ?? []))
+      .then(data => setNotifications(parseNotificationsResponse(data).notifications))
       .catch((err: Error) => setError(err.message || t('loadError')))
       .finally(() => setIsLoading(false));
   };

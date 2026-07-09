@@ -6,6 +6,8 @@ import {
   shouldShowOrderLiveTracking,
 } from '@/components/orders/order-live-tracking-map';
 
+const VIETNAM_ROUTE_POLYLINE = '_k|`A_zfjSf{Cf{Cf{Cf{C';
+
 const mocks = vi.hoisted(() => {
   const socketHandlers = new Map<string, (...args: unknown[]) => void>();
   const socket = {
@@ -159,6 +161,31 @@ describe('OrderLiveTrackingMap', () => {
     expect(screen.getByText('Driver location updated: Unavailable')).toBeInTheDocument();
   });
 
+  it('shows a valid zero-minute ETA from backend telemetry', async () => {
+    mocks.apiGet.mockResolvedValue({
+      orderId: 'order-1',
+      status: 'delivering',
+      driverLocation: {
+        lat: 10.75,
+        lng: 106.65,
+        lastUpdated: '2026-07-06T03:00:00.000Z',
+      },
+      etaMinutes: 0,
+      routePolyline: VIETNAM_ROUTE_POLYLINE,
+      routePhase: 'dropoff',
+    });
+
+    render(
+      <OrderLiveTrackingMap
+        orderId="order-1"
+        orderStatus="delivering"
+        customerAddress="12 Nguyen Trai"
+      />,
+    );
+
+    expect(await screen.findByText('0 min')).toBeInTheDocument();
+  });
+
   it('ignores driver location events for other orders', async () => {
     mocks.apiGet.mockResolvedValue({
       orderId: 'order-1',
@@ -193,12 +220,16 @@ describe('OrderLiveTrackingMap', () => {
     expect(screen.getByText('Waiting for real driver GPS')).toBeInTheDocument();
   });
 
-  it('decodes Google encoded route polylines for the map overlay', () => {
-    expect(decodeEncodedPolyline('_p~iF~ps|U_ulLnnqC_mqNvxq`@')).toEqual([
-      { lat: 38.5, lng: -120.2 },
-      { lat: 40.7, lng: -120.95 },
-      { lat: 43.252, lng: -126.453 },
+  it('decodes Vietnam delivery route polylines for the map overlay', () => {
+    expect(decodeEncodedPolyline(VIETNAM_ROUTE_POLYLINE)).toEqual([
+      { lat: 10.8, lng: 106.7 },
+      { lat: 10.775, lng: 106.675 },
+      { lat: 10.75, lng: 106.65 },
     ]);
+  });
+
+  it('fails closed for out-of-region route polylines instead of drawing stale geometry', () => {
+    expect(decodeEncodedPolyline('_p~iF~ps|U_ulLnnqC_mqNvxq`@')).toEqual([]);
   });
 
   it('only shows live tracking during active driver statuses', () => {

@@ -259,6 +259,7 @@
       "description": "Cập nhật thông tin món ăn",
       "back": "Quay lại thực đơn",
       "loadError": "Không thể tải món",
+      "contractError": "Phản hồi món ăn thiếu các trường chỉnh sửa bắt buộc",
       "saveError": "Không thể lưu. Vui lòng thử lại.",
       "categoryPlaceholder": "VD: Món chính",
       "cancel": "Huỷ",
@@ -1056,7 +1057,9 @@
       "buyQuantityPositive": "Số lượng mua phải lớn hơn 0",
       "invalidDate": "Ngày không hợp lệ",
       "dateRangeInvalid": "Ngày bắt đầu phải trước ngày kết thúc",
-      "scheduleRequired": "Vui lòng thiết lập lịch khuyến mãi"
+      "scheduleRequired": "Vui lòng thiết lập lịch khuyến mãi",
+      "categoryRequired": "Vui lòng chọn danh mục menu thật cho khuyến mãi này",
+      "itemsRequired": "Vui lòng chọn ít nhất một món trong menu cho khuyến mãi này"
     },
     "detail": {
       "loadError": "Không thể tải khuyến mãi",
@@ -1164,6 +1167,14 @@
       "loadError": "Không thể tải món",
       "retry": "Thử lại",
       "empty": "Không tìm thấy món"
+    },
+    "categorySelector": {
+      "label": "Danh mục menu",
+      "placeholder": "Chọn danh mục",
+      "loading": "Đang tải danh mục",
+      "loadError": "Không thể tải danh mục menu",
+      "retry": "Thử lại",
+      "empty": "Chưa có danh mục menu đang hiển thị"
     },
     "newPage": {
       "title": "Tạo khuyến mãi mới",

@@ -13,6 +13,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useTranslations } from 'next-intl';
+import { parseOrderItems, type OrderItem } from './order-detail-contract';
 
 export interface OrderDetail {
   id: string;
@@ -24,7 +25,7 @@ export interface OrderDetail {
   total: number;
   deliveryFee: number;
   discount: number;
-  items: { name: string; quantity: number; price: number }[];
+  items: OrderItem[];
   note: string;
   deliveryAddress: string;
   createdAt: string;
@@ -52,6 +53,7 @@ export default function OrderDetailSheet({
 }: OrderDetailSheetProps) {
   const t = useTranslations('orders.detail');
   const ordersT = useTranslations('orders');
+  const orderItems = order ? parseOrderItems(order.items) : null;
 
   const updateStatus = async (status: string) => {
     if (!order) return;
@@ -123,20 +125,26 @@ export default function OrderDetailSheet({
 
             <div className="space-y-3">
               <h4 className="font-medium">{t('items')}</h4>
-              <div className="space-y-2">
-                {(order.items || []).map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm"
-                  >
-                    <div>
-                      <span className="font-medium">{item.name}</span>
-                      <span className="ml-2 text-muted-foreground">x{item.quantity}</span>
+              {orderItems === null ? (
+                <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  {t('itemsUnavailable')}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {orderItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm"
+                    >
+                      <div>
+                        <span className="font-medium">{item.name}</span>
+                        <span className="ml-2 text-muted-foreground">x{item.quantity}</span>
+                      </div>
+                      <span>{formatCurrency(item.price * item.quantity)}</span>
                     </div>
-                    <span>{formatCurrency(item.price * item.quantity)}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Separator />

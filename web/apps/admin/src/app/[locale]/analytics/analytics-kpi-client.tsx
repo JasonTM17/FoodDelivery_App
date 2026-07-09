@@ -10,22 +10,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { apiGet } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { parseAnalyticsKpis, type ApiKpiResponse } from './analytics-contract'
 
 type Period = 'today' | '7d' | '30d'
-
-interface ApiKpiItem {
-  key: string
-  label: string
-  value: number
-  formattedValue: string
-  delta: number
-  sparkline: number[]
-  drillDownHref: string
-}
-
-interface ApiKpiResponse {
-  kpis: ApiKpiItem[]
-}
 
 const periods: Period[] = ['today', '7d', '30d']
 
@@ -75,11 +62,11 @@ export default function AnalyticsKpiClient() {
 
   const { data, error, isError, isLoading, refetch } = useQuery<ApiKpiResponse>({
     queryKey: ['admin-analytics-kpis', period],
-    queryFn: () => apiGet<ApiKpiResponse>('/admin/kpis', { params: { period } }),
+    queryFn: async () => parseAnalyticsKpis(await apiGet<unknown>('/admin/kpis', { params: { period } })),
   })
 
   const isForbidden = (error as { status?: number } | null)?.status === 403
-  const kpis = data?.kpis ?? []
+  const kpis = data?.kpis
 
   return (
     <div className="space-y-4">
@@ -117,7 +104,7 @@ export default function AnalyticsKpiClient() {
         </Card>
       ) : null}
 
-      {!isLoading && !isError && kpis.length === 0 ? (
+      {!isLoading && !isError && kpis?.length === 0 ? (
         <Card>
           <CardContent className="p-5">
             <p className="font-medium">{t('empty.kpisTitle')}</p>
@@ -126,7 +113,7 @@ export default function AnalyticsKpiClient() {
         </Card>
       ) : null}
 
-      {!isLoading && !isError && kpis.length > 0 ? (
+      {!isLoading && !isError && kpis && kpis.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {kpis.map(kpi => {
             const Icon = iconByKey[kpi.key] ?? TrendingUp

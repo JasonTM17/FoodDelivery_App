@@ -271,6 +271,7 @@
       "phoneLabel": "電話:",
       "addressLabel": "住所:",
       "items": "商品",
+      "itemsUnavailable": "注文商品を読み込めません。backend が有効な商品リストを返した後に再読み込みしてください。",
       "subtotal": "小計",
       "deliveryFee": "配達料",
       "discount": "割引",

@@ -17,6 +17,52 @@ export interface NotificationsResponse {
   unreadCount?: number;
 }
 
+export function parseNotificationsResponse(data: unknown): NotificationsResponse {
+  if (!data || typeof data !== 'object') {
+    throw new Error('NOTIFICATIONS_CONTRACT_MISMATCH');
+  }
+
+  const response = data as Record<string, unknown>;
+  if (!Array.isArray(response.notifications)) {
+    throw new Error('NOTIFICATIONS_CONTRACT_MISMATCH');
+  }
+
+  return {
+    notifications: response.notifications.map(parseNotification),
+    unreadCount:
+      typeof response.unreadCount === 'number' && Number.isFinite(response.unreadCount)
+        ? response.unreadCount
+        : undefined,
+  };
+}
+
+function parseNotification(value: unknown): Notification {
+  if (!value || typeof value !== 'object') {
+    throw new Error('NOTIFICATIONS_CONTRACT_MISMATCH');
+  }
+
+  const row = value as Record<string, unknown>;
+  if (
+    typeof row.id !== 'string' ||
+    typeof row.type !== 'string' ||
+    typeof row.title !== 'string' ||
+    typeof row.body !== 'string' ||
+    typeof row.isRead !== 'boolean' ||
+    typeof row.createdAt !== 'string'
+  ) {
+    throw new Error('NOTIFICATIONS_CONTRACT_MISMATCH');
+  }
+
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    body: row.body,
+    isRead: row.isRead,
+    createdAt: row.createdAt,
+  };
+}
+
 export const typeConfig: Record<NotificationCategory, { icon: ElementType; color: string }> = {
   order: { icon: ShoppingBag, color: 'bg-brand-100 text-brand-600' },
   message: { icon: MessageSquare, color: 'bg-blue-100 text-blue-600' },

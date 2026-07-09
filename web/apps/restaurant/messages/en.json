@@ -259,6 +259,7 @@
       "description": "Update menu item information",
       "back": "Back to menu",
       "loadError": "Could not load the item",
+      "contractError": "Menu item response is missing required editable fields",
       "saveError": "Could not save. Please try again.",
       "categoryPlaceholder": "E.g. Main dishes",
       "cancel": "Cancel",
@@ -1056,7 +1057,9 @@
       "buyQuantityPositive": "Buy quantity must be greater than 0",
       "invalidDate": "Date is invalid",
       "dateRangeInvalid": "Start date must be before end date",
-      "scheduleRequired": "Please configure the promotion schedule"
+      "scheduleRequired": "Please configure the promotion schedule",
+      "categoryRequired": "Please choose a real menu category for this promotion",
+      "itemsRequired": "Please choose at least one menu item for this promotion"
     },
     "detail": {
       "loadError": "Could not load promotion",
@@ -1164,6 +1167,14 @@
       "loadError": "Could not load menu items",
       "retry": "Retry",
       "empty": "No items found"
+    },
+    "categorySelector": {
+      "label": "Menu category",
+      "placeholder": "Choose a category",
+      "loading": "Loading categories",
+      "loadError": "Could not load menu categories",
+      "retry": "Retry",
+      "empty": "No visible menu categories found"
     },
     "newPage": {
       "title": "Create new promotion",

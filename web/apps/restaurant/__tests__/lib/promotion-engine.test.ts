@@ -42,6 +42,32 @@ describe('validatePromotion', () => {
     expect(result.valid).toBe(false);
   });
 
+  it('requires a real category for category-scoped promotions', () => {
+    const result = validatePromotion({
+      ...validPromotion,
+      appliesTo: 'category',
+      categoryId: undefined,
+    });
+
+    expect(result).toMatchObject({
+      valid: false,
+      errors: expect.arrayContaining(['categoryRequired']),
+    });
+  });
+
+  it('requires at least one item for item-scoped promotions', () => {
+    const result = validatePromotion({
+      ...validPromotion,
+      appliesTo: 'items',
+      itemIds: [],
+    });
+
+    expect(result).toMatchObject({
+      valid: false,
+      errors: expect.arrayContaining(['itemsRequired']),
+    });
+  });
+
   it('rejects an inverted schedule', () => {
     const result = validatePromotion({
       ...validPromotion,
