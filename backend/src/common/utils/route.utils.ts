@@ -11,36 +11,45 @@ export function decodePolyline(encoded: string): GeoPoint[] {
   let lat = 0
   let lng = 0
 
-  while (index < encoded.length) {
+  const readDelta = (): number | null => {
     let shift = 0
     let result = 0
     let b: number
 
     do {
+      if (index >= encoded.length) return null
       b = encoded.charCodeAt(index++) - 63
+      if (b < 0) return null
       result |= (b & 0x1f) << shift
       shift += 5
+      if (shift > 30) return null
     } while (b >= 0x20)
 
-    const dLat = result & 1 ? ~(result >> 1) : result >> 1
+    return result & 1 ? ~(result >> 1) : result >> 1
+  }
+
+  while (index < encoded.length) {
+    const dLat = readDelta()
+    const dLng = readDelta()
+    if (dLat === null || dLng === null) return []
     lat += dLat
-
-    shift = 0
-    result = 0
-
-    do {
-      b = encoded.charCodeAt(index++) - 63
-      result |= (b & 0x1f) << shift
-      shift += 5
-    } while (b >= 0x20)
-
-    const dLng = result & 1 ? ~(result >> 1) : result >> 1
     lng += dLng
 
-    points.push({ lat: lat / 1e5, lng: lng / 1e5 })
+    const point = { lat: lat / 1e5, lng: lng / 1e5 }
+    if (!isValidWorldCoordinate(point)) return []
+    points.push(point)
   }
 
   return points
+}
+
+function isValidWorldCoordinate(point: GeoPoint): boolean {
+  return Number.isFinite(point.lat) &&
+    Number.isFinite(point.lng) &&
+    point.lat >= -90 &&
+    point.lat <= 90 &&
+    point.lng >= -180 &&
+    point.lng <= 180
 }
 
 /**

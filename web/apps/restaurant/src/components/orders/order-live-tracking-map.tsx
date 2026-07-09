@@ -19,6 +19,12 @@ import type { OrderStatus } from '@/lib/types';
 const GOOGLE_MAPS_KEY = resolveGoogleMapsApiKey();
 const DEFAULT_CENTER = { lat: 14.0583, lng: 108.2772 };
 const DEFAULT_ZOOM = 6;
+const VIETNAM_BOUNDS = {
+  minLat: 8.18,
+  maxLat: 23.4,
+  minLng: 102.14,
+  maxLng: 109.47,
+} as const;
 const ACTIVE_TRACKING_STATUSES = new Set<OrderStatus>([
   'driver_assigned',
   'driver_arriving_restaurant',
@@ -65,7 +71,7 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
   }, [loadTracking]);
 
   const applyDriverLocation = useCallback((event: DriverLocationChangedEvent) => {
-    if (event.orderId !== orderId || !isValidLatLng(event.lat, event.lng)) return;
+    if (event.orderId !== orderId || !isValidDeliveryLatLng(event.lat, event.lng)) return;
 
     setTracking((prev) => {
       if (!prev) {
@@ -241,7 +247,7 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
               <MetricRow
                 icon={<Clock3 className="h-4 w-4" />}
                 label={t('etaLabel')}
-                value={tracking.etaMinutes ? t('etaMinutes', { minutes: tracking.etaMinutes }) : t('etaUnavailable')}
+                value={tracking.etaMinutes != null ? t('etaMinutes', { minutes: tracking.etaMinutes }) : t('etaUnavailable')}
               />
               <MetricRow
                 icon={<Route className="h-4 w-4" />}
@@ -382,13 +388,13 @@ function phaseFromStatus(status: OrderStatus): DeliveryRoutePhase {
     : 'dropoff';
 }
 
-function isValidLatLng(lat: number, lng: number): boolean {
+function isValidDeliveryLatLng(lat: number, lng: number): boolean {
   return Number.isFinite(lat) &&
     Number.isFinite(lng) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lng >= -180 &&
-    lng <= 180 &&
+    lat >= VIETNAM_BOUNDS.minLat &&
+    lat <= VIETNAM_BOUNDS.maxLat &&
+    lng >= VIETNAM_BOUNDS.minLng &&
+    lng <= VIETNAM_BOUNDS.maxLng &&
     !(lat === 0 && lng === 0);
 }
 
@@ -411,7 +417,7 @@ export function decodeEncodedPolyline(encoded: string | null): google.maps.LatLn
     lng += lngResult.delta;
 
     const point = { lat: lat / 1e5, lng: lng / 1e5 };
-    if (isValidLatLng(point.lat, point.lng)) points.push(point);
+    if (isValidDeliveryLatLng(point.lat, point.lng)) points.push(point);
   }
 
   return points;

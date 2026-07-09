@@ -32,6 +32,11 @@ describe('decodePolyline', () => {
     expect(points[0].lat).toBeCloseTo(38.5, 1)
     expect(points[0].lng).toBeCloseTo(-120.2, 1)
   })
+
+  it('fails closed for truncated or overflowing encoded polylines', () => {
+    expect(decodePolyline('_p~iF~ps')).toEqual([])
+    expect(decodePolyline('~~~~~~~~~~~~')).toEqual([])
+  })
 })
 
 describe('snapToPolylineDistanceKm', () => {
