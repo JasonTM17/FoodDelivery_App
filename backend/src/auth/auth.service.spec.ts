@@ -8,6 +8,7 @@ import { AuthService } from './auth.service'
 import { UsersService } from '../users/users.service'
 import { PrismaService } from '../database/prisma.service'
 import { RefreshTokenStore } from './refresh-token.store'
+import { Ed25519Service } from './keys/ed25519.service'
 import { QUEUE_SMTP } from '../notifications/notifications.constants'
 
 describe('AuthService', () => {
@@ -53,6 +54,12 @@ describe('AuthService', () => {
     isBlocklisted: jest.fn(),
   }
 
+  const mockEd25519 = {
+    canSign: jest.fn().mockReturnValue(false),
+    getPrivateKey: jest.fn().mockReturnValue(null),
+    kid: 'ed25519-primary',
+  }
+
   const mockSmtpQueue = {
     add: jest.fn(),
   }
@@ -66,6 +73,8 @@ describe('AuthService', () => {
       PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.test/reset-password',
       JWT_SECRET: 'test-secret',
     })
+    mockEd25519.canSign.mockReturnValue(false)
+    mockEd25519.getPrivateKey.mockReturnValue(null)
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma))
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,6 +85,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfig },
         { provide: RefreshTokenStore, useValue: mockRefreshTokenStore },
+        { provide: Ed25519Service, useValue: mockEd25519 },
         { provide: getQueueToken(QUEUE_SMTP), useValue: mockSmtpQueue },
       ],
     }).compile()
