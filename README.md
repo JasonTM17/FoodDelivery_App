@@ -15,6 +15,41 @@ Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.
 
 FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
 
+## Product preview
+
+Real screenshots from production Vercel builds + seeded API. Full gallery: **[docs/product-gallery.md](docs/product-gallery.md)**.
+
+<p align="center">
+  <img src="docs/screenshots/admin/01-login.png" alt="FoodFlow Admin login" width="48%" />
+  <img src="docs/screenshots/restaurant/01-login.png" alt="FoodFlow Restaurant login" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/admin/02-overview.png" alt="Admin overview KPIs" width="48%" />
+  <img src="docs/screenshots/admin/05-users.png" alt="Admin users table with seed data" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/restaurant/04-menu.png" alt="Restaurant menu with seed catalog" width="48%" />
+  <img src="docs/screenshots/restaurant/03-orders.png" alt="Restaurant order queue" width="48%" />
+</p>
+
+### Short motion demos
+
+| Flow | Preview |
+|------|---------|
+| Admin login | ![Admin login flow](docs/media/gifs/admin-login-flow.gif) |
+| Restaurant orders → menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
+
+### Try the web apps
+
+| App | URL |
+|-----|-----|
+| Admin | https://food-delivery-app-one-liard.vercel.app/vi/login |
+| Restaurant | https://foodflow-restaurant.vercel.app/vi/login |
+
+Backend API is **not** hosted on Vercel (Nest + workers + Redis). Use Docker Hub images or a tunnel for a public API — see [deployment guide](docs/deployment-guide.md).
+
 ## Packages (Docker)
 
 Public container images for deploy (`latest` and git SHA tags):

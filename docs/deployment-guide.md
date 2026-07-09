@@ -126,6 +126,15 @@ DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.sup
 DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
 ```
 
+## Product screenshots
+
+UI stills and GIFs: [product-gallery.md](./product-gallery.md). Regenerate after major UI changes:
+
+```bash
+# Requires seeded API + reachable Admin/Restaurant URLs
+node docs/scripts/capture-product-media.mjs
+```
+
 ## Vercel Deployment
 
 Deploy web only after `pnpm --filter foodflow-admin build` and `pnpm --filter restaurant build` pass.
