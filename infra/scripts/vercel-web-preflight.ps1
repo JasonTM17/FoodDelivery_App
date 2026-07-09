@@ -1,10 +1,52 @@
-# FoodFlow Vercel web preflight.
-# Verifies Admin/Restaurant project and production env readiness without printing
+# FoodFlow Vercel production preflight.
+# Verifies API/Admin/Restaurant project and production env readiness without printing
 # environment variable values or deploying.
 $ErrorActionPreference = 'Stop'
 
+$apiProject = if ($env:API_VERCEL_PROJECT) { $env:API_VERCEL_PROJECT } else { 'foodflow-api' }
 $adminProject = if ($env:ADMIN_VERCEL_PROJECT) { $env:ADMIN_VERCEL_PROJECT } else { 'food-delivery-app' }
-$restaurantProjectId = $env:RESTAURANT_VERCEL_PROJECT_ID
+$restaurantProject = if ($env:RESTAURANT_VERCEL_PROJECT) {
+  $env:RESTAURANT_VERCEL_PROJECT
+} elseif ($env:RESTAURANT_VERCEL_PROJECT_ID) {
+  $env:RESTAURANT_VERCEL_PROJECT_ID
+} else {
+  'foodflow-restaurant'
+}
+
+$apiRequiredEnv = @(
+  'NODE_ENV',
+  'DATABASE_URL',
+  'DIRECT_URL',
+  'REDIS_URL',
+  'REALTIME_PROVIDER',
+  'STORAGE_PROVIDER',
+  'QUEUE_PROVIDER',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_JWT_SECRET',
+  'SUPABASE_STORAGE_BUCKET',
+  'CRON_SECRET',
+  'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
+  'PASSWORD_RESET_URL_BASE',
+  'CORS_ORIGINS',
+  'DELIVERY_BASE_FEE_VND',
+  'GOOGLE_MAPS_API_KEY',
+  'OSRM_URL',
+  'DEEPSEEK_API_KEY',
+  'SEPAY_API_KEY',
+  'SEPAY_ACCOUNT_NUMBER',
+  'SEPAY_WEBHOOK_SECRET',
+  'WEBHOOK_SECRET',
+  'SMTP_HOST',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_FROM',
+  'FCM_SERVER_KEY',
+  'TWILIO_ACCOUNT_SID',
+  'TWILIO_AUTH_TOKEN',
+  'TWILIO_FROM_NUMBER'
+)
 
 $adminRequiredEnv = @(
   'NEXT_PUBLIC_API_URL',
@@ -80,6 +122,20 @@ function Assert-EnvNames {
   }
 }
 
+Invoke-NativeCapture vercel --version | Out-Null
+
+Write-Host "Checking Vercel API project settings for $apiProject..."
+$apiInspect = Invoke-NativeCapture vercel project inspect $apiProject --no-color
+Assert-ContainsLineValue $apiInspect 'Root Directory' 'backend'
+Assert-ContainsLineValue $apiInspect 'Framework Preset' 'Other'
+Assert-ContainsLineValue $apiInspect 'Build Command' 'pnpm prisma generate && pnpm build'
+Assert-ContainsLineValue $apiInspect 'Install Command' 'pnpm install --frozen-lockfile'
+
+Write-Host 'Checking Vercel API production env names...'
+$apiEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$apiProject/env?target=production" --raw
+$apiEnv = Extract-JsonObject ($apiEnvRaw -join "`n")
+Assert-EnvNames $apiEnv $apiRequiredEnv 'API Vercel project'
+
 Write-Host "Checking Vercel Admin project settings for $adminProject..."
 $adminInspect = Invoke-NativeCapture vercel project inspect $adminProject --no-color
 Assert-ContainsLineValue $adminInspect 'Root Directory' 'web/apps/admin'
@@ -89,16 +145,20 @@ Assert-ContainsLineValue $adminInspect 'Install Command' 'cd ../.. && pnpm insta
 Assert-ContainsLineValue $adminInspect 'Output Directory' '.next'
 
 Write-Host 'Checking Vercel Admin production env names...'
-$adminEnvRaw = Invoke-NativeCapture vercel env ls production --format json --no-color
+$adminEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$adminProject/env?target=production" --raw
 $adminEnv = Extract-JsonObject ($adminEnvRaw -join "`n")
 Assert-EnvNames $adminEnv $adminRequiredEnv 'Admin Vercel project'
 
-if ([string]::IsNullOrWhiteSpace($restaurantProjectId)) {
-  throw 'Missing RESTAURANT_VERCEL_PROJECT_ID. Create/link a separate Restaurant Vercel project before production deploy.'
-}
+Write-Host "Checking Vercel Restaurant project settings for $restaurantProject..."
+$restaurantInspect = Invoke-NativeCapture vercel project inspect $restaurantProject --no-color
+Assert-ContainsLineValue $restaurantInspect 'Root Directory' 'web/apps/restaurant'
+Assert-ContainsLineValue $restaurantInspect 'Framework Preset' 'Next.js'
+Assert-ContainsLineValue $restaurantInspect 'Build Command' 'cd ../.. && pnpm --filter restaurant build'
+Assert-ContainsLineValue $restaurantInspect 'Install Command' 'cd ../.. && pnpm install --frozen-lockfile'
+Assert-ContainsLineValue $restaurantInspect 'Output Directory' '.next'
 
-Write-Host "Checking Vercel Restaurant production env names for $restaurantProjectId..."
-$restaurantEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$restaurantProjectId/env?target=production" --raw
+Write-Host "Checking Vercel Restaurant production env names for $restaurantProject..."
+$restaurantEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$restaurantProject/env?target=production" --raw
 $restaurantEnv = Extract-JsonObject ($restaurantEnvRaw -join "`n")
 Assert-EnvNames $restaurantEnv $restaurantRequiredEnv 'Restaurant Vercel project'
 
