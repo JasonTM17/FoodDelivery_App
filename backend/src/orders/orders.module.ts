@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common'
-import { BullModule } from '@nestjs/bullmq'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
 import { OrdersGateway } from './orders.gateway'
@@ -16,6 +15,7 @@ import { DeliveryPricingService } from './delivery-pricing.service'
 import { AuthModule } from '../auth/auth.module'
 import { RealtimeRoomAccessService } from './realtime-room-access.service'
 import { PromotionsModule } from '../promotions/promotions.module'
+import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
   imports: [
@@ -23,9 +23,9 @@ import { PromotionsModule } from '../promotions/promotions.module'
     forwardRef(() => CartModule),
     PaymentsModule,
     PromotionsModule,
-    BullModule.registerQueue({ name: 'dispatch' }),
-    BullModule.registerQueue({ name: 'payment-refund' }),
-    BullModule.registerQueue({ name: 'order-timeout' }),
+    QueueProviderModule.registerQueue({ name: 'dispatch' }),
+    QueueProviderModule.registerQueue({ name: 'payment-refund' }),
+    QueueProviderModule.registerQueue({ name: 'order-timeout' }),
   ],
   controllers: [OrdersController],
   providers: [

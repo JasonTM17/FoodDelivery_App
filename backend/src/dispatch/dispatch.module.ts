@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-import { BullModule } from '@nestjs/bullmq'
 import { DispatchService } from './dispatch.service'
 import { DispatchProcessor } from './dispatch.processor'
 import { DispatchGateway } from './dispatch.gateway'
@@ -10,9 +9,10 @@ import { DispatchMetrics } from './dispatch.metrics'
 import { RedisModule } from '../redis/redis.module'
 import { AuthModule } from '../auth/auth.module'
 import { OrdersModule } from '../orders/orders.module'
+import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
-  imports: [AuthModule, OrdersModule, BullModule.registerQueue({ name: 'dispatch' }), RedisModule],
+  imports: [AuthModule, OrdersModule, QueueProviderModule.registerQueue({ name: 'dispatch' }), RedisModule],
   providers: [
     DispatchService,
     DispatchProcessor,

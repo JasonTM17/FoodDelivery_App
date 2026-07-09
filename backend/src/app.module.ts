@@ -1,7 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
-import { BullModule } from '@nestjs/bullmq'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { PrismaModule } from './database/prisma.module'
 import { RedisModule } from './redis/redis.module'
@@ -35,6 +34,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
+import { QueueProviderModule } from './common/queue/queue-provider.module'
 import { ThrottlerStorageRedis } from './common/storage/throttler-storage-redis'
 import { validateEnv } from './config/env.validation'
 import Redis from 'ioredis'
@@ -55,7 +55,7 @@ import Redis from 'ioredis'
         }),
       }),
     }),
-    BullModule.forRootAsync({
+    QueueProviderModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const redisUrl = config.get<string>('REDIS_URL')

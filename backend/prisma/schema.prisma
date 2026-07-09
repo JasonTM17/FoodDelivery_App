@@ -945,6 +945,25 @@ model RealtimeOutbox {
   @@map("realtime_outbox")
 }
 
+model JobOutbox {
+  id          String    @id @default(uuid()) @db.Uuid
+  queue       String
+  name        String
+  payload     Json
+  options     Json?
+  status      String    @default("queued")
+  attempts    Int       @default(0)
+  runAt       DateTime  @default(now()) @map("run_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+  failedAt    DateTime? @map("failed_at")
+  error       String?
+
+  @@index([queue, status, runAt])
+  @@map("job_outbox")
+}
+
 model AdminExportJob {
   id            String          @id @default(uuid()) @db.Uuid
   requestedById String          @map("requested_by_id") @db.Uuid

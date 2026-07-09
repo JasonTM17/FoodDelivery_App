@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
+import { createClient } from '@supabase/supabase-js'
 import { StorageService, UploadedFile } from './storage.service'
 
 const mockMinioClient = {
@@ -9,9 +10,23 @@ const mockMinioClient = {
   putObject: jest.fn(),
   removeObject: jest.fn(),
 }
+const mockSupabaseBucket = {
+  upload: jest.fn(),
+  remove: jest.fn(),
+  getPublicUrl: jest.fn(),
+}
+const mockSupabaseClient = {
+  storage: {
+    from: jest.fn(() => mockSupabaseBucket),
+  },
+}
 
 jest.mock('minio', () => ({
   Client: jest.fn(() => mockMinioClient),
+}))
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => mockSupabaseClient),
 }))
 
 describe('StorageService', () => {
@@ -21,6 +36,9 @@ describe('StorageService', () => {
     mockMinioClient.makeBucket.mockResolvedValue(undefined)
     mockMinioClient.putObject.mockResolvedValue(undefined)
     mockMinioClient.removeObject.mockResolvedValue(undefined)
+    mockSupabaseBucket.upload.mockResolvedValue({ data: { path: 'stored' }, error: null })
+    mockSupabaseBucket.remove.mockResolvedValue({ data: [], error: null })
+    mockSupabaseBucket.getPublicUrl.mockReturnValue({ data: { publicUrl: 'https://storage.foodflow.test/object.png' } })
   })
 
   it('uploads image files only after validating the declared MIME against magic bytes', async () => {
@@ -82,6 +100,39 @@ describe('StorageService', () => {
     }))).toThrow('MINIO_ACCESS_KEY is required in production')
     expect(Client).not.toHaveBeenCalled()
   })
+
+  it('uploads through Supabase Storage when STORAGE_PROVIDER=supabase', async () => {
+    const service = new StorageService(makeConfig({
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
+      SUPABASE_SERVICE_ROLE_KEY: 'service-role-test-key',
+      SUPABASE_STORAGE_BUCKET: 'foodflow-production',
+    }))
+    const png = makeFile({
+      originalname: 'logo.png',
+      mimetype: 'image/png',
+      buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]),
+    })
+
+    const result = await service.uploadFile(png, 'restaurants/restaurant-1')
+
+    expect(Client).not.toHaveBeenCalled()
+    expect(createClient).toHaveBeenCalledWith(
+      'https://lvanszgszzfopusboich.supabase.co',
+      'service-role-test-key',
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    )
+    expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('foodflow-production')
+    expect(mockSupabaseBucket.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^restaurants\/restaurant-1\/\d+-[a-f0-9]+\.png$/),
+      png.buffer,
+      { contentType: 'image/png', upsert: false },
+    )
+    expect(result).toEqual({
+      key: expect.stringMatching(/^restaurants\/restaurant-1\/\d+-[a-f0-9]+\.png$/),
+      url: 'https://storage.foodflow.test/object.png',
+    })
+  })
 })
 
 function makeConfig(overrides: Record<string, string | number | undefined> = {}) {
@@ -93,6 +144,7 @@ function makeConfig(overrides: Record<string, string | number | undefined> = {})
     MINIO_SECRET_KEY: 'minioadmin',
     MINIO_BUCKET: 'foodflow',
     MINIO_PUBLIC_URL: 'http://localhost:9000',
+    STORAGE_PROVIDER: 'minio',
     ...overrides,
   }
 

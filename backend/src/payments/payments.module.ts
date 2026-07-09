@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common'
-import { BullModule } from '@nestjs/bullmq'
 import { SepayProvider } from './providers/sepay.provider'
 import { CommissionService } from './commission.service'
 import { PayoutLedgerService } from './payout-ledger.service'
 import { RefundProcessor } from './refund.processor'
 import { CommissionSplitProcessor } from './commission-split.processor'
+import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
   imports: [
-    BullModule.registerQueue(
+    QueueProviderModule.registerQueue(
       { name: 'payment-refund' },
       { name: 'commission-split' },
     ),
