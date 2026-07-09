@@ -91,7 +91,15 @@ Any key pasted into chat, logs, screenshots, tickets, or git history must be rot
 
 Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
 
-Latest deploy-readiness check: Vercel CLI auth is present, but this repository is not linked to a Vercel project and the account project list did not show FoodFlow projects. Supabase CLI was not installed in the local PATH. No production deployment was performed.
+Latest deploy-readiness check (2026-07-09): Vercel CLI under `nguyensonbmt06-6377`.
+
+| Project | Public URL | Notes |
+|---------|------------|--------|
+| Admin `food-delivery-app` | https://food-delivery-app-one-liard.vercel.app | Production Ready; login + healthz 200 |
+| Restaurant `foodflow-restaurant` | https://foodflow-restaurant.vercel.app | Production Ready; login + healthz 200 |
+| `foodflow-api` | — | **Do not** host Nest here |
+
+Team-named `*.vercel.app` URLs may hit Vercel SSO (Deployment Protection) — prefer the aliases above. Temporary API demo can use Cloudflare Tunnel to local Docker (`trycloudflare.com`); permanent API stays Docker Hub / VPS. Supabase migrations need user `SUPABASE_ACCESS_TOKEN` from https://supabase.com/dashboard/account/tokens. GitHub Actions optional (billing); deploy web via `vercel --prod`.
 
 ## Supabase Deployment
 
