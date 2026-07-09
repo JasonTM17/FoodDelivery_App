@@ -258,6 +258,7 @@
       "description": "メニュー商品の情報を更新します",
       "back": "メニューに戻る",
       "loadError": "商品を読み込めません",
+      "contractError": "メニュー商品の応答に編集必須フィールドがありません",
       "saveError": "保存できませんでした。もう一度お試しください。",
       "categoryPlaceholder": "例: メイン",
       "cancel": "キャンセル",

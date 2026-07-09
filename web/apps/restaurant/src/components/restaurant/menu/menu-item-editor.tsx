@@ -21,6 +21,7 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const tBoard = useTranslations('menu.board');
   const tForm = useTranslations('menu.form');
   const loadErrorMessage = t('loadError');
+  const contractErrorMessage = t('contractError');
 
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedItem, setHasLoadedItem] = useState(false);
@@ -43,16 +44,17 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
     setHasLoadedItem(false);
     setError('');
     api
-      .get<MenuItem & { allergens?: string[] }>(`/restaurant/menu/items/${id}`)
+      .get<unknown>(`/restaurant/menu/items/${id}`)
       .then((data) => {
-        setName(data.name);
-        setDescription(data.description ?? '');
-        setPrice(data.price.toString());
-        setCategory(data.category);
-        setImage(data.image || '');
-        setAllergens(data.allergens ?? []);
-        setOptions(data.options ?? []);
-        if (data.available === false) {
+        const item = parseMenuItemEditorPayload(data, contractErrorMessage);
+        setName(item.name);
+        setDescription(item.description ?? '');
+        setPrice(item.price.toString());
+        setCategory(item.category);
+        setImage(item.image || '');
+        setAllergens(item.allergens);
+        setOptions(item.options);
+        if (item.available === false) {
           setAvailabilityMode('hidden');
         } else {
           setAvailabilityMode('always');
@@ -63,7 +65,7 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         setError((err as { message?: string }).message || loadErrorMessage)
       )
       .finally(() => setIsLoading(false));
-  }, [id, loadErrorMessage, reloadKey]);
+  }, [id, contractErrorMessage, loadErrorMessage, reloadKey]);
 
   const toggleAllergen = (allergen: string) =>
     setAllergens((prev) =>
@@ -214,4 +216,27 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
       </div>
     </div>
   );
+}
+
+type MenuItemEditorPayload = MenuItem & { allergens: string[] };
+
+function parseMenuItemEditorPayload(value: unknown, contractErrorMessage: string): MenuItemEditorPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(contractErrorMessage);
+  }
+  const item = value as Partial<MenuItem> & { allergens?: unknown; options?: unknown };
+  if (
+    typeof item.id !== 'string' ||
+    typeof item.name !== 'string' ||
+    typeof item.price !== 'number' ||
+    !Number.isFinite(item.price) ||
+    typeof item.category !== 'string' ||
+    typeof item.available !== 'boolean' ||
+    !Array.isArray(item.allergens) ||
+    !item.allergens.every(allergen => typeof allergen === 'string') ||
+    !Array.isArray(item.options)
+  ) {
+    throw new Error(contractErrorMessage);
+  }
+  return item as MenuItemEditorPayload;
 }

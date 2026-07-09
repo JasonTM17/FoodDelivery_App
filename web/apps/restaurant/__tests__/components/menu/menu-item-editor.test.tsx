@@ -26,6 +26,7 @@ vi.mock('next-intl', () => ({
       'menu.editPage.description': 'Update menu item information',
       'menu.editPage.back': 'Back to menu',
       'menu.editPage.loadError': 'Could not load the item',
+      'menu.editPage.contractError': 'Menu item response is missing required editable fields',
       'menu.editPage.saveError': 'Could not save. Please try again.',
       'menu.editPage.categoryPlaceholder': 'E.g. Main dishes',
       'menu.editPage.cancel': 'Cancel',
@@ -86,6 +87,19 @@ describe('MenuItemEditor', () => {
     await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
     expect(await screen.findByDisplayValue('Phở bò thật')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+  });
+
+  it('fails closed when editable arrays are missing instead of saving empty options/allergens', async () => {
+    const malformed = makeMenuItem() as Partial<ReturnType<typeof makeMenuItem>>;
+    delete malformed.options;
+    delete malformed.allergens;
+    vi.mocked(api.get).mockResolvedValueOnce(malformed);
+
+    render(<MenuItemEditor id="item-1" />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Menu item response is missing required editable fields');
+    expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
+    expect(api.patch).not.toHaveBeenCalled();
   });
 });
 

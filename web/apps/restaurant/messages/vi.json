@@ -258,6 +258,7 @@
       "description": "Cập nhật thông tin món ăn",
       "back": "Quay lại thực đơn",
       "loadError": "Không thể tải món",
+      "contractError": "Phản hồi món ăn thiếu các trường chỉnh sửa bắt buộc",
       "saveError": "Không thể lưu. Vui lòng thử lại.",
       "categoryPlaceholder": "VD: Món chính",
       "cancel": "Huỷ",
