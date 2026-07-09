@@ -209,6 +209,17 @@ Recommended checks:
 - Restaurant: `GET /api/healthz`
 - Synthetic flows after release: login, restaurant order queue and live tracking map, admin exports, AI degraded/configured state, driver map loading
 
+Run the production health smoke immediately after Vercel promotes deployments:
+
+```powershell
+$env:API_URL = "https://<api-domain>/api"
+$env:ADMIN_URL = "https://<admin-domain>"
+$env:RESTAURANT_URL = "https://<restaurant-domain>"
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\production-health-check.ps1
+```
+
+Use `-PlanOnly` to inspect resolved health endpoints without network calls. Use `-AllowHttp -AllowLocal` only for local smoke checks.
+
 Alert on repeated failures. Do not use keep-alive to mask failed migrations, missing secrets, or broken realtime connections.
 
 ## Pre-Deploy Gates
