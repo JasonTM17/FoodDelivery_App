@@ -932,6 +932,19 @@ model AdminAuditLog {
   @@map("admin_audit_logs")
 }
 
+model RealtimeOutbox {
+  id          String    @id @default(uuid()) @db.Uuid
+  channel     String
+  event       String
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deliveredAt DateTime? @map("delivered_at")
+  error       String?
+
+  @@index([channel, createdAt])
+  @@map("realtime_outbox")
+}
+
 model AdminExportJob {
   id            String          @id @default(uuid()) @db.Uuid
   requestedById String          @map("requested_by_id") @db.Uuid

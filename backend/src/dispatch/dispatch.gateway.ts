@@ -6,13 +6,15 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { Inject } from '@nestjs/common'
+import { Inject, Optional } from '@nestjs/common'
 import { UserRole } from '@prisma/client'
 import { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
 import Redis from 'ioredis'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+import { realtimeChannels } from '../realtime/realtime-channels'
+import { RealtimePublisherService } from '../realtime/realtime-publisher.service'
 
 type OfferCallback = (accepted: boolean) => void
 
@@ -26,6 +28,7 @@ export class DispatchGateway implements OnGatewayConnection {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly socketAuth: WebSocketAuthService,
+    @Optional() private readonly realtimePublisher?: RealtimePublisherService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -42,11 +45,13 @@ export class DispatchGateway implements OnGatewayConnection {
   }
 
   sendNewOrderOffer(driverId: string, data: Record<string, unknown>): void {
-    this.server.to(`driver:${driverId}`).emit('driver:new_order', data)
+    this.server?.to(`driver:${driverId}`).emit('driver:new_order', data)
+    void this.realtimePublisher?.publish(realtimeChannels.driver(driverId), 'driver:new_order', data)
   }
 
   sendAssignedOrder(driverId: string, data: { orderId: string }): void {
-    this.server.to(`driver:${driverId}`).emit('driver:order_assigned', data)
+    this.server?.to(`driver:${driverId}`).emit('driver:order_assigned', data)
+    void this.realtimePublisher?.publish(realtimeChannels.driver(driverId), 'driver:order_assigned', data)
   }
 
   registerOfferResponse(key: string, callback: OfferCallback): void {
@@ -65,7 +70,8 @@ export class DispatchGateway implements OnGatewayConnection {
   }
 
   emitToAdmins(event: string, data: Record<string, unknown>): void {
-    this.server.emit(event, data)
+    this.server?.emit(event, data)
+    void this.realtimePublisher?.publish(realtimeChannels.adminOrders, event, data)
   }
 
   @SubscribeMessage('dispatch:accept')

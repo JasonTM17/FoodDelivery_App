@@ -68,6 +68,12 @@ const productionForbiddenValues: Partial<Record<(typeof productionRequiredKeys)[
   TWILIO_FROM_NUMBER: ['your-twilio-from-number'],
 }
 
+const supabaseForbiddenValues = {
+  SUPABASE_URL: ['https://your-project.supabase.co'],
+  SUPABASE_SERVICE_ROLE_KEY: ['your-supabase-service-role-key'],
+  SUPABASE_JWT_SECRET: ['your-supabase-jwt-secret'],
+} satisfies Record<string, readonly string[]>
+
 const postgresUrl = z.string().url().startsWith('postgresql://')
 const redisUrl = z
   .string()
@@ -80,6 +86,9 @@ const redisUrl = z
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
+  REALTIME_PROVIDER: z.enum(['socketio', 'supabase']).default('socketio'),
+  STORAGE_PROVIDER: z.enum(['minio', 'supabase']).default('minio'),
+  QUEUE_PROVIDER: z.enum(['bullmq', 'supabase-postgres']).default('bullmq'),
   DATABASE_URL: postgresUrl,
   DIRECT_URL: postgresUrl,
   REDIS_URL: redisUrl,
@@ -123,6 +132,10 @@ export const envSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_JWT_SECRET: z.string().optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().optional(),
   // Ed25519 dual-verify (Phase 1 cutover — Phase 2 will flip signing)
   JWT_ED25519_PRIVATE_KEY: z.string().optional(),
   JWT_ED25519_PUBLIC_KEY: z.string().optional(),
@@ -183,6 +196,42 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
 
   if (config.THROTTLER_MEMORY_FALLBACK === 'true') {
     issues.push('THROTTLER_MEMORY_FALLBACK: must remain false in production')
+  }
+
+  const realtimeProvider = String(config.REALTIME_PROVIDER ?? 'socketio')
+  const storageProvider = String(config.STORAGE_PROVIDER ?? 'minio')
+  const queueProvider = String(config.QUEUE_PROVIDER ?? 'bullmq')
+  const needsSupabase =
+    realtimeProvider === 'supabase' ||
+    storageProvider === 'supabase' ||
+    queueProvider === 'supabase-postgres'
+
+  if (needsSupabase) {
+    for (const key of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      const value = config[key]
+      if (isBlank(value)) {
+        issues.push(`${key}: is required when a Supabase provider is enabled`)
+        continue
+      }
+      if (supabaseForbiddenValues[key].includes(String(value).trim())) {
+        issues.push(`${key}: must not use the example Supabase value in production`)
+      }
+    }
+  }
+
+  if (realtimeProvider === 'supabase') {
+    const value = config.SUPABASE_JWT_SECRET
+    if (isBlank(value)) {
+      issues.push('SUPABASE_JWT_SECRET: is required when REALTIME_PROVIDER=supabase')
+    } else if (supabaseForbiddenValues.SUPABASE_JWT_SECRET.includes(String(value).trim())) {
+      issues.push('SUPABASE_JWT_SECRET: must not use the example Supabase value in production')
+    } else if (String(value).trim().length < 32) {
+      issues.push('SUPABASE_JWT_SECRET: must be at least 32 characters')
+    }
+  }
+
+  if (storageProvider === 'supabase' && isBlank(config.SUPABASE_STORAGE_BUCKET)) {
+    issues.push('SUPABASE_STORAGE_BUCKET: is required when STORAGE_PROVIDER=supabase')
   }
 
   return issues

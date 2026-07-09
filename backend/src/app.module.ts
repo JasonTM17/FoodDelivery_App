@@ -27,6 +27,7 @@ import { RestaurantPortalModule } from './restaurant-portal/restaurant-portal.mo
 import { AiModule } from './ai/ai.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
+import { RealtimeModule } from './realtime/realtime.module'
 import { I18nSetupModule } from './i18n/i18n.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
@@ -66,6 +67,7 @@ import Redis from 'ioredis'
     RedisModule,
     HealthModule,
     MetricsModule,
+    RealtimeModule,
     I18nSetupModule,
     AuthModule,
     UsersModule,

@@ -1,4 +1,7 @@
 import {
+  Optional,
+} from '@nestjs/common'
+import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
@@ -10,6 +13,8 @@ import { UserRole } from '@prisma/client'
 import { Server, Socket } from 'socket.io'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+import { realtimeChannels } from '../realtime/realtime-channels'
+import { RealtimePublisherService } from '../realtime/realtime-publisher.service'
 import { RealtimeRoomAccessService } from './realtime-room-access.service'
 
 export interface AdminDriverLocationChangedEvent {
@@ -29,6 +34,7 @@ export class OrdersGateway implements OnGatewayConnection {
   constructor(
     private readonly socketAuth: WebSocketAuthService,
     private readonly roomAccess: RealtimeRoomAccessService,
+    @Optional() private readonly realtimePublisher?: RealtimePublisherService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -40,11 +46,17 @@ export class OrdersGateway implements OnGatewayConnection {
   }
 
   notifyRestaurant(restaurantId: string, data: Record<string, unknown>) {
-    this.server.to(`restaurant:${restaurantId}`).emit('restaurant:new_order', data)
+    this.server?.to(`restaurant:${restaurantId}`).emit('restaurant:new_order', data)
+    void this.realtimePublisher?.publish(
+      realtimeChannels.restaurant(restaurantId),
+      'restaurant:new_order',
+      data,
+    )
   }
 
   broadcastToOrder(orderId: string, event: string, data: Record<string, unknown>) {
-    this.server.to(`order:${orderId}`).emit(event, data)
+    this.server?.to(`order:${orderId}`).emit(event, data)
+    void this.realtimePublisher?.publish(realtimeChannels.order(orderId), event, data)
   }
 
   broadcastToRestaurantDriverChat(
@@ -52,15 +64,26 @@ export class OrdersGateway implements OnGatewayConnection {
     event: string,
     data: Record<string, unknown>,
   ) {
-    this.server.to(this.restaurantDriverChatRoom(orderId)).emit(event, data)
+    this.server?.to(this.restaurantDriverChatRoom(orderId)).emit(event, data)
+    void this.realtimePublisher?.publish(
+      realtimeChannels.restaurantDriverChat(orderId),
+      event,
+      data,
+    )
   }
 
   notifyAdmins(event: string, data: Record<string, unknown>) {
-    this.server.to('admin:orders').emit(event, data)
+    this.server?.to('admin:orders').emit(event, data)
+    void this.realtimePublisher?.publish(realtimeChannels.adminOrders, event, data)
   }
 
   notifyAdminDriverLocation(data: AdminDriverLocationChangedEvent) {
-    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', data)
+    this.server?.to('admin:drivers:all').emit('admin:driver_location_changed', data)
+    void this.realtimePublisher?.publish(
+      realtimeChannels.adminDrivers,
+      'admin:driver_location_changed',
+      data,
+    )
   }
 
   @SubscribeMessage('order:subscribe')

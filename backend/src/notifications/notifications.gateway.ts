@@ -8,10 +8,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { forwardRef, Inject, Logger } from '@nestjs/common'
+import { forwardRef, Inject, Logger, Optional } from '@nestjs/common'
 import { NotificationsService } from './notifications.service'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+import { realtimeChannels } from '../realtime/realtime-channels'
+import { RealtimePublisherService } from '../realtime/realtime-publisher.service'
 
 @WebSocketGateway({
   namespace: '/notifications',
@@ -27,6 +29,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     private readonly socketAuth: WebSocketAuthService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
+    @Optional() private readonly realtimePublisher?: RealtimePublisherService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -56,7 +59,12 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   /** Push a notification to a specific user in real time. */
   sendToUser(userId: string, notification: Record<string, unknown>): void {
     const room = `user:${userId}:notifications`
-    this.server.to(room).emit('notification:new', notification)
+    this.server?.to(room).emit('notification:new', notification)
+    void this.realtimePublisher?.publish(
+      realtimeChannels.userNotifications(userId),
+      'notification:new',
+      notification,
+    )
   }
 
   @SubscribeMessage('notifications:read')

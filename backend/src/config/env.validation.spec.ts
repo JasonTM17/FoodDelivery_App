@@ -30,6 +30,10 @@ const productionEnv = {
   TWILIO_ACCOUNT_SID: 'prod-twilio-account-sid',
   TWILIO_AUTH_TOKEN: 'prod-twilio-auth-token',
   TWILIO_FROM_NUMBER: '+84900000000',
+  SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
+  SUPABASE_SERVICE_ROLE_KEY: 'prod-supabase-service-role-key',
+  SUPABASE_JWT_SECRET: 'd'.repeat(64),
+  SUPABASE_STORAGE_BUCKET: 'foodflow-production',
 }
 
 describe('validateEnv', () => {
@@ -66,6 +70,28 @@ describe('validateEnv', () => {
       DIRECT_URL: productionEnv.DIRECT_URL,
       REDIS_URL: productionEnv.REDIS_URL,
       PASSWORD_RESET_URL_BASE: productionEnv.PASSWORD_RESET_URL_BASE,
+    })
+  })
+
+  it('requires Supabase secrets when production providers use Supabase', () => {
+    expect(() => validateEnv({
+      ...productionEnv,
+      REALTIME_PROVIDER: 'supabase',
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_URL: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+      SUPABASE_JWT_SECRET: undefined,
+      SUPABASE_STORAGE_BUCKET: undefined,
+    })).toThrow(/SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_JWT_SECRET|SUPABASE_STORAGE_BUCKET/)
+
+    expect(validateEnv({
+      ...productionEnv,
+      REALTIME_PROVIDER: 'supabase',
+      STORAGE_PROVIDER: 'supabase',
+    })).toMatchObject({
+      REALTIME_PROVIDER: 'supabase',
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_URL: productionEnv.SUPABASE_URL,
     })
   })
 

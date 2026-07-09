@@ -1,4 +1,7 @@
 import {
+  Optional,
+} from '@nestjs/common'
+import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
@@ -17,6 +20,8 @@ import { OrdersGateway, type AdminDriverLocationChangedEvent } from '../orders/o
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { RealtimeRoomAccessService } from '../orders/realtime-room-access.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
+import { realtimeChannels } from '../realtime/realtime-channels'
+import { RealtimePublisherService } from '../realtime/realtime-publisher.service'
 
 export interface DeliveryEtaUpdatedEvent {
   etaMinutes: number | null
@@ -42,6 +47,7 @@ export class TrackingGateway implements OnGatewayConnection {
     private readonly ordersGateway: OrdersGateway,
     private readonly socketAuth: WebSocketAuthService,
     private readonly roomAccess: RealtimeRoomAccessService,
+    @Optional() private readonly realtimePublisher?: RealtimePublisherService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -132,13 +138,19 @@ export class TrackingGateway implements OnGatewayConnection {
     `)
     const target = routeTarget[0]
     if (target) {
-      this.server.to(room).emit('driver:location_changed', {
+      const driverLocationPayload = {
         orderId, driverId, lat: data.lat, lng: data.lng,
         bearing: typeof data.bearing === 'number' && Number.isFinite(data.bearing)
           ? data.bearing
           : null,
         timestamp,
-      })
+      }
+      this.server?.to(room).emit('driver:location_changed', driverLocationPayload)
+      void this.realtimePublisher?.publish(
+        realtimeChannels.order(orderId),
+        'driver:location_changed',
+        driverLocationPayload,
+      )
 
       const routePhase = routePhaseForStatus(target.status)
       const destLat = routePhase === 'pickup' ? target.restaurantLat : target.deliveryLat
@@ -177,10 +189,16 @@ export class TrackingGateway implements OnGatewayConnection {
   }
 
   emitEtaUpdate(orderId: string, data: DeliveryEtaUpdatedEvent): void {
-    this.server.to(`order:${orderId}`).emit('delivery:eta_updated', {
+    const payload = {
       orderId,
       ...data,
-    })
+    }
+    this.server?.to(`order:${orderId}`).emit('delivery:eta_updated', payload)
+    void this.realtimePublisher?.publish(
+      realtimeChannels.order(orderId),
+      'delivery:eta_updated',
+      payload,
+    )
   }
 
   @SubscribeMessage('order:subscribe')
@@ -225,7 +243,7 @@ export class TrackingGateway implements OnGatewayConnection {
     if (now - lastTime < 2000) return
 
     this.lastBroadcast.set(key, now)
-    this.server.to('admin:drivers:all').emit('admin:driver_location_changed', data)
+    this.server?.to('admin:drivers:all').emit('admin:driver_location_changed', data)
     this.ordersGateway.notifyAdminDriverLocation(data)
   }
 }
