@@ -71,7 +71,7 @@ export default function SupportPage() {
 
   const { data, isLoading } = useQuery<{ tickets: Ticket[] }>({
     queryKey: ['support-tickets'],
-    queryFn: () => apiGet('/admin/support-tickets'),
+    queryFn: () => apiGet('/admin/support-tickets?page=1&limit=50'),
   });
 
   const tickets = data?.tickets || [];

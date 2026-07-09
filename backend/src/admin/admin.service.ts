@@ -8,6 +8,14 @@ import { calculateSupportSlaDeadline, shiftDeadlineForWaiting } from './support-
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Coerce query page/limit; NaN must not reach Prisma take/skip. */
+  private pagination(page?: number, limit?: number, defaultLimit = 20) {
+    const safePage = Number.isFinite(page) && (page as number) > 0 ? Math.trunc(page as number) : 1
+    const rawLimit = Number.isFinite(limit) && (limit as number) > 0 ? Math.trunc(limit as number) : defaultLimit
+    const safeLimit = Math.min(Math.max(rawLimit, 1), 100)
+    return { page: safePage, limit: safeLimit, skip: (safePage - 1) * safeLimit }
+  }
+
   async getDashboard() {
     const today = new Date(); today.setHours(0, 0, 0, 0)
     const [totalOrders, todayOrders, revenueResult, activeDrivers, totalUsers,
@@ -40,12 +48,12 @@ export class AdminService {
   }
 
   async getOrders(params: { status?: string; page?: number; limit?: number }) {
-    const page = params.page ?? 1; const limit = params.limit ?? 20
+    const { page, limit, skip } = this.pagination(params.page, params.limit)
     const where: Prisma.OrderWhereInput = {}
     if (params.status) where.status = params.status as OrderStatus
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
-        where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
         include: {
           restaurant: { select: { id: true, name: true, addressLine: true } },
           customer: { select: { id: true, fullName: true, phone: true } },
@@ -90,17 +98,17 @@ export class AdminService {
   }
 
   async getUsers(params: { role?: string; page?: number; limit?: number }) {
-    const page = params.page ?? 1; const limit = params.limit ?? 20
+    const { page, limit, skip } = this.pagination(params.page, params.limit)
     const where: Prisma.UserWhereInput = {}
     if (params.role) where.role = params.role as UserRole
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
-        where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
         select: { id: true, email: true, phone: true, fullName: true, role: true, isActive: true, createdAt: true },
       }),
       this.prisma.user.count({ where }),
     ])
-    return { users, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    return { users, total, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
   }
 
   async toggleUserStatus(userId: string, isActive: boolean) {
@@ -108,28 +116,79 @@ export class AdminService {
   }
 
   async getRestaurants(params: { page?: number; limit?: number }) {
-    const page = params.page ?? 1; const limit = params.limit ?? 20
-    const [restaurants, total] = await Promise.all([
+    const { page, limit, skip } = this.pagination(params.page, params.limit)
+    const [rows, total] = await Promise.all([
       this.prisma.restaurant.findMany({
-        skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
-        include: { profiles: { select: { user: { select: { fullName: true, email: true } } } } },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          profiles: {
+            where: { staffRole: 'owner' },
+            take: 1,
+            select: { user: { select: { fullName: true, email: true } } },
+          },
+          _count: { select: { orders: true } },
+        },
       }),
       this.prisma.restaurant.count(),
     ])
-    return { restaurants, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    // Shape expected by Admin web list UI
+    const restaurants = rows.map((r) => {
+      const ownerProfile = r.profiles[0]?.user
+      return {
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        cuisine: r.cuisineTypes?.[0] ?? r.priceRange ?? '—',
+        cuisineTypes: r.cuisineTypes,
+        rating: Number(r.rating),
+        totalOrders: r._count.orders,
+        totalReviews: r.totalReviews,
+        status: r.isActive ? 'active' : 'disabled',
+        isActive: r.isActive,
+        approvalStatus: r.approvalStatus,
+        addressLine: r.addressLine,
+        city: r.city,
+        phone: r.phone,
+        logoUrl: r.logoUrl,
+        owner: ownerProfile
+          ? { name: ownerProfile.fullName, email: ownerProfile.email }
+          : null,
+        createdAt: r.createdAt,
+      }
+    })
+    return {
+      restaurants,
+      total,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
   }
 
-  async toggleRestaurantStatus(restaurantId: string, isActive: boolean) {
+  async toggleRestaurantStatus(
+    restaurantId: string,
+    body: { isActive?: boolean; status?: string },
+  ) {
+    let isActive = body.isActive
+    if (typeof isActive !== 'boolean' && typeof body.status === 'string') {
+      isActive = body.status === 'active'
+    }
+    if (typeof isActive !== 'boolean') {
+      throw new BadRequestException('isActive or status is required')
+    }
     return this.prisma.restaurant.update({ where: { id: restaurantId }, data: { isActive } })
   }
 
   async getSupportTickets(params: { status?: string; page?: number; limit?: number }) {
-    const page = params.page ?? 1; const limit = params.limit ?? 20
+    const { page, limit, skip } = this.pagination(params.page, params.limit)
     const where: Prisma.AiSupportTicketWhereInput = {}
     if (params.status) where.status = params.status as TicketStatus
     const [tickets, total] = await Promise.all([
       this.prisma.aiSupportTicket.findMany({
-        where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' },
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { id: true, fullName: true, email: true } },
           assignedAdmin: { select: { id: true, fullName: true, email: true } },
@@ -139,10 +198,21 @@ export class AdminService {
       this.prisma.aiSupportTicket.count({ where }),
     ])
     return {
-      tickets: tickets.map(ticket => ({
-        ...ticket,
+      tickets: tickets.map((ticket) => ({
+        id: ticket.id,
+        issueType: ticket.issueType,
+        orderId: ticket.orderId ?? '',
+        userId: ticket.userId,
+        userName: ticket.user?.fullName ?? ticket.user?.email ?? '—',
+        priority: ticket.priority,
+        status: ticket.status,
+        description: ticket.summary,
+        createdAt: ticket.createdAt.toISOString(),
+        assignedTo: ticket.assignedAdmin?.fullName ?? null,
+        resolutionNotes: ticket.resolutionNotes ?? '',
         slaDeadlineAt: ticket.slaDeadlineAt ?? calculateSupportSlaDeadline(ticket.createdAt, ticket.priority),
       })),
+      total,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     }
   }

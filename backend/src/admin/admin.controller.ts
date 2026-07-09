@@ -35,12 +35,20 @@ export class AdminController {
 
   @Get('orders')
   getOrders(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getOrders({ status, page: Number(page), limit: Number(limit) })
+    return this.adminService.getOrders({
+      status,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
   @Get('users')
   getUsers(@Query('role') role?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getUsers({ role, page: Number(page), limit: Number(limit) })
+    return this.adminService.getUsers({
+      role,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
   @Patch('users/:id/status')
@@ -51,18 +59,35 @@ export class AdminController {
 
   @Get('restaurants')
   getRestaurants(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getRestaurants({ page: Number(page), limit: Number(limit) })
+    return this.adminService.getRestaurants({
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
   @Patch('restaurants/:id/status')
   @UsePipes(new ZodValidationPipe(toggleRestaurantStatusSchema))
-  toggleRestaurantStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
-    return this.adminService.toggleRestaurantStatus(id, body.isActive)
+  toggleRestaurantStatus(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean; status?: string },
+  ) {
+    return this.adminService.toggleRestaurantStatus(id, body)
   }
 
   @Get('support-tickets')
   getSupportTickets(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getSupportTickets({ status, page: Number(page), limit: Number(limit) })
+    return this.adminService.getSupportTickets({
+      status,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
+  }
+
+  /** Avoid Number(undefined) === NaN which breaks Prisma take/skip. */
+  private optionalPositiveInt(raw?: string): number | undefined {
+    if (raw === undefined || raw === null || raw === '') return undefined
+    const n = Number(raw)
+    return Number.isFinite(n) && n > 0 ? Math.trunc(n) : undefined
   }
 
   @Patch('support-tickets/:id')

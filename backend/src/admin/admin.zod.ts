@@ -46,9 +46,14 @@ export const toggleUserStatusSchema = z.object({
   isActive: z.boolean(),
 })
 
-export const toggleRestaurantStatusSchema = z.object({
-  isActive: z.boolean(),
-})
+export const toggleRestaurantStatusSchema = z
+  .object({
+    isActive: z.boolean().optional(),
+    status: z.enum(['active', 'disabled']).optional(),
+  })
+  .refine((v) => typeof v.isActive === 'boolean' || typeof v.status === 'string', {
+    message: 'isActive or status is required',
+  })
 
 export const updateSupportTicketSchema = z.object({
   status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
