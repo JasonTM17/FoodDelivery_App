@@ -1,12 +1,13 @@
-services:
-  backend:
-    restart: always
-    environment:
-      NODE_ENV: production
-    healthcheck:
-      interval: 15s
-      retries: 3
+# Production / Hub overlay — pull public images (no local build).
+#
+#   $env:IMAGE_TAG = "latest"   # or short git SHA
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Web images bake NEXT_PUBLIC_* at build time (see docker-publish.yml).
+# Runtime still needs backend secrets via env (JWT, DATABASE_URL, etc.).
 
+services:
   postgres:
     restart: always
     environment:
@@ -14,4 +15,108 @@ services:
 
   redis:
     restart: always
-    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 1gb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:?required}
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --aof-use-rdb-preamble yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:?required}
+
+  minio:
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?required}
+
+  # Migrations: use published migrator image (builder stage with pnpm+prisma).
+  migrate:
+    image: nguyenson1710/foodflow-migrate:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379}
+      JWT_SECRET: ${JWT_SECRET:?required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
+      DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://admin.foodflow.vn,https://restaurant.foodflow.vn}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?required}
+      MINIO_BUCKET: ${MINIO_BUCKET:-foodflow}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      THROTTLER_MEMORY_FALLBACK: "false"
+      AUTH_PUBLIC_THROTTLE_LIMIT: ${AUTH_PUBLIC_THROTTLE_LIMIT:-100}
+    healthcheck:
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
+    container_name: foodflow-worker
+    command: ["dist/workers/main.js"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379}
+      JWT_SECRET: ${JWT_SECRET:?required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
+      DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?required}
+      MINIO_BUCKET: ${MINIO_BUCKET:-foodflow}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+  admin:
+    image: nguyenson1710/foodflow-admin:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  restaurant:
+    image: nguyenson1710/foodflow-restaurant:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

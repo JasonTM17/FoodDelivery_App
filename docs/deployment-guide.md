@@ -8,6 +8,41 @@ FoodFlow deploys only after the integration branch is clean, pushed, reviewed, a
 
 Current Batch 4 status on 2026-07-06: `origin/master` is `64e46c795c9c15ae52bb0112f91e93a6f3851645`, and `git ls-remote --heads origin` returns only `refs/heads/master`. Local backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose, and fallback secret-scan gates passed for this head; see [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval. Supabase and Vercel deployment remain blocked until GitHub Actions access is restored, current-head remote checks are green, production secrets are rotated/valid, Supabase CLI/auth is available, and this repo is linked to the intended Vercel projects.
 
+## Docker Hub images (primary package path)
+
+Public images under namespace **`nguyenson1710`**:
+
+| Image | Role |
+|---|---|
+| `nguyenson1710/foodflow-backend` | Nest API (`dist/main.js`) |
+| `nguyenson1710/foodflow-worker` | Same layers as backend; run `dist/workers/main.js` |
+| `nguyenson1710/foodflow-migrate` | Prisma migrate deploy (builder stage) |
+| `nguyenson1710/foodflow-admin` | Admin Next.js |
+| `nguyenson1710/foodflow-restaurant` | Restaurant Next.js |
+
+Tags: `latest` and short git SHA (e.g. `5dfcc5b`). CI workflow `.github/workflows/docker-publish.yml` publishes on push to `master`/`main`.
+
+### Pull + run (production overlay)
+
+```bash
+# secrets: copy .env.production.example → .env.production
+export IMAGE_TAG=latest
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Worker uses the backend image with command override `dist/workers/main.js`.
+
+### Manual build/push (if CI secrets missing)
+
+```bash
+# after docker login as nguyenson1710
+docker build -t nguyenson1710/foodflow-backend:latest -f backend/Dockerfile backend
+docker build -t nguyenson1710/foodflow-migrate:latest --target migrator -f backend/Dockerfile backend
+# web apps: pass NEXT_PUBLIC_* build-args (see workflow)
+docker push nguyenson1710/foodflow-backend:latest
+```
+
 ## Local Docker Stack
 
 For host-run development:

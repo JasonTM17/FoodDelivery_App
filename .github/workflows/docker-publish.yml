@@ -17,11 +17,22 @@ jobs:
           - image: nguyenson1710/foodflow-backend
             context: ./backend
             dockerfile: ./backend/Dockerfile
+            target: runner
+            platforms: linux/amd64
+            build-args: |
+              BUILD_SHA=${{ github.sha }}
+          - image: nguyenson1710/foodflow-migrate
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            target: migrator
+            platforms: linux/amd64
             build-args: |
               BUILD_SHA=${{ github.sha }}
           - image: nguyenson1710/foodflow-admin
             context: ./web
             dockerfile: ./web/apps/admin/Dockerfile
+            target: runner
+            platforms: linux/amd64
             build-args: |
               BUILD_SHA=${{ github.sha }}
               NEXT_PUBLIC_APP_ENV=production
@@ -32,6 +43,8 @@ jobs:
           - image: nguyenson1710/foodflow-restaurant
             context: ./web
             dockerfile: ./web/apps/restaurant/Dockerfile
+            target: runner
+            platforms: linux/amd64
             build-args: |
               BUILD_SHA=${{ github.sha }}
               NEXT_PUBLIC_APP_ENV=production
@@ -68,10 +81,11 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platforms }}
           build-args: ${{ matrix.build-args }}
           cache-from: type=registry,ref=${{ matrix.image }}:buildcache
           cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
