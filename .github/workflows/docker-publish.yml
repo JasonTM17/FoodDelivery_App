@@ -29,6 +29,8 @@ jobs:
             platforms: linux/amd64
             build-args: |
               BUILD_SHA=${{ github.sha }}
+          # NOTE: secrets.* cannot be referenced inside strategy.matrix (parse-time).
+          # NEXT_PUBLIC_GOOGLE_MAPS_KEY is injected at the build step below.
           - image: nguyenson1710/foodflow-admin
             context: ./web
             dockerfile: ./web/apps/admin/Dockerfile
@@ -40,7 +42,6 @@ jobs:
               NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
               NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
               NEXT_PUBLIC_ADMIN_URL=https://admin.foodflow.vn
-              NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
           - image: nguyenson1710/foodflow-restaurant
             context: ./web
             dockerfile: ./web/apps/restaurant/Dockerfile
@@ -52,7 +53,6 @@ jobs:
               NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
               NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
               NEXT_PUBLIC_RESTAURANT_URL=https://restaurant.foodflow.vn
-              NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
 
     steps:
       - uses: actions/checkout@v7
@@ -87,7 +87,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.platforms }}
-          build-args: ${{ matrix.build-args }}
+          # secrets only valid in steps — not in strategy.matrix
+          build-args: |
+            ${{ matrix.build-args }}
+            NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
           cache-from: type=registry,ref=${{ matrix.image }}:buildcache
           cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
 
