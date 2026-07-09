@@ -15,19 +15,21 @@ services:
 
   redis:
     restart: always
+    # noeviction required for BullMQ (healthz fails closed on allkeys-lru)
     command: >
       redis-server
       --appendonly yes
       --appendfsync everysec
       --aof-use-rdb-preamble yes
       --maxmemory 1gb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
       --requirepass ${REDIS_PASSWORD:?required}
 
   minio:
     restart: always
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      # Must NOT be minioadmin when NODE_ENV=production (backend env.validation)
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?required}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?required}
 
   # Migrations: use published migrator image (builder stage with pnpm+prisma).
@@ -42,10 +44,15 @@ services:
       postgres:
         condition: service_healthy
 
+  # Backend + worker load the full production env file (fail-closed validation).
+  # Explicit environment: overrides keep compose-network hosts correct.
   backend:
     image: nguyenson1710/foodflow-backend:${IMAGE_TAG:-latest}
     pull_policy: always
     restart: always
+    env_file:
+      - path: .env.production
+        required: false
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
@@ -55,14 +62,30 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
       DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
       CORS_ORIGINS: ${CORS_ORIGINS:-https://admin.foodflow.vn,https://restaurant.foodflow.vn}
+      PASSWORD_RESET_URL_BASE: ${PASSWORD_RESET_URL_BASE:?required}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
       MINIO_PORT: ${MINIO_PORT:-9000}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?required}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?required}
       MINIO_BUCKET: ${MINIO_BUCKET:-foodflow}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?required}
       THROTTLER_MEMORY_FALLBACK: "false"
       AUTH_PUBLIC_THROTTLE_LIMIT: ${AUTH_PUBLIC_THROTTLE_LIMIT:-100}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:?required}
+      OSRM_URL: ${OSRM_URL:?required}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?required}
+      SEPAY_API_KEY: ${SEPAY_API_KEY:?required}
+      SEPAY_ACCOUNT_NUMBER: ${SEPAY_ACCOUNT_NUMBER:?required}
+      SEPAY_WEBHOOK_SECRET: ${SEPAY_WEBHOOK_SECRET:?required}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?required}
+      SMTP_HOST: ${SMTP_HOST:?required}
+      SMTP_USER: ${SMTP_USER:?required}
+      SMTP_PASS: ${SMTP_PASS:?required}
+      SMTP_FROM: ${SMTP_FROM:?required}
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY:?required}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:?required}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:?required}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:?required}
     healthcheck:
       interval: 15s
       timeout: 10s
@@ -75,6 +98,9 @@ services:
     restart: always
     container_name: foodflow-worker
     command: ["dist/workers/main.js"]
+    env_file:
+      - path: .env.production
+        required: false
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
@@ -83,12 +109,30 @@ services:
       JWT_SECRET: ${JWT_SECRET:?required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
       DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://admin.foodflow.vn,https://restaurant.foodflow.vn}
+      PASSWORD_RESET_URL_BASE: ${PASSWORD_RESET_URL_BASE:?required}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
       MINIO_PORT: ${MINIO_PORT:-9000}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?required}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?required}
       MINIO_BUCKET: ${MINIO_BUCKET:-foodflow}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?required}
+      THROTTLER_MEMORY_FALLBACK: "false"
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:?required}
+      OSRM_URL: ${OSRM_URL:?required}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?required}
+      SEPAY_API_KEY: ${SEPAY_API_KEY:?required}
+      SEPAY_ACCOUNT_NUMBER: ${SEPAY_ACCOUNT_NUMBER:?required}
+      SEPAY_WEBHOOK_SECRET: ${SEPAY_WEBHOOK_SECRET:?required}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?required}
+      SMTP_HOST: ${SMTP_HOST:?required}
+      SMTP_USER: ${SMTP_USER:?required}
+      SMTP_PASS: ${SMTP_PASS:?required}
+      SMTP_FROM: ${SMTP_FROM:?required}
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY:?required}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:?required}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:?required}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:?required}
     depends_on:
       postgres:
         condition: service_healthy

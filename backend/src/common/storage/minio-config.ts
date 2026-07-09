@@ -49,11 +49,22 @@ export function resolveMinioRuntimeConfig(
       })
     : optionalStringConfig(config, 'MINIO_PUBLIC_URL')
 
+  // Client TLS is independent of public CDN URL (often HTTPS edge, HTTP in-cluster).
+  const useSslRaw = optionalStringConfig(config, 'MINIO_USE_SSL')
+  const useSSL =
+    useSslRaw === 'true'
+      ? true
+      : useSslRaw === 'false'
+        ? false
+        : endpoint !== 'localhost' && endpoint !== 'minio' && endpoint !== '127.0.0.1'
+          ? Boolean(publicUrl?.startsWith('https://'))
+          : false
+
   return {
     client: {
       endPoint: endpoint,
       port: positiveIntegerConfig(config, 'MINIO_PORT', LOCAL_MINIO_DEFAULTS.port),
-      useSSL: publicUrl ? publicUrl.startsWith('https://') : false,
+      useSSL,
       accessKey,
       secretKey,
     },

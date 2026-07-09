@@ -20,25 +20,33 @@ Public images under namespace **`nguyenson1710`**:
 | `nguyenson1710/foodflow-admin` | Admin Next.js |
 | `nguyenson1710/foodflow-restaurant` | Restaurant Next.js |
 
-Tags: `latest` and short git SHA (e.g. `5dfcc5b`). CI workflow `.github/workflows/docker-publish.yml` publishes on push to `master`/`main`.
+Tags: `latest` and short git SHA (e.g. `0ab94ad`). CI workflow `.github/workflows/docker-publish.yml` publishes on push to `master`/`main` and via **workflow_dispatch**.
+
+**CI secrets (names only):** `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, optional `NEXT_PUBLIC_GOOGLE_MAPS_KEY`.  
+**Note:** GitHub Actions also needs a paid billing/spending limit. If runs fail with *spending limit*, use manual Hub push below — that path is release-valid.
 
 ### Pull + run (production overlay)
 
-```bash
-# secrets: copy .env.production.example → .env.production
-export IMAGE_TAG=latest
-docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```powershell
+# secrets: copy .env.production.example → .env.production (fill ALL productionRequiredKeys)
+$env:IMAGE_TAG = "latest"   # or short git SHA
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up -d
+# Create MinIO bucket once: foodflow (mc mb local/foodflow)
+# Optional seed: docker run --rm --network <compose-net> -e DATABASE_URL=... nguyenson1710/foodflow-migrate:<tag> pnpm run db:seed
 ```
 
-Worker uses the backend image with command override `dist/workers/main.js`.
+Worker uses the **backend** image with command override `dist/workers/main.js`.  
+Prod Redis uses **`noeviction`** (BullMQ). Backend fail-closed production env is documented in `.env.production.example`.  
+Do not set `MINIO_ACCESS_KEY=minioadmin` in production. In-cluster MinIO is HTTP — set `MINIO_USE_SSL=false` when public CDN URL is HTTPS.
 
-### Manual build/push (if CI secrets missing)
+### Manual build/push (if CI secrets or billing block)
 
 ```bash
 # after docker login as nguyenson1710
 docker build -t nguyenson1710/foodflow-backend:latest -f backend/Dockerfile backend
 docker build -t nguyenson1710/foodflow-migrate:latest --target migrator -f backend/Dockerfile backend
+docker tag nguyenson1710/foodflow-backend:latest nguyenson1710/foodflow-worker:latest
 # web apps: pass NEXT_PUBLIC_* build-args (see workflow)
 docker push nguyenson1710/foodflow-backend:latest
 ```
