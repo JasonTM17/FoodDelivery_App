@@ -151,6 +151,21 @@ For POSIX shells with Node.js and Vercel CLI available:
 
 Override `API_VERCEL_PROJECT`, `ADMIN_VERCEL_PROJECT`, or `RESTAURANT_VERCEL_PROJECT` only if deploying to differently named projects.
 
+If preflight reports missing Vercel production env names, use the local prompt helper instead of pasting secrets into chat, docs, or shell history. The default mode prints the env contract and safe `vercel env add` command shape without calling Vercel:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1
+```
+
+To add only the variables that preflight reported missing, pass those names explicitly. Example:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -LinkProjects
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+```
+
+When `-PromptValues` is used, the helper sends values to `vercel env add` through stdin, uses hidden input for secret variables, uses non-sensitive mode only for public/non-secret config, never writes `.env` files, and never deploys. Re-run `infra\scripts\vercel-web-preflight.ps1` after all values are added.
+
 Both web apps intentionally fail closed in production when API, Supabase realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.

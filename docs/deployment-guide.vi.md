@@ -85,15 +85,32 @@ Deploy web sau khi build Admin và Restaurant pass.
 
 | Vercel project | Root directory | Build command |
 |---|---|---|
-| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
-| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+| `foodflow-api` | `backend` | `pnpm prisma generate && pnpm build` |
+| `food-delivery-app` | `web/apps/admin` | `cd ../.. && pnpm --filter foodflow-admin build` |
+| `foodflow-restaurant` | `web/apps/restaurant` | `cd ../.. && pnpm --filter restaurant build` |
 
 Public env:
 
 | App | Variable |
 |---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+
+Chay preflight truoc khi deploy de kiem tra project settings va danh sach env production ma khong in gia tri secret:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-web-preflight.ps1
+```
+
+Neu thieu env, dung helper local de in contract/lenh an toan, roi truyen dung ten bien ma preflight bao thieu thay vi paste secret vao chat, docs hoac shell history:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -LinkProjects
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+```
+
+Khi dung `-PromptValues`, helper khong deploy, khong ghi `.env`, gui value vao `vercel env add` qua stdin, dung hidden input cho secret, va dung non-sensitive mode chi cho public/non-secret config.
 
 Admin và Restaurant cố ý fail-closed ở production khi thiếu API, realtime, canonical app URL hoặc map key bắt buộc. Giá trị localhost chỉ dành cho dev. Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel; biến này chỉ dùng proxy local cho Restaurant khi dev.
 

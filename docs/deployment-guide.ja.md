@@ -85,15 +85,32 @@ Admin と Restaurant の build が通った後に web を deploy します。
 
 | Vercel project | Root directory | Build command |
 |---|---|---|
-| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
-| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+| `foodflow-api` | `backend` | `pnpm prisma generate && pnpm build` |
+| `food-delivery-app` | `web/apps/admin` | `cd ../.. && pnpm --filter foodflow-admin build` |
+| `foodflow-restaurant` | `web/apps/restaurant` | `cd ../.. && pnpm --filter restaurant build` |
 
 Public env:
 
 | App | Variable |
 |---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+
+Deploy 前に preflight を実行し、project settings と production env 名を確認します。secret values は出力しません。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-web-preflight.ps1
+```
+
+env が不足している場合は、secret を chat/docs/shell history に貼らず、preflight が報告した不足名だけを local prompt helper に渡します。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -LinkProjects
+powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+```
+
+`-PromptValues` を使う場合、この helper は deploy せず、`.env` file も書きません。secret は hidden input から stdin 経由で `vercel env add` に渡し、public/non-secret config だけ non-sensitive mode で Vercel に保存します。
 
 Admin と Restaurant は production で API、realtime、canonical app URL、または必須 map key の env が未設定の場合、明示的に失敗します。localhost の既定値は dev 専用です。`FOODFLOW_ENABLE_DEV_API_REWRITE` は local Restaurant dev proxy 専用なので、Vercel では有効化しないでください。
 
