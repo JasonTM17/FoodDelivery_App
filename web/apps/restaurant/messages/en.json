@@ -259,6 +259,7 @@
       "description": "Update menu item information",
       "back": "Back to menu",
       "loadError": "Could not load the item",
+      "contractError": "Menu item response is missing required editable fields",
       "saveError": "Could not save. Please try again.",
       "categoryPlaceholder": "E.g. Main dishes",
       "cancel": "Cancel",
