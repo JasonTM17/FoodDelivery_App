@@ -8,6 +8,14 @@ Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ
 
 Trạng thái Batch 4 ngày 2026-07-08: remote cleanup đã recheck tại `118459e539eecb2dbd61e033431b7f4b5104f0e0`, và `git ls-remote --heads origin` chỉ trả `refs/heads/master`. Local head mới nhất trước docs refresh hiện tại là `188a256`, vẫn ahead `origin/master` và là fast-forward candidate cho `master`. Docker stack mới đã rebuild Backend/Admin/Restaurant từ source hiện tại, health check pass cả 3 service, và Playwright Chromium/Firefox pass 70/70 gồm axe serious/critical smoke, visual contract, realtime và tenant isolation; xem [Batch 4 release report](batch4-release-report.md). Đây là bằng chứng verify local, không phải approval deploy production. Vercel project `food-delivery-app` đã được link và chỉnh root/build settings cho Admin app, nhưng production env vẫn thiếu biến bắt buộc; deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, production secrets đã rotate/hợp lệ, Supabase CLI/auth khả dụng, backend/API URL hợp lệ và Vercel env đầy đủ.
 
+## Batch 4 update 2026-07-09
+
+Local head `f5ba366` is 71 commits ahead of `origin/master`. Supabase realtime/storage/queue foundation has landed. Backend full Jest passed 116 suites / 849 tests after the Supabase queue drain work. Vercel projects now exist for API/Admin/Restaurant: `foodflow-api`, `food-delivery-app`, and `foodflow-restaurant`. Generated app-owned `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` were stored as sensitive env vars on `foodflow-api` without printing values.
+
+Production deploy is still blocked because real Supabase database/service-role/JWT/anon keys, Redis, Google Maps, DeepSeek, SePay, SMTP, FCM, and Twilio values are not configured yet. Supabase MCP OAuth is logged in, but Supabase CLI still needs `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL` before migrations can run.
+
+Vercel Hobby cron can run only once per day on the current account, so the committed `/api/jobs/drain` cron is daily. Use Vercel Pro minute cron or another approved scheduler before relying on `QUEUE_PROVIDER=supabase-postgres` for time-sensitive dispatch/order-timeout jobs.
+
 ## Docker local
 
 Chạy service nền cho dev host-run:

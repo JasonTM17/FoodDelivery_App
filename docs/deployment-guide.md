@@ -6,9 +6,9 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 FoodFlow deploys only after the integration branch is clean, pushed, reviewed, and verified. Do not deploy from a dirty root worktree, with unrotated pasted keys, or while any Batch 4 gate is red.
 
-Current Batch 4 status on 2026-07-08: remote cleanup was rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`, where `git ls-remote --heads origin` returned only `refs/heads/master`. Latest local code head before the current docs refresh is `188a256` and remains ahead of `origin/master` as a fast-forward candidate. The refreshed local Docker stack rebuilt Backend/Admin/Restaurant from current source, passed all three health checks, and Playwright Chromium/Firefox passed 70/70 with axe serious/critical smoke, visual contract, realtime, and tenant isolation coverage. The branch remains ahead of `origin/master` until production prerequisites are valid. See [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval.
+Current Batch 4 status on 2026-07-09: remote cleanup was rechecked at `118459e539eecb2dbd61e033431b7f4b5104f0e0`, where `git ls-remote --heads origin` returned only `refs/heads/master`. Latest local code head before the current docs refresh is `f5ba366` and remains 71 commits ahead of `origin/master` as a fast-forward candidate. The refreshed local Docker stack rebuilt Backend/Admin/Restaurant from current source, passed all three health checks, and Playwright Chromium/Firefox passed 70/70 with axe serious/critical smoke, visual contract, realtime, and tenant isolation coverage. New Supabase realtime/storage/queue foundation passed backend typecheck/lint/build and full Jest 116 suites / 849 tests. The branch remains ahead of `origin/master` until production prerequisites are valid. See [Batch 4 release report](batch4-release-report.md). This is local verification evidence, not production deployment approval.
 
-The Vercel project `food-delivery-app` now exists and is linked to the GitHub repo. Its project settings were corrected from repo root/`Other` to Admin's monorepo app root `web/apps/admin` with Next.js build settings. Deployment is still intentionally blocked until required production env vars are present, current-head checks are green, pasted keys are rotated, Supabase CLI/auth is available, and backend/API production endpoints are valid.
+Vercel project shells now exist for API/Admin/Restaurant and have expected roots/build settings. Deployment is still intentionally blocked until required production env vars are present, current-head checks are green, pasted keys are rotated, Supabase CLI/auth is available, database migrations are deployed, and production health checks are valid.
 
 ## Local Docker Stack
 
@@ -40,18 +40,21 @@ Use provider secret managers, not committed files:
 |---|---|
 | Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
 | Database/cache | `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, passwords |
-| Storage | MinIO/S3 access key and secret key |
+| Storage | Supabase service role key and storage bucket for production; MinIO/S3 access key and secret key only when `STORAGE_PROVIDER=minio` |
 | SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
 | AI | `DEEPSEEK_API_KEY` or the configured LLM provider key |
 | Maps | backend `GOOGLE_MAPS_API_KEY` and owned `OSRM_URL`; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Admin web public env | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Realtime | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, web/mobile `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_REALTIME_PROVIDER=supabase` |
+| Queue drain | `CRON_SECRET` for `/api/jobs/drain` when `QUEUE_PROVIDER=supabase-postgres` |
+| Admin web public env | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Restaurant web public env | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 | Deploy CLIs | Vercel token, Supabase access token |
 
 Any key pasted into chat, logs, screenshots, tickets, or git history must be rotated before production.
 
 Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
 
-Latest deploy-readiness check on 2026-07-08: Vercel CLI auth is present and `food-delivery-app` is linked, but the Admin production env list is still missing `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, and `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Supabase MCP was added and OAuth login succeeded for project ref `lvanszgszzfopusboich`, but Supabase CLI deployment remains blocked until `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL` are available to the release shell. Docker Publish now targets `master`, matching the only live remote branch. No production deployment was performed.
+Latest deploy-readiness check on 2026-07-09: Vercel CLI auth is present. API project `foodflow-api`, Admin project `food-delivery-app`, and Restaurant project `foodflow-restaurant` exist and have expected roots/build settings. Generated app-owned `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` were set directly as sensitive production env vars on `foodflow-api` without printing values. Known non-secret provider/public env defaults were also added where safe. Vercel preflight still fails because real external production env values are missing. Supabase MCP OAuth login succeeded for project ref `lvanszgszzfopusboich`, but Supabase CLI deployment remains blocked until `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL` are available to the release shell. Docker Publish targets `master`, matching the only live remote branch. No production deployment was performed.
 
 ## Supabase Deployment
 
@@ -105,8 +108,9 @@ Recommended project mapping:
 
 | Vercel project | Root directory | Build command |
 |---|---|---|
-| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
-| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+| `foodflow-api` | `backend` | `pnpm prisma generate && pnpm build` |
+| `food-delivery-app` | `web/apps/admin` | `cd ../.. && pnpm --filter foodflow-admin build` |
+| `foodflow-restaurant` | `web/apps/restaurant` | `cd ../.. && pnpm --filter restaurant build` |
 
 Current Vercel Admin project setting:
 
@@ -119,12 +123,19 @@ Current Vercel Admin project setting:
 | Build Command | `cd ../.. && pnpm --filter foodflow-admin build` |
 | Output Directory | `.next` |
 
+Current Vercel API/Restaurant project settings:
+
+| Project | Root Directory | Framework | Install Command | Build Command | Output |
+|---|---|---|---|---|---|
+| `foodflow-api` | `backend` | Other | `pnpm install --frozen-lockfile` | `pnpm prisma generate && pnpm build` | Vercel Functions via `backend/vercel.json` |
+| `foodflow-restaurant` | `web/apps/restaurant` | Next.js | `cd ../.. && pnpm install --frozen-lockfile` | `cd ../.. && pnpm --filter restaurant build` | `.next` |
+
 Required public env:
 
 | App | Variable |
 |---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 
 Before deployment, run the web preflight from the repo root. It checks the linked Admin project settings, required production env names, and the required separate Restaurant project env list without printing env values or deploying:
 
@@ -138,15 +149,17 @@ For POSIX shells with Node.js and Vercel CLI available:
 ./infra/scripts/vercel-web-preflight.sh
 ```
 
-Set `RESTAURANT_VERCEL_PROJECT_ID` before running the preflight once the Restaurant project exists.
+Override `API_VERCEL_PROJECT`, `ADMIN_VERCEL_PROJECT`, or `RESTAURANT_VERCEL_PROJECT` only if deploying to differently named projects.
 
-Both web apps intentionally fail closed in production when API, realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
+Both web apps intentionally fail closed in production when API, Supabase realtime, canonical app URL, or required map key env is missing. Localhost defaults are dev-only. Do not enable `FOODFLOW_ENABLE_DEV_API_REWRITE` in Vercel; it is only for local Restaurant dev proxying.
 
 Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` by HTTP referrer in Google Cloud.
 
+Vercel Hobby cron limitation: the committed API cron schedule is daily (`0 17 * * *`) so deployment does not fail on the current Hobby account. Time-sensitive job draining for dispatch retries/order timeouts needs Vercel Pro minute cron or another approved scheduler before production traffic relies on `QUEUE_PROVIDER=supabase-postgres`.
+
 ## Backend Deployment
 
-The backend can run via Docker, VPS, or a managed container platform.
+The Batch 4 production target is Vercel Functions for the API plus Supabase Postgres/Realtime/Storage. Docker remains the local/container fallback.
 
 Minimum production checklist:
 
@@ -155,7 +168,8 @@ Minimum production checklist:
 - Backend boot validation rejects missing production infra secrets and localhost defaults. Configure `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, 64+ character JWT secrets, `PASSWORD_RESET_URL_BASE`, exact `CORS_ORIGINS`, and MinIO/S3 values before starting the API or workers.
 - Configure CORS to exact production dashboard/mobile origins.
 - Configure SePay webhook URL and `SEPAY_WEBHOOK_SECRET`.
-- Configure Redis for Socket.IO/realtime and rate limiting.
+- Set `REALTIME_PROVIDER=supabase`, `STORAGE_PROVIDER=supabase`, and `QUEUE_PROVIDER=supabase-postgres` only after Supabase env values and the secure job drain secret are present.
+- Configure Redis for remaining production rate limiting/dedupe paths until they are explicitly replaced; Socket.IO is not required for production realtime when Supabase provider is enabled.
 - Keep `THROTTLER_MEMORY_FALLBACK=false` in production so Redis outages fail explicitly instead of weakening rate limits.
 - Configure object storage public URL for uploaded assets.
 - Expose `/api/healthz` for uptime checks.
