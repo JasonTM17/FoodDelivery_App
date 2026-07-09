@@ -127,6 +127,18 @@ describe('OrderStateMachine', () => {
     it('can transition to restaurant_pending', () => {
       expect(OrderStateMachine.canTransitionByRole('system', 'paid', 'restaurant_pending')).toBe(true)
     })
+    it('can auto-timeout restaurant_pending → cancelled', () => {
+      expect(OrderStateMachine.canTransitionByRole('system', 'restaurant_pending', 'cancelled')).toBe(true)
+    })
+    it('can cancel when no driver is found after restaurant accept', () => {
+      expect(OrderStateMachine.canTransitionByRole('system', 'restaurant_accepted', 'cancelled')).toBe(true)
+    })
+    it('can assign driver from restaurant_accepted', () => {
+      expect(OrderStateMachine.canTransitionByRole('system', 'restaurant_accepted', 'driver_assigned')).toBe(true)
+    })
+    it('can cancel unpaid pending payment', () => {
+      expect(OrderStateMachine.canTransitionByRole('system', 'pending_payment', 'cancelled')).toBe(true)
+    })
     it('can finalise delivered → completed', () => {
       expect(OrderStateMachine.canTransitionByRole('system', 'delivered', 'completed')).toBe(true)
     })

@@ -6,6 +6,7 @@ import { DriverScoringService } from './driver-scoring.service'
 import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
+import { OrdersService } from '../orders/orders.service'
 import { Prisma } from '@prisma/client'
 
 describe('DispatchService', () => {
@@ -64,6 +65,10 @@ describe('DispatchService', () => {
     $queryRaw: jest.fn(),
   }
 
+  const mockOrdersService = {
+    transition: jest.fn().mockResolvedValue({ id: 'order-1', status: 'cancelled' }),
+  }
+
   beforeEach(async () => {
     jest.clearAllMocks()
     mockRedis.pipeline.mockReturnValue(mockPipelineResult())
@@ -78,6 +83,7 @@ describe('DispatchService', () => {
         { provide: CooldownService, useValue: mockCooldown },
         { provide: SurgePricingService, useValue: mockSurge },
         { provide: DispatchMetrics, useValue: mockMetrics },
+        { provide: OrdersService, useValue: mockOrdersService },
       ],
     }).compile()
 
@@ -190,12 +196,26 @@ describe('DispatchService', () => {
   })
 
   describe('autoCancelOrder', () => {
-    it('calls $transaction and emits order:auto_cancelled event', async () => {
+    it('transitions via OrdersService and emits order:auto_cancelled event', async () => {
+      mockPrisma.order.findUnique.mockResolvedValueOnce({ id: 'order-1', status: 'restaurant_accepted' })
       await service.autoCancelOrder('order-1')
-      expect(mockPrisma.$transaction).toHaveBeenCalled()
+      expect(mockOrdersService.transition).toHaveBeenCalledWith(
+        'order-1',
+        'cancelled',
+        'system',
+        'system',
+        'no_driver_available',
+      )
       expect(mockGateway.broadcastToOrder).toHaveBeenCalledWith(
         'order-1', 'order:auto_cancelled', expect.objectContaining({ orderId: 'order-1' }),
       )
+    })
+
+    it('skips cancel when order already left dispatchable states', async () => {
+      mockPrisma.order.findUnique.mockResolvedValueOnce({ id: 'order-1', status: 'delivering' })
+      await service.autoCancelOrder('order-1')
+      expect(mockOrdersService.transition).not.toHaveBeenCalled()
+      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalled()
     })
   })
 
