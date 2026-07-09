@@ -1,5 +1,5 @@
 # backend/Dockerfile — Multi-stage (distroless runtime)
-FROM node:22-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
