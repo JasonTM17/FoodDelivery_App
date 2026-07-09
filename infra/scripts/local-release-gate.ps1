@@ -71,38 +71,7 @@ function Assert-CleanWorktree {
 }
 
 function Invoke-SecretScan {
-  $patterns = @(
-    'sk-[A-Za-z0-9_-]{20,}',
-    'AIza[0-9A-Za-z_-]{20,}',
-    '-----BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY-----',
-    'xox[baprs]-[0-9A-Za-z-]{10,}',
-    'ghp_[0-9A-Za-z]{36}',
-    'github_pat_[0-9A-Za-z_]{20,}',
-    'AKIA[0-9A-Z]{16}'
-  )
-
-  $hits = New-Object System.Collections.Generic.List[string]
-  foreach ($pattern in $patterns) {
-    $files = git -C $repoRoot grep -Il -E -e $pattern HEAD -- . ':!backend/node_modules' ':!web/node_modules' ':!mobile/build' ':!backend/coverage' 2>$null
-    if ($LASTEXITCODE -eq 0 -and $files) {
-      foreach ($file in $files) { $hits.Add($file) }
-    } elseif ($LASTEXITCODE -gt 1) {
-      throw "Secret scan failed while checking pattern $pattern"
-    }
-
-    $stagedFiles = git -C $repoRoot diff --cached --name-only "-G$pattern" 2>$null
-    if ($LASTEXITCODE -eq 0 -and $stagedFiles) {
-      foreach ($file in $stagedFiles) { $hits.Add("staged:$file") }
-    } elseif ($LASTEXITCODE -gt 1) {
-      throw "Staged secret scan failed while checking pattern $pattern"
-    }
-  }
-
-  $uniqueHits = $hits | Sort-Object -Unique
-  if ($uniqueHits) {
-    throw "Potential secret material found in: $($uniqueHits -join ', ')"
-  }
-  Write-Host 'High-confidence secret scan passed.'
+  Invoke-Native powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'secret-scan.ps1')
 }
 
 Invoke-Step 'Git hygiene and secret scan' $repoRoot {

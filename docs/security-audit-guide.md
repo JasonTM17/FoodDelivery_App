@@ -24,7 +24,13 @@ Languages: [English](./security-audit-guide.md) | [Tiếng Việt](./security-au
 ## Regular Audits
 
 - Run `pnpm audit` weekly for dependency vulnerabilities
-- Run a tracked-file secret scan before every PR and a staged-diff secret scan before every commit
+- Run a tracked-file and staged-diff secret scan before every PR/commit:
+
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\secret-scan.ps1
+  ```
+
+  The scanner reports only pattern class and file path; it does not print secret values.
 - Review admin audit logs monthly
 - Rotate JWT signing keys quarterly
 - Penetration test before major releases
