@@ -44,4 +44,13 @@ describe('analytics charts', () => {
     expect(screen.getAllByRole('meter', { name: 'charts.retentionCohortLabel' })).toHaveLength(2);
     expect(screen.queryByText('degraded.retentionTitle')).not.toBeInTheDocument();
   });
+
+  it('shows a retryable error instead of fake empty charts when the backend contract is malformed', async () => {
+    mockedApiGet.mockResolvedValueOnce({ orderStatus: [], topRestaurants: [] });
+
+    renderWithClient(<AnalyticsChartsClient />);
+
+    expect(await screen.findByText('errors.loadTitle')).toBeInTheDocument();
+    expect(screen.queryByText('empty.funnelTitle')).not.toBeInTheDocument();
+  });
 });

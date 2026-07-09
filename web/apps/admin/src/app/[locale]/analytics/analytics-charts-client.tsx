@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { apiGet } from '@/lib/api'
+import { parseAnalyticsCharts } from './analytics-contract'
 import { buildFunnel, formatCurrency, formatInteger, formatPercent, type AdminChartsData } from './analytics-chart-data'
 
 const dateLocaleTags: Record<string, string> = {
@@ -41,7 +42,7 @@ export default function AnalyticsChartsClient() {
 
   const { data, error, isError, isLoading, refetch } = useQuery<AdminChartsData>({
     queryKey: ['admin-analytics-charts', '30d'],
-    queryFn: () => apiGet<AdminChartsData>('/admin/charts', { params: { period: '30d' } }),
+    queryFn: async () => parseAnalyticsCharts(await apiGet<unknown>('/admin/charts', { params: { period: '30d' } })),
   })
 
   const isForbidden = (error as { status?: number } | null)?.status === 403
