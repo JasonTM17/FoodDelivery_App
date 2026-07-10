@@ -36,7 +36,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get passwordRequired => 'パスワードを入力してください';
 
   @override
-  String get passwordMinLength => 'パスワードは6文字以上必要です';
+  String get passwordMinLength => '8～72文字で英大文字・英小文字・数字を含めてください';
 
   @override
   String get forgotPassword => 'パスワードを忘れた方';
@@ -96,7 +96,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phoneInvalid => '無効な電話番号です';
 
   @override
-  String get passwordHintLong => 'パスワードを入力（6文字以上）';
+  String get passwordHintLong => '8～72文字、英大文字・英小文字・数字を含む';
 
   @override
   String get confirmPasswordLabel => 'パスワードの確認';
@@ -1301,6 +1301,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get referralShareCode => 'コードを共有';
+
+  @override
+  String get referralShareFailed => '共有シートを開けませんでした。もう一度お試しください。';
 
   @override
   String get referralShareSheetTitle => '紹介コードを共有';

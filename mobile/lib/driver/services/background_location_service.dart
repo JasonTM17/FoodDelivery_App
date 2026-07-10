@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../shared/api/socket_client.dart';
+import '../../shared/api/realtime_client.dart';
 
 /// Throttle interval while an active order is in-progress (battery-aggressive).
 const _kActiveInterval = Duration(seconds: 4);
@@ -57,7 +57,7 @@ class _LocationPing {
   });
 }
 
-/// Streams driver GPS to the backend via WebSocket + offline buffer.
+/// Streams driver GPS to the backend command transport with an offline buffer.
 ///
 /// Throttle strategy:
 /// - [_kActiveInterval] (4s) when [setActiveOrderMode] is called with `true`
@@ -67,7 +67,7 @@ class _LocationPing {
 /// reconnect so no location data is silently dropped.
 class BackgroundLocationService {
   BackgroundLocationService._({LocationPingEmitter? socket})
-    : _socket = socket ?? SocketClient.instance;
+    : _socket = socket ?? RealtimeClient.instance;
 
   @visibleForTesting
   BackgroundLocationService.forTesting({required LocationPingEmitter socket})
@@ -82,6 +82,7 @@ class BackgroundLocationService {
   Timer? _bufferFlushTimer;
   bool _running = false;
   bool _hasActiveOrder = false;
+  bool _isFlushing = false;
   DateTime? _lastEmit;
   Position? _lastPosition;
   final LocationPingEmitter _socket;
@@ -142,7 +143,7 @@ class BackgroundLocationService {
     // Flush any offline-buffered pings every 15s when back online.
     _bufferFlushTimer = Timer.periodic(
       const Duration(seconds: 15),
-      (_) => _flushBuffer(),
+      (_) => unawaited(_flushBuffer()),
     );
   }
 
@@ -180,7 +181,10 @@ class BackgroundLocationService {
     _idleFlushTimer?.cancel();
     if (!_hasActiveOrder) {
       // Heartbeat so the server knows the driver is still online.
-      _idleFlushTimer = Timer.periodic(_kIdleInterval, (_) => _emitLastKnown());
+      _idleFlushTimer = Timer.periodic(
+        _kIdleInterval,
+        (_) => unawaited(_emitLastKnown()),
+      );
     }
   }
 
@@ -194,19 +198,21 @@ class BackgroundLocationService {
     final throttle = _hasActiveOrder ? _kActiveInterval : _kIdleInterval;
     if (_lastEmit != null && now.difference(_lastEmit!) < throttle) return;
     _lastEmit = now;
-    _emitPosition(
-      pos.latitude,
-      pos.longitude,
-      pos.timestamp,
-      bearing: normalizeGpsBearingDegrees(pos.heading),
-      speed: normalizeGpsSpeedKmh(pos.speed),
-      accuracy: normalizeGpsAccuracyMeters(pos.accuracy),
+    unawaited(
+      _emitPosition(
+        pos.latitude,
+        pos.longitude,
+        pos.timestamp,
+        bearing: normalizeGpsBearingDegrees(pos.heading),
+        speed: normalizeGpsSpeedKmh(pos.speed),
+        accuracy: normalizeGpsAccuracyMeters(pos.accuracy),
+      ),
     );
   }
 
-  void _emitLastKnown() {
+  Future<void> _emitLastKnown() async {
     if (_lastPosition == null) return;
-    _emitPosition(
+    await _emitPosition(
       _lastPosition!.latitude,
       _lastPosition!.longitude,
       _lastPosition!.timestamp,
@@ -216,34 +222,43 @@ class BackgroundLocationService {
     );
   }
 
-  void _emitPosition(
+  Future<void> _emitPosition(
     double lat,
     double lng,
     DateTime ts, {
     double? bearing,
     double? speed,
     double? accuracy,
-  }) {
+  }) async {
     final now = DateTime.now();
     if (!_isLiveReplaySafe(ts, now)) return;
 
     if (_socket.isConnected) {
-      _flushBuffer();
-      _socket.emitLocationPing(
-        lat,
-        lng,
-        bearing: bearing,
-        speed: speed,
-        accuracy: accuracy,
-        timestamp: ts,
-      );
-    } else {
-      _dropStaleBufferedPings(now);
-      // Buffer so pings survive brief disconnects.
-      if (_offlineBuffer.length >= _kMaxBuffer) {
-        _offlineBuffer.removeFirst(); // drop oldest
+      await _flushBuffer();
+      try {
+        await _socket.emitLocationPing(
+          lat,
+          lng,
+          bearing: bearing,
+          speed: speed,
+          accuracy: accuracy,
+          timestamp: ts,
+        );
+      } catch (_) {
+        _bufferPing(
+          _LocationPing(
+            lat,
+            lng,
+            ts,
+            bearing: bearing,
+            speed: speed,
+            accuracy: accuracy,
+          ),
+          now,
+        );
       }
-      _offlineBuffer.addLast(
+    } else {
+      _bufferPing(
         _LocationPing(
           lat,
           lng,
@@ -252,28 +267,48 @@ class BackgroundLocationService {
           speed: speed,
           accuracy: accuracy,
         ),
+        now,
       );
     }
   }
 
-  void _flushBuffer() {
+  Future<void> _flushBuffer() async {
     if (_offlineBuffer.isEmpty) return;
     if (!_socket.isConnected) return;
+    if (_isFlushing) return;
+    _isFlushing = true;
     final now = DateTime.now();
-    _dropStaleBufferedPings(now);
-    while (_offlineBuffer.isNotEmpty) {
-      final ping = _offlineBuffer.removeFirst();
-      if (!_isLiveReplaySafe(ping.timestamp, now)) continue;
-      _socket.emitLocationPing(
-        ping.lat,
-        ping.lng,
-        bearing: ping.bearing,
-        speed: ping.speed,
-        accuracy: ping.accuracy,
-        timestamp: ping.timestamp,
-        bypassThrottle: true,
-      );
+    try {
+      _dropStaleBufferedPings(now);
+      while (_offlineBuffer.isNotEmpty && _socket.isConnected) {
+        final ping = _offlineBuffer.removeFirst();
+        if (!_isLiveReplaySafe(ping.timestamp, now)) continue;
+        try {
+          await _socket.emitLocationPing(
+            ping.lat,
+            ping.lng,
+            bearing: ping.bearing,
+            speed: ping.speed,
+            accuracy: ping.accuracy,
+            timestamp: ping.timestamp,
+            bypassThrottle: true,
+          );
+        } catch (_) {
+          _offlineBuffer.addFirst(ping);
+          break;
+        }
+      }
+    } finally {
+      _isFlushing = false;
     }
+  }
+
+  void _bufferPing(_LocationPing ping, DateTime now) {
+    _dropStaleBufferedPings(now);
+    if (_offlineBuffer.length >= _kMaxBuffer) {
+      _offlineBuffer.removeFirst();
+    }
+    _offlineBuffer.addLast(ping);
   }
 
   void _dropStaleBufferedPings(DateTime now) {
@@ -291,7 +326,7 @@ class BackgroundLocationService {
   }
 
   @visibleForTesting
-  void bufferLocationPingForTesting(
+  Future<void> bufferLocationPingForTesting(
     double lat,
     double lng, {
     required DateTime timestamp,
@@ -299,7 +334,7 @@ class BackgroundLocationService {
     double? speed,
     double? accuracy,
   }) {
-    _emitPosition(
+    return _emitPosition(
       lat,
       lng,
       timestamp,
@@ -310,7 +345,5 @@ class BackgroundLocationService {
   }
 
   @visibleForTesting
-  void flushBufferForTesting() {
-    _flushBuffer();
-  }
+  Future<void> flushBufferForTesting() => _flushBuffer();
 }

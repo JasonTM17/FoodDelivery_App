@@ -11,7 +11,6 @@ import 'screens/earnings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/delivery_history_screen.dart';
 import 'screens/delivery_flow_screen.dart';
-import 'screens/register_screen.dart';
 import 'screens/kyc_verification_screen.dart';
 import 'screens/pickup_confirmation_screen.dart';
 import 'screens/delivery_complete_screen.dart';
@@ -45,7 +44,6 @@ final _router = GoRouter(
       path: '/delivery-flow',
       builder: (_, __) => const DeliveryFlowScreen(),
     ),
-    GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
     GoRoute(path: '/kyc', builder: (_, __) => const KycVerificationScreen()),
     GoRoute(
       path: '/pickup-confirmation',

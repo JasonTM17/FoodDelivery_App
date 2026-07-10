@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
+import 'realtime_transport.dart';
 
 Map<String, dynamic> buildDriverLocationPingPayload(
   double lat,
@@ -22,20 +23,6 @@ Map<String, dynamic> buildDriverLocationPingPayload(
   };
 }
 
-abstract interface class LocationPingEmitter {
-  bool get isConnected;
-
-  void emitLocationPing(
-    double lat,
-    double lng, {
-    double? bearing,
-    double? speed,
-    double? accuracy,
-    required DateTime timestamp,
-    bool bypassThrottle = false,
-  });
-}
-
 class _BufferedEvent {
   final String namespace;
   final String name;
@@ -43,7 +30,7 @@ class _BufferedEvent {
   const _BufferedEvent(this.namespace, this.name, this.data);
 }
 
-class SocketClient implements LocationPingEmitter {
+class SocketClient implements RealtimeTransport, LocationPingEmitter {
   static SocketClient? _instance;
   final _sockets = <String, io.Socket>{};
   final _connectedNamespaces = <String>{};
@@ -201,12 +188,12 @@ class SocketClient implements LocationPingEmitter {
 
   // Call after a successful token refresh triggered by onAuthRefreshRequired.
   Future<void> reconnectWithToken(String newToken) async {
-    disconnect();
+    await disconnect();
     await _storage.write(key: 'auth_token', value: newToken);
     await connect();
   }
 
-  void disconnect() {
+  Future<void> disconnect() async {
     for (final socket in _sockets.values) {
       socket.disconnect();
     }
@@ -214,20 +201,20 @@ class SocketClient implements LocationPingEmitter {
     _connectedNamespaces.clear();
   }
 
-  void subscribeOrder(String orderId) {
+  Future<void> subscribeOrder(String orderId) async {
     final payload = {'orderId': orderId};
     _emitToNamespace(_eventsNamespace, 'order:subscribe', payload);
     _emitToNamespace(_trackingNamespace, 'order:subscribe', payload);
   }
 
-  void unsubscribeOrder(String orderId) {
+  Future<void> unsubscribeOrder(String orderId) async {
     final payload = {'orderId': orderId};
     _emitToNamespace(_eventsNamespace, 'order:unsubscribe', payload);
     _emitToNamespace(_trackingNamespace, 'order:unsubscribe', payload);
   }
 
   // Throttled to one ping per 250 ms — for driver location updates.
-  void emitLocationPing(
+  Future<void> emitLocationPing(
     double lat,
     double lng, {
     double? bearing,
@@ -235,7 +222,7 @@ class SocketClient implements LocationPingEmitter {
     double? accuracy,
     required DateTime timestamp,
     bool bypassThrottle = false,
-  }) {
+  }) async {
     final now = DateTime.now();
     if (!bypassThrottle &&
         _lastLocationEmit != null &&
@@ -265,11 +252,11 @@ class SocketClient implements LocationPingEmitter {
     _lastLocationEmit = null;
   }
 
-  void respondToDispatchOffer({
+  Future<void> respondToDispatchOffer({
     required String orderId,
     required String offerToken,
     required bool accepted,
-  }) {
+  }) async {
     _emitToNamespace(
       _dispatchNamespace,
       accepted ? 'dispatch:accept' : 'dispatch:reject',
@@ -325,7 +312,7 @@ class SocketClient implements LocationPingEmitter {
     _notificationController.close();
     _driverOfferController.close();
     _driverOrderAssignedController.close();
-    disconnect();
+    unawaited(disconnect());
     _instance = null;
   }
 }

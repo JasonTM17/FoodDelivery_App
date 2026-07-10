@@ -194,24 +194,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Register link
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/register');
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                    ),
-                    child: const Text(
-                      'Đăng ký tài xế',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

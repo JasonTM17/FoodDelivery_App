@@ -36,7 +36,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Please enter your password';
 
   @override
-  String get passwordMinLength => 'Password must be at least 6 characters';
+  String get passwordMinLength =>
+      'Use 8–72 characters with uppercase, lowercase, and a number';
 
   @override
   String get forgotPassword => 'Forgot password?';
@@ -97,7 +98,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneInvalid => 'Invalid phone number';
 
   @override
-  String get passwordHintLong => 'Enter password (at least 6 characters)';
+  String get passwordHintLong =>
+      '8–72 characters with uppercase, lowercase, and a number';
 
   @override
   String get confirmPasswordLabel => 'Confirm password';
@@ -1330,6 +1332,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralShareCode => 'Share Code';
+
+  @override
+  String get referralShareFailed =>
+      'Could not open the share sheet. Please try again.';
 
   @override
   String get referralShareSheetTitle => 'Share referral code';

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../shared/api/api_client.dart';
-import '../../shared/api/socket_client.dart';
+import '../../shared/api/realtime_client.dart';
 import '../../shared/models/order.dart';
 import '../../shared/services/secure_storage_service.dart';
 import '../services/background_location_service.dart';
@@ -313,7 +313,7 @@ final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((
 
 class DriverNotifier extends StateNotifier<DriverState> {
   final ApiClient _api = ApiClient.instance;
-  final SocketClient _socket = SocketClient.instance;
+  final RealtimeClient _realtime = RealtimeClient.instance;
   final SecureStorageService _storage = SecureStorageService.instance;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
@@ -459,14 +459,21 @@ class DriverNotifier extends StateNotifier<DriverState> {
           'sampledAt': sample.toUtc().toIso8601String(),
         },
       );
+      await startDispatchOfferListener();
       state = state.copyWith(isLoading: false, isOnline: true);
       _startLocationUpdates(lat, lng, sampledAt: sample);
     } on DioException catch (e) {
+      try {
+        await _api.post('/driver/offline');
+      } catch (_) {}
       final msg =
           e.response?.data?['message'] as String? ??
           'Không thể chuyển sang trực tuyến';
       state = state.copyWith(isLoading: false, error: msg);
     } catch (e) {
+      try {
+        await _api.post('/driver/offline');
+      } catch (_) {}
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
     }
   }
@@ -522,7 +529,6 @@ class DriverNotifier extends StateNotifier<DriverState> {
         currentLng: lng,
       );
       await goOnline(lat, lng, sampledAt: sampledAt);
-      startDispatchOfferListener();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -538,7 +544,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   void _startLocationUpdates(double lat, double lng, {DateTime? sampledAt}) {
     // Emit the initial known position only when it came from a real GPS sample.
     if (sampledAt != null) {
-      _socket.emitLocationPing(lat, lng, timestamp: sampledAt);
+      unawaited(_realtime.emitLocationPing(lat, lng, timestamp: sampledAt));
     }
     BackgroundLocationService.instance.start(
       hasActiveOrder: state.activeOrder != null,
@@ -552,7 +558,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   void updateLocation(double lat, double lng, {DateTime? sampledAt}) {
     state = state.copyWith(currentLat: lat, currentLng: lng);
     if (state.isOnline && sampledAt != null) {
-      _socket.emitLocationPing(lat, lng, timestamp: sampledAt);
+      unawaited(_realtime.emitLocationPing(lat, lng, timestamp: sampledAt));
     }
   }
 
@@ -560,22 +566,39 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Orders
   // -----------------------------------------------------------------------
 
-  void acceptOrder(DispatchOffer offer) {
+  Future<void> acceptOrder(DispatchOffer offer) async {
     state = state.copyWith(isLoading: true, error: null).withOfferCleared();
-    _socket.respondToDispatchOffer(
-      orderId: offer.orderId,
-      offerToken: offer.offerToken,
-      accepted: true,
-    );
+    try {
+      await _realtime.respondToDispatchOffer(
+        orderId: offer.orderId,
+        offerToken: offer.offerToken,
+        accepted: true,
+      );
+      await fetchActiveOrder();
+      state = state.copyWith(isLoading: false);
+    } on DioException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'DISPATCH_OFFER_RESPONSE_FAILED',
+        pendingOffer: offer,
+      );
+    }
   }
 
-  void declineOrder(DispatchOffer offer) {
-    _socket.respondToDispatchOffer(
-      orderId: offer.orderId,
-      offerToken: offer.offerToken,
-      accepted: false,
-    );
+  Future<void> declineOrder(DispatchOffer offer) async {
     state = state.withOfferCleared();
+    try {
+      await _realtime.respondToDispatchOffer(
+        orderId: offer.orderId,
+        offerToken: offer.offerToken,
+        accepted: false,
+      );
+    } on DioException {
+      state = state.copyWith(
+        error: 'DISPATCH_OFFER_RESPONSE_FAILED',
+        pendingOffer: offer,
+      );
+    }
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
@@ -651,7 +674,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
           response.data as Map<String, dynamic>,
         );
         state = state.copyWith(activeOrder: order);
-        _listenOrderStatus(order.id);
+        await _listenOrderStatus(order.id);
         BackgroundLocationService.instance.setActiveOrderMode(true);
       } else {
         _orderStatusSub?.cancel();
@@ -703,13 +726,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // WebSocket
   // -----------------------------------------------------------------------
 
-  void _listenOrderStatus(String orderId) {
+  Future<void> _listenOrderStatus(String orderId) async {
     _orderStatusSub?.cancel();
     _etaSub?.cancel();
-    _socket.connect();
-    _socket.subscribeOrder(orderId);
+    await _realtime.connect();
+    await _realtime.subscribeOrder(orderId);
 
-    _orderStatusSub = _socket.onOrderStatus.listen((data) async {
+    _orderStatusSub = _realtime.onOrderStatus.listen((data) async {
       final id = data['orderId'] as String? ?? data['order_id'] as String?;
       final status = data['status'] as String?;
       if (id == orderId && status != null && state.activeOrder?.id == id) {
@@ -726,7 +749,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
       }
     });
 
-    _etaSub = _socket.onEtaUpdate.listen((data) {
+    _etaSub = _realtime.onEtaUpdate.listen((data) {
       if (data['orderId'] != orderId || state.activeOrder?.id != orderId) {
         return;
       }
@@ -754,13 +777,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Dispatch Offers
   // -----------------------------------------------------------------------
 
-  /// Subscribe to incoming delivery offers via WebSocket.
+  /// Subscribe to incoming delivery offers through the configured realtime provider.
   /// Call after going online so the driver receives real-time offer events.
-  void startDispatchOfferListener() {
+  Future<void> startDispatchOfferListener() async {
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
-    _socket.connect();
-    _offerSub = _socket.onDriverOffer.listen((data) {
+    await _realtime.connect();
+    _offerSub = _realtime.onDriverOffer.listen((data) {
       try {
         final offer = DispatchOffer.fromJson(data);
         state = state.copyWith(pendingOffer: offer);
@@ -768,7 +791,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         state = state.copyWith(error: 'DISPATCH_OFFER_INVALID');
       }
     });
-    _assignedOrderSub = _socket.onDriverOrderAssigned.listen((data) async {
+    _assignedOrderSub = _realtime.onDriverOrderAssigned.listen((data) async {
       if (data['orderId'] is! String) return;
       await fetchActiveOrder();
       state = state.copyWith(isLoading: false);

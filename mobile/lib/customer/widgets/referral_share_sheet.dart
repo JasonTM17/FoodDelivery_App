@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -71,25 +73,53 @@ class ReferralShareSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildShareButton(
-                  context,
-                  Icons.copy,
-                  l10n.referralCopyCode,
-                  () {
-                    Clipboard.setData(ClipboardData(text: referralCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.referralCodeCopied),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  },
-                ),
+                _buildShareButton(context, Icons.copy, l10n.referralCopyCode, (
+                  _,
+                ) async {
+                  await Clipboard.setData(ClipboardData(text: referralCode));
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.referralCodeCopied),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }),
                 _buildShareButton(
                   context,
                   Icons.share,
                   l10n.referralShareCode,
-                  () => Share.share(shareMessage),
+                  (buttonContext) async {
+                    final renderObject = buttonContext.findRenderObject();
+                    final viewport = MediaQuery.sizeOf(buttonContext);
+                    final shareOrigin =
+                        renderObject is RenderBox &&
+                            renderObject.hasSize &&
+                            !renderObject.size.isEmpty
+                        ? renderObject.localToGlobal(Offset.zero) &
+                              renderObject.size
+                        : Rect.fromCenter(
+                            center: Offset(
+                              viewport.width / 2,
+                              viewport.height / 2,
+                            ),
+                            width: 1,
+                            height: 1,
+                          );
+                    try {
+                      await SharePlus.instance.share(
+                        ShareParams(
+                          text: shareMessage,
+                          sharePositionOrigin: shareOrigin,
+                        ),
+                      );
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.referralShareFailed)),
+                      );
+                    }
+                  },
                 ),
               ],
             ),
@@ -104,24 +134,31 @@ class ReferralShareSheet extends StatelessWidget {
     BuildContext context,
     IconData icon,
     String label,
-    VoidCallback onTap,
+    Future<void> Function(BuildContext buttonContext) onTap,
   ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: AppColors.primary, size: 24),
+    return Builder(
+      builder: (buttonContext) => Semantics(
+        button: true,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => unawaited(onTap(buttonContext)),
+          child: Column(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(height: 8),
+              Text(label, style: AppTextStyles.caption),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(label, style: AppTextStyles.caption),
-        ],
+        ),
       ),
     );
   }

@@ -178,9 +178,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return l10n.passwordRequired;
                     }
-                    if (value.length < 6) {
-                      return l10n.passwordMinLength;
-                    }
                     return null;
                   },
                 ),
@@ -253,18 +250,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-
-                TextButton(
-                  onPressed: () => context.push(Routes.registerDriver),
-                  child: Text(
-                    l10n.registerAsDriver,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ),
               ],
             ),

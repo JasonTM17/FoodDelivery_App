@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import '../api/api_client.dart';
+import '../api/realtime_client.dart';
 import '../models/user.dart';
+import '../utils/auth_validation.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
@@ -43,6 +45,7 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   final ApiClient _api = ApiClient.instance;
+  final RealtimeClient _realtime = RealtimeClient.instance;
 
   AuthNotifier() : super(const AuthState());
 
@@ -60,8 +63,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
             user: user,
             isInitialized: true,
           );
+          await _connectRealtime();
           return;
         } catch (e) {
+          await _realtime.disconnect();
           await _storage.delete(key: 'auth_token');
           await _storage.delete(key: 'refresh_token');
         }
@@ -99,6 +104,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       state = AuthState(isAuthenticated: true, user: user, isInitialized: true);
+      await _connectRealtime();
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ??
@@ -118,7 +124,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String email,
     required String phone,
     required String password,
-    String role = 'customer',
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -127,9 +132,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         data: {
           'fullName': fullName,
           'email': email,
-          'phone': phone,
+          'phone': normalizePhoneForApi(phone),
           'password': password,
-          'role': role,
         },
       );
       final data = response.data as Map<String, dynamic>;
@@ -154,6 +158,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: user,
         isInitialized: true,
       );
+      if (accessToken.isNotEmpty) await _connectRealtime();
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ??
@@ -174,6 +179,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {
       // Ignore logout API errors
     }
+    await _realtime.disconnect();
     await _storage.delete(key: 'auth_token');
     await _storage.delete(key: 'refresh_token');
     state = const AuthState(isInitialized: true);
@@ -192,5 +198,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  Future<void> _connectRealtime() async {
+    try {
+      await _realtime.connect();
+    } catch (_) {
+      state = state.copyWith(error: 'REALTIME_UNAVAILABLE');
+    }
   }
 }

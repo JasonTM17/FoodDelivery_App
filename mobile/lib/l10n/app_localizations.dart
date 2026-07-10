@@ -157,7 +157,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordMinLength.
   ///
   /// In vi, this message translates to:
-  /// **'Mật khẩu phải có ít nhất 6 ký tự'**
+  /// **'Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số'**
   String get passwordMinLength;
 
   /// No description provided for @forgotPassword.
@@ -277,7 +277,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordHintLong.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập mật khẩu (ít nhất 6 ký tự)'**
+  /// **'8–72 ký tự, gồm chữ hoa, chữ thường và số'**
   String get passwordHintLong;
 
   /// No description provided for @confirmPasswordLabel.
@@ -2613,6 +2613,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chia sẻ mã'**
   String get referralShareCode;
+
+  /// No description provided for @referralShareFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở bảng chia sẻ. Vui lòng thử lại.'**
+  String get referralShareFailed;
 
   /// No description provided for @referralShareSheetTitle.
   ///

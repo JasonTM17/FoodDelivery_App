@@ -32,7 +32,7 @@ class _FakeDriverNotifier extends DriverNotifier {
   Future<void> fetchActiveOrder() async {}
 
   @override
-  void startDispatchOfferListener() {}
+  Future<void> startDispatchOfferListener() async {}
 
   @override
   Future<void> goOnlineWithGps() async {}

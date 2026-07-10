@@ -59,10 +59,6 @@ final appRouter = GoRouter(
       builder: (context, state) => const RegisterScreen(),
     ),
     GoRoute(
-      path: '/register-driver',
-      builder: (context, state) => const RegisterScreen(initialRole: 'driver'),
-    ),
-    GoRoute(
       path: '/home',
       name: 'home',
       builder: (context, state) => const HomeScreen(),

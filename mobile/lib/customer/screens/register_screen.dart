@@ -5,12 +5,11 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/auth_validation.dart';
 import '../router/route_names.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  final String initialRole;
-
-  const RegisterScreen({super.key, this.initialRole = 'customer'});
+  const RegisterScreen({super.key});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -23,16 +22,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _selectedRole = 'customer';
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedRole = widget.initialRole;
-  }
 
   @override
   void dispose() {
@@ -56,7 +48,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
           password: _passwordController.text,
-          role: _selectedRole,
         );
 
     if (!mounted) return;
@@ -196,7 +187,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.phoneRequired;
                     }
-                    if (value.trim().length < 10) {
+                    if (!isValidApiPhone(value)) {
                       return l10n.phoneInvalid;
                     }
                     return null;
@@ -225,7 +216,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return l10n.passwordRequired;
                     }
-                    if (value.length < 6) {
+                    if (!isValidRegistrationPassword(value)) {
                       return l10n.passwordMinLength;
                     }
                     return null;
@@ -264,24 +255,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 Text(l10n.registerAs, style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildRoleCard(
-                        icon: Icons.person,
-                        label: l10n.roleCustomer,
-                        value: 'customer',
-                      ),
+                Semantics(
+                  label: '${l10n.registerAs}: ${l10n.roleCustomer}',
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildRoleCard(
-                        icon: Icons.delivery_dining,
-                        label: l10n.roleDriver,
-                        value: 'driver',
-                      ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.roleCustomer,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.lock_outline,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 28),
 
@@ -328,46 +335,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleCard({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    final isSelected = _selectedRole == value;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedRole = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isSelected ? AppColors.primary : AppColors.textHint,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              ),
-            ),
-          ],
         ),
       ),
     );

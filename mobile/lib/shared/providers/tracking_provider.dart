@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
-import '../api/socket_client.dart';
+import '../api/realtime_client.dart';
 import '../maps/lat_lng_validation.dart';
 import '../utils/backend_date_time.dart';
 import 'order_provider.dart';
@@ -154,7 +154,7 @@ TrackingResponse parseTrackingSnapshotPayload(Object? data, String orderId) {
 class TrackingNotifier extends StateNotifier<TrackingState> {
   final OrderNotifier _orderNotifier;
   final ApiClient _api;
-  final SocketClient _socketClient;
+  final RealtimeClient _realtimeClient;
   StreamSubscription<Map<String, dynamic>>? _locationSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _statusSub;
@@ -162,9 +162,9 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   TrackingNotifier(
     this._orderNotifier, {
     ApiClient? apiClient,
-    SocketClient? socketClient,
+    RealtimeClient? realtimeClient,
   }) : _api = apiClient ?? ApiClient.instance,
-       _socketClient = socketClient ?? SocketClient.instance,
+       _realtimeClient = realtimeClient ?? RealtimeClient.instance,
        super(const TrackingState());
 
   Future<void> startTracking(String orderId) async {
@@ -174,12 +174,12 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = TrackingState(currentOrderId: orderId);
 
     await _loadTrackingSnapshot(orderId);
-    await _socketClient.connect();
+    await _realtimeClient.connect();
 
-    _socketClient.subscribeOrder(orderId);
-    state = state.copyWith(isConnected: _socketClient.isConnected);
+    await _realtimeClient.subscribeOrder(orderId);
+    state = state.copyWith(isConnected: _realtimeClient.isConnected);
 
-    _locationSub = _socketClient.onDriverLocation.listen((data) {
+    _locationSub = _realtimeClient.onDriverLocation.listen((data) {
       final lat =
           (data['lat'] as num?)?.toDouble() ??
           (data['latitude'] as num?)?.toDouble();
@@ -206,7 +206,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       }
     });
 
-    _etaSub = _socketClient.onEtaUpdate.listen((data) {
+    _etaSub = _realtimeClient.onEtaUpdate.listen((data) {
       if (data['orderId'] != orderId) return;
       final eta = (data['etaMinutes'] as num?)?.toInt();
       state = state.copyWith(
@@ -219,7 +219,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       );
     });
 
-    _statusSub = _socketClient.onOrderStatus.listen((data) {
+    _statusSub = _realtimeClient.onOrderStatus.listen((data) {
       if (data['orderId'] != null && data['orderId'] != orderId) return;
       final status = data['status'] as String?;
       if (status != null) {
@@ -235,7 +235,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   void stopTracking() {
     final orderId = state.currentOrderId;
     if (orderId != null) {
-      _socketClient.unsubscribeOrder(orderId);
+      unawaited(_realtimeClient.unsubscribeOrder(orderId));
     }
     _locationSub?.cancel();
     _etaSub?.cancel();
@@ -249,7 +249,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _etaSub?.cancel();
     _statusSub?.cancel();
     if (state.currentOrderId != null) {
-      _socketClient.unsubscribeOrder(state.currentOrderId!);
+      unawaited(_realtimeClient.unsubscribeOrder(state.currentOrderId!));
     }
     super.dispose();
   }
