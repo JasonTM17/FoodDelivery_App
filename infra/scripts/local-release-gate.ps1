@@ -137,10 +137,12 @@ if (-not $SkipDockerConfig) {
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.local.yml config --quiet
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.e2e.yml config --quiet
   } @{
+    IMAGE_TAG = 'sha-compose-config'
     POSTGRES_PASSWORD = 'compose-config-placeholder'
     REDIS_PASSWORD = 'compose-config-placeholder'
     JWT_SECRET = 'compose-config-only-jwt-secret-32-chars'
     JWT_REFRESH_SECRET = 'compose-config-only-refresh-secret-32-chars'
+    CORS_ORIGINS = 'https://admin.foodflow.test,https://restaurant.foodflow.test'
     PASSWORD_RESET_URL_BASE = 'https://admin.foodflow.test/reset-password'
     MINIO_ROOT_USER = 'compose-config-user'
     MINIO_ROOT_PASSWORD = 'compose-config-password'

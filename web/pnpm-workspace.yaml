@@ -2,6 +2,20 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# Keep local development native packages while also baking both production
+# Linux/glibc architectures into the shared standalone Next.js artifact.
+supportedArchitectures:
+  os:
+    - current
+    - linux
+  cpu:
+    - current
+    - x64
+    - arm64
+  libc:
+    - current
+    - glibc
+
 overrides:
   glob@10.3.10: 10.5.0
   js-yaml@4.1.1: 4.2.0

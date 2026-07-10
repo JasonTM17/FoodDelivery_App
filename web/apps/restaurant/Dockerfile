@@ -1,15 +1,15 @@
 # web/apps/restaurant/Dockerfile — Multi-stage Next.js standalone runtime
-FROM node:22-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf AS deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.11.0 --activate
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/restaurant/package.json ./apps/restaurant/
 COPY packages ./packages
 RUN pnpm install --frozen-lockfile
 
-FROM node:22-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.11.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
@@ -34,11 +34,11 @@ ENV NEXT_PUBLIC_RESTAURANT_URL=$NEXT_PUBLIC_RESTAURANT_URL
 ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_KEY
 RUN pnpm --filter restaurant build
 
-FROM gcr.io/distroless/nodejs22-debian12 AS runner
+FROM gcr.io/distroless/nodejs22-debian13@sha256:39d204f9061e310d3e090edd185f48b1e9f70ef4771819a555ed716ccb42d229 AS runner
 WORKDIR /app
 
 ARG BUILD_SHA
-LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
+LABEL org.opencontainers.image.source="https://github.com/JasonTM17/FoodDelivery_App"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA
 LABEL org.opencontainers.image.title="foodflow-restaurant"

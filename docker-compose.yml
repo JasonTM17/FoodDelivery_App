@@ -57,6 +57,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: migrator
+      args:
+        BUILD_SHA: ${BUILD_SHA:-local}
     container_name: foodflow-migrate
     restart: "no"
     environment:
@@ -70,6 +72,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        BUILD_SHA: ${BUILD_SHA:-local}
     container_name: foodflow-backend
     restart: unless-stopped
     ports:
@@ -115,6 +119,7 @@ services:
       context: ./web
       dockerfile: apps/admin/Dockerfile
       args:
+        BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
@@ -146,6 +151,7 @@ services:
       context: ./web
       dockerfile: apps/restaurant/Dockerfile
       args:
+        BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
