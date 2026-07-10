@@ -20,6 +20,8 @@
     "emailPlaceholder": "nhahang@email.com",
     "loginButton": "Đăng nhập",
     "loggingIn": "Đang đăng nhập...",
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
     "restaurantOnly": "Bảng điều khiển này chỉ dành cho tài khoản nhà hàng."
   },
   "sidebar": {

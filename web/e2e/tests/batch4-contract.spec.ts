@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { API_URL, TEST_USERS } from '../fixtures/test-users';
+import { API_URL, restaurantUrl, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
 import { gotoAdminRoute, loginRestaurantApp } from '../fixtures/ui-auth';
 
@@ -66,6 +66,82 @@ async function expectNoSeriousOrCriticalAxeViolations(page: Page): Promise<void>
   );
   expect(summary).toEqual([]);
 }
+
+const restaurantLoginLocales = [
+  {
+    locale: 'vi',
+    heading: 'Quản lý nhà hàng',
+    password: 'Mật khẩu',
+    submit: 'Đăng nhập',
+    showPassword: 'Hiện mật khẩu',
+    title: 'Đăng nhập | FoodFlow Nhà hàng',
+    conflictingCookie: 'en',
+  },
+  {
+    locale: 'en',
+    heading: 'Restaurant Manager',
+    password: 'Password',
+    submit: 'Sign In',
+    showPassword: 'Show password',
+    title: 'Sign In | FoodFlow Restaurant',
+    conflictingCookie: 'vi',
+  },
+  {
+    locale: 'ja',
+    heading: 'レストラン管理',
+    password: 'パスワード',
+    submit: 'ログイン',
+    showPassword: 'パスワードを表示',
+    title: 'ログイン | FoodFlow レストラン',
+    conflictingCookie: 'vi',
+  },
+] as const;
+
+async function expectRestaurantLoginLocale(
+  page: Page,
+  expected: (typeof restaurantLoginLocales)[number],
+): Promise<void> {
+  await expect(page.locator('html')).toHaveAttribute('lang', expected.locale);
+  await expect(page).toHaveTitle(expected.title);
+  await expect(page.getByRole('heading', { name: expected.heading, exact: true })).toBeVisible();
+  await expect(page.getByLabel(expected.password, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: expected.showPassword, exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: expected.submit, exact: true })).toBeVisible();
+}
+
+test.describe('Batch 4 public locale contracts', () => {
+  for (const expected of restaurantLoginLocales) {
+    test(`restaurant login honors /${expected.locale} in a fresh browser context`, async ({ page }) => {
+      const pageErrors: string[] = [];
+      const consoleErrors: string[] = [];
+
+      page.on('pageerror', (error) => pageErrors.push(error.message));
+      page.on('console', (message) => {
+        if (message.type() === 'error') consoleErrors.push(message.text());
+      });
+
+      const loginUrl = restaurantUrl('/login', expected.locale);
+      const response = await page.goto(loginUrl);
+      expect(response?.status(), 'Restaurant login must not resolve to a 404 shell').toBeLessThan(400);
+      await expectRestaurantLoginLocale(page, expected);
+
+      await page.context().addCookies([{
+        name: 'NEXT_LOCALE',
+        value: expected.conflictingCookie,
+        url: new URL(loginUrl).origin,
+      }]);
+      const conflictingCookieResponse = await page.reload();
+      expect(conflictingCookieResponse?.status(), 'A stale locale cookie must not break the URL locale')
+        .toBeLessThan(400);
+      await expectRestaurantLoginLocale(page, expected);
+
+      await focusFirstVisibleAppControl(page);
+      await expectNoSeriousOrCriticalAxeViolations(page);
+      expect(pageErrors).toEqual([]);
+      expect(consoleErrors).toEqual([]);
+    });
+  }
+});
 
 test.describe('Batch 4 API contracts', () => {
   test('AI chatbot is protected and follows the configured-provider contract', async ({ request }) => {

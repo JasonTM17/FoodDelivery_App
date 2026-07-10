@@ -20,6 +20,8 @@
     "emailPlaceholder": "restaurant@email.com",
     "loginButton": "Sign In",
     "loggingIn": "Signing in...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "restaurantOnly": "This dashboard is available to restaurant accounts only."
   },
   "sidebar": {

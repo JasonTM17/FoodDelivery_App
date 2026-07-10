@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { RootLayoutClient } from './root-layout-client'
 import { NextIntlClientProvider } from 'next-intl'
-import { cookies } from 'next/headers'
-import { getSharedMessages } from '@foodflow/i18n'
-import type { Locale } from '@foodflow/i18n'
-import viMessages from '../../messages/vi.json'
-import enMessages from '../../messages/en.json'
-import jaMessages from '../../messages/ja.json'
+import { Inter } from 'next/font/google'
+import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { resolveRestaurantMetadataBase } from '@/lib/metadata-url'
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] })
-
-const LOCALES = ['vi', 'en', 'ja'] as const
-const appMessages = { vi: viMessages, en: enMessages, ja: jaMessages }
 
 export const metadata: Metadata = {
   metadataBase: resolveRestaurantMetadataBase(),
@@ -40,22 +31,13 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get('NEXT_LOCALE')?.value ?? 'vi'
-  const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi'
-
-  // Full app messages at root: RestaurantSidebar lives outside [locale] layout
-  // and must resolve sidebar.* keys (not only shared + rootStates).
-  const messages = {
-    ...getSharedMessages(locale),
-    ...appMessages[locale],
-  }
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()])
 
   return (
     <html lang={locale}>
       <body className={inter.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <RootLayoutClient>{children}</RootLayoutClient>
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

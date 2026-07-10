@@ -20,6 +20,8 @@
     "emailPlaceholder": "restaurant@email.com",
     "loginButton": "ログイン",
     "loggingIn": "ログイン中...",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを非表示",
     "restaurantOnly": "このダッシュボードはレストランアカウントのみ利用できます。"
   },
   "sidebar": {
