@@ -1,10 +1,20 @@
-import type { AiChatRequest, AiChatReply } from '@foodflow/api-client'
+import {
+  assertAiChatSessionId,
+  parseAiChatHistory,
+  parseAiChatReply,
+  type AiChatHistory,
+  type AiChatRequest,
+  type AiChatReply,
+} from '@foodflow/api-client'
 
 /** Injectable POST for unit tests — real path is `/ai/chat`. */
 export type AiChatPoster = (
   path: string,
   body: AiChatRequest,
 ) => Promise<AiChatReply>
+
+/** Injectable GET for unit tests — real path is `/ai/history`. */
+export type AiChatHistoryGetter = (path: string) => Promise<AiChatHistory>
 
 /**
  * Sends one user message to the authenticated AI chat endpoint.
@@ -19,12 +29,24 @@ export async function sendAiChatMessage(
   if (!trimmed) {
     throw new Error('MESSAGE_REQUIRED')
   }
-  return post('/ai/chat', {
+  if (trimmed.length > 4000) throw new Error('MESSAGE_TOO_LONG')
+  if (sessionId) assertAiChatSessionId(sessionId)
+  const response = await post('/ai/chat', {
     message: trimmed,
     ...(sessionId ? { sessionId } : {}),
   })
+  return parseAiChatReply(response)
 }
 
-export function isDegradedAiReply(reply: Pick<AiChatReply, 'action'>): boolean {
-  return reply.action === 'degraded'
+/**
+ * Loads only the signed-in restaurant user's persisted support history. No
+ * placeholder conversations are created when the server has no history.
+ */
+export async function loadAiChatHistory(
+  get: AiChatHistoryGetter,
+  sessionId?: string,
+): Promise<AiChatHistory> {
+  if (sessionId) assertAiChatSessionId(sessionId)
+  const response = await get(sessionId ? `/ai/history?sessionId=${encodeURIComponent(sessionId)}` : '/ai/history')
+  return parseAiChatHistory(response)
 }

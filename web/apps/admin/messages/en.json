@@ -1116,7 +1116,20 @@
     "inputTokens": "Input tokens",
     "outputTokens": "Output tokens",
     "requests": "Requests",
-    "averageLatency": "Average latency"
+    "averageLatency": "Average latency",
+    "failedRequests": "Failed provider requests",
+    "providerDescription": "Live provider configuration and observed request telemetry",
+    "modelDescription": "The model configured on the server. Secrets are never exposed to this dashboard.",
+    "telemetryLive": "Live telemetry",
+    "telemetryAwaiting": "Awaiting first request",
+    "lastRequest": "Last provider request",
+    "lastSuccessfulRequest": "Last successful request",
+    "lastFailure": "Latest failure",
+    "configurationRequiredTitle": "The AI provider is not ready for production",
+    "configurationRequiredDescription": "A platform owner must add a rotated DEEPSEEK_API_KEY to the server-side secret store, then redeploy and verify a real chat request. Do not paste keys into this dashboard or source control.",
+    "telemetrySourceNote": "Token and latency values are recorded only after real provider requests.",
+    "refresh": "Refresh",
+    "costUnavailableDescription": "Cost stays unavailable until a provider billing source is connected; FoodFlow does not estimate it from tokens."
   },
   "analytics": {
     "title": "Analytics",
@@ -1545,6 +1558,17 @@
     "error": "Could not reach the assistant. Try again.",
     "degraded": "Assistant is temporarily limited",
     "you": "You",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "historyLoading": "Loading your conversation…",
+    "historyError": "Your earlier messages could not be loaded. You can still start a new request.",
+    "retryHistory": "Retry history",
+    "providerNotConfigured": "The AI assistant is not configured yet. Ask a platform owner to complete the server-side setup.",
+    "providerUnavailable": "The AI assistant is temporarily unavailable. No answer was generated; please try again shortly.",
+    "suggestions": "Try a starting point",
+    "suggestionOne": "Explain the order exception workflow",
+    "suggestionTwo": "How do I route a support issue?",
+    "suggestionThree": "What does the AI monitor show?",
+    "conversationLoaded": "Conversation loaded",
+    "characterCount": "{count} / {limit} characters"
   }
 }

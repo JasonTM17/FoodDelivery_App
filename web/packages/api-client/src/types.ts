@@ -107,6 +107,7 @@ export interface AdminSettingsPayload {
 }
 
 export type AiMonitorStatus = 'online' | 'degraded' | 'not_configured';
+export type AiTelemetryStatus = 'live' | 'awaiting_requests' | 'unavailable';
 
 export interface AdminAiMonitorOverview {
   instance: {
@@ -115,6 +116,12 @@ export interface AdminAiMonitorOverview {
     degradedReason: string | null;
     provider: 'deepseek';
     model: string;
+    telemetry: {
+      status: AiTelemetryStatus;
+      lastRequestAt: string | null;
+      lastSuccessfulRequestAt: string | null;
+      lastFailureCode: string | null;
+    };
   };
   stats: AdminAiMonitorStats;
 }
@@ -129,6 +136,7 @@ export interface AdminAiMonitorStats {
   inputTokens: number | null;
   outputTokens: number | null;
   requests: number | null;
+  failedRequests: number | null;
   averageLatencyMs: number | null;
 }
 
@@ -343,7 +351,7 @@ export interface AiChatRequest {
 export interface AiChatReply {
   reply: string;
   sessionId: string;
-  action: 'answered' | 'escalated' | 'degraded';
+  action: 'answered' | 'escalated';
   escalated?: boolean;
   severity?: string;
   language: 'vi' | 'en' | 'ja';
@@ -359,4 +367,16 @@ export interface AiChatReply {
       | 'notifyAdmin';
     args: Record<string, unknown>;
   }>;
+}
+
+export interface AiChatHistoryMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export interface AiChatHistory {
+  sessionId: string | null;
+  messages: AiChatHistoryMessage[];
 }

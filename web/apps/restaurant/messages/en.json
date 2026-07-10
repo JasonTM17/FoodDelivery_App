@@ -1332,6 +1332,17 @@
     "error": "Could not reach the assistant. Try again.",
     "degraded": "Assistant is temporarily limited",
     "you": "You",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "historyLoading": "Loading your conversation…",
+    "historyError": "Your earlier messages could not be loaded. You can still start a new request.",
+    "retryHistory": "Retry history",
+    "providerNotConfigured": "The AI assistant is not configured yet. Ask a platform owner to complete the server-side setup.",
+    "providerUnavailable": "The AI assistant is temporarily unavailable. No answer was generated; please try again shortly.",
+    "suggestions": "Try a starting point",
+    "suggestionOne": "How should I handle a delayed order?",
+    "suggestionTwo": "How do I update a menu item?",
+    "suggestionThree": "Explain my promotion options",
+    "conversationLoaded": "Conversation loaded",
+    "characterCount": "{count} / {limit} characters"
   }
 }

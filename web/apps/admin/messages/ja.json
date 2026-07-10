@@ -1116,7 +1116,20 @@
     "inputTokens": "入力トークン",
     "outputTokens": "出力トークン",
     "requests": "リクエスト数",
-    "averageLatency": "平均レイテンシ"
+    "averageLatency": "平均レイテンシ",
+    "failedRequests": "プロバイダー要求の失敗",
+    "providerDescription": "ライブのプロバイダー設定と観測済みリクエストテレメトリ",
+    "modelDescription": "サーバーで設定されたモデルです。シークレットはこのダッシュボードに表示されません。",
+    "telemetryLive": "ライブテレメトリ",
+    "telemetryAwaiting": "最初の要求を待機中",
+    "lastRequest": "最新のプロバイダー要求",
+    "lastSuccessfulRequest": "最新の成功要求",
+    "lastFailure": "最新の失敗",
+    "configurationRequiredTitle": "AIプロバイダーは本番環境の準備ができていません",
+    "configurationRequiredDescription": "プラットフォーム管理者はローテーション済みの DEEPSEEK_API_KEY をサーバー側のシークレットストアに追加し、再デプロイ後に実際のチャット要求を検証する必要があります。この画面やソース管理にキーを貼り付けないでください。",
+    "telemetrySourceNote": "トークン数とレイテンシは実際のプロバイダー要求後にのみ記録されます。",
+    "refresh": "更新",
+    "costUnavailableDescription": "コストはプロバイダーの請求データを接続するまで利用できません。FoodFlow はトークンから推定しません。"
   },
   "analytics": {
     "title": "分析",
@@ -1545,6 +1558,17 @@
     "error": "アシスタントに接続できません。再試行してください。",
     "degraded": "アシスタントは一時的に制限中",
     "you": "あなた",
-    "assistant": "アシスタント"
+    "assistant": "アシスタント",
+    "historyLoading": "会話を読み込んでいます…",
+    "historyError": "以前のメッセージを読み込めませんでした。新しいリクエストは送信できます。",
+    "retryHistory": "履歴を再試行",
+    "providerNotConfigured": "AIアシスタントはまだ設定されていません。プラットフォーム管理者にサーバー側の設定完了を依頼してください。",
+    "providerUnavailable": "AIアシスタントは一時的に利用できません。回答は生成されていません。しばらくしてから再試行してください。",
+    "suggestions": "はじめるための候補",
+    "suggestionOne": "注文例外の対応フローを説明して",
+    "suggestionTwo": "サポート案件を振り分ける方法は？",
+    "suggestionThree": "AI Monitor は何を示していますか？",
+    "conversationLoaded": "会話を読み込みました",
+    "characterCount": "{count} / {limit} 文字"
   }
 }

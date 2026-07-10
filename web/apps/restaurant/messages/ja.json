@@ -1332,6 +1332,17 @@
     "error": "アシスタントに接続できません。再試行してください。",
     "degraded": "アシスタントは一時的に制限中",
     "you": "あなた",
-    "assistant": "アシスタント"
+    "assistant": "アシスタント",
+    "historyLoading": "会話を読み込んでいます…",
+    "historyError": "以前のメッセージを読み込めませんでした。新しいリクエストは送信できます。",
+    "retryHistory": "履歴を再試行",
+    "providerNotConfigured": "AIアシスタントはまだ設定されていません。プラットフォーム管理者にサーバー側の設定完了を依頼してください。",
+    "providerUnavailable": "AIアシスタントは一時的に利用できません。回答は生成されていません。しばらくしてから再試行してください。",
+    "suggestions": "はじめるための候補",
+    "suggestionOne": "配達が遅れている注文にはどう対応しますか？",
+    "suggestionTwo": "メニュー項目はどう更新しますか？",
+    "suggestionThree": "プロモーションの選択肢を説明して",
+    "conversationLoaded": "会話を読み込みました",
+    "characterCount": "{count} / {limit} 文字"
   }
 }

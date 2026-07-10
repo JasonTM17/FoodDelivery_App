@@ -1,4 +1,5 @@
 export type AiMonitorStatus = 'online' | 'degraded' | 'not_configured';
+export type AiTelemetryStatus = 'live' | 'awaiting_requests' | 'unavailable';
 
 export interface AiMonitorOverview {
   instance: {
@@ -7,6 +8,12 @@ export interface AiMonitorOverview {
     degradedReason: string | null;
     provider: 'deepseek';
     model: string;
+    telemetry: {
+      status: AiTelemetryStatus;
+      lastRequestAt: string | null;
+      lastSuccessfulRequestAt: string | null;
+      lastFailureCode: string | null;
+    };
   };
   stats: AiMonitorStats;
 }
@@ -21,5 +28,6 @@ export interface AiMonitorStats {
   inputTokens: number | null;
   outputTokens: number | null;
   requests: number | null;
+  failedRequests: number | null;
   averageLatencyMs: number | null;
 }
