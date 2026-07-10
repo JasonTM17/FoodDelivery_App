@@ -135,6 +135,7 @@ if (-not $SkipDockerConfig) {
     Invoke-Native docker compose -f docker-compose.yml config --quiet
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.local.yml config --quiet
+    Invoke-Native docker compose -f docker-compose.yml -f docker-compose.e2e.yml config --quiet
   } @{
     POSTGRES_PASSWORD = 'compose-config-placeholder'
     REDIS_PASSWORD = 'compose-config-placeholder'

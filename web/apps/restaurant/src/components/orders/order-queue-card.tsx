@@ -31,7 +31,7 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-gray-900">{order.code}</span>
           {isPending && (
-            <span className="flex items-center gap-1 text-xs font-medium text-red-600">
+            <span className="flex items-center gap-1 text-xs font-medium text-red-700">
               <AlertCircle className="h-3 w-3" />
               {t('newBadge')}
             </span>
@@ -44,16 +44,16 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
         {order.items.slice(0, 4).map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
             <span className="truncate text-gray-600">
-              <span className="mr-1 text-gray-400">x{item.quantity}</span>
+              <span className="mr-1 text-gray-600">x{item.quantity}</span>
               {item.name}
             </span>
-            <span className="ml-2 shrink-0 text-gray-500">
+            <span className="ml-2 shrink-0 text-gray-700">
               {formatCurrency(item.price * item.quantity)}
             </span>
           </div>
         ))}
         {order.items.length > 4 && (
-          <p className="text-xs text-gray-400">{t('moreItems', { count: order.items.length - 4 })}</p>
+          <p className="text-xs text-gray-600">{t('moreItems', { count: order.items.length - 4 })}</p>
         )}
       </div>
 
@@ -62,7 +62,7 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
         <span className="text-base font-bold text-brand-600">{formatCurrency(order.total)}</span>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-700">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <User className="h-3 w-3" />

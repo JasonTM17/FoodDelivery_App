@@ -36,9 +36,18 @@ CREATE INDEX "ai_usage_events_user_id_created_at_idx"
 
 ALTER TABLE "ai_usage_events" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "foodflow_ai_usage_events_service_role_all"
-  ON "ai_usage_events"
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $roles$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "ai_usage_events" TO service_role';
+    EXECUTE $policy$
+      CREATE POLICY "foodflow_ai_usage_events_service_role_all"
+        ON "ai_usage_events"
+        FOR ALL
+        TO service_role
+        USING (true)
+        WITH CHECK (true)
+    $policy$;
+  END IF;
+END
+$roles$;

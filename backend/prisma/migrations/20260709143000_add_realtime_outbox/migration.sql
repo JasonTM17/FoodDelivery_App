@@ -19,27 +19,41 @@ CREATE INDEX "realtime_outbox_channel_created_at_idx"
 
 ALTER TABLE "realtime_outbox" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "foodflow_realtime_outbox_read_allowed_channels"
-  ON "realtime_outbox"
-  FOR SELECT
-  TO authenticated
-  USING (
-    "channel" IN (
-      SELECT jsonb_array_elements_text(
-        COALESCE(
-          (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb -> 'realtime_channels'),
-          '[]'::jsonb
+DO $roles$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    EXECUTE 'GRANT SELECT ON TABLE "realtime_outbox" TO authenticated';
+    EXECUTE $policy$
+      CREATE POLICY "foodflow_realtime_outbox_read_allowed_channels"
+        ON "realtime_outbox"
+        FOR SELECT
+        TO authenticated
+        USING (
+          "channel" IN (
+            SELECT jsonb_array_elements_text(
+              COALESCE(
+                (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb -> 'realtime_channels'),
+                '[]'::jsonb
+              )
+            )
+          )
         )
-      )
-    )
-  );
+    $policy$;
+  END IF;
 
-CREATE POLICY "foodflow_realtime_outbox_service_role_all"
-  ON "realtime_outbox"
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "realtime_outbox" TO service_role';
+    EXECUTE $policy$
+      CREATE POLICY "foodflow_realtime_outbox_service_role_all"
+        ON "realtime_outbox"
+        FOR ALL
+        TO service_role
+        USING (true)
+        WITH CHECK (true)
+    $policy$;
+  END IF;
+END
+$roles$;
 
 DO $$
 BEGIN

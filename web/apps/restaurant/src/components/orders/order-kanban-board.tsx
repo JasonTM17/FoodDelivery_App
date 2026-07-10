@@ -36,9 +36,9 @@ export function OrderKanbanBoard() {
   const restaurant = getStoredRestaurant();
 
   const columns = useMemo(() => [
-    { id: 'pending' as ColumnId, label: t('columns.pending'), color: 'text-red-600', bgColor: 'bg-red-50', dot: 'bg-red-500' },
-    { id: 'preparing' as ColumnId, label: t('columns.preparing'), color: 'text-amber-600', bgColor: 'bg-amber-50', dot: 'bg-amber-500' },
-    { id: 'ready' as ColumnId, label: t('columns.ready'), color: 'text-green-600', bgColor: 'bg-green-50', dot: 'bg-green-500' },
+    { id: 'pending' as ColumnId, label: t('columns.pending'), color: 'text-red-700', bgColor: 'bg-red-50', dot: 'bg-red-500' },
+    { id: 'preparing' as ColumnId, label: t('columns.preparing'), color: 'text-amber-800', bgColor: 'bg-amber-50', dot: 'bg-amber-500' },
+    { id: 'ready' as ColumnId, label: t('columns.ready'), color: 'text-green-800', bgColor: 'bg-green-50', dot: 'bg-green-500' },
   ], [t]);
 
   const fetchOrders = useCallback(async () => {
@@ -123,7 +123,7 @@ export function OrderKanbanBoard() {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSound}
-            className={cn('btn-ghost p-2 rounded-lg', soundEnabled ? 'text-brand-600' : 'text-gray-400')}
+            className={cn('btn-ghost p-2 rounded-lg', soundEnabled ? 'text-brand-600' : 'text-gray-600')}
             title={soundEnabled ? t('soundOff') : t('soundOn')}
             aria-label={soundEnabled ? t('soundOff') : t('soundOn')}
           >
@@ -151,13 +151,18 @@ export function OrderKanbanBoard() {
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <div className={cn('w-2.5 h-2.5 rounded-full', col.dot)} />
-                  <h2 className="font-semibold text-gray-900">{col.label}</h2>
+                  <h2 id={`order-column-${col.id}`} className="font-semibold text-gray-900">{col.label}</h2>
                 </div>
                 <span className={cn('inline-flex items-center justify-center min-w-6 h-6 rounded-full text-xs font-bold px-2', col.color)}>
                   {isLoading ? EMPTY_VALUE : orders.length}
                 </span>
               </div>
-              <div className="p-4 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin">
+              <div
+                role="region"
+                aria-labelledby={`order-column-${col.id}`}
+                tabIndex={0}
+                className="p-4 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500"
+              >
                 {isLoading ? (
                   [1, 2].map((i) => (
                     <div key={i} className="card space-y-3">
@@ -169,7 +174,7 @@ export function OrderKanbanBoard() {
                 ) : orders.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingBag className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-400">{t('emptyColumn')}</p>
+                    <p className="text-sm text-gray-600">{t('emptyColumn')}</p>
                   </div>
                 ) : (
                   orders.map((order) => (

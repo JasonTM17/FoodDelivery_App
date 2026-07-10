@@ -11,34 +11,42 @@ Playwright test suite covering the four critical user flows: admin dashboard, re
 
 ## Quick Start
 
+Use `docker-compose.e2e.yml` for release testing. It keeps its container names,
+volumes, and host ports separate from the root/default stack: Admin `13000`,
+API `13001`, Restaurant `13002`, and Postgres `15432`.
+
 ```bash
 # 1. Start the database and supporting services
-docker compose up -d postgres redis minio
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d postgres redis minio
 
 # 2. Apply migrations and seed the database
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm migrate
 cd backend
 pnpm install --frozen-lockfile
-pnpm prisma migrate deploy
+DATABASE_URL=postgresql://foodflow:foodflow_dev@localhost:15432/foodflow \
+DIRECT_URL=postgresql://foodflow:foodflow_dev@localhost:15432/foodflow \
 pnpm db:big-seed
 cd ..
 
-# 3. Start the backend and both web apps (three terminals)
-docker compose up -d backend
-pnpm --filter admin dev          # → http://localhost:3000
-pnpm --filter restaurant dev     # → http://localhost:3002
+# 3. Build and start the API plus both dashboards
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml build backend admin restaurant
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d backend admin restaurant
 
 # 4. Install Playwright browser (once)
 cd web && pnpm test:e2e:install
 
 # 5. Run all E2E tests (Chromium, Firefox, and mobile Chromium)
-cd web && pnpm test:e2e
+cd web && ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=http://localhost:13001/api pnpm test:e2e
 
 # Desktop release gate only
-pnpm test:e2e --project=chromium --project=firefox
+ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=http://localhost:13001/api pnpm test:e2e --project=chromium --project=firefox
 
 # Accessibility gate (fails on axe serious/critical violations)
-pnpm test:e2e --grep "accessibility" --project=chromium --project=firefox
+ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=http://localhost:13001/api pnpm test:e2e --grep "accessibility" --project=chromium --project=firefox
 ```
+
+In PowerShell, set `$env:ADMIN_URL`, `$env:RESTAURANT_URL`, and `$env:API_URL`
+to the same isolated URLs before invoking `pnpm test:e2e`.
 
 ## Environment Variables
 
@@ -47,6 +55,7 @@ pnpm test:e2e --grep "accessibility" --project=chromium --project=firefox
 | `ADMIN_URL` | `http://localhost:3000` | Admin Next.js app |
 | `RESTAURANT_URL` | `http://localhost:3002` | Restaurant Next.js app |
 | `API_URL` | `http://localhost:3001/api` | Backend API base URL |
+| `E2E_AI_LIVE` | unset | Set to `true` only when the target API has a valid provider secret; otherwise the suite verifies the fail-closed `AI_PROVIDER_NOT_CONFIGURED` contract |
 
 Override via shell: `ADMIN_URL=http://staging.example.com pnpm test:e2e`
 

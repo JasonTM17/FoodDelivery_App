@@ -24,9 +24,18 @@ CREATE INDEX "job_outbox_queue_status_run_at_idx"
 
 ALTER TABLE "job_outbox" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "foodflow_job_outbox_service_role_all"
-  ON "job_outbox"
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $roles$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "job_outbox" TO service_role';
+    EXECUTE $policy$
+      CREATE POLICY "foodflow_job_outbox_service_role_all"
+        ON "job_outbox"
+        FOR ALL
+        TO service_role
+        USING (true)
+        WITH CHECK (true)
+    $policy$;
+  END IF;
+END
+$roles$;
