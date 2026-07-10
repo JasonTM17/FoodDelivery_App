@@ -24,6 +24,7 @@ interface GroundingInput {
   message: string
   orderId?: string
   userId: string
+  actorRole?: string
   sessionId?: string
   sentimentLabel: string
 }
@@ -40,6 +41,7 @@ export class AiGroundingService {
     const toolCalls: AiToolCall[] = []
     const orderReference = input.orderId?.trim() || extractOrderReference(input.message)
     const severity = classifySeverity(input.message, input.sentimentLabel)
+    const canUseCustomerTools = !input.actorRole || input.actorRole === 'customer'
 
     const run = async (
       tool: AiToolName,
@@ -52,7 +54,7 @@ export class AiGroundingService {
       entries.push({ tool, data })
     }
 
-    if (orderReference) {
+    if (canUseCustomerTools && orderReference) {
       const args = { orderReference }
       await run('getOrderStatus', args, () => this.tools.getOrderStatus(orderReference, input.userId))
       await run('getDriverLocation', args, () => this.tools.getDriverLocation(orderReference, input.userId))
@@ -60,7 +62,9 @@ export class AiGroundingService {
       await run('getRefundEligibility', args, () => this.tools.getRefundEligibility(orderReference, input.userId))
     }
 
-    await run('getRecommendedFoods', {}, () => this.tools.getRecommendedFoods(input.userId))
+    if (canUseCustomerTools) {
+      await run('getRecommendedFoods', {}, () => this.tools.getRecommendedFoods(input.userId))
+    }
 
     if (severity && this.justification.validate('createSupportTicket', input.message, severity)) {
       const ticket = await this.execute(() => this.tools.createSupportTicket(

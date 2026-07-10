@@ -97,8 +97,14 @@ enum ChatSenderType {
   customer
   driver
   restaurant
+  admin
   ai
   system
+}
+
+enum AiUsageOutcome {
+  succeeded
+  failed
 }
 
 enum ChatSessionType {
@@ -242,6 +248,7 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   fcmTokens               UserFcmToken[]
+  aiUsageEvents           AiUsageEvent[]
 
   @@index([email])
   @@index([phone])
@@ -816,6 +823,7 @@ model ChatSession {
   user     User          @relation(fields: [userId], references: [id])
   order    Order?        @relation(fields: [orderId], references: [id])
   messages ChatMessage[]
+  usageEvents AiUsageEvent[]
 
   @@map("chat_sessions")
 }
@@ -832,6 +840,28 @@ model ChatMessage {
 
   @@index([sessionId, createdAt])
   @@map("chat_messages")
+}
+
+model AiUsageEvent {
+  id           String         @id @default(uuid()) @db.Uuid
+  sessionId    String?        @map("session_id") @db.Uuid
+  userId       String?        @map("user_id") @db.Uuid
+  provider     String         @db.VarChar(64)
+  model        String         @db.VarChar(128)
+  outcome      AiUsageOutcome
+  inputTokens  Int?           @map("input_tokens")
+  outputTokens Int?           @map("output_tokens")
+  latencyMs    Int            @map("latency_ms")
+  errorCode    String?        @map("error_code") @db.VarChar(128)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+
+  session ChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([provider, outcome, createdAt])
+  @@index([userId, createdAt])
+  @@map("ai_usage_events")
 }
 
 model AiSupportTicket {

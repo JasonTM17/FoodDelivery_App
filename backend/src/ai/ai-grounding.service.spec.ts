@@ -75,4 +75,20 @@ describe('AiGroundingService', () => {
       ]),
     })
   })
+
+  it('does not run customer-account tools for authenticated restaurant actors', async () => {
+    const result = await service.collect({
+      message: 'Recommend food and check order FD0000000001',
+      userId: 'restaurant-user-1',
+      actorRole: 'restaurant',
+      sentimentLabel: 'neutral',
+    })
+
+    expect(tools.getOrderStatus).not.toHaveBeenCalled()
+    expect(tools.getDriverLocation).not.toHaveBeenCalled()
+    expect(tools.getRestaurantStatus).not.toHaveBeenCalled()
+    expect(tools.getRefundEligibility).not.toHaveBeenCalled()
+    expect(tools.getRecommendedFoods).not.toHaveBeenCalled()
+    expect(result.entries).toEqual([])
+  })
 })
