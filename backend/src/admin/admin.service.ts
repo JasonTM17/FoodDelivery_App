@@ -145,7 +145,33 @@ export class AdminService {
     if (typeof isActive !== 'boolean') {
       throw new BadRequestException('isActive or status is required')
     }
-    return this.prisma.user.update({ where: { id: userId }, data: { isActive } })
+    // Never return passwordHash or other credential fields to the web client
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { isActive },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+    return {
+      id: user.id,
+      email: user.email,
+      phone: user.phone ?? '',
+      name: user.fullName,
+      fullName: user.fullName,
+      role: user.role === UserRole.restaurant ? 'restaurant_owner' : user.role,
+      status: user.isActive ? 'active' : 'banned',
+      isActive: user.isActive,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    }
   }
 
   async getRestaurants(params: { page?: number; limit?: number }) {
@@ -209,7 +235,27 @@ export class AdminService {
     if (typeof isActive !== 'boolean') {
       throw new BadRequestException('isActive or status is required')
     }
-    return this.prisma.restaurant.update({ where: { id: restaurantId }, data: { isActive } })
+    const restaurant = await this.prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { isActive },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        isActive: true,
+        approvalStatus: true,
+        updatedAt: true,
+      },
+    })
+    return {
+      id: restaurant.id,
+      name: restaurant.name,
+      slug: restaurant.slug,
+      status: restaurant.isActive ? 'active' : 'disabled',
+      isActive: restaurant.isActive,
+      approvalStatus: restaurant.approvalStatus,
+      updatedAt: restaurant.updatedAt.toISOString(),
+    }
   }
 
   async getSupportTickets(params: { status?: string; page?: number; limit?: number }) {

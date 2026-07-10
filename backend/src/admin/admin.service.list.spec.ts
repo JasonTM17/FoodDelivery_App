@@ -79,12 +79,22 @@ describe('AdminService list endpoints', () => {
   })
 
   it('toggleRestaurantStatus accepts status string from web UI', async () => {
-    prisma.restaurant.update.mockResolvedValue({ id: 'r1', isActive: false })
-    await service.toggleRestaurantStatus('r1', { status: 'disabled' })
+    prisma.restaurant.update.mockResolvedValue({
+      id: 'r1',
+      name: 'Phở 24',
+      slug: 'pho-24',
+      isActive: false,
+      approvalStatus: 'approved',
+      updatedAt: new Date('2026-01-02T00:00:00Z'),
+    })
+    const result = await service.toggleRestaurantStatus('r1', { status: 'disabled' })
     expect(prisma.restaurant.update).toHaveBeenCalledWith({
       where: { id: 'r1' },
       data: { isActive: false },
+      select: expect.objectContaining({ id: true, isActive: true }),
     })
+    expect(result).toMatchObject({ id: 'r1', status: 'disabled', isActive: false })
+    expect(result).not.toHaveProperty('passwordHash')
   })
 })
 
@@ -129,11 +139,28 @@ describe('AdminService getUsers mapping', () => {
   })
 
   it('toggleUserStatus accepts status banned from web UI', async () => {
-    prisma.user.update.mockResolvedValue({ id: 'u1', isActive: false })
-    await service.toggleUserStatus('u1', { status: 'banned' })
+    prisma.user.update.mockResolvedValue({
+      id: 'u1',
+      email: 'customer1@foodflow.vn',
+      phone: '090',
+      fullName: 'Customer One',
+      role: 'customer',
+      isActive: false,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-02T00:00:00Z'),
+    })
+    const result = await service.toggleUserStatus('u1', { status: 'banned' })
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
       data: { isActive: false },
+      select: expect.objectContaining({
+        id: true,
+        email: true,
+        isActive: true,
+      }),
     })
+    expect(result).toMatchObject({ id: 'u1', isActive: false, status: 'banned' })
+    expect(result).not.toHaveProperty('passwordHash')
+    expect(JSON.stringify(result)).not.toMatch(/passwordHash|\$2b\$/)
   })
 })

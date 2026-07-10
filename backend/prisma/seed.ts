@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { SeedPriceRange, toDatabasePriceRange } from './seed-database-values'
+import { ensureDemoOrdersAndTickets } from './seed-demo-content'
 
 const prisma = new PrismaClient()
 
@@ -296,6 +297,12 @@ async function main() {
     skipDuplicates: true,
   })
   console.log('3 promotions seeded')
+
+  // ── Demo order + support ticket (Admin Support + Restaurant kanban) ──
+  const demo = await ensureDemoOrdersAndTickets(prisma as never)
+  console.log(
+    `Demo content: order=${demo.orderId ?? 'skipped'} ticket=${demo.ticketId ?? 'skipped'}`,
+  )
   console.log('Seed complete!')
 }
 

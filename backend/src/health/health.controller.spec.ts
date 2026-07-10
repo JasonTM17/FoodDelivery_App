@@ -72,7 +72,23 @@ describe('HealthController', () => {
     expect(res.status).toHaveBeenCalledWith(503)
   })
 
-  it('returns degraded without constructing a localhost MinIO client when production storage env is missing', async () => {
+  it('returns 200 degraded when only MinIO is down (DB+Redis still up)', async () => {
+    ;(Client as unknown as jest.Mock).mockImplementationOnce(() => ({
+      bucketExists: jest.fn().mockRejectedValue(new Error('MinIO down')),
+    }))
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.check(res as unknown as Response)
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    const body = res.json.mock.calls[0][0]
+    expect(body.status).toBe('degraded')
+    expect(body.components.db.status).toBe('up')
+    expect(body.components.redis.status).toBe('up')
+    expect(body.components.minio.status).toBe('down')
+  })
+
+  it('does not construct a localhost MinIO client when production storage env is missing, but stays 200 if required deps up', async () => {
     mockConfig.get.mockImplementation((key: string) => {
       if (key === 'NODE_ENV') return 'production'
       if (key === 'MINIO_PORT') return 9000
@@ -84,7 +100,8 @@ describe('HealthController', () => {
     await controller.check(res as unknown as Response)
 
     expect(Client).not.toHaveBeenCalled()
-    expect(res.status).toHaveBeenCalledWith(503)
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json.mock.calls[0][0].status).toBe('degraded')
     expect(res.json.mock.calls[0][0].components.minio.status).toBe('down')
   })
 })

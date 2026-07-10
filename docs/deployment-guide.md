@@ -73,6 +73,10 @@ curl http://localhost:3000/api/healthz
 curl http://localhost:3002/api/healthz
 ```
 
+Backend `GET /api/healthz` treats **Postgres + Redis as required** and **MinIO as optional storage**. If MinIO is down but DB and Redis are up, the process returns **HTTP 200** with `status: "degraded"` and `components.minio.status: "down"` so Docker/uptime probes stay green. DB or Redis down still returns **HTTP 503**.
+
+Local demo seed (`pnpm run db:seed` in `backend/`) also creates a partner-visible demo order (`FF-DEMO01`) and a tagged Admin support ticket so Support and Restaurant order queue are not empty after seed.
+
 ## Required Secret Stores
 
 Use provider secret managers, not committed files:

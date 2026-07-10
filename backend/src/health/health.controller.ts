@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common'
+import { Controller, Get, Res } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
 import { PrismaService } from '../database/prisma.service'
@@ -6,21 +6,17 @@ import { Inject } from '@nestjs/common'
 import { Redis } from 'ioredis'
 import { Client } from 'minio'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
-
-interface ComponentStatus {
-  status: 'up' | 'down'
-  latencyMs: number
-}
+import {
+  type ComponentStatus,
+  type HealthComponents,
+  resolveHealthOutcome,
+} from './health-policy'
 
 interface HealthResponse {
   status: 'ok' | 'degraded'
   uptime: number
   timestamp: string
-  components: {
-    db: ComponentStatus
-    redis: ComponentStatus
-    minio: ComponentStatus
-  }
+  components: HealthComponents
 }
 
 @Controller('healthz')
@@ -39,22 +35,18 @@ export class HealthController {
       this.checkMinio(),
     ])
 
-    const allUp = dbStatus.status === 'up'
-      && redisStatus.status === 'up'
-      && minioStatus.status === 'up'
-
-    const overall = allUp ? 'ok' : 'degraded'
-    const httpStatus = allUp ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE
+    const components: HealthComponents = {
+      db: dbStatus,
+      redis: redisStatus,
+      minio: minioStatus,
+    }
+    const { status: overall, httpStatus } = resolveHealthOutcome(components)
 
     return res.status(httpStatus).json({
       status: overall,
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-      components: {
-        db: dbStatus,
-        redis: redisStatus,
-        minio: minioStatus,
-      },
+      components,
     } as HealthResponse)
   }
 
