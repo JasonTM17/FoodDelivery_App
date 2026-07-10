@@ -139,7 +139,13 @@ export function OrderKanbanBoard() {
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
           <p className="text-sm text-red-700">{error}</p>
-          <button onClick={fetchOrders} className="text-sm text-red-600 underline mt-1">{t('retry')}</button>
+          <button
+            type="button"
+            onClick={fetchOrders}
+            className="mt-1 rounded-sm text-sm font-medium text-red-700 underline decoration-red-400 underline-offset-2 transition-colors hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2"
+          >
+            {t('retry')}
+          </button>
         </div>
       )}
 
