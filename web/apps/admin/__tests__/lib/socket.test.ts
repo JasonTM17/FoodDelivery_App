@@ -55,6 +55,14 @@ describe('admin realtime socket', () => {
     disconnectSocket();
   });
 
+  it('does not use the removed NEXT_PUBLIC_SOCKET_URL fallback', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SOCKET_URL', 'https://legacy-realtime.foodflow.test/events');
+
+    const { resolveEventsSocketUrl } = await import('@/lib/socket');
+
+    expect(resolveEventsSocketUrl()).toBe('http://localhost:3001/events');
+  });
+
   it('fails closed in production when the websocket URL is not configured', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
 

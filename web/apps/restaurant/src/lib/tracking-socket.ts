@@ -9,9 +9,7 @@ let trackingSocket: Socket<TrackingServerToClientEvents, TrackingClientToServerE
 const supabaseTrackingSockets = new Map<string, SupabaseSocketAdapter>();
 
 export function resolveTrackingSocketUrl(): string {
-  const configured =
-    process.env.NEXT_PUBLIC_WS_URL?.trim() ||
-    process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
+  const configured = process.env.NEXT_PUBLIC_WS_URL?.trim();
 
   if (!configured) {
     if (isProductionDeployment(process.env)) {

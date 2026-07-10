@@ -30,7 +30,7 @@ jobs:
             build-args: |
               BUILD_SHA=${{ github.sha }}
           # NOTE: secrets.* cannot be referenced inside strategy.matrix (parse-time).
-          # NEXT_PUBLIC_GOOGLE_MAPS_KEY is injected at the build step below.
+          # Browser-safe provider keys are injected at the build step below.
           - image: nguyenson1710/foodflow-admin
             context: ./web
             dockerfile: ./web/apps/admin/Dockerfile
@@ -40,7 +40,8 @@ jobs:
               BUILD_SHA=${{ github.sha }}
               NEXT_PUBLIC_APP_ENV=production
               NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
-              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
+              NEXT_PUBLIC_REALTIME_PROVIDER=supabase
+              NEXT_PUBLIC_SUPABASE_URL=https://lvanszgszzfopusboich.supabase.co
               NEXT_PUBLIC_ADMIN_URL=https://admin.foodflow.vn
           - image: nguyenson1710/foodflow-restaurant
             context: ./web
@@ -51,7 +52,8 @@ jobs:
               BUILD_SHA=${{ github.sha }}
               NEXT_PUBLIC_APP_ENV=production
               NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
-              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
+              NEXT_PUBLIC_REALTIME_PROVIDER=supabase
+              NEXT_PUBLIC_SUPABASE_URL=https://lvanszgszzfopusboich.supabase.co
               NEXT_PUBLIC_RESTAURANT_URL=https://restaurant.foodflow.vn
 
     steps:
@@ -77,6 +79,16 @@ jobs:
             type=sha,prefix=,format=short
             type=raw,value=latest
 
+      - name: Validate web image public build inputs
+        if: contains(matrix.image, 'foodflow-admin') || contains(matrix.image, 'foodflow-restaurant')
+        shell: bash
+        env:
+          GOOGLE_MAPS_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          test -n "$GOOGLE_MAPS_KEY" || { echo 'Missing NEXT_PUBLIC_GOOGLE_MAPS_KEY'; exit 1; }
+          test -n "$SUPABASE_ANON_KEY" || { echo 'Missing NEXT_PUBLIC_SUPABASE_ANON_KEY'; exit 1; }
+
       - name: Build and push ${{ matrix.image }}
         uses: docker/build-push-action@v7
         with:
@@ -91,6 +103,7 @@ jobs:
           build-args: |
             ${{ matrix.build-args }}
             NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           cache-from: type=registry,ref=${{ matrix.image }}:buildcache
           cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
 

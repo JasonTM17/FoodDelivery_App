@@ -10,9 +10,7 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents> | SupabaseSocketA
 const supabaseSockets = new Map<string, SupabaseSocketAdapter>();
 
 export function resolveEventsSocketUrl(): string {
-  const configured =
-    process.env.NEXT_PUBLIC_WS_URL?.trim() ||
-    process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
+  const configured = process.env.NEXT_PUBLIC_WS_URL?.trim();
 
   if (!configured) {
     if (isProductionDeployment(process.env)) {

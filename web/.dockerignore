@@ -1,11 +1,15 @@
 # Dependencies
 node_modules
+**/node_modules
 .pnpm-store
 
 # Build outputs (will be regenerated)
 .next
+**/.next
 dist
+**/dist
 *.tsbuildinfo
+**/*.tsbuildinfo
 
 # Git
 .git
@@ -90,7 +94,11 @@ Thumbs.db
 
 # Testing
 coverage
+**/coverage
 .nyc_output
+**/.nyc_output
+**/playwright-report
+**/test-results
 *.test.ts
 *.test.tsx
 *.spec.ts
@@ -98,3 +106,4 @@ coverage
 
 # Turbo
 .turbo
+**/.turbo

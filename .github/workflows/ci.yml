@@ -86,7 +86,9 @@ jobs:
         env:
           NEXT_PUBLIC_APP_ENV: production
           NEXT_PUBLIC_API_URL: https://api.foodflow.test/api
-          NEXT_PUBLIC_WS_URL: wss://api.foodflow.test/events
+          NEXT_PUBLIC_REALTIME_PROVIDER: supabase
+          NEXT_PUBLIC_SUPABASE_URL: https://foodflow-ci.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-public-anon-key-for-contract-tests
           NEXT_PUBLIC_ADMIN_URL: https://admin.foodflow.test
           NEXT_PUBLIC_RESTAURANT_URL: https://restaurant.foodflow.test
           NEXT_PUBLIC_GOOGLE_MAPS_KEY: ci-google-maps-browser-key

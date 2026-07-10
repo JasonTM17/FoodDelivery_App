@@ -76,6 +76,9 @@ services:
       - "3001:3001"
     environment:
       NODE_ENV: development
+      REALTIME_PROVIDER: socketio
+      STORAGE_PROVIDER: minio
+      QUEUE_PROVIDER: bullmq
       DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
@@ -115,6 +118,7 @@ services:
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-http://localhost:3000}
         NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
     container_name: foodflow-admin
@@ -126,6 +130,7 @@ services:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
       NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_ADMIN_URL: http://localhost:3000
     depends_on:
       backend:
@@ -144,6 +149,7 @@ services:
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_RESTAURANT_URL: ${NEXT_PUBLIC_RESTAURANT_URL:-http://localhost:3002}
         NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
     container_name: foodflow-restaurant
@@ -155,6 +161,7 @@ services:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
       NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_RESTAURANT_URL: http://localhost:3002
       NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
     depends_on:
