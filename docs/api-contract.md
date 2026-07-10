@@ -72,6 +72,18 @@ Errors use RFC 7807 Problem Details. They are not wrapped in the success envelop
 
 Clients must branch on `code`, not translated text.
 
+## AI chat
+
+All AI routes require a user access token. The provider key is server-only.
+
+| Method | Route | Contract |
+|---|---|---|
+| `POST` | `/ai/chat` | Sends `{ message, sessionId?, orderId? }`; message is 1–4,000 trimmed characters, `sessionId` is a server UUID, and `orderId` is an owned UUID/FoodFlow order code. Returns a role-scoped, safety-filtered live-provider reply with `action: "answered" | "escalated"`, `grounded`, and optional tool metadata. |
+| `GET` | `/ai/history?sessionId=<uuid>` | Returns the caller's own active AI-support session and up to 50 persisted turns. Omit `sessionId` for the latest session. |
+| `POST` | `/ai/stream` | Authenticated SSE; emits `thinking`, one completed `response`, optional `escalated`, and `done`. It does not emit synthetic word tokens. |
+
+The chat endpoint fails closed with HTTP 503 and one of `AI_PROVIDER_NOT_CONFIGURED`, `AI_PROVIDER_UNAVAILABLE`, or `AI_CONTEXT_UNAVAILABLE`. Invalid/mismatched session and order context returns `AI_SESSION_NOT_FOUND`, `ORDER_NOT_FOUND`, or `SESSION_ORDER_MISMATCH` with 404/400. Clients must show an honest unavailable state and must not render a fallback assistant message.
+
 Common codes:
 
 | Code | Meaning |

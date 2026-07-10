@@ -19,7 +19,7 @@ Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, 
 - Shared web API client giữ dưới `web/packages/api-client`.
 - Restaurant revenue và analytics formatting đã localize.
 - SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
-- Vietnamese AI chat fast paths có focused tests.
+- Contract AI chat live-provider, fail-closed, telemetry và history theo user có focused tests.
 - Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
 - Mobile Flutter gate đã được kiểm lại local với `flutter pub get --enforce-lockfile`, `flutter analyze` sạch, full `flutter test` pass 225 test và `flutter build apk --debug` pass; hardening rerun sau `17e4661` cũng pass `flutter analyze` và full `flutter test` 225 test. GitHub Actions đang bị chặn do token/auth hoặc billing account, nên cần rerun remote checks sau khi xử lý.
 - Mobile runtime UI hiện không còn hardcoded presentation string theo targeted scanner cho các flow dispatch/cancel đã chạm, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.

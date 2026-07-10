@@ -19,7 +19,7 @@ Batch 4 is not complete until local gates, E2E, accessibility, visual checks, te
 - Shared web API client kept under `web/packages/api-client`.
 - Restaurant revenue and analytics formatting localized.
 - SePay runtime no longer fabricates successful intents when required configuration is missing.
-- Vietnamese AI chat fast paths covered by focused tests.
+- AI chat live-provider, fail-closed, telemetry, and user-scoped history contracts covered by focused tests.
 - Core setup, testing, and deployment docs started in English, Vietnamese, and Japanese.
 - Mobile Flutter gate was rechecked locally with `flutter pub get --enforce-lockfile`, `flutter analyze` clean, `flutter test` passing 225 tests, and `flutter build apk --debug` passing. Current mobile nearby/filter contract hardening rerun at `94d4e18` passed `flutter analyze`, focused nearby+i18n tests 19/19, and full `flutter test` 229/229. GitHub Actions is blocked by account token/auth or billing status, so remote checks must be rerun after that is fixed.
 - Mobile runtime UI now has no remaining hardcoded presentation strings found by the targeted mobile scanner for the touched dispatch/cancel flows, no runtime "coming soon" actions, deterministic backend timestamp parsing instead of current-time payload fallbacks, and release builds require explicit `API_BASE_URL`.

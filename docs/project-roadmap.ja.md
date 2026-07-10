@@ -19,7 +19,7 @@ Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation
 - Shared web API client は `web/packages/api-client` 配下に維持。
 - Restaurant revenue と analytics formatting を localize 済み。
 - SePay runtime は必須設定がないと successful intent を捏造しません。
-- Vietnamese AI chat fast paths に focused tests を追加済み。
+- AI chat の live-provider、fail-closed、telemetry、user-scoped history contract は focused tests で検証済み。
 - Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
 - Mobile Flutter gate は local 再確認済みです。`flutter pub get --enforce-lockfile`、`flutter analyze` clean、`flutter test` 225 tests passed、`flutter build apk --debug` が pass。Current tracking hardening targeted mobile rerun は 19 tests と `flutter analyze` が pass。GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
 - Mobile runtime UI は touched dispatch/cancel flows の targeted scanner 上で hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。

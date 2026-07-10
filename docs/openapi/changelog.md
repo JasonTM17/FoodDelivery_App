@@ -1,5 +1,7 @@
 # OpenAPI Changelog
 
+- 2026-07-10: Hardened AI chat input/session contracts (4,000-character cap, UUID ownership checks, 400/404 errors), role-scoped grounding, and allow-listed SSE failures.
+- 2026-07-10: AI chat now fails closed instead of returning a `degraded` assistant payload. The contract adds `GET /ai/history`, documents SSE `response`/`error` events, constrains actions to `answered` or `escalated`, and records real DeepSeek token/latency telemetry without estimating cost.
 - 2026-07-07: Customer `GET /orders` and `GET /orders/{orderId}` now serialize the documented `OrderDetail` item contract with `menuItemId`, real unit price, line totals, and selected option metadata; Prisma Decimal values are converted to JSON numbers so mobile/shared clients do not infer blank items or fake zero prices.
 - 2026-07-06: Mobile restaurant/review rating parsing now preserves missing ratings as unknown instead of rendering fabricated `0.0` restaurant scores or perfect `5.0` review scores.
 - 2026-07-06: Tightened `GET /restaurant/insights` suggestions to require i18n keys plus `params`; legacy localized text fields are no longer part of the OpenAPI or shared web API-client contract.

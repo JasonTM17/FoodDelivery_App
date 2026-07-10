@@ -29,7 +29,7 @@ Backend coverage threshold は `backend/jest.config.ts` で管理します。She
 
 `pnpm db:big-seed` は `customer1@foodflow.vn` 向けに deterministic な AI smoke order `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, `FF-010` を作成します。Integration workflow は `/api/auth/login` でログインし、認証済み `/api/ai/chat` に対して `e2e/ai-scenarios/run-ai-scenarios.ts` を実行します。
 
-LLM provider secret がない CI では `AI_ALLOW_DEGRADED=true` を使えます。この場合も auth、tool grounding、tenant-scoped order lookup、support-ticket escalation、hallucination guard は検証します。Release verification では degraded mode を使わず、secret manager から rotate 済みで有効な `DEEPSEEK_API_KEY` を設定して実行してください。
+CI で provider adapter を mock できるのは決定的な unit test 内だけです。runtime degraded answer path は有効にしません。Release verification では secret manager の rotate 済み有効な `DEEPSEEK_API_KEY` を使い、認証済み live-provider smoke と persisted telemetry 検証を実行してください。
 
 ## Web
 

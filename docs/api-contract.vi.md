@@ -72,6 +72,18 @@ Client phải rẽ nhánh theo `code`, không dựa vào text đã dịch.
 | `NOT_FOUND` | Resource không tồn tại hoặc không hiển thị với actor. |
 | `FORBIDDEN` | Actor thiếu quyền. |
 
+## AI chat
+
+Mọi route AI đều cần access token của user. Provider key chỉ tồn tại ở server.
+
+| Method | Route | Contract |
+|---|---|---|
+| `POST` | `/ai/chat` | Gửi `{ message, sessionId?, orderId? }`; message sau trim dài 1–4.000 ký tự, `sessionId` là UUID từ server và `orderId` là UUID/mã đơn FoodFlow thuộc caller. Trả lời live-provider theo role, đã qua safety filter với `action: "answered" | "escalated"`, `grounded` và metadata tool nếu có. |
+| `GET` | `/ai/history?sessionId=<uuid>` | Trả session AI-support active của chính caller và tối đa 50 turn đã lưu. Bỏ `sessionId` để lấy session gần nhất. |
+| `POST` | `/ai/stream` | SSE có xác thực; phát `thinking`, một `response` hoàn chỉnh, `escalated` nếu có và `done`. Không phát word token giả. |
+
+Chat fail-closed với HTTP 503 và một trong `AI_PROVIDER_NOT_CONFIGURED`, `AI_PROVIDER_UNAVAILABLE` hoặc `AI_CONTEXT_UNAVAILABLE`. Session/order không hợp lệ hoặc không khớp trả `AI_SESSION_NOT_FOUND`, `ORDER_NOT_FOUND` hoặc `SESSION_ORDER_MISMATCH` cùng status 404/400. Client phải hiển thị trạng thái không khả dụng trung thực, không render fallback assistant message.
+
 ## Pagination
 
 Endpoint collection dùng:

@@ -29,7 +29,7 @@ Ngưỡng coverage backend được cấu hình trong `backend/jest.config.ts`; 
 
 `pnpm db:big-seed` tạo các đơn AI smoke deterministic `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009` và `FF-010` cho `customer1@foodflow.vn`. Workflow integration đăng nhập qua `/api/auth/login` rồi chạy `e2e/ai-scenarios/run-ai-scenarios.ts` trên endpoint `/api/ai/chat` có auth.
 
-CI có thể đặt `AI_ALLOW_DEGRADED=true` khi chưa có secret LLM provider; gate vẫn kiểm auth, tool grounding, order lookup theo tenant, support-ticket escalation và hallucination guard. Release verification phải chạy không degraded mode và dùng `DEEPSEEK_API_KEY` hợp lệ/đã rotate từ secret manager.
+CI chỉ được mock provider adapter trong unit test xác định; không được bật runtime degraded answer path. Release verification phải chạy smoke live-provider đã xác thực với `DEEPSEEK_API_KEY` hợp lệ/đã rotate từ secret manager và xác minh telemetry đã persist.
 
 ## Web
 

@@ -46,7 +46,7 @@ Backend coverage thresholds are enforced in `backend/jest.config.ts`; do not pas
 
 `pnpm db:big-seed` creates deterministic AI smoke orders `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, and `FF-010` for `customer1@foodflow.vn`. The integration workflow logs in through `/api/auth/login` and runs `e2e/ai-scenarios/run-ai-scenarios.ts` against the authenticated `/api/ai/chat` endpoint.
 
-CI may set `AI_ALLOW_DEGRADED=true` when no LLM provider secret is available; this still verifies auth, tool grounding, tenant-scoped order lookup, support-ticket escalation, and hallucination guards. Release verification must run without degraded mode and with a rotated, valid `DEEPSEEK_API_KEY` from the secret manager.
+CI may mock the provider adapter only inside deterministic unit tests. It must not enable a runtime degraded answer path. Release verification must run an authenticated live-provider smoke with a rotated, valid `DEEPSEEK_API_KEY` from the secret manager and verify persisted telemetry.
 
 ## Post-deploy production smoke
 

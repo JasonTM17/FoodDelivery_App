@@ -2041,7 +2041,15 @@ components:
             degradedReason: { type: string, nullable: true }
             provider: { type: string, enum: [deepseek] }
             model: { type: string }
-          required: [status, dashboardUrl, degradedReason, provider, model]
+            telemetry:
+              type: object
+              properties:
+                status: { type: string, enum: [live, awaiting_requests, unavailable] }
+                lastRequestAt: { type: string, format: date-time, nullable: true }
+                lastSuccessfulRequestAt: { type: string, format: date-time, nullable: true }
+                lastFailureCode: { type: string, nullable: true }
+              required: [status, lastRequestAt, lastSuccessfulRequestAt, lastFailureCode]
+          required: [status, dashboardUrl, degradedReason, provider, model, telemetry]
         stats: { $ref: "#/components/schemas/AdminAiMonitorStats" }
       required: [instance, stats]
 
@@ -2057,6 +2065,7 @@ components:
         inputTokens: { type: integer, nullable: true }
         outputTokens: { type: integer, nullable: true }
         requests: { type: integer, nullable: true }
+        failedRequests: { type: integer, nullable: true }
         averageLatencyMs: { type: integer, nullable: true }
       required:
         - totalConversations
@@ -2068,22 +2077,23 @@ components:
         - inputTokens
         - outputTokens
         - requests
+        - failedRequests
         - averageLatencyMs
 
     AiChatRequest:
       type: object
       properties:
-        message: { type: string, minLength: 1 }
-        sessionId: { type: string }
-        orderId: { type: string, description: "Customer-scoped order UUID or order code reference." }
+        message: { type: string, minLength: 1, maxLength: 4000 }
+        sessionId: { type: string, format: uuid, description: "An active AI-support session owned by the authenticated caller." }
+        orderId: { type: string, maxLength: 36, pattern: "^(?:FD\\d{10}|F[DF]-?\\d{3,10}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$", description: "A customer-scoped order UUID or FoodFlow order code; ownership is resolved before grounding." }
       required: [message]
 
     AiChatReply:
       type: object
       properties:
         reply: { type: string }
-        sessionId: { type: string }
-        action: { type: string, enum: [answered, escalated, degraded] }
+        sessionId: { type: string, format: uuid }
+        action: { type: string, enum: [answered, escalated] }
         escalated: { type: boolean }
         severity: { type: string }
         language: { type: string, enum: [vi, en, ja] }
@@ -2108,6 +2118,25 @@ components:
                 additionalProperties: true
             required: [name, args]
       required: [reply, sessionId, action, language]
+
+    AiChatHistoryMessage:
+      type: object
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, role, content, createdAt]
+
+    AiChatHistory:
+      type: object
+      properties:
+        sessionId: { type: string, nullable: true, format: uuid }
+        messages:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/AiChatHistoryMessage" }
+      required: [sessionId, messages]
 
     DashboardKpi:
       type: object
@@ -4623,7 +4652,7 @@ paths:
     get:
       tags: [ai]
       summary: Get AI chatbot monitor overview
-      description: Returns the DeepSeek configuration state plus DB-backed AI conversation, escalation, and resolution metrics. Usage-cost/token/latency telemetry stays null until a real telemetry source is connected.
+      description: Returns DeepSeek configuration plus DB-backed conversations, escalations, actual provider token/latency telemetry, and provider status. Cost stays null until an approved billing source is connected.
       operationId: admin_aiMonitor_getOverview
       x-foo-actor: admin
       responses:
@@ -4642,7 +4671,7 @@ paths:
     post:
       tags: [ai]
       summary: Create one chatbot reply
-      description: Runs the FoodFlow chatbot pipeline once through DeepSeek and returns answered, escalated, or degraded state without streaming.
+      description: Runs the role-scoped FoodFlow chatbot pipeline once through DeepSeek and returns a safety-filtered answered or escalated state. Requested sessions are ownership-checked before any memory read. Provider/context failures fail closed with HTTP 503; no fallback assistant reply is returned.
       operationId: ai_chat_create
       x-foo-actor: user
       requestBody:
@@ -4661,13 +4690,40 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/AiChatReply" }
-        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "400": { description: "Missing/overlong/unsafe message, malformed UUID, or session/order mismatch", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Requested AI session or customer-scoped order was not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "Provider unconfigured, unavailable, or grounded context unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /ai/history:
+    get:
+      tags: [ai]
+      summary: Get the authenticated user's persisted AI chat history
+      description: Returns at most fifty turns belonging to the caller only. Omit sessionId to select the caller's latest active AI-support session.
+      operationId: ai_chat_getHistory
+      x-foo-actor: user
+      parameters:
+        - in: query
+          name: sessionId
+          required: false
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "User-scoped AI chat history"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AiChatHistory" }
+        "400": { description: "Invalid session ID", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /ai/stream:
     post:
       tags: [ai]
       summary: Stream a chatbot reply as server-sent events
-      description: Streams thinking/token/escalated/degraded/done events from the same chatbot service used by `POST /ai/chat`.
+      description: Streams thinking/response/escalated/done events from the same safety-filtered chatbot service. It does not synthesize word tokens; failures emit an allow-listed public error code and no assistant fallback.
       operationId: ai_chat_stream
       x-foo-actor: user
       requestBody:
@@ -4676,8 +4732,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/AiChatRequest" }
       responses:
-        "200": { description: "SSE stream with thinking/token/escalated/degraded/done events", content: { text/event-stream: { schema: { type: string } } } }
-        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "200": { description: "SSE stream with thinking/response/escalated/done or error events", content: { text/event-stream: { schema: { type: string } } } }
+        "400": { description: "Missing/overlong/unsafe message or malformed UUID", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/kpis:
     get:

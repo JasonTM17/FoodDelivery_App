@@ -85,6 +85,18 @@ Client は翻訳済み text ではなく `code` で分岐します。
 | `NOT_FOUND` | Resource が存在しない、または actor から見えません。 |
 | `FORBIDDEN` | Actor に必要な権限がありません。 |
 
+## AI chat
+
+すべての AI route には user access token が必要です。provider key は server 側のみで扱います。
+
+| Method | Route | Contract |
+|---|---|---|
+| `POST` | `/ai/chat` | `{ message, sessionId?, orderId? }` を送信します。trim 後 message は 1–4,000 文字、`sessionId` は server UUID、`orderId` は caller 所有 UUID/FoodFlow order code です。role-scoped かつ safety filter 済み live-provider reply、`action: "answered" | "escalated"`、`grounded`、任意 tool metadata を返します。 |
+| `GET` | `/ai/history?sessionId=<uuid>` | caller 自身の active AI-support session と最大 50 件の保存済み turn を返します。`sessionId` 省略時は最新 session です。 |
+| `POST` | `/ai/stream` | 認証済み SSE。`thinking`、完了済みの `response`、任意の `escalated`、`done` を送信します。偽の word token は送信しません。 |
+
+Chat は HTTP 503 と `AI_PROVIDER_NOT_CONFIGURED`、`AI_PROVIDER_UNAVAILABLE`、`AI_CONTEXT_UNAVAILABLE` のいずれかで fail-closed します。不正または不一致の session/order context は 404/400 と `AI_SESSION_NOT_FOUND`、`ORDER_NOT_FOUND`、`SESSION_ORDER_MISMATCH` を返します。Client は正直な unavailable state を表示し、fallback assistant message を描画しません。
+
 ## Pagination
 
 Collection endpoint は次を使います。
