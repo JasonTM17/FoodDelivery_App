@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { API_URL, restaurantUrl, TEST_USERS } from '../fixtures/test-users';
+import { API_URL, adminUrl, restaurantUrl, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
-import { gotoAdminRoute, loginRestaurantApp } from '../fixtures/ui-auth';
+import { gotoAdminRoute, loginAdminApp, loginRestaurantApp } from '../fixtures/ui-auth';
 
 interface Envelope<T> {
   success?: boolean;
@@ -97,6 +97,30 @@ const restaurantLoginLocales = [
   },
 ] as const;
 
+const adminOverviewLocales = [
+  {
+    locale: 'vi',
+    title: 'Tổng quan | FoodFlow Admin',
+    heading: 'Tổng quan',
+    revenue: 'Doanh thu',
+    conflictingCookie: 'en',
+  },
+  {
+    locale: 'en',
+    title: 'Overview | FoodFlow Admin',
+    heading: 'Overview',
+    revenue: 'Revenue',
+    conflictingCookie: 'vi',
+  },
+  {
+    locale: 'ja',
+    title: '概要 | FoodFlow Admin',
+    heading: '概要',
+    revenue: '売上',
+    conflictingCookie: 'vi',
+  },
+] as const;
+
 async function expectRestaurantLoginLocale(
   page: Page,
   expected: (typeof restaurantLoginLocales)[number],
@@ -107,6 +131,18 @@ async function expectRestaurantLoginLocale(
   await expect(page.getByLabel(expected.password, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: expected.showPassword, exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: expected.submit, exact: true })).toBeVisible();
+}
+
+async function expectAdminOverviewLocale(
+  page: Page,
+  expected: (typeof adminOverviewLocales)[number],
+): Promise<void> {
+  await expect(page.locator('html')).toHaveAttribute('lang', expected.locale);
+  await expect(page).toHaveTitle(expected.title);
+  await expect(page.getByRole('heading', { name: expected.heading, exact: true })).toBeVisible();
+  await expect(
+    page.getByTestId('kpi-card-revenue').getByRole('heading', { name: expected.revenue, exact: true }),
+  ).toBeVisible();
 }
 
 test.describe('Batch 4 public locale contracts', () => {
@@ -140,6 +176,40 @@ test.describe('Batch 4 public locale contracts', () => {
       expect(pageErrors).toEqual([]);
       expect(consoleErrors).toEqual([]);
     });
+  }
+
+  for (const expected of adminOverviewLocales) {
+    test(
+      'admin overview honors /' + expected.locale + ' with a stale locale cookie',
+      async ({ page, request }) => {
+        const pageErrors: string[] = [];
+        const consoleErrors: string[] = [];
+
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        page.on('console', (message) => {
+          if (message.type() === 'error') consoleErrors.push(message.text());
+        });
+
+        await loginAdminApp(page, request, expected.locale);
+        await expectAdminOverviewLocale(page, expected);
+
+        const overviewUrl = adminUrl('/overview', expected.locale);
+        await page.context().addCookies([{
+          name: 'NEXT_LOCALE',
+          value: expected.conflictingCookie,
+          url: new URL(overviewUrl).origin,
+        }]);
+        const conflictingCookieResponse = await page.reload();
+        expect(conflictingCookieResponse?.status(), 'A stale locale cookie must not break the URL locale')
+          .toBeLessThan(400);
+        await expectAdminOverviewLocale(page, expected);
+
+        await focusFirstVisibleAppControl(page);
+        await expectNoSeriousOrCriticalAxeViolations(page);
+        expect(pageErrors).toEqual([]);
+        expect(consoleErrors).toEqual([]);
+      },
+    );
   }
 });
 

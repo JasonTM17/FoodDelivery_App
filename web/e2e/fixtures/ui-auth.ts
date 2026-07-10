@@ -34,7 +34,11 @@ export function gotoRestaurantRoute(page: Page, path: string, locale?: 'vi' | 'e
   return gotoAppRoute(page, restaurantUrl(path, locale))
 }
 
-export async function loginAdminApp(page: Page, request: APIRequestContext): Promise<void> {
+export async function loginAdminApp(
+  page: Page,
+  request: APIRequestContext,
+  locale?: 'vi' | 'en' | 'ja',
+): Promise<void> {
   const auth = await loginViaApi(request, TEST_USERS.admin.email, TEST_USERS.admin.password)
   await seedLocalStorage(page, {
     admin_token: auth.accessToken,
@@ -46,7 +50,7 @@ export async function loginAdminApp(page: Page, request: APIRequestContext): Pro
     }),
   })
 
-  await gotoAdminRoute(page, '/overview')
+  await gotoAdminRoute(page, '/overview', locale)
   await expect(page).toHaveURL(/\/overview/, { timeout: 15_000 })
 }
 
