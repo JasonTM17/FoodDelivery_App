@@ -385,14 +385,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       fontSize: 14,
                     ),
                   ),
-                  if (message.action == 'degraded') ...[
-                    const SizedBox(height: 6),
-                    const Icon(
-                      Icons.info_outline,
-                      size: 12,
-                      color: AppColors.textHint,
-                    ),
-                  ],
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.time),

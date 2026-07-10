@@ -71,6 +71,7 @@ class AiChatMessage {
 class AiChatNotifier extends StateNotifier<AiChatState> {
   final String orderId;
   final AiChatService _service;
+  String? _sessionId;
 
   AiChatNotifier({required this.orderId, AiChatService? service})
     : _service = service ?? AiChatService(),
@@ -95,6 +96,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
           orderId: _orderReference,
         ),
       );
+      _sessionId = reply.sessionId;
       state = state.copyWith(
         messages: [...state.messages, AiChatMessage.assistant(reply)],
         isSending: false,
@@ -104,11 +106,6 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       state = state.copyWith(isSending: false, error: error.toString());
       rethrow;
     }
-  }
-
-  String get _sessionId {
-    final value = orderId.trim();
-    return value.isEmpty ? 'mobile-support' : 'mobile-$value';
   }
 
   String? get _orderReference {
