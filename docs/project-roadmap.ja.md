@@ -1,125 +1,77 @@
 # FoodFlow Project Roadmap
 
-言語: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.vi.md) | [日本語](./project-roadmap.ja.md)
+## Current objective
 
-この roadmap は `master` に merge 済みの Batch 4 方針を示します。すでに landed したものと、production deployment 前にまだ test が必要なものを分けています。
+Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Vercel deploy、production smoke、integration `HEAD` の `master` fast-forward、immutable Docker publish。
 
-## 現在の優先事項: merge 後 hardening と deployment readiness
+2026-07-10 status: **hardening in progress; production no-go**。
 
-Goal: Admin、Restaurant、backend、mobile を merge 済み Batch 4 contract に合わせ続け、deployment readiness gaps を閉じ、GitHub Actions auth 復旧後に remote CI を rerun します。Next.js 15、React 18、ESLint 8、固定済み pnpm 11.11.0、現行 Flutter constraints は維持します。
+## Completed on local integration
 
-Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、remote CI/security checks、deployment validation が通るまで完了ではありません。
+- 実在する backend/Admin/Restaurant/mobile/AI/realtime/map/docs/DevOps work の controlled consolidation。
+- Remote branch は `master` のみ。Local integration は final fast-forward まで保持。
+- Critical web screens の fake empty/zero fallback 除去と runtime response validation。
+- Restaurant URL-authoritative vi/en/ja locale、accessibility contrast/focus。
+- Supabase realtime outbox/RLS/token、Storage adapter、Postgres job outbox/Cron、explicit web provider。
+- DeepSeek `deepseek-v4-flash`、session/usage telemetry、fail-closed states。
+- Fresh GPS、route phase/provider geometry/ETA、tracking tenant auth、hardcoded map fallback 除去。
+- Node 22.13+、pnpm 11.11、frozen install。
+- 4 non-root multi-arch images と fail-closed Docker promotion。
+- Current-source screenshot/GIF pipeline と architecture/deploy/testing docs。
 
-## `master` に landed
+## In progress
 
-- `origin/master` は local で `118459e539eecb2dbd61e033431b7f4b5104f0e0` として recheck 済みです。`git ls-remote --heads origin` は `master` のみを返します。Local `codex/batch4-integration` branch は worktree continuity のため残り、`origin/master` を tracking しています。
-- Web response contract `{ success: true, data, meta? }` を document 済み。
-- Error contract RFC 7807 Problem Details を document 済み。
-- OpenAPI validation workflow と Spectral rules を追加済み。
-- Shared web API client は `web/packages/api-client` 配下に維持。
-- Restaurant revenue と analytics formatting を localize 済み。
-- SePay runtime は必須設定がないと successful intent を捏造しません。
-- AI chat の live-provider、fail-closed、telemetry、user-scoped history contract は focused tests で検証済み。
-- Core setup、testing、deployment docs を English/Vietnamese/Japanese で開始済み。
-- Mobile Flutter gate は local 再確認済みです。`flutter pub get --enforce-lockfile`、`flutter analyze` clean、`flutter test` 225 tests passed、`flutter build apk --debug` が pass。Current tracking hardening targeted mobile rerun は 19 tests と `flutter analyze` が pass。GitHub Actions は account token/auth または billing status により blocked されているため、修正後に remote checks を rerun する必要があります。
-- Mobile runtime UI は touched dispatch/cancel flows の targeted scanner 上で hardcoded presentation string が残っておらず、runtime の "coming soon" action もありません。Backend timestamp は current-time fallback ではなく deterministic sentinel で扱い、release build は明示的な `API_BASE_URL` を必須にします。
-- Customer/driver/Restaurant tracking maps は backend-routed `routePolyline` を使い、realtime 前に REST snapshot `/orders/:id/tracking` を hydrate し、telemetry trail と planned route を分離し、pickup/dropoff route phase を扱い、phase 変更または route-less snapshot で stale route geometry を clear し、driver GPS metadata を backend の km/h contract に normalize します。Route provider が使えない場合も straight-line ETA minutes を捏造しません。初期 `driver:assigned` event は tracking が Google/OSRM route を得るまで `etaMinutes` を null のままにします。
-- Dispatch は restaurant coordinates と attempt metadata を含む route-aware driver jobs を enqueue し、legacy malformed queue jobs を安全に扱い、ioredis `GEOSEARCH WITHDIST` tuple rows を crash せず parse します。
-- Admin shared tag input は default English placeholder copy を生成しません。Caller が localized placeholder を渡す必要があります。
-- Batch 4 merged worktree の最新 local evidence: backend Prisma validate/typecheck/lint/build と Jest (110 suites / 802 tests)、web typecheck/lint/build と Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests)、Playwright Chromium + Firefox 70/70、Docker health checks、tenant isolation、visual contract、axe serious/critical smoke、mobile Flutter tests (225)、Android debug APK build、OpenAPI Spectral lint、high-confidence secret scan が pass。Current targeted hardening reruns は backend 9 suites / 134 tests、Admin 2 files / 12 tests、mobile 19 tests、backend/admin typecheck、backend/admin lint、Flutter analyze が pass。
-- Remote CI は `e776f5c` が last fully green です: Gitleaks、Lint、Build Check、SBOM、Trivy、CodeQL、CI、E2E Tests、Integration Smoke Gate。Current head CI は GitHub token/auth または billing status により job start 前に blocked されています。
+### UI/UX/i18n/media
+
+- Vietnamese Admin overview に残る English KPI labels を修正。
+- Fresh `vi/en/ja` context で title、`html lang`、visible/aria text、number/date/currency、cookie isolation を audit。
+- Dashboard、approval、promotion、audit/export、staff、benchmark、AI monitor、map/order の responsive/keyboard/axe。
+- Stitch/design artifact comparison と visual regression acceptance。
+- UI approval 後に final media recapture。
 
 ### Mobile
 
-- Flutter customer/driver app を安定済み Batch 4 API contract に合わせる。
-- OpenAPI contract を意図的に refresh するまで mobile API client は regenerate/commit しない。
-- Violet/Indigo は branch refs または review 済み patch artifacts が入手できた場合だけ reconcile する。現在の `origin` head list にはそれらの branch は無い。
-- Mobile に影響する backend/web contract 変更後は `flutter analyze` と `flutter test` を再実行する。
+- Production Socket.IO を Web と同じ `POST /api/realtime/token` + Supabase channel contract に移行。
+- 必要なら Socket.IO は local/self-hosted のみに残す。
+- Violet/Indigo は実在 ref のみ reconcile。Missing branch を作らない。
+- API contract、vi/en/ja、customer/driver、map/GPS、offline/reconnect、build を再実行。
 
-## Deployment 前に進行中
+### Backend/production
 
-### Backend
+- Vercel の残存 Redis dependency を audit し、明示 provision または安全に削除。
+- 22 migrations を fresh PostGIS/Supabase で validate。
+- Supabase RLS/publication/storage/cross-tenant を live test。
+- Rotated secrets で DeepSeek、route、SePay、notification、export、storage、Cron smoke。
+- Release-relevant mutable Compose image を pin。
 
-- payment、promotion、support、analytics、reporting path に残る runtime mock/fallback を削除。
-- 既存 `AdminExportJob` model 上で canonical Admin export jobs を完成。
-- `PlatformSetting` backed な Platform Settings endpoints を完成。
-- order item value に基づく order/revenue/category attribution を verify。
-- Benchmark privacy を verify: cohort は最低 10 restaurants、足りない場合は identity を出さず platform aggregate を使う。
-- Support SLA を ICT business hours で verify し、customer 待ちでは pause。
+### Tests/security
 
-### Admin dashboard
+Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch、tenant、mobile post-migration、secret/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck。
 
-- Real data の dashboard KPI、comparison、timeseries、heatmap、recent orders を完成。
-- Orders list/detail/status updates と WebSocket `/events` status、controlled polling fallback を完成。
-- Restaurant approval detail、menu/orders/reviews/finance/KPI を完成。
-- Users、wallet、voucher、refund、KYC views を完成。
-- Promotions CRUD、toggle、analytics、overlap validation を完成。
-- Support queue/detail/messages/reply/internal note/bulk action/macros/CSAT を完成。
-- Audit logs と exports の progress/download を完成。
-- Settings と AI monitor は real-data backed または明確な degraded state にします。
+## External blockers
 
-### Restaurant dashboard
+- GitHub Actions billing/auth/token exhausted。
+- Supabase CLI access token/production database URLs missing。
+- Vercel API production env missing; Admin/Restaurant Supabase anon key missing。
+- 以前貼られた provider key は rotate 必須。
 
-- Profile、onboarding、operating hours を完成。
-- Real data から overview KPI を完成。
-- Menu categories/items/options visibility と reorder を完成。
-- Kanban orders、detail、status transitions、order chat を完成。
-- Reviews と merchant reply を完成。
-- Revenue drill-down と export formats を完成。
-- Promotions CRUD、targeting preview、scheduling、analytics、broadcast を完成。
-- Staff invitations、permissions、shift schedule を完成。
-- Insights、menu analytics、privacy-safe benchmark を完成。
-- `/notifications` の shared notifications を使います。
+Fake value や validation bypass は禁止です。
 
-### UI, UX, design
+## Release sequence
 
-- 既存 7 つの Stitch desktop screens を visual baseline として維持。
-- 本当の screen gap がある場合だけ focused Stitch designs を追加。
-- Dark sidebar、orange/green accents、dense cards、一貫した filters/action bars を適用。
-- Loading、empty、retryable error、permission-denied、disabled、success、destructive-confirmation states を追加。
-- 1440、1280、tablet、mobile widths で responsive layout を検証。
-- 承認済み logos/assets は app `public/` または docs asset folders に置き、repo root には置きません。
+1. Final source freeze + full local gate。
+2. 全 GitHub workflows green。
+3. Rotated secrets + provider preflight。
+4. Supabase migrations/RLS/Realtime/Storage。
+5. Vercel API health/readiness/Cron。
+6. Verified API alias で Admin/Restaurant。
+7. Realtime/map/chatbot/export/payment/notification/tenant smoke。
+8. `HEAD` を直接 `origin/master` へ push、one branch/`0 0` verify。
+9. Docker SHA → immutable `v4.0.0` → manual `latest`。
+10. Report、digests、GitHub About/topics/homepage、landing notes 更新。
 
-### Maps and AI chatbot
+## Post-release/deferred
 
-- Maps は provider state を正しく反映します。Google Maps は設定がある場合、OSRM/backend fallback は product behavior と一致する場合、どちらもない場合は明確な degraded state。
-- AI chatbot は LLM provider adapter を使い、現在の default は DeepSeek です。設定不足では明確な degraded response を返します。
-- 露出した API key は production 前に rotate し、real value は ignored env または provider secret store のみに保存します。
+Health/Cron/realtime/AI cost/maps/storage/payments monitor、mobile staged rollout、outbox/telemetry retention、worker tag consumer audit、`HEAD == origin/master` 後の local cleanup。
 
-### Repository hygiene and branch salvage
-
-- Stale team branches を raw merge しません。
-- Amber、Steel、audit branches からは focused tests で証明した behavior だけ port します。
-- Violet または Indigo ref が再出現した場合は、focused Flutter tests 付きで hunk-by-hunk に salvage し、disposition をここに記録する。
-- Generated screenshots、local caches、backup folders、assistant private files は Git に入れません。
-- 意図的に新しい review branch を開く場合を除き、`master` を唯一の live remote branch として維持します。
-
-## Deployment 前の required gates
-
-- Clean environment で `pnpm install --frozen-lockfile`。
-- Backend Prisma validate/generate/migration checks、typecheck、lint、Jest、contract tests、build。
-- Web API client generation/typecheck と OpenAPI validation。
-- Admin/Restaurant typecheck、warning なし ESLint、Vitest、production builds。
-- Chromium/Firefox Playwright: login、RBAC、locale、promotions、support、exports、WebSocket orders、menu、revenue、staff、insights、maps、AI chatbot。
-- Axe に serious/critical がないこと。
-- Approved Stitch screens との visual regression。
-- Restaurant-scoped reads/writes の tenant-isolation tests。
-- Secret scan、artifact scan、`.gitignore` hygiene check。
-
-## Gates が green になった後の deploy plan
-
-1. `master` を clean かつ pushed に保つ。
-2. GitHub Actions token/auth/billing access を復旧し、blocked CI/security workflows を rerun する。
-3. Branch disposition、test matrix、rejected changes、known degraded states を release report に添付。
-4. Supabase CLI を install/auth し、project access を確認してから、rotated secrets が有効な場合のみ database/realtime resources を deploy。
-5. Repo を対象 Vercel projects に link し、env を確認してから、local と remote gates が green の場合のみ web surfaces を deploy。
-6. Production smoke tests、realtime checks、map checks、AI chatbot checks、export checks、mobile API checks、keep-alive monitoring を実行。
-
-## Batch 4 から deferred
-
-- Next.js、React、ESLint、Node major migrations。
-- httpOnly cookie auth migration。
-- Data warehouse または OLAP redesign。
-- Nodemailer major migration。
-- Next.js 14、React 18、ESLint 8 と conflict する dependency major upgrades。
-- 全 gates が green になる前の deployment。
+Measured scale 前の Kubernetes/microservices、real writer 前の Parquet、public realtime/RLS bypass、missing branch recreation、local-only evidence deploy は deferred/forbidden です。

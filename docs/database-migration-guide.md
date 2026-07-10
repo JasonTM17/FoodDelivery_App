@@ -1,43 +1,93 @@
 # Database Migration Guide
 
-## Prisma Migrations
+FoodFlow uses Prisma migrations over PostgreSQL/PostGIS. Supabase is the
+managed production database; never use a local database command as a proxy for
+production migration readiness.
 
-```bash
-# Create migration from schema changes
+## Connection roles
+
+Prisma needs two production URLs:
+
+| Variable | Purpose | Supabase example shape |
+| --- | --- | --- |
+| DATABASE_URL | Application/runtime connection through the pooler | postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true |
+| DIRECT_URL | Direct migration and Prisma introspection connection | postgresql://...pooler.supabase.com:5432/postgres |
+
+Keep both values only in a secure CLI environment or Vercel/Supabase secret
+manager. Do not put real URLs in a committed .env file, a test snapshot, or a
+shell transcript.
+
+## Local development
+
+Create a new migration only from a disposable local database:
+
+~~~bash
 cd backend
-pnpm prisma migrate dev --name describe_your_change
+corepack pnpm db:generate
+corepack pnpm db:migrate --name describe_change
+corepack pnpm typecheck
+~~~
 
-# Apply in production
-pnpm prisma migrate deploy
+Review the generated SQL before committing. PostGIS types may require explicit
+SQL in the migration. Never amend an already-applied migration; add a new
+forward migration instead.
 
-# Generate Prisma client after migration
-pnpm prisma generate
-```
+## Production procedure
 
-## PostGIS Spatial Migrations
+Production deployment is a gated, one-way operation:
 
-PostGIS columns use `Unsupported` types in Prisma schema.
-Create spatial columns using raw SQL in migration files.
+1. Take or verify a provider backup and record the current migration state.
+2. Place SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, DATABASE_URL, and
+   DIRECT_URL in a secure process environment. Do not print them.
+3. Run infra/scripts/supabase-preflight.ps1.
+4. From backend/, run corepack pnpm db:generate, then
+   corepack pnpm db:migrate:prod.
+5. Verify Prisma migration status, API health, tenant boundaries, and the
+   affected product flow.
+6. Record the release evidence before web/API production deployment continues.
 
-## Table Partitioning
+Use prisma migrate deploy (the db:migrate:prod script) in production. Do not
+run any of the following against Supabase production:
 
-`driver_location_history` should be partitioned monthly for production:
+~~~text
+prisma migrate dev
+prisma migrate reset
+prisma db push
+pnpm db:seed
+pnpm db:big-seed
+~~~
 
-```sql
-CREATE TABLE driver_location_history_partitioned (
-  LIKE driver_location_history INCLUDING ALL
-) PARTITION BY RANGE (recorded_at);
+## Supabase policy verification
 
-CREATE TABLE dlh_2026_06 PARTITION OF driver_location_history_partitioned
-  FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
-```
+Batch 4's managed realtime/job/AI schema needs more than a successful Prisma
+command:
 
-## Backup & Restore
+- realtime_outbox, job_outbox, and ai_usage_events have row-level security
+  enabled.
+- Only realtime_outbox is added to the supabase_realtime publication.
+- Authenticated browser clients may read realtime rows only when their
+  short-lived JWT claim explicitly permits the channel.
+- service_role access stays server-only; it is never sent to a browser or
+  mobile binary.
+- Cross-tenant order, restaurant, driver, audit, and export reads are denied
+  by API authorization and tested against the deployed schema.
 
-```bash
-# Backup
-./infra/scripts/backup-db.sh
+Run an authenticated POST /api/realtime/token smoke test and verify the denied
+cross-tenant case after applying the migration. See
+[API contract](api-contract.md#managed-production-realtime-and-job-drain).
 
-# Restore
-./infra/scripts/restore-db.sh backups/foodflow_backup_20260604_120000.sql.gz
-```
+## Recovery
+
+Prisma does not generate universal down migrations. A release must therefore
+be backwards-compatible for the API version that is still serving traffic. If a
+migration problem is found:
+
+1. Stop the next deployment stage and preserve the failure evidence.
+2. Prefer a reviewed forward repair migration when data has already changed.
+3. Restore from the verified provider backup only under the incident runbook
+   and with explicit authorization.
+4. Re-run migration status, RLS/publication checks, and tenant smoke before
+   reopening traffic.
+
+Do not delete migration records, disable RLS broadly, or use a production reset
+to make a status check pass.

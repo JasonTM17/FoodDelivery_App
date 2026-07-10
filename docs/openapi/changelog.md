@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-10: Corrected the canonical base from the retired `/v1`/`api.foodflow.vn` examples to `/api` on a verified Vercel API alias. Added documented `POST /realtime/token` Supabase private-channel authorization, the `cronBearer` scheme, and secured `GET|POST /jobs/drain` PostgreSQL outbox contracts. These routes were implemented but absent from the prior public OpenAPI surface.
 - 2026-07-10: Hardened AI chat input/session contracts (4,000-character cap, UUID ownership checks, 400/404 errors), role-scoped grounding, and allow-listed SSE failures.
 - 2026-07-10: AI chat now fails closed instead of returning a `degraded` assistant payload. The contract adds `GET /ai/history`, documents SSE `response`/`error` events, constrains actions to `answered` or `escalated`, and records real DeepSeek token/latency telemetry without estimating cost.
 - 2026-07-07: Customer `GET /orders` and `GET /orders/{orderId}` now serialize the documented `OrderDetail` item contract with `menuItemId`, real unit price, line totals, and selected option metadata; Prisma Decimal values are converted to JSON numbers so mobile/shared clients do not infer blank items or fake zero prices.
@@ -70,7 +71,9 @@ Authored the canonical OpenAPI 3.1 contract covering all 12 backend modules:
 | audit | 3 | list logs, full-text search, export |
 | analytics | 7 | dashboard KPIs, top restaurants, revenue chart, heatmap, per-restaurant KPI, admin user/restaurant/order lists |
 
-**Total: 75 endpoints, ~2,600 lines**
+### Release inventory
+
+Total: 75 endpoints, ~2,600 lines
 
 ### Conventions Established
 

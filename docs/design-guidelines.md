@@ -46,12 +46,14 @@ Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guideli
 ## Component Patterns
 
 ### Order Status Badges
+
 - created/pending: gray
 - preparing/delivering: amber/yellow
 - completed/delivered: green
 - cancelled/refunded: red
 
 ### Map Markers
+
 - Restaurant: green pin
 - Driver (online): green dot
 - Driver (delivering): orange motorcycle

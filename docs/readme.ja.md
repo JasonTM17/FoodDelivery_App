@@ -1,116 +1,148 @@
-# FoodFlow - リアルタイムフードデリバリープラットフォーム
+# FoodFlow — フードデリバリー運用プラットフォーム
 
-Documentation languages: [English](../README.md) | [Tiếng Việt](readme.vi.md) | [日本語](readme.ja.md)
+言語: [English](../README.md) · [Tiếng Việt](readme.vi.md) · **日本語**
 
-FoodFlow は、NestJS バックエンド、Next.js の Admin/Restaurant ダッシュボード、Flutter モバイルアプリ、PostgreSQL/PostGIS、Redis、Socket.IO、SePay、Google/OSRM ルーティング、AI サポートチャットを含むマルチクライアント型のフードデリバリープラットフォームです。
+FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）と Vercel（API、Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-FoodFlow は runtime で外部 workflow automation runner を使用しません。AI チャットとフード推薦は backend LLM adapter を通り、model provider が利用できない場合は明示的な degraded response を返します。
+> **2026-07-10 status:** Batch 4 には local evidence がありますが、**production deploy は未実施**です。Supabase CLI credential、Vercel production env、GitHub Actions billing/auth が不足しているため、deploy と `master` fast-forward は fail closed です。
 
-## アプリケーション
+## Product preview
 
-| サーフェス | パス | Runtime | デフォルト URL |
+次の画像/GIF は current-source isolated Docker stack と deterministic seed data から取得したもので、production screenshot ではありません。[Full gallery](product-gallery.ja.md) を参照してください。
+
+<p align="center">
+  <img src="screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
+  <img src="screenshots/restaurant/04-menu.png" alt="FoodFlow Restaurant menu" width="48%" />
+</p>
+
+| Admin login → overview | Restaurant orders → menu |
+|---|---|
+| ![Admin flow](media/gifs/admin-login-flow.gif) | ![Restaurant flow](media/gifs/restaurant-orders-to-menu.gif) |
+
+## Applications
+
+| Surface | Source | Runtime | Local URL |
 |---|---|---|---|
-| Backend API | `backend/` | NestJS, Prisma, Socket.IO | `http://localhost:3001/api` |
-| Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
-| Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
-| Customer/driver apps | `mobile/` | Flutter | Device/emulator |
-| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO | Local containers |
+| API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` |
+| Admin | `web/apps/admin/` | Next.js 15, React 18 | `http://localhost:3000` |
+| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18 | `http://localhost:3002` |
+| Customer | `mobile/lib/main_customer.dart` | Flutter/Riverpod | device/emulator |
+| Driver | `mobile/lib/main_driver.dart` | Flutter/Riverpod | device/emulator |
 
-## 主な機能
+Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API success は `{ success: true, data, meta? }`、error は RFC 7807 Problem Details です。
 
-- 注文、ウォレット/COD/SePay 支払い、リアルタイム追跡、AI サポート。
-- ドライバーの稼働状態、GPS、配車、ルート案内、収益確認。
-- レストランの注文カンバン、メニュー、カテゴリ、レビュー、売上、プロモーション、スタッフ、インサイト。
-- Admin の KPI、ライブドライバーマップ、店舗、ユーザー、注文、プロモーション、サポート、監査ログ、エクスポート、設定。
-- Web contract: success は `{ success: true, data, meta? }`、error は RFC 7807。
-- Web route は `/:locale/...`、対応ロケールは `vi`, `en`, `ja`。
+## Main capabilities
 
-## ローカル起動
+- Customer ordering、cart、address、voucher、wallet/COD/SePay、review、support、AI。
+- Driver online/dispatch、fresh GPS validation、route/ETA、heatmap、earnings、KYC、incentive。
+- Restaurant order kanban、menu/options、promotion、revenue、review、notification、staff、opening hours、insight。
+- Admin KPI、order、restaurant、user、driver、live map、promotion、audit、support、export、AI telemetry。
+- Restaurant staff、realtime channel、tracking、export、admin resource の tenant isolation。
+- Google Maps と実 telemetry を使用し、座標・polyline・ETA が不足すると fake fallback を作らず fail closed。
+- DeepSeek は backend adapter 経由。key がなければ明示的 degraded response を返し、client/repo に key を埋め込みません。
+
+## Provider architecture
+
+| Concern | Managed production | Local/self-hosted |
+|---|---|---|
+| Database | Supabase PostgreSQL/PostGIS | PostGIS container |
+| Realtime | `REALTIME_PROVIDER=supabase` | `socketio` |
+| Storage | `STORAGE_PROVIDER=supabase` | `minio` |
+| Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
+
+Web は `POST /api/realtime/token` から短時間・tenant scoped token を取得します。Mobile は現在 Socket.IO compatibility client のままなので、production mobile release 前に同じ Supabase channel contract へ移行する必要があります。
+
+## Docker Hub
+
+検証済み registry path は Docker Hub のみです。GHCR package は独立検証されるまで掲載しません。
+
+| Image | Purpose |
+|---|---|
+| `nguyenson1710/foodflow-backend` | API + worker entry |
+| `nguyenson1710/foodflow-migrate` | non-root Prisma migration |
+| `nguyenson1710/foodflow-admin` | Admin standalone |
+| `nguyenson1710/foodflow-restaurant` | Restaurant standalone |
+
+Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。Docker Hub `latest` は古い code を指しているため、Batch 4 の source of truth ではありません。
+
+Release は `sha-<full-commit>` multi-arch build → `amd64/arm64` runtime smoke → High/Critical Trivy block → production health → immutable `v4.0.0` → manual `latest` promotion の順です。
+
+## Local development
+
+Node.js 22.13+、pnpm 11.11.0、Docker、Flutter SDK が必要です。実 secret は ignored `.env` または secret manager のみに保存します。
 
 ```bash
 docker compose up -d postgres redis minio
 
 cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm prisma migrate dev
-pnpm db:seed
-pnpm start:dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm prisma migrate dev
+corepack pnpm db:seed
+corepack pnpm start:dev
 
 cd ../web
-pnpm install --frozen-lockfile
-pnpm dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
 
 cd ../mobile
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter run -t lib/main_customer.dart
 flutter run -t lib/main_driver.dart
 ```
 
-## シークレットとセキュリティ
+Full stack は `docker compose up -d --build`。Health は API `:3001/api/healthz`、Admin `:3000/api/healthz`、Restaurant `:3002/api/healthz` です。
 
-- `.env`、トークン、秘密鍵、DB 認証情報、service-role key を commit しないこと。
-- チャット、ログ、スクリーンショット、チケット、git history に出たキーは production 前に必ず rotate すること。
-- `DATABASE_URL`, `DIRECT_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, Supabase/Vercel tokens は secret manager または ignored local env に置くこと。
-- Google Maps browser key は HTTP referrer で制限し、backend Maps key は server-side のみで使うこと。
-- SePay intent には `SEPAY_API_KEY` と `SEPAY_ACCOUNT_NUMBER` が必要です。QR/ref が欠けた response は reject します。
+## Secrets and security
 
-## テストゲート
+- Chat、log、screenshot、ticket、git history に貼られた key は exposed として production 前に rotate します。
+- `.env`、database URL、service-role key、JWT secret、private key、provider token、mobile signing file を commit しません。
+- Browser の Google Maps key と Supabase anon key は origin/API restriction を設定します。
+- DeepSeek、Supabase service role/JWT、SePay、SMTP、FCM、Twilio、deploy credential は server-side secret manager のみです。
 
-```bash
-cd backend
-pnpm prisma validate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-
-cd ../web
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-pnpm test:e2e -- --project=chromium
-pnpm test:e2e -- --project=firefox
-
-cd ../mobile
-flutter analyze
-flutter test
+```powershell
+powershell -File infra/scripts/supabase-preflight.ps1
+powershell -File infra/scripts/vercel-web-preflight.ps1
 ```
 
-Batch 4 の完了には、backend、web、Playwright Chromium/Firefox、axe、visual regression、tenant isolation、frozen install、secret scan がすべて green である必要があります。
+## Test gates
 
-## デプロイ
+```powershell
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
+```
 
-1. テスト済み PR で merge する。
-2. rotate 済み secret で Supabase database/realtime を provision する。backend Prisma は runtime に pooled `DATABASE_URL`、migration に direct/session `DIRECT_URL` を使う。
-3. build と E2E が通った後、Admin/Restaurant を Vercel に deploy する。
-4. backend は migration、Redis、storage、SePay webhook、production CORS、health checks を有効にして deploy する。
-5. production health、realtime、map、chatbot、export、notification、tenant isolation を確認する。
-6. keep-alive/monitor は health endpoint が安定してから有効にする。
+Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-## ドキュメント
+最新 focused evidence は Web Vitest 303 tests、Admin 70 pages、Restaurant 55 pages、cross-browser contract 18/18、error-state axe 2/2、8 architecture-specific image scan で High/Critical 0 です。Release 前に fresh full gate が必要です。
 
-- [API contract](api-contract.md)
-- [API reference](api-reference.md)
+## Deploy order
+
+1. GitHub Actions billing/auth を復旧し remote checks を green にする。
+2. Exposed key を rotate し Supabase/Vercel preflight を pass。
+3. Supabase migration、RLS、Realtime publication/channel、Storage policy を deploy。
+4. Vercel API と verified alias/health/Cron を確認。
+5. Verified API/Supabase public env で Admin/Restaurant を deploy。
+6. Auth、tenant、realtime、shipper route、chatbot、notification、export、payment を smoke。
+7. Local integration `HEAD` を直接 `origin/master` へ push し remote branch を一つに保つ。
+8. Immutable Docker manifests を publish し、production smoke 後だけ `latest` を更新。
+
+## Documentation
+
 - [Architecture](system-architecture.md)
-- [Deployment guide](deployment-guide.md)
-- [Docker/local 開発ガイド](docker-local-dev-guide.ja.md)
-- [Testing guide](testing-guide.md)
-- [Security audit guide](security-audit-guide.ja.md)
-- [Documentation localization policy](documentation-localization.md)
-- [Design guidelines](design-guidelines.ja.md)
-- [i18n guide](i18n-guide.md)
-- [Roadmap](project-roadmap.md)
+- [API contract](api-contract.ja.md)
+- [Deployment](deployment-guide.ja.md)
+- [Docker/local](docker-local-dev-guide.ja.md)
+- [Testing](testing-guide.ja.md)
+- [AI chatbot](ai-chatbot-guide.ja.md)
+- [Security](security-audit-guide.ja.md)
+- [Roadmap](project-roadmap.ja.md)
+- [Branch disposition](branch-disposition.md)
+- [Batch 4 report](batch4-release-report.md)
 
-## ブランチ方針
+## Branch policy
 
-- Remote は `master` のみです。2026-07-07 の audit では `origin/master` は `118459e539eecb2dbd61e033431b7f4b5104f0e0` でした。
-- Clean worktree は Codex の継続用に local `codex/batch4-integration` を使う場合がありますが、この branch は `origin/master` を tracking します。意図した review branch でない限り、削除済み remote branch は再作成しません。
-- 古い routes、runtime mock、誤った package manager、誤った generated mobile client を含む stale branch は raw-merge しない。
-- 必要な変更だけを hunk-by-hunk で salvage し、focused test と小さな conventional commit を付ける。
-- Mobile reconciliation は web/backend Batch 4 が安定した後に継続する。Violet/Indigo ref が無い場合は、架空の merge ではなく evidence として記録する。
+Remote branch は `master` の一つだけです。Clean worktree の local `codex/batch4-integration` は、この docs update 前に `origin/master@df945dd` より 99 commits ahead です。二つ目の remote branch を作らないため local branch 名では push せず、全 gate が green になった後に verified `HEAD` を直接 `master` へ push します。Backup と patch-equivalence 確認なしで raw merge/delete は行いません。
 
 ## License
 
-MIT。詳細は [LICENSE](../LICENSE) を参照してください。
+[MIT](../LICENSE)

@@ -14,7 +14,7 @@ A user's locale must flow from HTTP request through synchronous handlers and int
 
 Locale is resolved and carried explicitly at each hop:
 
-```
+```text
 HTTP request
   → NestJS I18nMiddleware reads Accept-Language header
   → Falls back to cookie `NEXT_LOCALE`

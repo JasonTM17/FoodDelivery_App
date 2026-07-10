@@ -1,1 +1,1 @@
-# Reserved directory for future release notes.
+# Reserved directory for future release notes

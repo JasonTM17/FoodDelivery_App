@@ -2,6 +2,12 @@
 
 言語: [English](./security-audit-guide.md) | [Tiếng Việt](./security-audit-guide.vi.md) | [日本語](./security-audit-guide.ja.md)
 
+## Production scope
+
+Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）と Vercel（API/Admin/Restaurant）です。Socket.IO、Redis/BullMQ、MinIO は local/self-hosted compatibility provider であり、managed provider 不足時の暗黙 fallback ではありません。
+
+Chat/screenshot/log/ticket/shell/Git に出た credential は exposed として live smoke/deploy 前に revoke/rotate します。`NEXT_PUBLIC_*` に private credential を入れず、Supabase anon key は RLS/short-lived channel claim の代わりではありません。
+
 ## Pre-Production Checklist
 
 - [ ] JWT secret は 64 文字以上で、`openssl rand -hex 64` で生成します。
@@ -20,6 +26,23 @@
 - [ ] HTTPS/TLS が有効です。
 - [ ] Docker containers は non-root user で実行します。
 - [ ] Git history に secrets がないことを gitleaks または同等の secret scan で確認します。
+
+## Supabase, Vercel, and release
+
+- [ ] Production は explicit `REALTIME_PROVIDER=supabase`、`STORAGE_PROVIDER=supabase`、`QUEUE_PROVIDER=supabase-postgres`。
+- [ ] `realtime_outbox`、`job_outbox`、`ai_usage_events` に RLS、realtime publication は `realtime_outbox` のみ。
+- [ ] Realtime token は short TTL、`private:` channels、signing 前 ownership check、anon/cross-tenant deny。
+- [ ] Supabase service-role/JWT、database、DeepSeek、SePay、notification secret は server-side。Browser Maps key は referrer/API restriction。
+- [ ] Exact verified HTTPS CORS、non-root dual-arch images、Trivy High/Critical block、immutable SHA/semver、initial `latest` deploy 禁止。
+
+```powershell
+powershell -File infra/scripts/secret-scan.ps1
+git diff --check
+git diff --cached --check
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
+```
+
+CI は Gitleaks/CodeQL/audit/Trivy/SBOM/workflow lint/test/promotion も実行します。Local green は remote CI や exposure resolution の代替ではありません。
 
 ## Regular Audits
 

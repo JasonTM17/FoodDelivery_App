@@ -1,197 +1,122 @@
 # FoodFlow i18n Guide
 
-Supported locales: **vi** (Vietnamese, default), **en** (English), **ja** (Japanese).
+FoodFlow supports Vietnamese (vi, default), English (en), and Japanese (ja).
+Every user-visible, screen-reader, validation, notification, and export-facing
+string must have all three translations.
 
----
+## Locale authority
 
-## Architecture Overview
+| Surface | Library | Authoritative locale |
+| --- | --- | --- |
+| NestJS API | nestjs-i18n | Explicit ?lang, then Accept-Language, then lang cookie; fallback vi |
+| Admin / Restaurant | next-intl | Explicit /[locale]/ URL segment |
+| Flutter | Flutter localization + ARB | In-app selected locale, initially derived from device/profile preference |
 
-Three independent i18n layers, each using its ecosystem's canonical library:
+User.preferredLocale is a durable profile preference, not permission to
+silently rewrite an explicit web URL or API locale request. It should be
+included explicitly in background-job payloads that create a user-facing
+notification.
 
-| Layer | Library | Locale anchor |
-|---|---|---|
-| NestJS backend | `nestjs-i18n` | Accept-Language header → cookie `lang` → `User.preferredLocale` |
-| Flutter mobile | `flutter_localizations` + ARB files | Device locale → `User.preferredLocale` |
-| Next.js web | `next-intl` | URL prefix `/[locale]/` → cookie `NEXT_LOCALE` |
+For Admin and Restaurant, the pathname always wins. The locale switcher may
+write NEXT_LOCALE to remember a future navigation preference, but a stale cookie
+must never cause /en/... to render Vietnamese or change the html lang value.
 
-`User.preferredLocale` (`LocaleCode` enum: `vi | en | ja`, default `vi`) is the persisted source of truth in PostgreSQL. Users update it via `PATCH /users/me { preferredLocale: 'en' }`.
+## Backend
 
----
+Backend locale files live under backend/src/i18n/locales/{vi,en,ja}/. The
+resolver order in I18nSetupModule is:
 
-## Backend (NestJS)
+1. ?lang=
+2. Accept-Language
+3. lang cookie
+4. Vietnamese fallback
 
-### File Layout
+Use I18nService, never a production hard-coded fallback map:
 
-```
-backend/src/i18n/
-├── i18n.module.ts           NestJS module — registers resolvers
-├── i18n-locale.spec.ts      Resolution chain unit tests
-└── locales/
-    ├── vi/
-    │   ├── errors.json
-    │   ├── notifications.json
-    │   ├── ai_templates.json
-    │   └── constants.json
-    ├── en/  (same namespaces)
-    └── ja/  (same namespaces)
-```
+~~~ts
+const message = await this.i18n.t('errors.promotion_expired', { lang })
+~~~
 
-### Resolver Priority
+Background jobs must receive their locale with the job data:
 
-Registered in `I18nSetupModule` (see `i18n.module.ts`):
-1. `?lang=` query param
-2. `Accept-Language` header
-3. `lang` cookie
-
-Fallback: `vi`.
-
-### Using Translations in Services
-
-```typescript
-import { I18nService } from 'nestjs-i18n'
-
-constructor(private i18n: I18nService) {}
-
-// key format: '{namespace}.{key}'
-const msg = await this.i18n.t('errors.promotion_expired', { lang })
-// with args
-const msg = await this.i18n.t('errors.promotion_min_order', { lang, args: { amount: 50000 } })
-```
-
-For code that runs outside a request context, pass the resolved locale explicitly and call `I18nService.t` with `lang`. Unit tests should use test-only stubs that read the real locale JSON files; production services must not silently fall back to hardcoded translation maps.
-
-```typescript
-const msg = this.i18n.t('notifications.order_update_body', {
-  lang: job.data.locale,
-  args: { orderId: '123', event: 'accepted' },
-})
-```
-
-### Locale in Async Jobs
-
-Callers **must** serialise locale into job data explicitly:
-
-```typescript
+~~~ts
 await this.notificationsQueue.add('send', {
   userId,
+  locale: user.preferredLocale,
   templateKey: 'order_update',
-  locale: user.preferredLocale,   // ← required
   args: { orderId },
 })
-```
+~~~
 
-Processor reads `job.data.locale` — never infers from request context.
+When adding a namespace:
 
-### Adding a New Namespace
+1. Add matching JSON files under vi, en, and ja.
+2. Use stable snake_case keys and named placeholders.
+3. Add or update focused tests that exercise the service's required keys.
+4. Run the backend test suite before merging.
 
-1. Create `backend/src/i18n/locales/vi/<namespace>.json`
-2. Create matching `en/<namespace>.json` and `ja/<namespace>.json`
-3. Keys use snake_case. Template variables: `{varName}`.
-4. Run `pnpm test` in `backend/` — `i18n-locale.spec.ts` validates service-required keys across locale files.
+## Web
 
----
+Web translation sources are split intentionally:
 
-## Mobile (Flutter)
+~~~text
+web/packages/i18n/messages/{vi,en,ja}.json     shared product vocabulary
+web/apps/admin/messages/{vi,en,ja}.json        Admin-specific copy
+web/apps/restaurant/messages/{vi,en,ja}.json   Restaurant-specific copy
+web/apps/*/src/i18n.ts                          request config and merge
+web/apps/*/src/app/[locale]/layout.tsx          locale-bound shell
+~~~
 
-### File Layout
+The [locale] layout is responsible for the locale-bound client provider and
+shell. A root layout must not choose its presentation locale from a cookie when
+an explicit route locale exists.
 
-```
-mobile/
-└── lib/
-    ├── l10n/
-    │   ├── app_vi.arb    canonical (add new strings here first)
-    │   ├── app_en.arb
-    │   └── app_ja.arb
-    ├── providers/
-    │   └── locale_provider.dart   Riverpod StateNotifier for locale
-    └── widgets/
-        └── locale_switcher.dart
-```
-
-### Using Translations
-
-```dart
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-// inside a widget build()
-final l10n = AppLocalizations.of(context)!;
-Text(l10n.orderStatusAccepted)
-```
-
-### Adding a New Locale String
-
-1. Add the key + Vietnamese value to `app_vi.arb`.
-2. Add English value to `app_en.arb`, Japanese to `app_ja.arb`.
-3. Run `flutter gen-l10n` (or `flutter pub get`) to regenerate `app_localizations.dart`.
-4. Use `AppLocalizations.of(context)!.<key>` in widgets.
-
-### Adding a New Locale (e.g., `ko`)
-
-1. Add `app_ko.arb` with all keys.
-2. Register in `MaterialApp`:
-   ```dart
-   supportedLocales: const [Locale('vi'), Locale('en'), Locale('ja'), Locale('ko')],
-   ```
-3. Add `ko` to `LocaleCode` enum in backend and web.
-
----
-
-## Web (Next.js — next-intl)
-
-### File Layout
-
-```
-web/packages/i18n/
-└── messages/
-    ├── vi.json
-    ├── en.json
-    └── ja.json
-
-web/apps/admin/
-├── app/[locale]/        all routes under locale segment
-└── i18n/
-    ├── routing.ts       defineRouting({ locales, defaultLocale: 'vi' })
-    └── request.ts       getRequestConfig — loads messages
-
-web/apps/restaurant/  (same structure)
-```
-
-### Using Translations
-
-```tsx
+~~~tsx
 import { useTranslations } from 'next-intl'
 
-export default function OrdersPage() {
+export function OrdersHeading() {
   const t = useTranslations('orders')
   return <h1>{t('title')}</h1>
 }
+~~~
 
-// Server Component
-import { getTranslations } from 'next-intl/server'
-const t = await getTranslations('orders')
-```
+Add a web string to every appropriate source, then validate all three routes in
+a new browser context:
 
-### Locale Switching
+~~~text
+/vi/login
+/en/login
+/ja/login
+~~~
 
-`<LocaleSwitcher>` component uses `next-intl`'s `usePathname` + `useRouter` to redirect to the same path under the new locale prefix.
+Check document lang, page title, heading, form labels, visible text, keyboard
+focus, and console errors. Do not pass a locale test solely because a cookie
+changed.
 
-### Adding a New Message Key
+## Flutter
 
-1. Add to `web/packages/i18n/messages/vi.json` (canonical).
-2. Add to `en.json` and `ja.json` with translations.
-3. TypeScript will error on missing keys at compile time if `next-intl` type generation is wired.
+Flutter ARB files live in mobile/lib/l10n/:
 
----
+~~~text
+app_vi.arb
+app_en.arb
+app_ja.arb
+~~~
 
-## Adding a New Locale End-to-End
+Add the key to all locale files, regenerate localization output using the
+project's Flutter configuration, and use the generated
+AppLocalizations.of(context) API. A new locale also requires matching backend
+and web support before it is advertised.
 
-1. **Backend**: create `backend/src/i18n/locales/<lang>/*.json` matching all existing namespaces. Add `<lang>` to `LocaleCode` enum in `backend/src/common/enums/`.
-2. **Mobile**: add `app_<lang>.arb`. Register locale in `MaterialApp.supportedLocales`. Run `flutter gen-l10n`.
-3. **Web**: add `web/packages/i18n/messages/<lang>.json`. Add locale to `routing.ts` `locales` array in both admin and restaurant apps.
-4. **Test**: run `backend` i18n spec to verify key parity. Run `flutter test` for mobile. Run `pnpm typecheck` for web.
+## Translation quality checks
 
----
+- Avoid concatenating translated fragments; use placeholders so grammar can
+  change by locale.
+- Use locale-aware currency/date formatting for business values.
+- Translate accessible names, error messages, password visibility labels,
+  empty states, and export headings as well as visible headings.
+- Keep API error codes stable; translate their human message separately.
+- Test vi, en, and ja after any shared key, route, or shell change.
 
-## Translation Key Parity Check
-
-The backend test `i18n-locale.spec.ts` asserts that every key present in `vi` locale files also exists in `en` and `ja`. CI fails if parity breaks.
+For release coverage, see [Testing guide](testing-guide.md) and
+[Product gallery](product-gallery.md).

@@ -1,364 +1,195 @@
 # Contributing to FoodFlow
 
-Thank you for contributing. This guide covers everything you need to get started.
+FoodFlow is a NestJS API, two Next.js workspaces, and Flutter customer/driver
+applications. Managed production is Supabase plus Vercel; Docker is the
+repeatable local and self-hosted compatibility path.
 
-## Table of Contents
+This guide is deliberately conservative: make a small change, prove it locally,
+then publish it only after the relevant release gates are green.
 
-1. [Development Environment Setup](#development-environment-setup)
-2. [Project Structure](#project-structure)
-3. [Docker Compose Local Development](#docker-compose-local-development)
-4. [Running the Backend](#running-the-backend)
-5. [Running the Web Dashboards](#running-the-web-dashboards)
-6. [Running the Mobile Apps](#running-the-mobile-apps)
-7. [Running Tests](#running-tests)
-8. [Code Review Process](#code-review-process)
-9. [Commit Message Conventions](#commit-message-conventions)
-10. [Branch Naming Conventions](#branch-naming-conventions)
-11. [How to Add New Features](#how-to-add-new-features)
-12. [Pull Request Checklist](#pull-request-checklist)
+## Prerequisites
 
-## Development Environment Setup
+| Tool | Required |
+| --- | --- |
+| Git | Current supported release |
+| Node.js | 22.x |
+| Corepack + pnpm | pnpm 11.11.0 |
+| Docker Desktop | Current supported release |
+| Flutter | Version accepted by mobile/pubspec.yaml |
 
-### Prerequisites
+The backend and web workspaces have independent lockfiles. Use Corepack and
+their checked-in pnpm version; do not use npm install or rewrite a lockfile as
+a side effect of another task.
 
-| Tool | Version | Check Command |
-|------|---------|---------------|
-| Docker Desktop | Latest | `docker --version` |
-| Node.js | 20+ | `node --version` |
-| pnpm | 10+ | `pnpm --version` |
-| Flutter SDK | 3.12+ | `flutter --version` |
-| Git | 2.40+ | `git --version` |
-
-### One-Time Setup
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/JasonTM17/foodflow.git
+~~~bash
+git clone https://github.com/JasonTM17/FoodDelivery_App.git foodflow
 cd foodflow
+corepack enable
+~~~
 
-# 2. Copy environment files
-cp backend/.env.example backend/.env
+Keep personal credentials in ignored files or provider secret managers. Never
+copy .env, .env.production, a browser profile, supabase/.temp, or Vercel state
+into Git.
 
-# 3. Start infrastructure (PostgreSQL, Redis, MinIO, Prometheus, Grafana)
-docker compose up -d
+## Isolated local development
 
-# 4. Install backend dependencies
+Use a worktree for work that must not disturb another checkout:
+
+~~~bash
+git fetch --prune origin
+git worktree add ../foodflow-feature -b codex/short-scope origin/master
+cd ../foodflow-feature
+~~~
+
+The repository's release target is master. A temporary branch is useful while
+developing, but do not recreate a stale remote branch or delete a worktree that
+still owns changes.
+
+### Full local compatibility stack
+
+The base Compose stack uses PostgreSQL/PostGIS, Redis, MinIO, Socket.IO, and
+BullMQ for local compatibility. It is not the managed-production architecture.
+
+~~~bash
+docker compose up --build -d
+docker compose ps
+curl http://localhost:3001/api/healthz
+~~~
+
+Default local ports are API 3001, Admin 3000, Restaurant 3002, PostgreSQL
+5432, Redis 6379, and MinIO 9000/9001. Use only the example development
+credentials in the local stack; production validation rejects them.
+
+### Isolated release-test stack
+
+Use the E2E overlay when another local FoodFlow stack may be running. It owns
+different container names, ports, and volumes:
+
+~~~bash
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --build -d
+curl http://localhost:13001/api/healthz
+curl http://localhost:13000/api/healthz
+curl http://localhost:13002/api/healthz
+~~~
+
+The isolated browser origins are <http://localhost:13000> and
+<http://localhost:13002>. <http://127.0.0.1> intentionally exercises the CORS
+failure path and is not a substitute origin.
+
+## Install and run
+
+### Backend
+
+~~~bash
 cd backend
-pnpm install
-pnpm prisma generate
-pnpm prisma migrate dev --name init
-pnpm db:seed
-cd ..
+corepack pnpm install --frozen-lockfile
+corepack pnpm db:generate
+corepack pnpm db:migrate
+corepack pnpm start:dev
+~~~
 
-# 5. Install web dependencies
+For a disposable local database only, deterministic seed data may be added with
+corepack pnpm db:seed or corepack pnpm db:big-seed. The production bootstrap is
+migration-only: never run either seed command against Supabase or any
+production-like database.
+
+### Admin and Restaurant
+
+~~~bash
 cd web
-pnpm install
-cd ..
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
+~~~
 
-# 6. Install mobile dependencies
+Navigate with an explicit locale, for example
+<http://localhost:3000/vi/login> or <http://localhost:3002/en/login>. The
+route locale is authoritative; a saved locale cookie is only a navigation
+preference and must not override the URL.
+
+### Mobile
+
+~~~bash
 cd mobile
 flutter pub get
-cd ..
-```
-
-## Project Structure
-
-```
-foodflow/
-├── backend/               # NestJS API server
-│   ├── src/
-│   │   ├── auth/          # Authentication (JWT, RBAC, guards)
-│   │   ├── orders/        # Order lifecycle & state machine
-│   │   ├── dispatch/      # Driver dispatch (BullMQ)
-│   │   ├── tracking/      # Realtime GPS (Socket.IO)
-│   │   ├── restaurants/   # Restaurant & menu CRUD
-│   │   ├── drivers/       # Driver management
-│   │   └── admin/         # Admin KPI, audit, support
-│   └── prisma/            # Schema, migrations, seeds
-├── web/                   # Next.js Turborepo
-│   ├── apps/
-│   │   ├── admin/         # Admin dashboard (port 3000)
-│   │   └── restaurant/    # Restaurant dashboard (port 3002)
-│   └── packages/
-│       └── ui/            # Shared UI component library
-├── mobile/                # Flutter monorepo
-│   └── lib/
-│       ├── customer/      # Customer app screens
-│       ├── driver/        # Driver app screens
-│       └── shared/        # Shared models, providers, widgets
-├── infra/                 # Infrastructure
-│   ├── docker-compose.yml
-│   ├── docker-compose.local.yml
-│   ├── nginx/             # Reverse proxy config
-│   └── observability/     # Prometheus, Grafana, logs, runbooks
-└── docs/                  # Project documentation
-```
-
-## Docker Compose Local Development
-
-The project provides two Compose files:
-
-- `docker-compose.yml` — production-style with resource limits, healthchecks, and persistence
-- `docker-compose.local.yml` — development overrides with remapped ports and relaxed limits
-
-```bash
-# Start all infrastructure services
-docker compose up -d
-
-# View logs for a specific service
-docker compose logs -f backend
-
-# Restart a service after code changes
-docker compose restart backend
-
-# Stop everything
-docker compose down
-```
-
-Services in the stack:
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| postgres | 5432 | PostgreSQL + PostGIS |
-| redis | 6379 | Cache, session, job queue |
-| backend | 3001 | NestJS API server |
-| worker | — | BullMQ job processor (2 replicas) |
-| minio | 9000/9001 | Object storage (S3-compatible) |
-| bullboard | 3004 | BullMQ queue monitoring |
-| prometheus | 9090 | Metrics collection |
-| grafana | 3005 | Metrics visualization |
-| redis-exporter | 9121 | Redis metrics for Prometheus |
-| nginx | 80/443 | Reverse proxy |
-
-## Running the Backend
-
-```bash
-cd backend
-
-# Install dependencies and generate Prisma client
-pnpm install
-pnpm prisma generate
-
-# Run database migrations
-pnpm prisma migrate dev --name your_migration_name
-
-# Seed the database
-pnpm db:seed        # Small dataset (5 restaurants, 10 customers)
-pnpm db:big-seed    # Large dataset (50 restaurants, 100 customers, 500 orders)
-
-# Start in development mode (hot reload)
-pnpm start:dev       # http://localhost:3001/api
-
-# Swagger API docs
-# Open http://localhost:3001/api/docs
-
-# Type check
-pnpm typecheck
-
-# Lint
-pnpm lint
-```
-
-## Running the Web Dashboards
-
-```bash
-cd web
-
-# Install dependencies
-pnpm install
-
-# Start both dashboards in development mode
-pnpm dev
-# Admin:      http://localhost:3000
-# Restaurant: http://localhost:3002
-
-# Run type checking across the monorepo
-pnpm typecheck
-
-# Lint
-pnpm lint
-
-# Build for production
-pnpm build
-```
-
-## Running the Mobile Apps
-
-```bash
-cd mobile
-
-# Install dependencies
-flutter pub get
-
-# Run code generation (required if models changed)
-flutter pub run build_runner build --delete-conflicting-outputs
-
-# Run customer app
-flutter run -t lib/main_customer.dart
-
-# Run driver app
-flutter run -t lib/main_driver.dart
-```
-
-## Running Tests
-
-### Backend Tests
-
-```bash
-cd backend
-
-# Unit tests
-pnpm test
-
-# Unit tests with coverage
-pnpm test:cov
-
-# E2E tests
-pnpm test:e2e
-```
-
-### Web Tests
-
-```bash
-cd web
-
-# Run tests across all packages (if configured)
-pnpm test
-```
-
-### Mobile Tests
-
-```bash
-cd mobile
-
-# Run Flutter tests
+flutter analyze
 flutter test
-```
+~~~
 
-### Coverage Thresholds
+The mobile apps currently retain the local Socket.IO compatibility client.
+Before a production mobile release, migrate them to the authenticated Supabase
+realtime token/channel contract documented in
+[API contract](api-contract.md#managed-production-realtime-and-job-drain).
 
-| Stack | Lines | Branches |
-|-------|-------|----------|
-| Backend (NestJS) | >= 80% | >= 75% |
-| Web (Next.js) | >= 80% | >= 70% |
-| Mobile (Flutter) | >= 80% | >= 70% |
+## Required checks
 
-CI will fail if coverage drops below these thresholds.
+Run the checks affected by the change before committing:
 
-## Code Review Process
+~~~bash
+# backend
+cd backend
+corepack pnpm db:generate
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm build
 
-1. **Create a branch** from `main` (see [Branch Naming Conventions](#branch-naming-conventions))
-2. **Implement your changes** following the code standards in `docs/code-standards.md`
-3. **Write tests** covering your changes
-4. **Self-review**: run `typecheck`, `lint`, and `test` locally
-5. **Open a pull request** against `main` with:
-   - Description of what and why
-   - Testing notes (how to verify)
-   - Screenshots/GIFs for UI changes
-6. **CI must pass**: build, typecheck, lint, test, Trivy, CodeQL, Gitleaks
-7. **Review**: at least one reviewer must approve
-8. **Squash merge** into `main` (preferred)
+# web
+cd ../web
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm build
 
-### Code Style
+# mobile
+cd ../mobile
+flutter analyze
+flutter test
+~~~
 
-- **Backend**: NestJS modules — controller, service, DTO, module per feature
-- **Web**: Next.js App Router with per-segment `error.tsx` and `loading.tsx`
-- **Mobile**: Flutter with Riverpod providers, screen-level state
+Release candidates additionally require fresh migrations, Chromium and Firefox
+Playwright coverage, axe serious/critical findings equal to zero, visual
+regression, tenant-isolation, map/route, realtime authorization, AI
+fail-closed/live smoke, Docker multi-architecture scans, OpenAPI lint, and
+secret scans. The exact command matrix and evidence policy are in
+[Testing guide](testing-guide.md).
 
-## Commit Message Conventions
+## Change discipline
 
-All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
+1. Read the affected controller/service/page and its tests before changing it.
+2. Keep API payloads and OpenAPI in sync; use the shared web client rather than
+   adding ad-hoc browser fetch wrappers.
+3. Do not add runtime mock, random, or fake-zero business data to hide an
+   unavailable API. Use an explicit loading, empty, or error state.
+4. Treat tenant boundaries, RLS, role checks, map geometry, and financial
+   amounts as security-sensitive.
+5. Use translated visible and accessible text in Vietnamese, English, and
+   Japanese. Test a fresh browser context for each URL locale.
+6. Put database changes in an ordered Prisma migration. Do not edit an applied
+   migration.
 
-```
-type(scope): subject
-```
+## Commits, reviews, and releases
 
-**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+Use Conventional Commits and keep each commit focused:
 
-**Rules**:
-- Subject <= 72 characters, imperative mood, no trailing period
-- Scope is optional but encouraged (e.g., `auth`, `dispatch`, `tracking`)
-- Breaking changes: append `!` after type/scope or add `BREAKING CHANGE:` footer
-- Body (optional): wrap at 100 columns, explain **why** not **what**
+~~~text
+feat(realtime): authorize tenant-scoped Supabase channels
+fix(admin): translate overview KPI labels
+docs(release): refresh deployment evidence
+~~~
 
-**Examples**:
-```
-feat(dispatch): add driver fallback on timeout
-fix(auth): prevent refresh token reuse after rotation
-refactor(orders): extract state machine into dedicated service
-test(tracking): add WebSocket reconnection coverage
-```
+Before staging, inspect the diff and run the repository secret scan. Never
+commit dotenv files, tokens, private keys, access/refresh tokens, fixture
+passwords intended for production, or generated provider state.
 
-## Branch Naming Conventions
+When remote automation is available, pull requests and the full remote gate
+must pass. A production release is only allowed after Supabase/Vercel preflight,
+secure secrets, local gates, remote gates, and production smoke all pass. The
+release then fast-forwards the validated integration head to origin/master; the
+remote should retain only master.
 
-```
-feat/<description>    # New features
-fix/<description>     # Bug fixes
-refactor/<description> # Code restructuring
-docs/<description>    # Documentation updates
-chore/<description>   # Maintenance tasks
-```
+See also:
 
-Use kebab-case for descriptions: `feat/add-driver-earnings-summary`, `fix/order-state-on-cancel`.
-
-## How to Add New Features
-
-### Backend (New Module)
-
-1. Create the module directory under `backend/src/<feature>/`
-2. Follow the standard pattern:
-   ```
-   <feature>/
-   ├── <feature>.module.ts
-   ├── <feature>.controller.ts
-   ├── <feature>.service.ts
-   ├── dto/
-   │   ├── create-<feature>.dto.ts
-   │   └── update-<feature>.dto.ts
-   └── <feature>.service.spec.ts
-   ```
-3. Add Prisma schema changes in `backend/prisma/schema.prisma`
-4. Generate migration: `pnpm prisma migrate dev --name add_<feature>`
-5. Register the module in `app.module.ts`
-6. Add guards (RBAC) on controller endpoints
-7. Add Zod/class-validator DTOs for all inputs
-8. Write unit and e2e tests
-
-### Web (New Page or Dashboard)
-
-1. Determine if it belongs to an existing app or needs a new one
-2. Create route under `web/apps/<app>/app/<route>/`
-3. Every route segment must have `error.tsx` and `loading.tsx`
-4. Use shared UI components from `@foodflow/ui` package
-5. Add `generateMetadata` for SEO on dynamic routes
-6. Use shadcn/ui components from `web/packages/ui/src/`
-
-### Mobile (New Screen)
-
-1. Create screen file under `mobile/lib/<role>/screens/`
-2. Create or extend provider in `mobile/lib/<role>/providers/` if needed
-3. Use shared widgets from `mobile/lib/shared/widgets/`
-4. Wire up navigation in the appropriate `GoRouter` configuration
-
-### AI Chatbot or Prompt Change
-
-1. Change prompts, templates, provider settings, or tool behavior in `backend/src/ai/`.
-2. Keep the runtime LLM-first; do not add an external automation runner as a chatbot dependency.
-3. Add or update focused backend tests for the changed behavior.
-4. Document user-visible behavior in [AI chatbot guide](ai-chatbot-guide.md).
-
-## Pull Request Checklist
-
-Before opening a PR, verify:
-
-- [ ] TypeScript compile passes (`pnpm typecheck` in both `backend/` and `web/`)
-- [ ] All tests pass (`pnpm test`)
-- [ ] No lint errors (`pnpm lint`)
-- [ ] New code has tests covering happy path and failure cases
-- [ ] Input validation on all API routes (`safeParse` or equivalent)
-- [ ] No `TODO` or `FIXME` left without a tracking issue
-- [ ] Per-segment `error.tsx` and `loading.tsx` exist for new web routes
-- [ ] `generateMetadata` present on dynamic web routes
-- [ ] PR description includes what, why, and testing notes
-- [ ] Breaking changes documented in the PR description
-- [ ] Migrations are reversible (down migration exists) if applicable
+- [Deployment guide](deployment-guide.md)
+- [Database migration guide](database-migration-guide.md)
+- [Security audit guide](security-audit-guide.md)
+- [Docker and local development](docker-local-dev-guide.md)

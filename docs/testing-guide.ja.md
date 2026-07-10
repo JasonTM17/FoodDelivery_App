@@ -1,148 +1,115 @@
-# FoodFlow テストガイド
+# FoodFlow Testing Guide
 
-Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
+## Release rule
 
-## 最新の local evidence (2026-07-10)
+Final source head が full local gates、fresh remote CI、provider preflight、production smoke をすべて pass した場合のみ green です。Focused test や historical count、skip 付き script は release approval ではありません。
 
-分離 E2E overlay の空の Postgres に対して Prisma migration 22/22 が成功しました。Backend は 121 suites / 891 tests、Admin は 44 files / 183 tests、Restaurant は 35 files / 118 tests、web typecheck/lint/build と mobile Flutter 255/255 が green です。Playwright Chromium + Firefox は 72/72、axe smoke は 4/4 で serious/critical は 0、visual contract と tenant isolation も green です。AI local test は `AI_PROVIDER_NOT_CONFIGURED` の fail-closed を確認します。live DeepSeek smoke は rotate 済みの新しい `DEEPSEEK_API_KEY` を secret manager に入力した後だけ実行します。Vercel/Supabase production は env/token 不足のためまだ blocked です。
+## Current evidence
+
+2026-07-10 integration line:
+
+- Web typecheck/ESLint green。Vitest Admin 184 + Restaurant 119 = 303 tests。
+- Admin 70 pages、Restaurant 55 pages build。Missing public env は fail closed。
+- Playwright Chromium+Firefox contract 18/18。
+- Error-state axe 2/2、serious/critical 0。
+- Docker 4 artifacts × 2 architectures runtime pass、Trivy 8/8 High/Critical 0。
+- Fresh DB 22 migrations、API/Admin/Restaurant health 200。
+
+Full backend、realtime migration 後 mobile、全 critical pages の axe/visual/Stitch、remote CI は再実行が必要です。
+
+## Full local gate
+
+```powershell
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
+```
+
+Development partial run は partial と明記し release approval にしません。
 
 ## Backend
 
-```bash
+```powershell
 cd backend
-pnpm prisma validate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm exec prisma validate --schema prisma/schema.prisma
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm exec jest --runInBand
+corepack pnpm build
 ```
 
-Focused examples:
+Empty PostGIS に 22 migrations を `migrate deploy`。Auth/RBAC、restaurant tenant、order/payment/webhook replay、promotion/notification/export/audit、realtime token/RLS claims、Supabase Storage/job outbox、GPS/route/ETA/dispatch、DeepSeek/session/telemetry、production env validation を検証します。
 
-```bash
-pnpm test -- sepay.provider.spec.ts payments.service.spec.ts
-pnpm test -- ai-chat.service.spec.ts deepseek-chat-provider.service.spec.ts ai-chat.controller.spec.ts
-pnpm test -- restaurant-revenue.service.spec.ts
-```
+## OpenAPI/Web
 
-Backend tests は real behavior を証明する必要があります。runtime mock payment、fabricated AI answer、random business value、tenant scope の欠落を許可しません。
+```powershell
+npx -y @stoplight/spectral-cli lint docs/openapi.yaml \
+  --ruleset docs/openapi/.spectral.yaml --fail-severity error
 
-Backend coverage threshold は `backend/jest.config.ts` で管理します。Shell ごとに quoting が異なるため、JSON threshold を CLI 引数で渡さないでください。
-
-### AI scenario smoke gate
-
-`pnpm db:big-seed` は `customer1@foodflow.vn` 向けに deterministic な AI smoke order `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, `FF-010` を作成します。Integration workflow は `/api/auth/login` でログインし、認証済み `/api/ai/chat` に対して `e2e/ai-scenarios/run-ai-scenarios.ts` を実行します。
-
-CI で provider adapter を mock できるのは決定的な unit test 内だけです。runtime degraded answer path は有効にしません。Release verification では secret manager の rotate 済み有効な `DEEPSEEK_API_KEY` を使い、認証済み live-provider smoke と persisted telemetry 検証を実行してください。
-
-## Web
-
-```bash
 cd web
-pnpm install --frozen-lockfile
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+corepack pnpm install --frozen-lockfile
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm --filter foodflow-admin build
+corepack pnpm --filter restaurant build
 ```
 
-Focused dashboard checks:
+Malformed success envelope、fake empty/zero business data、locale、auth refresh、tenant mutation、realtime provider、map geometry、accessibility を test します。
 
-```bash
-pnpm --filter foodflow-admin typecheck
-pnpm --filter foodflow-admin lint
-pnpm --filter foodflow-admin test
-pnpm --filter foodflow-admin build
+## Isolated E2E
 
-pnpm --filter restaurant typecheck
-pnpm --filter restaurant lint
-pnpm --filter restaurant test
-pnpm --filter restaurant build
-```
-
-最新の local web/API-contract evidence: OpenAPI YAML parse は 138 paths で pass し、local web endpoint coverage scanner は `MISSING_ENDPOINTS=0` を報告しました。Web workspace 全体で `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build` が pass。Vitest は Admin 37 files / 155 tests、Restaurant 31 files / 100 tests が pass。Backend は contract cluster で `pnpm typecheck`、`pnpm lint`、targeted Jest が pass しました。
-以前の map/tracking evidence at `3252c6a` は履歴として有用ですが、current-head verification matrix は 2026-07-06 の [Batch 4 release report](batch4-release-report.md) を参照してください。
-最新の current-head Restaurant web evidence: 2026-07-04 `2cd87e5` で、`pnpm --filter restaurant typecheck`、`pnpm --filter restaurant lint`、`pnpm --filter restaurant test` (27 files / 79 tests)、`pnpm --filter restaurant build` がすべて pass。Production build は localized `vi`、`en`、`ja` routes と `/api/healthz` を生成しました。
-最新の current-head backend/web gate evidence: 2026-07-04 `ad3b730` 後に、backend `pnpm install --frozen-lockfile`、`pnpm prisma generate`、`pnpm typecheck`、`pnpm lint`、full `pnpm test` (106 suites / 752 tests)、`pnpm build` はすべて pass。Web workspace は `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint`、`pnpm test` (Admin 34 files / 139 tests; Restaurant 27 files / 79 tests)、`pnpm build` がすべて pass。Admin build は `vi`、`en`、`ja` 向けに 70 localized pages、Restaurant build は 55 localized pages を生成しました。この head の remote CI/Actions evidence は account token/auth が無効なため pending です。
-
-## Playwright E2E
-
-```bash
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+$env:ADMIN_URL='http://localhost:13000'
+$env:API_URL='http://localhost:13001/api'
+$env:RESTAURANT_URL='http://localhost:13002'
 cd web
-pnpm test:e2e:install
-pnpm test:e2e --project=chromium
-pnpm test:e2e --project=firefox
+corepack pnpm test:e2e --project=chromium --project=firefox
 ```
 
-最新の local E2E evidence: 2026-07-06 `33e90ea` で、Docker Compose は `NEXT_PUBLIC_API_URL` を image build time に渡した healthy な Backend/Admin/Restaurant standalone containers を rebuild しました。Local machine では別 process が `127.0.0.1:3000` を使用していたため、verified run は IPv6 loopback endpoints を明示しました: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`。Chromium + Firefox は 70/70 tests pass し、axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation coverage を含みます。E2E harness は local route が Next.js 404 shell に解決された場合に fail-fast します。
+Postgres `15432`、Redis `16379`、MinIO `19000/19001`。`127.0.0.1` は CORS error-state test 専用です。
 
-Batch 4 E2E は login/RBAC、locale routes、WebSocket order feed、promotion CRUD、support flow、exports、menu、revenue、staff、insights、notifications、tenant isolation を含めます。`web/e2e/tests/tenant-isolation.spec.ts` は、restaurant user が別 restaurant tenant の order を list/read/update できないことを検証します。
+Auth、Admin、Restaurant queue/status、customer order、realtime/tracking、tenant isolation、Batch 4 contract、visual brand/layout を cover。404 shell、console error、unavailable business data を pass にしません。
 
-Realtime security regression では次も確認します。
+## Accessibility/visual/Stitch
 
-- Token なし、refresh token、期限切れ token、不正署名では Socket.IO に接続できない。
-- Admin 以外は Admin order/driver room に join できない。
-- Restaurant は別 tenant の room に join できない。
-- Customer、driver、restaurant staff は無関係な order room に join できない。
-- 認証済み driver account のみ GPS update を送信できる。
-- Mobile は driver GPS metadata を publish 前に normalize します。Geolocator speed は m/s から backend km/h contract に変換し、invalid な heading/speed/accuracy は送信しません。
-- Driver/customer maps は backend `routePolyline` と raw telemetry trail を別々に描画する必要があります。
-- Route deviation check は vertex だけでなく接続された polyline segment に snap し、provider polyline が疎でも driver を誤って off-route 判定しないこと。
-- Order が pickup phase から dropoff phase に変わる時、client が pickup 後に stale restaurant-bound route を描画しないよう route geometry を clear します。
-- Google/OSRM route provider が使えない場合、tracking は `etaMinutes: null` と `source: route_unavailable` を返します。Backend は straight-line ETA minutes を捏造してはいけません。
-- Admin driver map は realtime が `orderId: null` を送った時に stale `currentOrder` を clear し、invalid realtime coordinates を Google Maps に渡す前に無視すること。
-- Mobile driver の「Open directions」は、利用可能なら現在の driver coordinates を Google Maps `origin` として渡し、navigation mode を使い、invalid destination では明示的な unavailable state を表示すること。
-- Mobile driver route replay と demand heatmap は、backend route/demand coordinates から real Google Maps overlays で render します。schematic canvas-only map や local generated points に置き換えてはいけません。
-- Notification client は別 user として subscribe または mutation できない。
-- Dispatch offer room と accept/reject は認証済み driver ID に紐付く。
-- Admin/Restaurant web client は reconnect 時に最新 access token を送信する。
+- 全 critical page、normal/error state、Chromium/Firefox で axe serious/critical 0。
+- Keyboard、focus、heading、labels/errors、live region、contrast、dialog、title/`html lang`/aria locale。
+- 現在の `visual-contract.spec.ts` は structural screenshot で full pixel baseline ではありません。
+- Dashboard、approval、promotion、audit/export、staff、benchmark、map/tracking、mobile flows を approved Stitch/artifact と desktop/responsive 比較。
+- Regression を隠す baseline auto-update は禁止。UI approval 後に docs media を recapture。
 
-## Accessibility and visual QA
+## Maps/shipper route
 
-- Axe serious/critical issue は 0。
-- Keyboard navigation、visible focus、dialog focus trap、chart/table alternatives を確認。
-- Playwright suite で `web/e2e/tests/visual-contract.spec.ts` を実行する。Admin/Restaurant の FoodFlow login brand shell、responsive centering、SVG logo token、CTA contrast を検証し、review 用 screenshot を Playwright `test-results` に保存する。
-- Approved Stitch baseline と比較。
-- この repo には approved Stitch bitmap baseline はまだ保存されていない。review 済み Stitch export を追加してから pixel `toHaveScreenshot` snapshot に置き換える。
-- Desktop 1440/1280、tablet、mobile を確認。
+Provider route/cache/failure、Vietnam/service bounds、fresh timestamp、participant/phase、persisted geometry/distance/duration、remaining ETA、tenant denial。Web/mobile は hardcoded camera/polyline/ETA を禁止し stale/wrong-order/wrong-phase event を無視。Production smoke は authorized active order と `-RequireRoutePolyline` を使用します。
+
+## Supabase Realtime
+
+TTL/claims、`private:` channels、role scopes、token issue 前 cross-tenant forbidden、expired/invalid/anon denial、authorized event exactly-once handler。Socket.IO local mode は別 test、production implicit fallback は禁止。
+
+## AI
+
+Key なしは typed fail-closed。Live smoke は rotated `DEEPSEEK_API_KEY` と `deepseek-v4-flash` の server env のみ。Answer/escalation/session ownership/order context/token/latency/cost/budget/provider failure を確認し、canned/random text を LLM evidence にしません。
 
 ## Mobile
 
-Mobile reconciliation は web/backend Batch 4 が安定した後に行います。
-
-```bash
+```powershell
 cd mobile
-flutter pub get
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
+flutter build apk --debug
 ```
 
-Mobile API client は安定済みの Batch 4 OpenAPI contract を使います。
-Batch 4 mobile gate は frozen install、`flutter analyze` issue 0、Flutter test suite 全体の pass、customer と driver 両方の Android debug APK compile を必須にします。
-最新の local mobile evidence: `flutter pub get --enforce-lockfile` は pass、`flutter analyze` は issue 0、full `flutter test` は 225 tests pass、focused tracking/driver route/heatmap tests は 22/22 pass、`flutter build apk --debug` は `build/app/outputs/flutter-apk/app-debug.apk` を生成しました。APK build には `share_plus` の Kotlin Gradle Plugin future-compatibility warning のみが出ており、fail はしていません。Native Google Maps key は env/local xcconfig のみから読み、Android release signing は `FOODFLOW_UPLOAD_*` secrets が揃うまで fail-closed です。
+Release には pending Supabase realtime migration、customer/driver entry、permission/GPS/background/offline/reconnect/route phase、vi/en/ja、secure map/signing config が必要です。
 
-Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Lint `28704171260`、Build Check `28704171258`、SBOM `28704171266`、Trivy `28704171279`、CodeQL `28704171259`、CI `28704171265`、E2E Tests `28704171252`、Integration Smoke Gate `28704171294`。その後の head（最新 Batch 4 local commits を含む）は GitHub Actions account billing/spending-limit または token/auth blocker により remote jobs が start/complete できませんでした。Billing/auth 修正後、Mobile CI、CI、Build Check、Lint、Gitleaks、CodeQL、Trivy、SBOM、E2E Tests、Integration Smoke Gate を rerun してください。
+## Docker/security
 
-## 最新 local evidence (2026-07-06)
+- `amd64/arm64` build/smoke: bcrypt/BullMQ/MessagePack、Prisma、Sharp、non-root、health、manifest、provenance、SBOM。
+- 両 architectures Trivy High/Critical block、actionlint/ShellCheck。
+- Semver overwrite refusal と digest compare。
+- Secret scan、staged diff、CI Gitleaks/CodeQL/dependency audit/Trivy/SBOM。
+- CI unavailable 中は local evidence から publish/deploy しません。
 
-Verified code head は docs-only refresh 前の `33e90ea` on `origin/master` です。Remote `codex/batch4-integration` は削除済みです。Clean local worktree は local `codex/batch4-integration` を使っていますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
-
-- Backend と web の frozen install は pinned `pnpm 11.11.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
-- Backend は test `DATABASE_URL`/`DIRECT_URL` で Prisma validate、`pnpm typecheck`、`pnpm lint`、full `pnpm exec jest --runInBand`（110 suites / 802 tests）、`pnpm build` が pass。
-- Web は `pnpm typecheck`、`pnpm lint`、full Vitest（Admin 37 files / 155 tests、Restaurant 31 files / 100 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
-- Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。rebuild 後に `http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
-- Playwright は IPv6 loopback URL で Chromium + Firefox together 70/70 tests が pass。axe serious/critical smoke、visual contract、admin driver map navigation、tracking endpoint availability、realtime status flows、tenant isolation を含みます。
-- Mobile は `flutter pub get --enforce-lockfile`、`flutter analyze`、full `flutter test`（225 tests）、focused tracking/driver route/heatmap tests（22/22）、`flutter build apk --debug` が pass。
-- Tracking contract refresh は backend `pnpm exec jest src/tracking --runInBand`（5 suites / 41 tests）と focused dispatch/tracking regression tests（2 suites / 16 tests）を pass。OpenAPI YAML parse は 138 paths と `OrderTrackingResponse.routePhase` required で pass 済みです。
-- Dispatch/map evidence: restaurant acceptance は restaurant latitude/longitude と attempt metadata を含む route-aware dispatch jobs を enqueue します。Worker は legacy malformed jobs を skip し、ioredis `GEOSEARCH WITHDIST` tuple rows を parse し、`raw[i].replace is not a function` で fail しません。Customer `driver:assigned` event は `etaMinutes: null` を返すため、tracking が Google/OSRM route を得る前に speed-based ETA を捏造しません。
-- Security evidence: high-confidence tracked secret scan は match なし。`.env.example` 以外の tracked dotenv/key/credential files はありません。Native Firebase/provisioning artifacts は ignore 済み。Legacy fake refund processor は削除済み。Refund は `payment-refund` に enqueue され、full refund は SePay または wallet ledger reversal 成功後のみ反映されます。Mobile idempotency key は UUID v4、mobile HTTP body logging は debug-only かつ redacted です。
-
-## Security checks
-
-```bash
-git diff --check
-git diff --cached --check
-```
-
-Staged と tracked-file の secret scan を実行します。`.env.example` の placeholder は許可しますが、real token、private key、database credential、service-role secret は block します。
+Evidence には SHA、UTC、command、environment、pass/fail、count、image digest/architecture、skip/blocker を記録し、secret/bearer は記録しません。

@@ -4,12 +4,11 @@ Languages: [English](./api-contract.md) | [Tiếng Việt](./api-contract.vi.md)
 
 This document defines the web/admin/restaurant API contract used by Batch 4. It does not change legacy customer or mobile contracts unless an endpoint is explicitly versioned or aliased.
 
-## Versioning policy
+## Base path and versioning policy
 
-- Public versioned paths use `/v1`, `/v2`, and later version prefixes.
-- Batch 4 web endpoints may also expose compatibility aliases for one cycle when an older Admin or Restaurant route already exists.
-- Breaking changes require a new version or a documented compatibility alias.
-- Additive changes can stay in the same version.
+- Current routes are mounted below `/api`; route examples in this document are relative to that base.
+- Batch 4 does not expose a `/v1` prefix. A future version prefix may be introduced only together with an updated OpenAPI server and migration policy.
+- Breaking changes require a new version or a documented compatibility alias. Additive changes can remain on the current route.
 
 Breaking changes include:
 
@@ -61,11 +60,11 @@ Errors use RFC 7807 Problem Details. They are not wrapped in the success envelop
 
 ```json
 {
-  "type": "https://api.foodflow.vn/errors/validation",
+  "type": "about:blank",
   "title": "Validation Error",
   "status": 422,
   "detail": "Email khong dung dinh dang",
-  "instance": "/v1/auth/register",
+  "instance": "/api/auth/register",
   "code": "VALIDATION_INVALID_EMAIL"
 }
 ```
@@ -78,7 +77,7 @@ All AI routes require a user access token. The provider key is server-only.
 
 | Method | Route | Contract |
 |---|---|---|
-| `POST` | `/ai/chat` | Sends `{ message, sessionId?, orderId? }`; message is 1–4,000 trimmed characters, `sessionId` is a server UUID, and `orderId` is an owned UUID/FoodFlow order code. Returns a role-scoped, safety-filtered live-provider reply with `action: "answered" | "escalated"`, `grounded`, and optional tool metadata. |
+| `POST` | `/ai/chat` | Sends message, sessionId?, orderId?; message is 1–4,000 trimmed characters, `sessionId` is a server UUID, and `orderId` is an owned UUID/FoodFlow order code. Returns a role-scoped, safety-filtered live-provider reply with action answered or escalated, `grounded`, and optional tool metadata. |
 | `GET` | `/ai/history?sessionId=<uuid>` | Returns the caller's own active AI-support session and up to 50 persisted turns. Omit `sessionId` for the latest session. |
 | `POST` | `/ai/stream` | Authenticated SSE; emits `thinking`, one completed `response`, optional `escalated`, and `done`. It does not emit synthetic word tokens. |
 
@@ -119,7 +118,21 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 - When a session expires, redirects keep the current locale.
 - Moving web auth to httpOnly cookies is tracked separately and is not part of Batch 4.
 
-## WebSocket authentication and room authorization
+## Managed-production realtime and job drain
+
+| Method | Route | Authentication | Contract |
+|---|---|---|---|
+| `POST` | `/realtime/token` | User bearer access token | Optional `{ orderId?, restaurantId? }`. Returns `{ provider: "supabase", token, expiresAt, channels }`; the JWT expires after five minutes and all channels are explicit private scopes. |
+| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Vercel Cron drain for due PostgreSQL outbox jobs. Returns `{ claimed, completed, failed, retried }`. |
+| `POST` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Same drain contract for secured worker invocations. |
+
+Token issue verifies order/restaurant ownership before signing. Customer, driver, restaurant, and admin roles receive only their documented user/order/tenant/admin channels. Cross-tenant requests fail with `REALTIME_ORDER_CHANNEL_FORBIDDEN` or `REALTIME_RESTAURANT_CHANNEL_FORBIDDEN`. Missing signing configuration fails with `SUPABASE_REALTIME_NOT_CONFIGURED`.
+
+Supabase RLS permits an authenticated client to read `realtime_outbox` rows only when `channel` appears in its JWT `realtime_channels` claim. The anon role and broad public channels are not part of this contract.
+
+## Socket.IO compatibility authentication and room authorization
+
+Socket.IO is the explicit local/self-hosted realtime provider. It is not an implicit managed-production fallback.
 
 - The `/events`, `/tracking`, `/notifications`, and `/dispatch` Socket.IO namespaces require the current bearer access token in `handshake.auth.token` or the `Authorization` header.
 - Refresh tokens, expired tokens, invalid signatures, and inactive users are rejected before a room can be joined.
@@ -134,7 +147,7 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 
 ## Order tracking REST snapshot
 
-- `GET /orders/{id}/tracking` is order-participant scoped: customer-owned orders, assigned driver orders, active restaurant staff for the order's restaurant tenant, or admin. It returns only real Redis/cache/database telemetry for an order the authenticated actor can access.
+- `GET /orders/{id}/tracking` is order-participant scoped: customer-owned orders, assigned driver orders, active restaurant staff for the order's restaurant tenant, or admin. It returns only real provider-cache/database telemetry for an order the authenticated actor can access.
 - `driverLocation`, `etaMinutes`, and `routePolyline` are nullable; clients must treat nulls as unavailable data, not fabricate straight-line ETA or route geometry.
 - `routePhase` is required and is `pickup` before pickup, `dropoff` after pickup. Mobile and web clients must use it to avoid reusing stale pickup geometry for customer-bound delivery.
 - Customer mobile and Restaurant web hydrate this snapshot before subscribing to realtime events, then let realtime `delivery:eta_updated` replace or clear the planned route.

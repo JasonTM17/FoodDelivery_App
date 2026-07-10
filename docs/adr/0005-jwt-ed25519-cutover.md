@@ -18,6 +18,7 @@ changes must follow a three-phase protocol to avoid evicting active sessions.
 Execute a three-phase cutover:
 
 **Phase 1 (this ADR) — Dual verify, signing unchanged.**
+
 - `JwtStrategy` uses `secretOrKeyProvider` to route by `alg` header: HS256 → HMAC secret, EdDSA → Ed25519 public key.
 - Signing remains HS256 until Phase 2.
 - `/.well-known/jwks.json` exposes the Ed25519 public key for external verifiers to pre-cache.
@@ -25,25 +26,30 @@ Execute a three-phase cutover:
 - If `JWT_ED25519_PUBLIC_KEY` env is absent, service logs a warning and operates in HS256-only mode.
 
 **Phase 2 — Cut signing to EdDSA (future ADR).**
+
 - Issuer switches to signing with the Ed25519 private key (`JWT_ED25519_PRIVATE_KEY`).
 - Both alg paths still verified. Run for ≥ 1 token TTL (default 15 min).
 
 **Phase 3 — Drop legacy verify (future ADR).**
+
 - Set `LEGACY_HS256_FALLBACK=false` and redeploy. Remove fallback code path.
 
 ## Consequences
 
 ### Positive
+
 - Zero session disruption — existing HS256 tokens remain valid through all three phases.
 - JWKS endpoint lets mobile/web clients cache the public key without per-request network hops.
 - Asymmetric keys: public key exposure does not enable token forgery.
 - Key rotation achievable via kid-based JWKS slot swap without service downtime.
 
 ### Negative
+
 - Two verification code paths add complexity during the migration window.
 - Ed25519 keys require secure backup and documented rotation runbook.
 
 ### Neutral
+
 - `secretOrKeyProvider` replaces static `secretOrKey` in `passport-jwt` Strategy options.
 - `@types/passport-jwt` types `done` callback as `string | Buffer`; `crypto.KeyObject` is
   valid at runtime but requires a cast — documented inline at the call site.
