@@ -2,12 +2,14 @@ import { Processor, WorkerHost, OnWorkerEvent, InjectQueue } from '@nestjs/bullm
 import { Logger } from '@nestjs/common'
 import { Job, Queue } from 'bullmq'
 import { DispatchService } from './dispatch.service'
+import { DispatchOfferService } from './dispatch-offer.service'
 
 interface DispatchJobData {
   orderId: string
   restaurantLat?: number
   restaurantLng?: number
   attempt?: number
+  offerId?: string
 }
 
 // Radius per attempt: 3km → 5km → 8km (stays at 8km for attempts 4+)
@@ -21,6 +23,7 @@ export class DispatchProcessor extends WorkerHost {
 
   constructor(
     private readonly dispatchService: DispatchService,
+    private readonly offers: DispatchOfferService,
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
   ) { super() }
 
@@ -34,7 +37,21 @@ export class DispatchProcessor extends WorkerHost {
     this.logger.error(`Job ${job.id} failed for order ${job.data.orderId}: ${error.message}`)
   }
 
-  async process(job: Job<DispatchJobData>): Promise<{ assigned: boolean; driverId?: string }> {
+  async process(job: Job<DispatchJobData>): Promise<{
+    assigned?: boolean
+    pending?: boolean
+    driverId?: string
+    offerId?: string
+    expired?: boolean
+  }> {
+    if (job.name === 'dispatch.offer-timeout') {
+      if (!job.data.offerId) {
+        this.logger.warn(`Skipping malformed dispatch offer timeout job ${job.id}`)
+        return { expired: false }
+      }
+      return this.offers.expireOffer(job.data.offerId)
+    }
+
     const { orderId } = job.data
     const restaurantLat = Number(job.data.restaurantLat)
     const restaurantLng = Number(job.data.restaurantLng)
@@ -53,7 +70,9 @@ export class DispatchProcessor extends WorkerHost {
       orderId, restaurantLat, restaurantLng, radius, attempt,
     )
 
-    if (!result.assigned) {
+    if (result.pending) {
+      this.logger.log(`Offered order ${orderId} to driver ${result.driverId}`)
+    } else if (!result.assigned) {
       if (attempt >= MAX_ATTEMPTS) {
         this.logger.warn(`Auto-cancelling order ${orderId} after ${MAX_ATTEMPTS} failed attempts`)
         await this.dispatchService.autoCancelOrder(orderId)

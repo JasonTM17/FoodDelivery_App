@@ -249,6 +249,7 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   fcmTokens               UserFcmToken[]
   aiUsageEvents           AiUsageEvent[]
+  dispatchOffers          DispatchOffer[]
 
   @@index([email])
   @@index([phone])
@@ -581,6 +582,7 @@ model Order {
   supportTickets   AiSupportTicket[]
   promotionUsages  PromotionUsage[]
   chatSessions     ChatSession[]
+  dispatchOffers   DispatchOffer[]
 
   @@index([customerId, createdAt(sort: Desc)])
   @@index([restaurantId, status])
@@ -820,9 +822,9 @@ model ChatSession {
   createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   closedAt  DateTime?       @map("closed_at") @db.Timestamptz()
 
-  user     User          @relation(fields: [userId], references: [id])
-  order    Order?        @relation(fields: [orderId], references: [id])
-  messages ChatMessage[]
+  user        User           @relation(fields: [userId], references: [id])
+  order       Order?         @relation(fields: [orderId], references: [id])
+  messages    ChatMessage[]
   usageEvents AiUsageEvent[]
 
   @@map("chat_sessions")
@@ -992,6 +994,32 @@ model JobOutbox {
 
   @@index([queue, status, runAt])
   @@map("job_outbox")
+}
+
+model DispatchOffer {
+  id              String    @id @default(uuid()) @db.Uuid
+  orderId         String    @map("order_id") @db.Uuid
+  driverId        String    @map("driver_id") @db.Uuid
+  tokenHash       String    @map("token_hash") @db.Char(64)
+  status          String    @default("pending") @db.VarChar(20)
+  attempt         Int       @db.SmallInt
+  restaurantLat   Float     @map("restaurant_lat")
+  restaurantLng   Float     @map("restaurant_lng")
+  distanceKm      Float     @map("distance_km")
+  driverRating    Float     @map("driver_rating")
+  totalDeliveries Int       @map("total_deliveries")
+  surgeMultiplier Float     @map("surge_multiplier")
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz()
+  respondedAt     DateTime? @map("responded_at") @db.Timestamptz()
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver User  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, status])
+  @@index([driverId, status, expiresAt])
+  @@map("dispatch_offers")
 }
 
 model AdminExportJob {

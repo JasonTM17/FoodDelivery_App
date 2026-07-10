@@ -148,6 +148,7 @@ Socket.IO is the explicit local/self-hosted realtime provider. It is not an impl
 ## Order tracking REST snapshot
 
 - `POST /driver/location` is driver-only and accepts a real device GPS sample with required capture `timestamp`. The shared tracking pipeline rejects stale, future, out-of-bounds, over-speed, and teleporting samples with `422 DRIVER_LOCATION_REJECTED`; accepted samples update live presence and publish tenant-scoped order/admin events.
+- `POST /driver/dispatch/offers/{orderId}/respond` is driver-only. It accepts `{ offerToken, decision: "accept"|"reject" }`, binds the response to the bearer identity, consumes a short-lived token once, and returns `409` for invalid/expired/raced offers. Offer state lives in PostgreSQL; only a SHA-256 token hash is persisted.
 - `GET /orders/{id}/tracking` is order-participant scoped: customer-owned orders, assigned driver orders, active restaurant staff for the order's restaurant tenant, or admin. It returns only real provider-cache/database telemetry for an order the authenticated actor can access.
 - `driverLocation`, `etaMinutes`, and `routePolyline` are nullable; clients must treat nulls as unavailable data, not fabricate straight-line ETA or route geometry.
 - `routePhase` is required and is `pickup` before pickup, `dropoff` after pickup. Mobile and web clients must use it to avoid reusing stale pickup geometry for customer-bound delivery.

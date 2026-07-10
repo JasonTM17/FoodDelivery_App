@@ -872,6 +872,25 @@ components:
         timestamp: { type: string, format: date-time }
       required: [accepted, orderId, timestamp]
 
+    DispatchOfferResponseRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        offerToken:
+          type: string
+          format: uuid
+          description: Single-use token delivered only on the authenticated driver's private realtime channel.
+        decision: { type: string, enum: [accept, reject] }
+      required: [offerToken, decision]
+
+    DispatchOfferResolution:
+      type: object
+      properties:
+        orderId: { type: string, format: uuid }
+        decision: { type: string, enum: [accept, reject] }
+        status: { type: string, enum: [assigned, rejected] }
+      required: [orderId, decision, status]
+
     DriverEarningEntry:
       type: object
       description: One real payout ledger row joined to its completed order.
@@ -3855,6 +3874,35 @@ paths:
               schema: { $ref: "#/components/schemas/DriverLocationUpdateResponse" }
         "422":
           description: Location rejected as stale, future, invalid, outside the service area, or physically implausible
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
+
+  /driver/dispatch/offers/{orderId}/respond:
+    post:
+      tags: [drivers]
+      summary: Resolve a short-lived dispatch offer
+      description: Accepts or rejects the authenticated driver's persisted offer exactly once. The API stores only a SHA-256 token hash, enforces expiry and driver ownership, atomically claims assignment, and never relies on an in-memory WebSocket callback.
+      operationId: dispatch_respondToOffer
+      x-foo-actor: driver
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DispatchOfferResponseRequest" }
+      responses:
+        "200":
+          description: Offer resolved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DispatchOfferResolution" }
+        "409":
+          description: Offer token is invalid, expired, already resolved, or the order/driver can no longer be assigned
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ProblemDetail" }

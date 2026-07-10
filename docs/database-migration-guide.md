@@ -76,6 +76,16 @@ Run an authenticated POST /api/realtime/token smoke test and verify the denied
 cross-tenant case after applying the migration. See
 [API contract](api-contract.md#managed-production-realtime-and-job-drain).
 
+### Dispatch offers
+
+Migration `20260710200000_add_dispatch_offers` adds the server-only
+`dispatch_offers` state machine. It enables RLS without granting a direct
+browser/mobile policy, stores only SHA-256 offer-token hashes, and creates a
+partial unique index that permits at most one pending/accepted offer per order.
+After migration, verify reject, expiry, duplicate accept, concurrent driver
+claim, and successful PostGIS delivery-task assignment before enabling mobile
+production dispatch.
+
 ## Recovery
 
 Prisma does not generate universal down migrations. A release must therefore

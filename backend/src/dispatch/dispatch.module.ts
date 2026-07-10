@@ -10,6 +10,9 @@ import { RedisModule } from '../redis/redis.module'
 import { AuthModule } from '../auth/auth.module'
 import { OrdersModule } from '../orders/orders.module'
 import { QueueProviderModule } from '../common/queue/queue-provider.module'
+import { DispatchOfferService } from './dispatch-offer.service'
+import { DispatchNotifierService } from './dispatch-notifier.service'
+import { DispatchController } from './dispatch.controller'
 
 @Module({
   imports: [
@@ -18,8 +21,11 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     RedisModule,
     forwardRef(() => OrdersModule),
   ],
+  controllers: [DispatchController],
   providers: [
     DispatchService,
+    DispatchOfferService,
+    DispatchNotifierService,
     DispatchProcessor,
     DispatchGateway,
     DriverScoringService,
@@ -27,6 +33,6 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     SurgePricingService,
     DispatchMetrics,
   ],
-  exports: [DispatchService, DispatchGateway],
+  exports: [DispatchService, DispatchGateway, DispatchOfferService],
 })
 export class DispatchModule {}

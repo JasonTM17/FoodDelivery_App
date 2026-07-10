@@ -144,6 +144,7 @@ Socket.IO は local/self-hosted の explicit provider であり、managed produc
 ## Order tracking REST snapshot
 
 - `POST /driver/location` は driver 専用で、端末が取得した実 GPS timestamp を必須とします。共通 tracking pipeline は stale、future、service area 外、speed 超過、teleport sample を `422 DRIVER_LOCATION_REJECTED` で拒否し、有効な sample だけが presence と tenant-scoped order/admin event を更新します。
+- `POST /driver/dispatch/offers/{orderId}/respond` は driver 専用で、`{ offerToken, decision: "accept"|"reject" }` を bearer identity に bind し、短命 token を一度だけ consume します。Offer state は PostgreSQL に保存し、token は SHA-256 hash のみを保持します。Invalid、expired、race は `409` です。
 - `GET /orders/{id}/tracking` は order participant scoped です。customer-owned order、assigned driver order、注文の restaurant tenant に属する active restaurant staff、または admin のみが利用できます。認証済み actor がアクセスできる注文について provider cache/database の real telemetry だけを返します。
 - `driverLocation`、`etaMinutes`、`routePolyline` は nullable です。Client は null を unavailable data として扱い、straight-line ETA や route geometry を捏造してはいけません。
 - `routePhase` は必須 field で、pickup 前は `pickup`、pickup 後は `dropoff` です。Mobile/web client は stale pickup geometry を customer-bound delivery に再利用しないためにこの field を使います。

@@ -1,15 +1,13 @@
-import { Injectable, Inject, Logger, NotFoundException, forwardRef } from '@nestjs/common'
+import { Injectable, Inject, Logger, forwardRef } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { DispatchGateway } from './dispatch.gateway'
 import { DriverScoringService } from './driver-scoring.service'
 import { CooldownService } from './cooldown.service'
 import { SurgePricingService } from './surge-pricing.service'
 import { DispatchMetrics } from './dispatch.metrics'
 import Redis from 'ioredis'
-import { Prisma } from '@prisma/client'
-import { type DeliveryRoutePhase, routeCacheKey } from '../tracking/tracking.service'
 import { OrdersGateway } from '../orders/orders.gateway'
 import { OrdersService } from '../orders/orders.service'
+import { DispatchOfferService } from './dispatch-offer.service'
 
 interface DriverCandidate {
   driverId: string
@@ -28,7 +26,7 @@ export class DispatchService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly dispatchGateway: DispatchGateway,
+    private readonly offers: DispatchOfferService,
     private readonly ordersGateway: OrdersGateway,
     private readonly scoring: DriverScoringService,
     private readonly cooldown: CooldownService,
@@ -93,45 +91,46 @@ export class DispatchService {
 
   async dispatchOrder(
     orderId: string, lat: number, lng: number, radiusKm: number, attempt: number,
-  ): Promise<{ assigned: boolean; driverId?: string }> {
+  ): Promise<{ assigned: boolean; pending?: boolean; driverId?: string; offerId?: string }> {
     const lockKey = `lock:dispatch:${orderId}`
     const lockToken = crypto.randomUUID()
     const locked = await this.redis.set(lockKey, lockToken, 'PX', 30000, 'NX')
     if (!locked) return { assigned: false }
 
-    const start = Date.now()
     this.metrics.attemptsTotal.inc({ attempt_no: String(attempt) })
 
     try {
       const candidates = await this.findCandidates(lat, lng, radiusKm)
+      const attemptedDriverIds = await this.offers.attemptedDriverIds(orderId)
+      const candidate = candidates.find(item => !attemptedDriverIds.has(item.driverId))
       this.metrics.availableDriversPerZone.set(
         { zone: `${Math.floor(lat * 20)}:${Math.floor(lng * 20)}` },
-        candidates.length,
+        candidate ? 1 : 0,
       )
 
-      if (!candidates.length) {
+      if (!candidate) {
         const surgeMultiplier = this.surge.checkAndUpdate(lat, lng, attempt, false)
-        this.logger.debug(`No candidates for order ${orderId} attempt ${attempt} (surge: ${surgeMultiplier}x)`)
+        this.logger.debug(`No untried candidates for order ${orderId} attempt ${attempt} (surge: ${surgeMultiplier}x)`)
         this.metrics.noDriverTotal.inc({ reason: 'no_candidates' })
         return { assigned: false }
       }
 
       this.surge.checkAndUpdate(lat, lng, attempt, true)
       const surgeMultiplier = attempt >= 3 ? this.surge.getMultiplier(lat, lng) : 1.0
-
-      for (const candidate of candidates) {
-        const accepted = await this.offerToDriver(orderId, candidate, surgeMultiplier)
-        if (accepted) {
-          await this.assignDriver(orderId, candidate)
-          this.metrics.successTotal.inc()
-          this.metrics.timeToAssign.observe((Date.now() - start) / 1000)
-          return { assigned: true, driverId: candidate.driverId }
-        }
-        await this.cooldown.recordTimeout(candidate.driverId)
+      const offer = await this.offers.createOffer({
+        orderId,
+        candidate,
+        restaurantLat: lat,
+        restaurantLng: lng,
+        attempt,
+        surgeMultiplier,
+      })
+      return {
+        assigned: false,
+        pending: true,
+        driverId: offer.driverId,
+        offerId: offer.offerId,
       }
-
-      this.metrics.noDriverTotal.inc({ reason: 'all_rejected' })
-      return { assigned: false }
     } finally {
       await this.redis.eval(
         `if redis.call("get",KEYS[1])==ARGV[1] then return redis.call("del",KEYS[1]) else return 0 end`,
@@ -177,139 +176,6 @@ export class DispatchService {
     this.logger.warn(`Order ${orderId} auto-cancelled: no driver found after max attempts`)
   }
 
-  private async offerToDriver(
-    orderId: string, candidate: DriverCandidate, surgeMultiplier: number,
-  ): Promise<boolean> {
-    const offerToken = crypto.randomUUID()
-    const offerKey = `offer:${orderId}:${candidate.driverId}`
-    await this.redis.setex(offerKey, 30, offerToken)
-
-    const order = await this.prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      select: {
-        total: true,
-        deliveryFee: true,
-        deliveryAddress: { select: { addressLine: true } },
-        restaurant: { select: { name: true, addressLine: true } },
-      },
-    })
-
-    this.dispatchGateway.sendNewOrderOffer(candidate.driverId, {
-      orderId, offerToken,
-      restaurantName: order.restaurant.name,
-      restaurantAddress: order.restaurant.addressLine,
-      deliveryAddress: order.deliveryAddress.addressLine,
-      orderTotal: Number(order.total),
-      deliveryFee: Number(order.deliveryFee),
-      distanceKm: candidate.distKm,
-      timeoutSeconds: 30,
-      surgeMultiplier,
-    })
-
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => { void this.redis.del(offerKey); resolve(false) }, 30000)
-      this.dispatchGateway.registerOfferResponse(`${orderId}:${candidate.driverId}`, (accepted: boolean) => {
-        clearTimeout(timeout)
-        if (!accepted) void this.redis.del(offerKey)
-        resolve(accepted)
-      })
-    })
-  }
-
-  private async assignDriver(orderId: string, candidate: DriverCandidate): Promise<void> {
-    const order = await this.prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      select: { deliveryAddressId: true, restaurantId: true },
-    })
-
-    const coords = await this.prisma.$queryRaw<Array<{ restLng: number; restLat: number; custLng: number; custLat: number }>>(Prisma.sql`
-      SELECT ST_X(r.location::geometry)::float8 AS "restLng", ST_Y(r.location::geometry)::float8 AS "restLat",
-              ST_X(a.location::geometry)::float8 AS "custLng", ST_Y(a.location::geometry)::float8 AS "custLat"
-       FROM restaurants r, addresses a
-       WHERE r.id = CAST(${order.restaurantId} AS uuid)
-         AND a.id = CAST(${order.deliveryAddressId} AS uuid)
-    `)
-    const location = coords[0]
-    if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
-
-    await this.writeDriverAssignmentToRedis(candidate.driverId, orderId)
-    try {
-      await this.invalidateRouteCaches(orderId)
-      await this.prisma.$transaction([
-        this.prisma.order.update({
-          where: { id: orderId },
-          data: {
-            driverId: candidate.driverId,
-            status: 'driver_assigned',
-            estimatedDeliveryTimeMinutes: null,
-            routePolyline: null,
-            routeWaypoints: Prisma.DbNull,
-          },
-        }),
-        this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
-        this.prisma.$executeRaw(Prisma.sql`
-          INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
-          VALUES (
-            CAST(${orderId} AS uuid),
-            CAST(${candidate.driverId} AS uuid),
-            ST_SetSRID(
-              ST_MakePoint(CAST(${location.restLng} AS double precision), CAST(${location.restLat} AS double precision)),
-              4326
-            ),
-            ST_SetSRID(
-              ST_MakePoint(CAST(${location.custLng} AS double precision), CAST(${location.custLat} AS double precision)),
-              4326
-            ),
-            'assigned',
-            CAST(${candidate.rating.toString()} AS numeric),
-            NOW()
-          )
-        `),
-      ])
-    } catch (err) {
-      await this.releaseRedisAssignment(candidate.driverId, orderId)
-      throw err
-    }
-    this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
-    this.ordersGateway.broadcastToOrder(orderId, 'driver:assigned', {
-      driverId: candidate.driverId,
-      etaMinutes: null,
-    })
-  }
-
-  private async writeDriverAssignmentToRedis(driverId: string, orderId: string): Promise<void> {
-    const pipeline = this.redis.pipeline()
-    pipeline.set(`driver:${driverId}:status`, 'busy')
-    pipeline.set(`driver:${driverId}:current_order`, orderId)
-    pipeline.del(`driver:${driverId}:idle_since`)
-    const results = await pipeline.exec()
-    if (!results || results.length !== 3 || results.some(([error]) => error)) {
-      throw new Error('REDIS_DRIVER_ASSIGNMENT_FAILED')
-    }
-  }
-
-  private invalidateRouteCaches(orderId: string): Promise<number> {
-    return this.redis.del(
-      routeRedisKey(orderId, 'pickup'),
-      routeRedisKey(orderId, 'dropoff'),
-    )
-  }
-
-  private async releaseRedisAssignment(driverId: string, orderId: string): Promise<void> {
-    await this.redis.eval(
-      `if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("del", KEYS[1]); redis.call("set", KEYS[2], "online"); redis.call("set", KEYS[3], ARGV[2]); return 1 else return 0 end`,
-      3,
-      `driver:${driverId}:current_order`,
-      `driver:${driverId}:status`,
-      `driver:${driverId}:idle_since`,
-      orderId,
-      Date.now().toString(),
-    )
-  }
-}
-
-function routeRedisKey(orderId: string, phase: DeliveryRoutePhase): string {
-  return `route:${routeCacheKey(orderId, phase)}`
 }
 
 function parseGeoSearchWithDistance(raw: Array<unknown>): Array<{ member: string; distKm: number }> {
