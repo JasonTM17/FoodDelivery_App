@@ -1520,5 +1520,20 @@
     "restaurantDetail": {
       "title": "レストラン詳細を読み込めません"
     }
+  },
+  "chatbot": {
+    "open": "AIアシスタントを開く",
+    "close": "チャットを閉じる",
+    "title": "FoodFlowアシスタント",
+    "subtitle": "注文・サポート・ダッシュボードについて質問",
+    "placeholder": "メッセージを入力...",
+    "send": "送信",
+    "empty": "何でも質問できます — 本番AIサービスを使用します。",
+    "emptyReply": "（返信が空です）",
+    "sending": "送信中...",
+    "error": "アシスタントに接続できません。再試行してください。",
+    "degraded": "アシスタントは一時的に制限中",
+    "you": "あなた",
+    "assistant": "アシスタント"
   }
 }

@@ -8,6 +8,7 @@ FoodFlow uses an LLM-first chatbot path in Batch 4. The backend AI module owns t
 
 - Provider: DeepSeek through the backend provider adapter, default model `deepseek-v4-flash`.
 - Entry points: `POST /ai/chat` and `POST /ai/stream`, both authenticated.
+- Admin and Restaurant web shells expose a fixed bottom-right FAB that calls `POST /ai/chat` with the signed-in session token (login routes have no widget).
 - Customer mobile chat uses `POST /ai/chat` directly; support-only chats omit `orderId`, while order chats pass a verified-looking order code or UUID for backend grounding.
 - Internal grounding tools fetch real order, driver, restaurant, refund, recommendation, and support-ticket context.
 - Tool calls are scoped to the authenticated `user.sub`; user-supplied order IDs are never trusted alone.

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { AuthProvider } from '@/lib/auth-provider'
 import { RestaurantSidebar } from '@/components/layout/restaurant-sidebar'
+import { AiChatbotWidget } from '@/components/chatbot/ai-chatbot-widget'
 
 export function RootLayoutClient({
   children,
@@ -33,6 +34,8 @@ export function RootLayoutClient({
           </div>
         </main>
       </div>
+      {/* Authenticated shell only — login branch above has no FAB */}
+      <AiChatbotWidget />
     </AuthProvider>
   )
 }

@@ -151,46 +151,46 @@
       "cancel": "キャンセル",
       "actionFailed": "操作に失敗しました"
     },
-  "prepTime": {
-    "title": "準備時間",
-    "minutes": "{minutes}分",
-    "customPlaceholder": "カスタム（分）",
-    "set": "設定"
-  },
-  "tracking": {
-    "title": "ライブ配達追跡",
-    "description": "バックエンドの実ルートとテレメトリで担当ドライバーを追跡します。",
-    "mapRegionLabel": "注文のライブ追跡マップ",
-    "refresh": "更新",
-    "loading": "ライブ追跡を読み込み中",
-    "loadError": "ライブ追跡を読み込めませんでした",
-    "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
-    "missingKeyDescription": "ライブ配達マップを表示するには、Restaurant環境に公開Google Mapsキーを追加してください。",
-    "telemetryUnavailable": "実際のドライバーGPSまたはルートはまだ記録されていません。FoodFlowはETAを捏造しません。",
-    "noSnapshotDescription": "バックエンドがドライバー割り当てと実テレメトリを記録すると追跡が表示されます。",
-    "etaLabel": "ETA",
-    "etaMinutes": "{minutes}分",
-    "etaUnavailable": "ルート済みテレメトリが届くまで利用不可",
-    "routePhaseLabel": "ルート段階",
-    "driverLocationLabel": "ドライバーGPS",
-    "locationAvailable": "ライブ位置情報あり",
-    "locationUnavailable": "実ドライバーGPS待ち",
-    "customerAddressLabel": "顧客住所",
-    "routeAvailable": "ルート形状はバックエンドのDirections/OSRM providerから取得しています。",
-    "routeUnavailable": "ルート形状はまだありません。バックエンドが返すとマップが更新されます。",
-    "driverLocationUpdated": "ドライバー位置更新: {time}",
-    "unavailable": "利用不可",
-    "connection": {
-      "connecting": "接続中",
-      "connected": "ライブ",
-      "disconnected": "再接続中"
+    "prepTime": {
+      "title": "準備時間",
+      "minutes": "{minutes}分",
+      "customPlaceholder": "カスタム（分）",
+      "set": "設定"
     },
-    "phase": {
-      "pickup": "ドライバーが店舗へ移動中",
-      "dropoff": "ドライバーが顧客へ配達中"
+    "tracking": {
+      "title": "ライブ配達追跡",
+      "description": "バックエンドの実ルートとテレメトリで担当ドライバーを追跡します。",
+      "mapRegionLabel": "注文のライブ追跡マップ",
+      "refresh": "更新",
+      "loading": "ライブ追跡を読み込み中",
+      "loadError": "ライブ追跡を読み込めませんでした",
+      "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
+      "missingKeyDescription": "ライブ配達マップを表示するには、Restaurant環境に公開Google Mapsキーを追加してください。",
+      "telemetryUnavailable": "実際のドライバーGPSまたはルートはまだ記録されていません。FoodFlowはETAを捏造しません。",
+      "noSnapshotDescription": "バックエンドがドライバー割り当てと実テレメトリを記録すると追跡が表示されます。",
+      "etaLabel": "ETA",
+      "etaMinutes": "{minutes}分",
+      "etaUnavailable": "ルート済みテレメトリが届くまで利用不可",
+      "routePhaseLabel": "ルート段階",
+      "driverLocationLabel": "ドライバーGPS",
+      "locationAvailable": "ライブ位置情報あり",
+      "locationUnavailable": "実ドライバーGPS待ち",
+      "customerAddressLabel": "顧客住所",
+      "routeAvailable": "ルート形状はバックエンドのDirections/OSRM providerから取得しています。",
+      "routeUnavailable": "ルート形状はまだありません。バックエンドが返すとマップが更新されます。",
+      "driverLocationUpdated": "ドライバー位置更新: {time}",
+      "unavailable": "利用不可",
+      "connection": {
+        "connecting": "接続中",
+        "connected": "ライブ",
+        "disconnected": "再接続中"
+      },
+      "phase": {
+        "pickup": "ドライバーが店舗へ移動中",
+        "dropoff": "ドライバーが顧客へ配達中"
+      }
     }
-  }
-},
+  },
   "menu": {
     "title": "メニュー",
     "description": "メニューアイテムとカテゴリを管理",
@@ -1318,5 +1318,20 @@
       "backGate": "裏口へお越しください",
       "thanks": "ありがとうございます!"
     }
+  },
+  "chatbot": {
+    "open": "AIアシスタントを開く",
+    "close": "チャットを閉じる",
+    "title": "FoodFlowアシスタント",
+    "subtitle": "注文・サポート・ダッシュボードについて質問",
+    "placeholder": "メッセージを入力...",
+    "send": "送信",
+    "empty": "何でも質問できます — 本番AIサービスを使用します。",
+    "emptyReply": "（返信が空です）",
+    "sending": "送信中...",
+    "error": "アシスタントに接続できません。再試行してください。",
+    "degraded": "アシスタントは一時的に制限中",
+    "you": "あなた",
+    "assistant": "アシスタント"
   }
 }

@@ -151,46 +151,46 @@
       "cancel": "Cancel",
       "actionFailed": "Action failed"
     },
-  "prepTime": {
-    "title": "Preparation time",
-    "minutes": "{minutes} min",
-    "customPlaceholder": "Custom (minutes)",
-    "set": "Set"
-  },
-  "tracking": {
-    "title": "Live delivery tracking",
-    "description": "Follow the assigned driver with backend route and telemetry data.",
-    "mapRegionLabel": "Live order tracking map",
-    "refresh": "Refresh",
-    "loading": "Loading live tracking",
-    "loadError": "Could not load live tracking",
-    "missingKeyTitle": "Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY",
-    "missingKeyDescription": "Add the public Google Maps key to the restaurant environment to display the live delivery map.",
-    "telemetryUnavailable": "No real driver GPS or route has been recorded yet. FoodFlow will not fabricate an ETA.",
-    "noSnapshotDescription": "Tracking will appear when the backend records a driver assignment and telemetry.",
-    "etaLabel": "ETA",
-    "etaMinutes": "{minutes} min",
-    "etaUnavailable": "Unavailable until routed telemetry exists",
-    "routePhaseLabel": "Route phase",
-    "driverLocationLabel": "Driver GPS",
-    "locationAvailable": "Live location available",
-    "locationUnavailable": "Waiting for real driver GPS",
-    "customerAddressLabel": "Customer address",
-    "routeAvailable": "Route geometry comes from the backend Directions/OSRM provider.",
-    "routeUnavailable": "No routed geometry yet; the map will update when the backend provides one.",
-    "driverLocationUpdated": "Driver location updated: {time}",
-    "unavailable": "Unavailable",
-    "connection": {
-      "connecting": "Connecting",
-      "connected": "Live",
-      "disconnected": "Reconnecting"
+    "prepTime": {
+      "title": "Preparation time",
+      "minutes": "{minutes} min",
+      "customPlaceholder": "Custom (minutes)",
+      "set": "Set"
     },
-    "phase": {
-      "pickup": "Driver to restaurant",
-      "dropoff": "Driver to customer"
+    "tracking": {
+      "title": "Live delivery tracking",
+      "description": "Follow the assigned driver with backend route and telemetry data.",
+      "mapRegionLabel": "Live order tracking map",
+      "refresh": "Refresh",
+      "loading": "Loading live tracking",
+      "loadError": "Could not load live tracking",
+      "missingKeyTitle": "Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY",
+      "missingKeyDescription": "Add the public Google Maps key to the restaurant environment to display the live delivery map.",
+      "telemetryUnavailable": "No real driver GPS or route has been recorded yet. FoodFlow will not fabricate an ETA.",
+      "noSnapshotDescription": "Tracking will appear when the backend records a driver assignment and telemetry.",
+      "etaLabel": "ETA",
+      "etaMinutes": "{minutes} min",
+      "etaUnavailable": "Unavailable until routed telemetry exists",
+      "routePhaseLabel": "Route phase",
+      "driverLocationLabel": "Driver GPS",
+      "locationAvailable": "Live location available",
+      "locationUnavailable": "Waiting for real driver GPS",
+      "customerAddressLabel": "Customer address",
+      "routeAvailable": "Route geometry comes from the backend Directions/OSRM provider.",
+      "routeUnavailable": "No routed geometry yet; the map will update when the backend provides one.",
+      "driverLocationUpdated": "Driver location updated: {time}",
+      "unavailable": "Unavailable",
+      "connection": {
+        "connecting": "Connecting",
+        "connected": "Live",
+        "disconnected": "Reconnecting"
+      },
+      "phase": {
+        "pickup": "Driver to restaurant",
+        "dropoff": "Driver to customer"
+      }
     }
-  }
-},
+  },
   "menu": {
     "title": "Menu",
     "description": "Manage menu items and categories",
@@ -1318,5 +1318,20 @@
       "backGate": "Please use the back gate",
       "thanks": "Thank you!"
     }
+  },
+  "chatbot": {
+    "open": "Open AI assistant",
+    "close": "Close chat",
+    "title": "FoodFlow Assistant",
+    "subtitle": "Ask about orders, support, or the dashboard",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "empty": "Ask anything — we use the live AI service.",
+    "emptyReply": "(Empty assistant reply)",
+    "sending": "Sending...",
+    "error": "Could not reach the assistant. Try again.",
+    "degraded": "Assistant is temporarily limited",
+    "you": "You",
+    "assistant": "Assistant"
   }
 }

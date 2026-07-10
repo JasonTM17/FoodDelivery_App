@@ -1520,5 +1520,20 @@
     "restaurantDetail": {
       "title": "Unable to load restaurant detail"
     }
+  },
+  "chatbot": {
+    "open": "Open AI assistant",
+    "close": "Close chat",
+    "title": "FoodFlow Assistant",
+    "subtitle": "Ask about orders, support, or the dashboard",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "empty": "Ask anything — we use the live AI service.",
+    "emptyReply": "(Empty assistant reply)",
+    "sending": "Sending...",
+    "error": "Could not reach the assistant. Try again.",
+    "degraded": "Assistant is temporarily limited",
+    "you": "You",
+    "assistant": "Assistant"
   }
 }
