@@ -130,6 +130,7 @@ Socket.IO là provider explicit cho local/self-hosted, không phải fallback im
 
 ## Snapshot REST tracking đơn hàng
 
+- `POST /driver/location` chỉ dành cho driver và bắt buộc timestamp GPS thật từ thiết bị. Pipeline tracking dùng chung trả `422 DRIVER_LOCATION_REJECTED` cho sample stale, tương lai, ngoài vùng phục vụ, vượt tốc hoặc teleport; sample hợp lệ cập nhật presence và phát event order/admin đúng tenant.
 - `GET /orders/{id}/tracking` scope theo order participant: customer sở hữu đơn, driver được gán, staff nhà hàng active đúng tenant của đơn, hoặc admin. Endpoint chỉ trả telemetry thật từ provider cache/database cho đơn mà actor đã xác thực được phép truy cập.
 - `driverLocation`, `etaMinutes` và `routePolyline` có thể null; client phải xem null là dữ liệu chưa khả dụng, không tự bịa ETA đường thẳng hoặc route geometry.
 - `routePhase` là field bắt buộc, giá trị `pickup` trước khi lấy món và `dropoff` sau khi lấy món. Mobile/web client phải dùng field này để tránh tái sử dụng geometry pickup stale cho chặng giao tới khách.

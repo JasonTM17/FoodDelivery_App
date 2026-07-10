@@ -6,9 +6,11 @@ describe('TrackingController', () => {
   const getCachedRoute = jest.fn()
   const getPersistedRoute = jest.fn()
   const getTracking = jest.fn()
+  const processLocationUpdate = jest.fn()
   const controller = new TrackingController(
     { getDriverLocation, getCachedRoute, getPersistedRoute } as never,
     { getTracking } as never,
+    { processLocationUpdate } as never,
   )
 
   beforeEach(() => {
@@ -16,6 +18,54 @@ describe('TrackingController', () => {
     getDriverLocation.mockResolvedValue(null)
     getCachedRoute.mockResolvedValue(null)
     getPersistedRoute.mockResolvedValue(null)
+    processLocationUpdate.mockResolvedValue({
+      accepted: true,
+      orderId: 'order-1',
+      timestamp: '2026-07-10T10:00:00.000Z',
+    })
+  })
+
+  it('submits a driver GPS sample through the shared tracking pipeline', async () => {
+    const body = {
+      lat: 10.8,
+      lng: 106.7,
+      bearing: 180,
+      speed: 24,
+      accuracy: 5,
+      timestamp: '2026-07-10T10:00:00.000Z',
+    }
+
+    await expect(controller.updateDriverLocation(
+      { sub: 'driver-1', role: UserRole.driver },
+      body,
+    )).resolves.toEqual({
+      accepted: true,
+      orderId: 'order-1',
+      timestamp: body.timestamp,
+    })
+    expect(processLocationUpdate).toHaveBeenCalledWith('driver-1', body)
+  })
+
+  it('surfaces rejected GPS samples as an explicit 422 contract', async () => {
+    processLocationUpdate.mockResolvedValueOnce({
+      accepted: false,
+      reason: 'stale_timestamp',
+    })
+
+    await expect(controller.updateDriverLocation(
+      { sub: 'driver-1', role: UserRole.driver },
+      {
+        lat: 10.8,
+        lng: 106.7,
+        timestamp: '2026-07-10T09:00:00.000Z',
+      },
+    )).rejects.toMatchObject({
+      response: {
+        code: 'DRIVER_LOCATION_REJECTED',
+        reason: 'stale_timestamp',
+      },
+      status: 422,
+    })
   })
 
   it('resolves the assigned driver before reading live Redis coordinates', async () => {

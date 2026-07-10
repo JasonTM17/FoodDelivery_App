@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-10: Added driver-only `POST /driver/location` so production mobile GPS mutations use authenticated REST while Supabase remains the receive-only realtime transport. The contract preserves device timestamps and explicitly rejects stale, future, out-of-bounds, over-speed, and teleporting samples.
 - 2026-07-10: Corrected the canonical base from the retired `/v1`/`api.foodflow.vn` examples to `/api` on a verified Vercel API alias. Added documented `POST /realtime/token` Supabase private-channel authorization, the `cronBearer` scheme, and secured `GET|POST /jobs/drain` PostgreSQL outbox contracts. These routes were implemented but absent from the prior public OpenAPI surface.
 - 2026-07-10: Hardened AI chat input/session contracts (4,000-character cap, UUID ownership checks, 400/404 errors), role-scoped grounding, and allow-listed SSE failures.
 - 2026-07-10: AI chat now fails closed instead of returning a `degraded` assistant payload. The contract adds `GET /ai/history`, documents SSE `response`/`error` events, constrains actions to `answered` or `escalated`, and records real DeepSeek token/latency telemetry without estimating cost.

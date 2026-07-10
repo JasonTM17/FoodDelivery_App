@@ -851,6 +851,27 @@ components:
         lat: 10.7769
         lng: 106.7009
 
+    DriverLocationUpdateRequest:
+      type: object
+      additionalProperties: false
+      description: A fresh GPS sample captured by the authenticated driver's device. Speed is expressed in kilometres per hour.
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+        bearing: { type: number, minimum: 0, exclusiveMaximum: 360 }
+        speed: { type: number, minimum: 0, maximum: 150 }
+        accuracy: { type: number, minimum: 0, maximum: 10000 }
+        timestamp: { type: string, format: date-time }
+      required: [lat, lng, timestamp]
+
+    DriverLocationUpdateResponse:
+      type: object
+      properties:
+        accepted: { type: boolean, const: true }
+        orderId: { type: [string, "null"], format: uuid }
+        timestamp: { type: string, format: date-time }
+      required: [accepted, orderId, timestamp]
+
     DriverEarningEntry:
       type: object
       description: One real payout ledger row joined to its completed order.
@@ -3813,6 +3834,30 @@ paths:
       x-foo-actor: driver
       responses:
         "200": { description: "Now offline", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean } } } } } }
+
+  /driver/location:
+    post:
+      tags: [drivers]
+      summary: Submit a live driver GPS sample
+      description: Reuses the authenticated tracking pipeline and rejects stale, future, out-of-bounds, implausibly fast, or teleporting samples before updating Redis/PostGIS and publishing authorized realtime order/admin events.
+      operationId: tracking_updateDriverLocation
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverLocationUpdateRequest" }
+      responses:
+        "201":
+          description: Location sample accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DriverLocationUpdateResponse" }
+        "422":
+          description: Location rejected as stale, future, invalid, outside the service area, or physically implausible
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
 
   /driver/orders/active:
     get:
