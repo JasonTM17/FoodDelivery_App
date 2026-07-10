@@ -2,6 +2,10 @@
 
 Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
+## 最新の local evidence (2026-07-10)
+
+分離 E2E overlay の空の Postgres に対して Prisma migration 22/22 が成功しました。Backend は 121 suites / 891 tests、Admin は 44 files / 183 tests、Restaurant は 35 files / 118 tests、web typecheck/lint/build と mobile Flutter 255/255 が green です。Playwright Chromium + Firefox は 72/72、axe smoke は 4/4 で serious/critical は 0、visual contract と tenant isolation も green です。AI local test は `AI_PROVIDER_NOT_CONFIGURED` の fail-closed を確認します。live DeepSeek smoke は rotate 済みの新しい `DEEPSEEK_API_KEY` を secret manager に入力した後だけ実行します。Vercel/Supabase production は env/token 不足のためまだ blocked です。
+
 ## Backend
 
 ```bash

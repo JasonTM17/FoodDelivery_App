@@ -2,6 +2,10 @@
 
 Ngôn ngữ: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
 
+## Bằng chứng local mới nhất (2026-07-10)
+
+Overlay E2E cô lập đã áp dụng thành công 22/22 Prisma migration từ database trắng. Backend pass 121 suite / 891 test; Admin 44 file / 183 test; Restaurant 35 file / 118 test; web typecheck/lint/build và mobile 255/255 Flutter test đều xanh. Playwright Chromium + Firefox pass 72/72. Axe smoke pass 4/4 (Admin + Restaurant trên cả hai browser), serious/critical = 0; visual contract và tenant isolation cũng xanh. AI local kiểm tra fail-closed `AI_PROVIDER_NOT_CONFIGURED`; live DeepSeek smoke chỉ chạy khi `DEEPSEEK_API_KEY` mới đã rotate và được nhập qua secret manager. Vercel/Supabase production vẫn blocked bởi env/token còn thiếu.
+
 ## Backend
 
 ```bash

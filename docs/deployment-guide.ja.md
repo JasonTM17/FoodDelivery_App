@@ -6,6 +6,8 @@ Languages: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi
 
 Integration branch が clean で、push/review/verification が完了し、すべての gate が green になってから deploy します。dirty root worktree、漏えい済み key、赤い Batch 4 gate がある状態では deploy しません。
 
+2026-07-10 の local verify: 空の database への migration 22/22、backend 121 suites / 891 tests、web/mobile green、Playwright Chromium/Firefox 72/72、axe 4/4 (serious/critical = 0)、visual と tenant isolation が pass しました。Production は Vercel の API secrets と両 web project の `NEXT_PUBLIC_SUPABASE_ANON_KEY`、Supabase CLI の `SUPABASE_ACCESS_TOKEN` が不足しているため未 deploy です。Chat に貼り付けた key は secret manager に再登録する前に rotate してください。
+
 2026-07-07 時点の Batch 4 状態: remote cleanup は `118459e539eecb2dbd61e033431b7f4b5104f0e0` で recheck 済みで、`git ls-remote --heads origin` は `refs/heads/master` のみを返します。validated code line では backend、web、Docker、Playwright Chromium/Firefox、mobile、OpenAPI、compose、high-confidence secret scan の local gates は pass 済みです。詳細は [Batch 4 release report](batch4-release-report.md) を参照してください。これは local verification evidence であり、production deployment approval ではありません。Vercel project `food-delivery-app` は link 済みで Admin app 用の root/build settings も修正済みですが、production env は空です。Supabase と Vercel の deploy は、GitHub Actions access が復旧し、current-head remote checks が green になり、production secrets が rotate 済みで有効になり、Supabase CLI/auth が利用可能になり、有効な backend/API URL と Vercel env が揃うまで blocked です。
 
 ## Batch 4 update 2026-07-09

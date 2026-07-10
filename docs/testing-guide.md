@@ -1,6 +1,16 @@
 # FoodFlow Testing Guide
 
-## Latest local evidence (2026-07-08)
+## Current local evidence (2026-07-10)
+
+The clean integration worktree now has a fresh isolated Docker E2E overlay. From an empty Postgres database, all 22 Prisma migrations apply successfully, including Supabase realtime/job/AI tables on plain Postgres where Supabase-only roles are absent. Backend validation is green at 121 Jest suites / 891 tests, Prisma validate/generate, typecheck, lint, and build. Admin Vitest is 44 files / 183 tests; Restaurant Vitest is 35 files / 118 tests; web typecheck, lint, and production-like Admin/Restaurant builds are green. Mobile frozen install, analyze, and 255/255 Flutter tests remain green.
+
+Playwright Chromium + Firefox is green at 72/72 with one worker. The suite covers auth/RBAC, dashboards, restaurant queue/actions, customer order flow, realtime/tracking, visual contract, tenant isolation, and fail-closed AI configuration. The explicit axe smoke is 4/4 (Admin + Restaurant on both browsers) with serious/critical violations at zero. The isolated overlay uses Admin `13000`, API `13001`, Restaurant `13002`, Postgres `15432`, Redis `16379`, and MinIO `19000`; it does not stop or reuse the dirty root stack.
+
+Local AI E2E intentionally verifies `AI_PROVIDER_NOT_CONFIGURED` when no provider secret is present. A live DeepSeek smoke is required before production approval and must use a newly rotated `DEEPSEEK_API_KEY` entered through the secret manager; a key pasted into chat is not acceptable.
+
+The current Vercel preflight still reports missing API production secrets and `NEXT_PUBLIC_SUPABASE_ANON_KEY` on both web projects. Supabase preflight still requires `SUPABASE_ACCESS_TOKEN`. Production deployment remains blocked until those external inputs are present and health/realtime/map/chatbot/export smoke checks pass.
+
+## Historical evidence (2026-07-08)
 
 Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`, with latest local code head `188a256` ahead of `origin/master` by 55 commits before this docs refresh. The latest broad non-deploy release gate remains the `edd906d` local gate with focused hardening and refreshed Docker/E2E evidence added afterward. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
@@ -105,7 +115,7 @@ pnpm test:e2e --project=chromium
 pnpm test:e2e --project=firefox
 ```
 
-Latest local E2E evidence: 2026-07-06 on `33e90ea`, Docker Compose rebuilt healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation. The E2E harness now fails fast if a local route resolves to a Next.js 404 shell.
+The historical 2026-07-06 E2E run used explicit IPv6 loopback endpoints and passed 70/70. The current 2026-07-10 run supersedes it with the isolated overlay and 72/72 evidence above. The E2E harness fails fast if a local route resolves to a Next.js 404 shell.
 
 Batch 4 E2E coverage should include:
 
