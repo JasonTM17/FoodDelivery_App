@@ -9,6 +9,7 @@ overrides:
   ws: 8.21.0
 
 allowBuilds:
+  '@nestjs/core': true
   '@prisma/client': true
   '@prisma/engines': true
   '@scarf/scarf': true

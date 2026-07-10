@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UsePipes } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
+import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import { AdminService } from './admin.service'
@@ -35,40 +37,82 @@ export class AdminController {
 
   @Get('orders')
   getOrders(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getOrders({ status, page: Number(page), limit: Number(limit) })
+    return this.adminService.getOrders({
+      status,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
   @Get('users')
   getUsers(@Query('role') role?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getUsers({ role, page: Number(page), limit: Number(limit) })
+    return this.adminService.getUsers({
+      role,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
+  // Zod only on @Body — method-level @UsePipes also validates @Param/@CurrentUser and 400s
   @Patch('users/:id/status')
-  @UsePipes(new ZodValidationPipe(toggleUserStatusSchema))
-  toggleUserStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
-    return this.adminService.toggleUserStatus(id, body.isActive)
+  toggleUserStatus(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(toggleUserStatusSchema)) body: { isActive?: boolean; status?: string },
+  ) {
+    return this.adminService.toggleUserStatus(id, body)
   }
 
   @Get('restaurants')
   getRestaurants(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getRestaurants({ page: Number(page), limit: Number(limit) })
+    return this.adminService.getRestaurants({
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
   }
 
   @Patch('restaurants/:id/status')
-  @UsePipes(new ZodValidationPipe(toggleRestaurantStatusSchema))
-  toggleRestaurantStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
-    return this.adminService.toggleRestaurantStatus(id, body.isActive)
+  toggleRestaurantStatus(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(toggleRestaurantStatusSchema)) body: { isActive?: boolean; status?: string },
+  ) {
+    return this.adminService.toggleRestaurantStatus(id, body)
   }
 
   @Get('support-tickets')
   getSupportTickets(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getSupportTickets({ status, page: Number(page), limit: Number(limit) })
+    return this.adminService.getSupportTickets({
+      status,
+      page: this.optionalPositiveInt(page),
+      limit: this.optionalPositiveInt(limit),
+    })
+  }
+
+  /** Avoid Number(undefined) === NaN which breaks Prisma take/skip. */
+  private optionalPositiveInt(raw?: string): number | undefined {
+    if (raw === undefined || raw === null || raw === '') return undefined
+    const n = Number(raw)
+    return Number.isFinite(n) && n > 0 ? Math.trunc(n) : undefined
   }
 
   @Patch('support-tickets/:id')
-  @UsePipes(new ZodValidationPipe(updateSupportTicketSchema))
-  updateSupportTicket(@Param('id') id: string, @Body() body: { status?: string; assignedAdminId?: string; resolutionNotes?: string }) {
-    return this.adminService.updateSupportTicket(id, body)
+  updateSupportTicket(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateSupportTicketSchema)) body: {
+      status?: string
+      assignedAdminId?: string
+      assignedTo?: string
+      resolutionNotes?: string
+    },
+  ) {
+    const assignedAdminId =
+      body.assignedAdminId ??
+      (body.assignedTo === 'self' ? user.sub : undefined)
+    return this.adminService.updateSupportTicket(id, {
+      status: body.status,
+      assignedAdminId,
+      resolutionNotes: body.resolutionNotes,
+    })
   }
 
   @Get('promotions')
@@ -77,14 +121,17 @@ export class AdminController {
   }
 
   @Post('promotions')
-  @UsePipes(new ZodValidationPipe(createPromotionSchema))
-  async createPromotion(@Body() dto: CreatePromotionDto) {
+  async createPromotion(
+    @Body(new ZodValidationPipe(createPromotionSchema)) dto: CreatePromotionDto,
+  ) {
     return this.adminService.createPromotion(dto)
   }
 
   @Patch('promotions/:id')
-  @UsePipes(new ZodValidationPipe(updatePromotionSchema))
-  async updatePromotion(@Param('id') id: string, @Body() dto: UpdatePromotionDto) {
+  async updatePromotion(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updatePromotionSchema)) dto: UpdatePromotionDto,
+  ) {
     return this.adminService.updatePromotion(id, dto)
   }
 

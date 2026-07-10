@@ -10,6 +10,49 @@ Current Batch 4 status on 2026-07-09: remote cleanup was rechecked at `118459e53
 
 Vercel project shells now exist for API/Admin/Restaurant and have expected roots/build settings. Deployment is still intentionally blocked until required production env vars are present, current-head checks are green, pasted keys are rotated, Supabase CLI/auth is available, database migrations are deployed, and production health checks are valid.
 
+## Docker Hub images (primary package path)
+
+Public images under namespace **`nguyenson1710`**:
+
+| Image | Role |
+|---|---|
+| `nguyenson1710/foodflow-backend` | Nest API (`dist/main.js`) |
+| `nguyenson1710/foodflow-worker` | Same layers as backend; run `dist/workers/main.js` |
+| `nguyenson1710/foodflow-migrate` | Prisma migrate deploy (builder stage) |
+| `nguyenson1710/foodflow-admin` | Admin Next.js |
+| `nguyenson1710/foodflow-restaurant` | Restaurant Next.js |
+
+Tags: `latest` and short git SHA (e.g. `0ab94ad`). CI workflow `.github/workflows/docker-publish.yml` publishes on push to `master`/`main` and via **workflow_dispatch**.
+
+**CI secrets (names only):** `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, optional `NEXT_PUBLIC_GOOGLE_MAPS_KEY`.
+**Note:** GitHub Actions also needs a paid billing/spending limit. If runs fail with *spending limit*, use manual Hub push below — that path is release-valid.
+
+### Pull + run (production overlay)
+
+```powershell
+# secrets: copy .env.production.example → .env.production (fill ALL productionRequiredKeys)
+$env:IMAGE_TAG = "latest"   # or short git SHA
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up -d
+# Create MinIO bucket once: foodflow (mc mb local/foodflow)
+# Optional seed: docker run --rm --network <compose-net> -e DATABASE_URL=... nguyenson1710/foodflow-migrate:<tag> pnpm run db:seed
+```
+
+Worker uses the **backend** image with command override `dist/workers/main.js`.
+Prod Redis uses **`noeviction`** (BullMQ). Backend fail-closed production env is documented in `.env.production.example`.
+Do not set `MINIO_ACCESS_KEY=minioadmin` in production. In-cluster MinIO is HTTP — set `MINIO_USE_SSL=false` when public CDN URL is HTTPS.
+
+### Manual build/push (if CI secrets or billing block)
+
+```bash
+# after docker login as nguyenson1710
+docker build -t nguyenson1710/foodflow-backend:latest -f backend/Dockerfile backend
+docker build -t nguyenson1710/foodflow-migrate:latest --target migrator -f backend/Dockerfile backend
+docker tag nguyenson1710/foodflow-backend:latest nguyenson1710/foodflow-worker:latest
+# web apps: pass NEXT_PUBLIC_* build-args (see workflow)
+docker push nguyenson1710/foodflow-backend:latest
+```
+
 ## Local Docker Stack
 
 For host-run development:
@@ -54,7 +97,7 @@ Any key pasted into chat, logs, screenshots, tickets, or git history must be rot
 
 Required non-secret production config: set `DELIVERY_BASE_FEE_VND` to the approved checkout base delivery fee. Backend boot validation rejects missing pricing config so orders are not created with hardcoded MVP fees.
 
-Latest deploy-readiness check on 2026-07-09: Vercel CLI auth is present. API project `foodflow-api`, Admin project `food-delivery-app`, and Restaurant project `foodflow-restaurant` exist and have expected roots/build settings. Generated app-owned `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` were set directly as sensitive production env vars on `foodflow-api` without printing values. Known non-secret provider/public env defaults were also added where safe. Vercel preflight still fails because real external production env values are missing. Supabase MCP OAuth login succeeded for project ref `lvanszgszzfopusboich`, but Supabase CLI deployment remains blocked until `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL` are available to the release shell. Docker Publish targets `master`, matching the only live remote branch. No production deployment was performed.
+Latest deploy-readiness check (2026-07-10): Vercel CLI auth is present and the API (`foodflow-api`), Admin (`food-delivery-app`), and Restaurant (`foodflow-restaurant`) projects exist. Generated app-owned `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` are stored as sensitive API production variables without printing their values. Public aliases may render while the API is still unavailable, so a Vercel `Ready` status is not a release gate: rerun the health and post-deploy smoke checks after every production deploy. Supabase CLI deployment remains blocked until the release shell has a valid `SUPABASE_ACCESS_TOKEN`, project ref, `DATABASE_URL`, and `DIRECT_URL`. Docker Publish targets `master`, which is the intended sole remote branch.
 
 ## Supabase Deployment
 
@@ -109,42 +152,41 @@ DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.sup
 DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
 ```
 
+## Product screenshots
+
+UI stills and GIFs: [product-gallery.md](./product-gallery.md). Regenerate after major UI changes:
+
+```bash
+# Requires seeded API + reachable Admin/Restaurant URLs
+node docs/scripts/capture-product-media.mjs
+```
+
 ## Vercel Deployment
 
-Deploy web only after `pnpm --filter foodflow-admin build` and `pnpm --filter restaurant build` pass.
+Deploy only after backend, Admin, and Restaurant builds pass and their production preflight is green.
 
-Recommended project mapping:
+### Recommended project mapping
 
-| Vercel project | Root directory | Build command |
+| Vercel project | Root directory | Install command | Build command | Node |
+|---|---|---|---|---|
+| API (`foodflow-api`) | **`backend`** | `pnpm install --frozen-lockfile` | `pnpm prisma generate && pnpm build` | **22.x** |
+| Admin (`food-delivery-app`) | **`web`** (not `web/apps/admin`) | `pnpm install --frozen-lockfile` | `pnpm --filter foodflow-admin build` | **22.x** |
+| Restaurant (`foodflow-restaurant`) | **`web`** | `pnpm install --frozen-lockfile` | `pnpm --filter restaurant build` | **22.x** |
+
+The API Vercel target uses the serverless app factory with Supabase Realtime, Storage, and Postgres outbox providers. Docker remains the local/container fallback; do not configure production Socket.IO or BullMQ workers for the Vercel target.
+
+### Required public env (Preview + Production)
+
+| App | Variable | Notes |
 |---|---|---|
-| `foodflow-api` | `backend` | `pnpm prisma generate && pnpm build` |
-| `food-delivery-app` | `web/apps/admin` | `cd ../.. && pnpm --filter foodflow-admin build` |
-| `foodflow-restaurant` | `web/apps/restaurant` | `cd ../.. && pnpm --filter restaurant build` |
-
-Current Vercel Admin project setting:
-
-| Setting | Value |
-|---|---|
-| Project | `food-delivery-app` |
-| Root Directory | `web/apps/admin` |
-| Framework | Next.js |
-| Install Command | `cd ../.. && pnpm install --frozen-lockfile` |
-| Build Command | `cd ../.. && pnpm --filter foodflow-admin build` |
-| Output Directory | `.next` |
-
-Current Vercel API/Restaurant project settings:
-
-| Project | Root Directory | Framework | Install Command | Build Command | Output |
-|---|---|---|---|---|---|
-| `foodflow-api` | `backend` | Other | `pnpm install --frozen-lockfile` | `pnpm prisma generate && pnpm build` | Vercel Functions via `backend/vercel.json` |
-| `foodflow-restaurant` | `web/apps/restaurant` | Next.js | `cd ../.. && pnpm install --frozen-lockfile` | `cd ../.. && pnpm --filter restaurant build` | `.next` |
-
-Required public env:
-
-| App | Variable |
-|---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Both | `NEXT_PUBLIC_APP_ENV=production` | Triggers fail-closed URL validation |
+| Both | `NEXT_PUBLIC_API_URL` | HTTPS public API, e.g. `https://api.example.com/api` |
+| Both | `NEXT_PUBLIC_REALTIME_PROVIDER=supabase` | Explicit provider; no Socket.IO fallback |
+| Both | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| Both | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser-safe Supabase anonymous key |
+| Both | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Real browser key (not `your-*` placeholder) |
+| Admin | `NEXT_PUBLIC_ADMIN_URL` | Canonical admin HTTPS URL |
+| Restaurant | `NEXT_PUBLIC_RESTAURANT_URL` | Canonical restaurant HTTPS URL |
 
 Before deployment, run the web preflight from the repo root. It checks the linked Admin project settings, required production env names, and the required separate Restaurant project env list without printing env values or deploying:
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useRouter } from '@/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -17,11 +18,9 @@ import type { Promotion, PromotionAnalyticsData, PromotionStatus } from '@/lib/t
 
 const EMPTY_VALUE = '\u2014';
 
-export default function PromotionDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function PromotionDetailPage() {
+  const routeParams = useParams<{ id: string }>();
+  const promotionId = typeof routeParams.id === 'string' ? routeParams.id : '';
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('promotions.detail');
@@ -35,24 +34,28 @@ export default function PromotionDetailPage({
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
+    if (!promotionId) {
+      setLoading(false);
+      setError(t('notFound'));
+      return;
+    }
     let cancelled = false;
-    params.then(({ id }) => {
-      fetchPromotionDetail(id)
-        .then((data) => {
-          if (!cancelled) {
-            setPromo(data.promotion);
-            setAnalytics(data.analytics);
-          }
-        })
-        .catch((err: unknown) => {
-          if (!cancelled) setError((err as { message?: string }).message || t('loadError'));
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    });
+    setLoading(true);
+    fetchPromotionDetail(promotionId)
+      .then((data) => {
+        if (!cancelled) {
+          setPromo(data.promotion);
+          setAnalytics(data.analytics);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError((err as { message?: string }).message || t('loadError'));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => { cancelled = true; };
-  }, [params, t]);
+  }, [promotionId, t]);
 
   const handleStatusChange = async (status: PromotionStatus) => {
     if (!promo) return;

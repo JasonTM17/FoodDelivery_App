@@ -16,6 +16,7 @@ import { PrismaService } from '../database/prisma.service'
 import { RegisterDto, LoginDto, RefreshDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto'
 import { UsersService } from '../users/users.service'
 import { RefreshTokenStore } from './refresh-token.store'
+import { Ed25519Service } from './keys/ed25519.service'
 import { QUEUE_SMTP } from '../notifications/notifications.constants'
 import type { SmtpJobData } from '../notifications/channels/smtp.channel'
 
@@ -68,6 +69,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly refreshTokenStore: RefreshTokenStore,
+    private readonly ed25519: Ed25519Service,
     private readonly config: ConfigService,
     @InjectQueue(QUEUE_SMTP) private readonly smtpQueue: Queue<SmtpJobData>,
   ) {}
@@ -293,10 +295,9 @@ export class AuthService {
       role: user.role,
     }
 
-    const accessToken = this.jwtService.sign(
-      { ...basePayload, type: 'access' },
-      { expiresIn: AuthService.ACCESS_TOKEN_TTL },
-    )
+    // Phase 2 cutover: sign access tokens with EdDSA when private key is configured.
+    // Refresh stays HS256 JWT until opaque-refresh migration (Phase 5 remainder).
+    const accessToken = this.signAccessToken({ ...basePayload, type: 'access' })
 
     const refreshToken = this.jwtService.sign(
       { ...basePayload, type: 'refresh', jti: randomUUID() },
@@ -304,6 +305,29 @@ export class AuthService {
     )
 
     return { accessToken, refreshToken }
+  }
+
+  private signAccessToken(payload: JwtPayload & { type: 'access' }): string {
+    if (this.ed25519.canSign()) {
+      const privateKey = this.ed25519.getPrivateKey()
+      if (!privateKey) {
+        throw new Error('Ed25519 private key unavailable after canSign() returned true')
+      }
+      // @nestjs/jwt Algorithm type lags jsonwebtoken EdDSA support; cast is intentional.
+      return this.jwtService.sign(
+        payload,
+        {
+          secret: privateKey as unknown as string,
+          algorithm: 'EdDSA',
+          keyid: this.ed25519.kid,
+          expiresIn: AuthService.ACCESS_TOKEN_TTL,
+        } as unknown as Parameters<JwtService['sign']>[1],
+      )
+    }
+
+    return this.jwtService.sign(payload, {
+      expiresIn: AuthService.ACCESS_TOKEN_TTL,
+    })
   }
 
   private hashPasswordResetToken(token: string): string {

@@ -18,7 +18,7 @@ describe('admin detail sheets', () => {
 
   it('shows a retryable restaurant detail error instead of stale row data', async () => {
     mockedApiGet.mockImplementation((endpoint: string) => {
-      if (endpoint === '/admin/restaurants') {
+      if (endpoint.startsWith('/admin/restaurants?') || endpoint === '/admin/restaurants') {
         return Promise.resolve({
           restaurants: [makeRestaurant()],
           total: 1,

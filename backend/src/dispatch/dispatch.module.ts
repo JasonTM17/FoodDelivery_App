@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { DispatchService } from './dispatch.service'
 import { DispatchProcessor } from './dispatch.processor'
 import { DispatchGateway } from './dispatch.gateway'
@@ -12,7 +12,12 @@ import { OrdersModule } from '../orders/orders.module'
 import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
-  imports: [AuthModule, OrdersModule, QueueProviderModule.registerQueue({ name: 'dispatch' }), RedisModule],
+  imports: [
+    AuthModule,
+    QueueProviderModule.registerQueue({ name: 'dispatch' }),
+    RedisModule,
+    forwardRef(() => OrdersModule),
+  ],
   providers: [
     DispatchService,
     DispatchProcessor,

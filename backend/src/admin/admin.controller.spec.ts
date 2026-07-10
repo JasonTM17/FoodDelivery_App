@@ -54,7 +54,9 @@ describe('AdminController', () => {
   })
 
   it('toggleUserStatus bans user', async () => {
+    mockAdminService.toggleUserStatus.mockResolvedValue({ id: 'u1', isActive: false })
     const result = await controller.toggleUserStatus('u1', { isActive: false })
+    expect(mockAdminService.toggleUserStatus).toHaveBeenCalledWith('u1', { isActive: false })
     expect(result.isActive).toBe(false)
   })
 
@@ -89,5 +91,33 @@ describe('AdminController', () => {
     const result = await controller.togglePromotionActive('p1')
     expect(mockAdminService.togglePromotionActive).toHaveBeenCalledWith('p1')
     expect(result.isActive).toBe(false)
+  })
+
+  it('getRestaurants does not pass NaN page/limit when query is omitted', async () => {
+    await controller.getRestaurants()
+    expect(mockAdminService.getRestaurants).toHaveBeenCalledWith({
+      page: undefined,
+      limit: undefined,
+    })
+  })
+
+  it('getSupportTickets coerces invalid page strings to undefined', async () => {
+    await controller.getSupportTickets(undefined, 'not-a-number', '0')
+    expect(mockAdminService.getSupportTickets).toHaveBeenCalledWith({
+      status: undefined,
+      page: undefined,
+      limit: undefined,
+    })
+  })
+
+  it('getRestaurants accepts positive page/limit query strings', async () => {
+    await controller.getRestaurants('2', '10')
+    expect(mockAdminService.getRestaurants).toHaveBeenCalledWith({ page: 2, limit: 10 })
+  })
+
+  it('toggleRestaurantStatus forwards status body for web client', async () => {
+    mockAdminService.toggleRestaurantStatus.mockResolvedValue({ id: 'r1', isActive: false })
+    await controller.toggleRestaurantStatus('r1', { status: 'disabled' })
+    expect(mockAdminService.toggleRestaurantStatus).toHaveBeenCalledWith('r1', { status: 'disabled' })
   })
 })

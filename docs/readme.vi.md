@@ -6,6 +6,27 @@ FoodFlow là nền tảng giao đồ ăn đa ứng dụng gồm backend NestJS, 
 
 FoodFlow không dùng workflow automation runner bên ngoài trong runtime. Chatbot và gợi ý món ăn đi qua backend LLM adapter, trả degraded state rõ ràng khi provider không khả dụng.
 
+## Xem trước sản phẩm
+
+Ảnh chụp thật từ bản Vercel production + API seed. Gallery đầy đủ: **[product-gallery.md](./product-gallery.md)**.
+
+<p align="center">
+  <img src="./screenshots/admin/01-login.png" alt="Đăng nhập Admin" width="48%" />
+  <img src="./screenshots/restaurant/01-login.png" alt="Đăng nhập Nhà hàng" width="48%" />
+</p>
+
+<p align="center">
+  <img src="./screenshots/admin/05-users.png" alt="Danh sách người dùng Admin" width="48%" />
+  <img src="./screenshots/restaurant/04-menu.png" alt="Thực đơn nhà hàng" width="48%" />
+</p>
+
+| App | URL công khai |
+|-----|----------------|
+| Admin | https://food-delivery-app-one-liard.vercel.app/vi/login |
+| Restaurant | https://foodflow-restaurant.vercel.app/vi/login |
+
+API Nest **không** chạy trên Vercel — xem [deployment-guide.md](./deployment-guide.md).
+
 ## Ứng dụng
 
 | Bề mặt | Đường dẫn | Runtime | URL mặc định |

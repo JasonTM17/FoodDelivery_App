@@ -100,7 +100,9 @@ export default function RestaurantsTableClient() {
 
   const { data, isLoading } = useQuery<RestaurantsResponse>({
     queryKey: ['restaurants'],
-    queryFn: async () => normalizeRestaurantsResponse(await apiGet<RawRestaurantsResponse>('/admin/restaurants')),
+    queryFn: async () => normalizeRestaurantsResponse(
+      await apiGet<RawRestaurantsResponse>('/admin/restaurants?page=1&limit=50'),
+    ),
   });
 
   const handleViewRestaurant = async (restaurantId: string) => {

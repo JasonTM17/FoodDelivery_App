@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common'
+import { Injectable, Inject, Logger, NotFoundException, forwardRef } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { DispatchGateway } from './dispatch.gateway'
 import { DriverScoringService } from './driver-scoring.service'
@@ -9,6 +9,7 @@ import Redis from 'ioredis'
 import { Prisma } from '@prisma/client'
 import { type DeliveryRoutePhase, routeCacheKey } from '../tracking/tracking.service'
 import { OrdersGateway } from '../orders/orders.gateway'
+import { OrdersService } from '../orders/orders.service'
 
 interface DriverCandidate {
   driverId: string
@@ -34,6 +35,7 @@ export class DispatchService {
     private readonly surge: SurgePricingService,
     private readonly metrics: DispatchMetrics,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    @Inject(forwardRef(() => OrdersService)) private readonly ordersService: OrdersService,
   ) {}
 
   async findCandidates(lat: number, lng: number, radiusKm: number): Promise<DriverCandidate[]> {
@@ -139,11 +141,39 @@ export class DispatchService {
   }
 
   async autoCancelOrder(orderId: string): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.order.update({ where: { id: orderId }, data: { status: 'cancelled' } }),
-      this.prisma.orderStatusHistory.create({ data: { orderId, status: 'cancelled', changedBy: 'system' } }),
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, status: true },
+    })
+    if (!order) {
+      this.logger.warn(`Order ${orderId} not found for auto-cancel`)
+      return
+    }
+
+    // Only cancel while still waiting for a driver (avoid clobbering in-flight trips)
+    const cancellable = new Set([
+      'restaurant_accepted',
+      'preparing',
+      'ready_for_pickup',
     ])
-    this.ordersGateway.broadcastToOrder(orderId, 'order:auto_cancelled', { orderId, reason: 'no_driver_available' })
+    if (!cancellable.has(order.status)) {
+      this.logger.log(
+        `Skip auto-cancel for order ${orderId}: status=${order.status} is not dispatch-cancellable`,
+      )
+      return
+    }
+
+    await this.ordersService.transition(
+      orderId,
+      'cancelled',
+      'system',
+      'system',
+      'no_driver_available',
+    )
+    this.ordersGateway.broadcastToOrder(orderId, 'order:auto_cancelled', {
+      orderId,
+      reason: 'no_driver_available',
+    })
     this.logger.warn(`Order ${orderId} auto-cancelled: no driver found after max attempts`)
   }
 

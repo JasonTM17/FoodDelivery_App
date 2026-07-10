@@ -40,25 +40,37 @@ export async function loginViaApi(
   const cached = authTokenCache.get(cacheKey)
   if (cached) return cached
 
-  const resp = await request.post(`${API_URL}/auth/login`, {
-    data: { email, password },
-  })
+  let lastError: Error | undefined
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const resp = await request.post(`${API_URL}/auth/login`, {
+      data: { email, password },
+    })
 
-  await assertOk(resp, `login(${email})`)
-  const payload = unwrap<{
-    accessToken: string
-    refreshToken: string
-    user?: { id?: string; role?: string }
-  }>(await resp.json())
+    if (resp.status() === 429) {
+      lastError = new Error(`login(${email}): HTTP 429 — rate limited (attempt ${attempt + 1})`)
+      // Auth throttle window is 60s; back off briefly between suite logins
+      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)))
+      continue
+    }
 
-  const tokens = {
-    accessToken: payload.accessToken,
-    refreshToken: payload.refreshToken,
-    userId: payload.user?.id ?? '',
-    role: payload.user?.role ?? '',
+    await assertOk(resp, `login(${email})`)
+    const payload = unwrap<{
+      accessToken: string
+      refreshToken: string
+      user?: { id?: string; role?: string }
+    }>(await resp.json())
+
+    const tokens = {
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      userId: payload.user?.id ?? '',
+      role: payload.user?.role ?? '',
+    }
+    authTokenCache.set(cacheKey, tokens)
+    return tokens
   }
-  authTokenCache.set(cacheKey, tokens)
-  return tokens
+
+  throw lastError ?? new Error(`login(${email}): exhausted retries`)
 }
 
 export async function registerViaApi(

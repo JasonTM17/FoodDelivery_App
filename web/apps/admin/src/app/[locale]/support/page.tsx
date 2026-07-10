@@ -76,7 +76,7 @@ export default function SupportPage() {
 
   const ticketsQuery = useQuery<unknown>({
     queryKey: ['support-tickets'],
-    queryFn: () => apiGet('/admin/support-tickets'),
+    queryFn: () => apiGet('/admin/support-tickets?page=1&limit=50'),
   });
 
   const response = parseSupportTicketsResponse(ticketsQuery.data);

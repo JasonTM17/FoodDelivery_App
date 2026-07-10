@@ -1531,5 +1531,20 @@
     "restaurantDetail": {
       "title": "Không tải được chi tiết nhà hàng"
     }
+  },
+  "chatbot": {
+    "open": "Mở trợ lý AI",
+    "close": "Đóng chat",
+    "title": "Trợ lý FoodFlow",
+    "subtitle": "Hỏi về đơn hàng, hỗ trợ hoặc bảng điều khiển",
+    "placeholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "empty": "Hãy hỏi bất kỳ điều gì — chúng tôi dùng dịch vụ AI thật.",
+    "emptyReply": "(Không có nội dung phản hồi)",
+    "sending": "Đang gửi...",
+    "error": "Không kết nối được trợ lý. Vui lòng thử lại.",
+    "degraded": "Trợ lý đang hạn chế tạm thời",
+    "you": "Bạn",
+    "assistant": "Trợ lý"
   }
 }

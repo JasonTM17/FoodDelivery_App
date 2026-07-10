@@ -10,6 +10,7 @@ import {
   SheetDescription,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { AiChatbotWidget } from '@/components/chatbot/ai-chatbot-widget'
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false)
@@ -43,6 +44,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
         <AdminTopbar onOpenNavigation={() => setIsNavigationOpen(true)} />
         <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
       </div>
+
+      {/* Authenticated shell only — RootLayoutClient skips this on login/public routes */}
+      <AiChatbotWidget />
     </div>
   )
 }

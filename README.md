@@ -9,10 +9,68 @@ Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.
   <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
   <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
   <img src="https://img.shields.io/badge/ai-LLM%20Chatbot-18e46a" alt="AI">
+  <img src="https://img.shields.io/badge/docker-Hub%20%2B%20GHCR-2496ED?logo=docker" alt="Docker packages">
   <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
 </p>
 
 FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
+
+## Product preview
+
+Real screenshots from production Vercel builds + seeded API. Full gallery: **[docs/product-gallery.md](docs/product-gallery.md)**.
+
+<p align="center">
+  <img src="docs/screenshots/admin/01-login.png" alt="FoodFlow Admin login" width="48%" />
+  <img src="docs/screenshots/restaurant/01-login.png" alt="FoodFlow Restaurant login" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/admin/02-overview.png" alt="Admin overview KPIs" width="48%" />
+  <img src="docs/screenshots/admin/05-users.png" alt="Admin users table with seed data" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/restaurant/04-menu.png" alt="Restaurant menu with seed catalog" width="48%" />
+  <img src="docs/screenshots/restaurant/03-orders.png" alt="Restaurant order queue" width="48%" />
+</p>
+
+### Short motion demos
+
+| Flow | Preview |
+|------|---------|
+| Admin login | ![Admin login flow](docs/media/gifs/admin-login-flow.gif) |
+| Restaurant orders → menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
+
+### Try the web apps
+
+| App | URL |
+|-----|-----|
+| Admin | https://food-delivery-app-one-liard.vercel.app/vi/login |
+| Restaurant | https://foodflow-restaurant.vercel.app/vi/login |
+
+Backend API is **not** hosted on Vercel (Nest + workers + Redis). Use Docker Hub images or a tunnel for a public API — see [deployment guide](docs/deployment-guide.md).
+
+## Packages (Docker)
+
+Public container images for deploy (`latest` and git SHA tags):
+
+| Package | Docker Hub | GHCR |
+|---|---|---|
+| API | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-backend` |
+| Worker | [`nguyenson1710/foodflow-worker`](https://hub.docker.com/r/nguyenson1710/foodflow-worker) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-worker` |
+| Migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-migrate` |
+| Admin | [`nguyenson1710/foodflow-admin`](https://hub.docker.com/r/nguyenson1710/foodflow-admin) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-admin` |
+| Restaurant | [`nguyenson1710/foodflow-restaurant`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-restaurant` |
+
+```bash
+# Pull from Docker Hub (default in docker-compose.prod.yml)
+docker pull nguyenson1710/foodflow-backend:latest
+
+# Or GitHub Container Registry
+docker pull ghcr.io/jasontm17/fooddelivery_app/foodflow-backend:latest
+```
+
+Deploy with compose: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d` (see [deployment guide](docs/deployment-guide.md)).
 
 FoodFlow does not use an external workflow automation runner in runtime. AI chat and food recommendations run through the backend LLM adapter, with explicit degraded responses when the model provider is unavailable.
 
@@ -46,6 +104,22 @@ customer/driver  ->  admin/restaurant   ->  REST + WebSocket + queues
 ```
 
 Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat is LLM-first through the backend provider adapter and returns an explicit degraded state when no model key is configured.
+
+## Repository layout
+
+| Path | Purpose |
+|---|---|
+| `backend/` | NestJS API, Prisma, BullMQ workers entry |
+| `web/` | pnpm monorepo: Admin + Restaurant, shared packages, Playwright e2e |
+| `mobile/` | Flutter customer + driver apps |
+| `infra/` | Nginx, monitoring, loadtest, release scripts |
+| `docs/` | Public docs, OpenAPI, ADRs |
+| `e2e/` | Cross-surface smoke / AI scenarios |
+| `docker-compose.yml` | Local full stack |
+| `docker-compose.prod.yml` | Deploy by pulling public Hub images |
+| `plans/` | Local-only private plans (**gitignored**) |
+
+Build artifacts (`dist/`, `coverage/`, `.turbo/`, Playwright reports) are gitignored and should not be committed.
 
 ## Prerequisites
 

@@ -27,6 +27,7 @@ ARG BUILD_SHA
 LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA
+LABEL org.opencontainers.image.title="foodflow-backend"
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
@@ -36,4 +37,6 @@ USER 65534:65534
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD ["/nodejs/bin/node", "-e", "require('http').get('http://localhost:3001/api/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
+# API entrypoint. Worker reuses this image with:
+#   command: ["dist/workers/main.js"]
 CMD ["dist/main.js"]

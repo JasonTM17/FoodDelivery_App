@@ -19,7 +19,8 @@
     "description": "Đăng nhập để quản lý đơn hàng và thực đơn",
     "emailPlaceholder": "nhahang@email.com",
     "loginButton": "Đăng nhập",
-    "loggingIn": "Đang đăng nhập..."
+    "loggingIn": "Đang đăng nhập...",
+    "restaurantOnly": "Bảng điều khiển này chỉ dành cho tài khoản nhà hàng."
   },
   "sidebar": {
     "defaultName": "Nhà hàng",
@@ -150,46 +151,46 @@
       "cancel": "Huỷ",
       "actionFailed": "Thao tác thất bại"
     },
-  "prepTime": {
-    "title": "Thời gian chuẩn bị",
-    "minutes": "{minutes} phút",
-    "customPlaceholder": "Tuỳ chỉnh (phút)",
-    "set": "Đặt"
-  },
-  "tracking": {
-    "title": "Theo dõi giao hàng trực tiếp",
-    "description": "Xem vị trí shipper và tuyến đường từ dữ liệu thật của backend.",
-    "mapRegionLabel": "Bản đồ theo dõi đơn hàng trực tiếp",
-    "refresh": "Làm mới",
-    "loading": "Đang tải tracking trực tiếp",
-    "loadError": "Không thể tải tracking trực tiếp",
-    "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",
-    "missingKeyDescription": "Thêm public Google Maps key vào môi trường Restaurant để hiển thị bản đồ giao hàng trực tiếp.",
-    "telemetryUnavailable": "Chưa có GPS shipper hoặc tuyến đường thật. FoodFlow sẽ không tự bịa ETA.",
-    "noSnapshotDescription": "Tracking sẽ xuất hiện khi backend ghi nhận shipper và telemetry thật.",
-    "etaLabel": "ETA",
-    "etaMinutes": "{minutes} phút",
-    "etaUnavailable": "Chưa có cho tới khi có telemetry tuyến đường",
-    "routePhaseLabel": "Chặng đường",
-    "driverLocationLabel": "GPS shipper",
-    "locationAvailable": "Đã có vị trí trực tiếp",
-    "locationUnavailable": "Đang chờ GPS thật từ shipper",
-    "customerAddressLabel": "Địa chỉ khách",
-    "routeAvailable": "Route geometry đến từ provider Directions/OSRM của backend.",
-    "routeUnavailable": "Chưa có geometry tuyến đường; bản đồ sẽ cập nhật khi backend trả về.",
-    "driverLocationUpdated": "GPS shipper cập nhật: {time}",
-    "unavailable": "Chưa có",
-    "connection": {
-      "connecting": "Đang kết nối",
-      "connected": "Trực tiếp",
-      "disconnected": "Đang kết nối lại"
+    "prepTime": {
+      "title": "Thời gian chuẩn bị",
+      "minutes": "{minutes} phút",
+      "customPlaceholder": "Tuỳ chỉnh (phút)",
+      "set": "Đặt"
     },
-    "phase": {
-      "pickup": "Shipper tới nhà hàng",
-      "dropoff": "Shipper tới khách"
+    "tracking": {
+      "title": "Theo dõi giao hàng trực tiếp",
+      "description": "Xem vị trí shipper và tuyến đường từ dữ liệu thật của backend.",
+      "mapRegionLabel": "Bản đồ theo dõi đơn hàng trực tiếp",
+      "refresh": "Làm mới",
+      "loading": "Đang tải tracking trực tiếp",
+      "loadError": "Không thể tải tracking trực tiếp",
+      "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",
+      "missingKeyDescription": "Thêm public Google Maps key vào môi trường Restaurant để hiển thị bản đồ giao hàng trực tiếp.",
+      "telemetryUnavailable": "Chưa có GPS shipper hoặc tuyến đường thật. FoodFlow sẽ không tự bịa ETA.",
+      "noSnapshotDescription": "Tracking sẽ xuất hiện khi backend ghi nhận shipper và telemetry thật.",
+      "etaLabel": "ETA",
+      "etaMinutes": "{minutes} phút",
+      "etaUnavailable": "Chưa có cho tới khi có telemetry tuyến đường",
+      "routePhaseLabel": "Chặng đường",
+      "driverLocationLabel": "GPS shipper",
+      "locationAvailable": "Đã có vị trí trực tiếp",
+      "locationUnavailable": "Đang chờ GPS thật từ shipper",
+      "customerAddressLabel": "Địa chỉ khách",
+      "routeAvailable": "Route geometry đến từ provider Directions/OSRM của backend.",
+      "routeUnavailable": "Chưa có geometry tuyến đường; bản đồ sẽ cập nhật khi backend trả về.",
+      "driverLocationUpdated": "GPS shipper cập nhật: {time}",
+      "unavailable": "Chưa có",
+      "connection": {
+        "connecting": "Đang kết nối",
+        "connected": "Trực tiếp",
+        "disconnected": "Đang kết nối lại"
+      },
+      "phase": {
+        "pickup": "Shipper tới nhà hàng",
+        "dropoff": "Shipper tới khách"
+      }
     }
-  }
-},
+  },
   "menu": {
     "title": "Thực đơn",
     "description": "Quản lý món ăn và danh mục",
@@ -1317,5 +1318,20 @@
       "backGate": "Vui lòng đến cổng sau",
       "thanks": "Cảm ơn!"
     }
+  },
+  "chatbot": {
+    "open": "Mở trợ lý AI",
+    "close": "Đóng chat",
+    "title": "Trợ lý FoodFlow",
+    "subtitle": "Hỏi về đơn hàng, hỗ trợ hoặc bảng điều khiển",
+    "placeholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "empty": "Hãy hỏi bất kỳ điều gì — chúng tôi dùng dịch vụ AI thật.",
+    "emptyReply": "(Không có nội dung phản hồi)",
+    "sending": "Đang gửi...",
+    "error": "Không kết nối được trợ lý. Vui lòng thử lại.",
+    "degraded": "Trợ lý đang hạn chế tạm thời",
+    "you": "Bạn",
+    "assistant": "Trợ lý"
   }
 }

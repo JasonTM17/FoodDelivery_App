@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useRouter } from '@/navigation';
 import { Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -8,11 +9,9 @@ import { PromotionForm } from '@/components/promotions/promotion-form';
 import { fetchPromotion, updatePromotion } from '@/lib/actions/promotion-actions';
 import type { Promotion } from '@/lib/types';
 
-export default function PromotionEditPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function PromotionEditPage() {
+  const routeParams = useParams<{ id: string }>();
+  const promotionId = typeof routeParams.id === 'string' ? routeParams.id : '';
   const router = useRouter();
   const t = useTranslations('promotions.editPage');
   const loadErrorMessage = t('loadError');
@@ -22,21 +21,25 @@ export default function PromotionEditPage({
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!promotionId) {
+      setLoading(false);
+      setError(loadErrorMessage);
+      return;
+    }
     let cancelled = false;
-    params.then(({ id }) => {
-      fetchPromotion(id)
-        .then((data) => {
-          if (!cancelled) setPromotion(data);
-        })
-        .catch((err: unknown) => {
-          if (!cancelled) setError((err as { message?: string }).message || loadErrorMessage);
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    });
+    setLoading(true);
+    fetchPromotion(promotionId)
+      .then((data) => {
+        if (!cancelled) setPromotion(data);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError((err as { message?: string }).message || loadErrorMessage);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => { cancelled = true; };
-  }, [params, loadErrorMessage]);
+  }, [promotionId, loadErrorMessage]);
 
   const handleSubmit = async (data: Partial<Promotion>) => {
     if (!promotion) return;

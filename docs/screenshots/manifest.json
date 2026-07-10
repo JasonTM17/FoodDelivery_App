@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-07-09T15:39:05.036Z",
+  "adminUrl": "https://food-delivery-app-one-liard.vercel.app",
+  "restaurantUrl": "https://foodflow-restaurant.vercel.app",
+  "seed": {
+    "admin": "admin@foodflow.vn",
+    "restaurant": "restaurant1@foodflow.vn"
+  }
+}

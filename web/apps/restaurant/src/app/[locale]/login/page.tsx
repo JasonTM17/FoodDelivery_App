@@ -33,10 +33,13 @@ export default function LoginPage() {
         restaurant?: unknown;
       }>('/auth/login', { email, password }, { requireAuth: false });
 
+      if (data.user.role !== 'restaurant') {
+        throw new Error(t('restaurantOnly'));
+      }
+
       setToken(data.accessToken);
       localStorage.setItem('restaurant_refresh_token', data.refreshToken);
       if (data.restaurant) setStoredRestaurant(data.restaurant);
-      // Navigate to orders (not yet locale-prefixed)
       router.push('/orders');
     } catch (err: unknown) {
       const apiError = err as { message?: string };
