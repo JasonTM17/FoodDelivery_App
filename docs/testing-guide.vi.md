@@ -128,7 +128,7 @@ Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, 
 
 Code head đã verify hiện tại là `33e90ea` trên `origin/master` trước docs-only refresh này. Remote `codex/batch4-integration` đã xoá; worktree sạch local vẫn dùng branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions vẫn pending vì GitHub token/auth/billing chưa khả dụng.
 
-- Frozen install pass cho backend và web với `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` pass.
+- Frozen install pass cho backend và web với `pnpm 11.11.0`; mobile `flutter pub get --enforce-lockfile` pass.
 - Backend pass Prisma validate với test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suite / 802 test) và `pnpm build`.
 - Web pass `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 file / 153 test; Restaurant 31 file / 100 test) và `pnpm build` (Admin 70 page localized; Restaurant 55 page localized).
 - Docker Compose rebuild image Backend/Admin/Restaurant từ source hiện tại với frozen install; health check pass cho `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, `http://[::1]:3002/api/healthz` sau rebuild.

@@ -49,7 +49,7 @@ Rules:
 
 ## Web: Next.js Admin and Restaurant
 
-- Stay on Next.js 14, React 18, ESLint 8, and pinned pnpm 11.7.0 until a separate migration is approved.
+- Stay on Next.js 15, React 18, ESLint 8, and pinned pnpm 11.11.0 until a separate migration is approved.
 - Routes live under `app/[locale]`; non-locale routes are compatibility redirects only.
 - Use next-intl for `vi`, `en`, and `ja`.
 - Use `loading.tsx`, `error.tsx`, and `not-found.tsx` for new route segments.

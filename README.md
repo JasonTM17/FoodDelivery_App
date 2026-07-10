@@ -123,8 +123,8 @@ Build artifacts (`dist/`, `coverage/`, `.turbo/`, Playwright reports) are gitign
 
 ## Prerequisites
 
-- Node.js 20+ or 22+ compatible with the checked-in lockfiles
-- pnpm 11.7.0 (or pnpm 11+)
+- Node.js 22.13 or newer (required by the pinned pnpm release)
+- pnpm 11.11.0 (or a compatible pnpm 11 release)
 - Docker Desktop or Docker Engine
 - Flutter SDK for mobile work
 - Google Maps, SePay, DeepSeek, Supabase, and Vercel credentials only when enabling those integrations

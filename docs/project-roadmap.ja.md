@@ -6,7 +6,7 @@
 
 ## 現在の優先事項: merge 後 hardening と deployment readiness
 
-Goal: Admin、Restaurant、backend、mobile を merge 済み Batch 4 contract に合わせ続け、deployment readiness gaps を閉じ、GitHub Actions auth 復旧後に remote CI を rerun します。Next.js 14、React 18、ESLint 8、固定済み pnpm 11.7.0、現行 Flutter constraints は維持します。
+Goal: Admin、Restaurant、backend、mobile を merge 済み Batch 4 contract に合わせ続け、deployment readiness gaps を閉じ、GitHub Actions auth 復旧後に remote CI を rerun します。Next.js 15、React 18、ESLint 8、固定済み pnpm 11.11.0、現行 Flutter constraints は維持します。
 
 Batch 4 は local gates、E2E、accessibility、visual checks、tenant-isolation checks、remote CI/security checks、deployment validation が通るまで完了ではありません。
 

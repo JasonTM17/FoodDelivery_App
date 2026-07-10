@@ -49,7 +49,7 @@ Rules:
 
 ## Web: Next.js Admin and Restaurant
 
-- 別 migration が承認されるまで Next.js 14、React 18、ESLint 8、固定済みの pnpm 11.7.0 を維持します。
+- 別 migration が承認されるまで Next.js 15、React 18、ESLint 8、固定済みの pnpm 11.11.0 を維持します。
 - Routes は `app/[locale]` 配下に置き、non-locale route は compatibility redirect のみにします。
 - `vi`, `en`, `ja` には next-intl を使います。
 - 新しい route segment には `loading.tsx`, `error.tsx`, `not-found.tsx` を用意します。

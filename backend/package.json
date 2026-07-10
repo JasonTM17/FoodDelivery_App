@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "FoodFlow API Server",
   "private": true,
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@11.11.0",
   "scripts": {
     "build": "nest build",
     "start": "nest start",

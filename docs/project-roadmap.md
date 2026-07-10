@@ -6,7 +6,7 @@ This roadmap reflects the merged Batch 4 direction on `master`. It separates wha
 
 ## Current priority: Batch 4 post-merge hardening and deployment readiness
 
-Goal: keep Admin, Restaurant, backend, and mobile aligned on the merged Batch 4 contract, close remaining deployment-readiness gaps, and rerun remote CI once GitHub Actions auth is restored while staying on Next.js 14, React 18, ESLint 8, pinned pnpm 11.7.0, and the current Flutter constraints.
+Goal: keep Admin, Restaurant, backend, and mobile aligned on the merged Batch 4 contract, close remaining deployment-readiness gaps, and rerun remote CI once GitHub Actions auth is restored while staying on Next.js 15, React 18, ESLint 8, pinned pnpm 11.11.0, and the current Flutter constraints.
 
 Batch 4 is not complete until local gates, E2E, accessibility, visual checks, tenant-isolation checks, remote CI/security checks, and deployment validation pass.
 

@@ -14,7 +14,7 @@ The current Vercel preflight still reports missing API production secrets and `N
 
 Verified remote code head: `118459e` on `origin/master` before this local hardening refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`, with latest local code head `188a256` ahead of `origin/master` by 55 commits before this docs refresh. The latest broad non-deploy release gate remains the `edd906d` local gate with focused hardening and refreshed Docker/E2E evidence added afterward. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
 
-- Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
+- Frozen install passed for backend and web with pinned `pnpm 11.11.0`; mobile `flutter pub get --enforce-lockfile` passed.
 - Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 803 tests), and `pnpm build`.
 - Web passed `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and `pnpm build` (Admin 70 localized pages; Restaurant 55 localized pages).
 - Docker Compose rebuilt Backend/Admin/Restaurant images from the current source at `188a256` on 2026-07-08; health checks passed for backend DB/Redis/MinIO plus `http://[::1]:3000/api/healthz` and `http://[::1]:3002/api/healthz` after container recreation.

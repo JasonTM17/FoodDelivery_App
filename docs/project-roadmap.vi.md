@@ -6,7 +6,7 @@ Roadmap này phản ánh hướng Batch 4 đã merge trên `master`. Nó tách p
 
 ## Ưu tiên hiện tại: hardening sau merge và sẵn sàng deploy
 
-Mục tiêu: giữ Admin, Restaurant, backend và mobile khớp Batch 4 contract đã merge, đóng các gap sẵn sàng deploy và rerun remote CI sau khi GitHub Actions auth được khôi phục, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 11.7.0 đã pin và constraints Flutter hiện có.
+Mục tiêu: giữ Admin, Restaurant, backend và mobile khớp Batch 4 contract đã merge, đóng các gap sẵn sàng deploy và rerun remote CI sau khi GitHub Actions auth được khôi phục, đồng thời giữ Next.js 15, React 18, ESLint 8, pnpm 11.11.0 đã pin và constraints Flutter hiện có.
 
 Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, tenant-isolation checks, remote CI/security checks và deployment validation chưa pass.
 

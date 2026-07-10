@@ -128,7 +128,7 @@ Remote CI は `e776f5c` が last fully green です: Gitleaks `28704171253`、Li
 
 Verified code head は docs-only refresh 前の `33e90ea` on `origin/master` です。Remote `codex/batch4-integration` は削除済みです。Clean local worktree は local `codex/batch4-integration` を使っていますが、`origin/master` を tracking しています。GitHub token/auth/billing が未解決のため、remote CI/Actions は pending です。
 
-- Backend と web の frozen install は pinned `pnpm 11.7.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
+- Backend と web の frozen install は pinned `pnpm 11.11.0` で pass。Mobile `flutter pub get --enforce-lockfile` も pass。
 - Backend は test `DATABASE_URL`/`DIRECT_URL` で Prisma validate、`pnpm typecheck`、`pnpm lint`、full `pnpm exec jest --runInBand`（110 suites / 802 tests）、`pnpm build` が pass。
 - Web は `pnpm typecheck`、`pnpm lint`、full Vitest（Admin 37 files / 155 tests、Restaurant 31 files / 100 tests）、`pnpm build`（Admin 70 localized pages、Restaurant 55 localized pages）が pass。
 - Docker Compose は current source から Backend/Admin/Restaurant images を frozen install で rebuild。rebuild 後に `http://[::1]:3001/api/healthz`、`http://[::1]:3000/api/healthz`、`http://[::1]:3002/api/healthz` の health check が pass。
