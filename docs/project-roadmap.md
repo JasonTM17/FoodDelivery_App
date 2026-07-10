@@ -19,16 +19,15 @@ Status on 2026-07-10: **hardening in progress; no-go for production**.
 - Node 22.13+/pnpm 11.11 alignment and frozen-install paths.
 - Multi-architecture non-root Backend/Migrate/Admin/Restaurant images and fail-closed Docker release promotion.
 - Current-source screenshots/GIF pipeline and rewritten architecture/deployment/testing documentation.
+- Admin URL locale ownership, localized overview KPI labels, accessible color tokens, and fresh accepted media; targeted vi/en/ja Chromium/Firefox locale and axe checks pass.
 
 ## In progress before release
 
 ### UI, UX, i18n, and media
 
-- Fix visual-audit findings, including English Admin KPI labels rendered on Vietnamese overview.
 - Audit every Admin/Restaurant critical page in fresh `vi`, `en`, and `ja` contexts for title, `html lang`, visible text, aria text, number/date/currency formatting, and cookie isolation.
 - Complete responsive/keyboard/axe review for dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map, and order flows.
 - Compare implementation with approved Stitch/design artifacts and establish accepted visual regression evidence.
-- Recapture final screenshots/GIFs only after UI acceptance.
 
 ### Mobile parity
 

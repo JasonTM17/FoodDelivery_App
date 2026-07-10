@@ -18,16 +18,15 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 - Node 22.13+、pnpm 11.11、frozen install。
 - 4 non-root multi-arch images と fail-closed Docker promotion。
 - Current-source screenshot/GIF pipeline と architecture/deploy/testing docs。
+- Admin URL locale ownership、overview KPI 翻訳、accessible color token、accepted media recapture を完了。Targeted vi/en/ja Chromium/Firefox locale + axe は pass。
 
 ## In progress
 
 ### UI/UX/i18n/media
 
-- Vietnamese Admin overview に残る English KPI labels を修正。
 - Fresh `vi/en/ja` context で title、`html lang`、visible/aria text、number/date/currency、cookie isolation を audit。
 - Dashboard、approval、promotion、audit/export、staff、benchmark、AI monitor、map/order の responsive/keyboard/axe。
 - Stitch/design artifact comparison と visual regression acceptance。
-- UI approval 後に final media recapture。
 
 ### Mobile
 

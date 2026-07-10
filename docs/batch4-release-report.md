@@ -59,10 +59,10 @@ Evidence below applies to the current hardening line unless explicitly marked hi
 | Gate | Evidence |
 |---|---|
 | Web typecheck/lint | Admin + Restaurant passed; ESLint reported no warnings/errors (Next 15 deprecation notice only). |
-| Web unit/component | Admin 44 files / 184 tests; Restaurant 36 files / 119 tests; total 303 passed. |
+| Web unit/component | Admin 45 files / 186 tests; Restaurant 36 files / 119 tests; total 305 passed. |
 | Web production build | Admin generated 70 localized pages; Restaurant generated 55. Missing required public env failed closed as intended. |
-| Playwright contract | Chromium + Firefox passed 18/18 against the isolated current-source stack. |
-| Accessibility | Intentional CORS/error-state Chromium + Firefox checks passed 2/2 with axe serious/critical = 0. Earlier broad page smoke remains useful but must be rerun after final UI changes. |
+| Playwright contract | Earlier contract coverage passed 18/18; current-head Admin URL-locale/cookie regression passed 6/6 across Chromium and Firefox. |
+| Accessibility | Current Admin overview locale checks passed 6/6 with axe serious/critical = 0 after semantic primary/destructive token hardening. Complete cross-page axe still remains a release gate. |
 | Docker runtime | Backend, migrate, Admin, Restaurant passed native runtime checks on both `amd64` and `arm64`; non-root UIDs verified. |
 | Docker security | Trivy 0.72.0 scanned four artifacts × two architectures: 8/8 passed with zero High/Critical findings. |
 | Docker health | Fresh database applied all 22 migrations; API, Admin, and Restaurant health returned 200. |
@@ -76,7 +76,7 @@ A fresh full backend Prisma/typecheck/lint/Jest/build gate, full mobile analyze/
 
 The first capture used `127.0.0.1`, correctly triggered the isolated stack's CORS fail-closed behavior, and was discarded. Recapture through the configured `localhost` origin loaded real seeded API data.
 
-Visual review then found Vietnamese Admin overview KPI labels still rendered in English. This is a real i18n polish defect; the media must be recaptured after that UI cluster is fixed. The finding is not hidden by editing screenshots.
+Visual review found Vietnamese Admin overview KPI labels rendered in English and two serious contrast failures. Commit 7ab9633 localized KPI labels by stable metric key, made URL locale authoritative for the Admin root, and hardened semantic color tokens. Fresh vi/en/ja Chromium and Firefox checks passed with conflicting cookies and axe serious/critical = 0; the accepted media was then recaptured from that build.
 
 ## Registry audit
 

@@ -18,16 +18,15 @@ Trạng thái 10/07/2026: **đang hardening; chưa đủ điều kiện producti
 - Node 22.13+, pnpm 11.11, frozen install.
 - Bốn image non-root multi-arch và Docker promotion fail-closed.
 - Pipeline screenshot/GIF current source và docs architecture/deploy/testing mới.
+- Admin dùng locale URL làm nguồn chuẩn, KPI overview đã dịch, token màu đạt accessibility và media đã recapture; targeted vi/en/ja Chromium/Firefox locale + axe đều pass.
 
 ## Đang làm trước release
 
 ### UI/UX/i18n/media
 
-- Sửa nhãn KPI tiếng Anh còn xuất hiện trên Admin overview tiếng Việt.
 - Audit fresh context `vi/en/ja`: title, `html lang`, visible/aria text, number/date/currency, cookie isolation.
 - Hoàn thiện responsive/keyboard/axe cho dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map/order.
 - So implementation với Stitch/design artifact và chốt visual regression.
-- Recapture ảnh/GIF sau khi UI được duyệt.
 
 ### Mobile
 
