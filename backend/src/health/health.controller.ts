@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common'
+import { Controller, Get, Res } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
 import { PrismaService } from '../database/prisma.service'
@@ -7,25 +7,18 @@ import { Redis } from 'ioredis'
 import { Client } from 'minio'
 import { createClient } from '@supabase/supabase-js'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
-
-interface ComponentStatus {
-  status: 'up' | 'down'
-  latencyMs: number
-}
-
-interface StorageComponentStatus extends ComponentStatus {
-  provider: 'minio' | 'supabase'
-}
+import {
+  type ComponentStatus,
+  type HealthComponents,
+  type StorageComponentStatus,
+  resolveHealthOutcome,
+} from './health-policy'
 
 interface HealthResponse {
   status: 'ok' | 'degraded'
   uptime: number
   timestamp: string
-  components: {
-    db: ComponentStatus
-    redis: ComponentStatus
-    storage: StorageComponentStatus
-  }
+  components: HealthComponents
 }
 
 @Controller('healthz')
@@ -44,22 +37,18 @@ export class HealthController {
       this.checkStorage(),
     ])
 
-    const allUp = dbStatus.status === 'up'
-      && redisStatus.status === 'up'
-      && storageStatus.status === 'up'
-
-    const overall = allUp ? 'ok' : 'degraded'
-    const httpStatus = allUp ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE
+    const components: HealthComponents = {
+      db: dbStatus,
+      redis: redisStatus,
+      storage: storageStatus,
+    }
+    const { status: overall, httpStatus } = resolveHealthOutcome(components)
 
     return res.status(httpStatus).json({
       status: overall,
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-      components: {
-        db: dbStatus,
-        redis: redisStatus,
-        storage: storageStatus,
-      },
+      components,
     } as HealthResponse)
   }
 
@@ -84,7 +73,10 @@ export class HealthController {
   }
 
   private async checkStorage(): Promise<StorageComponentStatus> {
-    const provider = this.config.get<string>('STORAGE_PROVIDER') === 'supabase' ? 'supabase' : 'minio'
+    const provider =
+      this.config.get<string>('STORAGE_PROVIDER') === 'supabase'
+        ? 'supabase'
+        : 'minio'
     if (provider === 'supabase') {
       return this.checkSupabaseStorage()
     }
@@ -122,7 +114,8 @@ export class HealthController {
 
   private requireStringConfig(key: string): string {
     const value = this.config.get<string | number>(key)
-    const stringValue = value === undefined || value === null ? '' : String(value).trim()
+    const stringValue =
+      value === undefined || value === null ? '' : String(value).trim()
     if (!stringValue) throw new Error(`${key} is required`)
     return stringValue
   }

@@ -30,7 +30,10 @@ describe('HealthController', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
-    mockSupabaseGetBucket.mockResolvedValue({ data: { id: 'foodflow-production' }, error: null })
+    mockSupabaseGetBucket.mockResolvedValue({
+      data: { id: 'foodflow-production' },
+      error: null,
+    })
     mockPrisma = { $queryRaw: jest.fn().mockResolvedValue([{ '1': 1 }]) }
     mockRedis = { ping: jest.fn().mockResolvedValue('PONG') }
     mockConfig = {
@@ -60,33 +63,59 @@ describe('HealthController', () => {
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
     await controller.check(res as unknown as Response)
     expect(res.status).toHaveBeenCalledWith(200)
-    const jsonArg = res.json.mock.calls[0][0]
-    expect(jsonArg.status).toBe('ok')
-    expect(jsonArg.components.db.status).toBe('up')
-    expect(jsonArg.components.redis.status).toBe('up')
-    expect(jsonArg.components.storage.provider).toBe('minio')
-    expect(jsonArg.components.storage.status).toBe('up')
-    expect(jsonArg.uptime).toBeGreaterThan(0)
-    expect(jsonArg.timestamp).toBeDefined()
+    const body = res.json.mock.calls[0][0]
+    expect(body.status).toBe('ok')
+    expect(body.components.db.status).toBe('up')
+    expect(body.components.redis.status).toBe('up')
+    expect(body.components.storage).toMatchObject({
+      provider: 'minio',
+      status: 'up',
+    })
+    expect(body.uptime).toBeGreaterThan(0)
+    expect(body.timestamp).toBeDefined()
   })
 
-  it('returns degraded when db is down', async () => {
+  it('returns 503 degraded when database is down', async () => {
     mockPrisma.$queryRaw.mockRejectedValueOnce(new Error('DB down'))
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
     await controller.check(res as unknown as Response)
+
     expect(res.status).toHaveBeenCalledWith(503)
     expect(res.json.mock.calls[0][0].status).toBe('degraded')
     expect(res.json.mock.calls[0][0].components.db.status).toBe('down')
   })
 
-  it('returns degraded when redis is down', async () => {
+  it('returns 503 degraded when Redis is down', async () => {
     mockRedis.ping.mockRejectedValueOnce(new Error('Redis down'))
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
     await controller.check(res as unknown as Response)
+
     expect(res.status).toHaveBeenCalledWith(503)
+    expect(res.json.mock.calls[0][0].status).toBe('degraded')
   })
 
-  it('returns degraded without constructing a localhost MinIO client when production storage env is missing', async () => {
+  it('returns 200 degraded when only MinIO is down', async () => {
+    ;(Client as unknown as jest.Mock).mockImplementationOnce(() => ({
+      bucketExists: jest.fn().mockRejectedValue(new Error('MinIO down')),
+    }))
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.check(res as unknown as Response)
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    const body = res.json.mock.calls[0][0]
+    expect(body.status).toBe('degraded')
+    expect(body.components.db.status).toBe('up')
+    expect(body.components.redis.status).toBe('up')
+    expect(body.components.storage).toMatchObject({
+      provider: 'minio',
+      status: 'down',
+    })
+  })
+
+  it('does not construct a localhost MinIO client when production storage env is missing', async () => {
     mockConfig.get.mockImplementation((key: string) => {
       if (key === 'NODE_ENV') return 'production'
       if (key === 'MINIO_PORT') return 9000
@@ -98,12 +127,16 @@ describe('HealthController', () => {
     await controller.check(res as unknown as Response)
 
     expect(Client).not.toHaveBeenCalled()
-    expect(res.status).toHaveBeenCalledWith(503)
-    expect(res.json.mock.calls[0][0].components.storage.provider).toBe('minio')
-    expect(res.json.mock.calls[0][0].components.storage.status).toBe('down')
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json.mock.calls[0][0]).toMatchObject({
+      status: 'degraded',
+      components: {
+        storage: { provider: 'minio', status: 'down' },
+      },
+    })
   })
 
-  it('checks Supabase Storage instead of MinIO when STORAGE_PROVIDER=supabase', async () => {
+  it('checks Supabase Storage instead of MinIO when configured', async () => {
     mockConfig.get.mockImplementation((key: string) => {
       if (key === 'STORAGE_PROVIDER') return 'supabase'
       if (key === 'SUPABASE_URL') return 'https://foodflow.supabase.co'
@@ -129,7 +162,7 @@ describe('HealthController', () => {
     })
   })
 
-  it('returns degraded when Supabase Storage bucket check fails', async () => {
+  it('returns 200 degraded when only Supabase Storage is down', async () => {
     mockConfig.get.mockImplementation((key: string) => {
       if (key === 'STORAGE_PROVIDER') return 'supabase'
       if (key === 'SUPABASE_URL') return 'https://foodflow.supabase.co'
@@ -137,15 +170,20 @@ describe('HealthController', () => {
       if (key === 'SUPABASE_STORAGE_BUCKET') return 'foodflow-production'
       return null
     })
-    mockSupabaseGetBucket.mockResolvedValueOnce({ data: null, error: new Error('bucket missing') })
+    mockSupabaseGetBucket.mockResolvedValueOnce({
+      data: null,
+      error: new Error('bucket missing'),
+    })
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
 
     await controller.check(res as unknown as Response)
 
-    expect(res.status).toHaveBeenCalledWith(503)
-    expect(res.json.mock.calls[0][0].components.storage).toMatchObject({
-      provider: 'supabase',
-      status: 'down',
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json.mock.calls[0][0]).toMatchObject({
+      status: 'degraded',
+      components: {
+        storage: { provider: 'supabase', status: 'down' },
+      },
     })
   })
 })

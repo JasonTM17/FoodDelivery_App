@@ -75,6 +75,10 @@ curl http://localhost:3000/api/healthz
 curl http://localhost:3002/api/healthz
 ```
 
+Backend `GET /api/healthz` treats **Postgres + Redis as required** and the selected storage provider as optional. If MinIO or Supabase Storage is down while DB and Redis remain up, the process returns **HTTP 200** with `status: "degraded"` and `components.storage.status: "down"`; DB or Redis down returns **HTTP 503**. `components.storage.provider` identifies the provider that was actually checked.
+
+Local demo seed (`pnpm run db:seed` in `backend/`) also creates a partner-visible demo order (`FF-DEMO01`) and a tagged Admin support ticket so Support and Restaurant order queues are useful in local QA. The seed script refuses to run when `NODE_ENV=production`; production uses reviewed migrations/imports and never demo seed data.
+
 ## Required Secret Stores
 
 Use provider secret managers, not committed files:
