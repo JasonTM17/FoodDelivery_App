@@ -1,8 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
 import { API_URL, adminUrl, restaurantUrl, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
 import { gotoAdminRoute, loginAdminApp, loginRestaurantApp } from '../fixtures/ui-auth';
+import {
+  expectNoSeriousOrCriticalAxeViolations,
+  focusFirstVisibleAppControl,
+} from '../fixtures/accessibility';
 
 interface Envelope<T> {
   success?: boolean;
@@ -27,44 +30,6 @@ function unwrap<T>(body: unknown): T {
 
 function authHeaders(token: string): { Authorization: string } {
   return { Authorization: `Bearer ${token}` };
-}
-
-async function focusFirstVisibleAppControl(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await page.keyboard.press('Tab');
-    const hasVisibleAppFocus = await page.evaluate(() => {
-      const active = document.activeElement;
-      if (!(active instanceof HTMLElement)) return false;
-      if (active.closest('nextjs-portal')) return false;
-      if (active.matches('[data-nextjs-dev-tools-button="true"]')) return false;
-      if (!active.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')) {
-        return false;
-      }
-
-      const rect = active.getBoundingClientRect();
-      const style = window.getComputedStyle(active);
-      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
-    });
-    if (hasVisibleAppFocus) return;
-  }
-
-  throw new Error('Expected keyboard Tab to focus a visible in-app control');
-}
-
-async function expectNoSeriousOrCriticalAxeViolations(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).analyze();
-  const seriousOrCritical = results.violations.filter(
-    (violation) => violation.impact === 'serious' || violation.impact === 'critical',
-  );
-  const summary = seriousOrCritical.flatMap((violation) =>
-    violation.nodes.map((node) => ({
-      id: violation.id,
-      impact: violation.impact,
-      target: node.target,
-      message: node.any[0]?.message ?? node.all[0]?.message ?? node.none[0]?.message,
-    })),
-  );
-  expect(summary).toEqual([]);
 }
 
 const restaurantLoginLocales = [
