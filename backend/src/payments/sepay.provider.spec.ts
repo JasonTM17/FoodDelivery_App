@@ -8,131 +8,140 @@ describe('SepayProvider', () => {
   beforeEach(() => {
     delete process.env.SEPAY_API_KEY
     delete process.env.SEPAY_WEBHOOK_SECRET
-    delete process.env.SEPAY_BASE_URL
     delete process.env.SEPAY_ACCOUNT_NUMBER
+    delete process.env.SEPAY_BANK_NAME
     jest.restoreAllMocks()
     provider = new SepayProvider()
   })
 
   describe('createPaymentIntent', () => {
-    it('throws explicit unavailable error when SEPAY_API_KEY is not set', async () => {
-      await expect(provider.createPaymentIntent('order-abc-123', 100_000))
-        .rejects.toThrow(ServiceUnavailableException)
-    })
-
-    it('throws explicit unavailable error when SEPAY_ACCOUNT_NUMBER is not set', async () => {
-      process.env.SEPAY_API_KEY = 'test-key-123'
+    it('fails closed when the beneficiary account is missing', async () => {
+      process.env.SEPAY_BANK_NAME = 'Vietcombank'
       provider = new SepayProvider()
 
       await expect(provider.createPaymentIntent('order-abc-123', 100_000))
         .rejects.toThrow(ServiceUnavailableException)
     })
 
-    it('calls SePay API and returns parsed response', async () => {
-      process.env.SEPAY_API_KEY = 'test-key-123'
+    it('fails closed when the beneficiary bank name is missing', async () => {
       process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
       provider = new SepayProvider()
 
-      const mockFetch = jest.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          qr_code_url: 'https://qr.sepay.vn/real-ref',
-          transaction_ref: 'REAL-REF-001',
-        }),
-      })
-      global.fetch = mockFetch as typeof fetch
+      await expect(provider.createPaymentIntent('order-abc-123', 100_000))
+        .rejects.toThrow(ServiceUnavailableException)
+    })
+
+    it('builds the documented VietQR URL without calling an invented intent API', async () => {
+      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
+      process.env.SEPAY_BANK_NAME = 'Vietcombank'
+      provider = new SepayProvider()
+      global.fetch = jest.fn() as typeof fetch
 
       const result = await provider.createPaymentIntent('order-xyz', 80_000)
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/transactions/create'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({ Authorization: 'Bearer test-key-123' }),
-        }),
-      )
-      expect(result.transaction_ref).toBe('REAL-REF-001')
-      expect(result.qr_code_url).toBe('https://qr.sepay.vn/real-ref')
+      const qrUrl = new URL(result.qr_code_url)
+      expect(`${qrUrl.origin}${qrUrl.pathname}`).toBe('https://vietqr.app/img')
+      expect(qrUrl.searchParams.get('acc')).toBe('123456789')
+      expect(qrUrl.searchParams.get('bank')).toBe('Vietcombank')
+      expect(qrUrl.searchParams.get('amount')).toBe('80000')
+      expect(qrUrl.searchParams.get('des')).toBe('FF-ORDERXYZ')
+      expect(qrUrl.searchParams.get('template')).toBe('compact')
+      expect(result.transaction_ref).toBe('FF-ORDERXYZ')
       expect(result.expires_at.getTime()).toBeGreaterThan(Date.now())
-      const request = mockFetch.mock.calls[0][1] as RequestInit
-      expect(JSON.parse(request.body as string)).toMatchObject({
-        transaction_ref: 'FF-ORDERXYZ',
-      })
+      expect(global.fetch).not.toHaveBeenCalled()
     })
 
-    it('throws instead of creating a fallback intent when API omits QR fields', async () => {
-      process.env.SEPAY_API_KEY = 'test-key'
-      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
-      provider = new SepayProvider()
+    it.each([0, -1, 1.5, 10_000_000_000, Number.NaN, Number.POSITIVE_INFINITY])(
+      'rejects invalid amount %s',
+      async amount => {
+        process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
+        process.env.SEPAY_BANK_NAME = 'Vietcombank'
+        provider = new SepayProvider()
 
-      global.fetch = jest.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({}),
-      }) as typeof fetch
+        await expect(provider.createPaymentIntent('order-1', amount))
+          .rejects.toThrow('SEPAY_AMOUNT_INVALID')
+      },
+    )
+
+    it('rejects invalid beneficiary configuration instead of emitting a malformed QR', async () => {
+      process.env.SEPAY_ACCOUNT_NUMBER = '123 456'
+      process.env.SEPAY_BANK_NAME = 'Vietcombank<script>'
+      provider = new SepayProvider()
 
       await expect(provider.createPaymentIntent('order-1', 50_000))
-        .rejects.toThrow('SEPAY_INVALID_INTENT_RESPONSE')
+        .rejects.toThrow('SEPAY_ACCOUNT_NUMBER_INVALID')
     })
 
-    it('throws when API returns non-ok status', async () => {
-      process.env.SEPAY_API_KEY = 'test-key'
+    it('rejects an order id that cannot produce a payment code', async () => {
       process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
+      process.env.SEPAY_BANK_NAME = 'Vietcombank'
       provider = new SepayProvider()
 
-      global.fetch = jest.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 422,
-        text: async () => 'Unprocessable Entity',
-      }) as typeof fetch
-
-      await expect(provider.createPaymentIntent('order-1', 50_000)).rejects.toThrow('422')
+      await expect(provider.createPaymentIntent('---', 50_000))
+        .rejects.toThrow('SEPAY_ORDER_ID_INVALID')
     })
   })
 
   describe('verifyWebhookSignature', () => {
+    const timestamp = '1750000000'
+    const body = '{"id":92704,"code":"FF-ORDER1"}'
+
     it('returns false when SEPAY_WEBHOOK_SECRET is not set', () => {
-      expect(provider.verifyWebhookSignature('{"foo":"bar"}', 'any-sig')).toBe(false)
+      expect(provider.verifyWebhookSignature(body, `sha256=${'a'.repeat(64)}`, timestamp, 1_750_000_000))
+        .toBe(false)
     })
 
-    it('returns true for correct HMAC signature', () => {
+    it('verifies the documented timestamp.raw-body HMAC contract', () => {
+      process.env.SEPAY_WEBHOOK_SECRET = 'test-secret-123'
+      provider = new SepayProvider()
+      const signature = `sha256=${createHmac('sha256', 'test-secret-123')
+        .update(`${timestamp}.${body}`)
+        .digest('hex')}`
+
+      expect(provider.verifyWebhookSignature(Buffer.from(body), signature, timestamp, 1_750_000_000))
+        .toBe(true)
+      expect(provider.verifyWebhookSignature(`${body} `, signature, timestamp, 1_750_000_000))
+        .toBe(false)
+    })
+
+    it('rejects stale timestamps to prevent webhook replay', () => {
+      process.env.SEPAY_WEBHOOK_SECRET = 'test-secret-123'
+      provider = new SepayProvider()
+      const signature = `sha256=${createHmac('sha256', 'test-secret-123')
+        .update(`${timestamp}.${body}`)
+        .digest('hex')}`
+
+      expect(provider.verifyWebhookSignature(body, signature, timestamp, 1_750_000_301))
+        .toBe(false)
+    })
+
+    it.each(['deadbeef', `sha256=${'z'.repeat(64)}`, ''])('rejects malformed signature %s', signature => {
       process.env.SEPAY_WEBHOOK_SECRET = 'test-secret-123'
       provider = new SepayProvider()
 
-      const body = '{"transaction_ref":"TXN-001","amount":100000}'
-      const sig = createHmac('sha256', 'test-secret-123').update(body).digest('hex')
-
-      expect(provider.verifyWebhookSignature(body, sig)).toBe(true)
+      expect(provider.verifyWebhookSignature(body, signature, timestamp, 1_750_000_000))
+        .toBe(false)
     })
+  })
 
-    it('returns false for wrong signature', () => {
-      process.env.SEPAY_WEBHOOK_SECRET = 'test-secret-123'
+  describe('matchesPaymentAccount', () => {
+    it('accepts the configured account as either accountNumber or matched VA', () => {
+      process.env.SEPAY_ACCOUNT_NUMBER = '123456789'
+      process.env.SEPAY_BANK_NAME = 'Vietcombank'
       provider = new SepayProvider()
 
-      expect(provider.verifyWebhookSignature('{"foo":"bar"}', 'deadbeef')).toBe(false)
-    })
-
-    it('returns false when signature length differs', () => {
-      process.env.SEPAY_WEBHOOK_SECRET = 'test-secret-123'
-      provider = new SepayProvider()
-
-      expect(provider.verifyWebhookSignature('body', 'short')).toBe(false)
+      expect(provider.matchesPaymentAccount('123456789')).toBe(true)
+      expect(provider.matchesPaymentAccount('source-account', '123456789')).toBe(true)
+      expect(provider.matchesPaymentAccount('attacker-account', 'other-va')).toBe(false)
     })
   })
 
   describe('refund', () => {
-    it('throws explicit unavailable error when SEPAY_API_KEY is not set', async () => {
-      await expect(provider.refund('TXN-MISSING-CONFIG', 50_000, 'customer request'))
-        .rejects.toThrow(ServiceUnavailableException)
-    })
-
-    it('fails closed instead of calling an unmodelled bank-transfer refund endpoint', async () => {
-      process.env.SEPAY_API_KEY = 'test-key'
-      provider = new SepayProvider()
-
+    it('routes bank-transfer refunds to audited manual review instead of a fake provider API', async () => {
       global.fetch = jest.fn() as typeof fetch
 
       await expect(provider.refund('TXN-001', 50_000, 'test reason'))
-        .rejects.toThrow('SEPAY_REFUND_NOT_MODELLED')
+        .rejects.toThrow('SEPAY_BANK_TRANSFER_REFUND_REQUIRES_MANUAL_REVIEW')
       expect(global.fetch).not.toHaveBeenCalled()
     })
   })

@@ -567,22 +567,23 @@ model Order {
   createdAt                    DateTime      @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                    DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
 
-  customer         User                 @relation("CustomerOrders", fields: [customerId], references: [id])
-  restaurant       Restaurant           @relation(fields: [restaurantId], references: [id])
-  driver           User?                @relation("DriverOrders", fields: [driverId], references: [id])
-  deliveryAddress  Address              @relation(fields: [deliveryAddressId], references: [id])
-  orderItems       OrderItem[]
-  statusHistory    OrderStatusHistory[]
-  payment          Payment?
-  paymentIntent    PaymentIntent?
-  payoutLedgers    PayoutLedger[]
-  deliveryTask     DeliveryTask?
-  driverTipReports DriverTipReport[]
-  reviews          Review[]
-  supportTickets   AiSupportTicket[]
-  promotionUsages  PromotionUsage[]
-  chatSessions     ChatSession[]
-  dispatchOffers   DispatchOffer[]
+  customer               User                    @relation("CustomerOrders", fields: [customerId], references: [id])
+  restaurant             Restaurant              @relation(fields: [restaurantId], references: [id])
+  driver                 User?                   @relation("DriverOrders", fields: [driverId], references: [id])
+  deliveryAddress        Address                 @relation(fields: [deliveryAddressId], references: [id])
+  orderItems             OrderItem[]
+  statusHistory          OrderStatusHistory[]
+  payment                Payment?
+  paymentIntent          PaymentIntent?
+  paymentWebhookReceipts PaymentWebhookReceipt[]
+  payoutLedgers          PayoutLedger[]
+  deliveryTask           DeliveryTask?
+  driverTipReports       DriverTipReport[]
+  reviews                Review[]
+  supportTickets         AiSupportTicket[]
+  promotionUsages        PromotionUsage[]
+  chatSessions           ChatSession[]
+  dispatchOffers         DispatchOffer[]
 
   @@index([customerId, createdAt(sort: Desc)])
   @@index([restaurantId, status])
@@ -1146,9 +1147,33 @@ model PaymentIntent {
   expiresAt      DateTime @map("expires_at") @db.Timestamptz()
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order           Order                   @relation(fields: [orderId], references: [id])
+  webhookReceipts PaymentWebhookReceipt[]
 
   @@map("payment_intents")
+}
+
+model PaymentWebhookReceipt {
+  id                    String    @id @default(uuid()) @db.Uuid
+  provider              String    @db.VarChar(20)
+  providerTransactionId String    @map("provider_transaction_id") @db.VarChar(100)
+  paymentIntentId       String?   @map("payment_intent_id") @db.Uuid
+  orderId               String?   @map("order_id") @db.Uuid
+  amount                Int
+  bankReference         String?   @map("bank_reference") @db.VarChar(100)
+  status                String    @default("processing") @db.VarChar(20)
+  failureCode           String?   @map("failure_code") @db.VarChar(100)
+  receivedAt            DateTime  @default(now()) @map("received_at") @db.Timestamptz()
+  processedAt           DateTime? @map("processed_at") @db.Timestamptz()
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  paymentIntent PaymentIntent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  order         Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerTransactionId])
+  @@index([orderId, receivedAt(sort: Desc)])
+  @@index([status, updatedAt])
+  @@map("payment_webhook_receipts")
 }
 
 model PayoutLedger {

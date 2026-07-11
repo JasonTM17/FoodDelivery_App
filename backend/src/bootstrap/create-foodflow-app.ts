@@ -16,7 +16,7 @@ export async function createFoodFlowApp(
   options: CreateFoodFlowAppOptions = {},
 ): Promise<INestApplication> {
   const { enableWebSockets = true, setupSwagger = true } = options
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, { rawBody: true })
   const configService = app.get(ConfigService)
 
   const corsOrigins = configService.get<string>('CORS_ORIGINS')
