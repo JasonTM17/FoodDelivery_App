@@ -116,6 +116,20 @@ Cursor-based endpoint は `meta` に cursor field を追加できますが、col
 - Session 期限切れ redirect は現在の locale を維持します。
 - Web auth の httpOnly cookie 化は別 scope であり、Batch 4 には含めません。
 
+## Private driver KYC
+
+すべての KYC route は認証済みかつ role-scoped です。Driver document は public media asset ではなく private storage object です。
+
+| Method | Route | Actor | Contract |
+|---|---|---|---|
+| `POST` | `/driver/kyc/uploads` | Driver | `idCardFront`、`idCardBack`、`driverLicense`、`vehicleRegistration` のいずれか 1 件に signed grant を発行します。JPEG/PNG/WebP、1 KiB–4 MiB の metadata を受け、`{ uploadUrl, objectKey, headers }` を返します。 |
+| `POST` | `/driver/kyc` | Driver | License/vehicle 情報と caller 所有の private object key 4 件を送信します。Public/signed URL、重複 key、不正 signature、2 件目の pending submission、retry 上限超過は拒否します。 |
+| `GET` | `/driver/kyc/status` | Driver | Caller 自身の verified/status、vehicle/license、accepted terms、latest review、remaining attempts を返します。 |
+| `GET` | `/admin/users/{userId}/kyc` | Admin | Valid document に 5 分間の signed read URL を付けて real submission を返します。Raw object key は返しません。 |
+| `POST` | `/admin/users/{userId}/kyc/review` | Admin | Pending submission 1 件を atomic に approve/reject します。Reject reason は必須で、review 済み submission は再処理できません。 |
+
+Client は返された exact headers だけで `uploadUrl` に PUT します。FoodFlow API bearer を Storage に転送せず、public URL を導出せず、signed URL を保存せず、`objectKey` を URI に置き換えません。Production は dedicated private `SUPABASE_KYC_BUCKET` を使い、MinIO は explicit local/self-hosted mode のみ同じ contract に従います。
+
 ## Managed-production realtime と job drain
 
 | Method | Route | Authentication | Contract |

@@ -1,172 +1,174 @@
 # FoodFlow Mobile
 
-## 1. Purpose
+## Purpose
 
-Flutter monorepo containing two mobile applications for the FoodFlow platform. The **customer app** provides restaurant discovery (PostGIS nearby search), food ordering, realtime order tracking on map, AI chat assistant, and order history. The **driver app** provides order request acceptance, GPS background tracking, turn-by-turn delivery flow, earnings dashboard, and delivery history. Both apps consume the NestJS backend API and connect to the Socket.IO WebSocket gateway for realtime features.
+This Flutter workspace builds two FoodFlow applications:
 
-## 2. API Surface
+| App | Entry point | Runtime scope |
+|---|---|---|
+| Customer | `lib/main_customer.dart` | Discovery, cart/checkout, order tracking, maps, notifications, AI support |
+| Driver | `lib/main_driver.dart` | Dispatch offers, GPS tracking, routed delivery, earnings, history |
 
-These apps are frontend-only consumers. They call the backend REST API and maintain a persistent WebSocket connection:
+Both apps use the NestJS REST API for business mutations. Managed production
+receives authorized events through Supabase Realtime. Socket.IO remains an
+explicit local/self-hosted compatibility transport.
 
-| App | Entry Point | Primary Users |
-|-----|------------|---------------|
-| Customer | `lib/main_customer.dart` | End customers ordering food |
-| Driver | `lib/main_driver.dart` | Delivery drivers |
+## Runtime contract
 
-### External API Dependencies
+- HTTP: `lib/shared/api/api_client.dart` and the checked-in OpenAPI client.
+- Realtime facade: `lib/shared/api/realtime_client.dart`.
+- Managed realtime: short-lived `POST /realtime/token` grants and filtered
+  `realtime_outbox` subscriptions.
+- Local compatibility: `lib/shared/api/socket_client.dart`.
+- GPS and maps: `geolocator`, `google_maps_flutter`, backend route geometry,
+  ETA, and route phase. The client does not fabricate straight-line routes.
+- Dispatch: offers arrive on the private driver channel; accept/reject uses
+  authenticated `POST /driver/dispatch/offers/{orderId}/respond`.
+- Driver KYC: terms are persisted first, then typed license/vehicle data is
+  carried through onboarding. Each JPEG/PNG/WebP document is uploaded with a
+  driver-scoped `POST /driver/kyc/uploads` grant; only the returned private
+  object key is submitted to `POST /driver/kyc`. Mobile never derives a public
+  URL from a signed upload URL.
 
-- **Backend API**: configured via `ApiClient` in `lib/shared/api/api_client.dart`
-- **WebSocket**: configured via `SocketClient` in `lib/shared/api/socket_client.dart`
-- **Google Maps**: embedded map component for location picker and tracking
+## Environment
 
-## 3. Env Vars
+Configuration uses Dart defines. Release builds fail closed when the API or
+realtime provider configuration is missing.
 
-Configuration is read from Dart defines. Debug/test builds keep an emulator-friendly local default, but release builds must pass a real backend API URL; they no longer silently fall back to localhost or `10.0.2.2`.
+| Name | Required | Description |
+|---|---|---|
+| `API_BASE_URL` | Release | Verified backend base ending in `/api` |
+| `REALTIME_PROVIDER` | Release | `supabase` in managed production; `socketio` only for local/self-hosted use |
+| `SUPABASE_URL` | Provider `supabase` | Supabase project HTTPS origin |
+| `SUPABASE_ANON_KEY` | Provider `supabase` | Public anon/publishable key; never service-role/JWT secrets |
+| `WS_URL` | Provider `socketio`, optional | Socket.IO origin; defaults to `API_BASE_URL` without `/api` |
+| `GOOGLE_MAPS_API_KEY` | Map builds | Native Maps SDK key from environment/Gradle or ignored iOS xcconfig |
+
+Never put service-role keys, Supabase JWT secrets, DeepSeek keys, database URLs,
+or Android upload passwords in Dart defines or source control.
+
+## Local development
+
+Prerequisites: Flutter stable with Dart 3.12+, API on port 3001, and the local
+Socket.IO stack.
 
 ```bash
-$env:GOOGLE_MAPS_API_KEY="your-native-google-maps-key"
-flutter run -t lib/main_customer.dart \
-  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api
-```
-
-| Name | Required | Default | Description |
-|------|----------|---------|-------------|
-| `API_BASE_URL` | Release: yes; debug/test: no | Debug/test only: `http://10.0.2.2:3001/api` | Backend API base URL |
-| `WS_URL` | No | Derived by stripping `/api` from `API_BASE_URL` | Socket.IO gateway root; set only when it differs from the REST API origin |
-| `GOOGLE_MAPS_API_KEY` | Yes for map screens | — | Native Google Maps SDK key. Android reads this from an environment variable or Gradle property; iOS reads it from gitignored `ios/Flutter/GoogleMapsKeys.xcconfig`. Never commit the key. |
-
-## 4. Run Locally
-
-```bash
-# Prerequisites: Flutter SDK 3.12+, backend running on :3001
-
-# 1. Install dependencies
 flutter pub get
-
-# 2. Run code generation (required if models or providers changed)
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# 3. Run customer app
-flutter run -t lib/main_customer.dart
-
-# 4. Run driver app (separate terminal/simulator)
-flutter run -t lib/main_driver.dart
-
-# 5. For physical device, ensure the API URL points to your machine's LAN IP:
 flutter run -t lib/main_customer.dart \
-  --dart-define=API_BASE_URL=http://192.168.1.100:3001/api
+  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
+  --dart-define=REALTIME_PROVIDER=socketio
+
+flutter run -t lib/main_driver.dart \
+  --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
-## 5. Test
+For a physical device, replace `10.0.2.2` with the development machine's LAN
+address. Do not edit source files to switch environments.
+
+## Managed-production build inputs
+
+Use provider aliases verified during deployment; do not copy retired or example
+domains into a release:
 
 ```bash
-# Run all Flutter tests
+flutter run -t lib/main_customer.dart \
+  --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
+  --dart-define=REALTIME_PROVIDER=supabase \
+  --dart-define=SUPABASE_URL=https://<project>.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<public-anon-key>
+```
+
+The scoped Supabase JWT is obtained at runtime from the API, expires after five
+minutes, and is refreshed before expiry. Mobile never signs its own grant and
+never publishes business events directly to Supabase.
+
+## Test gates
+
+```bash
+flutter pub get
+flutter analyze
 flutter test
 
-# Run tests for a specific directory
-flutter test test/customer/
-flutter test test/driver/
-flutter test test/shared/
-
-# Run with coverage
+# Optional coverage artifact
 flutter test --coverage
 genhtml coverage/lcov.info -o coverage/html
 ```
 
-Coverage thresholds: lines >= 80%, branches >= 70%.
+Run customer and driver tests plus release-flavor compilation after changes to
+realtime, maps, native manifests, or Dart defines. Generated API/model changes
+must come from the canonical OpenAPI contract, not handwritten guesses.
 
-## 6. Runbook
-
-### Regenerating Models After Backend API Changes
-
-```bash
-cd mobile
-flutter pub run build_runner build --delete-conflicting-outputs
-```
-
-This regenerates Freezed models and JSON serialization code. Run whenever `dto` classes or API response shapes change upstream.
-
-### Switching Between Environments
-
-Pass the API base URL via `--dart-define`; do not edit runtime source files for environment switching:
+## Android builds
 
 ```bash
-# Development on Android emulator
-flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=http://10.0.2.2:3001/api
+# Debug compatibility builds
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 
-# Staging
-flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=https://staging-api.foodflow.vn/api
-
-# Production
-flutter run -t lib/main_customer.dart --dart-define=API_BASE_URL=https://api.foodflow.vn/api
+# Release customer; use the same defines for the driver flavor/entrypoint
+flutter build apk --release --flavor customer -t lib/main_customer.dart \
+  --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
+  --dart-define=REALTIME_PROVIDER=supabase \
+  --dart-define=SUPABASE_URL=https://<project>.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<public-anon-key>
 ```
 
-### Debugging WebSocket Connection Issues
-
-1. Verify backend is running and WebSocket gateway is reachable
-2. Check the `WS_URL` matches backend address and port
-3. Check WebSocket CORS origins in backend `.env`
-4. Enable Flutter WebSocket debug logging:
-   ```dart
-   // In socket_client.dart, set socket.io options:
-   SocketOptions(enableLogging: true)
-   ```
-
-### Build APK/IPA for Distribution
-
-The Batch 4 mobile tree now includes Flutter Android and iOS platform projects
-under `mobile/android` and `mobile/ios`. Android debug APK builds were verified
-locally on 2026-07-04 for both entrypoints.
-
-```bash
-# Android debug APK (customer)
-flutter build apk --debug --flavor customer -t lib/main_customer.dart
-
-# Android debug APK (driver)
-flutter build apk --debug --flavor driver -t lib/main_driver.dart
-
-# Android release APK (customer)
-flutter build apk --release --flavor customer -t lib/main_customer.dart
-
-# Android release APK (driver)
-flutter build apk --release --flavor driver -t lib/main_driver.dart
-
-# iOS (requires macOS + Xcode)
-flutter build ios -t lib/main_customer.dart --release
-```
-
-Android release builds must not use debug signing. Set these values via
-environment variables or Gradle properties before running a release build:
+Release signing must come from secure CI/host configuration:
 
 | Name | Description |
-|------|-------------|
-| `FOODFLOW_UPLOAD_STORE_FILE` | Absolute or project-relative path to the Android upload keystore |
-| `FOODFLOW_UPLOAD_STORE_PASSWORD` | Upload keystore password |
+|---|---|
+| `FOODFLOW_UPLOAD_STORE_FILE` | Android upload keystore path |
+| `FOODFLOW_UPLOAD_STORE_PASSWORD` | Keystore password |
 | `FOODFLOW_UPLOAD_KEY_ALIAS` | Upload key alias |
 | `FOODFLOW_UPLOAD_KEY_PASSWORD` | Upload key password |
 
-If these values are missing, the Gradle release task fails before signing. For
-iOS builds still use the Flutter entrypoint target. Android builds use flavors so
-the customer app installs as `vn.foodflow.customer` and the driver app installs
-as `vn.foodflow.driver` with separate launcher labels. For
-iOS local development, create a gitignored key file:
+The Gradle release task fails when these values are absent. The customer and
+driver flavors install as `vn.foodflow.customer` and `vn.foodflow.driver`.
+
+For local iOS development, create the ignored file below:
 
 ```xcconfig
 // mobile/ios/Flutter/GoogleMapsKeys.xcconfig
 GOOGLE_MAPS_API_KEY=your-native-google-maps-key
 ```
 
-### Clearing Flutter Build Cache
+iOS release compilation requires macOS, Xcode, and valid signing profiles.
+
+## Realtime troubleshooting
+
+1. Confirm the release uses `REALTIME_PROVIDER=supabase` with the correct
+   project origin and public key.
+2. Request `POST /realtime/token` with an authenticated user and verify only
+   required `private:` channels are returned.
+3. Verify the requested order channel is present and another tenant is denied.
+4. Confirm `realtime_outbox` RLS and the explicit Supabase publication.
+5. Confirm GPS and dispatch responses appear as REST requests, while outbox
+   inserts arrive through Supabase Realtime.
+6. For local Socket.IO only, verify `WS_URL` and WebSocket CORS.
+
+## Driver KYC troubleshooting
+
+1. Confirm the authenticated account has role `driver` and accepted the
+   current terms version.
+2. Check that all four documents are valid JPEG, PNG, or WebP images no larger
+   than 4 MB; file extension alone is not trusted.
+3. Verify each upload uses exactly the non-credential headers returned by
+   `POST /driver/kyc/uploads` and that no API bearer token is sent to storage.
+4. Submit opaque object keys, not signed URLs or public URLs. The backend checks
+   driver ownership, object uniqueness, stored metadata, and magic bytes.
+5. A pending submission cannot be duplicated. Rejected submissions show the
+   server status after the next authenticated login and can be retried within
+   the configured limit.
+
+## Cache recovery
 
 ```bash
 flutter clean
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
-
-### Adding a New Customer Screen
-
-1. Create screen in `mobile/lib/customer/screens/<name>_screen.dart`
-2. Create or extend provider in `mobile/lib/shared/providers/` if needed
-3. Use shared widgets from `mobile/lib/shared/widgets/` (FoodCard, RestaurantCard, LoadingShimmer, EmptyState, ErrorState, OrderStatusBadge)
-4. Wire up navigation in the GoRouter configuration

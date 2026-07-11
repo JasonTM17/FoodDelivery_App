@@ -2,12 +2,12 @@
 
 ## Audit snapshot
 
-Last audited: **2026-07-10** from `D:\Food_Delivery-worktrees\batch4-integration-restored` after `git fetch --prune origin`.
+Last audited: **2026-07-11** from `D:\Food_Delivery-worktrees\batch4-integration-restored` after `git fetch --prune origin`.
 
 | Scope | Ref | Commit | Decision |
 |---|---|---|---|
 | Remote | `origin/master` | `df945dd2c572e690a3c9e7aa31130c517ef83880` | Keep as the only long-lived remote branch. |
-| Local integration | `codex/batch4-integration` | `e74a5b4` before this docs update | Keep until its verified `HEAD` is pushed directly to `master`. |
+| Local integration | `codex/batch4-integration` | `924808c47ca7de1aa001693bdfcca3c4ff293a9f` before this docs update | Keep until its verified `HEAD` is pushed directly to `master`. |
 | Local root | `master` | `df945dd` | Do not touch; the root worktree contains user-owned dirty files. |
 | Backup tag | `backup/batch4-integration-20260704-032a6c0` | preserved tag | Keep until release and cleanup evidence are complete. |
 | Release tag | `v0.1.0` | historical | Keep as historical; it is not Batch 4. |
@@ -17,7 +17,7 @@ GitHub connector branch search and `git ls-remote --heads origin` both returned 
 Before the current docs edits:
 
 ```text
-origin/master...codex/batch4-integration = 0 behind / 99 ahead
+origin/master...codex/batch4-integration = 0 behind / 106 ahead
 ```
 
 The integration line is therefore a fast-forward candidate, not a merge-commit candidate.
@@ -75,4 +75,4 @@ Then, without switching or cleaning the dirty root:
 
 ## Current conclusion
 
-Remote branch cleanup is already complete: only `master` remains. Final local cleanup and push are intentionally pending because production secrets/preflights, current-head remote CI, mobile Supabase realtime parity, and final full test gates are not yet complete.
+Remote branch cleanup is already complete: only `master` remains. Mobile Supabase realtime parity is now present on the integration line, including scoped token/channel tests and REST GPS/dispatch mutations. Final local cleanup and push remain intentionally pending because production secrets/preflights, current-head remote CI, and the final full release gates are not yet complete.

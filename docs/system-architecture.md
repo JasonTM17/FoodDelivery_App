@@ -4,7 +4,7 @@
 
 FoodFlow is a modular-monolith delivery platform with five user-facing surfaces: the NestJS API, Admin web, Restaurant web, Customer Flutter app, and Driver Flutter app. The managed-production target is Supabase + Vercel; Docker Compose is an explicit local/self-hosted compatibility topology rather than the production source of truth.
 
-Current schema snapshot (2026-07-10): **54 Prisma models** and **22 ordered migrations**, including PostGIS delivery geometry, realtime/job outboxes, audit/export records, and AI usage telemetry.
+Current schema snapshot (2026-07-11): **55 Prisma models** and **24 ordered migrations**, including PostGIS delivery geometry, realtime/job/dispatch outboxes, private driver KYC, audit/export records, and AI usage telemetry.
 
 ## Managed-production topology
 
@@ -36,8 +36,12 @@ flowchart TB
     DB -->|INSERT realtime_outbox| Realtime
     API -->|5-minute scoped JWT| Admin
     API -->|5-minute scoped JWT| Restaurant
+    API -->|5-minute scoped JWT| Customer
+    API -->|5-minute scoped JWT| Driver
     Realtime -->|authorized table changes| Admin
     Realtime -->|authorized table changes| Restaurant
+    Realtime -->|authorized table changes| Customer
+    Realtime -->|authorized table changes| Driver
 ```
 
 The API can run without a long-lived WebSocket server when `REALTIME_PROVIDER=supabase`. Scheduled work is persisted in PostgreSQL and drained by a secured Cron endpoint when `QUEUE_PROVIDER=supabase-postgres`.
@@ -73,25 +77,25 @@ See [API contract](api-contract.md) and [OpenAPI](openapi.yaml).
 
 ```mermaid
 sequenceDiagram
-    participant Web as Admin/Restaurant
+    participant Client as Admin/Restaurant/Customer/Driver
     participant API as NestJS API
     participant DB as Supabase Postgres
     participant RT as Supabase Realtime
 
-    Web->>API: POST /api/realtime/token {orderId?, restaurantId?}
+    Client->>API: POST /api/realtime/token {orderId?, restaurantId?}
     API->>DB: Verify user/order/restaurant ownership
-    API-->>Web: HS256 JWT, expiresAt, allowed channels
-    Web->>RT: setAuth(token) + subscribe to realtime_outbox
+    API-->>Client: HS256 JWT, expiresAt, allowed channels
+    Client->>RT: setAuth(token) + subscribe to realtime_outbox
     API->>DB: INSERT realtime_outbox(channel,event,payload)
     DB-->>RT: postgres_changes INSERT
-    RT-->>Web: Row only when RLS channel claim matches
+    RT-->>Client: Row only when RLS channel claim matches
 ```
 
 The JWT TTL is five minutes. Claims contain `sub`, application role, and `realtime_channels`. RLS reads those claims and permits `SELECT` only for rows whose channel is explicitly allowed. The `realtime_outbox` table alone is added to `supabase_realtime`; broad public channels are not part of the design.
 
 Canonical channel families cover user notifications, admin orders/drivers, restaurant tenants, drivers, orders, and restaurant-driver chat. A requested order or restaurant scope is rejected before token issue when ownership cannot be proven.
 
-The current Admin and Restaurant clients support this contract. Mobile still uses the Socket.IO compatibility client and remains a production-mobile migration item.
+Admin, Restaurant, Customer, and Driver managed clients support this contract. Mobile GPS and dispatch decisions remain authenticated REST mutations; Supabase is receive-only for allow-listed business events. Socket.IO remains an explicit local/self-hosted transport.
 
 ## Queue and outbox processing
 
@@ -103,7 +107,8 @@ Local BullMQ remains available. The worker is another entry point in the backend
 
 - Managed production: Supabase Storage through the server-side service-role client.
 - Local/self-hosted: MinIO.
-- Review photos use signed upload URLs.
+- Driver KYC uses a dedicated private `foodflow-kyc` bucket. The API issues owner-scoped signed uploads, validates stored MIME/signature/ownership, stores only object keys, and gives Admin five-minute signed reads.
+- Public restaurant/menu assets remain separate from private KYC data.
 - Restaurant assets are uploaded/deleted through backend authorization; service-role keys are never exposed to clients.
 - Storage health follows the selected provider and reports a degraded component instead of silently substituting another provider.
 

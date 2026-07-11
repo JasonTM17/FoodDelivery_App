@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）と Vercel（API、Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-10 status:** Batch 4 には local evidence がありますが、**production deploy は未実施**です。Supabase CLI credential、Vercel production env、GitHub Actions billing/auth が不足しているため、deploy と `master` fast-forward は fail closed です。
+> **2026-07-11 status:** Batch 4 hardening は継続中で、**production deploy は未実施**です。Supabase CLI credential、Vercel production env、GitHub Actions billing/auth が不足しています。Final head の full gate と provider preflight がすべて green になるまで deploy と `master` fast-forward は fail closed です。
 
 ## Product preview
 
@@ -39,7 +39,7 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 - Admin KPI、order、restaurant、user、driver、live map、promotion、audit、support、export、AI telemetry。
 - Restaurant staff、realtime channel、tracking、export、admin resource の tenant isolation。
 - Google Maps と実 telemetry を使用し、座標・polyline・ETA が不足すると fake fallback を作らず fail closed。
-- DeepSeek は backend adapter 経由。key がなければ明示的 degraded response を返し、client/repo に key を埋め込みません。
+- DeepSeek は backend adapter 経由です。Key 不足または provider error は fail closed とし、実 telemetry を保存し、client/repo に key を埋め込みません。
 
 ## Provider architecture
 
@@ -50,7 +50,7 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
 
-Web は `POST /api/realtime/token` から短時間・tenant scoped token を取得します。Mobile は現在 Socket.IO compatibility client のままなので、production mobile release 前に同じ Supabase channel contract へ移行する必要があります。
+Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、allowlist 内の Supabase outbox event だけを受信します。Socket.IO は explicit local/self-hosted provider のみです。
 
 ## Docker Hub
 
@@ -113,7 +113,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-最新 focused evidence は Web Vitest 303 tests、Admin 70 pages、Restaurant 55 pages、cross-browser contract 18/18、error-state axe 2/2、8 architecture-specific image scan で High/Critical 0 です。Release 前に fresh full gate が必要です。
+最新 integration evidence は backend KYC/config/notification 48 tests、backend typecheck/lint、Flutter 274 tests、Flutter analyze、`lib/main_driver.dart` からの実 Driver debug APK build、Admin KYC contract/typecheck と 5 component tests、clean OpenAPI Spectral です。より広い web/container/browser evidence は release report に残しますが、release 前に final head の fresh full gate が必要です。
 
 ## Deploy order
 
@@ -141,7 +141,7 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 
 ## Branch policy
 
-Remote branch は `master` の一つだけです。Clean worktree の local `codex/batch4-integration` は、この docs update 前に `origin/master@df945dd` より 99 commits ahead です。二つ目の remote branch を作らないため local branch 名では push せず、全 gate が green になった後に verified `HEAD` を直接 `master` へ push します。Backup と patch-equivalence 確認なしで raw merge/delete は行いません。
+Remote branch は `master` の一つだけです。2026-07-11 audit baseline では local `codex/batch4-integration@924808c` が `origin/master@df945dd` より 106 commits ahead の clean fast-forward candidate です。二つ目の remote branch を作らないため local branch 名では push せず、全 gate が green になった後に verified `HEAD` を直接 `master` へ push します。Backup と patch-equivalence 確認なしで raw merge/delete は行いません。
 
 ## License
 

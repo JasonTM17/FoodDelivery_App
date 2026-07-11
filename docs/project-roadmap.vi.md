@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Vercel, smoke production, fast-forward integration `HEAD` vào `master`, rồi publish Docker immutable.
 
-Trạng thái 10/07/2026: **đang hardening; chưa đủ điều kiện production**.
+Trạng thái 11/07/2026: **đang hardening; chưa đủ điều kiện production**.
 
 ## Đã hoàn thành trên local integration
 
@@ -19,6 +19,8 @@ Trạng thái 10/07/2026: **đang hardening; chưa đủ điều kiện producti
 - Bốn image non-root multi-arch và Docker promotion fail-closed.
 - Pipeline screenshot/GIF current source và docs architecture/deploy/testing mới.
 - Admin dùng locale URL làm nguồn chuẩn, KPI overview đã dịch, token màu đạt accessibility và media đã recapture; targeted vi/en/ja Chromium/Firefox locale + axe đều pass.
+- Mobile managed realtime đã dùng token/channel Supabase scope chặt; GPS và quyết định dispatch đi qua REST xác thực, Socket.IO chỉ còn local/self-hosted.
+- KYC tài xế dùng private signed upload, object key theo owner, kiểm tra ảnh, một hồ sơ pending, Admin signed review và onboarding mobile vi/en/ja có kiểu/test.
 
 ## Đang làm trước release
 
@@ -28,17 +30,16 @@ Trạng thái 10/07/2026: **đang hardening; chưa đủ điều kiện producti
 - Hoàn thiện responsive/keyboard/axe cho dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map/order.
 - So implementation với Stitch/design artifact và chốt visual regression.
 
-### Mobile
+### Mobile release validation
 
-- Chuyển production realtime từ Socket.IO sang `POST /api/realtime/token` + Supabase channel giống web.
-- Chỉ giữ Socket.IO cho local/self-hosted nếu cần.
 - Reconcile Violet/Indigo chỉ khi ref thật tồn tại; không bịa branch.
-- Rerun API contract, vi/en/ja, customer/driver, map/GPS, offline/reconnect và build.
+- Rerun API contract, vi/en/ja, customer/driver, map/GPS, offline/reconnect, realtime denial, KYC và signed release build.
+- Xác minh Android production signing và iOS signing trên runner macOS được cấp quyền; debug keystore local chỉ là bằng chứng compile.
 
 ### Backend/production
 
 - Audit dependency Redis còn lại trên Vercel: provision rõ ràng hoặc loại bỏ an toàn.
-- Validate 22 migration trên fresh PostGIS và Supabase target.
+- Validate 24 migration trên fresh PostGIS và Supabase target.
 - Test RLS/publication/storage/cross-tenant trực tiếp trên Supabase.
 - Live smoke DeepSeek, route, SePay, notification, export, storage, Cron bằng secret đã rotate.
 - Pin mutable third-party Compose image liên quan release.
@@ -48,14 +49,14 @@ Trạng thái 10/07/2026: **đang hardening; chưa đủ điều kiện producti
 - Full backend Prisma/typecheck/lint/Jest/build.
 - Full web frozen install/typecheck/ESLint/Vitest/build.
 - Full Playwright Chromium+Firefox, axe critical pages = 0, visual/Stitch, tenant isolation.
-- Flutter analyze/full tests/build sau realtime migration.
+- Flutter frozen fetch/analyze/full tests và customer/driver release build tại final head.
 - Secret scan/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck.
 
 ## Blocker bên ngoài
 
 - GitHub Actions hết billing/auth/token nên chưa có current-head remote green.
 - Supabase CLI thiếu access token và production database URLs.
-- Vercel API thiếu env database/provider/integration; Admin/Restaurant thiếu Supabase anon key.
+- Vercel API thiếu database, Supabase KYC/service credential, Maps/routing, DeepSeek, SePay, SMTP, FCM và Twilio; Admin/Restaurant thiếu Supabase anon key.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.
@@ -75,7 +76,7 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 
 ## Sau release
 
-Monitor health/Cron/realtime/AI cost-map-storage-payment; rollout mobile sau parity/signing; đặt retention outbox/telemetry; cleanup worker tags sau consumer audit; xóa local integration chỉ khi `HEAD == origin/master`.
+Monitor health/Cron/realtime/AI cost-map-storage-payment; rollout mobile sau production signing; đặt retention outbox/telemetry; cleanup worker tags sau consumer audit; xóa local integration chỉ khi `HEAD == origin/master`.
 
 ## Deferred có chủ đích
 

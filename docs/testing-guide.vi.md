@@ -6,16 +6,18 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Evidence hiện tại
 
-Trên integration line ngày 10/07/2026:
+Evidence mới nhất trên integration line ngày 11/07/2026:
 
-- Web typecheck/ESLint xanh; Vitest Admin 184 + Restaurant 119 = 303 test.
-- Build Admin 70 trang, Restaurant 55 trang; thiếu public env thì fail closed.
-- Playwright Chromium+Firefox contract 18/18.
-- Axe error-state 2/2, serious/critical = 0.
-- 4 Docker artifact × 2 kiến trúc pass runtime; Trivy 8/8, High/Critical = 0.
-- Fresh DB apply 22 migration; API/Admin/Restaurant health 200.
+| Khu vực | Kết quả |
+|---|---|
+| Backend KYC/config/notifications | 5 suite / 48 test, typecheck và lint pass |
+| Fresh database | Apply đủ 24 migration trên PostGIS isolated; đã xác minh KYC RLS và partial unique index |
+| Flutter | Analyze pass; đủ 274 test pass; build Driver debug APK từ entry thật `lib/main_driver.dart` |
+| Contract KYC Admin | Shared API-client và Admin typecheck pass; 5 component/security test pass |
+| OpenAPI | Spectral không báo error sau khi đồng bộ contract KYC private |
+| Secret hygiene | Staged high-confidence scan pass trước `924808c`; không commit dotenv/private key |
 
-Đây chưa phải full final gate: backend full, mobile sau realtime migration, axe/visual/Stitch toàn trang và remote CI vẫn phải chạy lại.
+Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
 
 ## Gate tổng
 
@@ -43,7 +45,7 @@ corepack pnpm exec jest --runInBand
 corepack pnpm build
 ```
 
-Phải test fresh PostGIS bằng `migrate deploy` đủ 22 migration. Coverage bắt buộc: auth/RBAC, tenant restaurant, order/payment/webhook replay, promotion/notification/export/audit, realtime token/RLS claims, Supabase Storage/job outbox, GPS/route/ETA/dispatch, DeepSeek/session/telemetry và production env validation.
+Phải test fresh PostGIS bằng `migrate deploy` đủ 24 migration. Coverage bắt buộc: auth/RBAC, tenant restaurant, order/payment/webhook replay, promotion/notification/export/audit, realtime token/RLS claims, Supabase Storage/job outbox, GPS/route/ETA/dispatch, DeepSeek/session/telemetry và production env validation.
 
 ## OpenAPI và web
 
@@ -106,10 +108,13 @@ cd mobile
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
-Release còn cần test migration Supabase realtime (đang pending), customer/driver entry, permission/GPS/background/offline/reconnect/route phase, vi/en/ja và secure map/signing config.
+Production release còn phải test token/channel Supabase, cross-scope denial, reconnect/refresh và receive-only dispatch; entry Customer/Driver; permission/GPS/background/offline/reconnect/route phase; KYC upload private và Admin signed review; vi/en/ja; API/base URL fail-closed; cấu hình map và signing production an toàn.
 
 ## Docker và security
 

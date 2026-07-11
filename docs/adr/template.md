@@ -4,7 +4,7 @@ Date: YYYY-MM-DD
 
 ## Status
 
-Proposed | Accepted | Deprecated | Superseded by [ADR-NNNN](NNNN-title.md)
+Proposed | Accepted | Deprecated | Superseded by `ADR-NNNN` (replace with the real relative link)
 
 ## Context
 

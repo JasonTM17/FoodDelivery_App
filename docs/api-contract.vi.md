@@ -103,6 +103,20 @@ Endpoint cursor-based có thể thêm cursor vào `meta`, nhưng collection vẫ
 - Khi hết phiên, redirect phải giữ locale hiện tại.
 - Chuyển web auth sang httpOnly cookie là hạng mục riêng, không thuộc Batch 4.
 
+## KYC tài xế private
+
+Mọi route KYC đều có xác thực và scope theo role. Tài liệu tài xế là object storage private, không phải public media asset.
+
+| Method | Route | Actor | Contract |
+|---|---|---|---|
+| `POST` | `/driver/kyc/uploads` | Driver | Xin một signed grant cho `idCardFront`, `idCardBack`, `driverLicense` hoặc `vehicleRegistration`; metadata chỉ nhận JPEG/PNG/WebP từ 1 KiB đến 4 MiB và trả `{ uploadUrl, objectKey, headers }`. |
+| `POST` | `/driver/kyc` | Driver | Gửi thông tin bằng lái/xe và đúng bốn private object key thuộc caller. Public/signed URL, key trùng, signature sai, submission pending thứ hai hoặc hết lượt retry đều bị từ chối. |
+| `GET` | `/driver/kyc/status` | Driver | Trả verified/status, thông tin xe/bằng lái, terms đã nhận, review gần nhất và số lượt còn lại của chính caller. |
+| `GET` | `/admin/users/{userId}/kyc` | Admin | Trả submission thật cùng signed read URL hết hạn sau 5 phút khi tài liệu hợp lệ; không bao giờ trả raw object key. |
+| `POST` | `/admin/users/{userId}/kyc/review` | Admin | Approve/reject atomically một pending submission; reject bắt buộc có lý do và không review lại submission đã xử lý. |
+
+Client PUT vào `uploadUrl` chỉ với đúng header được trả về. Không forward bearer token FoodFlow sang storage, không suy ra public URL, không lưu signed URL và không thay `objectKey` bằng URI. Production dùng riêng private `SUPABASE_KYC_BUCKET`; MinIO chỉ theo cùng contract ở local/self-hosted explicit.
+
 ## Realtime production và job drain
 
 | Method | Route | Xác thực | Contract |

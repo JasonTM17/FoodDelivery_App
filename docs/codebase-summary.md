@@ -11,7 +11,7 @@ Current tracked text-code footprint (excluding generated/test-output directories
 ```text
 backend/                   NestJS API, Prisma, Vercel handler, worker entry
   api/[...path].ts         Vercel function adapter
-  prisma/                  Schema, 22 migrations, deterministic seed tooling
+  prisma/                  Schema, 24 migrations, deterministic seed tooling
   src/                     Feature modules
 web/                       pnpm workspace
   apps/admin/              Admin Next.js application
@@ -54,7 +54,7 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The Prisma schema currently declares 54 models. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, and `ai_usage_events` support the managed-production topology.
+The Prisma schema currently declares 55 models across 24 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 ## Web
 
@@ -84,7 +84,7 @@ The Flutter package has two app entry points but shares domain/provider/UI code 
 - Localization: generated ARB resources for `vi`, `en`, `ja`.
 - Secrets: Maps key and release signing are injected through ignored platform config/`--dart-define` inputs.
 
-Mobile currently uses `socket_io_client` for realtime. Moving it to the scoped `POST /api/realtime/token` + Supabase channel contract is an explicit pre-production task; do not claim production realtime parity until that migration and its tests land.
+Managed mobile realtime uses the same scoped `POST /api/realtime/token` + Supabase channel contract as web. `RealtimeClient` selects `SupabaseRealtimeClient` in managed release builds; GPS samples and dispatch decisions use authenticated REST while allow-listed outbox records are receive-only. `socket_io_client` remains installed solely for the explicit local/self-hosted provider. Driver KYC uses private signed uploads, opaque object keys, authenticated status checks, and a typed terms → vehicle → documents flow.
 
 ## Infrastructure and release tooling
 
@@ -107,11 +107,11 @@ Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The wo
 
 **Tracking:** driver GPS with `sampledAt` → authorization/freshness/bounds validation → route provider/cache → PostGIS/delivery task → authorized snapshot and realtime channel.
 
-**Supabase realtime:** API event → `realtime_outbox` row → explicit Supabase publication → RLS filter against short-lived JWT channel claims → Admin/Restaurant handler.
+**Supabase realtime:** API event → `realtime_outbox` row → explicit Supabase publication → RLS filter against short-lived JWT channel claims → Admin/Restaurant/Customer/Driver handler.
 
 **Queue:** service adds abstract job → PostgreSQL `job_outbox` in managed mode or BullMQ locally → secured drain/worker → status/attempt/error persisted.
 
-**AI:** authenticated message → session/order context validation → DeepSeek adapter → persisted turn and usage event → explicit degraded state or support escalation when needed.
+**AI:** authenticated message → session/order context validation → DeepSeek adapter → persisted turn and usage event → answer or support escalation; missing configuration/provider failures return explicit errors and never synthesize an assistant reply.
 
 ## Contributor entry points
 

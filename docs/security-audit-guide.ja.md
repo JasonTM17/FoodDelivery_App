@@ -19,10 +19,11 @@ Chat/screenshot/log/ticket/shell/Git に出た credential は exposed として 
 - [ ] CORS origins は production domains に限定します。
 - [ ] Auth endpoints では rate limiting を有効にします。
 - [ ] Helmet security headers が有効です。
-- [ ] PostgreSQL password は強力で、default ではありません。
-- [ ] MinIO credentials は default から変更済みです。
+- [ ] Supabase pooled/direct database URL は server-only。Self-hosted PostgreSQL password は強力で default ではありません。
+- [ ] Supabase Storage policy は least privilege。Self-hosted MinIO credentials は default から変更済みです。
+- [ ] Driver KYC は dedicated private bucket、owner-scoped short-lived upload、5 分 Admin read、MIME/size/magic-byte check を使用し、public URL/raw key を返しません。
 - [ ] すべての API keys は development values から rotate 済みです。
-- [ ] WebSocket origins は制限されています。
+- [ ] Realtime は explicit。Managed production は Supabase JWT/RLS private channels、Socket.IO は restricted-origin compatibility mode のみです。
 - [ ] HTTPS/TLS が有効です。
 - [ ] Docker containers は non-root user で実行します。
 - [ ] Git history に secrets がないことを gitleaks または同等の secret scan で確認します。
@@ -33,6 +34,7 @@ Chat/screenshot/log/ticket/shell/Git に出た credential は exposed として 
 - [ ] `realtime_outbox`、`job_outbox`、`ai_usage_events` に RLS、realtime publication は `realtime_outbox` のみ。
 - [ ] Realtime token は short TTL、`private:` channels、signing 前 ownership check、anon/cross-tenant deny。
 - [ ] Supabase service-role/JWT、database、DeepSeek、SePay、notification secret は server-side。Browser Maps key は referrer/API restriction。
+- [ ] `SUPABASE_KYC_BUCKET`、upload limit、retry limit は explicit。Storage PUT に FoodFlow bearer を渡しません。
 - [ ] Exact verified HTTPS CORS、non-root dual-arch images、Trivy High/Critical block、immutable SHA/semver、initial `latest` deploy 禁止。
 
 ```powershell

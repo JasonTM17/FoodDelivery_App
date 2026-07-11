@@ -68,6 +68,7 @@ API core:
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
 - `SUPABASE_URL`, server-only `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_STORAGE_BUCKET`
+- private `SUPABASE_KYC_BUCKET=foodflow-kyc`, `DRIVER_KYC_MAX_UPLOAD_MB=4`, `DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`, `JWT_SECRET`, `JWT_REFRESH_SECRET`
 - verified `CORS_ORIGINS`, `PASSWORD_RESET_URL_BASE`
 - Maps/routing, DeepSeek, SePay, SMTP, FCM, Twilio và webhook secrets.
@@ -99,11 +100,12 @@ Không chạy `migrate dev`, reset hoặc demo seed trên production.
 
 Xác minh:
 
-- đủ 22 migration;
+- đủ 24 migration;
 - RLS bật cho `realtime_outbox`, `job_outbox`, `ai_usage_events`;
 - chỉ `realtime_outbox` cần thiết nằm trong publication `supabase_realtime`;
 - authenticated chỉ đọc channel nằm trong claim `realtime_channels`;
 - anon không đọc outbox/job/AI telemetry;
+- KYC bucket private; driver chỉ ghi bằng signed grant scope theo owner, Admin read URL hết hạn sau 5 phút, response browser không lộ raw object key;
 - Storage bucket/policy đúng và service-role key không xuất hiện trong client.
 
 Realtime smoke phải chứng minh authorized event nhận được, cross-tenant/expired token bị từ chối.

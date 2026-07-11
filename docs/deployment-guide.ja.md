@@ -68,6 +68,7 @@ API core:
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
 - `SUPABASE_URL`、server-only `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_JWT_SECRET`、`SUPABASE_STORAGE_BUCKET`
+- private `SUPABASE_KYC_BUCKET=foodflow-kyc`、`DRIVER_KYC_MAX_UPLOAD_MB=4`、`DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`、access/refresh JWT secrets
 - verified CORS/reset URL
 - Maps/routing、DeepSeek、SePay、SMTP、FCM、Twilio、webhook secrets。
@@ -87,7 +88,7 @@ cd ..
 
 Production で `migrate dev`、reset、demo seed は実行しません。
 
-22 migrations、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
+24 migrations、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。KYC bucket は private、driver write は owner-scoped signed grant、Admin read は 5 分で失効し、browser response に raw object key を返しません。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
 
 ## 5. Vercel
 

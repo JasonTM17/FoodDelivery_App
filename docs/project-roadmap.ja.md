@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Vercel deploy、production smoke、integration `HEAD` の `master` fast-forward、immutable Docker publish。
 
-2026-07-10 status: **hardening in progress; production no-go**。
+2026-07-11 status: **hardening in progress; production no-go**。
 
 ## Completed on local integration
 
@@ -19,6 +19,8 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 - 4 non-root multi-arch images と fail-closed Docker promotion。
 - Current-source screenshot/GIF pipeline と architecture/deploy/testing docs。
 - Admin URL locale ownership、overview KPI 翻訳、accessible color token、accepted media recapture を完了。Targeted vi/en/ja Chromium/Firefox locale + axe は pass。
+- Mobile managed realtime は scoped Supabase token/channel、authenticated REST GPS/dispatch decision、receive-only outbox を使用し、Socket.IO は local/self-hosted のみです。
+- Driver KYC は private signed upload、owner-scoped object key、image validation、one-pending enforcement、Admin signed review、typed vi/en/ja mobile onboarding を実装済みです。
 
 ## In progress
 
@@ -28,30 +30,29 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 - Dashboard、approval、promotion、audit/export、staff、benchmark、AI monitor、map/order の responsive/keyboard/axe。
 - Stitch/design artifact comparison と visual regression acceptance。
 
-### Mobile
+### Mobile release validation
 
-- Production Socket.IO を Web と同じ `POST /api/realtime/token` + Supabase channel contract に移行。
-- 必要なら Socket.IO は local/self-hosted のみに残す。
 - Violet/Indigo は実在 ref のみ reconcile。Missing branch を作らない。
-- API contract、vi/en/ja、customer/driver、map/GPS、offline/reconnect、build を再実行。
+- API contract、vi/en/ja、customer/driver、map/GPS、offline/reconnect、realtime denial、KYC、signed release build を再実行。
+- Android production signing と authorized macOS runner 上の iOS signing を確認。Local debug keystore は compile evidence のみです。
 
 ### Backend/production
 
 - Vercel の残存 Redis dependency を audit し、明示 provision または安全に削除。
-- 22 migrations を fresh PostGIS/Supabase で validate。
+- 24 migrations を fresh PostGIS/Supabase で validate。
 - Supabase RLS/publication/storage/cross-tenant を live test。
 - Rotated secrets で DeepSeek、route、SePay、notification、export、storage、Cron smoke。
 - Release-relevant mutable Compose image を pin。
 
 ### Tests/security
 
-Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch、tenant、mobile post-migration、secret/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck。
+Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch、tenant、final-head mobile release build、secret/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck。
 
 ## External blockers
 
 - GitHub Actions billing/auth/token exhausted。
 - Supabase CLI access token/production database URLs missing。
-- Vercel API production env missing; Admin/Restaurant Supabase anon key missing。
+- Vercel API は database、Supabase KYC/service、Maps/routing、DeepSeek、SePay、SMTP、FCM、Twilio env が不足。Admin/Restaurant は Supabase anon key が不足。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。

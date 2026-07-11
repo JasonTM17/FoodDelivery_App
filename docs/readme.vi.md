@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production được thiết kế cho Supabase (PostgreSQL/PostGIS, Realtime, Storage) và Vercel (API, Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 10/07/2026:** Batch 4 đã có bằng chứng local nhưng **chưa deploy production**. Supabase CLI còn thiếu credential, Vercel còn thiếu env production, và GitHub Actions chưa chạy được vì billing/auth hết hạn. Quy trình sẽ không deploy hoặc fast-forward `master` khi các gate này chưa xanh.
+> **Trạng thái 11/07/2026:** Batch 4 vẫn đang hardening và **chưa deploy production**. Supabase CLI còn thiếu credential, Vercel còn thiếu env production, và GitHub Actions chưa chạy được vì billing/auth hết hạn. Không deploy hoặc fast-forward `master` cho tới khi full gate tại final head và provider preflight đều xanh.
 
 ## Xem trước sản phẩm
 
@@ -39,7 +39,7 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 - Admin: KPI, đơn hàng, nhà hàng, user, tài xế, bản đồ live, promotion, audit, support, export, AI telemetry.
 - Tenant isolation trên staff nhà hàng, realtime channel, tracking, export và tài nguyên quản trị.
 - Google Maps/route telemetry thật; thiếu dữ liệu thì UI fail closed, không tự tạo tọa độ, polyline hoặc ETA.
-- DeepSeek qua backend adapter; thiếu key trả trạng thái degraded rõ ràng, không nhúng key vào client/repo.
+- DeepSeek qua backend adapter; thiếu key hoặc provider lỗi thì fail closed, có telemetry thật và không nhúng key vào client/repo.
 
 ## Kiến trúc provider
 
@@ -50,7 +50,7 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
 
-Web lấy token realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token`. Mobile hiện vẫn dùng client Socket.IO tương thích; phải chuyển sang cùng contract Supabase trước release mobile production.
+Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và chỉ nhận event Supabase outbox nằm trong allowlist; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
 ## Docker Hub
 
@@ -117,7 +117,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Evidence focused mới nhất tại local head: 303 Vitest test, build 70 trang Admin + 55 trang Restaurant, Playwright contract 18/18, axe error-state 2/2 và 8 image/architecture Trivy scan không có High/Critical. Vẫn phải chạy full final gate trước release.
+Evidence mới nhất trên integration line gồm 48 test backend KYC/config/notification, backend typecheck/lint, đủ 274 Flutter test, Flutter analyze, build APK Driver thật từ `lib/main_driver.dart`, Admin KYC typecheck/contract với 5 component test và OpenAPI Spectral sạch. Evidence web/container/browser rộng hơn vẫn được lưu trong release report, nhưng phải chạy fresh full gate tại final head trước release.
 
 ## Thứ tự deploy
 
@@ -145,7 +145,7 @@ Evidence focused mới nhất tại local head: 303 Vitest test, build 70 trang 
 
 ## Chính sách branch
 
-Remote hiện chỉ có `master`. Worktree sạch dùng local `codex/batch4-integration`, đang ahead `origin/master@df945dd` 99 commit trước lần cập nhật docs này. Không push branch local đó vì sẽ tạo branch remote thứ hai; khi toàn bộ gate xanh, push `HEAD` trực tiếp vào `master`. Không raw-merge hoặc xóa branch khi chưa backup và xác minh patch-equivalent.
+Remote hiện chỉ có `master`. Tại baseline audit 11/07/2026, local `codex/batch4-integration@924808c` là ứng viên fast-forward sạch, ahead `origin/master@df945dd` 106 commit. Không push branch local theo tên vì sẽ tạo branch remote thứ hai; khi toàn bộ gate xanh, push `HEAD` trực tiếp vào `master`. Không raw-merge hoặc xóa branch khi chưa backup và xác minh patch-equivalent.
 
 ## License
 

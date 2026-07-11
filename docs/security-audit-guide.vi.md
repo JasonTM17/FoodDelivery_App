@@ -19,10 +19,11 @@ Mọi credential từng xuất hiện trong chat/screenshot/log/ticket/shell/Git
 - [ ] CORS origins chỉ cho phép domain production.
 - [ ] Rate limiting bật trên toàn bộ endpoint auth.
 - [ ] Helmet security headers đang hoạt động.
-- [ ] PostgreSQL password mạnh, không dùng mặc định.
-- [ ] MinIO credentials đã đổi khỏi mặc định.
+- [ ] Supabase pooled/direct database URL chỉ ở server; PostgreSQL self-hosted dùng password mạnh, không mặc định.
+- [ ] Supabase Storage áp dụng least privilege; MinIO self-hosted đã đổi credential mặc định.
+- [ ] KYC tài xế dùng bucket private riêng, upload grant ngắn hạn scope theo owner, Admin read 5 phút, kiểm MIME/size/magic bytes và không trả public URL/raw key.
 - [ ] Tất cả API key đã rotate khỏi giá trị development.
-- [ ] WebSocket origins bị giới hạn.
+- [ ] Realtime explicit: Supabase JWT/RLS private channel ở managed production; Socket.IO chỉ có origin giới hạn trong compatibility mode.
 - [ ] HTTPS/TLS đã bật.
 - [ ] Docker containers chạy bằng non-root user.
 - [ ] Git history không chứa secret, đã kiểm bằng gitleaks hoặc secret scan tương đương.
@@ -33,6 +34,7 @@ Mọi credential từng xuất hiện trong chat/screenshot/log/ticket/shell/Git
 - [ ] `realtime_outbox`, `job_outbox`, `ai_usage_events` có RLS; chỉ `realtime_outbox` nằm trong publication realtime.
 - [ ] Token realtime ngắn hạn, chỉ `private:`, verify ownership trước ký; anon/cross-tenant bị từ chối.
 - [ ] Service-role/JWT Supabase, database, DeepSeek, SePay và notification secret chỉ server-side; Maps browser key bị referrer/API restrict.
+- [ ] `SUPABASE_KYC_BUCKET`, upload limit và retry limit được khai báo explicit; storage PUT không nhận bearer token FoodFlow.
 - [ ] CORS exact verified HTTPS origins; image non-root hai kiến trúc, Trivy block High/Critical, tag SHA/semver immutable, không deploy `latest` đầu tiên.
 
 ```powershell

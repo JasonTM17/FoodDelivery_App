@@ -30,6 +30,7 @@ Every credential pasted into chat, screenshots, logs, tickets, shell history, or
 - [ ] Helmet security headers active
 - [ ] Supabase pooled/direct database URLs are server-only; any self-hosted PostgreSQL password is strong and non-default
 - [ ] Managed Supabase Storage policy is least privilege; self-hosted MinIO credentials are changed from defaults
+- [ ] Driver KYC uses a dedicated private bucket, owner-scoped short-lived upload grants, five-minute Admin reads, MIME/size/magic-byte checks, and no public/raw-key response
 - [ ] All API keys rotated from development values
 - [ ] Realtime is explicit: Supabase JWT/RLS private channels in managed production, restricted Socket.IO origins only for compatibility mode
 - [ ] HTTPS/TLS enabled (Let's Encrypt)
@@ -42,6 +43,7 @@ Every credential pasted into chat, screenshots, logs, tickets, shell history, or
 - [ ] `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS; only `realtime_outbox` is in the explicit Realtime publication.
 - [ ] Realtime tokens have short TTL, only `private:` channels, ownership verification before signing, and cross-tenant/anon denial tests.
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_JWT_SECRET` are server-only and absent from browser bundles/logs.
+- [ ] `SUPABASE_KYC_BUCKET`, upload limit, and retry limit are explicit; storage PUT requests never receive the FoodFlow bearer token.
 - [ ] Browser Maps key is restricted by referrer/API/quotas; the server Maps key is separate.
 - [ ] Production CORS has exact verified Admin/Restaurant origins, no wildcard; all public aliases are HTTPS.
 - [ ] Docker images are non-root, verified on `amd64` and `arm64`, scanned with High/Critical blocking, and released by immutable SHA/semver digest.

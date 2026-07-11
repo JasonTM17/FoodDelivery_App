@@ -74,7 +74,7 @@ Exact methods, request schemas, error responses, pagination, and role annotation
 
 `POST /realtime/token` accepts an authenticated user token and optional `{ orderId?, restaurantId? }`. It verifies ownership, then returns a five-minute Supabase JWT and an explicit `private:` channel allowlist. Admin/Restaurant clients set that token on the Supabase client and subscribe only to `realtime_outbox` rows authorized by RLS.
 
-Do not use the service-role key, `SUPABASE_JWT_SECRET`, raw outbox SQL, or broad wildcard channels in browser/mobile code. Mobile migration to this contract is pending; its current Socket.IO client is local/self-hosted compatibility only.
+Do not use the service-role key, `SUPABASE_JWT_SECRET`, raw outbox SQL, or broad wildcard channels in browser/mobile code. Admin, Restaurant, Customer, and Driver managed clients use this scoped contract; the mobile Socket.IO transport is local/self-hosted compatibility only.
 
 ## Vercel Cron job drain
 

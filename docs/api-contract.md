@@ -118,6 +118,20 @@ Cursor-based endpoints may add cursor fields under `meta`, but the collection st
 - When a session expires, redirects keep the current locale.
 - Moving web auth to httpOnly cookies is tracked separately and is not part of Batch 4.
 
+## Private driver KYC
+
+Every KYC route is authenticated and role-scoped. Driver documents are private storage objects, not public media assets.
+
+| Method | Route | Actor | Contract |
+|---|---|---|---|
+| `POST` | `/driver/kyc/uploads` | Driver | Requests one signed grant for `idCardFront`, `idCardBack`, `driverLicense`, or `vehicleRegistration`; accepts JPEG/PNG/WebP metadata from 1 KiB through 4 MiB and returns `{ uploadUrl, objectKey, headers }`. |
+| `POST` | `/driver/kyc` | Driver | Submits license/vehicle fields and exactly four opaque private object keys owned by the caller. Public/signed URLs, duplicate keys, invalid signatures, a second pending submission, and exhausted retries are rejected. |
+| `GET` | `/driver/kyc/status` | Driver | Returns verified/status, vehicle/license details, accepted terms, latest review state, and remaining attempts for the caller only. |
+| `GET` | `/admin/users/{userId}/kyc` | Admin | Returns real submissions with five-minute signed read URLs when documents are valid. Raw object keys are never returned. |
+| `POST` | `/admin/users/{userId}/kyc/review` | Admin | Atomically approves or rejects one pending submission; rejection requires a reason and a reviewed submission cannot be reviewed again. |
+
+The client uploads to `uploadUrl` using only the exact returned headers. It must not forward the FoodFlow API bearer token to storage, derive a public URL, persist the signed URL, or replace `objectKey` with any URI. Production uses a dedicated private `SUPABASE_KYC_BUCKET`; MinIO follows the same contract only in explicit local/self-hosted mode.
+
 ## Managed-production realtime and job drain
 
 | Method | Route | Authentication | Contract |

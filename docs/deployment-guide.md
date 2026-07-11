@@ -78,7 +78,7 @@ Required additional evidence:
 - DeepSeek fail-closed test and live smoke using a newly rotated key.
 - Secret scan for tracked files and staged diff.
 - Multi-arch runtime smoke and High/Critical image scan.
-- Flutter analyze/test after mobile Supabase realtime migration.
+- Flutter analyze/test plus scoped Supabase realtime, private KYC, map/GPS, and signed production entry checks.
 
 Do not continue until current-head GitHub workflows are also green.
 
@@ -139,6 +139,9 @@ Core/provider values:
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only, sensitive |
 | `SUPABASE_JWT_SECRET` | Server-only signing secret for scoped realtime JWTs |
 | `SUPABASE_STORAGE_BUCKET` | Explicit production bucket |
+| `SUPABASE_KYC_BUCKET` | Dedicated private KYC bucket, normally `foodflow-kyc` |
+| `DRIVER_KYC_MAX_UPLOAD_MB` | Explicit per-document limit, currently `4` |
+| `DRIVER_KYC_RETRY_LIMIT` | Explicit rejected-submission retry limit, currently `3` |
 | `CRON_SECRET` | Strong bearer secret for `/api/jobs/drain` |
 
 Application/security values:
@@ -208,10 +211,11 @@ where schemaname = 'public'
 
 Expected invariants:
 
-- All 22 repository migrations are applied in order.
+- All 24 repository migrations are applied in order.
 - `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS enabled.
 - `realtime_outbox` is in `supabase_realtime`; unrelated business tables are not broadly added merely for convenience.
 - Authenticated outbox reads are limited by the JWT `realtime_channels` claim.
+- The KYC bucket is private; driver writes are owner-scoped signed grants, Admin reads expire after five minutes, and no raw KYC object key reaches a browser response.
 - Service-role access is separate; anon cannot read the outbox/job/AI telemetry tables.
 - The storage bucket exists with the intended privacy policy; no service-role key is present in browser output.
 

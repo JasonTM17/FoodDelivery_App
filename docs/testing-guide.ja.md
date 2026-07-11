@@ -6,16 +6,18 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Current evidence
 
-2026-07-10 integration line:
+2026-07-11 integration line の最新 evidence:
 
-- Web typecheck/ESLint green。Vitest Admin 184 + Restaurant 119 = 303 tests。
-- Admin 70 pages、Restaurant 55 pages build。Missing public env は fail closed。
-- Playwright Chromium+Firefox contract 18/18。
-- Error-state axe 2/2、serious/critical 0。
-- Docker 4 artifacts × 2 architectures runtime pass、Trivy 8/8 High/Critical 0。
-- Fresh DB 22 migrations、API/Admin/Restaurant health 200。
+| Area | Result |
+|---|---|
+| Backend KYC/config/notifications | 5 suites / 48 tests、typecheck、lint pass |
+| Fresh database | Isolated PostGIS に 24 migrations を適用し、KYC RLS と partial unique index を検証 |
+| Flutter | Analyze pass、274 tests pass、実際の `lib/main_driver.dart` entry から Driver debug APK を build |
+| Admin KYC contract | Shared API-client/Admin typecheck pass、5 component/security tests pass |
+| OpenAPI | Private KYC contract 同期後の Spectral error なし |
+| Secret hygiene | `924808c` 前の staged high-confidence scan pass、dotenv/private key の commit なし |
 
-Full backend、realtime migration 後 mobile、全 critical pages の axe/visual/Stitch、remote CI は再実行が必要です。
+より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 
 ## Full local gate
 
@@ -38,7 +40,7 @@ corepack pnpm exec jest --runInBand
 corepack pnpm build
 ```
 
-Empty PostGIS に 22 migrations を `migrate deploy`。Auth/RBAC、restaurant tenant、order/payment/webhook replay、promotion/notification/export/audit、realtime token/RLS claims、Supabase Storage/job outbox、GPS/route/ETA/dispatch、DeepSeek/session/telemetry、production env validation を検証します。
+Empty PostGIS に 24 migrations を `migrate deploy`。Auth/RBAC、restaurant tenant、order/payment/webhook replay、promotion/notification/export/audit、realtime token/RLS claims、Supabase Storage/job outbox、GPS/route/ETA/dispatch、DeepSeek/session/telemetry、production env validation を検証します。
 
 ## OpenAPI/Web
 
@@ -99,10 +101,13 @@ cd mobile
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
-Release には pending Supabase realtime migration、customer/driver entry、permission/GPS/background/offline/reconnect/route phase、vi/en/ja、secure map/signing config が必要です。
+Production release では Supabase token/channel、cross-scope denial、reconnect/refresh、receive-only dispatch、Customer/Driver entry、permission/GPS/background/offline/reconnect/route phase、private KYC upload と Admin signed review、vi/en/ja、API/base URL fail-closed、secure map/signing config を追加検証します。
 
 ## Docker/security
 

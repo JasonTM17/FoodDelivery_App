@@ -6,21 +6,18 @@ A release is green only when the final source head passes every required local g
 
 ## Current evidence snapshot
 
-Latest focused evidence on the 2026-07-10 local integration line:
+Latest current-line evidence on 2026-07-11:
 
 | Area | Result |
 |---|---|
-| Web typecheck/ESLint | Admin + Restaurant passed; no lint warnings/errors |
-| Vitest | Admin 44 files / 184 tests; Restaurant 36 files / 119 tests; 303 total |
-| Next production builds | Admin 70 localized pages; Restaurant 55; required public env fails closed |
-| Playwright contract | Chromium + Firefox 18/18 against current-source isolated stack |
-| Error-state accessibility | Chromium + Firefox 2/2; axe serious/critical = 0 |
-| Multi-arch runtime | Backend/Migrate/Admin/Restaurant passed on `amd64` and `arm64` |
-| Image security | 8/8 architecture-specific Trivy scans; High/Critical = 0 |
-| Fresh database | All 22 migrations applied; API/Admin/Restaurant health 200 |
-| Workflow/config | Actionlint, Compose configs, secret mini-gate passed |
+| Backend KYC/config/notifications | 5 suites / 48 tests, typecheck and lint passed |
+| Fresh database | All 24 migrations applied to isolated PostGIS; KYC RLS and partial unique index verified |
+| Flutter | Analyze passed; all 274 tests passed; Driver debug APK built from the real `lib/main_driver.dart` entry |
+| Admin KYC contract | Shared API-client and Admin typecheck passed; 5 component/security tests passed |
+| OpenAPI | Spectral reported no errors after private KYC contract alignment |
+| Secret hygiene | Staged high-confidence scan passed before `924808c`; no dotenv/private key was committed |
 
-This is not yet a final release gate. Full backend, post-migration mobile, full cross-page axe/visual/Stitch, and current remote CI remain required. See [release report](batch4-release-report.md).
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, and current remote CI remain required.
 
 ## One-command local gate
 
@@ -60,7 +57,7 @@ Fresh-migration test:
 
 1. Start an isolated empty PostGIS database.
 2. Run `prisma migrate deploy`, never `migrate dev`.
-3. Confirm all 22 migrations complete.
+3. Confirm all 24 migrations complete.
 4. Start the API and require healthy DB/provider components.
 5. Run integration/E2E against that schema.
 
@@ -211,7 +208,7 @@ Required cases:
 
 ## AI chatbot
 
-Local fail-closed test runs without a key and expects `AI_PROVIDER_NOT_CONFIGURED` or the documented degraded contract. Live smoke requires a newly rotated `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL=deepseek-v4-flash`, and a server-side environment.
+Local fail-closed tests run without a key and expect `AI_PROVIDER_NOT_CONFIGURED`; timeout/provider errors must terminate with the documented error event rather than a fabricated assistant reply. Live smoke requires a newly rotated `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL=deepseek-v4-flash`, and a server-side environment.
 
 Verify answer, escalation, session ownership, order context, token usage, latency, cost telemetry, budget display, and provider timeout/error. Never accept canned/random text as proof of an LLM call.
 
@@ -222,14 +219,18 @@ cd mobile
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
 Production release additionally requires:
 
-- Supabase realtime token/channel migration tests (currently pending).
+- Supabase token/channel claims, cross-scope denial, reconnect/refresh, and receive-only event dispatch.
 - Customer/driver app entry smoke.
 - Maps/GPS permission denied, stale/future sample, background update, route phase, offline/reconnect.
+- Driver terms/KYC private upload grants, credential-header denial, object-key submission, pending/rejected routing, and Admin signed review.
 - vi/en/ja generated localization and no hardcoded business labels.
 - API contract and base URL fail-closed checks.
 - Android/iOS production signing and provider-key injection through secure platform config.

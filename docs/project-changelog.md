@@ -31,13 +31,19 @@ authoritative source for individual commits and implementation detail.
   real telemetry requirements.
 - Added tenant-scoped Supabase realtime token, outbox, RLS, and job-drain
   contracts to the public API documentation.
+- Migrated managed mobile realtime to scoped Supabase subscriptions while
+  keeping GPS and dispatch decisions on authenticated REST; Socket.IO remains
+  an explicit local/self-hosted provider.
+- Replaced legacy public-URL driver KYC with private owner-scoped signed
+  uploads, object/signature validation, atomic review state, signed Admin
+  previews, and typed vi/en/ja mobile onboarding.
 
 ### Release blockers
 
 - Production secrets, Supabase CLI migration credentials, and Vercel production
   environment variables still require secure configuration.
-- Mobile must migrate from its Socket.IO compatibility client to the same
-  Supabase token/channel contract before a production mobile release.
+- Final Android production signing and iOS build/signing evidence still require
+  authorized release credentials/runners; local debug APKs are not publishable.
 - Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
   and production smoke gates remain mandatory before deployment.
 

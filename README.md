@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage, with the API and both web dashboards on Vercel. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-10:** Batch 4 is validated locally but is **not production-deployed**. Supabase CLI credentials and required Vercel production variables are incomplete, and fresh remote CI is unavailable because GitHub Actions billing/auth is exhausted. Deployment and `master` fast-forward remain fail-closed until those gates are restored.
+> **Release status — 2026-07-11:** Batch 4 hardening is still in progress and is **not production-deployed**. Supabase CLI credentials and required Vercel production variables are incomplete, and fresh remote CI is unavailable because GitHub Actions billing/auth is exhausted. Deployment and the `master` fast-forward remain fail-closed until the complete final-head gates and provider preflights pass.
 
 ## Product preview
 
@@ -48,7 +48,7 @@ Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The AP
 - Admin KPIs, orders, restaurants, users, drivers, live maps, promotions, audit, support, export, and AI telemetry.
 - Tenant-scoped authorization for restaurant staff, realtime channels, tracking, exports, and administrative resources.
 - Google Maps routing when configured; backend route snapshots and telemetry fail closed instead of inventing coordinates, polylines, or ETA.
-- DeepSeek-backed support through the backend adapter, with explicit unconfigured/degraded responses and no embedded provider key.
+- DeepSeek-backed support through the backend adapter, with fail-closed configuration/provider errors, persisted usage telemetry, and no embedded provider key.
 
 ## Production and local architecture
 
@@ -74,7 +74,7 @@ Provider selection is explicit:
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
 
-Web obtains short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token`. Mobile is still on the Socket.IO compatibility client and must be reconciled to the same Supabase channel contract before production mobile release.
+Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed Supabase outbox events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
 ## Docker packages
 
@@ -185,7 +185,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-Latest focused evidence at local head includes 303 web Vitest tests, 70 Admin and 55 Restaurant localized build pages, 18/18 cross-browser contract tests, 2/2 intentional-error accessibility tests, and eight architecture-specific container scans with zero High/Critical findings. A fresh all-suites final gate is still required before release.
+Latest current-line evidence includes 48 focused backend KYC/config/notification tests, backend typecheck/lint, all 274 Flutter tests, Flutter analyze, a real Driver debug APK build from `lib/main_driver.dart`, Admin KYC contract/typecheck with 5 component tests, and clean OpenAPI Spectral validation. Earlier broader web/container/browser evidence is retained in the release report, but a fresh all-suites final-head gate is still required before release.
 
 ## Deployment order
 
@@ -214,7 +214,7 @@ Latest focused evidence at local head includes 303 web Vitest tests, 70 Admin an
 
 ## Branch policy
 
-The remote currently has one branch: `master`. The clean integration worktree uses local `codex/batch4-integration`, currently 99 commits ahead of `origin/master@df945dd` before this docs update. Do not push that local branch (which would recreate a second remote branch); after all release gates pass, push its verified `HEAD` directly to `master`. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
+The remote currently has one branch: `master`. At the 2026-07-11 audit baseline, local `codex/batch4-integration@924808c` was a clean fast-forward candidate 106 commits ahead of `origin/master@df945dd`. Do not push the local branch by name because that would recreate a second remote branch; after every release gate passes, push its verified `HEAD` directly to `master`. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
 
 ## License
 

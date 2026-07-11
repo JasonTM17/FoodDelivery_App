@@ -115,10 +115,11 @@ flutter analyze
 flutter test
 ~~~
 
-The mobile apps currently retain the local Socket.IO compatibility client.
-Before a production mobile release, migrate them to the authenticated Supabase
-realtime token/channel contract documented in
+Managed mobile builds use the authenticated Supabase realtime token/channel
+contract documented in
 [API contract](api-contract.md#managed-production-realtime-and-job-drain).
+Keep Socket.IO only as the explicit local/self-hosted provider; GPS and dispatch
+decisions remain authenticated REST mutations in Supabase mode.
 
 ## Required checks
 
