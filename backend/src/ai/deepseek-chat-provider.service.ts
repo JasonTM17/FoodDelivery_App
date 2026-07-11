@@ -56,6 +56,7 @@ export class DeepSeekChatProviderService {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
+      redirect: 'error',
       body: JSON.stringify(this.requestBody(input)),
       signal: AbortSignal.timeout(this.timeoutMs()),
     })
@@ -89,7 +90,7 @@ export class DeepSeekChatProviderService {
   }
 
   modelName(): string {
-    return this.model()
+    return this.defaultModel
   }
 
   private requestBody(input: AiProviderInput): Record<string, unknown> {
@@ -153,6 +154,7 @@ export class DeepSeekChatProviderService {
       'If account-specific data is needed and no verified tool result is available, direct the user to the relevant authenticated app screen.',
       safeRole === 'customer' ? 'Never promise a refund unless getRefundEligibility returns eligible true.' : null,
       'Never claim you completed a mutation, contacted another person, or changed operational state unless VERIFIED_CONTEXT proves it.',
+      'Never reveal raw latitude or longitude coordinates in a reply.',
       safeRole === 'customer' ? 'Only recommend foods that appear in getRecommendedFoods results.' : null,
       safeRole === 'customer' ? 'If getRecommendedFoods returns an empty items list, say no verified recommendation is available yet and ask for preferences.' : null,
       'Escalate angry, safety, fraud, refund dispute, or repeated delivery failure cases to human support.',
@@ -170,11 +172,19 @@ export class DeepSeekChatProviderService {
 
   private baseUrl(): string {
     const configured = this.config.get<string>('DEEPSEEK_BASE_URL')?.trim() || this.defaultBaseUrl
-    return configured.replace(/\/+$/, '')
+    const normalized = configured.replace(/\/+$/, '')
+    if (normalized !== this.defaultBaseUrl) {
+      throw new Error('DEEPSEEK_ENDPOINT_NOT_ALLOWED')
+    }
+    return normalized
   }
 
   private model(): string {
-    return this.config.get<string>('DEEPSEEK_MODEL')?.trim() || this.defaultModel
+    const configured = this.config.get<string>('DEEPSEEK_MODEL')?.trim()
+    if (configured && configured !== this.defaultModel) {
+      throw new Error('DEEPSEEK_MODEL_NOT_ALLOWED')
+    }
+    return this.defaultModel
   }
 
   private timeoutMs(): number {

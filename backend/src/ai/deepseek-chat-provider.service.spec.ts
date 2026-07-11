@@ -45,6 +45,7 @@ describe('DeepSeekChatProviderService', () => {
 
     expect(global.fetch).toHaveBeenCalledWith('https://api.deepseek.com/chat/completions', expect.objectContaining({
       method: 'POST',
+      redirect: 'error',
       headers: expect.objectContaining({ Authorization: 'Bearer test-key' }),
     }))
     expect(body).toMatchObject({
@@ -96,11 +97,11 @@ describe('DeepSeekChatProviderService', () => {
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
-  it('supports explicit base URL, model and thinking settings', async () => {
+  it('supports approved thinking settings while keeping the fixed Flash model and official origin', async () => {
     config.get.mockImplementation((key: string) => ({
       DEEPSEEK_API_KEY: 'test-key',
-      DEEPSEEK_BASE_URL: 'https://deepseek.example.test/',
-      DEEPSEEK_MODEL: 'deepseek-v4-pro',
+      DEEPSEEK_BASE_URL: 'https://api.deepseek.com/',
+      DEEPSEEK_MODEL: 'deepseek-v4-flash',
       DEEPSEEK_THINKING: 'enabled',
       DEEPSEEK_REASONING_EFFORT: 'max',
       DEEPSEEK_MAX_OUTPUT_TOKENS: '1200',
@@ -116,14 +117,45 @@ describe('DeepSeekChatProviderService', () => {
     const [, options] = (global.fetch as jest.Mock).mock.calls[0]
     const body = JSON.parse(options.body)
 
-    expect(global.fetch).toHaveBeenCalledWith('https://deepseek.example.test/chat/completions', expect.any(Object))
+    expect(global.fetch).toHaveBeenCalledWith('https://api.deepseek.com/chat/completions', expect.any(Object))
     expect(body).toMatchObject({
-      model: 'deepseek-v4-pro',
+      model: 'deepseek-v4-flash',
       thinking: { type: 'enabled' },
       reasoning_effort: 'max',
       max_tokens: 1200,
     })
-    expect(service.modelName()).toBe('deepseek-v4-pro')
+    expect(service.modelName()).toBe('deepseek-v4-flash')
+  })
+
+  it('fails before network access when an override could exfiltrate the key or select another model', async () => {
+    config.get.mockImplementation((key: string) => ({
+      DEEPSEEK_API_KEY: 'test-key',
+      DEEPSEEK_BASE_URL: 'https://attacker.example',
+    }[key]))
+
+    await expect(service.createReply({
+      message: 'Need help',
+      sessionId: 'session-1',
+      userId: 'user-1',
+      sentimentLabel: 'neutral',
+      history: [],
+    })).rejects.toThrow('DEEPSEEK_ENDPOINT_NOT_ALLOWED')
+    expect(global.fetch).not.toHaveBeenCalled()
+
+    config.get.mockImplementation((key: string) => ({
+      DEEPSEEK_API_KEY: 'test-key',
+      DEEPSEEK_MODEL: 'deepseek-v4-pro',
+    }[key]))
+
+    await expect(service.createReply({
+      message: 'Need help',
+      sessionId: 'session-1',
+      userId: 'user-1',
+      sentimentLabel: 'neutral',
+      history: [],
+    })).rejects.toThrow('DEEPSEEK_MODEL_NOT_ALLOWED')
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(service.modelName()).toBe('deepseek-v4-flash')
   })
 
   it('gives restaurant actors role-specific workflow guidance without claiming live data', async () => {

@@ -51,6 +51,8 @@ describe('validateEnv', () => {
     expect(env.THROTTLER_TTL_MS).toBe(60_000)
     expect(env.THROTTLER_LIMIT).toBe(100)
     expect(env.DELIVERY_BASE_FEE_VND).toBe(15_000)
+    expect(env.DEEPSEEK_BASE_URL).toBe('https://api.deepseek.com')
+    expect(env.DEEPSEEK_MODEL).toBe('deepseek-v4-flash')
   })
 
   it('accepts bounded non-production throttle overrides for load-test runs', () => {
@@ -162,5 +164,19 @@ describe('validateEnv', () => {
         THROTTLER_MEMORY_FALLBACK: 'true',
       }),
     ).toThrow(/local development default|router\.project-osrm\.org|your-deepseek-api-key|your-sepay-webhook-secret|THROTTLER_MEMORY_FALLBACK/)
+  })
+
+  it('rejects DeepSeek credential exfiltration endpoints and unsupported models', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      DEEPSEEK_BASE_URL: 'https://attacker.example/api',
+    })).toThrow(/official DeepSeek API origin/)
+
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      DEEPSEEK_MODEL: 'deepseek-v4-pro',
+    })).toThrow(/deepseek-v4-flash/)
   })
 })

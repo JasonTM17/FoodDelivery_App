@@ -92,6 +92,11 @@ const redisUrl = z
     (value) => value.startsWith('redis://') || value.startsWith('rediss://'),
     'Must start with redis:// or rediss://',
   )
+const deepSeekBaseUrl = z
+  .string()
+  .url()
+  .transform(value => value.replace(/\/+$/, ''))
+  .refine(value => value === 'https://api.deepseek.com', 'Must use the official DeepSeek API origin')
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -122,8 +127,8 @@ export const envSchema = z.object({
   THROTTLER_TTL_MS: z.coerce.number().int().positive().max(600_000).default(60_000),
   THROTTLER_LIMIT: z.coerce.number().int().positive().max(100_000).default(100),
   DEEPSEEK_API_KEY: z.string().optional(),
-  DEEPSEEK_BASE_URL: z.string().url().optional(),
-  DEEPSEEK_MODEL: z.string().min(1).optional(),
+  DEEPSEEK_BASE_URL: deepSeekBaseUrl.default('https://api.deepseek.com'),
+  DEEPSEEK_MODEL: z.literal('deepseek-v4-flash').default('deepseek-v4-flash'),
   DEEPSEEK_TIMEOUT_MS: z.coerce.number().int().positive().max(60000).optional(),
   DEEPSEEK_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().max(8000).optional(),
   DEEPSEEK_THINKING: z.enum(['enabled', 'disabled']).default('disabled'),

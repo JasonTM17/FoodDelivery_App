@@ -67,9 +67,7 @@ export class ToolJustificationService {
 
     const justified = pattern.test(userMessage)
     if (!justified) {
-      this.logger.warn(
-        `Potential tool injection — tool: ${toolName} | msg: "${userMessage.slice(0, 100)}"`,
-      )
+      this.logger.warn(`Potential tool injection — unjustified tool: ${toolName}`)
     }
     return justified
   }
