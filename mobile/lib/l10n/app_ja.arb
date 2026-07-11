@@ -400,6 +400,14 @@
   },
   "driverRatingsToday": "今日",
   "driverRatingsYesterday": "昨日",
+  "driverHistoryTodayAt": "今日 {time}",
+  "@driverHistoryTodayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "driverHistoryYesterdayAt": "昨日 {time}",
+  "@driverHistoryYesterdayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "driverTripDetailTitle": "配達詳細",
   "driverTripDetailSegments": "ルート手順",
   "driverTripDetailRetry": "再試行",
@@ -681,7 +689,7 @@
   "@driver_heatmap_order_count": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "driver_heatmap_avg_payout": "平均 {amount}đ/件",
+  "driver_heatmap_avg_payout": "平均 {amount}/件",
   "@driver_heatmap_avg_payout": {
     "placeholders": { "amount": { "type": "String" } }
   },

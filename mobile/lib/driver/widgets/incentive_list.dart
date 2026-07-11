@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/incentives_provider.dart';
 
 class IncentiveList extends StatelessWidget {
@@ -125,7 +126,9 @@ class _IncentiveCard extends StatelessWidget {
                 style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
               ),
               Text(
-                l10n.driver_incentives_reward(_formatVnd(item.rewardAmount)),
+                l10n.driver_incentives_reward(
+                  formatVnd(context, item.rewardAmount),
+                ),
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -160,14 +163,6 @@ class _CompletedBadge extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatVnd(int amount) {
-  final text = amount.toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ',',
-  );
-  return '${text}đ';
 }
 
 String _formatDate(BuildContext context, String value) {

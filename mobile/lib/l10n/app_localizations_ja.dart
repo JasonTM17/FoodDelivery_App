@@ -995,6 +995,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverRatingsYesterday => '昨日';
 
   @override
+  String driverHistoryTodayAt(String time) {
+    return '今日 $time';
+  }
+
+  @override
+  String driverHistoryYesterdayAt(String time) {
+    return '昨日 $time';
+  }
+
+  @override
   String get driverTripDetailTitle => '配達詳細';
 
   @override
@@ -1701,7 +1711,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String driver_heatmap_avg_payout(String amount) {
-    return '平均 $amountđ/件';
+    return '平均 $amount/件';
   }
 
   @override

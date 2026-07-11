@@ -1011,6 +1011,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverRatingsYesterday => 'Hôm qua';
 
   @override
+  String driverHistoryTodayAt(String time) {
+    return 'Hôm nay, $time';
+  }
+
+  @override
+  String driverHistoryYesterdayAt(String time) {
+    return 'Hôm qua, $time';
+  }
+
+  @override
   String get driverTripDetailTitle => 'Chi tiết chuyến đi';
 
   @override
@@ -1746,7 +1756,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String driver_heatmap_avg_payout(String amount) {
-    return 'Trung bình $amountđ/đơn';
+    return 'Trung bình $amount/đơn';
   }
 
   @override

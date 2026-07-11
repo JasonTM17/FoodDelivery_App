@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
-
+import '../../shared/utils/currency_formatter.dart';
 import '../../shared/utils/order_status_labels.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../providers/driver_provider.dart';
 import '../providers/trip_history_filter_provider.dart';
+import '../utils/history_date_formatter.dart';
 import '../widgets/date_range_filter.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -242,7 +243,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _formatDateTime(order.createdAt),
+                      formatDriverHistoryDateTime(context, order.createdAt),
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6B7280),
@@ -251,7 +252,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                   ],
                 ),
                 Text(
-                  '${order.total.toStringAsFixed(0)}đ',
+                  formatVnd(context, order.total),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -392,7 +393,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                     ),
                   ),
                   Text(
-                    '${order.deliveryFee.toStringAsFixed(0)}đ',
+                    formatVnd(ctx, order.deliveryFee),
                     style: const TextStyle(fontSize: 14, color: Colors.white),
                   ),
                 ],
@@ -410,7 +411,7 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
                     ),
                   ),
                   Text(
-                    '${order.total.toStringAsFixed(0)}đ',
+                    formatVnd(ctx, order.total),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -425,17 +426,5 @@ class _DeliveryHistoryScreenState extends ConsumerState<DeliveryHistoryScreen> {
         );
       },
     );
-  }
-
-  String _formatDateTime(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inDays == 0) {
-      return 'Hôm nay, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    }
-    if (diff.inDays == 1) {
-      return 'Hôm qua, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    }
-    return '${dt.day}/${dt.month}/${dt.year}';
   }
 }

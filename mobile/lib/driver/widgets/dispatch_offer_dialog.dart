@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/driver_provider.dart' show DispatchOffer;
 
 /// Full-screen modal dialog showing a new dispatch offer.
@@ -164,7 +165,7 @@ class _DispatchOfferDialogState extends State<DispatchOfferDialog> {
                 AppColors.info,
               ),
               _chip(
-                '+${widget.offer.deliveryFee.toStringAsFixed(0)}đ',
+                formatSignedVnd(context, widget.offer.deliveryFee),
                 Icons.monetization_on,
                 AppColors.primary,
               ),

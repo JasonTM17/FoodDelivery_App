@@ -400,6 +400,14 @@
   },
   "driverRatingsToday": "Today",
   "driverRatingsYesterday": "Yesterday",
+  "driverHistoryTodayAt": "Today, {time}",
+  "@driverHistoryTodayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "driverHistoryYesterdayAt": "Yesterday, {time}",
+  "@driverHistoryYesterdayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "driverTripDetailTitle": "Trip details",
   "driverTripDetailSegments": "Route steps",
   "driverTripDetailRetry": "Retry",
@@ -681,7 +689,7 @@
   "@driver_heatmap_order_count": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "driver_heatmap_avg_payout": "Average {amount}đ/order",
+  "driver_heatmap_avg_payout": "Average {amount}/order",
   "@driver_heatmap_avg_payout": {
     "placeholders": { "amount": { "type": "String" } }
   },

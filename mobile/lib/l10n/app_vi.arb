@@ -406,6 +406,14 @@
   },
   "driverRatingsToday": "Hôm nay",
   "driverRatingsYesterday": "Hôm qua",
+  "driverHistoryTodayAt": "Hôm nay, {time}",
+  "@driverHistoryTodayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "driverHistoryYesterdayAt": "Hôm qua, {time}",
+  "@driverHistoryYesterdayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "driverTripDetailTitle": "Chi tiết chuyến đi",
   "driverTripDetailSegments": "Hướng dẫn từng chặng",
   "driverTripDetailRetry": "Thử lại",
@@ -687,7 +695,7 @@
   "@driver_heatmap_order_count": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "driver_heatmap_avg_payout": "Trung bình {amount}đ/đơn",
+  "driver_heatmap_avg_payout": "Trung bình {amount}/đơn",
   "@driver_heatmap_avg_payout": {
     "placeholders": { "amount": { "type": "String" } }
   },

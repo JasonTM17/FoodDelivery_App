@@ -85,9 +85,10 @@ void main() {
         find.byKey(const Key('delivery-complete-earnings-card')),
         findsOneWidget,
       );
-      expect(find.textContaining('23000'), findsOneWidget);
-      expect(find.textContaining('18000'), findsOneWidget);
-      expect(find.textContaining('5000'), findsOneWidget);
+      expect(find.textContaining('23.000'), findsOneWidget);
+      expect(find.textContaining('18.000'), findsOneWidget);
+      expect(find.textContaining('5.000'), findsOneWidget);
+      expect(find.textContaining('₫'), findsNWidgets(3));
     });
 
     testWidgets('does not invent a bonus when completion args omit it', (
@@ -101,8 +102,9 @@ void main() {
       await tester.pumpWidget(_wrap(const DeliveryCompleteScreen(args: args)));
       await tester.pump(const Duration(milliseconds: 1000));
 
-      expect(find.textContaining('18000'), findsWidgets);
-      expect(find.textContaining('5000'), findsNothing);
+      expect(find.textContaining('18.000'), findsWidgets);
+      expect(find.textContaining('5.000'), findsNothing);
+      expect(find.textContaining('₫'), findsWidgets);
     });
 
     testWidgets(

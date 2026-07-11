@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/driver_provider.dart';
 import '../widgets/active_order_card.dart';
 import '../widgets/delivery_order_item.dart';
@@ -33,7 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(driverProvider);
 
-    // Show the dispatch offer dialog whenever a new offer arrives via WebSocket.
+    // Show the dispatch offer dialog whenever a new realtime offer arrives.
     ref.listen<DispatchOffer?>(driverProvider.select((s) => s.pendingOffer), (
       prev,
       offer,
@@ -128,7 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         DriverStatCard(
           icon: Icons.monetization_on_outlined,
           label: l10n.driverStatEarnings,
-          value: '${stats.earnings.toStringAsFixed(0)}đ',
+          value: formatVnd(context, stats.earnings),
           color: AppColors.primary,
         ),
         DriverStatCard(

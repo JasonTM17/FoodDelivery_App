@@ -147,7 +147,8 @@ void main() {
       );
       await tester.pumpWidget(_buildHome(state));
       await tester.pumpAndSettle();
-      expect(find.textContaining('120000'), findsOneWidget);
+      expect(find.textContaining('120.000'), findsOneWidget);
+      expect(find.textContaining('₫'), findsOneWidget);
     });
 
     testWidgets('displays order count from todayStats', (tester) async {

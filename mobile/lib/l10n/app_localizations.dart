@@ -1996,6 +1996,18 @@ abstract class AppLocalizations {
   /// **'Hôm qua'**
   String get driverRatingsYesterday;
 
+  /// No description provided for @driverHistoryTodayAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay, {time}'**
+  String driverHistoryTodayAt(String time);
+
+  /// No description provided for @driverHistoryYesterdayAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua, {time}'**
+  String driverHistoryYesterdayAt(String time);
+
   /// No description provided for @driverTripDetailTitle.
   ///
   /// In vi, this message translates to:
@@ -3343,7 +3355,7 @@ abstract class AppLocalizations {
   /// No description provided for @driver_heatmap_avg_payout.
   ///
   /// In vi, this message translates to:
-  /// **'Trung bình {amount}đ/đơn'**
+  /// **'Trung bình {amount}/đơn'**
   String driver_heatmap_avg_payout(String amount);
 
   /// No description provided for @driver_bank_title.
