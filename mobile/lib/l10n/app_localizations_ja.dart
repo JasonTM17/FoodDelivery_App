@@ -1823,6 +1823,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_tip_success_message => 'チップ報告は照合用に保存されました。支払い精算は自動変更されません。';
 
   @override
+  String get driver_tip_submit_failed => 'チップ報告を保存できませんでした。もう一度お試しください。';
+
+  @override
   String get driver_notifications_read_all => 'すべて既読';
 
   @override
@@ -1893,6 +1896,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driver_settings_title => '設定';
+
+  @override
+  String get driver_settings_notifications_section => '通知';
+
+  @override
+  String get driver_settings_general_section => '一般';
 
   @override
   String get driver_settings_notifications => 'プッシュ通知';

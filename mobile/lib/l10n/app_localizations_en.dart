@@ -1871,6 +1871,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip report saved for audit. Payout settlement is not changed automatically.';
 
   @override
+  String get driver_tip_submit_failed =>
+      'Could not save the tip report. Please try again.';
+
+  @override
   String get driver_notifications_read_all => 'Read all';
 
   @override
@@ -1944,6 +1948,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driver_settings_title => 'Settings';
+
+  @override
+  String get driver_settings_notifications_section => 'Notifications';
+
+  @override
+  String get driver_settings_general_section => 'General';
 
   @override
   String get driver_settings_notifications => 'Push notifications';

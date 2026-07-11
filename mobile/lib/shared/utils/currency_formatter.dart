@@ -1,6 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
+String vndCurrencySymbol(BuildContext context) {
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  return NumberFormat.simpleCurrency(
+    name: 'VND',
+    locale: locale,
+  ).currencySymbol;
+}
+
 String formatVnd(BuildContext context, num amount) {
   final locale = Localizations.localeOf(context).toLanguageTag();
   return NumberFormat.currency(

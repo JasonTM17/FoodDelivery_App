@@ -3574,6 +3574,12 @@ abstract class AppLocalizations {
   /// **'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.'**
   String get driver_tip_success_message;
 
+  /// No description provided for @driver_tip_submit_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu báo cáo tip. Vui lòng thử lại.'**
+  String get driver_tip_submit_failed;
+
   /// No description provided for @driver_notifications_read_all.
   ///
   /// In vi, this message translates to:
@@ -3717,6 +3723,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cài đặt'**
   String get driver_settings_title;
+
+  /// No description provided for @driver_settings_notifications_section.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo'**
+  String get driver_settings_notifications_section;
+
+  /// No description provided for @driver_settings_general_section.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chung'**
+  String get driver_settings_general_section;
 
   /// No description provided for @driver_settings_notifications.
   ///

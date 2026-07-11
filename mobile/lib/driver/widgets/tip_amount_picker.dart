@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/tip_provider.dart';
 
 class TipAmountPicker extends ConsumerWidget {
@@ -33,33 +34,25 @@ class TipAmountPicker extends ConsumerWidget {
           runSpacing: 10,
           children: _suggestedAmounts.map((amount) {
             final isSelected = tipState.suggestedAmount == amount;
-            return GestureDetector(
-              onTap: () => ref.read(tipProvider.notifier).selectAmount(amount),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : const Color(0xFF374151),
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: Text(
-                  '${amount ~/ 1000}Kđ',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? AppColors.primary : Colors.white,
-                  ),
-                ),
+            return ChoiceChip(
+              label: Text(formatVnd(context, amount)),
+              selected: isSelected,
+              showCheckmark: false,
+              onSelected: (_) =>
+                  ref.read(tipProvider.notifier).selectAmount(amount),
+              selectedColor: AppColors.primary.withValues(alpha: 0.15),
+              backgroundColor: const Color(0xFF1E1E1E),
+              side: BorderSide(
+                color: isSelected ? AppColors.primary : const Color(0xFF374151),
+                width: isSelected ? 2 : 1,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              labelStyle: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? AppColors.primary : Colors.white,
               ),
             );
           }).toList(),
@@ -76,13 +69,15 @@ class TipAmountPicker extends ConsumerWidget {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: l10n.driver_tip_custom_hint,
-            prefixText: 'đ ',
+            prefixText: '${vndCurrencySymbol(context)} ',
             prefixStyle: const TextStyle(color: Color(0xFF6B7280)),
           ),
           onChanged: (value) {
             final amount = int.tryParse(value);
             if (amount != null && amount > 0) {
               ref.read(tipProvider.notifier).setCustomAmount(amount);
+            } else {
+              ref.read(tipProvider.notifier).clearCustomAmount();
             }
           },
         ),

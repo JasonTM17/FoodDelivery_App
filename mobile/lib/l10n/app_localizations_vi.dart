@@ -1872,6 +1872,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.';
 
   @override
+  String get driver_tip_submit_failed =>
+      'Không thể lưu báo cáo tip. Vui lòng thử lại.';
+
+  @override
   String get driver_notifications_read_all => 'Đọc tất cả';
 
   @override
@@ -1945,6 +1949,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driver_settings_title => 'Cài đặt';
+
+  @override
+  String get driver_settings_notifications_section => 'Thông báo';
+
+  @override
+  String get driver_settings_general_section => 'Chung';
 
   @override
   String get driver_settings_notifications => 'Thông báo đẩy';
