@@ -154,6 +154,7 @@ if (-not $SkipDockerConfig) {
     DEEPSEEK_API_KEY = 'compose-config-deepseek-key'
     SEPAY_API_KEY = 'compose-config-sepay-key'
     SEPAY_ACCOUNT_NUMBER = '0000000000'
+    SEPAY_BANK_NAME = 'Vietcombank'
     SEPAY_WEBHOOK_SECRET = 'compose-config-sepay-webhook-secret'
     WEBHOOK_SECRET = 'compose-config-webhook-secret'
     SMTP_HOST = 'smtp.foodflow.test'

@@ -45,8 +45,8 @@ describe('AdminSettingsService', () => {
       updatedAt: new Date('2026-07-02T00:00:00.000Z'),
     })
     config.get.mockImplementation((key: string) => ({
-      SEPAY_API_KEY: 'live-sepay-key',
       SEPAY_ACCOUNT_NUMBER: '1234567890',
+      SEPAY_BANK_NAME: 'Vietcombank',
       SEPAY_WEBHOOK_SECRET: 'live-sepay-webhook-secret',
       FCM_SERVER_KEY: 'live-fcm-key',
       WEBHOOK_SECRET: 'live-webhook-secret',
@@ -64,8 +64,8 @@ describe('AdminSettingsService', () => {
   it('does not treat documented placeholder env values as configured', async () => {
     platformSetting.findUnique.mockResolvedValue(null)
     config.get.mockImplementation((key: string) => ({
-      SEPAY_API_KEY: 'your-sepay-api-key',
       SEPAY_ACCOUNT_NUMBER: 'your-sepay-account-number',
+      SEPAY_BANK_NAME: 'your-sepay-bank-name',
       SEPAY_WEBHOOK_SECRET: 'your-sepay-webhook-secret',
       FCM_SERVER_KEY: 'your-fcm-server-key',
       SMTP_HOST: 'smtp.example.com',

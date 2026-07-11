@@ -75,8 +75,8 @@ $projectDefinitions = @{
       'GOOGLE_MAPS_API_KEY',
       'OSRM_URL',
       'DEEPSEEK_API_KEY',
-      'SEPAY_API_KEY',
       'SEPAY_ACCOUNT_NUMBER',
+      'SEPAY_BANK_NAME',
       'SEPAY_WEBHOOK_SECRET',
       'WEBHOOK_SECRET',
       'SMTP_HOST',
@@ -139,6 +139,7 @@ $readableEnvNames = [System.Collections.Generic.HashSet[string]]::new([System.St
   'DELIVERY_BASE_FEE_VND',
   'OSRM_URL',
   'SEPAY_ACCOUNT_NUMBER',
+  'SEPAY_BANK_NAME',
   'SMTP_FROM'
 ) | ForEach-Object { $readableEnvNames.Add($_) | Out-Null }
 
