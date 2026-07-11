@@ -341,7 +341,7 @@ describe('TrackingService', () => {
       expect(mockEtaQueue.add).toHaveBeenCalledWith(
         'recompute-route',
         expect.objectContaining({ orderId: 'ord-1', lat: 10.85, lng: 106.75, phase: 'dropoff' }),
-        expect.objectContaining({ jobId: 'recompute:ord-1:dropoff' }),
+        expect.objectContaining({ jobId: 'recompute-ord-1-dropoff' }),
       )
     })
 

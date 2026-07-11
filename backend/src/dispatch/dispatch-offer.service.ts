@@ -118,7 +118,7 @@ export class DispatchOfferService {
       { offerId: offer.id },
       {
         delay: OFFER_TTL_MS,
-        jobId: `dispatch-offer-timeout:${offer.id}`,
+        jobId: `dispatch-offer-timeout-${offer.id}`,
         removeOnComplete: true,
       },
     )
@@ -216,7 +216,7 @@ export class DispatchOfferService {
         { offerId: offer.id },
         {
           delay: ACCEPTED_RECOVERY_GRACE_MS - ageMs,
-          jobId: `dispatch-offer-recovery:${offer.id}:${offer.updatedAt.getTime()}`,
+          jobId: `dispatch-offer-recovery-${offer.id}-${offer.updatedAt.getTime()}`,
           removeOnComplete: true,
         },
       )
@@ -393,7 +393,7 @@ export class DispatchOfferService {
         attempt: offer.attempt,
       },
       {
-        jobId: `dispatch:${offer.orderId}:${offer.attempt}:after:${offer.id}`,
+        jobId: `dispatch-${offer.orderId}-${offer.attempt}-after-${offer.id}`,
         removeOnComplete: true,
       },
     )

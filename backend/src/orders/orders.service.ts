@@ -310,7 +310,7 @@ export class OrdersService {
           targetStatus: 'cancelled',
           reason: 'Restaurant did not accept order in time',
         },
-        { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
+        { delay: 5 * 60_000, jobId: `timeout-${order.id}-restaurant-accept`, removeOnComplete: true },
       )
 
       this.ordersGateway.notifyRestaurant(restaurant.id, {

@@ -18,6 +18,7 @@ type JobStats = { claimed: number; completed: number; failed: number; retried: n
 
 const DEFAULT_DRAIN_LIMIT = 25
 const MAX_DRAIN_LIMIT = 100
+const PROCESSING_LEASE_MS = 5 * 60_000
 
 @Injectable()
 export class JobOutboxService implements OnModuleInit {
@@ -42,6 +43,7 @@ export class JobOutboxService implements OnModuleInit {
 
   async drain(limit = DEFAULT_DRAIN_LIMIT): Promise<JobStats> {
     const take = Math.max(1, Math.min(MAX_DRAIN_LIMIT, Math.trunc(limit)))
+    await this.recoverStaleClaims()
     const dueJobs = await this.prisma.jobOutbox.findMany({
       where: { status: 'queued', runAt: { lte: new Date() } },
       orderBy: [{ runAt: 'asc' }, { createdAt: 'asc' }],
@@ -56,12 +58,14 @@ export class JobOutboxService implements OnModuleInit {
 
       try {
         await this.run(job)
+        const options = parseOptions(job.options)
         await this.prisma.jobOutbox.update({
           where: { id: job.id },
           data: {
             status: 'completed',
             completedAt: new Date(),
             error: null,
+            ...(options.removeOnComplete === true ? { dedupeKey: null } : {}),
           },
         })
         stats.completed += 1
@@ -80,6 +84,24 @@ export class JobOutboxService implements OnModuleInit {
       this.processors.set(queue, this.moduleRef.get(token, { strict: false }) as JobProcessor)
     } catch {
       this.logger.warn(`Queue processor ${token.name} is not available for ${queue}`)
+    }
+  }
+
+  private async recoverStaleClaims(): Promise<void> {
+    const recovered = await this.prisma.jobOutbox.updateMany({
+      where: {
+        status: 'processing',
+        updatedAt: { lt: new Date(Date.now() - PROCESSING_LEASE_MS) },
+      },
+      data: {
+        status: 'queued',
+        runAt: new Date(),
+        error: 'JOB_PROCESSING_LEASE_EXPIRED',
+        updatedAt: new Date(),
+      },
+    })
+    if (recovered.count > 0) {
+      this.logger.warn(`Recovered ${recovered.count} stale Postgres queue claim(s)`)
     }
   }
 
@@ -136,6 +158,7 @@ export class JobOutboxService implements OnModuleInit {
         status: 'failed',
         failedAt: new Date(),
         error: message.slice(0, 2000),
+        ...(options.removeOnFail === true ? { dedupeKey: null } : {}),
       },
     })
     this.logger.error(`Job ${job.id} permanently failed after ${nextAttempt}/${maxAttempts} attempts: ${message}`)

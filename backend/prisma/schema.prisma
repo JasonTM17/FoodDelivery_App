@@ -981,6 +981,7 @@ model RealtimeOutbox {
 model JobOutbox {
   id          String    @id @default(uuid()) @db.Uuid
   queue       String
+  dedupeKey   String?   @map("dedupe_key") @db.VarChar(200)
   name        String
   payload     Json
   options     Json?
@@ -993,6 +994,7 @@ model JobOutbox {
   failedAt    DateTime? @map("failed_at")
   error       String?
 
+  @@unique([queue, dedupeKey])
   @@index([queue, status, runAt])
   @@map("job_outbox")
 }

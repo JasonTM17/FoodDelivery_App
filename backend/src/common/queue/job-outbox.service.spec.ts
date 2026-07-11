@@ -75,6 +75,48 @@ describe('JobOutboxService', () => {
     })
   })
 
+  it('recovers abandoned processing claims before selecting due work', async () => {
+    findMany.mockResolvedValueOnce([])
+
+    await expect(service.drain()).resolves.toEqual({
+      claimed: 0,
+      completed: 0,
+      failed: 0,
+      retried: 0,
+    })
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        status: 'processing',
+        updatedAt: { lt: new Date('2026-07-09T09:55:00.000Z') },
+      },
+      data: {
+        status: 'queued',
+        runAt: now,
+        error: 'JOB_PROCESSING_LEASE_EXPIRED',
+        updatedAt: now,
+      },
+    })
+  })
+
+  it('releases a durable dedupe key when removeOnComplete is true', async () => {
+    findMany.mockResolvedValueOnce([makeJob({
+      options: { attempts: 1, removeOnComplete: true },
+    })])
+
+    await service.drain()
+
+    expect(update).toHaveBeenLastCalledWith({
+      where: { id: 'job-1' },
+      data: {
+        status: 'completed',
+        completedAt: now,
+        error: null,
+        dedupeKey: null,
+      },
+    })
+  })
+
   it('requeues failed jobs when attempts remain', async () => {
     process.mockRejectedValueOnce(new Error('temporary outage'))
 
@@ -116,12 +158,32 @@ describe('JobOutboxService', () => {
       },
     })
   })
+
+  it('releases a failed job dedupe key only when removeOnFail is true', async () => {
+    process.mockRejectedValueOnce(new Error('bad payload'))
+    findMany.mockResolvedValueOnce([makeJob({
+      options: { attempts: 1, removeOnFail: true },
+    })])
+
+    await service.drain()
+
+    expect(update).toHaveBeenLastCalledWith({
+      where: { id: 'job-1' },
+      data: {
+        status: 'failed',
+        failedAt: now,
+        error: 'bad payload',
+        dedupeKey: null,
+      },
+    })
+  })
 })
 
 function makeJob(overrides: Partial<JobOutbox> = {}): JobOutbox {
   return {
     id: 'job-1',
     queue: 'dispatch',
+    dedupeKey: 'dispatch-order-1-1',
     name: 'dispatch.driver',
     payload: { orderId: 'order-1' },
     options: { attempts: 2, backoff: { type: 'fixed', delay: 5000 } },

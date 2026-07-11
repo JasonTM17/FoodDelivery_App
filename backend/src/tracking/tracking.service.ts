@@ -171,7 +171,7 @@ export class TrackingService implements OnModuleDestroy {
           removeOnComplete: true,
           removeOnFail: 100,
           // Deduplicate: only one pending recompute per order at a time
-          jobId: `recompute:${orderId}:${phase}`,
+          jobId: `recompute-${orderId}-${phase}`,
         },
       )
     }

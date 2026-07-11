@@ -80,7 +80,7 @@ export class DispatchProcessor extends WorkerHost {
         await this.dispatchQueue.add(
           'dispatch.driver',
           { orderId, restaurantLat, restaurantLng, attempt: attempt + 1 },
-          { delay: RETRY_DELAY_MS, jobId: `dispatch:${orderId}:${attempt + 1}` },
+          { delay: RETRY_DELAY_MS, jobId: `dispatch-${orderId}-${attempt + 1}` },
         )
         this.logger.log(`Requeued attempt ${attempt + 1} for order ${orderId}`)
       }

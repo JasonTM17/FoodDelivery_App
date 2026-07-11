@@ -69,7 +69,7 @@ describe('DispatchProcessor', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'dispatch.driver',
         expect.objectContaining({ orderId: 'order-1', attempt: 2 }),
-        expect.objectContaining({ jobId: 'dispatch:order-1:2' }),
+        expect.objectContaining({ jobId: 'dispatch-order-1-2' }),
       )
     })
 
