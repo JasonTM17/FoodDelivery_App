@@ -174,20 +174,21 @@ Socket.IO is the explicit local/self-hosted realtime provider. It is not an impl
 
 | Field | Value |
 |---|---|
-| Header | `x-sepay-signature` |
+| Headers | `x-sepay-signature: sha256={hex}`, `x-sepay-timestamp: {unix_seconds}` |
 | Algorithm | HMAC-SHA256 |
-| Input | Raw request body |
+| Input | `{timestamp}.{raw_request_body}` |
 | Secret | `SEPAY_WEBHOOK_SECRET` |
-| Replay protection | Redis deduplication key per transaction reference, TTL 24h |
+| Replay protection | Reject timestamps outside ±5 minutes; durable Postgres unique receipt per SePay transaction `id` |
 
 Verification flow:
 
-1. Read `x-sepay-signature`.
-2. Compute HMAC-SHA256 over the raw body.
+1. Read both SePay signature and timestamp headers.
+2. Reject stale timestamps, then compute HMAC-SHA256 over `{timestamp}.{raw_body}` without re-serializing JSON.
 3. Compare with timing-safe equality.
-4. Reject mismatch with `WEBHOOK_INVALID_SIGNATURE`.
-5. Deduplicate already-processed transaction references.
-6. Process and persist the payment result.
+4. Reject mismatch with `SEPAY_WEBHOOK_SIGNATURE_INVALID`.
+5. Claim SePay's stable transaction `id` in `payment_webhook_receipts`; the database unique constraint remains authoritative across retries, restarts and historical replays.
+6. Require an inbound transfer whose beneficiary account, payment code and exact VND amount match the pending intent before persisting payment success.
+7. Return exactly `{"success": true}` for every accepted delivery. Valid but non-payable transfers are stored as `ignored` or `manual_review` and alerted without releasing the order.
 
 ### Outbound service webhooks
 

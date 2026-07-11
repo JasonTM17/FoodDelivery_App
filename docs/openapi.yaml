@@ -1711,18 +1711,32 @@ components:
     SepayWebhookPayload:
       type: object
       properties:
-        transaction_ref: { type: string }
-        amount:          { type: integer, description: "VND" }
-        account_number:  { type: string }
+        id:              { type: integer, minimum: 1, description: "Stable SePay transaction id used for deduplication" }
+        gateway:         { type: string, example: "Vietcombank" }
+        transactionDate: { type: string, description: "Vietnam local time in YYYY-MM-DD HH:mm:ss format" }
+        accountNumber:   { type: string }
+        subAccount:      { type: string, description: "Matched virtual account, or an empty string" }
+        code:            { type: [string, "null"], description: "Payment code extracted by SePay" }
+        content:         { type: string }
+        transferType:    { type: string, enum: [in, out] }
         description:     { type: string }
-        transaction_time: { type: string, format: date-time }
-      required: [transaction_ref, amount]
+        transferAmount:  { type: integer, minimum: 1, description: "Positive VND amount" }
+        accumulated:     { type: integer, minimum: 0 }
+        referenceCode:   { type: string, description: "Bank transaction reference" }
+      required: [id, gateway, transactionDate, accountNumber, code, content, transferType, transferAmount]
       example:
-        transaction_ref: "sepay-ref-abc123"
-        amount: 200000
-        account_number: "0011001234567"
-        description: "FoodFlow nap tien"
-        transaction_time: "2026-06-09T10:30:00Z"
+        id: 92704
+        gateway: "Vietcombank"
+        transactionDate: "2026-07-11 14:30:00"
+        accountNumber: "0011001234567"
+        subAccount: ""
+        code: "FF-ORDERABC123"
+        content: "FF-ORDERABC123 thanh toan"
+        transferType: "in"
+        description: "NGUYEN VAN A chuyen tien"
+        transferAmount: 200000
+        accumulated: 1000000
+        referenceCode: "FT2607110001"
 
     PaymentIntent:
       type: object
@@ -4631,15 +4645,31 @@ paths:
           in: header
           required: true
           schema: { type: string }
-          description: HMAC-SHA256 signature of request body
+          description: HMAC-SHA256 signature in `sha256={hex}` format
+        - name: x-sepay-timestamp
+          in: header
+          required: true
+          schema: { type: string, pattern: "^[0-9]{10}$" }
+          description: Unix timestamp included in the signed `{timestamp}.{raw_body}` message
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/SepayWebhookPayload" }
       responses:
-        "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean }, duplicate: { type: boolean } } } } } }
-        "400": { description: "Bad request / invalid signature / unknown ref", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "200":
+          description: "Accepted; exact response required by SePay. Non-payable signed transfers are durably audited as ignored or manual review."
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [success]
+                properties:
+                  success: { type: boolean, const: true }
+              example: { success: true }
+        "400": { description: "Invalid/stale signature or malformed payload", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "A concurrent receipt is still processing or a durable claim could not be acquired; SePay should retry", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   # ═══════════════════════════════════════════════
   # PROMOTIONS

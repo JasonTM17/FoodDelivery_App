@@ -170,13 +170,13 @@ Socket.IO は local/self-hosted の explicit provider であり、managed produc
 
 | Field | Value |
 |---|---|
-| Header | `x-sepay-signature` |
+| Headers | `x-sepay-signature: sha256={hex}`, `x-sepay-timestamp: {unix_seconds}` |
 | Algorithm | HMAC-SHA256 |
-| Input | Raw request body |
+| Input | `{timestamp}.{raw_request_body}` |
 | Secret | `SEPAY_WEBHOOK_SECRET` |
-| Replay protection | transaction reference ごとの Redis deduplication key、TTL 24h |
+| Replay protection | ±5分を超える timestamp を拒否し、SePay transaction `id` ごとの durable Postgres unique receipt で deduplicate |
 
-Verification flow: header を読み、raw body で HMAC を計算し、timing-safe equality で比較します。不一致なら `WEBHOOK_INVALID_SIGNATURE` で拒否し、処理済み transaction を deduplicate してから payment result を永続化します。
+Verification flow: signature と timestamp を読み、古い timestamp を拒否し、JSON を再 serialize せず `{timestamp}.{raw_body}` で HMAC を計算して timing-safe comparison を行います。Transaction `id` は database unique constraint を持つ `payment_webhook_receipts` に claim します。入金、受取口座、payment code、正確な VND amount が pending intent と一致した場合だけ payment success を永続化します。有効な delivery には正確に `{"success": true}` を返し、自動計上できない取引は order を release せず `ignored` または `manual_review` として監査します。
 
 ### Outbound service webhook
 

@@ -157,13 +157,13 @@ Socket.IO là provider explicit cho local/self-hosted, không phải fallback im
 
 | Field | Giá trị |
 |---|---|
-| Header | `x-sepay-signature` |
+| Headers | `x-sepay-signature: sha256={hex}`, `x-sepay-timestamp: {unix_seconds}` |
 | Algorithm | HMAC-SHA256 |
-| Input | Raw request body |
+| Input | `{timestamp}.{raw_request_body}` |
 | Secret | `SEPAY_WEBHOOK_SECRET` |
-| Replay protection | Redis deduplication key theo transaction reference, TTL 24h |
+| Replay protection | Từ chối timestamp lệch quá ±5 phút; receipt Postgres unique bền vững theo transaction `id` của SePay |
 
-Luồng verify: đọc header, tính HMAC trên raw body, so sánh timing-safe, reject bằng `WEBHOOK_INVALID_SIGNATURE` nếu sai, deduplicate transaction đã xử lý, rồi persist kết quả thanh toán.
+Luồng verify: đọc cả signature/timestamp, từ chối timestamp cũ, tính HMAC trên đúng `{timestamp}.{raw_body}` không serialize lại JSON và so sánh timing-safe. Backend claim transaction `id` vào `payment_webhook_receipts` với unique constraint ở database. Chỉ persist thanh toán khi đây là tiền vào và tài khoản thụ hưởng, payment code, số tiền VND khớp chính xác intent đang chờ. Mọi delivery hợp lệ được trả đúng `{"success": true}`; giao dịch không thể hạch toán tự động được lưu `ignored` hoặc `manual_review` và cảnh báo, không tự release đơn.
 
 ### Webhook service outbound
 

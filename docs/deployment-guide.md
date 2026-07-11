@@ -150,7 +150,7 @@ Application/security values:
 - `PASSWORD_RESET_URL_BASE`, `CORS_ORIGINS`, `DELIVERY_BASE_FEE_VND`
 - `GOOGLE_MAPS_API_KEY`, `OSRM_URL`
 - `DEEPSEEK_API_KEY` and optional `DEEPSEEK_MODEL=deepseek-v4-flash`
-- `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`
+- `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, optional `SEPAY_API_KEY`, and `WEBHOOK_SECRET`
 - `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 - `FCM_SERVER_KEY`
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
@@ -197,7 +197,7 @@ select count(*) from prisma_migrations;
 select tablename, rowsecurity
 from pg_tables
 where schemaname = 'public'
-  and tablename in ('realtime_outbox', 'job_outbox', 'ai_usage_events');
+  and tablename in ('realtime_outbox', 'job_outbox', 'ai_usage_events', 'payment_webhook_receipts');
 
 select pubname, schemaname, tablename
 from pg_publication_tables
@@ -206,17 +206,17 @@ where pubname = 'supabase_realtime';
 select policyname, tablename, roles, cmd
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('realtime_outbox', 'job_outbox', 'ai_usage_events');
+  and tablename in ('realtime_outbox', 'job_outbox', 'ai_usage_events', 'payment_webhook_receipts');
 ```
 
 Expected invariants:
 
-- All 24 repository migrations are applied in order.
-- `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS enabled.
+- All 25 repository migrations are applied in order.
+- `realtime_outbox`, `job_outbox`, `ai_usage_events`, and `payment_webhook_receipts` have RLS enabled.
 - `realtime_outbox` is in `supabase_realtime`; unrelated business tables are not broadly added merely for convenience.
 - Authenticated outbox reads are limited by the JWT `realtime_channels` claim.
 - The KYC bucket is private; driver writes are owner-scoped signed grants, Admin reads expire after five minutes, and no raw KYC object key reaches a browser response.
-- Service-role access is separate; anon cannot read the outbox/job/AI telemetry tables.
+- Service-role access is separate; anon cannot read the outbox/job/AI telemetry/payment receipt tables.
 - The storage bucket exists with the intended privacy policy; no service-role key is present in browser output.
 
 ### Realtime smoke
