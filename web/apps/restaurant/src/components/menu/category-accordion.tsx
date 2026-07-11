@@ -64,7 +64,7 @@ export function CategoryAccordion({
         <div className="flex items-center gap-2">
           <UtensilsCrossed className="h-4 w-4 text-brand-500 shrink-0" />
           <span className="font-semibold text-gray-900">{category}</span>
-          <span className="text-xs text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">
+          <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
             {t('itemCount', { count: items.length })}
           </span>
         </div>
@@ -78,7 +78,7 @@ export function CategoryAccordion({
       {isOpen && (
         <div className={cn('p-3 space-y-2', items.length === 0 && 'pb-4')}>
           {items.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-2">
+            <p className="py-2 text-center text-sm text-gray-600">
               {t('empty')}
             </p>
           ) : (

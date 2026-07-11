@@ -66,7 +66,7 @@ export function HourOfDayBar({ data }: HourOfDayBarProps) {
             })}
           </div>
 
-          <div className="flex justify-between text-xs text-gray-400" aria-hidden="true">
+          <div className="flex justify-between text-xs text-gray-600" aria-hidden="true">
             <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
           </div>
 

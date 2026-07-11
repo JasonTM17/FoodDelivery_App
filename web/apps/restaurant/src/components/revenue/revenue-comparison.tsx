@@ -75,18 +75,18 @@ function ComparisonCard({
         className={cn(
           'mt-1 flex items-center justify-center gap-1 text-sm font-bold',
           delta === null
-            ? 'text-gray-400'
+            ? 'text-gray-600'
             : delta > 0
-              ? 'text-green-600'
+              ? 'text-green-700'
               : delta < 0
-                ? 'text-red-500'
+                ? 'text-red-700'
                 : 'text-gray-500',
         )}
       >
         <Icon className="h-3.5 w-3.5" />
         {delta === null ? unavailableLabel : `${delta > 0 ? '+' : ''}${delta}%`}
       </p>
-      <p className="mt-0.5 text-xs text-gray-400">{value}</p>
+      <p className="mt-0.5 text-xs text-gray-600">{value}</p>
     </div>
   );
 }

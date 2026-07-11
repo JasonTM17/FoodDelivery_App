@@ -1,5 +1,6 @@
 import { AlertCircle, ToggleLeft, ToggleRight, UserCircle, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 const CUISINE_OPTIONS = [
@@ -83,14 +84,15 @@ export function BasicInfoFields({
   onToggleCuisine: (cuisine: string) => void;
 }) {
   const t = useTranslations('settings.profileForm.basic');
+  const descriptionId = useId();
 
   return (
     <div className="card mb-6 space-y-4">
       <h2 className="text-base font-semibold text-gray-900">{t('title')}</h2>
       <TextField label={t('name')} value={values.name} onChange={setters.setName} required />
       <div>
-        <label className="label">{t('description')}</label>
-        <textarea value={values.description} onChange={event => setters.setDescription(event.target.value)} rows={3} className="input-field resize-none" />
+        <label className="label" htmlFor={descriptionId}>{t('description')}</label>
+        <textarea id={descriptionId} value={values.description} onChange={event => setters.setDescription(event.target.value)} rows={3} className="input-field resize-none" />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField label={t('address')} value={values.address} onChange={setters.setAddress} required />
@@ -125,8 +127,14 @@ export function OperationsFields({
           <p className="text-sm font-medium text-gray-900">{t('acceptingOrders')}</p>
           <p className="text-xs text-gray-500">{t('acceptingOrdersDescription')}</p>
         </div>
-        <button type="button" onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
-          {isOpen ? <ToggleRight className="h-8 w-8 text-brand-500" /> : <ToggleLeft className="h-8 w-8 text-gray-400" />}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          aria-label={t('acceptingOrders')}
+          aria-pressed={isOpen}
+        >
+          {isOpen ? <ToggleRight className="h-8 w-8 text-brand-500" aria-hidden="true" /> : <ToggleLeft className="h-8 w-8 text-gray-600" aria-hidden="true" />}
         </button>
       </div>
     </div>
@@ -153,7 +161,8 @@ function TextField({ label, value, onChange, type = 'text', required = false }: 
   type?: string;
   required?: boolean;
 }) {
-  return <div><label className="label">{label}</label><input type={type} value={value} onChange={event => onChange(event.target.value)} className="input-field" required={required} /></div>;
+  const id = useId();
+  return <div><label className="label" htmlFor={id}>{label}</label><input id={id} type={type} value={value} onChange={event => onChange(event.target.value)} className="input-field" required={required} /></div>;
 }
 
 function CuisinePicker({ cuisines, onToggleCuisine }: { cuisines: string[]; onToggleCuisine: (cuisine: string) => void }) {
@@ -161,8 +170,8 @@ function CuisinePicker({ cuisines, onToggleCuisine }: { cuisines: string[]; onTo
   const selectedCuisines = new Set(canonicalizeCuisineValues(cuisines));
 
   return (
-    <div>
-      <label className="label">{t('label')}</label>
+    <fieldset>
+      <legend className="label">{t('label')}</legend>
       <div className="mt-1 flex flex-wrap gap-2">
         {CUISINE_OPTIONS.map(cuisine => (
           <button key={cuisine.value} type="button" onClick={() => onToggleCuisine(cuisine.value)}
@@ -173,7 +182,7 @@ function CuisinePicker({ cuisines, onToggleCuisine }: { cuisines: string[]; onTo
           </button>
         ))}
       </div>
-    </div>
+    </fieldset>
   );
 }
 

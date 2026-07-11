@@ -31,7 +31,7 @@ export function BenchmarkOverlay({
           {t('title')}
         </h4>
         {updatedLabel && (
-          <span className="text-xs text-gray-400">{t('updatedAt', { date: updatedLabel })}</span>
+          <span className="text-xs text-gray-600">{t('updatedAt', { date: updatedLabel })}</span>
         )}
       </div>
 
@@ -47,7 +47,7 @@ export function BenchmarkOverlay({
             <span className="text-gray-600">{t('averageOrderValue')}</span>
             <span className={cn(
               'font-semibold',
-              restaurant.avgOrderValue >= industry.avgOrderValue ? 'text-green-600' : 'text-red-500'
+              restaurant.avgOrderValue >= industry.avgOrderValue ? 'text-green-700' : 'text-red-700'
             )}>
               {formatCurrency(restaurant.avgOrderValue, locale)}
             </span>
@@ -63,7 +63,7 @@ export function BenchmarkOverlay({
               style={{ width: `${benchmarkWidth(restaurant.avgOrderValue, industry.avgOrderValue)}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="mt-0.5 text-xs text-gray-600">
             {t('industryAverage', { value: formatCurrency(industry.avgOrderValue, locale) })}
           </p>
         </div>
@@ -73,7 +73,7 @@ export function BenchmarkOverlay({
             <span className="text-gray-600">{t('repeatRate')}</span>
             <span className={cn(
               'font-semibold',
-              restaurant.repeatRate >= industry.repeatRate ? 'text-green-600' : 'text-red-500'
+              restaurant.repeatRate >= industry.repeatRate ? 'text-green-700' : 'text-red-700'
             )}>
               {restaurant.repeatRate}%
             </span>
@@ -89,13 +89,13 @@ export function BenchmarkOverlay({
               style={{ width: `${benchmarkWidth(restaurant.repeatRate, industry.repeatRate)}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="mt-0.5 text-xs text-gray-600">
             {t('industryAverage', { value: `${industry.repeatRate}%` })}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-gray-400">
+      <div className="flex items-center gap-2 text-xs text-gray-600">
         <RefreshCw className="h-3 w-3" />
         <span>{t('refreshCadence')}</span>
       </div>

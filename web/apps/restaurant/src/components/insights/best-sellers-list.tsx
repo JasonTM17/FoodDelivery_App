@@ -40,8 +40,8 @@ export function BestSellersList({ items }: BestSellersListProps) {
             </div>
             <span className={cn(
               'flex items-center gap-0.5 text-xs font-medium',
-              item.trendVsLastWeek > 0 ? 'text-green-600' :
-              item.trendVsLastWeek < 0 ? 'text-red-500' : 'text-gray-400'
+              item.trendVsLastWeek > 0 ? 'text-green-700' :
+              item.trendVsLastWeek < 0 ? 'text-red-700' : 'text-gray-600'
             )}>
               {item.trendVsLastWeek > 0 ? <TrendingUp className="h-3 w-3" /> :
                item.trendVsLastWeek < 0 ? <TrendingDown className="h-3 w-3" /> :

@@ -118,7 +118,7 @@ export default function RevenuePage() {
                   'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                   period === option.id
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700',
+                    : 'text-gray-700 hover:text-gray-900',
                 )}
               >
                 {t(`periods.${option.labelKey}`)}

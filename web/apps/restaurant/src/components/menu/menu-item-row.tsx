@@ -65,7 +65,7 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
 
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-900 truncate text-sm">{item.name}</p>
-        <p className="text-xs text-gray-400 truncate">
+        <p className="truncate text-xs text-gray-600">
           {item.description || t('noDescription')}
         </p>
       </div>
@@ -79,7 +79,7 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
         className={cn(
           'flex items-center gap-1 text-xs rounded-lg px-2 py-1.5 border transition-colors shrink-0',
           item.available
-            ? 'border-green-200 text-green-600 hover:bg-green-50'
+            ? 'border-green-300 text-green-700 hover:bg-green-50'
             : 'border-red-200 text-red-600 hover:bg-red-50'
         )}
         title={item.available ? t('availableTitle') : t('unavailableTitle')}

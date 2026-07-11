@@ -64,7 +64,7 @@ export function CategoryMixDonut({ data }: CategoryMixDonutProps) {
           <text x="100" y="95" textAnchor="middle" className="text-xl font-bold" fill="#111827">
             {formatCompactCurrency(total, locale)}
           </text>
-          <text x="100" y="112" textAnchor="middle" className="text-xs" fill="#9CA3AF">
+          <text x="100" y="112" textAnchor="middle" className="text-xs" fill="#4B5563">
             {t('total')}
           </text>
         </svg>

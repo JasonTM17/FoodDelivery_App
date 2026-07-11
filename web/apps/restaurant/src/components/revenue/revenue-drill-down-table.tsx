@@ -31,7 +31,12 @@ export function RevenueDrillDownTable({ data }: RevenueDrillDownTableProps) {
           {t('empty')}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div
+          className="overflow-x-auto rounded-lg border"
+          role="region"
+          aria-labelledby={headingId}
+          tabIndex={0}
+        >
           <table className="w-full text-sm" aria-labelledby={headingId}>
             <thead>
               <tr className="border-b bg-gray-50">
@@ -48,12 +53,12 @@ export function RevenueDrillDownTable({ data }: RevenueDrillDownTableProps) {
                   <td className="px-3 py-2 text-gray-900">{row.date}</td>
                   <td className="px-3 py-2 text-right text-gray-700">{row.orders}</td>
                   <td className="px-3 py-2 text-right text-gray-900">{formatCurrency(row.gross, locale)}</td>
-                  <td className="px-3 py-2 text-right text-red-500">-{formatCurrency(row.discount, locale)}</td>
+                  <td className="px-3 py-2 text-right text-red-700">-{formatCurrency(row.discount, locale)}</td>
                   <td className="px-3 py-2 text-right font-medium text-gray-900">{formatCurrency(row.net, locale)}</td>
                   <td className="px-3 py-2 text-right text-gray-500">{formatCurrency(row.avgOrder, locale)}</td>
                   <td className="px-3 py-2 text-right text-gray-500">
-                    <span className="text-green-600">{row.newCustomers}</span>
-                    <span className="text-gray-400">/</span>
+                    <span className="text-green-700">{row.newCustomers}</span>
+                    <span className="text-gray-600">/</span>
                     <span className="text-blue-600">{row.returning}</span>
                   </td>
                 </tr>

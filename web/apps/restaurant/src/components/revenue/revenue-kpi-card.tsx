@@ -36,7 +36,7 @@ export function RevenueKpiCard({
         <div
           className={cn(
             'flex items-center gap-1 mt-1 text-xs',
-            trend.positive ? 'text-green-600' : 'text-red-600'
+            trend.positive ? 'text-green-700' : 'text-red-700'
           )}
         >
           <span>{trend.positive ? '↑' : '↓'}</span>
@@ -46,7 +46,7 @@ export function RevenueKpiCard({
         </div>
       )}
       {subtext && !trend && (
-        <p className="text-xs text-gray-400 mt-1">{subtext}</p>
+        <p className="mt-1 text-xs text-gray-600">{subtext}</p>
       )}
     </div>
   );
