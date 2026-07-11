@@ -11,6 +11,8 @@
   "passwordHint": "Nhập mật khẩu",
   "passwordRequired": "Vui lòng nhập mật khẩu",
   "passwordMinLength": "Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số",
+  "showPassword": "Hiện mật khẩu",
+  "hidePassword": "Ẩn mật khẩu",
   "forgotPassword": "Quên mật khẩu?",
   "forgotPasswordTitle": "Quên mật khẩu",
   "forgotPasswordContent": "Vui lòng liên hệ hỗ trợ qua email để được cấp lại mật khẩu.",
@@ -19,6 +21,8 @@
   "noAccount": "Chưa có tài khoản?",
   "registerLink": "Đăng ký",
   "registerAsDriver": "Đăng ký làm tài xế",
+  "driverLoginTitle": "FoodFlow Driver",
+  "driverLoginSubtitle": "Đăng nhập để bắt đầu nhận đơn giao hàng",
 
   "registerTitle": "Đăng ký",
   "registerCreateAccount": "Tạo tài khoản mới",

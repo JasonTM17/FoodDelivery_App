@@ -160,6 +160,18 @@ abstract class AppLocalizations {
   /// **'Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số'**
   String get passwordMinLength;
 
+  /// No description provided for @showPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mật khẩu'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get hidePassword;
+
   /// No description provided for @forgotPassword.
   ///
   /// In vi, this message translates to:
@@ -207,6 +219,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký làm tài xế'**
   String get registerAsDriver;
+
+  /// No description provided for @driverLoginTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'FoodFlow Driver'**
+  String get driverLoginTitle;
+
+  /// No description provided for @driverLoginSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để bắt đầu nhận đơn giao hàng'**
+  String get driverLoginSubtitle;
 
   /// No description provided for @registerTitle.
   ///

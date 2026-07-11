@@ -11,6 +11,8 @@
   "passwordHint": "パスワードを入力してください",
   "passwordRequired": "パスワードを入力してください",
   "passwordMinLength": "8～72文字で英大文字・英小文字・数字を含めてください",
+  "showPassword": "パスワードを表示",
+  "hidePassword": "パスワードを隠す",
   "forgotPassword": "パスワードを忘れた方",
   "forgotPasswordTitle": "パスワードを忘れた方",
   "forgotPasswordContent": "メールにてサポートにご連絡ください。",
@@ -19,6 +21,8 @@
   "noAccount": "アカウントをお持ちでない方",
   "registerLink": "登録",
   "registerAsDriver": "ドライバーとして登録",
+  "driverLoginTitle": "FoodFlow Driver",
+  "driverLoginSubtitle": "ログインして配達依頼の受付を開始",
 
   "registerTitle": "登録",
   "registerCreateAccount": "新しいアカウントを作成",

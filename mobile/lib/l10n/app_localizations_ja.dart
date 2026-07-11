@@ -39,6 +39,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get passwordMinLength => '8～72文字で英大文字・英小文字・数字を含めてください';
 
   @override
+  String get showPassword => 'パスワードを表示';
+
+  @override
+  String get hidePassword => 'パスワードを隠す';
+
+  @override
   String get forgotPassword => 'パスワードを忘れた方';
 
   @override
@@ -61,6 +67,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'ドライバーとして登録';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'ログインして配達依頼の受付を開始';
 
   @override
   String get registerTitle => '登録';

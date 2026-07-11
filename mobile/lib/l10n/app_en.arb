@@ -11,6 +11,8 @@
   "passwordHint": "Enter your password",
   "passwordRequired": "Please enter your password",
   "passwordMinLength": "Use 8–72 characters with uppercase, lowercase, and a number",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "forgotPassword": "Forgot password?",
   "forgotPasswordTitle": "Forgot Password",
   "forgotPasswordContent": "Please contact support via email to reset your password.",
@@ -19,6 +21,8 @@
   "noAccount": "Don't have an account?",
   "registerLink": "Register",
   "registerAsDriver": "Register as a driver",
+  "driverLoginTitle": "FoodFlow Driver",
+  "driverLoginSubtitle": "Sign in to start accepting deliveries",
 
   "registerTitle": "Register",
   "registerCreateAccount": "Create a new account",

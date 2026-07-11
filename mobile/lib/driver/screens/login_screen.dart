@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/widgets/foodflow_mark.dart';
 import '../providers/driver_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -27,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(driverProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -40,29 +43,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: const Icon(
-                      Icons.delivery_dining,
-                      color: AppColors.primary,
-                      size: 44,
-                    ),
-                  ),
+                  const FoodFlowMark(size: 88),
                   const SizedBox(height: 20),
                   Text(
-                    'FoodFlow Driver',
+                    l10n.driverLoginTitle,
                     style: AppTextStyles.headline2.copyWith(
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Đăng nhập để nhận đơn hàng',
+                    l10n.driverLoginSubtitle,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -75,16 +66,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: _inputDecoration(
-                      label: 'Email',
-                      hint: 'Nhập email của bạn',
+                      label: l10n.emailLabel,
+                      hint: l10n.emailHint,
                       icon: Icons.email_outlined,
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập email';
+                        return l10n.emailRequired;
                       }
                       if (!value.contains('@')) {
-                        return 'Email không hợp lệ';
+                        return l10n.emailInvalid;
                       }
                       return null;
                     },
@@ -97,10 +88,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     obscureText: _obscurePassword,
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: _inputDecoration(
-                      label: 'Mật khẩu',
-                      hint: 'Nhập mật khẩu',
+                      label: l10n.passwordLabel,
+                      hint: l10n.passwordHint,
                       icon: Icons.lock_outlined,
                       suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_off
@@ -114,10 +108,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
+                        return l10n.passwordRequired;
                       }
                       if (value.length < 6) {
-                        return 'Mật khẩu phải có ít nhất 6 ký tự';
+                        return l10n.passwordMinLength;
                       }
                       return null;
                     },
@@ -184,9 +178,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text(
-                              'ĐĂNG NHẬP',
-                              style: TextStyle(
+                          : Text(
+                              l10n.loginButton.toUpperCase(),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,

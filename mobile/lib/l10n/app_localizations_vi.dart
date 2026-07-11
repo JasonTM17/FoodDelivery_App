@@ -40,6 +40,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số';
 
   @override
+  String get showPassword => 'Hiện mật khẩu';
+
+  @override
+  String get hidePassword => 'Ẩn mật khẩu';
+
+  @override
   String get forgotPassword => 'Quên mật khẩu?';
 
   @override
@@ -63,6 +69,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'Đăng ký làm tài xế';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'Đăng nhập để bắt đầu nhận đơn giao hàng';
 
   @override
   String get registerTitle => 'Đăng ký';

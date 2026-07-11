@@ -40,6 +40,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use 8–72 characters with uppercase, lowercase, and a number';
 
   @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get forgotPassword => 'Forgot password?';
 
   @override
@@ -63,6 +69,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'Register as a driver';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'Sign in to start accepting deliveries';
 
   @override
   String get registerTitle => 'Register';
