@@ -52,18 +52,17 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 
 Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và chỉ nhận event Supabase outbox nằm trong allowlist; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
-## Docker Hub
+## Docker Hub và GitHub Packages
 
-Registry đã xác minh là Docker Hub; chưa quảng bá GHCR khi package chưa được kiểm chứng.
+Backend và migrator current-head đã được publish bằng SHA immutable lên cả Docker Hub và GHCR; package GHCR đã nối với repository. Admin/Restaurant chưa publish vì env public Supabase bắt buộc còn thiếu, không bake key giả/rỗng vào image.
 
 | Image | Mục đích |
 |---|---|
-| `nguyenson1710/foodflow-backend` | API và worker entry |
-| `nguyenson1710/foodflow-migrate` | Prisma migration non-root |
-| `nguyenson1710/foodflow-admin` | Admin standalone |
-| `nguyenson1710/foodflow-restaurant` | Restaurant standalone |
+| `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API và worker entry; digest `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
+| `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | Prisma migration non-root; digest `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
+| Admin / Restaurant | Gated cho tới khi có `NEXT_PUBLIC_SUPABASE_ANON_KEY` đã xác minh |
 
-Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. Tag `latest` hiện còn ở code cũ nên không được dùng làm source of truth cho Batch 4.
+Tag candidate là `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, hỗ trợ `amd64/arm64`, có SBOM/provenance và cùng digest giữa hai registry. Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. `latest` không được dùng làm source of truth cho Batch 4.
 
 Pipeline release: push `sha-<full-commit>` multi-arch → runtime smoke `amd64/arm64` → Trivy chặn High/Critical → production health → tạo tag immutable `v4.0.0` → chỉ promote `latest` bằng thao tác manual sau smoke.
 

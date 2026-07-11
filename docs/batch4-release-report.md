@@ -60,13 +60,13 @@ Evidence below distinguishes current-line checks from historical broader runs. H
 
 | Gate | Evidence |
 |---|---|
-| Backend current-line | KYC/config/notification 5 suites / 48 tests, typecheck, and lint passed. |
-| Database current-line | Fresh isolated PostGIS applied all 24 migrations; KYC RLS, table comment, and one-pending partial unique index were verified. |
+| Backend current-line | Prisma validate/generate, typecheck, lint, build, and all 129 Jest suites / 972 tests passed at `1f761a6`. |
+| Database current-line | Fresh isolated PostGIS applied all 27 migrations; payment receipt/refund, job dedupe, RLS, and unique-index invariants were verified. |
 | Mobile current-line | Flutter analyze and all 274 tests passed; the real `lib/main_driver.dart` entry built a Driver debug APK. |
 | Admin/OpenAPI current-line | Shared API client + Admin typecheck passed, KYC modal 5/5 passed, and Spectral reported no errors. |
 | Web historical | Admin/Restaurant typecheck/lint, 305 Vitest tests, and 70/55 localized production pages passed before the latest KYC/docs commits. Rerun required. |
 | Browser/a11y historical | Contract 18/18 plus locale/cookie 6/6 passed across Chromium/Firefox; focused axe serious/critical = 0. Full cross-page rerun required. |
-| Docker historical | Four non-root artifacts passed `amd64`/`arm64` runtime smoke and 8/8 Trivy scans with zero High/Critical findings before current head. Rerun required. |
+| Docker current-line | Backend and migrate were published from `1f761a6` to Docker Hub and repository-linked GHCR packages; both registries resolve to identical `amd64`/`arm64` manifest digests with SBOM/provenance. Current-head Trivy/runtime smoke is still required. |
 | Workflow/config historical | Actionlint, Compose configs, and the local release mini-gate passed before current head. Rerun required. |
 | Secret hygiene | The staged scan for `924808c` found no live token/private key; real dotenv files remained untracked. A full final-head Gitleaks scan is still required. |
 | Documentation media | 20 current-source Admin/Restaurant screenshots and two optimized GIFs captured through the real seeded API. |
@@ -81,17 +81,17 @@ Visual review found Vietnamese Admin overview KPI labels rendered in English and
 
 ## Registry audit
 
-Docker Hub was queried anonymously again on 2026-07-11:
+Docker Hub and GHCR were verified on 2026-07-11:
 
-| Repository | Current newest release-like tag | Batch 4 status |
-|---|---|---|
-| `foodflow-backend` | `95759be` / `latest` | Older than local head |
-| `foodflow-migrate` | `95759be` / `latest` | Older than local head |
-| `foodflow-admin` | `0ab94ad` / `latest` | Older than local head |
-| `foodflow-restaurant` | `0ab94ad` / `latest` | Older than local head |
-| `foodflow-worker` | historical duplicate of backend digest | Superseded; worker now runs from backend image |
+| Artifact | Candidate tag | Verified digest | Status |
+|---|---|---|---|
+| `foodflow-backend` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` | Docker Hub/GHCR digest match; linked to repository |
+| `foodflow-migrate` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` | Docker Hub/GHCR digest match; linked to repository |
+| `foodflow-admin` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
+| `foodflow-restaurant` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
+| `foodflow-worker` | no separate artifact | backend digest | worker runs from backend image |
 
-No current `sha-924808c...` or `v4.0.0` release was published. GHCR is not verified and is intentionally absent from public package guidance. Publishing old or unscanned `latest` images would be misleading, so registry publication remains gated.
+The two current SHA manifests are release-candidate evidence, not a production release. No `v4.0.0` tag was created and `latest` was not changed. Semver/latest promotion remains gated on current-head image scanning, all application gates, provider preflight, deployment, and production smoke.
 
 ## External preflight status
 

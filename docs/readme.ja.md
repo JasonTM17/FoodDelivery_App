@@ -52,18 +52,17 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、allowlist 内の Supabase outbox event だけを受信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Docker Hub
+## Docker Hub and GitHub Packages
 
-検証済み registry path は Docker Hub のみです。GHCR package は独立検証されるまで掲載しません。
+Current-head backend/migrator SHA manifests are published to Docker Hub and repository-linked GHCR packages. Admin/Restaurant images remain gated because the required verified Supabase public build variable is absent; no empty or fabricated key is baked into an image.
 
 | Image | Purpose |
 |---|---|
-| `nguyenson1710/foodflow-backend` | API + worker entry |
-| `nguyenson1710/foodflow-migrate` | non-root Prisma migration |
-| `nguyenson1710/foodflow-admin` | Admin standalone |
-| `nguyenson1710/foodflow-restaurant` | Restaurant standalone |
+| `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API + worker; `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
+| `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | non-root Prisma migration; `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
+| Admin / Restaurant | verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` まで gated |
 
-Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。Docker Hub `latest` は古い code を指しているため、Batch 4 の source of truth ではありません。
+Candidate tag is `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; both registries resolve to the same `amd64/arm64` manifest with SBOM/provenance. Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。`latest` は Batch 4 の source of truth ではありません。
 
 Release は `sha-<full-commit>` multi-arch build → `amd64/arm64` runtime smoke → High/Critical Trivy block → production health → immutable `v4.0.0` → manual `latest` promotion の順です。
 

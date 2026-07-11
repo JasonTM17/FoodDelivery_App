@@ -11,7 +11,7 @@ Current tracked text-code footprint (excluding generated/test-output directories
 ```text
 backend/                   NestJS API, Prisma, Vercel handler, worker entry
   api/[...path].ts         Vercel function adapter
-  prisma/                  Schema, 24 migrations, deterministic seed tooling
+  prisma/                  Schema, 27 migrations, deterministic seed tooling
   src/                     Feature modules
 web/                       pnpm workspace
   apps/admin/              Admin Next.js application
@@ -54,7 +54,7 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The Prisma schema currently declares 55 models across 24 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The Prisma schema currently declares 57 models across 27 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 ## Web
 
