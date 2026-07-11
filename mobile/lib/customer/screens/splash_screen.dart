@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
+import '../router/route_names.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -44,9 +47,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final authState = ref.read(authProvider);
 
     if (authState.isAuthenticated) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      context.go(Routes.home);
     } else {
-      Navigator.of(context).pushReplacementNamed('/login');
+      context.go(Routes.login);
     }
   }
 
@@ -100,7 +103,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Giao hàng nhanh - Tươi ngon mỗi ngày',
+                  AppLocalizations.of(context).onboardingWelcomeSubtitle,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.8),
