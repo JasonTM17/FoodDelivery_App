@@ -848,6 +848,92 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverStatusInfoText => 'オンライン中は、稼働エリア内の新しい注文通知を受け取ります。';
 
   @override
+  String get driverOnlineStatusOnline => 'オンライン';
+
+  @override
+  String get driverOnlineStatusPaused => '一時停止中';
+
+  @override
+  String get driverOnlineStatusOffline => 'オフライン';
+
+  @override
+  String get driverOnlineReady => '注文を受け付けられます';
+
+  @override
+  String get driverOnlineEnable => 'オンにして注文を受け付ける';
+
+  @override
+  String get driverOnlineAutoOffline => '一時停止終了後に自動でオフラインへ戻ります';
+
+  @override
+  String get driverDateToday => '今日';
+
+  @override
+  String get driverDateLastSevenDays => '過去7日間';
+
+  @override
+  String get driverDateLastThirtyDays => '過去30日間';
+
+  @override
+  String get driverDateCustom => '期間指定';
+
+  @override
+  String get driverDateClear => 'クリア';
+
+  @override
+  String driverDateFrom(String date) {
+    return '$dateから';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return '$dateまで';
+  }
+
+  @override
+  String get driverStepRestaurant => '店舗へ';
+
+  @override
+  String get driverStepPickup => '受け取り';
+
+  @override
+  String get driverStepDeliver => '配達';
+
+  @override
+  String get driverStepComplete => '完了';
+
+  @override
+  String get driverPeakTitle => 'ピーク時間';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target件';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return '獲得済み報酬: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'あと$count件で$amountを獲得';
+  }
+
+  @override
+  String get driverEarningsDaily => '日別収益';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count日間';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count件の評価';
+  }
+
+  @override
   String get driverEarningsTitle => '収益';
 
   @override

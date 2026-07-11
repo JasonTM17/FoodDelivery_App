@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/driver_provider.dart';
 
@@ -9,6 +10,7 @@ class OnlineToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(driverProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -25,7 +27,7 @@ class OnlineToggle extends ConsumerWidget {
         children: [
           _StatusDot(isOnline: state.isOnline),
           const SizedBox(width: 12),
-          _StatusLabel(isOnline: state.isOnline),
+          _StatusLabel(isOnline: state.isOnline, l10n: l10n),
           const Spacer(),
           SizedBox(
             height: 36,
@@ -76,7 +78,8 @@ class _StatusDot extends StatelessWidget {
 
 class _StatusLabel extends StatelessWidget {
   final bool isOnline;
-  const _StatusLabel({required this.isOnline});
+  final AppLocalizations l10n;
+  const _StatusLabel({required this.isOnline, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +87,9 @@ class _StatusLabel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isOnline ? 'Đang trực tuyến' : 'Đang ngoại tuyến',
+          isOnline
+              ? l10n.driverOnlineStatusOnline
+              : l10n.driverOnlineStatusOffline,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -92,7 +97,7 @@ class _StatusLabel extends StatelessWidget {
           ),
         ),
         Text(
-          isOnline ? 'Sẵn sàng nhận đơn' : 'Bật để nhận đơn hàng',
+          isOnline ? l10n.driverOnlineReady : l10n.driverOnlineEnable,
           style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
         ),
       ],

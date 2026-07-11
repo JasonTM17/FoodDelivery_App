@@ -323,6 +323,57 @@
     }
   },
   "driverStatusInfoText": "オンライン中は、稼働エリア内の新しい注文通知を受け取ります。",
+  "driverOnlineStatusOnline": "オンライン",
+  "driverOnlineStatusPaused": "一時停止中",
+  "driverOnlineStatusOffline": "オフライン",
+  "driverOnlineReady": "注文を受け付けられます",
+  "driverOnlineEnable": "オンにして注文を受け付ける",
+  "driverOnlineAutoOffline": "一時停止終了後に自動でオフラインへ戻ります",
+  "driverDateToday": "今日",
+  "driverDateLastSevenDays": "過去7日間",
+  "driverDateLastThirtyDays": "過去30日間",
+  "driverDateCustom": "期間指定",
+  "driverDateClear": "クリア",
+  "driverDateFrom": "{date}から",
+  "@driverDateFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverDateTo": "{date}まで",
+  "@driverDateTo": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverStepRestaurant": "店舗へ",
+  "driverStepPickup": "受け取り",
+  "driverStepDeliver": "配達",
+  "driverStepComplete": "完了",
+  "driverPeakTitle": "ピーク時間",
+  "driverPeakProgress": "{completed}/{target}件",
+  "@driverPeakProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "driverPeakRewardEarned": "獲得済み報酬: {amount}",
+  "@driverPeakRewardEarned": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "driverPeakRewardRemaining": "あと{count}件で{amount}を獲得",
+  "@driverPeakRewardRemaining": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "driverEarningsDaily": "日別収益",
+  "driverDaysCount": "{count}日間",
+  "@driverDaysCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsReviewCount": "{count}件の評価",
+  "@driverRatingsReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "driverEarningsTitle": "収益",
   "driverEarningsPeriodToday": "今日",

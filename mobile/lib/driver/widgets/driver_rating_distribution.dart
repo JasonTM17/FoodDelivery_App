@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class DriverRatingDistribution extends StatelessWidget {
@@ -15,6 +16,7 @@ class DriverRatingDistribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -49,7 +51,7 @@ class DriverRatingDistribution extends StatelessWidget {
                   _buildStars(average.round()),
                   const SizedBox(height: 4),
                   Text(
-                    '$totalReviews đánh giá',
+                    l10n.driverRatingsReviewCount(totalReviews),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF6B7280),
@@ -71,7 +73,7 @@ class DriverRatingDistribution extends StatelessWidget {
                   SizedBox(
                     width: 40,
                     child: Text(
-                      '$star sao',
+                      l10n.driverRatingsStars(star),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF9CA3AF),

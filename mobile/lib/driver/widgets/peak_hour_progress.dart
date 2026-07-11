@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
+import '../../shared/utils/currency_formatter.dart';
 
 class PeakHourProgress extends StatelessWidget {
   final int completedOrders;
@@ -19,6 +21,8 @@ class PeakHourProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final formattedBonus = formatVnd(context, bonusAmount);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -44,9 +48,9 @@ class PeakHourProgress extends StatelessWidget {
                     color: Color(0xFFF97316),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Giờ cao điểm',
-                    style: TextStyle(
+                  Text(
+                    l10n.driverPeakTitle,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -55,7 +59,7 @@ class PeakHourProgress extends StatelessWidget {
                 ],
               ),
               Text(
-                '$completedOrders/$targetOrders đơn',
+                l10n.driverPeakProgress(completedOrders, targetOrders),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -79,8 +83,11 @@ class PeakHourProgress extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             _isComplete
-                ? 'Đã nhận thưởng +${bonusAmount.toStringAsFixed(0)}đ'
-                : 'Hoàn thành ${targetOrders - completedOrders} đơn nữa để nhận +${bonusAmount.toStringAsFixed(0)}đ',
+                ? l10n.driverPeakRewardEarned(formattedBonus)
+                : l10n.driverPeakRewardRemaining(
+                    targetOrders - completedOrders,
+                    formattedBonus,
+                  ),
             style: TextStyle(
               fontSize: 12,
               color: _isComplete

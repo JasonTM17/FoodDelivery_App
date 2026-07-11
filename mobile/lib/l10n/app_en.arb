@@ -323,6 +323,57 @@
     }
   },
   "driverStatusInfoText": "When online, you will receive new order alerts in your active area.",
+  "driverOnlineStatusOnline": "Online",
+  "driverOnlineStatusPaused": "Paused",
+  "driverOnlineStatusOffline": "Offline",
+  "driverOnlineReady": "Ready to receive orders",
+  "driverOnlineEnable": "Turn on to receive orders",
+  "driverOnlineAutoOffline": "Automatically returns offline when the pause ends",
+  "driverDateToday": "Today",
+  "driverDateLastSevenDays": "Last 7 days",
+  "driverDateLastThirtyDays": "Last 30 days",
+  "driverDateCustom": "Custom",
+  "driverDateClear": "Clear",
+  "driverDateFrom": "From {date}",
+  "@driverDateFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverDateTo": "To {date}",
+  "@driverDateTo": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverStepRestaurant": "Restaurant",
+  "driverStepPickup": "Pick up",
+  "driverStepDeliver": "Deliver",
+  "driverStepComplete": "Complete",
+  "driverPeakTitle": "Peak hours",
+  "driverPeakProgress": "{completed}/{target} orders",
+  "@driverPeakProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "driverPeakRewardEarned": "Reward earned: {amount}",
+  "@driverPeakRewardEarned": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "driverPeakRewardRemaining": "Complete {count} more orders to earn {amount}",
+  "@driverPeakRewardRemaining": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "driverEarningsDaily": "Daily earnings",
+  "driverDaysCount": "{count} days",
+  "@driverDaysCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsReviewCount": "{count} reviews",
+  "@driverRatingsReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "driverEarningsTitle": "Earnings",
   "driverEarningsPeriodToday": "Today",

@@ -864,6 +864,93 @@ class AppLocalizationsEn extends AppLocalizations {
       'When online, you will receive new order alerts in your active area.';
 
   @override
+  String get driverOnlineStatusOnline => 'Online';
+
+  @override
+  String get driverOnlineStatusPaused => 'Paused';
+
+  @override
+  String get driverOnlineStatusOffline => 'Offline';
+
+  @override
+  String get driverOnlineReady => 'Ready to receive orders';
+
+  @override
+  String get driverOnlineEnable => 'Turn on to receive orders';
+
+  @override
+  String get driverOnlineAutoOffline =>
+      'Automatically returns offline when the pause ends';
+
+  @override
+  String get driverDateToday => 'Today';
+
+  @override
+  String get driverDateLastSevenDays => 'Last 7 days';
+
+  @override
+  String get driverDateLastThirtyDays => 'Last 30 days';
+
+  @override
+  String get driverDateCustom => 'Custom';
+
+  @override
+  String get driverDateClear => 'Clear';
+
+  @override
+  String driverDateFrom(String date) {
+    return 'From $date';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return 'To $date';
+  }
+
+  @override
+  String get driverStepRestaurant => 'Restaurant';
+
+  @override
+  String get driverStepPickup => 'Pick up';
+
+  @override
+  String get driverStepDeliver => 'Deliver';
+
+  @override
+  String get driverStepComplete => 'Complete';
+
+  @override
+  String get driverPeakTitle => 'Peak hours';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target orders';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return 'Reward earned: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'Complete $count more orders to earn $amount';
+  }
+
+  @override
+  String get driverEarningsDaily => 'Daily earnings';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count days';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count reviews';
+  }
+
+  @override
   String get driverEarningsTitle => 'Earnings';
 
   @override

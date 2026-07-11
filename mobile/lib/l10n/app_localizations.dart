@@ -1738,6 +1738,150 @@ abstract class AppLocalizations {
   /// **'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.'**
   String get driverStatusInfoText;
 
+  /// No description provided for @driverOnlineStatusOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang trực tuyến'**
+  String get driverOnlineStatusOnline;
+
+  /// No description provided for @driverOnlineStatusPaused.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạm dừng'**
+  String get driverOnlineStatusPaused;
+
+  /// No description provided for @driverOnlineStatusOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ngoại tuyến'**
+  String get driverOnlineStatusOffline;
+
+  /// No description provided for @driverOnlineReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẵn sàng nhận đơn'**
+  String get driverOnlineReady;
+
+  /// No description provided for @driverOnlineEnable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật để nhận đơn hàng'**
+  String get driverOnlineEnable;
+
+  /// No description provided for @driverOnlineAutoOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động ngoại tuyến khi hết thời gian tạm dừng'**
+  String get driverOnlineAutoOffline;
+
+  /// No description provided for @driverDateToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverDateToday;
+
+  /// No description provided for @driverDateLastSevenDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'7 ngày qua'**
+  String get driverDateLastSevenDays;
+
+  /// No description provided for @driverDateLastThirtyDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'30 ngày qua'**
+  String get driverDateLastThirtyDays;
+
+  /// No description provided for @driverDateCustom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chỉnh'**
+  String get driverDateCustom;
+
+  /// No description provided for @driverDateClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get driverDateClear;
+
+  /// No description provided for @driverDateFrom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ {date}'**
+  String driverDateFrom(String date);
+
+  /// No description provided for @driverDateTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến {date}'**
+  String driverDateTo(String date);
+
+  /// No description provided for @driverStepRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến NH'**
+  String get driverStepRestaurant;
+
+  /// No description provided for @driverStepPickup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lấy hàng'**
+  String get driverStepPickup;
+
+  /// No description provided for @driverStepDeliver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng'**
+  String get driverStepDeliver;
+
+  /// No description provided for @driverStepComplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get driverStepComplete;
+
+  /// No description provided for @driverPeakTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ cao điểm'**
+  String get driverPeakTitle;
+
+  /// No description provided for @driverPeakProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'{completed}/{target} đơn'**
+  String driverPeakProgress(int completed, int target);
+
+  /// No description provided for @driverPeakRewardEarned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã nhận thưởng: {amount}'**
+  String driverPeakRewardEarned(String amount);
+
+  /// No description provided for @driverPeakRewardRemaining.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành thêm {count} đơn để nhận {amount}'**
+  String driverPeakRewardRemaining(int count, String amount);
+
+  /// No description provided for @driverEarningsDaily.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập hàng ngày'**
+  String get driverEarningsDaily;
+
+  /// No description provided for @driverDaysCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày'**
+  String driverDaysCount(int count);
+
+  /// No description provided for @driverRatingsReviewCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đánh giá'**
+  String driverRatingsReviewCount(int count);
+
   /// No description provided for @driverEarningsTitle.
   ///
   /// In vi, this message translates to:

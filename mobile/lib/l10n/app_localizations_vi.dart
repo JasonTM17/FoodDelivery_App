@@ -863,6 +863,93 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.';
 
   @override
+  String get driverOnlineStatusOnline => 'Đang trực tuyến';
+
+  @override
+  String get driverOnlineStatusPaused => 'Đang tạm dừng';
+
+  @override
+  String get driverOnlineStatusOffline => 'Đang ngoại tuyến';
+
+  @override
+  String get driverOnlineReady => 'Sẵn sàng nhận đơn';
+
+  @override
+  String get driverOnlineEnable => 'Bật để nhận đơn hàng';
+
+  @override
+  String get driverOnlineAutoOffline =>
+      'Tự động ngoại tuyến khi hết thời gian tạm dừng';
+
+  @override
+  String get driverDateToday => 'Hôm nay';
+
+  @override
+  String get driverDateLastSevenDays => '7 ngày qua';
+
+  @override
+  String get driverDateLastThirtyDays => '30 ngày qua';
+
+  @override
+  String get driverDateCustom => 'Tùy chỉnh';
+
+  @override
+  String get driverDateClear => 'Xóa';
+
+  @override
+  String driverDateFrom(String date) {
+    return 'Từ $date';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return 'Đến $date';
+  }
+
+  @override
+  String get driverStepRestaurant => 'Đến NH';
+
+  @override
+  String get driverStepPickup => 'Lấy hàng';
+
+  @override
+  String get driverStepDeliver => 'Giao hàng';
+
+  @override
+  String get driverStepComplete => 'Hoàn tất';
+
+  @override
+  String get driverPeakTitle => 'Giờ cao điểm';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target đơn';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return 'Đã nhận thưởng: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'Hoàn thành thêm $count đơn để nhận $amount';
+  }
+
+  @override
+  String get driverEarningsDaily => 'Thu nhập hàng ngày';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count đánh giá';
+  }
+
+  @override
   String get driverEarningsTitle => 'Thu nhập';
 
   @override

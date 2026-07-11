@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 
 class DeliveryOrderItem extends StatelessWidget {
   final OrderModel order;
@@ -9,6 +11,7 @@ class DeliveryOrderItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -46,7 +49,9 @@ class DeliveryOrderItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Mã: ${order.id.substring(0, 8).toUpperCase()}',
+                  l10n.driverRatingsOrder(
+                    order.id.substring(0, 8).toUpperCase(),
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF6B7280),
@@ -56,7 +61,7 @@ class DeliveryOrderItem extends StatelessWidget {
             ),
           ),
           Text(
-            '${order.total.toStringAsFixed(0)}đ',
+            formatVnd(context, order.total),
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,

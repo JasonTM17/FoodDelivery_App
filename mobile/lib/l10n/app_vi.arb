@@ -329,6 +329,57 @@
     }
   },
   "driverStatusInfoText": "Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.",
+  "driverOnlineStatusOnline": "Đang trực tuyến",
+  "driverOnlineStatusPaused": "Đang tạm dừng",
+  "driverOnlineStatusOffline": "Đang ngoại tuyến",
+  "driverOnlineReady": "Sẵn sàng nhận đơn",
+  "driverOnlineEnable": "Bật để nhận đơn hàng",
+  "driverOnlineAutoOffline": "Tự động ngoại tuyến khi hết thời gian tạm dừng",
+  "driverDateToday": "Hôm nay",
+  "driverDateLastSevenDays": "7 ngày qua",
+  "driverDateLastThirtyDays": "30 ngày qua",
+  "driverDateCustom": "Tùy chỉnh",
+  "driverDateClear": "Xóa",
+  "driverDateFrom": "Từ {date}",
+  "@driverDateFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverDateTo": "Đến {date}",
+  "@driverDateTo": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverStepRestaurant": "Đến NH",
+  "driverStepPickup": "Lấy hàng",
+  "driverStepDeliver": "Giao hàng",
+  "driverStepComplete": "Hoàn tất",
+  "driverPeakTitle": "Giờ cao điểm",
+  "driverPeakProgress": "{completed}/{target} đơn",
+  "@driverPeakProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "driverPeakRewardEarned": "Đã nhận thưởng: {amount}",
+  "@driverPeakRewardEarned": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "driverPeakRewardRemaining": "Hoàn thành thêm {count} đơn để nhận {amount}",
+  "@driverPeakRewardRemaining": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "driverEarningsDaily": "Thu nhập hàng ngày",
+  "driverDaysCount": "{count} ngày",
+  "@driverDaysCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsReviewCount": "{count} đánh giá",
+  "@driverRatingsReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "driverEarningsTitle": "Thu nhập",
   "driverEarningsPeriodToday": "Hôm nay",
