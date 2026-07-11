@@ -345,7 +345,7 @@ components:
       type: object
       properties:
         accessToken:  { type: string, description: "JWT access token (15 min TTL; algorithm follows the active backend cutover phase)" }
-        refreshToken: { type: string, description: "Opaque rotating refresh token" }
+        refreshToken: { type: string, description: "Rotating refresh JWT (7 day TTL; invalidated through the server-side blocklist)" }
         expiresAt:    { type: string, format: date-time }
         user:
           $ref: "#/components/schemas/UserProfile"
@@ -364,7 +364,8 @@ components:
         avatarUrl: { type: string }
         isActive:  { type: boolean }
         createdAt: { type: string, format: date-time }
-      required: [id, email, fullName, role, isActive, createdAt]
+        updatedAt: { type: string, format: date-time }
+      required: [id, email, fullName, role, isActive, createdAt, updatedAt]
       example:
         id: "550e8400-e29b-41d4-a716-446655440000"
         email: "nguyenvana@example.com"
@@ -374,6 +375,7 @@ components:
         avatarUrl: "https://cdn.foodflow.vn/avatars/default.png"
         isActive: true
         createdAt: "2026-01-15T08:30:00Z"
+        updatedAt: "2026-07-11T08:30:00Z"
 
     UpdateUserRequest:
       type: object
