@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: docker-publish-${{ github.ref }}
@@ -29,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-tag: ${{ steps.release.outputs.tag }}
+      ghcr_owner: ${{ steps.release.outputs.ghcr_owner }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
@@ -62,6 +64,7 @@ jobs:
             exit 1
           }
           echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "ghcr_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Validate registry secrets and public build URLs
         shell: bash
@@ -174,11 +177,20 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract immutable image metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+          images: |
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+            ghcr.io/${{ needs.release-preflight.outputs.ghcr_owner }}/${{ matrix.name }}
           tags: |
             type=raw,value=sha-${{ github.sha }}
 
@@ -229,9 +241,18 @@ jobs:
       - name: Inspect published multi-architecture manifest
         shell: bash
         env:
-          IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+          DOCKERHUB_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+          GHCR_IMAGE: ghcr.io/${{ needs.release-preflight.outputs.ghcr_owner }}/${{ matrix.name }}
           IMAGE_TAG: sha-${{ github.sha }}
-        run: docker buildx imagetools inspect "$IMAGE:$IMAGE_TAG"
+        run: |
+          set -euo pipefail
+          dockerhub_digest="$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
+          ghcr_digest="$(docker buildx imagetools inspect "$GHCR_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
+          test -n "$dockerhub_digest" && test "$dockerhub_digest" = "$ghcr_digest" || {
+            echo 'Docker Hub and GHCR manifest digests differ.'
+            exit 1
+          }
+          echo "Both registries published $dockerhub_digest"
 
   runtime-smoke:
     needs: build-and-push
@@ -392,43 +413,53 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Promote verified SHA manifests to the immutable release tag
         shell: bash
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GHCR_OWNER: ${{ needs.release-preflight.outputs.ghcr_owner }}
           RELEASE_TAG: ${{ needs.release-preflight.outputs.release-tag }}
           SHA_TAG: sha-${{ github.sha }}
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
           for image in "${images[@]}"; do
-            source="docker.io/$DOCKERHUB_USERNAME/$image:$SHA_TAG"
-            target="docker.io/$DOCKERHUB_USERNAME/$image:$RELEASE_TAG"
-            source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-            test -n "$source_digest" || {
-              echo "Published SHA manifest has no digest for $image"
-              exit 1
-            }
-
-            if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
-              target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
-              test "$source_digest" = "$target_digest" || {
-                echo "Refusing to overwrite immutable tag $target"
-                echo "Existing: $target_digest"
-                echo "Requested: $source_digest"
+            for registry in "docker.io/$DOCKERHUB_USERNAME" "ghcr.io/$GHCR_OWNER"; do
+              source="$registry/$image:$SHA_TAG"
+              target="$registry/$image:$RELEASE_TAG"
+              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+              test -n "$source_digest" || {
+                echo "Published SHA manifest has no digest for $source"
                 exit 1
               }
-              echo "$image already released at $target_digest"
-              continue
-            fi
 
-            docker buildx imagetools create --tag "$target" "$source"
-            promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-            test "$source_digest" = "$promoted_digest" || {
-              echo "Release digest verification failed for $image"
-              exit 1
-            }
-            echo "$image released at $promoted_digest"
+              if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
+                target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
+                test "$source_digest" = "$target_digest" || {
+                  echo "Refusing to overwrite immutable tag $target"
+                  echo "Existing: $target_digest"
+                  echo "Requested: $source_digest"
+                  exit 1
+                }
+                echo "$target already released at $target_digest"
+                continue
+              fi
+
+              docker buildx imagetools create --tag "$target" "$source"
+              promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+              test "$source_digest" = "$promoted_digest" || {
+                echo "Release digest verification failed for $target"
+                exit 1
+              }
+              echo "$target released at $promoted_digest"
+            done
           done
 
   promote-latest:
@@ -446,23 +477,33 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Promote verified manifests and compare digests
         shell: bash
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GHCR_OWNER: ${{ needs.release-preflight.outputs.ghcr_owner }}
           RELEASE_TAG: ${{ needs.release-preflight.outputs.release-tag }}
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
           for image in "${images[@]}"; do
-            source="docker.io/$DOCKERHUB_USERNAME/$image:$RELEASE_TAG"
-            target="docker.io/$DOCKERHUB_USERNAME/$image:latest"
-            docker buildx imagetools create --tag "$target" "$source"
-            source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-            target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-            test -n "$source_digest" && test "$source_digest" = "$target_digest" || {
-              echo "Digest verification failed for $image"
-              exit 1
-            }
-            echo "$image promoted at $source_digest"
+            for registry in "docker.io/$DOCKERHUB_USERNAME" "ghcr.io/$GHCR_OWNER"; do
+              source="$registry/$image:$RELEASE_TAG"
+              target="$registry/$image:latest"
+              docker buildx imagetools create --tag "$target" "$source"
+              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+              target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+              test -n "$source_digest" && test "$source_digest" = "$target_digest" || {
+                echo "Digest verification failed for $target"
+                exit 1
+              }
+              echo "$target promoted at $source_digest"
+            done
           done
