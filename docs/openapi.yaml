@@ -66,6 +66,8 @@ tags:
     description: Short-lived Supabase Realtime authorization for authenticated private channels
   - name: jobs
     description: Secured PostgreSQL outbox drain used by Vercel Cron and approved workers
+  - name: health
+    description: Public platform liveness and strict dependency readiness probes
 
 security:
   - bearerAuth: []
@@ -127,6 +129,52 @@ components:
         status: 422
         detail: "Email is not valid"
         code: "VALIDATION_INVALID_EMAIL"
+
+    HealthComponentStatus:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [up, down] }
+        latencyMs: { type: integer, minimum: 0 }
+      required: [status, latencyMs]
+
+    StorageHealthComponentStatus:
+      type: object
+      additionalProperties: false
+      properties:
+        provider: { type: string, enum: [minio, supabase] }
+        status: { type: string, enum: [up, down] }
+        latencyMs: { type: integer, minimum: 0 }
+      required: [provider, status, latencyMs]
+
+    HealthComponents:
+      type: object
+      additionalProperties: false
+      properties:
+        db: { $ref: '#/components/schemas/HealthComponentStatus' }
+        redis: { $ref: '#/components/schemas/HealthComponentStatus' }
+        storage: { $ref: '#/components/schemas/StorageHealthComponentStatus' }
+      required: [db, redis, storage]
+
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        uptime: { type: number, minimum: 0 }
+        timestamp: { type: string, format: date-time }
+        components: { $ref: '#/components/schemas/HealthComponents' }
+      required: [status, uptime, timestamp, components]
+
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ready, not_ready] }
+        ready: { type: boolean }
+        timestamp: { type: string, format: date-time }
+        components: { $ref: '#/components/schemas/HealthComponents' }
+      required: [status, ready, timestamp, components]
 
     PaginationMeta:
       type: object
@@ -2731,6 +2779,44 @@ components:
       required: [data, meta]
 
 paths:
+
+  /healthz:
+    get:
+      tags: [health]
+      operationId: getApiHealth
+      summary: Report API liveness and dependency state
+      description: Database and Redis failures return 503. A storage-only outage is reported as degraded with 200 so the platform does not restart an otherwise live instance.
+      security: []
+      responses:
+        "200":
+          description: API is live; all components are up or only storage is degraded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+        "503":
+          description: A dependency required for API liveness is down
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+
+  /readyz:
+    get:
+      tags: [health]
+      operationId: getApiReadiness
+      summary: Report strict readiness for production traffic
+      description: Returns 200 only when database, Redis, and the explicitly configured storage provider are all reachable. Any dependency failure returns 503 and not_ready.
+      security: []
+      responses:
+        "200":
+          description: Every configured dependency is ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessResponse' }
+        "503":
+          description: At least one configured dependency is not ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessResponse' }
 
   /realtime/token:
     post:

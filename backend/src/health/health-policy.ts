@@ -35,3 +35,22 @@ export function resolveHealthOutcome(components: HealthComponents): {
   }
   return { status: 'degraded', httpStatus: 503, requiredOk: false }
 }
+
+/**
+ * Readiness is stricter than the platform liveness response: an instance must
+ * not receive production traffic while any configured dependency is down.
+ */
+export function resolveReadinessOutcome(components: HealthComponents): {
+  status: 'ready' | 'not_ready'
+  httpStatus: number
+  ready: boolean
+} {
+  const ready =
+    components.db.status === 'up' &&
+    components.redis.status === 'up' &&
+    components.storage.status === 'up'
+
+  return ready
+    ? { status: 'ready', httpStatus: 200, ready: true }
+    : { status: 'not_ready', httpStatus: 503, ready: false }
+}

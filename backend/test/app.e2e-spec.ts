@@ -26,4 +26,13 @@ describe('AppController (e2e)', () => {
         expect(res.body.status).toBe('ok')
       })
   })
+
+  it('/api/readyz (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/api/readyz')
+      .expect(200)
+      .expect(res => {
+        expect(res.body).toMatchObject({ status: 'ready', ready: true })
+      })
+  })
 })

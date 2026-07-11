@@ -12,6 +12,7 @@ import {
   type HealthComponents,
   type StorageComponentStatus,
   resolveHealthOutcome,
+  resolveReadinessOutcome,
 } from './health-policy'
 
 interface HealthResponse {
@@ -21,7 +22,14 @@ interface HealthResponse {
   components: HealthComponents
 }
 
-@Controller('healthz')
+interface ReadinessResponse {
+  status: 'ready' | 'not_ready'
+  ready: boolean
+  timestamp: string
+  components: HealthComponents
+}
+
+@Controller()
 export class HealthController {
   constructor(
     private readonly prisma: PrismaService,
@@ -29,19 +37,9 @@ export class HealthController {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
-  @Get()
+  @Get('healthz')
   async check(@Res() res: Response) {
-    const [dbStatus, redisStatus, storageStatus] = await Promise.all([
-      this.checkDatabase(),
-      this.checkRedis(),
-      this.checkStorage(),
-    ])
-
-    const components: HealthComponents = {
-      db: dbStatus,
-      redis: redisStatus,
-      storage: storageStatus,
-    }
+    const components = await this.checkComponents()
     const { status: overall, httpStatus } = resolveHealthOutcome(components)
 
     return res.status(httpStatus).json({
@@ -50,6 +48,28 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       components,
     } as HealthResponse)
+  }
+
+  @Get('readyz')
+  async readiness(@Res() res: Response) {
+    const components = await this.checkComponents()
+    const outcome = resolveReadinessOutcome(components)
+
+    return res.status(outcome.httpStatus).json({
+      status: outcome.status,
+      ready: outcome.ready,
+      timestamp: new Date().toISOString(),
+      components,
+    } as ReadinessResponse)
+  }
+
+  private async checkComponents(): Promise<HealthComponents> {
+    const [db, redis, storage] = await Promise.all([
+      this.checkDatabase(),
+      this.checkRedis(),
+      this.checkStorage(),
+    ])
+    return { db, redis, storage }
   }
 
   private async checkDatabase(): Promise<ComponentStatus> {

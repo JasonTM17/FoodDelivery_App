@@ -1,4 +1,4 @@
-import { resolveHealthOutcome } from './health-policy'
+import { resolveHealthOutcome, resolveReadinessOutcome } from './health-policy'
 
 const up = { status: 'up' as const, latencyMs: 1 }
 const down = { status: 'down' as const, latencyMs: 5 }
@@ -45,5 +45,25 @@ describe('resolveHealthOutcome', () => {
     })
     expect(result.httpStatus).toBe(503)
     expect(result.requiredOk).toBe(false)
+  })
+})
+
+describe('resolveReadinessOutcome', () => {
+  it('returns ready only when every configured dependency is up', () => {
+    expect(
+      resolveReadinessOutcome({ db: up, redis: up, storage: storageUp }),
+    ).toEqual({ status: 'ready', httpStatus: 200, ready: true })
+  })
+
+  it.each([
+    ['database', { db: down, redis: up, storage: storageUp }],
+    ['Redis', { db: up, redis: down, storage: storageUp }],
+    ['storage', { db: up, redis: up, storage: storageDown }],
+  ])('returns not_ready when %s is down', (_name, components) => {
+    expect(resolveReadinessOutcome(components)).toEqual({
+      status: 'not_ready',
+      httpStatus: 503,
+      ready: false,
+    })
   })
 })

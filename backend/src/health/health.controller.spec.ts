@@ -115,6 +115,39 @@ describe('HealthController', () => {
     })
   })
 
+  it('returns ready when every configured dependency is up', async () => {
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.readiness(res as unknown as Response)
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json.mock.calls[0][0]).toMatchObject({
+      status: 'ready',
+      ready: true,
+      components: {
+        db: { status: 'up' },
+        redis: { status: 'up' },
+        storage: { provider: 'minio', status: 'up' },
+      },
+    })
+  })
+
+  it('returns 503 not_ready when storage is down', async () => {
+    ;(Client as unknown as jest.Mock).mockImplementationOnce(() => ({
+      bucketExists: jest.fn().mockRejectedValue(new Error('MinIO down')),
+    }))
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.readiness(res as unknown as Response)
+
+    expect(res.status).toHaveBeenCalledWith(503)
+    expect(res.json.mock.calls[0][0]).toMatchObject({
+      status: 'not_ready',
+      ready: false,
+      components: { storage: { status: 'down' } },
+    })
+  })
+
   it('does not construct a localhost MinIO client when production storage env is missing', async () => {
     mockConfig.get.mockImplementation((key: string) => {
       if (key === 'NODE_ENV') return 'production'
