@@ -42,6 +42,8 @@ tags:
     description: Menu management (categories, items, options, availability) -- restaurant owner only
   - name: restaurant-staff
     description: Restaurant tenant staff invitations, permissions, and shift schedules
+  - name: restaurant-reviews
+    description: Restaurant tenant review inbox and merchant replies
   - name: orders
     description: Order lifecycle (place, status transitions, cancel, refund, assign driver, tracking)
   - name: drivers
@@ -1652,6 +1654,55 @@ components:
             deleted: { type: boolean, const: true }
           required: [deleted]
       required: [success, data]
+
+    RestaurantReview:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        customerName: { type: string }
+        customerInitial: { type: string, minLength: 0, maxLength: 2 }
+        customerAvatar: { type: [string, "null"], format: uri }
+        dishName: { type: string }
+        dishId: { type: [string, "null"], format: uuid }
+        photos:
+          type: array
+          items: { type: string, format: uri }
+        reply: { type: [string, "null"] }
+        repliedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+      required: [id, orderId, rating, comment, customerName, customerInitial, customerAvatar, dishName, dishId, photos, reply, repliedAt, createdAt]
+
+    RestaurantReviewsPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        reviews:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantReview" }
+        distribution:
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [reviews, distribution, meta]
+
+    RestaurantReviewReplyRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reply: { type: string, minLength: 1, maxLength: 1000 }
+      required: [reply]
+
+    RestaurantReviewReplyResult:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        reply: { type: string }
+        replyAt: { type: string, format: date-time }
+      required: [id, reply, replyAt]
 
     # ── Payments ──
 
@@ -3388,6 +3439,64 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/ImageUploadResult" }
         "400": { description: "Missing or invalid image", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/reviews:
+    get:
+      tags: [restaurant-reviews]
+      summary: List reviews for the authenticated restaurant
+      description: Returns only reviews owned by the authenticated restaurant tenant, including the stable fields consumed by the Restaurant dashboard.
+      operationId: restaurantReviews_list
+      x-foo-actor: restaurant_owner
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: rating
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        "200":
+          description: "Tenant-scoped restaurant reviews"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantReviewsPayload" }
+        "403": { description: "Restaurant profile unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/reviews/{id}/reply:
+    post:
+      tags: [restaurant-reviews]
+      summary: Reply to a tenant-owned review
+      description: Creates or edits the merchant reply for a review owned by the authenticated restaurant. Existing replies can be edited only during the 24-hour edit window.
+      operationId: restaurantReviews_reply
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantReviewReplyRequest" }
+      responses:
+        "201":
+          description: "Review reply saved"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantReviewReplyResult" }
+        "400": { description: "Reply edit window closed or invalid reply", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Review belongs to another restaurant tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Review not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /restaurant/staff:
     get:

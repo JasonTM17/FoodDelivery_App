@@ -164,15 +164,17 @@ export class ReviewsService {
     const distribution = Object.fromEntries(grouped.map(row => [row.foodRating, row._count]))
     return {
       reviews: reviews.map(review => ({
-        id: review.id, rating: review.foodRating, comment: review.comment ?? '',
-        customerName: review.customer.fullName, customerAvatar: review.customer.avatarUrl,
+        id: review.id, orderId: review.orderId, rating: review.foodRating, comment: review.comment ?? '',
+        customerName: review.customer.fullName,
+        customerInitial: Array.from(review.customer.fullName.trim())[0]?.toUpperCase() ?? '',
+        customerAvatar: review.customer.avatarUrl,
         dishName: review.order.orderItems[0]?.nameSnapshot ?? '',
-        dishId: review.order.orderItems[0]?.menuItemId,
+        dishId: review.order.orderItems[0]?.menuItemId ?? null,
         photos: review.photos, reply: review.reply, repliedAt: review.replyAt,
         createdAt: review.createdAt,
       })),
       distribution,
-      meta: { page, limit, total },
+      meta: { page, limit, total, hasMore: page * limit < total },
     }
   }
 
