@@ -45,12 +45,14 @@ export class CommissionSplitProcessor extends WorkerHost {
 
     const entries: LedgerEntryInput[] = [
       {
+        dedupeKey: `commission-${orderId}-restaurant`,
         orderId,
         recipientType: 'restaurant',
         recipientId: order.restaurantId,
         amount: split.restaurantPayout,
       },
       {
+        dedupeKey: `commission-${orderId}-platform`,
         orderId,
         recipientType: 'platform',
         amount: split.platformCut + split.platformDriverFee,
@@ -59,6 +61,7 @@ export class CommissionSplitProcessor extends WorkerHost {
 
     if (order.driverId) {
       entries.push({
+        dedupeKey: `commission-${orderId}-driver`,
         orderId,
         recipientType: 'driver',
         recipientId: order.driverId,

@@ -33,7 +33,6 @@ describe('WebhooksController SePay contract', () => {
     notifyRestaurant: jest.fn(),
     notifyAdmins: jest.fn(),
   }
-  const commissionQueue = { add: jest.fn() }
   const orderTimeoutQueue = { add: jest.fn() }
 
   const controller = new WebhooksController(
@@ -41,7 +40,6 @@ describe('WebhooksController SePay contract', () => {
     prisma as unknown as PrismaService,
     orders as unknown as OrdersService,
     ordersGateway as unknown as OrdersGateway,
-    commissionQueue as unknown as Queue,
     orderTimeoutQueue as unknown as Queue,
   )
 
@@ -107,7 +105,6 @@ describe('WebhooksController SePay contract', () => {
     prisma.orderStatusHistory.create.mockResolvedValue({})
     prisma.$transaction.mockResolvedValue([])
     orders.transition.mockResolvedValue({})
-    commissionQueue.add.mockResolvedValue({})
     orderTimeoutQueue.add.mockResolvedValue({})
   })
 
@@ -154,11 +151,6 @@ describe('WebhooksController SePay contract', () => {
       'restaurant-accept-timeout',
       expect.objectContaining({ orderId: 'order-1' }),
       expect.objectContaining({ jobId: 'timeout-order-1-restaurant-accept' }),
-    )
-    expect(commissionQueue.add).toHaveBeenCalledWith(
-      'commission-split',
-      { orderId: 'order-1' },
-      { jobId: 'commission-split-order-1', removeOnComplete: true },
     )
     expect(prisma.paymentWebhookReceipt.update).toHaveBeenLastCalledWith({
       where: { id: 'receipt-1' },
@@ -283,7 +275,6 @@ describe('WebhooksController SePay contract', () => {
       }),
     })
     expect(orders.transition).not.toHaveBeenCalled()
-    expect(commissionQueue.add).not.toHaveBeenCalled()
     expect(prisma.paymentWebhookReceipt.update).toHaveBeenLastCalledWith({
       where: { id: 'receipt-1' },
       data: expect.objectContaining({ status: 'manual_review' }),

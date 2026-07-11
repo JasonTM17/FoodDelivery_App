@@ -9,7 +9,6 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
   imports: [
     PaymentsModule,
     OrdersModule,
-    QueueProviderModule.registerQueue({ name: 'commission-split' }),
     QueueProviderModule.registerQueue({ name: 'order-timeout' }),
   ],
   controllers: [WebhooksController],

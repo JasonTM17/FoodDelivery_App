@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service'
 export type RecipientType = 'restaurant' | 'driver' | 'platform'
 
 export interface LedgerEntryInput {
+  dedupeKey: string
   orderId: string
   recipientType: RecipientType
   recipientId?: string
@@ -16,15 +17,17 @@ export class PayoutLedgerService {
   constructor(private readonly prisma: PrismaService) {}
 
   async insertEntry(entry: LedgerEntryInput): Promise<void> {
-    await this.prisma.payoutLedger.create({
-      data: {
+    await this.prisma.payoutLedger.createMany({
+      data: [{
+        dedupeKey: entry.dedupeKey,
         orderId: entry.orderId,
         recipientType: entry.recipientType,
         recipientId: entry.recipientId ?? null,
         amount: entry.amount,
         currency: entry.currency ?? 'VND',
         status: 'pending',
-      },
+      }],
+      skipDuplicates: true,
     })
   }
 
@@ -32,6 +35,7 @@ export class PayoutLedgerService {
     if (entries.length === 0) return
     await this.prisma.payoutLedger.createMany({
       data: entries.map(e => ({
+        dedupeKey: e.dedupeKey,
         orderId: e.orderId,
         recipientType: e.recipientType,
         recipientId: e.recipientId ?? null,
@@ -39,6 +43,7 @@ export class PayoutLedgerService {
         currency: e.currency ?? 'VND',
         status: 'pending',
       })),
+      skipDuplicates: true,
     })
   }
 

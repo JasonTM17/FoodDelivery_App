@@ -65,7 +65,6 @@ export class WebhooksController {
     private readonly prisma: PrismaService,
     private readonly orders: OrdersService,
     private readonly ordersGateway: OrdersGateway,
-    @InjectQueue('commission-split') private readonly commissionQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
   ) {}
 
@@ -271,11 +270,6 @@ export class WebhooksController {
         }
       }
 
-      await this.commissionQueue.add(
-        'commission-split',
-        { orderId: intent.orderId },
-        { jobId: `commission-split-${intent.orderId}`, removeOnComplete: true },
-      )
       await this.completeReceipt(claim.id, 'completed')
       return { success: true }
     } catch (error) {

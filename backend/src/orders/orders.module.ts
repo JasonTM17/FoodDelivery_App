@@ -26,6 +26,7 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     QueueProviderModule.registerQueue({ name: 'dispatch' }),
     QueueProviderModule.registerQueue({ name: 'payment-refund' }),
     QueueProviderModule.registerQueue({ name: 'order-timeout' }),
+    QueueProviderModule.registerQueue({ name: 'commission-split' }),
   ],
   controllers: [OrdersController],
   providers: [

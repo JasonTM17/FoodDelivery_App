@@ -576,6 +576,7 @@ model Order {
   payment                Payment?
   paymentIntent          PaymentIntent?
   paymentWebhookReceipts PaymentWebhookReceipt[]
+  refundRequests         PaymentRefundRequest[]
   payoutLedgers          PayoutLedger[]
   deliveryTask           DeliveryTask?
   driverTipReports       DriverTipReport[]
@@ -616,7 +617,8 @@ model OrderStatusHistory {
   note      String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order          Order                  @relation(fields: [orderId], references: [id])
+  refundRequests PaymentRefundRequest[]
 
   @@index([orderId, createdAt])
   @@map("order_status_history")
@@ -632,7 +634,8 @@ model Payment {
   paidAt        DateTime?     @map("paid_at") @db.Timestamptz()
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order                 Order                  @relation(fields: [orderId], references: [id])
+  paymentRefundRequests PaymentRefundRequest[]
 
   @@map("payments")
 }
@@ -1178,9 +1181,40 @@ model PaymentWebhookReceipt {
   @@map("payment_webhook_receipts")
 }
 
+model PaymentRefundRequest {
+  id              String        @id @default(uuid()) @db.Uuid
+  refundKey       String        @unique @map("refund_key") @db.VarChar(200)
+  orderId         String        @map("order_id") @db.Uuid
+  paymentId       String        @map("payment_id") @db.Uuid
+  amount          Int
+  kind            String        @db.VarChar(20)
+  reason          String        @db.Text
+  method          PaymentMethod
+  status          String        @default("queued") @db.VarChar(20)
+  attempts        Int           @default(0)
+  processingJobId String?       @map("processing_job_id") @db.VarChar(200)
+  failureCode     String?       @map("failure_code") @db.VarChar(100)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+  completedAt     DateTime?     @map("completed_at") @db.Timestamptz()
+
+  order                Order               @relation(fields: [orderId], references: [id])
+  payment              Payment             @relation(fields: [paymentId], references: [id])
+  walletTransaction    WalletTransaction?
+  payoutLedger         PayoutLedger?
+  orderStatusHistory   OrderStatusHistory? @relation(fields: [orderStatusHistoryId], references: [id])
+  orderStatusHistoryId String?             @db.Uuid
+
+  @@index([orderId, status])
+  @@index([status, updatedAt])
+  @@map("payment_refund_requests")
+}
+
 model PayoutLedger {
   id                String    @id @default(uuid()) @db.Uuid
+  dedupeKey         String    @unique @map("dedupe_key") @db.VarChar(200)
   orderId           String    @map("order_id") @db.Uuid
+  refundRequestId   String?   @unique @map("refund_request_id") @db.Uuid
   recipientType     String    @map("recipient_type") @db.VarChar(20)
   recipientId       String?   @map("recipient_id") @db.Uuid
   amount            Int
@@ -1190,7 +1224,8 @@ model PayoutLedger {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   settledAt         DateTime? @map("settled_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order         Order                 @relation(fields: [orderId], references: [id])
+  refundRequest PaymentRefundRequest? @relation(fields: [refundRequestId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([recipientType, recipientId, status])
@@ -1241,15 +1276,17 @@ enum WalletTxnType {
 }
 
 model WalletTransaction {
-  id          String        @id @default(uuid()) @db.Uuid
-  userId      String        @map("user_id") @db.Uuid
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amountDelta Int           @map("amount_delta")
-  type        WalletTxnType
-  reason      String
-  refId       String?       @map("ref_id") @db.Uuid
-  status      String        @default("CONFIRMED") @db.VarChar(20)
-  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @map("user_id") @db.Uuid
+  refundRequestId String?               @unique @map("refund_request_id") @db.Uuid
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refundRequest   PaymentRefundRequest? @relation(fields: [refundRequestId], references: [id], onDelete: SetNull)
+  amountDelta     Int                   @map("amount_delta")
+  type            WalletTxnType
+  reason          String
+  refId           String?               @map("ref_id") @db.Uuid
+  status          String                @default("CONFIRMED") @db.VarChar(20)
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([userId, status])
   @@index([userId, createdAt(sort: Desc)])

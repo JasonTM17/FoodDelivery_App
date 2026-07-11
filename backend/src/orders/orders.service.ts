@@ -8,7 +8,14 @@ import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto } from './orders.dto'
-import { OrderStatus as PrismaOrderStatus, Prisma, UserRole, type Order } from '@prisma/client'
+import {
+  OrderStatus as PrismaOrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  Prisma,
+  UserRole,
+  type Order,
+} from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
@@ -32,6 +39,7 @@ export class OrdersService {
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
     @InjectQueue('payment-refund') private readonly refundQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
+    @InjectQueue('commission-split') private readonly commissionQueue: Queue,
   ) {}
 
   async transition(
@@ -45,6 +53,7 @@ export class OrdersService {
     type SideEffects = {
       refundJob: PaymentRefundJobData | null
       needsDispatch: boolean
+      needsCommission: boolean
       releaseDriverId: string | null
     }
 
@@ -87,17 +96,38 @@ export class OrdersService {
       })
 
       let refundJob: PaymentRefundJobData | null = null
+      if (toStatus === 'delivered') {
+        const payment = await tx.payment.findUnique({ where: { orderId } })
+        if (!payment) throw new BadRequestException('ORDER_PAYMENT_NOT_FOUND')
+        if (payment.method === PaymentMethod.cash && payment.status === PaymentStatus.pending) {
+          await tx.payment.update({
+            where: { orderId },
+            data: { status: PaymentStatus.completed, paidAt: new Date() },
+          })
+        } else if (payment.status !== PaymentStatus.completed) {
+          throw new BadRequestException('ORDER_PAYMENT_NOT_CAPTURED')
+        }
+      }
       if (toStatus === 'cancelled') {
         const payment = await tx.payment.findUnique({ where: { orderId } })
         if (payment?.status === 'completed') {
-          refundJob = {
-            refundId: `full-${orderId}`,
-            orderId,
-            transactionRef: payment.transactionId,
-            amount: Math.trunc(Number(payment.amount)),
-            reason: reason ?? 'Order cancelled',
-            kind: 'full',
-            attemptNo: 1,
+          const priorRefunds = await tx.paymentRefundRequest.aggregate({
+            where: { orderId, status: 'completed' },
+            _sum: { amount: true },
+          })
+          const remainingAmount = Math.max(
+            0,
+            Math.trunc(Number(payment.amount)) - (priorRefunds._sum.amount ?? 0),
+          )
+          if (remainingAmount > 0) {
+            refundJob = {
+              refundId: `full-${orderId}`,
+              orderId,
+              transactionRef: payment.transactionId,
+              amount: remainingAmount,
+              reason: reason ?? 'Order cancelled',
+              kind: 'full',
+            }
           }
         }
       }
@@ -107,6 +137,7 @@ export class OrdersService {
         fx: {
           refundJob,
           needsDispatch: toStatus === 'restaurant_accepted',
+          needsCommission: toStatus === 'delivered' || toStatus === 'completed',
           releaseDriverId: isDriverReleaseStatus(toStatus) ? order.driverId : null,
         } as SideEffects,
       }
@@ -135,6 +166,14 @@ export class OrdersService {
 
     if (fx.needsDispatch) {
       await this.enqueueDispatch(orderId)
+    }
+
+    if (fx.needsCommission) {
+      await this.commissionQueue.add(
+        'commission-split',
+        { orderId },
+        { jobId: `commission-split-${orderId}` },
+      )
     }
 
     return result

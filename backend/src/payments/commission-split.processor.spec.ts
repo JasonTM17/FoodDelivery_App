@@ -52,9 +52,11 @@ describe('CommissionSplitProcessor', () => {
 
     expect(restaurant).toBeDefined()
     expect(restaurant.recipientId).toBe('rest-1')
+    expect(restaurant.dedupeKey).toBe('commission-order-1-restaurant')
     expect(driver).toBeDefined()
     expect(driver.recipientId).toBe('driver-1')
     expect(platform).toBeDefined()
+    expect(platform.dedupeKey).toBe('commission-order-1-platform')
 
     // foodAmount=80k, rate=15% → platformCut=12k, restaurant=68k
     expect(restaurant.amount).toBe(68_000)

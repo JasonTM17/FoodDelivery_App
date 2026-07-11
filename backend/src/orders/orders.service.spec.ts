@@ -16,6 +16,7 @@ describe('OrdersService', () => {
   let mockDispatchQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockRefundQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockOrderTimeoutQueue: jest.Mocked<Pick<Queue, 'add'>>
+  let mockCommissionQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockGateway: { broadcastToOrder: jest.Mock; notifyRestaurant: jest.Mock; notifyAdmins: jest.Mock }
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockPaymentsService: { processPayment: jest.Mock }
@@ -28,6 +29,7 @@ describe('OrdersService', () => {
     restaurantProfile: { findUnique: jest.Mock }
     orderStatusHistory: { create: jest.Mock }
     payment: { findUnique: jest.Mock; update: jest.Mock }
+    paymentRefundRequest: { aggregate: jest.Mock }
     cartItem: { deleteMany: jest.Mock }
     cart: { delete: jest.Mock }
   }
@@ -55,6 +57,9 @@ describe('OrdersService', () => {
       restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }) },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
+      paymentRefundRequest: {
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }),
+      },
       cartItem: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       cart: { delete: jest.fn().mockResolvedValue({}) },
     }
@@ -88,6 +93,7 @@ describe('OrdersService', () => {
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
     mockRefundQueue = { add: jest.fn().mockResolvedValue({}) }
     mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
+    mockCommissionQueue = { add: jest.fn().mockResolvedValue({}) }
 
     service = new OrdersService(
       mockPrisma as unknown as PrismaService,
@@ -100,6 +106,7 @@ describe('OrdersService', () => {
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
+      mockCommissionQueue as unknown as Queue,
     )
   })
 
@@ -535,7 +542,6 @@ describe('OrdersService', () => {
           amount: 50_000,
           reason: 'reason',
           kind: 'full',
-          attemptNo: 1,
         }),
         expect.objectContaining({
           attempts: 3,
@@ -551,6 +557,7 @@ describe('OrdersService', () => {
         driverId: 'driver-1',
       })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockTx.payment.findUnique.mockResolvedValue({ method: 'cash', status: 'pending' })
       mockRedis.get.mockResolvedValueOnce(orderId).mockResolvedValueOnce('1')
 
       await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')
@@ -560,6 +567,15 @@ describe('OrdersService', () => {
       expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:alive')
       expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:status', 'online')
       expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:idle_since', expect.any(String))
+      expect(mockTx.payment.update).toHaveBeenCalledWith({
+        where: { orderId },
+        data: { status: 'completed', paidAt: expect.any(Date) },
+      })
+      expect(mockCommissionQueue.add).toHaveBeenCalledWith(
+        'commission-split',
+        { orderId },
+        { jobId: `commission-split-${orderId}` },
+      )
     })
 
     it('does not release a driver assignment that has already moved to another order', async () => {
@@ -569,6 +585,7 @@ describe('OrdersService', () => {
         driverId: 'driver-1',
       })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockTx.payment.findUnique.mockResolvedValue({ method: 'wallet', status: 'completed' })
       mockRedis.get.mockResolvedValueOnce('other-order')
 
       await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')

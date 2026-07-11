@@ -7,7 +7,6 @@ describe('PayoutLedgerService', () => {
 
   const mockPrisma = {
     payoutLedger: {
-      create: jest.fn(),
       createMany: jest.fn(),
       updateMany: jest.fn(),
     },
@@ -28,34 +27,40 @@ describe('PayoutLedgerService', () => {
   describe('insertEntry', () => {
     it('creates a pending ledger entry with defaults', async () => {
       await service.insertEntry({
+        dedupeKey: 'commission-order-1-restaurant',
         orderId: 'order-1',
         recipientType: 'restaurant',
         recipientId: 'rest-1',
         amount: 64_000,
       })
 
-      expect(mockPrisma.payoutLedger.create).toHaveBeenCalledWith({
-        data: {
+      expect(mockPrisma.payoutLedger.createMany).toHaveBeenCalledWith({
+        data: [{
+          dedupeKey: 'commission-order-1-restaurant',
           orderId: 'order-1',
           recipientType: 'restaurant',
           recipientId: 'rest-1',
           amount: 64_000,
           currency: 'VND',
           status: 'pending',
-        },
+        }],
+        skipDuplicates: true,
       })
     })
 
     it('uses provided currency', async () => {
       await service.insertEntry({
+        dedupeKey: 'commission-order-2-platform',
         orderId: 'order-2',
         recipientType: 'platform',
         amount: 5_000,
         currency: 'USD',
       })
 
-      expect(mockPrisma.payoutLedger.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ currency: 'USD' }) }),
+      expect(mockPrisma.payoutLedger.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.arrayContaining([expect.objectContaining({ currency: 'USD' })]),
+        }),
       )
     })
   })
@@ -68,8 +73,8 @@ describe('PayoutLedgerService', () => {
 
     it('bulk-creates multiple entries', async () => {
       await service.insertEntries([
-        { orderId: 'o1', recipientType: 'restaurant', amount: 64_000 },
-        { orderId: 'o1', recipientType: 'driver', amount: 17_000 },
+        { dedupeKey: 'commission-o1-restaurant', orderId: 'o1', recipientType: 'restaurant', amount: 64_000 },
+        { dedupeKey: 'commission-o1-driver', orderId: 'o1', recipientType: 'driver', amount: 17_000 },
       ])
 
       expect(mockPrisma.payoutLedger.createMany).toHaveBeenCalledWith({
@@ -77,6 +82,7 @@ describe('PayoutLedgerService', () => {
           expect.objectContaining({ recipientType: 'restaurant', amount: 64_000 }),
           expect.objectContaining({ recipientType: 'driver', amount: 17_000 }),
         ]),
+        skipDuplicates: true,
       })
     })
   })
