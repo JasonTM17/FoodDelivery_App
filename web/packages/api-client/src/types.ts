@@ -249,26 +249,42 @@ export interface AdminPromotionAnalytics {
 }
 
 export type AdminKycStatus = 'pending' | 'approved' | 'rejected';
+export type AdminKycDocumentKey =
+  | 'idCardFront'
+  | 'idCardBack'
+  | 'driverLicense'
+  | 'vehicleRegistration';
+export type AdminKycSignedDocuments = Record<AdminKycDocumentKey, string>;
 
 export interface AdminKycSubmission {
   id: string;
   status: AdminKycStatus;
-  documentUrls: Record<string, unknown>;
+  documentsAvailable: boolean;
+  documentUrls: AdminKycSignedDocuments | null;
   rejectionReason: string | null;
+  reviewedById: string | null;
   createdAt: string;
+  updatedAt: string;
   reviewedAt: string | null;
 }
 
-export interface AdminKycPayload {
-  available: boolean;
-  reason?: string;
-  submissions?: AdminKycSubmission[];
-}
+export type AdminKycPayload =
+  | { available: false; reason: 'NOT_A_DRIVER' }
+  | { available: true; submissions: AdminKycSubmission[] };
 
 export interface AdminKycReviewRequest {
   submissionId: string;
   status: 'approved' | 'rejected';
   reason?: string;
+}
+
+export interface AdminKycReviewResponse {
+  id: string;
+  status: Exclude<AdminKycStatus, 'pending'>;
+  rejectionReason: string | null;
+  reviewedById: string;
+  reviewedAt: string;
+  updatedAt: string;
 }
 
 export type RestaurantInsightSuggestionType = 'pricing' | 'menu_mix' | 'marketing' | 'operations';

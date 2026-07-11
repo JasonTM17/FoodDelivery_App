@@ -21,9 +21,10 @@ import { AdminAiMonitorService } from './admin-ai-monitor.service'
 import { AdminDriversController } from './admin-drivers.controller'
 import { AdminDriversService } from './admin-drivers.service'
 import { AdminTrackingService } from './admin-tracking.service'
+import { DriversModule } from '../drivers/drivers.module'
 
 @Module({
-  imports: [OrdersModule, NotificationsModule],
+  imports: [OrdersModule, NotificationsModule, DriversModule],
   controllers: [
     AdminController,
     AdminTrackingController,

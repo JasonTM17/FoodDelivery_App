@@ -821,11 +821,143 @@ components:
 
     KycReviewRequest:
       type: object
+      additionalProperties: false
       properties:
         submissionId: { type: string, format: uuid }
         status: { type: string, enum: [approved, rejected] }
-        reason: { type: string }
+        reason: { type: string, minLength: 1, maxLength: 1000, description: "Required when status is rejected." }
       required: [submissionId, status]
+
+    DriverKycUploadRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        documentType: { type: string, enum: [idCardFront, idCardBack, driverLicense, vehicleRegistration] }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        sizeBytes: { type: integer, minimum: 1024, maximum: 4194304 }
+      required: [documentType, contentType, sizeBytes]
+
+    DriverKycUploadGrant:
+      type: object
+      additionalProperties: false
+      description: Short-lived upload capability for one private KYC object. Clients must not derive or persist a public URL.
+      properties:
+        uploadUrl: { type: string, format: uri, description: "Provider-signed PUT URL. HTTPS is mandatory in release clients." }
+        objectKey: { type: string, minLength: 1, maxLength: 512, description: "Opaque private object key returned unchanged in the final KYC submission." }
+        headers:
+          type: object
+          description: Exact non-credential headers that the client must include in the signed PUT request.
+          additionalProperties: { type: string }
+      required: [uploadUrl, objectKey, headers]
+
+    DriverKycDocumentObjects:
+      type: object
+      additionalProperties: false
+      description: Private storage object keys owned by the authenticated driver; URI values are rejected.
+      properties:
+        idCardFront: { type: string, minLength: 1, maxLength: 512 }
+        idCardBack: { type: string, minLength: 1, maxLength: 512 }
+        driverLicense: { type: string, minLength: 1, maxLength: 512 }
+        vehicleRegistration: { type: string, minLength: 1, maxLength: 512 }
+      required: [idCardFront, idCardBack, driverLicense, vehicleRegistration]
+
+    SubmitDriverKycRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        licenseNumber: { type: string, minLength: 5, maxLength: 50, pattern: "^[A-Z0-9./-]+$" }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: string, minLength: 5, maxLength: 20, pattern: "^[A-Z0-9.-]+$" }
+        documents: { $ref: "#/components/schemas/DriverKycDocumentObjects" }
+      required: [licenseNumber, vehicleType, vehiclePlate, documents]
+      example:
+        licenseNumber: "A1-123456789"
+        vehicleType: "motorbike"
+        vehiclePlate: "59-F1-12345"
+        documents:
+          idCardFront: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000000-0123456789abcdef01234567-idCardFront.jpg"
+          idCardBack: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000001-0123456789abcdef01234567-idCardBack.jpg"
+          driverLicense: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000002-0123456789abcdef01234567-driverLicense.jpg"
+          vehicleRegistration: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000003-0123456789abcdef01234567-vehicleRegistration.jpg"
+
+    DriverKycSubmissionReceipt:
+      type: object
+      additionalProperties: false
+      properties:
+        submissionId: { type: string, format: uuid }
+        status: { type: string, enum: [pending] }
+        submittedAt: { type: string, format: date-time }
+      required: [submissionId, status, submittedAt]
+
+    DriverKycLatestSubmission:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        submittedAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, "null"], format: date-time }
+      required: [id, status, rejectionReason, submittedAt, reviewedAt]
+
+    DriverKycStatusResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        isVerified: { type: boolean }
+        status: { type: string, enum: [not_submitted, pending, approved, rejected] }
+        licenseNumber: { type: [string, "null"] }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: [string, "null"] }
+        termsAcceptedAt: { type: [string, "null"], format: date-time }
+        termsVersion: { type: [string, "null"] }
+        latestSubmission:
+          oneOf:
+            - $ref: "#/components/schemas/DriverKycLatestSubmission"
+            - type: "null"
+        attemptsRemaining: { type: integer, minimum: 0 }
+      required: [isVerified, status, licenseNumber, vehicleType, vehiclePlate, termsAcceptedAt, termsVersion, latestSubmission, attemptsRemaining]
+
+    AdminKycSignedDocuments:
+      type: object
+      additionalProperties: false
+      description: Five-minute signed read URLs generated only for authorized admin review.
+      properties:
+        idCardFront: { type: string, format: uri }
+        idCardBack: { type: string, format: uri }
+        driverLicense: { type: string, format: uri }
+        vehicleRegistration: { type: string, format: uri }
+      required: [idCardFront, idCardBack, driverLicense, vehicleRegistration]
+
+    AdminKycSubmission:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        reviewedById: { type: [string, "null"], format: uuid }
+        reviewedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        documentsAvailable: { type: boolean }
+        documentUrls:
+          oneOf:
+            - $ref: "#/components/schemas/AdminKycSignedDocuments"
+            - type: "null"
+      required: [id, status, rejectionReason, reviewedById, reviewedAt, createdAt, updatedAt, documentsAvailable, documentUrls]
+
+    AdminKycReviewResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        reviewedById: { type: string, format: uuid }
+        reviewedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, status, rejectionReason, reviewedById, reviewedAt, updatedAt]
 
     CreateReviewRequest:
       type: object
@@ -4164,35 +4296,42 @@ paths:
         "400": { description: "Invalid terms version", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
+  /driver/kyc/uploads:
+    post:
+      tags: [drivers]
+      summary: Create a private KYC upload grant
+      description: Validates ownership prerequisites and returns a provider-signed upload capability for exactly one private driver document. The grant never returns a public asset URL.
+      operationId: drivers_createKycUploadGrant
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverKycUploadRequest" }
+      responses:
+        "201": { description: "Private upload grant", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycUploadGrant" } } } }
+        "400": { description: "Terms, file metadata, retry eligibility, or private storage configuration is invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Driver is already verified or already has a pending submission", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "Private storage signing is temporarily unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /driver/kyc:
     post:
       tags: [drivers]
       summary: Submit KYC documents
-      description: Submits driver KYC and vehicle information for platform review.
+      description: Validates four authenticated-driver-owned private objects, image metadata and signatures, then atomically creates one pending KYC submission and updates vehicle information. Public URLs and duplicate object keys are rejected.
       operationId: drivers_submitKyc
       x-foo-actor: driver
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              properties:
-                licenseNumber: { type: string }
-                vehicleType: { type: string, enum: [motorbike, car, bicycle] }
-                vehiclePlate: { type: string }
-                idCardFront: { type: string, format: uri, description: "Uploaded front image URL" }
-                idCardBack: { type: string, format: uri, description: "Uploaded back image URL" }
-              required: [licenseNumber, vehicleType, vehiclePlate]
-              example:
-                licenseNumber: "A1-123456789"
-                vehicleType: "motorbike"
-                vehiclePlate: "59-F1-12345"
-                idCardFront: "https://cdn.foodflow.vn/kyc/id-front-001.jpg"
-                idCardBack: "https://cdn.foodflow.vn/kyc/id-back-001.jpg"
+            schema: { $ref: "#/components/schemas/SubmitDriverKycRequest" }
       responses:
-        "200": { description: "KYC submitted" }
-        "409": { description: "Already submitted", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "201": { description: "KYC submitted", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycSubmissionReceipt" } } } }
+        "400": { description: "Terms, identifiers, object ownership, image metadata, or signatures are invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Driver is verified, has a pending submission, or exhausted automatic retries", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile or private document not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/kyc/status:
     get:
@@ -4202,7 +4341,8 @@ paths:
       operationId: drivers_kycStatus
       x-foo-actor: driver
       responses:
-        "200": { description: "KYC status", content: { application/json: { schema: { type: object, properties: { isVerified: { type: boolean }, licenseNumber: { type: string }, vehicleType: { type: string }, vehiclePlate: { type: string } } } } } }
+        "200": { description: "KYC status", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycStatusResponse" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/withdrawals:
     post:
@@ -5291,7 +5431,7 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver KYC submissions for one user
-      description: Returns an explicit unavailable reason for non-driver users or real driver KYC submissions for driver users.
+      description: Returns an explicit unavailable reason for non-driver users or real driver KYC submissions with five-minute signed private-document read URLs for authorized admin review. Raw object keys are never returned.
       operationId: admin_getUserKyc
       x-foo-actor: admin
       parameters:
@@ -5305,14 +5445,21 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  available: { type: boolean }
-                  reason: { type: string }
-                  submissions:
-                    type: array
-                    items: { type: object, additionalProperties: true }
-                required: [available]
+                oneOf:
+                  - type: object
+                    additionalProperties: false
+                    properties:
+                      available: { type: boolean, const: false }
+                      reason: { type: string, enum: [NOT_A_DRIVER] }
+                    required: [available, reason]
+                  - type: object
+                    additionalProperties: false
+                    properties:
+                      available: { type: boolean, const: true }
+                      submissions:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminKycSubmission" }
+                    required: [available, submissions]
         "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/kyc/review:
@@ -5333,7 +5480,9 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/KycReviewRequest" }
       responses:
-        "201": { description: "KYC review saved", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "201": { description: "KYC review saved without private object keys", content: { application/json: { schema: { $ref: "#/components/schemas/AdminKycReviewResponse" } } } }
+        "400": { description: "Rejection reason or private document manifest is invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "KYC submission was already reviewed", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "KYC submission not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/status:

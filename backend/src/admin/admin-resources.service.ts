@@ -3,12 +3,14 @@ import { KycStatus, RestaurantApprovalStatus } from '@prisma/client'
 import type { Promotion, PromotionUsage } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 import { OrdersService } from '../orders/orders.service'
+import { DriverKycService } from '../drivers/driver-kyc.service'
 
 @Injectable()
 export class AdminResourcesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly orders: OrdersService,
+    private readonly driverKyc: DriverKycService,
   ) {}
 
   async getOrder(id: string) {
@@ -202,27 +204,17 @@ export class AdminResourcesService {
   }
 
   async getUserKyc(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id }, include: { driverProfile: true } })
-    if (!user) throw new NotFoundException('USER_NOT_FOUND')
-    if (!user.driverProfile) return { available: false, reason: 'NOT_A_DRIVER' }
-    return {
-      available: true,
-      submissions: await this.prisma.driverKycSubmission.findMany({
-        where: { driverProfileId: user.driverProfile.id }, orderBy: { createdAt: 'desc' },
-      }),
-    }
+    return this.driverKyc.getAdminSubmissions(id)
   }
 
-  async reviewUserKyc(id: string, submissionId: string, status: KycStatus, adminId: string, reason?: string) {
-    const user = await this.prisma.user.findUnique({ where: { id }, include: { driverProfile: true } })
-    const submission = user?.driverProfile && await this.prisma.driverKycSubmission.findFirst({
-      where: { id: submissionId, driverProfileId: user.driverProfile.id },
-    })
-    if (!submission) throw new NotFoundException('KYC_SUBMISSION_NOT_FOUND')
-    return this.prisma.driverKycSubmission.update({
-      where: { id: submissionId },
-      data: { status, rejectionReason: reason, reviewedById: adminId, reviewedAt: new Date() },
-    })
+  async reviewUserKyc(
+    id: string,
+    submissionId: string,
+    status: Exclude<KycStatus, 'pending'>,
+    adminId: string,
+    reason?: string,
+  ) {
+    return this.driverKyc.review(id, submissionId, status, adminId, reason)
   }
 
   async getPromotion(id: string) {

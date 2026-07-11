@@ -1014,6 +1014,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not submit application. Please try again.';
 
   @override
+  String get driverKycUploadFailed =>
+      'Could not upload this document. Please try again.';
+
+  @override
+  String get driverKycUnsupportedImage =>
+      'Use a valid JPEG, PNG, or WebP image.';
+
+  @override
+  String get driverKycFileTooSmall =>
+      'This image is incomplete or too small. Capture the document again.';
+
+  @override
+  String get driverKycFileTooLarge => 'Each document must be 4 MB or smaller.';
+
+  @override
+  String get driverKycInvalidUploadGrant =>
+      'The secure upload session is invalid. Please try again.';
+
+  @override
+  String get driverKycSubmittedTitle => 'Application submitted';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      'Your private documents are securely stored and awaiting review. You cannot go online until approval.';
+
+  @override
+  String get driverKycGoHome => 'Go to driver home';
+
+  @override
   String get driverHistoryTitle => 'Delivery history';
 
   @override
@@ -1467,6 +1496,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => 'Car';
 
   @override
+  String get driver_onboarding_license_label => 'Driver license number';
+
+  @override
+  String get driver_onboarding_license_hint => 'Enter driver license number';
+
+  @override
+  String get driver_onboarding_license_required =>
+      'Please enter your driver license number';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      'Use 5-50 letters, numbers, dots, slashes, or hyphens';
+
+  @override
   String get driver_onboarding_plate_label => 'License plate';
 
   @override
@@ -1474,6 +1517,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'Please enter license plate';
+
+  @override
+  String get driver_onboarding_plate_invalid =>
+      'Use 5-20 letters, numbers, dots, or hyphens';
 
   @override
   String get driver_onboarding_next => 'Next';

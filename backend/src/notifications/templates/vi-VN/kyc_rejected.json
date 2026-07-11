@@ -1,0 +1,6 @@
+{
+  "title": "Hồ sơ KYC cần cập nhật",
+  "body": "Hồ sơ KYC của bạn chưa được duyệt. Lý do: {{reason}}. Vui lòng cập nhật giấy tờ và gửi lại.",
+  "channels": ["in_app", "push"],
+  "critical": true
+}

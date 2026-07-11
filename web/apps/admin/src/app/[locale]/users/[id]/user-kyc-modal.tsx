@@ -1,10 +1,19 @@
 'use client';
 
+/* Private signed KYC URLs must be loaded directly without Next image proxying or caching. */
+/* eslint-disable @next/next/no-img-element */
+
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock, FileText, XCircle } from 'lucide-react';
-import type { AdminKycPayload, AdminKycReviewRequest, AdminKycStatus } from '@foodflow/api-client';
+import type {
+  AdminKycDocumentKey,
+  AdminKycPayload,
+  AdminKycReviewRequest,
+  AdminKycSignedDocuments,
+  AdminKycStatus,
+} from '@foodflow/api-client';
 import { apiGet, apiPost } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,16 +35,32 @@ interface UserKycModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const documentKeys = ['idFront', 'idBack', 'selfie'] as const;
-type KycDocumentKey = (typeof documentKeys)[number];
-type KycDocuments = Record<KycDocumentKey, string | null>;
+const documentKeys = [
+  'idCardFront',
+  'idCardBack',
+  'driverLicense',
+  'vehicleRegistration',
+] as const satisfies readonly AdminKycDocumentKey[];
+type KycDocuments = Record<AdminKycDocumentKey, string | null>;
 
-function normalizeDocumentUrls(documentUrls: Record<string, unknown> | null | undefined): KycDocuments {
+function normalizeDocumentUrls(
+  documentUrls: AdminKycSignedDocuments | null | undefined,
+): KycDocuments {
   return documentKeys.reduce((documents, key) => {
     const value = documentUrls?.[key];
-    documents[key] = typeof value === 'string' && value.length > 0 ? value : null;
+    documents[key] = safeDocumentUrl(value);
     return documents;
   }, {} as KycDocuments);
+}
+
+function safeDocumentUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function kycStatusLabelKey(status: AdminKycStatus) {
@@ -81,7 +106,7 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
     queryFn: () => apiGet<AdminKycPayload>(`/admin/users/${userId}/kyc`),
     enabled: open,
   });
-  const activeSubmission = kyc?.available ? kyc.submissions?.[0] ?? null : null;
+  const activeSubmission = kyc?.available ? kyc.submissions[0] ?? null : null;
   const documents = normalizeDocumentUrls(activeSubmission?.documentUrls);
 
   const handleReview = async (action: 'approve' | 'reject') => {
@@ -118,7 +143,7 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
 
         {isLoading ? (
           <div role="status" aria-label={t('kycLoading')} className="space-y-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+            {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="h-24 animate-pulse rounded-lg bg-muted" />
             ))}
           </div>
@@ -131,20 +156,33 @@ export default function UserKycModal({ userId, open, onOpenChange }: UserKycModa
                 label={t(`kycStatuses.${kycStatusLabelKey(activeSubmission.status)}`)}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {documentKeys.map((documentKey) => (
                 <div key={documentKey} className="space-y-1">
                   <p className="text-xs text-muted-foreground">{t(`kycDocuments.${documentKey}`)}</p>
-                  <div className="flex h-24 items-center justify-center rounded-lg bg-muted/50">
+                  <div className="flex h-36 items-center justify-center overflow-hidden rounded-lg border bg-muted/50">
                     {documents[documentKey] ? (
-                      <div
-                        role="img"
-                        aria-label={t('kycDocumentPreview', { document: t(`kycDocuments.${documentKey}`) })}
-                        className="h-full w-full rounded-lg bg-cover bg-center"
-                        style={{ backgroundImage: `url(${JSON.stringify(documents[documentKey])})` }}
-                      />
+                      <a
+                        href={documents[documentKey]!}
+                        target="_blank"
+                        rel="noreferrer"
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={t('kycOpenDocument', { document: t(`kycDocuments.${documentKey}`) })}
+                      >
+                        <img
+                          src={documents[documentKey]!}
+                          alt={t('kycDocumentPreview', { document: t(`kycDocuments.${documentKey}`) })}
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      </a>
                     ) : (
-                      <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+                      <span className="flex flex-col items-center gap-2 px-3 text-center text-xs text-muted-foreground">
+                        <FileText className="h-6 w-6" aria-hidden="true" />
+                        {t('kycDocumentUnavailable')}
+                      </span>
                     )}
                   </div>
                 </div>

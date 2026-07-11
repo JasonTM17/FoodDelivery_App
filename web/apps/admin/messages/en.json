@@ -1259,9 +1259,6 @@
     "kycReview": "KYC Document Review",
     "kycReviewDesc": "Review submitted identity documents",
     "kycStatus": "KYC Status",
-    "kyc_idFront": "ID Front",
-    "kyc_idBack": "ID Back",
-    "kyc_selfie": "Selfie",
     "kycLoading": "Loading KYC submission",
     "kycStatuses": {
       "pending": "Pending review",
@@ -1269,11 +1266,14 @@
       "rejected": "Rejected"
     },
     "kycDocuments": {
-      "idFront": "ID Front",
-      "idBack": "ID Back",
-      "selfie": "Selfie"
+      "idCardFront": "ID card (front)",
+      "idCardBack": "ID card (back)",
+      "driverLicense": "Driver license",
+      "vehicleRegistration": "Vehicle registration"
     },
     "kycDocumentPreview": "{document} preview",
+    "kycOpenDocument": "Open {document} in a new tab",
+    "kycDocumentUnavailable": "Secure preview unavailable",
     "kycRejectReason": "Rejection Reason",
     "kycRejectReasonPlaceholder": "Enter reason for rejection...",
     "kycReject": "Reject KYC",

@@ -994,6 +994,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverKycSubmitFailed => '申請を送信できませんでした。もう一度お試しください。';
 
   @override
+  String get driverKycUploadFailed => 'この書類をアップロードできませんでした。もう一度お試しください。';
+
+  @override
+  String get driverKycUnsupportedImage => '有効なJPEG、PNG、またはWebP画像を使用してください。';
+
+  @override
+  String get driverKycFileTooSmall => '画像が不完全または小さすぎます。書類を撮影し直してください。';
+
+  @override
+  String get driverKycFileTooLarge => '各書類のサイズは4 MB以下にしてください。';
+
+  @override
+  String get driverKycInvalidUploadGrant => '安全なアップロードセッションが無効です。もう一度お試しください。';
+
+  @override
+  String get driverKycSubmittedTitle => '申請を送信しました';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      '非公開書類は安全に保存され、審査待ちです。承認されるまでオンラインにはできません。';
+
+  @override
+  String get driverKycGoHome => 'ドライバーホームへ';
+
+  @override
   String get driverHistoryTitle => '配達履歴';
 
   @override
@@ -1435,6 +1460,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => '自動車';
 
   @override
+  String get driver_onboarding_license_label => '運転免許証番号';
+
+  @override
+  String get driver_onboarding_license_hint => '運転免許証番号を入力';
+
+  @override
+  String get driver_onboarding_license_required => '運転免許証番号を入力してください';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      '5〜50文字の英数字、ピリオド、スラッシュ、ハイフンを使用してください';
+
+  @override
   String get driver_onboarding_plate_label => 'ナンバープレート';
 
   @override
@@ -1442,6 +1480,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'ナンバープレートを入力してください';
+
+  @override
+  String get driver_onboarding_plate_invalid => '5〜20文字の英数字、ピリオド、ハイフンを使用してください';
 
   @override
   String get driver_onboarding_next => '次へ';

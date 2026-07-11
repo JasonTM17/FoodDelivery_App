@@ -1,0 +1,6 @@
+{
+  "title": "KYC documents need an update",
+  "body": "Your KYC submission was not approved. Reason: {{reason}}. Please update the documents and submit again.",
+  "channels": ["in_app", "push"],
+  "critical": true
+}

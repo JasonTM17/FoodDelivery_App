@@ -1014,6 +1014,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverKycSubmitFailed => 'Gửi đơn thất bại. Vui lòng thử lại.';
 
   @override
+  String get driverKycUploadFailed =>
+      'Không thể tải giấy tờ này lên. Vui lòng thử lại.';
+
+  @override
+  String get driverKycUnsupportedImage =>
+      'Vui lòng dùng ảnh JPEG, PNG hoặc WebP hợp lệ.';
+
+  @override
+  String get driverKycFileTooSmall =>
+      'Ảnh chưa đầy đủ hoặc quá nhỏ. Vui lòng chụp lại giấy tờ.';
+
+  @override
+  String get driverKycFileTooLarge =>
+      'Mỗi giấy tờ phải có dung lượng tối đa 4 MB.';
+
+  @override
+  String get driverKycInvalidUploadGrant =>
+      'Phiên tải lên bảo mật không hợp lệ. Vui lòng thử lại.';
+
+  @override
+  String get driverKycSubmittedTitle => 'Đã gửi hồ sơ';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      'Giấy tờ riêng tư của bạn đã được lưu an toàn và đang chờ xét duyệt. Bạn chưa thể trực tuyến trước khi được duyệt.';
+
+  @override
+  String get driverKycGoHome => 'Về trang tài xế';
+
+  @override
   String get driverHistoryTitle => 'Lịch sử giao hàng';
 
   @override
@@ -1468,6 +1498,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => 'Ô tô';
 
   @override
+  String get driver_onboarding_license_label => 'Số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_hint => 'Nhập số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_required =>
+      'Vui lòng nhập số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      'Dùng 5-50 chữ cái, chữ số, dấu chấm, gạch chéo hoặc gạch nối';
+
+  @override
   String get driver_onboarding_plate_label => 'Biển số xe';
 
   @override
@@ -1475,6 +1519,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'Vui lòng nhập biển số';
+
+  @override
+  String get driver_onboarding_plate_invalid =>
+      'Dùng 5-20 chữ cái, chữ số, dấu chấm hoặc gạch nối';
 
   @override
   String get driver_onboarding_next => 'Tiếp theo';

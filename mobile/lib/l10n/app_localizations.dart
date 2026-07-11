@@ -2014,6 +2014,54 @@ abstract class AppLocalizations {
   /// **'Gửi đơn thất bại. Vui lòng thử lại.'**
   String get driverKycSubmitFailed;
 
+  /// No description provided for @driverKycUploadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải giấy tờ này lên. Vui lòng thử lại.'**
+  String get driverKycUploadFailed;
+
+  /// No description provided for @driverKycUnsupportedImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng dùng ảnh JPEG, PNG hoặc WebP hợp lệ.'**
+  String get driverKycUnsupportedImage;
+
+  /// No description provided for @driverKycFileTooSmall.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh chưa đầy đủ hoặc quá nhỏ. Vui lòng chụp lại giấy tờ.'**
+  String get driverKycFileTooSmall;
+
+  /// No description provided for @driverKycFileTooLarge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi giấy tờ phải có dung lượng tối đa 4 MB.'**
+  String get driverKycFileTooLarge;
+
+  /// No description provided for @driverKycInvalidUploadGrant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên tải lên bảo mật không hợp lệ. Vui lòng thử lại.'**
+  String get driverKycInvalidUploadGrant;
+
+  /// No description provided for @driverKycSubmittedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi hồ sơ'**
+  String get driverKycSubmittedTitle;
+
+  /// No description provided for @driverKycSubmittedMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giấy tờ riêng tư của bạn đã được lưu an toàn và đang chờ xét duyệt. Bạn chưa thể trực tuyến trước khi được duyệt.'**
+  String get driverKycSubmittedMessage;
+
+  /// No description provided for @driverKycGoHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về trang tài xế'**
+  String get driverKycGoHome;
+
   /// No description provided for @driverHistoryTitle.
   ///
   /// In vi, this message translates to:
@@ -2866,6 +2914,30 @@ abstract class AppLocalizations {
   /// **'Ô tô'**
   String get driver_onboarding_vehicle_type_car;
 
+  /// No description provided for @driver_onboarding_license_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số giấy phép lái xe'**
+  String get driver_onboarding_license_label;
+
+  /// No description provided for @driver_onboarding_license_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số giấy phép lái xe'**
+  String get driver_onboarding_license_hint;
+
+  /// No description provided for @driver_onboarding_license_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập số giấy phép lái xe'**
+  String get driver_onboarding_license_required;
+
+  /// No description provided for @driver_onboarding_license_invalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng 5-50 chữ cái, chữ số, dấu chấm, gạch chéo hoặc gạch nối'**
+  String get driver_onboarding_license_invalid;
+
   /// No description provided for @driver_onboarding_plate_label.
   ///
   /// In vi, this message translates to:
@@ -2883,6 +2955,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vui lòng nhập biển số'**
   String get driver_onboarding_plate_required;
+
+  /// No description provided for @driver_onboarding_plate_invalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng 5-20 chữ cái, chữ số, dấu chấm hoặc gạch nối'**
+  String get driver_onboarding_plate_invalid;
 
   /// No description provided for @driver_onboarding_next.
   ///

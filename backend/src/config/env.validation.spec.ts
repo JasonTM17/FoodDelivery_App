@@ -13,6 +13,7 @@ const productionEnv = {
   MINIO_ENDPOINT: 's3.foodflow.vn',
   MINIO_ACCESS_KEY: 'foodflow-production-access-key',
   MINIO_SECRET_KEY: 'c'.repeat(64),
+  MINIO_KYC_BUCKET: 'foodflow-kyc',
   MINIO_PUBLIC_URL: 'https://cdn.foodflow.vn',
   THROTTLER_MEMORY_FALLBACK: 'false',
   GOOGLE_MAPS_API_KEY: 'prod-google-maps-browser-key',
@@ -34,6 +35,7 @@ const productionEnv = {
   SUPABASE_SERVICE_ROLE_KEY: 'prod-supabase-service-role-key',
   SUPABASE_JWT_SECRET: 'd'.repeat(64),
   SUPABASE_STORAGE_BUCKET: 'foodflow-production',
+  SUPABASE_KYC_BUCKET: 'foodflow-kyc',
 }
 
 describe('validateEnv', () => {
@@ -82,7 +84,8 @@ describe('validateEnv', () => {
       SUPABASE_SERVICE_ROLE_KEY: undefined,
       SUPABASE_JWT_SECRET: undefined,
       SUPABASE_STORAGE_BUCKET: undefined,
-    })).toThrow(/SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_JWT_SECRET|SUPABASE_STORAGE_BUCKET/)
+      SUPABASE_KYC_BUCKET: undefined,
+    })).toThrow(/SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_JWT_SECRET|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
 
     expect(validateEnv({
       ...productionEnv,
@@ -104,11 +107,26 @@ describe('validateEnv', () => {
     delete supabaseStorageEnv.MINIO_ACCESS_KEY
     delete supabaseStorageEnv.MINIO_SECRET_KEY
     delete supabaseStorageEnv.MINIO_PUBLIC_URL
+    delete supabaseStorageEnv.MINIO_KYC_BUCKET
 
     expect(validateEnv(supabaseStorageEnv)).toMatchObject({
       STORAGE_PROVIDER: 'supabase',
       SUPABASE_STORAGE_BUCKET: productionEnv.SUPABASE_STORAGE_BUCKET,
     })
+  })
+
+  it('keeps the KYC upload limit and managed private bucket aligned with migrations', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      DRIVER_KYC_MAX_UPLOAD_MB: '5',
+    })).toThrow(/DRIVER_KYC_MAX_UPLOAD_MB/)
+
+    expect(() => validateEnv({
+      ...productionEnv,
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_KYC_BUCKET: 'public-assets',
+    })).toThrow(/SUPABASE_KYC_BUCKET/)
   })
 
   it('requires a strong cron secret when production queues use Supabase/Postgres', () => {

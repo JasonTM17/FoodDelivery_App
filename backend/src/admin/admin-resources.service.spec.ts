@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common'
 import { AdminResourcesService } from './admin-resources.service'
 import { PrismaService } from '../database/prisma.service'
 import { OrdersService } from '../orders/orders.service'
+import { DriverKycService } from '../drivers/driver-kyc.service'
 
 describe('AdminResourcesService', () => {
   const mockPrisma = {
@@ -16,6 +17,10 @@ describe('AdminResourcesService', () => {
     },
   }
   const mockOrders = { updateOrderStatus: jest.fn() }
+  const mockDriverKyc = {
+    getAdminSubmissions: jest.fn(),
+    review: jest.fn(),
+  }
   let service: AdminResourcesService
 
   beforeEach(() => {
@@ -23,6 +28,7 @@ describe('AdminResourcesService', () => {
     service = new AdminResourcesService(
       mockPrisma as unknown as PrismaService,
       mockOrders as unknown as OrdersService,
+      mockDriverKyc as unknown as DriverKycService,
     )
   })
 
@@ -73,48 +79,47 @@ describe('AdminResourcesService', () => {
 
   describe('driver KYC resources', () => {
     it('returns an explicit unavailable state for non-driver users', async () => {
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'user-1', driverProfile: null })
+      mockDriverKyc.getAdminSubmissions.mockResolvedValueOnce({
+        available: false,
+        reason: 'NOT_A_DRIVER',
+      })
 
       await expect(service.getUserKyc('user-1')).resolves.toEqual({
         available: false,
         reason: 'NOT_A_DRIVER',
       })
-      expect(mockPrisma.driverKycSubmission.findMany).not.toHaveBeenCalled()
+      expect(mockDriverKyc.getAdminSubmissions).toHaveBeenCalledWith('user-1')
     })
 
-    it('returns real driver KYC submissions for driver users', async () => {
-      const submissions = [{ id: 'kyc-1', status: 'pending', documentUrls: { idFront: 'https://example.test/id.jpg' } }]
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'user-1', driverProfile: { id: 'driver-profile-1' } })
-      mockPrisma.driverKycSubmission.findMany.mockResolvedValueOnce(submissions)
+    it('returns signed private KYC resources from the driver KYC boundary', async () => {
+      const submissions = [{
+        id: 'kyc-1',
+        status: 'pending',
+        documentUrls: { idCardFront: 'https://signed.storage.test/id-front' },
+      }]
+      mockDriverKyc.getAdminSubmissions.mockResolvedValueOnce({ available: true, submissions })
 
       await expect(service.getUserKyc('user-1')).resolves.toEqual({
         available: true,
         submissions,
       })
-      expect(mockPrisma.driverKycSubmission.findMany).toHaveBeenCalledWith({
-        where: { driverProfileId: 'driver-profile-1' },
-        orderBy: { createdAt: 'desc' },
-      })
+      expect(mockDriverKyc.getAdminSubmissions).toHaveBeenCalledWith('user-1')
     })
 
-    it('reviews one driver KYC submission with backend DTO status values', async () => {
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'user-1', driverProfile: { id: 'driver-profile-1' } })
-      mockPrisma.driverKycSubmission.findFirst.mockResolvedValueOnce({ id: 'kyc-1' })
-      mockPrisma.driverKycSubmission.update.mockResolvedValueOnce({ id: 'kyc-1', status: 'approved' })
+    it('delegates one atomic KYC review with backend DTO status values', async () => {
+      mockDriverKyc.review.mockResolvedValueOnce({ id: 'kyc-1', status: 'approved' })
 
       await expect(service.reviewUserKyc('user-1', 'kyc-1', 'approved', 'admin-1')).resolves.toEqual({
         id: 'kyc-1',
         status: 'approved',
       })
-      expect(mockPrisma.driverKycSubmission.update).toHaveBeenCalledWith({
-        where: { id: 'kyc-1' },
-        data: {
-          status: 'approved',
-          rejectionReason: undefined,
-          reviewedById: 'admin-1',
-          reviewedAt: expect.any(Date),
-        },
-      })
+      expect(mockDriverKyc.review).toHaveBeenCalledWith(
+        'user-1',
+        'kyc-1',
+        'approved',
+        'admin-1',
+        undefined,
+      )
     })
   })
 

@@ -181,6 +181,18 @@ int _requiredNonNegativeInt(Map<String, dynamic> json, String key) {
 
 const _driverStateUnset = Object();
 
+enum DriverKycStatus { notSubmitted, pending, approved, rejected }
+
+DriverKycStatus parseDriverKycStatus(Object? value) {
+  return switch (value) {
+    'not_submitted' => DriverKycStatus.notSubmitted,
+    'pending' => DriverKycStatus.pending,
+    'approved' => DriverKycStatus.approved,
+    'rejected' => DriverKycStatus.rejected,
+    _ => throw const FormatException('Invalid driver KYC status'),
+  };
+}
+
 class DriverState {
   final bool isLoading;
   final bool isAuthenticated;
@@ -194,6 +206,9 @@ class DriverState {
   final double totalEarnings;
   final String? vehicleType;
   final String? vehiclePlate;
+  final bool isVerified;
+  final bool hasAcceptedTerms;
+  final DriverKycStatus kycStatus;
   final DriverTodayStats todayStats;
   final List<OrderModel> recentOrders;
   final OrderModel? activeOrder;
@@ -216,6 +231,9 @@ class DriverState {
     this.totalEarnings = 0.0,
     this.vehicleType,
     this.vehiclePlate,
+    this.isVerified = false,
+    this.hasAcceptedTerms = false,
+    this.kycStatus = DriverKycStatus.notSubmitted,
     this.todayStats = const DriverTodayStats(),
     this.recentOrders = const [],
     this.activeOrder,
@@ -239,6 +257,9 @@ class DriverState {
     double? totalEarnings,
     String? vehicleType,
     String? vehiclePlate,
+    bool? isVerified,
+    bool? hasAcceptedTerms,
+    DriverKycStatus? kycStatus,
     DriverTodayStats? todayStats,
     List<OrderModel>? recentOrders,
     Object? activeOrder = _driverStateUnset,
@@ -261,6 +282,9 @@ class DriverState {
       totalEarnings: totalEarnings ?? this.totalEarnings,
       vehicleType: vehicleType ?? this.vehicleType,
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      isVerified: isVerified ?? this.isVerified,
+      hasAcceptedTerms: hasAcceptedTerms ?? this.hasAcceptedTerms,
+      kycStatus: kycStatus ?? this.kycStatus,
       todayStats: todayStats ?? this.todayStats,
       recentOrders: recentOrders ?? this.recentOrders,
       activeOrder: identical(activeOrder, _driverStateUnset)
@@ -290,6 +314,9 @@ class DriverState {
     totalEarnings: totalEarnings,
     vehicleType: vehicleType,
     vehiclePlate: vehiclePlate,
+    isVerified: isVerified,
+    hasAcceptedTerms: hasAcceptedTerms,
+    kycStatus: kycStatus,
     todayStats: todayStats,
     recentOrders: recentOrders,
     activeOrder: activeOrder,
@@ -321,6 +348,19 @@ class DriverNotifier extends StateNotifier<DriverState> {
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
 
   DriverNotifier() : super(const DriverState());
+
+  void markTermsAccepted() {
+    state = state.copyWith(hasAcceptedTerms: true);
+  }
+
+  void markKycPending() {
+    state = state.copyWith(
+      isVerified: false,
+      isOnline: false,
+      hasAcceptedTerms: true,
+      kycStatus: DriverKycStatus.pending,
+    );
+  }
 
   // -----------------------------------------------------------------------
   // Auth
@@ -358,6 +398,17 @@ class DriverNotifier extends StateNotifier<DriverState> {
           isLoading: false,
           isAuthenticated: false,
           error: profileError,
+        );
+        return;
+      }
+      final kycLoaded = await _fetchKycStatus();
+      if (!kycLoaded) {
+        final kycError = state.error;
+        await _clearAuthTokens();
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          error: kycError,
         );
         return;
       }
@@ -406,6 +457,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
         state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
         return false;
       }
+      final isVerified = profile['isVerified'];
+      if (isVerified is! bool) {
+        state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+        return false;
+      }
       state = state.copyWith(
         driverName: data['fullName'] as String?,
         driverPhone: data['phone'] as String?,
@@ -419,10 +475,33 @@ class DriverNotifier extends StateNotifier<DriverState> {
         vehicleType: profile['vehicleType'] as String?,
         vehiclePlate: profile['vehiclePlate'] as String?,
         isOnline: profile['isOnline'] as bool? ?? false,
+        isVerified: isVerified,
+        hasAcceptedTerms: profile['termsAcceptedAt'] != null,
       );
       return true;
     } catch (_) {
       state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+      return false;
+    }
+  }
+
+  Future<bool> _fetchKycStatus() async {
+    try {
+      final response = await _api.get('/driver/kyc/status');
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        throw const FormatException('Invalid KYC status response');
+      }
+      final status = parseDriverKycStatus(data['status']);
+      final isVerified = data['isVerified'];
+      if (isVerified is! bool ||
+          (isVerified && status != DriverKycStatus.approved)) {
+        throw const FormatException('Inconsistent KYC status response');
+      }
+      state = state.copyWith(isVerified: isVerified, kycStatus: status);
+      return true;
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_KYC_STATUS_UNAVAILABLE');
       return false;
     }
   }

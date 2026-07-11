@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
+import '../shared/providers/locale_provider.dart';
 import '../shared/theme/app_colors.dart';
 import '../shared/theme/app_text_styles.dart';
 import 'providers/driver_provider.dart';
@@ -28,6 +29,7 @@ import 'screens/bank_account_screen.dart';
 import 'screens/support_driver_screen.dart';
 import 'screens/settings_screen.dart';
 import 'models/driver_flow_args.dart';
+import 'models/driver_onboarding_draft.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -44,7 +46,13 @@ final _router = GoRouter(
       path: '/delivery-flow',
       builder: (_, __) => const DeliveryFlowScreen(),
     ),
-    GoRoute(path: '/kyc', builder: (_, __) => const KycVerificationScreen()),
+    GoRoute(
+      path: '/kyc',
+      redirect: (_, state) =>
+          state.extra is DriverOnboardingDraft ? null : '/onboarding-vehicle',
+      builder: (_, state) =>
+          KycVerificationScreen(draft: state.extra! as DriverOnboardingDraft),
+    ),
     GoRoute(
       path: '/pickup-confirmation',
       builder: (_, state) => PickupConfirmationScreen(
@@ -67,7 +75,11 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/onboarding-documents',
-      builder: (_, __) => const OnboardingDocumentsScreen(),
+      redirect: (_, state) =>
+          state.extra is DriverOnboardingDraft ? null : '/onboarding-vehicle',
+      builder: (_, state) => OnboardingDocumentsScreen(
+        draft: state.extra! as DriverOnboardingDraft,
+      ),
     ),
     GoRoute(
       path: '/onboarding-agreement',
@@ -125,7 +137,14 @@ class DriverApp extends ConsumerWidget {
     // Navigate on auth state changes
     ref.listen<DriverState>(driverProvider, (prev, next) {
       if (prev?.isAuthenticated == false && next.isAuthenticated) {
-        _router.go('/home');
+        if (!next.hasAcceptedTerms) {
+          _router.go('/onboarding-agreement');
+        } else if (!next.isVerified &&
+            next.kycStatus != DriverKycStatus.pending) {
+          _router.go('/onboarding-vehicle');
+        } else {
+          _router.go('/home');
+        }
       } else if (prev?.isAuthenticated == true && !next.isAuthenticated) {
         _router.go('/login');
       }
@@ -136,6 +155,7 @@ class DriverApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: _darkTheme,
+      locale: ref.watch(localeProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     );

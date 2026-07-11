@@ -1259,9 +1259,6 @@
     "kycReview": "KYC書類レビュー",
     "kycReviewDesc": "提出された身元確認書類のレビュー",
     "kycStatus": "KYCステータス",
-    "kyc_idFront": "ID表面",
-    "kyc_idBack": "ID裏面",
-    "kyc_selfie": "セルフィー",
     "kycLoading": "KYC申請を読み込んでいます",
     "kycStatuses": {
       "pending": "審査待ち",
@@ -1269,11 +1266,14 @@
       "rejected": "拒否済み"
     },
     "kycDocuments": {
-      "idFront": "ID表面",
-      "idBack": "ID裏面",
-      "selfie": "セルフィー"
+      "idCardFront": "身分証明書（表面）",
+      "idCardBack": "身分証明書（裏面）",
+      "driverLicense": "運転免許証",
+      "vehicleRegistration": "車両登録証"
     },
     "kycDocumentPreview": "{document}プレビュー",
+    "kycOpenDocument": "{document}を新しいタブで開く",
+    "kycDocumentUnavailable": "安全なプレビューを利用できません",
     "kycRejectReason": "拒否理由",
     "kycRejectReasonPlaceholder": "拒否理由を入力してください...",
     "kycReject": "KYC拒否",

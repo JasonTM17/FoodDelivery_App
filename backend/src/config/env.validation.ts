@@ -41,6 +41,7 @@ const minioProductionRequiredKeys = [
   'MINIO_ACCESS_KEY',
   'MINIO_SECRET_KEY',
   'MINIO_PUBLIC_URL',
+  'MINIO_KYC_BUCKET',
 ] as const
 
 type ProductionRequiredKey =
@@ -112,8 +113,11 @@ export const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string().min(3).optional(),
   MINIO_SECRET_KEY: z.string().min(8).optional(),
   MINIO_BUCKET: z.string().default('foodflow'),
+  MINIO_KYC_BUCKET: z.string().default('foodflow-kyc'),
   MINIO_PUBLIC_URL: z.string().url().default('http://localhost:9000'),
   STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(5),
+  DRIVER_KYC_MAX_UPLOAD_MB: z.coerce.number().int().positive().max(4).default(4),
+  DRIVER_KYC_RETRY_LIMIT: z.coerce.number().int().positive().max(10).default(3),
   THROTTLER_MEMORY_FALLBACK: z.enum(['true', 'false']).default('false'),
   THROTTLER_TTL_MS: z.coerce.number().int().positive().max(600_000).default(60_000),
   THROTTLER_LIMIT: z.coerce.number().int().positive().max(100_000).default(100),
@@ -146,6 +150,7 @@ export const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   SUPABASE_JWT_SECRET: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),
+  SUPABASE_KYC_BUCKET: z.literal('foodflow-kyc').optional(),
   // Ed25519 dual-verify (Phase 1 cutover — Phase 2 will flip signing)
   JWT_ED25519_PRIVATE_KEY: z.string().optional(),
   JWT_ED25519_PUBLIC_KEY: z.string().optional(),
@@ -255,6 +260,9 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
 
   if (storageProvider === 'supabase' && isBlank(config.SUPABASE_STORAGE_BUCKET)) {
     issues.push('SUPABASE_STORAGE_BUCKET: is required when STORAGE_PROVIDER=supabase')
+  }
+  if (storageProvider === 'supabase' && isBlank(config.SUPABASE_KYC_BUCKET)) {
+    issues.push('SUPABASE_KYC_BUCKET: is required when STORAGE_PROVIDER=supabase')
   }
 
   if (queueProvider === 'supabase-postgres') {

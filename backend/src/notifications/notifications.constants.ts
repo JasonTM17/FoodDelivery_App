@@ -17,6 +17,7 @@ export enum EventType {
   REFUNDED = 'refunded',
   PROMO_NEW = 'promo_new',
   KYC_APPROVED = 'kyc_approved',
+  KYC_REJECTED = 'kyc_rejected',
   SYSTEM_ALERT = 'system_alert',
 }
 
@@ -24,6 +25,7 @@ export const CRITICAL_EVENTS = new Set<string>([
   EventType.CANCELLED,
   EventType.REFUNDED,
   EventType.KYC_APPROVED,
+  EventType.KYC_REJECTED,
 ])
 
 export const DEFAULT_CHANNELS: Record<string, string[]> = {
@@ -35,5 +37,6 @@ export const DEFAULT_CHANNELS: Record<string, string[]> = {
   [EventType.REFUNDED]:       ['in_app', 'push', 'email', 'sms'],
   [EventType.PROMO_NEW]:      ['in_app', 'push'],
   [EventType.KYC_APPROVED]:   ['in_app', 'push', 'sms'],
+  [EventType.KYC_REJECTED]:   ['in_app', 'push'],
   [EventType.SYSTEM_ALERT]:   ['in_app'],
 }
