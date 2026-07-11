@@ -63,7 +63,7 @@ export default function AiMonitorStatsClient() {
             <div className="border-t pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{t('resolutionRate')}</span>
-                <span className="text-sm font-semibold text-emerald-600">
+                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                   {formatPercent(stats?.resolutionRate, locale)}
                 </span>
               </div>

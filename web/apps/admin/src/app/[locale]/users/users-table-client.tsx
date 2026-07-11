@@ -121,7 +121,7 @@ export default function UsersTableClient() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" aria-label={t('roleFilter')}>
             <SelectValue placeholder={t('roleFilter')} />
           </SelectTrigger>
           <SelectContent>

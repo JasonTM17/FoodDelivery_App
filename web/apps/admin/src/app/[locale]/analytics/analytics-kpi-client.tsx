@@ -135,7 +135,7 @@ export default function AnalyticsKpiClient() {
                     <div
                       className={cn(
                         'mt-1 flex items-center gap-1 text-xs',
-                        isPositive ? 'text-emerald-600' : 'text-destructive',
+                        isPositive ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive',
                       )}
                     >
                       {isPositive ? (

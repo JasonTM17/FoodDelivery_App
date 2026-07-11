@@ -188,9 +188,9 @@ export default function DriverMapPage() {
         ) : (
           <div className="flex h-full items-center justify-center bg-muted/30 p-6">
             <div className="text-center">
-              <MapPin className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <MapPin className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
               <p className="mt-2 text-sm text-muted-foreground">{t('missingKeyTitle')}</p>
-              <p className="text-xs text-muted-foreground/60">{t('missingKeyDescription')}</p>
+              <p className="text-xs text-muted-foreground">{t('missingKeyDescription')}</p>
             </div>
           </div>
         )}
