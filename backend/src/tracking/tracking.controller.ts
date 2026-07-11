@@ -7,7 +7,7 @@ import { JwtPayload } from '../auth/jwt-payload.interface'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import { OrdersService } from '../orders/orders.service'
-import { routePhaseForStatus, TrackingService } from './tracking.service'
+import { isLiveTrackingStatus, routePhaseForStatus, TrackingService } from './tracking.service'
 import { TrackingGateway } from './tracking.gateway'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import { DriverLocationUpdateBody, driverLocationUpdateSchema } from './tracking.zod'
@@ -48,8 +48,8 @@ export class TrackingController {
     const order = await this.ordersService.getTracking(id, user.sub, user.role)
     const routePhase = routePhaseForStatus(order.status)
     const [driverLocation, cachedRoute, persistedRoute] = await Promise.all([
-      order.driverId
-        ? this.trackingService.getDriverLocation(order.driverId)
+      order.driverId && isLiveTrackingStatus(order.status)
+        ? this.trackingService.getOrderDriverLocation(order.id, order.driverId)
         : Promise.resolve(null),
       this.trackingService.getCachedRoute(order.id, routePhase),
       this.trackingService.getPersistedRoute(order.id, routePhase),

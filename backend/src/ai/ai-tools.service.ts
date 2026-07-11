@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
-import { Prisma, SupportChannel, TicketIssueType, TicketPriority, TicketStatus, UserRole } from '@prisma/client'
+import { OrderStatus, Prisma, SupportChannel, TicketIssueType, TicketPriority, TicketStatus, UserRole } from '@prisma/client'
 import { NotificationsService } from '../notifications/notifications.service'
 import {
   availableRecommendationWhere,
@@ -37,22 +37,28 @@ export class AiToolsService {
   async getDriverLocation(orderReference: string, customerId: string) {
     const order = await this.prisma.order.findFirst({
       where: customerOrderWhere(orderReference, customerId),
-      select: { driverId: true },
+      select: { id: true, driverId: true, status: true },
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
-    if (!order.driverId) return { available: false }
+    if (!order.driverId || !AI_VISIBLE_DRIVER_STATUSES.includes(order.status)) {
+      return { available: false, orderStatus: order.status }
+    }
 
-    const rows = await this.prisma.$queryRaw<Array<{ lat: number; lng: number; recorded_at: string }>>(Prisma.sql`
-      SELECT ST_Y(location::geometry)::float8 AS lat,
-             ST_X(location::geometry)::float8 AS lng,
-             recorded_at
+    const rows = await this.prisma.$queryRaw<Array<{ recorded_at: Date }>>(Prisma.sql`
+      SELECT recorded_at
       FROM driver_location_history
       WHERE driver_id = CAST(${order.driverId} AS uuid)
+        AND order_id = CAST(${order.id} AS uuid)
+        AND recorded_at > NOW() - INTERVAL '30 seconds'
       ORDER BY recorded_at DESC
       LIMIT 1
     `)
-    if (!rows.length) return { available: false }
-    return { available: true, lat: rows[0].lat, lng: rows[0].lng, recordedAt: rows[0].recorded_at }
+    if (!rows.length) return { available: false, orderStatus: order.status }
+    return {
+      available: true,
+      orderStatus: order.status,
+      recordedAt: rows[0].recorded_at.toISOString(),
+    }
   }
 
   async getRestaurantStatus(orderReference: string, customerId: string) {
@@ -198,6 +204,13 @@ export class AiToolsService {
     }
   }
 }
+
+const AI_VISIBLE_DRIVER_STATUSES: OrderStatus[] = [
+  OrderStatus.driver_assigned,
+  OrderStatus.driver_arriving_restaurant,
+  OrderStatus.picked_up,
+  OrderStatus.delivering,
+]
 
 function customerOrderWhere(orderReference: string, customerId: string): Prisma.OrderWhereInput {
   const reference = orderReference.trim()

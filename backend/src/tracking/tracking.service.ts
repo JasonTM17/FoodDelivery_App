@@ -18,6 +18,10 @@ const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.delivering,
 ]
 
+export function isLiveTrackingStatus(status: string): boolean {
+  return ACTIVE_DRIVER_ORDER_STATUSES.includes(status as OrderStatus)
+}
+
 export function routePhaseForStatus(status: string): DeliveryRoutePhase {
   return status === 'driver_assigned' || status === 'driver_arriving_restaurant'
     ? 'pickup'
@@ -182,6 +186,15 @@ export class TrackingService implements OnModuleDestroy {
     if (!timestamp) return null
     const [lng, lat] = pos[0]
     return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp }
+  }
+
+  async getOrderDriverLocation(
+    orderId: string,
+    driverId: string,
+  ): Promise<{ lat: number; lng: number; timestamp: string } | null> {
+    const activeOrderId = await this.resolveActiveOrderForDriver(driverId)
+    if (activeOrderId !== orderId) return null
+    return this.getDriverLocation(driverId)
   }
 
   getCachedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {

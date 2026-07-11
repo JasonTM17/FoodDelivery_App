@@ -166,6 +166,31 @@ describe('TrackingService', () => {
     })
   })
 
+  describe('getOrderDriverLocation', () => {
+    it('returns coordinates only when the driver is still assigned to that active order', async () => {
+      mockRedis.get
+        .mockResolvedValueOnce('order-1')
+        .mockResolvedValueOnce('2026-07-03T01:00:00.000Z')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-1' })
+      mockRedis.geopos.mockResolvedValueOnce([['106.7001', '10.8001']])
+
+      await expect(service.getOrderDriverLocation('order-1', 'driver-1')).resolves.toEqual({
+        lat: 10.8001,
+        lng: 106.7001,
+        timestamp: '2026-07-03T01:00:00.000Z',
+      })
+    })
+
+    it('does not leak a driver location when the active assignment belongs to another order', async () => {
+      mockRedis.get.mockResolvedValueOnce('order-2')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-2' })
+
+      await expect(service.getOrderDriverLocation('order-1', 'driver-1')).resolves.toBeNull()
+
+      expect(mockRedis.geopos).not.toHaveBeenCalled()
+    })
+  })
+
   describe('location history flush', () => {
     it('binds one driver/order/lng/lat/timestamp parameter group per buffered location', async () => {
       mockRedis.get

@@ -2,20 +2,20 @@ import { OrderStatus, UserRole } from '@prisma/client'
 import { TrackingController } from './tracking.controller'
 
 describe('TrackingController', () => {
-  const getDriverLocation = jest.fn()
+  const getOrderDriverLocation = jest.fn()
   const getCachedRoute = jest.fn()
   const getPersistedRoute = jest.fn()
   const getTracking = jest.fn()
   const processLocationUpdate = jest.fn()
   const controller = new TrackingController(
-    { getDriverLocation, getCachedRoute, getPersistedRoute } as never,
+    { getOrderDriverLocation, getCachedRoute, getPersistedRoute } as never,
     { getTracking } as never,
     { processLocationUpdate } as never,
   )
 
   beforeEach(() => {
     jest.clearAllMocks()
-    getDriverLocation.mockResolvedValue(null)
+    getOrderDriverLocation.mockResolvedValue(null)
     getCachedRoute.mockResolvedValue(null)
     getPersistedRoute.mockResolvedValue(null)
     processLocationUpdate.mockResolvedValue({
@@ -76,7 +76,7 @@ describe('TrackingController', () => {
       estimatedDeliveryTimeMinutes: 18,
       routePolyline: 'persisted-route',
     })
-    getDriverLocation.mockResolvedValue({
+    getOrderDriverLocation.mockResolvedValue({
       lat: 10.8,
       lng: 106.7,
       timestamp: '2026-07-03T02:00:00.000Z',
@@ -102,7 +102,7 @@ describe('TrackingController', () => {
       routePolyline: 'live-route',
     })
     expect(getTracking).toHaveBeenCalledWith('order-1', 'customer-1', UserRole.customer)
-    expect(getDriverLocation).toHaveBeenCalledWith('driver-1')
+    expect(getOrderDriverLocation).toHaveBeenCalledWith('order-1', 'driver-1')
     expect(getCachedRoute).toHaveBeenCalledWith('order-1', 'dropoff')
     expect(getPersistedRoute).toHaveBeenCalledWith('order-1', 'dropoff')
   })
@@ -212,7 +212,7 @@ describe('TrackingController', () => {
       etaMinutes: null,
       routePolyline: null,
     })
-    expect(getDriverLocation).not.toHaveBeenCalled()
+    expect(getOrderDriverLocation).not.toHaveBeenCalled()
   })
 
   it('passes restaurant identity through so the service can enforce tenant ownership', async () => {
@@ -229,5 +229,22 @@ describe('TrackingController', () => {
     )
 
     expect(getTracking).toHaveBeenCalledWith('order-5', 'restaurant-user-1', UserRole.restaurant)
+  })
+
+  it('never exposes a driver current location after the tracked order is complete', async () => {
+    getTracking.mockResolvedValue({
+      id: 'order-complete',
+      status: OrderStatus.completed,
+      driverId: 'driver-1',
+      estimatedDeliveryTimeMinutes: null,
+      routePolyline: null,
+    })
+
+    await expect(controller.getTracking(
+      { sub: 'customer-1', role: UserRole.customer },
+      'order-complete',
+    )).resolves.toMatchObject({ driverLocation: null })
+
+    expect(getOrderDriverLocation).not.toHaveBeenCalled()
   })
 })
