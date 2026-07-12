@@ -1,11 +1,8 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
-import { Inter } from 'next/font/google'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { resolveRestaurantMetadataBase } from '@/lib/metadata-url'
-
-const inter = Inter({ subsets: ['latin', 'vietnamese'] })
 
 export const metadata: Metadata = {
   metadataBase: resolveRestaurantMetadataBase(),
@@ -35,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale}>
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

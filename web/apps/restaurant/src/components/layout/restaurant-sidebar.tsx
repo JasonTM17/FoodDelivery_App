@@ -105,6 +105,7 @@ export function RestaurantSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
@@ -124,6 +125,7 @@ export function RestaurantSidebar() {
           {collapsed ? (
             <Link
               href="/settings"
+              prefetch={false}
               className={cn(
                 'flex items-center justify-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors',
                 isSettingsActive
@@ -146,6 +148,7 @@ export function RestaurantSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                       isActive

@@ -24,6 +24,9 @@ async function gotoAppRoute(page: Page, targetUrl: string): Promise<void> {
   const response = await page.goto(targetUrl)
   expect(response?.status(), `${targetUrl} should not return the Next.js 404 shell`).not.toBe(404)
   await expect(page.getByRole('heading', { name: /^404$/ })).toHaveCount(0)
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
 }
 
 export function gotoAdminRoute(page: Page, path: string, locale?: 'vi' | 'en' | 'ja'): Promise<void> {
