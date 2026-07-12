@@ -92,7 +92,10 @@ class SupabaseRealtimeClient implements RealtimeTransport {
     : _api = apiClient ?? ApiClient.instance,
       _client =
           client ??
-          SupabaseClient(AppConfig.supabaseUrl, AppConfig.supabaseAnonKey);
+          SupabaseClient(
+            AppConfig.supabaseUrl,
+            AppConfig.supabasePublishableKey,
+          );
 
   @override
   bool get isConnected =>
@@ -214,50 +217,42 @@ class SupabaseRealtimeClient implements RealtimeTransport {
 
   Future<void> _subscribeChannel(String channelName) async {
     final completer = Completer<void>();
-    final channel =
-        _client
-            .channel('foodflow:$channelName')
-            .onPostgresChanges(
-              event: PostgresChangeEvent.insert,
-              schema: 'public',
-              table: 'realtime_outbox',
-              filter: PostgresChangeFilter(
-                type: PostgresChangeFilterType.eq,
-                column: 'channel',
-                value: channelName,
-              ),
-              callback: (change) {
-                dispatchRealtimeOutboxRecord(
-                  change.newRecord,
-                  allowedChannel: channelName,
-                  onDriverLocation: _driverLocationController.add,
-                  onOrderStatus: _orderStatusController.add,
-                  onEtaUpdate: _etaController.add,
-                  onNotification: _notificationController.add,
-                  onDriverOffer: _driverOfferController.add,
-                  onDriverOrderAssigned: _driverOrderAssignedController.add,
-                );
-              },
-            )
-          ..subscribe((status, error) {
-            switch (status) {
-              case RealtimeSubscribeStatus.subscribed:
-                _subscribedChannels.add(channelName);
-                if (!completer.isCompleted) completer.complete();
-              case RealtimeSubscribeStatus.channelError:
-              case RealtimeSubscribeStatus.timedOut:
-                _subscribedChannels.remove(channelName);
-                if (!completer.isCompleted) {
-                  completer.completeError(
-                    StateError(
-                      'Supabase channel subscription failed: $channelName',
-                    ),
-                  );
-                }
-              case RealtimeSubscribeStatus.closed:
-                _subscribedChannels.remove(channelName);
-            }
-          });
+    final channel = _client.channel(
+      channelName,
+      opts: const RealtimeChannelConfig(private: true),
+    );
+    for (final event in _supportedBroadcastEvents) {
+      channel.onBroadcast(
+        event: event,
+        callback: (payload) => dispatchRealtimeBroadcastEvent(
+          event,
+          payload,
+          onDriverLocation: _driverLocationController.add,
+          onOrderStatus: _orderStatusController.add,
+          onEtaUpdate: _etaController.add,
+          onNotification: _notificationController.add,
+          onDriverOffer: _driverOfferController.add,
+          onDriverOrderAssigned: _driverOrderAssignedController.add,
+        ),
+      );
+    }
+    channel.subscribe((status, error) {
+      switch (status) {
+        case RealtimeSubscribeStatus.subscribed:
+          _subscribedChannels.add(channelName);
+          if (!completer.isCompleted) completer.complete();
+        case RealtimeSubscribeStatus.channelError:
+        case RealtimeSubscribeStatus.timedOut:
+          _subscribedChannels.remove(channelName);
+          if (!completer.isCompleted) {
+            completer.completeError(
+              StateError('Supabase channel subscription failed: $channelName'),
+            );
+          }
+        case RealtimeSubscribeStatus.closed:
+          _subscribedChannels.remove(channelName);
+      }
+    });
     _channels[channelName] = channel;
 
     try {
@@ -366,4 +361,38 @@ void dispatchRealtimeOutboxRecord(
     case 'driver:order_assigned':
       onDriverOrderAssigned(payload);
   }
+}
+
+const _supportedBroadcastEvents = <String>{
+  'driver:location_changed',
+  'driver:location',
+  'order:status:changed',
+  'order:status',
+  'delivery:eta_updated',
+  'notification:new',
+  'driver:new_order',
+  'driver:offer',
+  'driver:order_assigned',
+};
+
+void dispatchRealtimeBroadcastEvent(
+  String event,
+  Map<String, dynamic> payload, {
+  required void Function(Map<String, dynamic>) onDriverLocation,
+  required void Function(Map<String, dynamic>) onOrderStatus,
+  required void Function(Map<String, dynamic>) onEtaUpdate,
+  required void Function(Map<String, dynamic>) onNotification,
+  required void Function(Map<String, dynamic>) onDriverOffer,
+  required void Function(Map<String, dynamic>) onDriverOrderAssigned,
+}) {
+  dispatchRealtimeOutboxRecord(
+    {'channel': 'broadcast', 'event': event, 'payload': payload},
+    allowedChannel: 'broadcast',
+    onDriverLocation: onDriverLocation,
+    onOrderStatus: onOrderStatus,
+    onEtaUpdate: onEtaUpdate,
+    onNotification: onNotification,
+    onDriverOffer: onDriverOffer,
+    onDriverOrderAssigned: onDriverOrderAssigned,
+  );
 }

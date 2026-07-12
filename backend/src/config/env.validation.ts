@@ -84,8 +84,10 @@ const productionForbiddenValues: Partial<Record<ProductionRequiredKey, readonly 
 
 const supabaseForbiddenValues = {
   SUPABASE_URL: ['https://your-project.supabase.co'],
+  SUPABASE_SECRET_KEY: ['your-supabase-secret-key'],
   SUPABASE_SERVICE_ROLE_KEY: ['your-supabase-service-role-key'],
-  SUPABASE_JWT_SECRET: ['your-supabase-jwt-secret'],
+  SUPABASE_REALTIME_JWT_PRIVATE_KEY: ['your-es256-private-key'],
+  SUPABASE_REALTIME_JWT_KEY_ID: ['your-supabase-signing-key-id'],
 } satisfies Record<string, readonly string[]>
 
 const postgresUrl = z.string().url().startsWith('postgresql://')
@@ -157,10 +159,14 @@ export const envSchema = z.object({
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
   SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SECRET_KEY: z.string().optional(),
+  SUPABASE_REALTIME_JWT_PRIVATE_KEY: z.string().optional(),
+  SUPABASE_REALTIME_JWT_KEY_ID: z.string().optional(),
+  SUPABASE_ALLOW_LEGACY_KEYS: z.enum(['true', 'false']).default('false'),
+  // Rollback-only alias; production rejects it unless explicitly enabled.
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  SUPABASE_JWT_SECRET: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),
-  SUPABASE_KYC_BUCKET: z.literal('foodflow-kyc').optional(),
+  SUPABASE_KYC_BUCKET: z.literal('foodflow-private').optional(),
   // Ed25519 dual-verify (Phase 1 cutover — Phase 2 will flip signing)
   JWT_ED25519_PRIVATE_KEY: z.string().optional(),
   JWT_ED25519_PUBLIC_KEY: z.string().optional(),
@@ -232,7 +238,7 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
     queueProvider === 'supabase-postgres'
 
   if (needsSupabase) {
-    for (const key of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+    for (const key of ['SUPABASE_URL'] as const) {
       const value = config[key]
       if (isBlank(value)) {
         issues.push(`${key}: is required when a Supabase provider is enabled`)
@@ -241,6 +247,15 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
       if (supabaseForbiddenValues[key].includes(String(value).trim())) {
         issues.push(`${key}: must not use the example Supabase value in production`)
       }
+    }
+    const secretKey = config.SUPABASE_SECRET_KEY
+    const legacyKey = config.SUPABASE_SERVICE_ROLE_KEY
+    if (isBlank(secretKey)) {
+      if (config.SUPABASE_ALLOW_LEGACY_KEYS !== 'true' || isBlank(legacyKey)) {
+        issues.push('SUPABASE_SECRET_KEY: is required when a Supabase provider is enabled')
+      }
+    } else if (supabaseForbiddenValues.SUPABASE_SECRET_KEY.includes(String(secretKey).trim())) {
+      issues.push('SUPABASE_SECRET_KEY: must not use the example Supabase value in production')
     }
   }
 
@@ -258,13 +273,13 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
   }
 
   if (realtimeProvider === 'supabase') {
-    const value = config.SUPABASE_JWT_SECRET
-    if (isBlank(value)) {
-      issues.push('SUPABASE_JWT_SECRET: is required when REALTIME_PROVIDER=supabase')
-    } else if (supabaseForbiddenValues.SUPABASE_JWT_SECRET.includes(String(value).trim())) {
-      issues.push('SUPABASE_JWT_SECRET: must not use the example Supabase value in production')
-    } else if (String(value).trim().length < 32) {
-      issues.push('SUPABASE_JWT_SECRET: must be at least 32 characters')
+    for (const key of ['SUPABASE_REALTIME_JWT_PRIVATE_KEY', 'SUPABASE_REALTIME_JWT_KEY_ID'] as const) {
+      const value = config[key]
+      if (isBlank(value)) {
+        issues.push(`${key}: is required when REALTIME_PROVIDER=supabase`)
+      } else if (supabaseForbiddenValues[key].includes(String(value).trim())) {
+        issues.push(`${key}: must not use the example Supabase value in production`)
+      }
     }
   }
 

@@ -149,7 +149,7 @@ describe('NotificationsService', () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
 
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(23)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(16)
 
       await service.fanout(userId, eventType, payload)
 
@@ -163,7 +163,7 @@ describe('NotificationsService', () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
 
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(23)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(16)
 
       await service.fanout(userId, 'cancelled', { sourceId: 'order-x' })
 

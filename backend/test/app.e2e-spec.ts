@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { INestApplication } from '@nestjs/common'
-import * as request from 'supertest'
 import { AppModule } from '../src/app.module'
+
+// CJS interop under ts-jest: namespace imports are not callable.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const request = require('supertest') as typeof import('supertest')
 
 describe('AppController (e2e)', () => {
   let app: INestApplication
@@ -16,7 +19,7 @@ describe('AppController (e2e)', () => {
     await app.init()
   })
 
-  afterAll(async () => { await app.close() })
+  afterAll(async () => { await app?.close() })
 
   it('/api/healthz (GET)', () => {
     return request(app.getHttpServer())

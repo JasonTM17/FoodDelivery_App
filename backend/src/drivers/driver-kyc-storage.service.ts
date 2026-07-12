@@ -9,6 +9,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { Client } from 'minio'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
+import { getSupabaseSecretKey } from '../common/supabase/supabase-config'
 import {
   KYC_DOCUMENT_TYPES,
   KYC_IMAGE_CONTENT_TYPES,
@@ -53,7 +54,7 @@ export class DriverKycStorageService {
       this.bucket = requireStringConfig(config, 'SUPABASE_KYC_BUCKET')
       this.supabase = createClient(
         requireStringConfig(config, 'SUPABASE_URL'),
-        requireStringConfig(config, 'SUPABASE_SERVICE_ROLE_KEY'),
+        getSupabaseSecretKey(config),
         { auth: { persistSession: false, autoRefreshToken: false } },
       )
       return

@@ -84,8 +84,8 @@ The current Batch 4 candidate publishes immutable, repository-linked images to b
 |---|---|---|---|
 | API + worker | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | [`ghcr.io/jasontm17/foodflow-backend`](https://github.com/users/JasonTM17/packages/container/package/foodflow-backend) | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
 | Prisma migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | [`ghcr.io/jasontm17/foodflow-migrate`](https://github.com/users/JasonTM17/packages/container/package/foodflow-migrate) | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| Restaurant | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Admin | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Restaurant | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 
 Both published manifests use tag `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, contain `linux/amd64` and `linux/arm64`, and carry SBOM/provenance attestations plus the repository OCI source annotation. Docker Hub and GHCR resolve to the same digest for each artifact. The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Existing `latest` tags are **not** the Batch 4 release source of truth and will not be promoted before production smoke.
 

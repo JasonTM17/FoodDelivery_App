@@ -128,7 +128,7 @@ describe('JwtStrategy.validate', () => {
 
   it('returns user for valid active payload', async () => {
     findUnique.mockResolvedValue(baseUser)
-    const result = await strategy.validate({ sub: 'u1', role: 'CUSTOMER' })
+    const result = await strategy.validate({ sub: 'u1', role: 'CUSTOMER', type: 'access' })
     expect(result.id).toBe('u1')
     expect(result.sub).toBe('u1')
     expect(findUnique).toHaveBeenCalledWith({ where: { id: 'u1' }, select: expect.any(Object) })
@@ -136,14 +136,14 @@ describe('JwtStrategy.validate', () => {
 
   it('throws UnauthorizedException when user not found', async () => {
     findUnique.mockResolvedValue(null)
-    await expect(strategy.validate({ sub: 'ghost', role: 'CUSTOMER' })).rejects.toThrow(
+    await expect(strategy.validate({ sub: 'ghost', role: 'CUSTOMER', type: 'access' })).rejects.toThrow(
       UnauthorizedException,
     )
   })
 
   it('throws UnauthorizedException when user is inactive', async () => {
     findUnique.mockResolvedValue({ ...baseUser, isActive: false })
-    await expect(strategy.validate({ sub: 'u1', role: 'CUSTOMER' })).rejects.toThrow(
+    await expect(strategy.validate({ sub: 'u1', role: 'CUSTOMER', type: 'access' })).rejects.toThrow(
       UnauthorizedException,
     )
   })

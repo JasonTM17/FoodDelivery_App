@@ -127,20 +127,15 @@ class BackgroundLocationService {
     _running = true;
     _hasActiveOrder = hasActiveOrder;
 
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      // Only emit when moved ≥10 m to suppress GPS jitter while stationary.
-      distanceFilter: 10,
-    );
+    final settings = defaultDriverLocationSettings();
 
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: settings,
-    ).listen(
-      _onPosition,
-      onError: (error) {
-        debugPrint('Background location stream error: $error');
-      },
-    );
+    _positionSub = Geolocator.getPositionStream(locationSettings: settings)
+        .listen(
+          _onPosition,
+          onError: (error) {
+            debugPrint('Background location stream error: $error');
+          },
+        );
 
     // In idle mode the driver may stay stationary — push a heartbeat every 30s.
     _scheduleIdleTimer();
@@ -351,4 +346,35 @@ class BackgroundLocationService {
 
   @visibleForTesting
   Future<void> flushBufferForTesting() => _flushBuffer();
+}
+
+LocationSettings defaultDriverLocationSettings() {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    return AndroidSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+      intervalDuration: _kActiveInterval,
+      foregroundNotificationConfig: const ForegroundNotificationConfig(
+        notificationTitle: 'FoodFlow đang chia sẻ vị trí giao hàng',
+        notificationText:
+            'Chỉ hoạt động khi tài xế Online hoặc đang có chuyến.',
+        enableWakeLock: true,
+        setOngoing: true,
+      ),
+    );
+  }
+  if (defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS) {
+    return AppleSettings(
+      accuracy: LocationAccuracy.high,
+      activityType: ActivityType.automotiveNavigation,
+      distanceFilter: 10,
+      pauseLocationUpdatesAutomatically: false,
+      showBackgroundLocationIndicator: true,
+    );
+  }
+  return const LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 10,
+  );
 }

@@ -32,7 +32,7 @@ Each app uses an ignored `.env.local` copied from its example file.
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
 | `NEXT_PUBLIC_REALTIME_PROVIDER` | Yes | `supabase` in production; `socketio` for local Docker/E2E |
 | `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL used by Realtime |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Browser-safe Supabase anonymous/publishable key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production | Browser-safe Supabase publishable key |
 | `NEXT_PUBLIC_WS_URL` | Local Socket.IO only | Socket.IO gateway URL; ignored when provider is `supabase` |
 | `NEXT_PUBLIC_ADMIN_URL` | Yes | Public Admin base URL for metadata and canonical links |
 | `NEXT_PUBLIC_MAP_PROVIDER` | Production | Must be `openfreemap`; local development defaults to the same provider |
@@ -46,7 +46,7 @@ Each app uses an ignored `.env.local` copied from its example file.
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
 | `NEXT_PUBLIC_REALTIME_PROVIDER` | Yes | `supabase` in production; `socketio` for local Docker/E2E |
 | `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL used by Realtime |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Browser-safe Supabase anonymous/publishable key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production | Browser-safe Supabase publishable key |
 | `NEXT_PUBLIC_WS_URL` | Local Socket.IO only | Socket.IO gateway URL; ignored when provider is `supabase` |
 | `NEXT_PUBLIC_RESTAURANT_URL` | Yes | Public Restaurant base URL for metadata and canonical links |
 | `NEXT_PUBLIC_MAP_PROVIDER` | Production | Must be `openfreemap`; local development defaults to the same provider |

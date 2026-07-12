@@ -3,8 +3,7 @@ import { DeepSeekChatProviderService } from './deepseek-chat-provider.service'
 
 describe('DeepSeekChatProviderService', () => {
   const config = { get: jest.fn() }
-  const ragRetrieval = { search: jest.fn(), formatForPrompt: jest.fn() }
-  const service = new DeepSeekChatProviderService(config as never, ragRetrieval as never)
+  const service = new DeepSeekChatProviderService(config as never)
   const originalFetch = global.fetch
 
   beforeEach(() => {

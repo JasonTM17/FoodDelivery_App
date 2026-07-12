@@ -53,6 +53,23 @@ void main() {
   });
 
   group('dispatchRealtimeOutboxRecord', () {
+    test('routes a private Broadcast event without an outbox row', () {
+      final locations = <Map<String, dynamic>>[];
+
+      dispatchRealtimeBroadcastEvent(
+        'driver:location_changed',
+        {'orderId': 'order-1', 'lat': 10.8, 'lng': 106.7},
+        onDriverLocation: locations.add,
+        onOrderStatus: (_) {},
+        onEtaUpdate: (_) {},
+        onNotification: (_) {},
+        onDriverOffer: (_) {},
+        onDriverOrderAssigned: (_) {},
+      );
+
+      expect(locations.single['orderId'], 'order-1');
+    });
+
     test('routes an authorized event payload to its typed stream', () {
       final locations = <Map<String, dynamic>>[];
       final statuses = <Map<String, dynamic>>[];

@@ -33,10 +33,11 @@ const productionEnv = {
   TWILIO_AUTH_TOKEN: 'prod-twilio-auth-token',
   TWILIO_FROM_NUMBER: '+84900000000',
   SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
-  SUPABASE_SERVICE_ROLE_KEY: 'prod-supabase-service-role-key',
-  SUPABASE_JWT_SECRET: 'd'.repeat(64),
-  SUPABASE_STORAGE_BUCKET: 'foodflow-production',
-  SUPABASE_KYC_BUCKET: 'foodflow-kyc',
+  SUPABASE_SECRET_KEY: 'sb_secret_foodflow_production',
+  SUPABASE_REALTIME_JWT_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\ntest-only-es256-private-key-material\\n-----END PRIVATE KEY-----',
+  SUPABASE_REALTIME_JWT_KEY_ID: 'foodflow-es256-2026-07',
+  SUPABASE_STORAGE_BUCKET: 'foodflow-public',
+  SUPABASE_KYC_BUCKET: 'foodflow-private',
 }
 
 describe('validateEnv', () => {
@@ -84,11 +85,12 @@ describe('validateEnv', () => {
       REALTIME_PROVIDER: 'supabase',
       STORAGE_PROVIDER: 'supabase',
       SUPABASE_URL: undefined,
-      SUPABASE_SERVICE_ROLE_KEY: undefined,
-      SUPABASE_JWT_SECRET: undefined,
+      SUPABASE_SECRET_KEY: undefined,
+      SUPABASE_REALTIME_JWT_PRIVATE_KEY: undefined,
+      SUPABASE_REALTIME_JWT_KEY_ID: undefined,
       SUPABASE_STORAGE_BUCKET: undefined,
       SUPABASE_KYC_BUCKET: undefined,
-    })).toThrow(/SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_JWT_SECRET|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
+    })).toThrow(/SUPABASE_URL|SUPABASE_SECRET_KEY|SUPABASE_REALTIME_JWT_PRIVATE_KEY|SUPABASE_REALTIME_JWT_KEY_ID|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
 
     expect(validateEnv({
       ...productionEnv,

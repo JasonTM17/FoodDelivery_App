@@ -138,10 +138,10 @@ describe('PromotionsService', () => {
       await service.validateAndClaim('SAVE10', CART, USER_ID, ORDER_ID)
       expect(txMock.promotion.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: {
+          data: expect.objectContaining({
             usageCount: { increment: 1 },
             currentUsageCount: { increment: 1 },
-          },
+          }),
         }),
       )
     })

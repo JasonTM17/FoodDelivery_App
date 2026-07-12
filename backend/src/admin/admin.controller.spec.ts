@@ -55,8 +55,13 @@ describe('AdminController', () => {
 
   it('toggleUserStatus bans user', async () => {
     mockAdminService.toggleUserStatus.mockResolvedValue({ id: 'u1', isActive: false })
-    const result = await controller.toggleUserStatus('u1', { isActive: false })
-    expect(mockAdminService.toggleUserStatus).toHaveBeenCalledWith('u1', { isActive: false })
+    const request = { user: { sub: 'admin-1' } }
+    const result = await controller.toggleUserStatus('u1', { isActive: false }, request)
+    expect(mockAdminService.toggleUserStatus).toHaveBeenCalledWith(
+      'u1',
+      { isActive: false },
+      'admin-1',
+    )
     expect(result.isActive).toBe(false)
   })
 

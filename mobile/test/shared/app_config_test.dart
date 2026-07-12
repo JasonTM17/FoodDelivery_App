@@ -63,14 +63,14 @@ void main() {
       );
     });
 
-    test('rejects missing and placeholder Supabase anon keys', () {
-      expect(() => validateSupabaseAnonKey(''), throwsStateError);
+    test('rejects missing and placeholder Supabase publishable keys', () {
+      expect(() => validateSupabasePublishableKey(''), throwsStateError);
       expect(
-        () => validateSupabaseAnonKey('your-supabase-anon-key'),
+        () => validateSupabasePublishableKey('your-supabase-publishable-key'),
         throwsStateError,
       );
       expect(
-        validateSupabaseAnonKey('sb_publishable_foodflow_test_key'),
+        validateSupabasePublishableKey('sb_publishable_foodflow_test_key'),
         'sb_publishable_foodflow_test_key',
       );
     });

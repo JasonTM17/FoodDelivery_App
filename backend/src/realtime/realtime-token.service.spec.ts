@@ -1,12 +1,16 @@
 import { ForbiddenException, InternalServerErrorException } from '@nestjs/common'
 import { UserRole } from '@prisma/client'
 import { decode } from 'jsonwebtoken'
+import { generateKeyPairSync } from 'node:crypto'
 import { RealtimeTokenService } from './realtime-token.service'
 
 describe('RealtimeTokenService', () => {
+  const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' })
+  const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString()
   const config = {
     get: jest.fn((key: string) => {
-      if (key === 'SUPABASE_JWT_SECRET') return 's'.repeat(64)
+      if (key === 'SUPABASE_REALTIME_JWT_PRIVATE_KEY') return privatePem
+      if (key === 'SUPABASE_REALTIME_JWT_KEY_ID') return 'foodflow-test-es256'
       return undefined
     }),
   }
@@ -23,7 +27,11 @@ describe('RealtimeTokenService', () => {
     const service = new RealtimeTokenService(config as never, prisma as never)
 
     const result = await service.issueToken({ sub: customerUuid(1), role: UserRole.admin })
-    const payload = decode(result.token) as { realtime_channels: string[]; app_role: string }
+    const decoded = decode(result.token, { complete: true }) as unknown as {
+      header: { alg: string; kid: string };
+      payload: { realtime_channels: string[]; app_role: string };
+    }
+    const payload = decoded.payload
 
     expect(result.channels).toEqual([
       `private:user:${customerUuid(1)}:notifications`,
@@ -32,6 +40,7 @@ describe('RealtimeTokenService', () => {
     ].sort())
     expect(payload.realtime_channels).toEqual(result.channels)
     expect(payload.app_role).toBe(UserRole.admin)
+    expect(decoded.header).toMatchObject({ alg: 'ES256', kid: 'foodflow-test-es256' })
     expect(result.expiresAt).toMatch(/Z$/)
   })
 

@@ -39,17 +39,24 @@ String validateSupabaseUrl(String value, {required bool isRelease}) {
   return normalized;
 }
 
-String validateSupabaseAnonKey(String value) {
+String validateSupabasePublishableKey(String value) {
   final normalized = value.trim();
   if (normalized.isEmpty ||
+      normalized == 'your-supabase-publishable-key' ||
       normalized == 'your-supabase-anon-key' ||
       normalized.length < 20) {
     throw StateError(
-      'SUPABASE_ANON_KEY is required when REALTIME_PROVIDER=supabase.',
+      'SUPABASE_PUBLISHABLE_KEY is required when REALTIME_PROVIDER=supabase.',
     );
   }
   return normalized;
 }
+
+@Deprecated(
+  'Use validateSupabasePublishableKey; legacy anon keys are rollback-only.',
+)
+String validateSupabaseAnonKey(String value) =>
+    validateSupabasePublishableKey(value);
 
 class AppConfig {
   AppConfig._();
@@ -62,6 +69,10 @@ class AppConfig {
     'REALTIME_PROVIDER',
   );
   static const _supabaseUrlDefine = String.fromEnvironment('SUPABASE_URL');
+  static const _supabasePublishableKeyDefine = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+  );
+  // Rollback-only compatibility for one release cycle.
   static const _supabaseAnonKeyDefine = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
   );
@@ -94,8 +105,11 @@ class AppConfig {
   static String get supabaseUrl =>
       validateSupabaseUrl(_supabaseUrlDefine, isRelease: kReleaseMode);
 
-  static String get supabaseAnonKey =>
-      validateSupabaseAnonKey(_supabaseAnonKeyDefine);
+  static String get supabasePublishableKey => validateSupabasePublishableKey(
+    _supabasePublishableKeyDefine.trim().isNotEmpty
+        ? _supabasePublishableKeyDefine
+        : _supabaseAnonKeyDefine,
+  );
 
   static String normalizeBaseUrl(String value) {
     final trimmed = value.trim();

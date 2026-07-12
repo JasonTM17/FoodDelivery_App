@@ -19,9 +19,12 @@ describe('PaymentsService', () => {
     },
     paymentIntent: { create: jest.fn().mockResolvedValue({}) },
     orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
-    $transaction: jest.fn((input: unknown) => {
-      return Promise.all(input as Array<Promise<unknown>>)
-    }),
+    promotionUsage: {
+      findMany: jest.fn().mockResolvedValue([]),
+      delete: jest.fn().mockResolvedValue({}),
+    },
+    promotion: { update: jest.fn().mockResolvedValue({}) },
+    $transaction: jest.fn(),
   }
 
   const mockSepay = {
@@ -34,6 +37,12 @@ describe('PaymentsService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    mockPrisma.$transaction.mockImplementation((input: unknown) => {
+      if (typeof input === 'function') {
+        return input(mockPrisma)
+      }
+      return Promise.all(input as Array<Promise<unknown>>)
+    })
     mockPrisma.order.findUniqueOrThrow.mockResolvedValue({
       id: 'order-1',
       status: 'created',

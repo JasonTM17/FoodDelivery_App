@@ -7,6 +7,7 @@ describe('PartialFulfillmentService', () => {
   let service: PartialFulfillmentService
 
   const mockTx = {
+    orderItem: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
     order: { update: jest.fn().mockResolvedValue({}) },
     orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
   }

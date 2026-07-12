@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, InternalServerErrorException } from '@n
 import { ConfigService } from '@nestjs/config'
 import { UserRole } from '@prisma/client'
 import { sign } from 'jsonwebtoken'
+import { normalizePem } from '../common/supabase/supabase-config'
 import type { JwtPayload } from '../auth/jwt-payload.interface'
 import { PrismaService } from '../database/prisma.service'
 import { realtimeChannels } from './realtime-channels'
@@ -29,8 +30,9 @@ export class RealtimeTokenService {
   ) {}
 
   async issueToken(user: JwtPayload, body: RealtimeTokenRequest = {}): Promise<RealtimeTokenResponse> {
-    const jwtSecret = this.config.get<string>('SUPABASE_JWT_SECRET')
-    if (!jwtSecret) {
+    const privateKey = this.config.get<string>('SUPABASE_REALTIME_JWT_PRIVATE_KEY')
+    const keyId = this.config.get<string>('SUPABASE_REALTIME_JWT_KEY_ID')
+    if (!privateKey || !keyId) {
       throw new InternalServerErrorException('SUPABASE_REALTIME_NOT_CONFIGURED')
     }
 
@@ -47,8 +49,8 @@ export class RealtimeTokenService {
         iat: nowSeconds,
         exp: expiresAtSeconds,
       },
-      jwtSecret,
-      { algorithm: 'HS256' },
+      normalizePem(privateKey),
+      { algorithm: 'ES256', keyid: keyId },
     )
 
     return {

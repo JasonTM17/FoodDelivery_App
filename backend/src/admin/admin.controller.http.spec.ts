@@ -76,7 +76,11 @@ describe('AdminController HTTP (Zod body pipes)', () => {
       .expect(200)
 
     expect(res.body).toMatchObject({ id: 'u1', isActive: true })
-    expect(adminService.toggleUserStatus).toHaveBeenCalledWith('user-uuid-1', { status: 'active' })
+    expect(adminService.toggleUserStatus).toHaveBeenCalledWith(
+      'user-uuid-1',
+      { status: 'active' },
+      ADMIN_USER.sub,
+    )
   })
 
   it('PATCH /api/admin/users/:id/status accepts { status: banned }', async () => {
@@ -85,7 +89,11 @@ describe('AdminController HTTP (Zod body pipes)', () => {
       .patch('/api/admin/users/user-uuid-1/status')
       .send({ status: 'banned' })
       .expect(200)
-    expect(adminService.toggleUserStatus).toHaveBeenCalledWith('user-uuid-1', { status: 'banned' })
+    expect(adminService.toggleUserStatus).toHaveBeenCalledWith(
+      'user-uuid-1',
+      { status: 'banned' },
+      ADMIN_USER.sub,
+    )
   })
 
   it('PATCH /api/admin/restaurants/:id/status accepts { status: disabled }', async () => {

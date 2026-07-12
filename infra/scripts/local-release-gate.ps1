@@ -74,6 +74,15 @@ function Invoke-SecretScan {
   Invoke-Native powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'secret-scan.ps1')
 }
 
+Invoke-Step 'Disk capacity guard' $repoRoot {
+  $guardArguments = @(
+    '-NoProfile', '-ExecutionPolicy', 'Bypass',
+    '-File', (Join-Path $PSScriptRoot 'disk-usage-guard.ps1')
+  )
+  if (-not $SkipBuild) { $guardArguments += '-BlockBuild' }
+  Invoke-Native powershell @guardArguments
+}
+
 Invoke-Step 'Git hygiene and secret scan' $repoRoot {
   Assert-CleanWorktree
   Invoke-Native git diff --check
@@ -96,6 +105,7 @@ if (-not $SkipBackend) {
   Invoke-Step 'Backend typecheck' (Join-Path $repoRoot 'backend') { Invoke-Native pnpm typecheck }
   Invoke-Step 'Backend lint' (Join-Path $repoRoot 'backend') { Invoke-Native pnpm lint }
   Invoke-Step 'Backend Jest' (Join-Path $repoRoot 'backend') { Invoke-Native pnpm exec jest --runInBand }
+  Invoke-Step 'Backend E2E' (Join-Path $repoRoot 'backend') { Invoke-Native pnpm test:e2e -- --runInBand }
   if (-not $SkipBuild) {
     Invoke-Step 'Backend build' (Join-Path $repoRoot 'backend') { Invoke-Native pnpm build }
   }

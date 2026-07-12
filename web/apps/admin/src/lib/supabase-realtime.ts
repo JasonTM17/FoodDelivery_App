@@ -17,12 +17,6 @@ interface RealtimeTokenResponse {
   channels: string[];
 }
 
-interface RealtimeOutboxRow {
-  channel: string;
-  event: string;
-  payload: unknown;
-}
-
 interface SubscribeOptions {
   channel: string;
   scope?: { orderId?: string; restaurantId?: string };
@@ -62,19 +56,13 @@ export function subscribeToSupabaseOutbox(options: SubscribeOptions): () => void
     if (!active) return;
 
     realtimeChannel = client
-      .channel(`foodflow:${options.channel}`)
+      .channel(options.channel, { config: { private: true } })
       .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'realtime_outbox',
-          filter: `channel=eq.${options.channel}`,
-        },
-        (change) => {
-          const row = change.new as RealtimeOutboxRow;
-          const handler = options.events[row.event];
-          if (handler) handler(row.payload);
+        'broadcast',
+        { event: '*' },
+        ({ event, payload }) => {
+          const handler = options.events[event];
+          if (handler) handler(payload);
         },
       )
       .subscribe((status) => {
@@ -101,8 +89,8 @@ export function subscribeToSupabaseOutbox(options: SubscribeOptions): () => void
 function getSupabaseClient(): SupabaseClient {
   if (!supabaseClient) {
     const url = resolveSupabaseUrl();
-    const anonKey = resolveSupabaseAnonKey();
-    supabaseClient = createClient(url, anonKey, {
+    const publishableKey = resolveSupabasePublishableKey();
+    supabaseClient = createClient(url, publishableKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -118,13 +106,14 @@ function resolveSupabaseUrl(): string {
   return assertProductionPublicUrl('NEXT_PUBLIC_SUPABASE_URL', value, process.env, ['https:']);
 }
 
-function resolveSupabaseAnonKey(): string {
-  const value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!value) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required when realtime provider is supabase');
+function resolveSupabasePublishableKey(): string {
+  const value = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
+    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!value) throw new Error('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required when realtime provider is supabase');
   return assertProductionPublicValue(
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
     value,
     process.env,
-    ['your-supabase-anon-key'],
+    ['your-supabase-publishable-key', 'your-supabase-anon-key'],
   );
 }

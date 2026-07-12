@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 import { Redis } from 'ioredis'
 import { Client } from 'minio'
 import { createClient } from '@supabase/supabase-js'
+import { getSupabaseSecretKey } from '../common/supabase/supabase-config'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
 import {
   type ComponentStatus,
@@ -119,7 +120,7 @@ export class HealthController {
     const start = Date.now()
     try {
       const supabaseUrl = this.requireStringConfig('SUPABASE_URL')
-      const serviceRoleKey = this.requireStringConfig('SUPABASE_SERVICE_ROLE_KEY')
+      const serviceRoleKey = getSupabaseSecretKey(this.config)
       const bucket = this.requireStringConfig('SUPABASE_STORAGE_BUCKET')
       const client = createClient(supabaseUrl, serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
