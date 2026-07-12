@@ -12,7 +12,8 @@ describe('AiGroundingService', () => {
     notifyAdmin: jest.fn(),
   }
   const justification = { validate: jest.fn() }
-  const service = new AiGroundingService(tools as never, justification as never)
+  const ragRetrieval = { search: jest.fn().mockResolvedValue([]) }
+  const service = new AiGroundingService(tools as never, justification as never, ragRetrieval as never)
 
   beforeEach(() => {
     jest.clearAllMocks()

@@ -63,7 +63,11 @@ export class AiChatService {
 
   async createReply(body: AiChatRequest, user: JwtPayload): Promise<AiChatReply> {
     const { message, orderId } = body
-    const sessionId = body.sessionId?.trim() || user.sub
+    // Bind memory to authenticated user — never trust client sessionId alone (IDOR)
+    const clientSession = body.sessionId?.trim()
+    const sessionId = clientSession
+      ? `${user.sub}:${clientSession}`
+      : user.sub
     const language = detectLanguage(message)
     this.validateMessage(message, user.sub)
     const persistedSessionId = await this.safeEnsurePersistedSession(user.sub, orderId)
@@ -118,6 +122,7 @@ export class AiChatService {
         sentimentLabel,
         history,
         grounding: groundingResult.entries,
+        ragChunks: groundingResult.ragChunks,
       })
       const reply = this.outputFilter.filter(data.reply)
       const escalated = Boolean(data.escalated || groundingEscalated)

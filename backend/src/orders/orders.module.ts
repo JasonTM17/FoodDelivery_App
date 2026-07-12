@@ -26,6 +26,7 @@ import { PromotionsModule } from '../promotions/promotions.module'
     BullModule.registerQueue({ name: 'dispatch' }),
     BullModule.registerQueue({ name: 'payment-refund' }),
     BullModule.registerQueue({ name: 'order-timeout' }),
+    BullModule.registerQueue({ name: 'commission-split' }),
   ],
   controllers: [OrdersController],
   providers: [

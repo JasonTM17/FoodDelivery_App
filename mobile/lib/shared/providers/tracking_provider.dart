@@ -88,6 +88,16 @@ String? resolveTrackingRoutePolyline(TrackingState tracking, String? _) {
   return tracking.routeUpdateReceived ? tracking.routePolyline : null;
 }
 
+/// B-MOB-06: only apply status events that target the tracked order.
+bool shouldApplyOrderStatusEvent(
+  Map<String, dynamic> data,
+  String trackedOrderId,
+) {
+  final eventOrderId = data['orderId']?.toString();
+  if (eventOrderId == null || eventOrderId.isEmpty) return false;
+  return eventOrderId == trackedOrderId;
+}
+
 TrackingState mergeTrackingSnapshot(
   TrackingState current,
   TrackingResponse snapshot,
@@ -187,8 +197,9 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       );
     });
 
+    // B-MOB-06: ignore status events with missing/mismatched orderId.
     _statusSub = _socketClient.onOrderStatus.listen((data) {
-      if (data['orderId'] != null && data['orderId'] != orderId) return;
+      if (!shouldApplyOrderStatusEvent(data, orderId)) return;
       final status = data['status'] as String?;
       if (status != null) {
         _orderNotifier.updateOrderStatus(

@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
 }
 
 // ─── Enums ───
@@ -1060,6 +1062,7 @@ model PayoutLedger {
 
   order Order @relation(fields: [orderId], references: [id])
 
+  @@unique([orderId, recipientType, recipientId])
   @@index([orderId])
   @@index([recipientType, recipientId, status])
   @@map("payout_ledger")
@@ -1121,6 +1124,7 @@ model WalletTransaction {
 
   @@index([userId, status])
   @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, refId, reason])
   @@map("wallet_transactions")
 }
 
@@ -1163,4 +1167,22 @@ model IdempotencyRequest {
   @@index([userId])
   @@index([createdAt])
   @@map("idempotency_requests")
+}
+
+// ─── RAG Knowledge Base ───
+
+model RagDocument {
+  id        String   @id @default(uuid()) @db.Uuid
+  docType   String   @map("doc_type") @db.VarChar(50)
+  locale    String   @default("vi") @db.VarChar(10)
+  title     String   @db.VarChar(300)
+  content   String   @db.Text
+  sourceId  String?  @map("source_id") @db.VarChar(100)
+  embedding Unsupported("vector(1536)")?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([docType, locale])
+  @@map("rag_documents")
 }

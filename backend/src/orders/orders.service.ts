@@ -32,6 +32,7 @@ export class OrdersService {
     @InjectQueue('dispatch') private readonly dispatchQueue: Queue,
     @InjectQueue('payment-refund') private readonly refundQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
+    @InjectQueue('commission-split') private readonly commissionQueue: Queue,
   ) {}
 
   async transition(
@@ -137,6 +138,23 @@ export class OrdersService {
       await this.enqueueDispatch(orderId)
     }
 
+    // After driver assignment or delivery, (re)run commission so driver ledger row is created
+    if (toStatus === 'driver_assigned' || toStatus === 'delivered') {
+      await this.commissionQueue.add(
+        'commission-split',
+        { orderId },
+        { jobId: `commission:${orderId}:${toStatus}`, removeOnComplete: true },
+      )
+    }
+
+    // COD: mark payment completed when delivered
+    if (toStatus === 'delivered') {
+      await this.prisma.payment.updateMany({
+        where: { orderId, method: 'cash', status: 'pending' },
+        data: { status: 'completed', paidAt: new Date() },
+      })
+    }
+
     return result
   }
 
@@ -189,12 +207,22 @@ export class OrdersService {
   }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
+    // Serialize concurrent checkouts for the same user/cart
+    await this.prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`place-order:${userId}`}))`.catch(() => undefined)
+
     const cart = await this.prisma.cart.findUnique({
       where: { userId },
       include: { items: { include: { menuItem: true } } },
     })
     if (!cart || cart.items.length === 0) throw new BadRequestException('CART_EMPTY')
     if (!cart.restaurantId) throw new BadRequestException('CART_NO_RESTAURANT')
+
+    // Re-check menu availability at checkout
+    for (const item of cart.items) {
+      if (!item.menuItem?.isAvailable) {
+        throw new UnprocessableEntityException('MENU_ITEM_UNAVAILABLE')
+      }
+    }
 
     const restaurant = await this.prisma.restaurant.findUniqueOrThrow({
       where: { id: cart.restaurantId },
@@ -217,12 +245,27 @@ export class OrdersService {
 
     const code = (dto.promotionCode ?? cart.promotionCode)?.trim()
     const paymentMethod = normalizeOrderPaymentMethod(dto.paymentMethod)
+    const menuItemIds = cart.items.map((i) => i.menuItemId)
+    const categoryIds = cart.items
+      .map((i) => i.menuItem?.categoryId)
+      .filter((id): id is string => Boolean(id))
 
     let order: Order | null = null
     for (let attempt = 1; attempt <= ORDER_CODE_CREATE_ATTEMPTS; attempt += 1) {
       const orderCode = generateOrderCode()
       try {
         order = await this.prisma.$transaction(async (tx) => {
+          // Hold advisory lock inside the transaction for double place-order
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`place-order:${userId}`}))`
+
+          const liveCart = await tx.cart.findUnique({
+            where: { userId },
+            include: { items: { include: { menuItem: true } } },
+          })
+          if (!liveCart || liveCart.items.length === 0) {
+            throw new BadRequestException('CART_EMPTY')
+          }
+
           const baseTotal = subtotal + deliveryFee
           let createdOrder = await tx.order.create({
             data: {
@@ -259,7 +302,13 @@ export class OrdersService {
             const { discountAmount } = await this.promotionsService.claimInTransaction(
               tx,
               code,
-              { subtotal, restaurantId: cart.restaurantId! },
+              {
+                subtotal,
+                restaurantId: cart.restaurantId!,
+                deliveryFee,
+                menuItemIds,
+                categoryIds,
+              },
               userId,
               createdOrder.id,
             )
@@ -267,12 +316,12 @@ export class OrdersService {
               where: { id: createdOrder.id },
               data: {
                 promotionDiscount: discountAmount,
-                total: baseTotal - discountAmount,
+                total: Math.max(0, baseTotal - discountAmount),
               },
             })
           }
 
-          // Clean up cart atomically
+          // Clear cart inside the same txn so a second concurrent place cannot reuse it
           await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
           await tx.cart.delete({ where: { id: cart.id } })
 
@@ -294,11 +343,23 @@ export class OrdersService {
       paymentMethod,
     )
 
+    // Cart already cleared inside create transaction; only restore on payment failure
+    // is not done here — promo is released in failPayment.
+
     const status = paymentResult.failureCode
       ? 'cancelled'
       : paymentResult.readyForRestaurant
         ? 'restaurant_pending'
         : 'pending_payment'
+
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { status },
+    })
+
+    await this.prisma.orderStatusHistory.create({
+      data: { orderId: order.id, status, changedBy: 'system' },
+    })
 
     // Schedule auto-timeout: cancel if restaurant doesn't accept in 5 min
     if (paymentResult.readyForRestaurant) {
@@ -311,6 +372,13 @@ export class OrdersService {
           reason: 'Restaurant did not accept order in time',
         },
         { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
+      )
+
+      // Commission for wallet/COD (SePay enqueues from webhook after pay confirm)
+      await this.commissionQueue.add(
+        'commission-split',
+        { orderId: order.id },
+        { jobId: `commission:${order.id}`, removeOnComplete: true },
       )
 
       this.ordersGateway.notifyRestaurant(restaurant.id, {
@@ -345,16 +413,19 @@ export class OrdersService {
     const where: Prisma.OrderWhereInput = { restaurantId: profile.restaurantId }
     if (status) where.status = status as PrismaOrderStatus
 
-    const orders = await this.prisma.order.findMany({
-      where, orderBy: { createdAt: 'desc' }, take: 50,
-      include: {
-        restaurant: { select: { name: true } },
-        orderItems: { select: { id: true, menuItemId: true, nameSnapshot: true, quantity: true, unitPrice: true, selectedOptions: true } },
-        customer: { select: { fullName: true, phone: true } },
-        deliveryAddress: { select: { addressLine: true } },
-      },
-    })
-    return { orders: orders.map(serializeRestaurantOrder), meta: { page: 1, limit: 50, total: orders.length } }
+    const [orders, total] = await this.prisma.$transaction([
+      this.prisma.order.findMany({
+        where, orderBy: { createdAt: 'desc' }, take: 50,
+        include: {
+          restaurant: { select: { name: true } },
+          orderItems: { select: { id: true, menuItemId: true, nameSnapshot: true, quantity: true, unitPrice: true, selectedOptions: true } },
+          customer: { select: { fullName: true, phone: true } },
+          deliveryAddress: { select: { addressLine: true } },
+        },
+      }),
+      this.prisma.order.count({ where })
+    ])
+    return { orders: orders.map(serializeRestaurantOrder), meta: { page: 1, limit: 50, total } }
   }
 
   async getRestaurantOrderDetail(orderId: string, userId: string) {
@@ -411,7 +482,14 @@ export class OrdersService {
       },
     })
 
-    if (role !== 'admin' && order.customerId !== userId && order.driverId !== userId) {
+    if (role === UserRole.restaurant) {
+      const profile = await this.prisma.restaurantProfile.findUnique({
+        where: { userId },
+      })
+      if (!profile || order.restaurantId !== profile.restaurantId) {
+        throw new NotFoundException('ORDER_NOT_FOUND')
+      }
+    } else if (role !== 'admin' && order.customerId !== userId && order.driverId !== userId) {
       throw new NotFoundException('ORDER_NOT_FOUND')
     }
 
@@ -467,6 +545,10 @@ export class OrdersService {
   async submitReview(orderId: string, userId: string, dto: CreateReviewDto) {
     const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } })
     if (order.customerId !== userId) throw new NotFoundException('ORDER_NOT_FOUND')
+
+    if (order.status !== 'delivered' && order.status !== 'completed') {
+      throw new BadRequestException('ORDER_NOT_DELIVERED')
+    }
 
     const existing = await this.prisma.review.findUnique({ where: { orderId } })
     if (existing) throw new BadRequestException('ALREADY_REVIEWED')

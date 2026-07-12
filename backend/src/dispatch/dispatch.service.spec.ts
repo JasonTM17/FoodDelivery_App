@@ -24,6 +24,7 @@ describe('DispatchService', () => {
   const mockRedis = {
     call: jest.fn(),
     set: jest.fn(),
+    get: jest.fn().mockResolvedValue(null),
     del: jest.fn(),
     setex: jest.fn(),
     eval: jest.fn(),
@@ -57,10 +58,21 @@ describe('DispatchService', () => {
     broadcastToOrder: jest.fn(),
   }
 
+  const mockTx = {
+    order: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+    orderStatusHistory: { create: jest.fn() },
+    $executeRaw: jest.fn(),
+  }
+
   const mockPrisma = {
     order: { findUnique: jest.fn(), update: jest.fn(), findUniqueOrThrow: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
-    $transaction: jest.fn().mockResolvedValue([]),
+    $transaction: jest.fn(async (fn: unknown) => {
+      if (typeof fn === 'function') {
+        return (fn as (tx: typeof mockTx) => Promise<unknown>)(mockTx)
+      }
+      return fn
+    }),
     $executeRaw: jest.fn(),
     $queryRaw: jest.fn(),
   }
@@ -220,11 +232,15 @@ describe('DispatchService', () => {
   })
 
   describe('assignDriver', () => {
-    it('does not broadcast a speed-based ETA before route telemetry is available', async () => {
-      mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce({
-        restaurantId: '00000000-0000-0000-0000-000000000001',
-        deliveryAddressId: '00000000-0000-0000-0000-000000000002',
-      })
+    const assignableOrder = {
+      restaurantId: '00000000-0000-0000-0000-000000000001',
+      deliveryAddressId: '00000000-0000-0000-0000-000000000002',
+      status: 'restaurant_accepted',
+      driverId: null,
+    }
+
+    it('conditionally assigns via updateMany and does not broadcast speed-based ETA', async () => {
+      mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce(assignableOrder)
       mockPrisma.$queryRaw.mockResolvedValueOnce([{
         restLng: 106.7001,
         restLat: 10.8001,
@@ -252,8 +268,12 @@ describe('DispatchService', () => {
       })
 
       expect(mockRedis.del).toHaveBeenCalledWith('route:order-1:pickup', 'route:order-1:dropoff')
-      expect(mockPrisma.order.update).toHaveBeenCalledWith({
-        where: { id: 'order-1' },
+      expect(mockTx.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'order-1',
+          driverId: null,
+          status: { in: ['restaurant_accepted', 'preparing', 'ready_for_pickup'] },
+        },
         data: expect.objectContaining({
           driverId: 'driver-1',
           status: 'driver_assigned',
@@ -270,11 +290,27 @@ describe('DispatchService', () => {
       )
     })
 
-    it('does not commit DB assignment when Redis driver assignment fails', async () => {
+    it('rejects assignment when order status is not assignable (B-DISP-02)', async () => {
       mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce({
-        restaurantId: '00000000-0000-0000-0000-000000000001',
-        deliveryAddressId: '00000000-0000-0000-0000-000000000002',
+        ...assignableOrder,
+        status: 'cancelled',
       })
+
+      await expect((service as unknown as {
+        assignDriver: (orderId: string, candidate: { driverId: string; distKm: number; rating: number; totalDeliveries: number; score: number }) => Promise<void>
+      }).assignDriver('order-1', {
+        driverId: 'driver-1',
+        distKm: 4,
+        rating: 4.8,
+        totalDeliveries: 120,
+        score: 0.9,
+      })).rejects.toThrow(/ORDER_NOT_ASSIGNABLE/)
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+    })
+
+    it('does not notify driver when Redis driver assignment fails after DB assign', async () => {
+      mockPrisma.order.findUniqueOrThrow.mockResolvedValueOnce(assignableOrder)
       mockPrisma.$queryRaw.mockResolvedValueOnce([{
         restLng: 106.7001,
         restLat: 10.8001,
@@ -306,13 +342,8 @@ describe('DispatchService', () => {
         score: 0.9,
       })).rejects.toThrow('REDIS_DRIVER_ASSIGNMENT_FAILED')
 
-      expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+      expect(mockPrisma.$transaction).toHaveBeenCalled()
       expect(mockGateway.sendAssignedOrder).not.toHaveBeenCalled()
-      expect(mockGateway.broadcastToOrder).not.toHaveBeenCalledWith(
-        'order-1',
-        'driver:assigned',
-        expect.any(Object),
-      )
     })
   })
 })

@@ -316,8 +316,23 @@ class DriverNotifier extends StateNotifier<DriverState> {
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
+  StreamSubscription<void>? _logoutSub;
+  StreamSubscription<String>? _tokenRefreshSub;
 
-  DriverNotifier() : super(const DriverState());
+  DriverNotifier() : super(const DriverState()) {
+    // B-MOB-04 / B-MOB-05: clear session + sockets on forced logout; reconnect on refresh.
+    _logoutSub = ApiClient.onLogout.listen((_) {
+      _stopLocationUpdates();
+      _socket.disconnect();
+      if (!mounted) return;
+      state = const DriverState();
+    });
+    _tokenRefreshSub = ApiClient.onTokenRefreshed.listen((newToken) {
+      if (_socket.isConnected) {
+        unawaited(_socket.reconnectWithToken(newToken));
+      }
+    });
+  }
 
   // -----------------------------------------------------------------------
   // Auth
@@ -426,6 +441,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> logout() async {
     _stopLocationUpdates();
+    // B-MOB-05: disconnect sockets on logout.
+    _socket.disconnect();
     try {
       await _api.post('/auth/logout');
     } catch (_) {}
@@ -448,8 +465,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
           e.response?.data?['message'] as String? ??
           'Không thể chuyển sang trực tuyến';
       state = state.copyWith(isLoading: false, error: msg);
+      rethrow;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
+      rethrow;
     }
   }
 
@@ -460,8 +479,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _assignedOrderSub?.cancel();
     try {
       await _api.post('/driver/offline');
-    } catch (_) {}
-    state = state.copyWith(isOnline: false);
+      state = state.copyWith(isOnline: false);
+    } catch (e) {
+      state = state.copyWith(isOnline: true, error: e.toString());
+    }
   }
 
   /// Goes online after acquiring real device GPS.
@@ -494,12 +515,16 @@ class DriverNotifier extends StateNotifier<DriverState> {
         return;
       }
       state = state.copyWith(
-        isLoading: false,
         currentLat: lat,
         currentLng: lng,
       );
-      await goOnline(lat, lng);
-      startDispatchOfferListener();
+      try {
+        await goOnline(lat, lng);
+        startDispatchOfferListener();
+      } catch (e) {
+        // error already set in goOnline, we can just return
+        return;
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -561,7 +586,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         data: {'status': status},
       );
 
-      if (status == 'delivered') {
+      if (status == 'delivered' || status == 'completed') {
         // Refresh stats & clear active order after a moment
         await fetchTodayStats();
         state = state.copyWith(
@@ -571,15 +596,16 @@ class DriverNotifier extends StateNotifier<DriverState> {
         BackgroundLocationService.instance.setActiveOrderMode(false);
       } else {
         await fetchActiveOrder();
-        state = state.copyWith(isLoading: false);
       }
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] as String? ??
           'Cập nhật trạng thái thất bại';
-      state = state.copyWith(isLoading: false, error: msg);
+      state = state.copyWith(error: msg);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
+      state = state.copyWith(error: 'Có lỗi xảy ra');
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -764,6 +790,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _etaSub?.cancel();
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
+    _logoutSub?.cancel();
+    _tokenRefreshSub?.cancel();
     BackgroundLocationService.instance.stop();
     super.dispose();
   }

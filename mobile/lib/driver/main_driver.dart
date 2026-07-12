@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
 import '../shared/theme/app_colors.dart';
@@ -30,8 +31,38 @@ import 'screens/support_driver_screen.dart';
 import 'screens/settings_screen.dart';
 import 'models/driver_flow_args.dart';
 
+const _driverStorage = FlutterSecureStorage();
+
+const _driverPublicRoutes = {'/login', '/register'};
+
+/// B-MOB-10: require auth token for every non-login driver route.
+Future<String?> _driverAuthRedirect(
+  BuildContext context,
+  GoRouterState state,
+) async {
+  final location = state.matchedLocation;
+  final isPublic = _driverPublicRoutes.contains(location);
+  final token = await _driverStorage.read(key: 'auth_token');
+  final isLoggedIn = token != null && token.isNotEmpty;
+
+  if (!isLoggedIn && !isPublic) {
+    return '/login';
+  }
+  if (isLoggedIn && isPublic) {
+    return '/home';
+  }
+  return null;
+}
+
+Map<String, dynamic> _safeExtraMap(Object? extra) {
+  if (extra is Map<String, dynamic>) return extra;
+  if (extra is Map) return Map<String, dynamic>.from(extra);
+  return const {};
+}
+
 final _router = GoRouter(
   initialLocation: '/login',
+  redirect: _driverAuthRedirect,
   routes: [
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/home', builder: (_, __) => const DriverShell()),
@@ -90,7 +121,8 @@ final _router = GoRouter(
     GoRoute(
       path: '/tip-adjustment',
       builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>? ?? {};
+        // B-MOB-14: safe cast on route extras.
+        final extra = _safeExtraMap(state.extra);
         return TipAdjustmentScreen(
           tripId: extra['tripId'] as String? ?? '',
           restaurantName: extra['restaurantName'] as String? ?? '',
@@ -105,14 +137,14 @@ final _router = GoRouter(
     GoRoute(
       path: '/trip-detail',
       builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final extra = _safeExtraMap(state.extra);
         return TripDetailScreen(
           tripId: extra['tripId'] as String? ?? '',
           restaurantName: extra['restaurantName'] as String?,
-          fromLat: extra['fromLat'] as double?,
-          fromLng: extra['fromLng'] as double?,
-          toLat: extra['toLat'] as double?,
-          toLng: extra['toLng'] as double?,
+          fromLat: (extra['fromLat'] as num?)?.toDouble(),
+          fromLng: (extra['fromLng'] as num?)?.toDouble(),
+          toLat: (extra['toLat'] as num?)?.toDouble(),
+          toLng: (extra['toLng'] as num?)?.toDouble(),
         );
       },
     ),

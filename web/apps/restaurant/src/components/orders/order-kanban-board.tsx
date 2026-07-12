@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ShoppingBag, Bell, BellRing, RotateCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { OrderQueueCard } from './order-queue-card';
@@ -32,6 +32,8 @@ export function OrderKanbanBoard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(initSound);
+  const soundEnabledRef = useRef(soundEnabled);
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const restaurant = getStoredRestaurant();
 
@@ -42,6 +44,7 @@ export function OrderKanbanBoard() {
   ], [t]);
 
   const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
     try {
       const data = await api.get<{ orders: Order[] }>('/restaurant/orders');
       setAllOrders(data.orders);
@@ -74,7 +77,7 @@ export function OrderKanbanBoard() {
 
     const handleNew = (payload: Partial<Order> & { orderId?: string }) => {
       const orderId = payload.id ?? payload.orderId;
-      if (soundEnabled) playNewOrderSound();
+      if (soundEnabledRef.current) playNewOrderSound();
       if (orderId) {
         setNewOrderIds((prev) => new Set(prev).add(orderId));
         setTimeout(() => {
@@ -104,7 +107,7 @@ export function OrderKanbanBoard() {
       socket.off('order:status:changed', handleUpdate);
       leaveRestaurant(restaurantId);
     };
-  }, [fetchOrders, restaurant?.id, soundEnabled]);
+  }, [fetchOrders, restaurant?.id]);
 
   return (
     <div>

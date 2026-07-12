@@ -40,12 +40,14 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const [schedule, setSchedule] = useState<{ open: string; close: string }>({ open: '', close: '' });
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
     setHasLoadedItem(false);
     setError('');
     api
       .get<unknown>(`/restaurant/menu/items/${id}`)
       .then((data) => {
+        if (cancelled) return;
         const item = parseMenuItemEditorPayload(data, contractErrorMessage);
         setName(item.name);
         setDescription(item.description ?? '');
@@ -61,10 +63,13 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
         }
         setHasLoadedItem(true);
       })
-      .catch((err: unknown) =>
-        setError((err as { message?: string }).message || loadErrorMessage)
-      )
-      .finally(() => setIsLoading(false));
+      .catch((err: unknown) => {
+        if (!cancelled) setError((err as { message?: string }).message || loadErrorMessage);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+      return () => { cancelled = true; };
   }, [id, contractErrorMessage, loadErrorMessage, reloadKey]);
 
   const toggleAllergen = (allergen: string) =>
@@ -75,7 +80,7 @@ export function MenuItemEditor({ id }: MenuItemEditorProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError(tForm('errors.nameRequired')); return; }
-    if (!price || parseFloat(price) <= 0) { setError(tForm('errors.priceInvalid')); return; }
+    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) { setError(tForm('errors.priceInvalid')); return; }
     setIsSubmitting(true);
     setError('');
     try {

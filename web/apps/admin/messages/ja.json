@@ -154,6 +154,7 @@
     "newPassword": "新しいパスワード",
     "confirmPassword": "パスワード確認",
     "passwordPlaceholder": "8文字以上",
+    "passwordHint": "8文字以上で、大文字・小文字・数字を含めてください。",
     "confirmPlaceholder": "新しいパスワードを再入力",
     "submit": "パスワードをリセット",
     "submitting": "パスワードをリセット中...",
@@ -163,6 +164,7 @@
     "backToLogin": "ログインに戻る",
     "missingToken": "このリセットリンクは不足しているか無効です。新しいリセットメールをリクエストしてください。",
     "passwordMismatch": "パスワードが一致しません。",
+    "weakPassword": "パスワードは8文字以上で、大文字・小文字・数字を含める必要があります。",
     "error": "パスワードをリセットできませんでした。新しいリンクをリクエストして再試行してください。"
   },
   "topbar": {
@@ -943,7 +945,8 @@
       "empty": "メッセージはまだありません",
       "agentRole": "(サポート担当)",
       "customerRole": "(顧客)",
-      "internalNote": "内部メモ"
+      "internalNote": "内部メモ",
+      "unsafeAttachment": "添付ファイルはブロックされました: httpsリンクのみ許可"
     },
     "internalNote": {
       "saveError": "内部メモを保存できません",

@@ -25,6 +25,10 @@ function setTokens(tokens: TokenPair): void {
   if (tokens.refreshToken) localStorage.setItem('restaurant_refresh_token', tokens.refreshToken);
 }
 
+/**
+ * B-WEB-01 residual: tokens live in localStorage (not HttpOnly cookies).
+ * clearToken must wipe every session key on logout / unauthorized.
+ */
 export function clearToken(): void {
   localStorage.removeItem('restaurant_token');
   localStorage.removeItem('restaurant_refresh_token');

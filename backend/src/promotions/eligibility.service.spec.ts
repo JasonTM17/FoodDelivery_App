@@ -42,6 +42,7 @@ describe('EligibilityService', () => {
           useValue: {
             order: { count: jest.fn().mockResolvedValue(0) },
             promotionUsage: { count: jest.fn().mockResolvedValue(0) },
+            promotionItem: { findMany: jest.fn().mockResolvedValue([]) },
           },
         },
       ],
@@ -165,9 +166,14 @@ describe('EligibilityService', () => {
       expect(service.calculateDiscount(promo, 100_000)).toBe(100_000)
     })
 
-    it('free_delivery returns value', () => {
-      const promo = makePromo({ type: 'free_delivery' as PromotionType, value: 20_000 as unknown as Promotion['value'] })
-      expect(service.calculateDiscount(promo, 100_000)).toBe(20_000)
+    it('free_delivery clamps to delivery fee', () => {
+      const promo = makePromo({ type: 'free_delivery' as PromotionType, value: 50_000 as unknown as Promotion['value'] })
+      expect(service.calculateDiscount(promo, 100_000, 15_000)).toBe(15_000)
+    })
+
+    it('free_delivery does not exceed configured value when fee is higher', () => {
+      const promo = makePromo({ type: 'free_delivery' as PromotionType, value: 10_000 as unknown as Promotion['value'] })
+      expect(service.calculateDiscount(promo, 100_000, 15_000)).toBe(10_000)
     })
   })
 })

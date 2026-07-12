@@ -23,7 +23,7 @@ export default function PromotionsListPage() {
   const [analytics, setAnalytics] = useState<PromotionAnalyticsData | undefined>();
   const [statusFilter, setStatusFilter] = useState<PromotionStatus | 'all'>('all');
   const [search, setSearch] = useState('');
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -87,7 +87,9 @@ export default function PromotionsListPage() {
   };
 
   const handleBulkAction = async (action: 'pause' | 'resume' | 'archive') => {
+    if (isSubmitting) return;
     if (action === 'archive' && !window.confirm(t('archiveConfirm'))) return;
+    setIsSubmitting(true);
     try {
       await api.post('/restaurant/promotions/bulk', { ids: Array.from(selectedIds), action });
       const nextStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'archived';
@@ -95,6 +97,8 @@ export default function PromotionsListPage() {
       setSelectedIds(new Set());
     } catch (err: unknown) {
       setError((err as { message?: string }).message || t('bulkError'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

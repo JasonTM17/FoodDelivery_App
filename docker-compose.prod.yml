@@ -10,11 +10,14 @@
 services:
   postgres:
     restart: always
+    # Do not publish data-plane ports on host in production
+    ports: !reset []
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
 
   redis:
     restart: always
+    ports: !reset []
     # noeviction required for BullMQ (healthz fails closed on allkeys-lru)
     command: >
       redis-server
@@ -24,9 +27,15 @@ services:
       --maxmemory 1gb
       --maxmemory-policy noeviction
       --requirepass ${REDIS_PASSWORD:?required}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     restart: always
+    ports: !reset []
     environment:
       # Must NOT be minioadmin when NODE_ENV=production (backend env.validation)
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?required}

@@ -126,7 +126,12 @@ class BackgroundLocationService {
 
     _positionSub = Geolocator.getPositionStream(
       locationSettings: settings,
-    ).listen(_onPosition, onError: (_) {});
+    ).listen(
+      _onPosition,
+      onError: (error) {
+        debugPrint('Background location stream error: $error');
+      },
+    );
 
     // In idle mode the driver may stay stationary — push a heartbeat every 30s.
     _scheduleIdleTimer();

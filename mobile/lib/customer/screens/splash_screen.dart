@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
+import '../router/route_names.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -43,10 +45,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
     final authState = ref.read(authProvider);
 
+    // B-MOB-08: GoRouter navigation (named Navigator routes are unused).
     if (authState.isAuthenticated) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      context.go(Routes.home);
     } else {
-      Navigator.of(context).pushReplacementNamed('/login');
+      context.go(Routes.login);
     }
   }
 

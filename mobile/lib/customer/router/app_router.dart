@@ -34,6 +34,18 @@ import '../../shared/models/menu_item.dart';
 import 'route_guards.dart';
 import 'route_names.dart';
 
+/// B-MOB-14: safe cast helpers for GoRouter extras.
+String? _extraString(Object? extra) {
+  if (extra is String && extra.isNotEmpty) return extra;
+  return null;
+}
+
+Map<String, dynamic> _extraMap(Object? extra) {
+  if (extra is Map<String, dynamic>) return extra;
+  if (extra is Map) return Map<String, dynamic>.from(extra);
+  return const {};
+}
+
 /// Central GoRouter configuration for customer-facing flows.
 ///
 /// Uses [authGuard] redirect for route protection. Path constants come from
@@ -71,7 +83,7 @@ final appRouter = GoRouter(
       path: '/restaurant-detail',
       name: 'restaurant-detail',
       builder: (context, state) {
-        final restaurantId = state.extra as String;
+        final restaurantId = _extraString(state.extra) ?? '';
         return RestaurantDetailScreen(restaurantId: restaurantId);
       },
     ),
@@ -79,10 +91,19 @@ final appRouter = GoRouter(
       path: '/food-detail',
       name: 'food-detail',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>;
+        final args = _extraMap(state.extra);
+        final item = args['item'];
         return FoodDetailScreen(
-          item: args['item'] as MenuItemModel,
-          restaurantName: args['restaurantName'] as String,
+          item: item is MenuItemModel
+              ? item
+              : MenuItemModel(
+                  id: '',
+                  restaurantId: '',
+                  name: '',
+                  price: 0,
+                  category: '',
+                ),
+          restaurantName: args['restaurantName'] as String? ?? '',
         );
       },
     ),
@@ -100,7 +121,16 @@ final appRouter = GoRouter(
       path: '/order-tracking',
       name: 'order-tracking',
       builder: (context, state) {
-        final orderId = state.extra as String;
+        final orderId = _extraString(state.extra) ?? '';
+        return OrderTrackingScreen(orderId: orderId);
+      },
+    ),
+    // B-MOB-09: path-style deep link /orders/:id → tracking with extra.
+    GoRoute(
+      path: '/orders/:orderId',
+      name: 'order-detail-deep-link',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId'] ?? '';
         return OrderTrackingScreen(orderId: orderId);
       },
     ),
@@ -108,7 +138,7 @@ final appRouter = GoRouter(
       path: '/chat',
       name: 'chat',
       builder: (context, state) {
-        final orderId = state.extra as String;
+        final orderId = _extraString(state.extra) ?? '';
         return ChatScreen(orderId: orderId);
       },
     ),
@@ -131,7 +161,7 @@ final appRouter = GoRouter(
       path: '/review',
       name: 'review',
       builder: (context, state) {
-        final orderId = state.extra as String;
+        final orderId = _extraString(state.extra) ?? '';
         return ReviewScreen(orderId: orderId);
       },
     ),
@@ -154,7 +184,7 @@ final appRouter = GoRouter(
       path: '/search',
       name: 'search',
       builder: (context, state) {
-        final query = state.extra as String? ?? '';
+        final query = _extraString(state.extra) ?? '';
         return SearchResultsScreen(initialQuery: query);
       },
     ),
@@ -172,12 +202,12 @@ final appRouter = GoRouter(
       path: '/cancel-order',
       name: 'cancel-order',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>? ?? {};
+        final args = _extraMap(state.extra);
         return CancelOrderScreen(
-          orderId: args['orderId'] as String,
+          orderId: args['orderId'] as String? ?? '',
           restaurantName: args['restaurantName'] as String?,
           orderSummary: args['orderSummary'] as String?,
-          totalAmount: args['totalAmount'] as int?,
+          totalAmount: (args['totalAmount'] as num?)?.toInt(),
         );
       },
     ),
@@ -220,7 +250,9 @@ final appRouter = GoRouter(
       path: '/restaurant-filters',
       name: 'restaurant-filters',
       builder: (context, state) {
-        final initial = state.extra as RestaurantFilters?;
+        final initial = state.extra is RestaurantFilters
+            ? state.extra as RestaurantFilters
+            : null;
         return RestaurantFiltersScreen(
           initial: initial ?? const RestaurantFilters(),
         );

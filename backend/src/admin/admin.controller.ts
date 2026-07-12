@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, Req } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { CurrentUser } from '../auth/current-user.decorator'
@@ -58,8 +58,9 @@ export class AdminController {
   toggleUserStatus(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(toggleUserStatusSchema)) body: { isActive?: boolean; status?: string },
+    @Req() req: { user?: { sub?: string } },
   ) {
-    return this.adminService.toggleUserStatus(id, body)
+    return this.adminService.toggleUserStatus(id, body, req.user?.sub)
   }
 
   @Get('restaurants')

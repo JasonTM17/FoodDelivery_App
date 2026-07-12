@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/auth_validators.dart';
 import '../router/route_names.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
+    // B-MOB-02: do not send role — backend register schema rejects it.
     await ref
         .read(authProvider.notifier)
         .register(
@@ -56,7 +58,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
           password: _passwordController.text,
-          role: _selectedRole,
         );
 
     if (!mounted) return;
@@ -193,12 +194,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     hintText: l10n.phoneHint,
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.phoneRequired;
-                    }
-                    if (value.trim().length < 10) {
-                      return l10n.phoneInvalid;
-                    }
+                    // B-MOB-13: E.164-ish phone aligned with backend auth.zod.
+                    final code = AuthValidators.phoneError(value);
+                    if (code == 'required') return l10n.phoneRequired;
+                    if (code == 'invalid') return l10n.phoneInvalid;
                     return null;
                   },
                 ),
@@ -222,12 +221,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.passwordRequired;
-                    }
-                    if (value.length < 6) {
-                      return l10n.passwordMinLength;
-                    }
+                    // B-MOB-13: min 8 + upper/lower/digit complexity.
+                    final code = AuthValidators.passwordError(value);
+                    if (code == 'required') return l10n.passwordRequired;
+                    if (code == 'minLength') return l10n.passwordMinLength;
+                    if (code == 'complexity') return l10n.passwordComplexity;
                     return null;
                   },
                 ),

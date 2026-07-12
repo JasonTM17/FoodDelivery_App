@@ -80,6 +80,7 @@ export class StorageService {
       this.logger.log(`Deleted file ${key}`)
     } catch (err) {
       this.logger.error(`Failed to delete file ${key}: ${(err as Error).message}`)
+      throw err
     }
   }
 

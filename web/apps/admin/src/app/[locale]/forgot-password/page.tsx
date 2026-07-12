@@ -26,7 +26,8 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await apiPost('/auth/forgot-password', { email: email.trim() });
+      // B-WEB-03: public auth endpoint — do not attach bearer / force refresh
+      await apiPost('/auth/forgot-password', { email: email.trim() }, { requireAuth: false });
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('error'));

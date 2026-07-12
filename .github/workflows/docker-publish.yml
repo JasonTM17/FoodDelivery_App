@@ -110,5 +110,5 @@ jobs:
         with:
           image-ref: ${{ matrix.image }}:latest
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'

@@ -77,7 +77,8 @@ export class AuthService {
   // ─── Public API ───────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto): Promise<AuthResult> {
-    const { email, password, fullName, phone } = dto
+    const email = dto.email.trim().toLowerCase()
+    const { password, fullName, phone } = dto
     const role = UserRole.customer
 
     const existing = await this.usersService.findByEmail(email)
@@ -107,7 +108,8 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {
-    const user = await this.usersService.findByEmail(dto.email)
+    const email = dto.email.trim().toLowerCase()
+    const user = await this.usersService.findByEmail(email)
     if (!user) {
       throw new UnauthorizedException('Invalid email or password')
     }
@@ -126,17 +128,16 @@ export class AuthService {
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash)
     if (!passwordValid) {
-      const newCount = (user.failedLoginCount ?? 0) + 1
-      if (newCount >= 5) {
-        const lockedUntil = new Date(Date.now() + 15 * 60 * 1000)
+      // Atomic increment to avoid under-counting under concurrent failures
+      const updated = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginCount: { increment: 1 } },
+        select: { failedLoginCount: true },
+      })
+      if (updated.failedLoginCount >= 5) {
         await this.prisma.user.update({
           where: { id: user.id },
-          data: { failedLoginCount: newCount, lockedUntil },
-        })
-      } else {
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { failedLoginCount: newCount },
+          data: { lockedUntil: new Date(Date.now() + 15 * 60 * 1000) },
         })
       }
       throw new UnauthorizedException('Invalid email or password')
@@ -154,7 +155,7 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto): Promise<AuthResult> {
-    let payload: JwtPayload & { type?: string; jti?: string }
+    let payload: JwtPayload & { type?: string; jti?: string; iat?: number }
     try {
       payload = this.jwtService.verify(dto.refreshToken)
     } catch {
@@ -165,17 +166,18 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token')
     }
 
-    if (await this.refreshTokenStore.isBlocklisted(payload.jti)) {
-      throw new UnauthorizedException('Refresh token has been revoked')
+    if (await this.refreshTokenStore.isUserRevoked(payload.sub, payload.iat)) {
+      throw new UnauthorizedException('Refresh token revoked')
+    }
+
+    if (!(await this.refreshTokenStore.blocklistIfNew(payload.jti))) {
+      throw new UnauthorizedException('Refresh token revoked')
     }
 
     const user = await this.usersService.findById(payload.sub)
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found or account is inactive')
     }
-
-    // Blocklist old refresh token (rotation)
-    await this.refreshTokenStore.blocklist(payload.jti)
 
     return this.buildAuthResult(user)
   }
@@ -242,6 +244,14 @@ export class AuthService {
     const usedAt = new Date()
 
     await this.prisma.$transaction(async tx => {
+      const updated = await tx.passwordResetToken.updateMany({
+        where: { id: resetToken.id, usedAt: null },
+        data: { usedAt },
+      })
+      if (updated.count === 0) {
+        throw new BadRequestException('Token already used')
+      }
+
       await tx.user.update({
         where: { id: resetToken.userId },
         data: {
@@ -250,11 +260,10 @@ export class AuthService {
           lockedUntil: null,
         },
       })
-      await tx.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { usedAt },
-      })
     })
+
+    // Invalidate refresh tokens issued before this stamp (Redis user-level revoke)
+    await this.refreshTokenStore.revokeAllForUser(resetToken.userId)
 
     return { message: 'Password reset successful' }
   }

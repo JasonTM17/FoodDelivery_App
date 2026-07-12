@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/navigation';
 import { api } from '@/lib/api';
@@ -20,24 +20,40 @@ const STATUS_ACTIONS: Record<string, { labelKey: string; action: string; variant
 interface OrderStatusActionsProps {
   orderId: string;
   status: string;
+  onStatusUpdated?: (status: string) => void;
 }
 
-export function OrderStatusActions({ orderId, status }: OrderStatusActionsProps) {
+export function OrderStatusActions({ orderId, status, onStatusUpdated }: OrderStatusActionsProps) {
   const router = useRouter();
   const t = useTranslations('orders.statusActions');
   const [error, setError] = useState('');
-  const actions = STATUS_ACTIONS[status] || [];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(status);
+
+  useEffect(() => {
+    setCurrentStatus(status);
+  }, [status]);
+
+  const actions = STATUS_ACTIONS[currentStatus] || [];
 
   if (actions.length === 0) return null;
 
   const handleAction = async (newStatus: string, event: React.MouseEvent) => {
     event.stopPropagation();
+    // B-WEB-07: in-flight lock — ignore re-entry while submitting
+    if (isSubmitting) return;
+
     setError('');
+    setIsSubmitting(true);
     try {
       await api.patch(`/restaurant/orders/${orderId}/status`, { status: newStatus });
+      setCurrentStatus(newStatus);
+      onStatusUpdated?.(newStatus);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('updateError'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -49,9 +65,10 @@ export function OrderStatusActions({ orderId, status }: OrderStatusActionsProps)
           <button
             key={action.action}
             type="button"
+            disabled={isSubmitting}
             onClick={(event) => void handleAction(action.action, event)}
             className={cn(
-              'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+              'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               action.variant === 'primary' && 'bg-brand-500 text-white hover:bg-brand-600',
               action.variant === 'danger' && 'bg-red-100 text-red-700 hover:bg-red-200',
               action.variant === 'secondary' && 'bg-gray-100 text-gray-700 hover:bg-gray-200',

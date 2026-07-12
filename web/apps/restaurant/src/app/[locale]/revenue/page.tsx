@@ -56,7 +56,7 @@ export default function RevenuePage() {
     try {
       const [summaryData, benchmarkData, breakdownData] = await Promise.all([
         fetchRevenueSummary(period),
-        fetchIndustryBenchmark(),
+        fetchIndustryBenchmark().catch(() => null),
         fetchRevenueBreakdown({ startDate, endDate }),
       ]);
       if (signal.aborted) return;

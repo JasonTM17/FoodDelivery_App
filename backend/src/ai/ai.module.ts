@@ -10,9 +10,10 @@ import { SentimentDetectionService } from './sentiment-detection.service'
 import { ToolJustificationService } from './tool-justification.service'
 import { OutputFilterService } from './output-filter.service'
 import { NotificationsModule } from '../notifications/notifications.module'
+import { RagModule } from './rag/rag.module'
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, RagModule],
   controllers: [AiController, AiChatController],
   providers: [
     AiToolsService,

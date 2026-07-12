@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, NotFoundException, forwardRef } from '@nestjs/common'
+import { Injectable, Inject, Logger, NotFoundException, ConflictException, forwardRef } from '@nestjs/common'
 import { PrismaService } from '../database/prisma.service'
 import { DispatchGateway } from './dispatch.gateway'
 import { DriverScoringService } from './driver-scoring.service'
@@ -125,7 +125,12 @@ export class DispatchService {
           this.metrics.timeToAssign.observe((Date.now() - start) / 1000)
           return { assigned: true, driverId: candidate.driverId }
         }
-        await this.cooldown.recordTimeout(candidate.driverId)
+        // Only count hard timeouts toward cooldown — explicit reject is not a timeout
+        const resultKey = `offer:result:${orderId}:${candidate.driverId}`
+        const result = await this.redis.get(resultKey)
+        if (result !== 'rejected') {
+          await this.cooldown.recordTimeout(candidate.driverId)
+        }
       }
 
       this.metrics.noDriverTotal.inc({ reason: 'all_rejected' })
@@ -204,21 +209,46 @@ export class DispatchService {
       surgeMultiplier,
     })
 
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => { void this.redis.del(offerKey); resolve(false) }, 30000)
-      this.dispatchGateway.registerOfferResponse(`${orderId}:${candidate.driverId}`, (accepted: boolean) => {
-        clearTimeout(timeout)
-        if (!accepted) void this.redis.del(offerKey)
-        resolve(accepted)
-      })
-    })
+    // Redis-backed wait so accept can resolve across API replicas / workers
+    const resultKey = `offer:result:${orderId}:${candidate.driverId}`
+    await this.redis.del(resultKey)
+    await this.redis.setex(`offer:wait:${orderId}:${candidate.driverId}`, 35, '1')
+
+    const deadline = Date.now() + 30_000
+    while (Date.now() < deadline) {
+      const result = await this.redis.get(resultKey)
+      if (result === 'accepted') {
+        await this.redis.del(offerKey)
+        return true
+      }
+      if (result === 'rejected') {
+        await this.redis.del(offerKey)
+        return false
+      }
+      // Also support in-process callback path (single instance)
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    await this.redis.del(offerKey)
+    await this.redis.del(`offer:wait:${orderId}:${candidate.driverId}`)
+    return false
   }
 
   private async assignDriver(orderId: string, candidate: DriverCandidate): Promise<void> {
     const order = await this.prisma.order.findUniqueOrThrow({
       where: { id: orderId },
-      select: { deliveryAddressId: true, restaurantId: true },
+      select: { deliveryAddressId: true, restaurantId: true, status: true, driverId: true },
     })
+
+    const assignable = new Set([
+      'restaurant_accepted',
+      'preparing',
+      'ready_for_pickup',
+    ])
+    if (!assignable.has(order.status) || order.driverId) {
+      throw new ConflictException(
+        `ORDER_NOT_ASSIGNABLE status=${order.status} driver=${order.driverId ?? 'none'}`,
+      )
+    }
 
     const coords = await this.prisma.$queryRaw<Array<{ restLng: number; restLat: number; custLng: number; custLat: number }>>(Prisma.sql`
       SELECT ST_X(r.location::geometry)::float8 AS "restLng", ST_Y(r.location::geometry)::float8 AS "restLat",
@@ -230,44 +260,51 @@ export class DispatchService {
     const location = coords[0]
     if (!location) throw new NotFoundException('ORDER_LOCATION_NOT_FOUND')
 
+    await this.invalidateRouteCaches(orderId)
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Conditional assign — only if still unassigned and in assignable status
+      const result = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          driverId: null,
+          status: { in: ['restaurant_accepted', 'preparing', 'ready_for_pickup'] },
+        },
+        data: {
+          driverId: candidate.driverId,
+          status: 'driver_assigned',
+          estimatedDeliveryTimeMinutes: null,
+          routePolyline: null,
+          routeWaypoints: Prisma.DbNull,
+        },
+      })
+      if (result.count !== 1) {
+        throw new ConflictException('ORDER_ASSIGNMENT_RACE')
+      }
+      await tx.orderStatusHistory.create({
+        data: { orderId, status: 'driver_assigned', changedBy: 'system' },
+      })
+      await tx.$executeRaw(Prisma.sql`
+        INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
+        VALUES (
+          CAST(${orderId} AS uuid),
+          CAST(${candidate.driverId} AS uuid),
+          ST_SetSRID(
+            ST_MakePoint(CAST(${location.restLng} AS double precision), CAST(${location.restLat} AS double precision)),
+            4326
+          ),
+          ST_SetSRID(
+            ST_MakePoint(CAST(${location.custLng} AS double precision), CAST(${location.custLat} AS double precision)),
+            4326
+          ),
+          'assigned',
+          CAST(${candidate.rating.toString()} AS numeric),
+          NOW()
+        )
+      `)
+      return true
+    })
+    if (!updated) throw new ConflictException('ORDER_ASSIGNMENT_FAILED')
     await this.writeDriverAssignmentToRedis(candidate.driverId, orderId)
-    try {
-      await this.invalidateRouteCaches(orderId)
-      await this.prisma.$transaction([
-        this.prisma.order.update({
-          where: { id: orderId },
-          data: {
-            driverId: candidate.driverId,
-            status: 'driver_assigned',
-            estimatedDeliveryTimeMinutes: null,
-            routePolyline: null,
-            routeWaypoints: Prisma.DbNull,
-          },
-        }),
-        this.prisma.orderStatusHistory.create({ data: { orderId, status: 'driver_assigned', changedBy: 'system' } }),
-        this.prisma.$executeRaw(Prisma.sql`
-          INSERT INTO delivery_tasks (order_id, driver_id, pickup_location, dropoff_location, status, driver_rating, assigned_at)
-          VALUES (
-            CAST(${orderId} AS uuid),
-            CAST(${candidate.driverId} AS uuid),
-            ST_SetSRID(
-              ST_MakePoint(CAST(${location.restLng} AS double precision), CAST(${location.restLat} AS double precision)),
-              4326
-            ),
-            ST_SetSRID(
-              ST_MakePoint(CAST(${location.custLng} AS double precision), CAST(${location.custLat} AS double precision)),
-              4326
-            ),
-            'assigned',
-            CAST(${candidate.rating.toString()} AS numeric),
-            NOW()
-          )
-        `),
-      ])
-    } catch (err) {
-      await this.releaseRedisAssignment(candidate.driverId, orderId)
-      throw err
-    }
     this.dispatchGateway.sendAssignedOrder(candidate.driverId, { orderId })
     this.dispatchGateway.broadcastToOrder(orderId, 'driver:assigned', {
       driverId: candidate.driverId,

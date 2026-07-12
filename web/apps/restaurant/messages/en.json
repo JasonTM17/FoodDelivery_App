@@ -522,6 +522,11 @@
     "loading": {
       "label": "Loading restaurant dashboard"
     },
+    "globalError": {
+      "title": "System error",
+      "description": "A critical error occurred. Reload the page or contact support if the issue continues.",
+      "reload": "Reload page"
+    },
     "notFound": {
       "title": "Page not found",
       "description": "The page you requested does not exist or has moved. Please check the address.",

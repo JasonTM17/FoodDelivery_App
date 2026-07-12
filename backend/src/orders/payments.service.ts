@@ -45,6 +45,11 @@ export class PaymentsService {
       },
     })
 
+    // Persist pending_payment so provider webhooks and state machine can advance
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'pending_payment' },
+    })
     await this.recordStatusChange(orderId, 'pending_payment', 'system')
 
     if (method === PaymentMethod.cash) {
@@ -130,14 +135,37 @@ export class PaymentsService {
     paymentId: string,
     errorCode: string,
   ): Promise<PaymentProcessingResult> {
-    await this.prisma.payment.update({
-      where: { id: paymentId },
-      data: { status: PaymentStatus.failed },
-    })
-    await this.recordStatusChange(orderId, 'cancelled', 'system', `Payment failed: ${errorCode}`)
-    await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status: 'cancelled', cancelledReason: `Payment failed: ${errorCode}` },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { id: paymentId },
+        data: { status: PaymentStatus.failed },
+      })
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId,
+          status: 'cancelled',
+          changedBy: 'system',
+          note: `Payment failed: ${errorCode}`,
+        },
+      })
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: 'cancelled', cancelledReason: `Payment failed: ${errorCode}` },
+      })
+
+      // Release promo quota burned during order create (B-ORD-04 / B-PROMO-03)
+      const usages = await tx.promotionUsage.findMany({ where: { orderId } })
+      for (const usage of usages) {
+        await tx.promotionUsage.delete({ where: { id: usage.id } })
+        await tx.promotion.update({
+          where: { id: usage.promotionId },
+          data: {
+            usageCount: { decrement: 1 },
+            currentUsageCount: { decrement: 1 },
+            usedBudget: { decrement: Number(usage.discountAmount) },
+          },
+        })
+      }
     })
     this.logger.warn(`Payment failed for order ${orderId}: ${errorCode}`)
     return { readyForRestaurant: false, failureCode: errorCode }

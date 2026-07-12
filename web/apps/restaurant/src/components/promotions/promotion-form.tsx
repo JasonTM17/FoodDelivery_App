@@ -20,7 +20,7 @@ interface PromotionFormProps {
   isSubmitting?: boolean;
 }
 
-export function PromotionForm({ initialData, onSubmit, isSubmitting }: PromotionFormProps) {
+export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsSubmitting }: PromotionFormProps) {
   const router = useRouter();
   const t = useTranslations('promotions.form');
   const tValidation = useTranslations('promotions.validation');
@@ -49,10 +49,15 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
   );
   const [comboConfig, setComboConfig] = useState<ComboConfig | undefined>(initialData?.comboConfig);
   const [errors, setErrors] = useState<string[]>([]);
+  const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
+  const isSubmitting = externalIsSubmitting || internalIsSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrors([]);
+    setInternalIsSubmitting(true);
+    try {
 
     const data: Partial<Promotion> = {
       code: code.trim(),
@@ -85,6 +90,9 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting }: Promotion
     }
 
     await onSubmit(data);
+    } finally {
+      setInternalIsSubmitting(false);
+    }
   };
 
   return (

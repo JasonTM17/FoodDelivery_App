@@ -5,14 +5,18 @@ import {
   Headers,
   Inject,
   BadRequestException,
+  Req,
 } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import type Redis from 'ioredis'
+import type { Request } from 'express'
 import { SepayProvider } from '../payments/providers/sepay.provider'
 import { PrismaService } from '../database/prisma.service'
 import { OrdersGateway } from '../orders/orders.gateway'
 import { OrdersService } from '../orders/orders.service'
+
+type RawBodyRequest = Request & { rawBody?: Buffer }
 
 @Controller('webhooks')
 export class WebhooksController {
@@ -28,11 +32,16 @@ export class WebhooksController {
 
   @Post('sepay/payment-success')
   async sepayPaymentSuccess(
+    @Req() req: RawBodyRequest,
     @Body() body: Record<string, unknown>,
     @Headers('x-sepay-signature') signature: string | undefined,
   ) {
-    // Signature check — uses JSON.stringify; enable rawBody in bootstrap for strict verification
-    if (!signature || !this.sepay.verifyWebhookSignature(JSON.stringify(body), signature)) {
+    // Prefer raw body bytes for HMAC; fall back to stable JSON only if rawBody not wired
+    const rawBody =
+      req.rawBody?.toString('utf8') ??
+      (typeof req.body === 'string' ? req.body : JSON.stringify(body))
+
+    if (!signature || !this.sepay.verifyWebhookSignature(rawBody, signature)) {
       throw new BadRequestException('Invalid SePay signature')
     }
 
@@ -54,6 +63,23 @@ export class WebhooksController {
         throw new BadRequestException(`Unknown transaction_ref: ${transactionRef}`)
       }
 
+      if (intent.status === 'completed') {
+        await this.redis.set(dedupeKey, '1', 'EX', 24 * 3600)
+        return { received: true, duplicate: true }
+      }
+
+      if (intent.expiresAt && intent.expiresAt.getTime() <= Date.now()) {
+        throw new BadRequestException('Payment intent expired')
+      }
+
+      // Amount reconciliation when provider sends amount fields
+      const paidAmount = this.extractPaidAmount(body)
+      if (paidAmount != null && paidAmount !== Number(intent.amount)) {
+        throw new BadRequestException(
+          `Amount mismatch: expected ${intent.amount}, got ${paidAmount}`,
+        )
+      }
+
       const order = await this.prisma.order.findUnique({
         where: { id: intent.orderId },
         include: {
@@ -62,6 +88,37 @@ export class WebhooksController {
       })
       if (!order) {
         throw new BadRequestException(`Unknown order for transaction_ref: ${transactionRef}`)
+      }
+
+      // Do not complete money-side effects for cancelled / refunded / terminal orders
+      if (order.status === 'cancelled' || order.status === 'refunded' || order.status === 'completed') {
+        throw new BadRequestException(`Order not payable in status ${order.status}`)
+      }
+
+      const payableStatuses = new Set(['created', 'pending_payment'])
+      if (!payableStatuses.has(order.status)) {
+        // Already advanced — treat as idempotent success without re-ledgering
+        if (order.status === 'paid' || order.status === 'restaurant_pending' || order.status === 'restaurant_accepted') {
+          await this.prisma.payment.upsert({
+            where: { orderId: intent.orderId },
+            update: { status: 'completed', transactionId: transactionRef, paidAt: new Date() },
+            create: {
+              orderId: intent.orderId,
+              amount: intent.amount,
+              method: 'sepay',
+              status: 'completed',
+              transactionId: transactionRef,
+              paidAt: new Date(),
+            },
+          })
+          await this.prisma.paymentIntent.update({
+            where: { id: intent.id },
+            data: { status: 'completed' },
+          })
+          await this.redis.set(dedupeKey, '1', 'EX', 24 * 3600)
+          return { received: true, alreadyFulfilled: true }
+        }
+        throw new BadRequestException(`Order not payable in status ${order.status}`)
       }
 
       await this.prisma.payment.upsert({
@@ -82,7 +139,11 @@ export class WebhooksController {
         data: { status: 'completed' },
       })
 
-      if (order.status === 'pending_payment') {
+      // Ensure pending_payment before paid (state machine) if still at created (legacy rows)
+      if (order.status === 'created') {
+        await this.orders.transition(intent.orderId, 'pending_payment', 'system', 'system', 'SePay payment confirmed')
+      }
+      if (order.status === 'created' || order.status === 'pending_payment') {
         await this.orders.transition(intent.orderId, 'paid', 'system', 'system', 'SePay payment confirmed')
         await this.orders.transition(intent.orderId, 'restaurant_pending', 'system', 'system', 'SePay payment confirmed')
         await this.orderTimeoutQueue.add(
@@ -103,15 +164,27 @@ export class WebhooksController {
         })
       }
 
-      await this.commissionQueue.add('commission-split', { orderId: intent.orderId })
-      // Promote claim to durable 24h dedupe only after successful side effects
+      await this.commissionQueue.add(
+        'commission-split',
+        { orderId: intent.orderId },
+        { jobId: `commission:${intent.orderId}`, removeOnComplete: true },
+      )
       await this.redis.set(dedupeKey, '1', 'EX', 24 * 3600)
 
       return { received: true }
     } catch (error) {
-      // Allow provider retries after failed processing
       await this.redis.del(dedupeKey)
       throw error
     }
+  }
+
+  private extractPaidAmount(body: Record<string, unknown>): number | null {
+    const candidates = [body['amount'], body['amount_in'], body['transferAmount'], body['transfer_amount']]
+    for (const c of candidates) {
+      if (c == null) continue
+      const n = typeof c === 'number' ? c : Number(String(c).replace(/[^\d.-]/g, ''))
+      if (Number.isFinite(n) && n > 0) return Math.trunc(n)
+    }
+    return null
   }
 }

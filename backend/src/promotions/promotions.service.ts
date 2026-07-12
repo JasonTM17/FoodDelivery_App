@@ -76,11 +76,13 @@ export class PromotionsService {
     const result = await this.eligibility.validate(promotion, cart, userId, tx)
     if (!result.valid) throw new BadRequestException(result.error)
 
+    const discountAmount = result.discountAmount!
     await tx.promotion.update({
       where: { id: promotion.id },
       data: {
         usageCount: { increment: 1 },
         currentUsageCount: { increment: 1 },
+        usedBudget: { increment: discountAmount },
       },
     })
 
@@ -89,17 +91,37 @@ export class PromotionsService {
         promotionId: promotion.id,
         userId,
         orderId,
-        discountAmount: result.discountAmount!,
+        discountAmount,
       },
     })
 
-    return { discountAmount: result.discountAmount! }
+    return { discountAmount }
   }
 
   async findByCode(code: string) {
     const promotion = await this.prisma.promotion.findUnique({ where: { code } })
     if (!promotion) throw new NotFoundException(this.t('errors.promotion_not_found'))
-    return promotion
+    return this.serializeForCustomer(promotion, false, 'available')
+  }
+
+  /**
+   * Reverse a claim when payment fails or order is cancelled unpaid.
+   * Decrements usage counters and removes PromotionUsage for the order.
+   */
+  async releaseClaimForOrder(orderId: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const db = tx ?? this.prisma
+    const usages = await db.promotionUsage.findMany({ where: { orderId } })
+    for (const usage of usages) {
+      await db.promotionUsage.delete({ where: { id: usage.id } })
+      await db.promotion.update({
+        where: { id: usage.promotionId },
+        data: {
+          usageCount: { decrement: 1 },
+          currentUsageCount: { decrement: 1 },
+          usedBudget: { decrement: Number(usage.discountAmount) },
+        },
+      })
+    }
   }
 
   async listAvailable(userId: string) {

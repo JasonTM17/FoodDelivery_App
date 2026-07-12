@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiPost } from '@/lib/api';
+import { isStrongPassword } from '@/lib/password-strength';
 
 export default function ResetPasswordPage() {
   const t = useTranslations('resetPassword');
@@ -39,9 +40,16 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // B-WEB-16: client password strength (min 8, upper, lower, digit)
+    if (!isStrongPassword(password)) {
+      setError(t('weakPassword'));
+      return;
+    }
+
     setLoading(true);
     try {
-      await apiPost('/auth/reset-password', { token, password });
+      // B-WEB-03: public auth endpoint — do not attach bearer / force refresh
+      await apiPost('/auth/reset-password', { token, password }, { requireAuth: false });
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('error'));
@@ -83,6 +91,7 @@ export default function ResetPasswordPage() {
                   required
                   disabled={loading || !token}
                 />
+                <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>

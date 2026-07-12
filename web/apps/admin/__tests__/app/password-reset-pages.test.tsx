@@ -25,9 +25,11 @@ describe('Admin password reset pages', () => {
     fireEvent.click(screen.getByRole('button', { name: 'submit' }));
 
     await waitFor(() => {
-      expect(mockedApiPost).toHaveBeenCalledWith('/auth/forgot-password', {
-        email: 'admin@foodflow.vn',
-      });
+      expect(mockedApiPost).toHaveBeenCalledWith(
+        '/auth/forgot-password',
+        { email: 'admin@foodflow.vn' },
+        { requireAuth: false },
+      );
     });
     expect(await screen.findByText('successTitle')).toBeInTheDocument();
     expect(screen.getByText('neutralNotice')).toBeInTheDocument();
@@ -48,12 +50,30 @@ describe('Admin password reset pages', () => {
     fireEvent.click(screen.getByRole('button', { name: 'submit' }));
 
     await waitFor(() => {
-      expect(mockedApiPost).toHaveBeenCalledWith('/auth/reset-password', {
-        token: 'reset-token',
-        password: 'NewPass123',
-      });
+      expect(mockedApiPost).toHaveBeenCalledWith(
+        '/auth/reset-password',
+        { token: 'reset-token', password: 'NewPass123' },
+        { requireAuth: false },
+      );
     });
     expect(await screen.findByText('successTitle')).toBeInTheDocument();
+  });
+
+  it('blocks weak passwords client-side before calling the API', async () => {
+    window.history.pushState({}, '', '/vi/reset-password?token=reset-token');
+
+    render(<ResetPasswordPage />);
+
+    fireEvent.change(screen.getByLabelText('newPassword'), {
+      target: { value: 'weakpass' },
+    });
+    fireEvent.change(screen.getByLabelText('confirmPassword'), {
+      target: { value: 'weakpass' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'submit' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('weakPassword');
+    expect(mockedApiPost).not.toHaveBeenCalled();
   });
 
   it('blocks reset submission when the token is missing', () => {

@@ -7,6 +7,12 @@ describe('AdminService list endpoints', () => {
       count: jest.fn(),
       update: jest.fn(),
     },
+    user: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      update: jest.fn(),
+      findUnique: jest.fn(),
+    },
     aiSupportTicket: {
       findMany: jest.fn(),
       count: jest.fn(),
@@ -104,6 +110,7 @@ describe('AdminService getUsers mapping', () => {
       findMany: jest.fn(),
       count: jest.fn(),
       update: jest.fn(),
+      findUnique: jest.fn(),
     },
   }
   let service: AdminService
@@ -139,7 +146,15 @@ describe('AdminService getUsers mapping', () => {
   })
 
   it('toggleUserStatus accepts status banned from web UI', async () => {
-    prisma.user.update.mockResolvedValue({
+    const userMock = prisma.user as {
+      findMany: jest.Mock
+      count: jest.Mock
+      update: jest.Mock
+      findUnique: jest.Mock
+    }
+    userMock.findUnique.mockResolvedValue({ role: 'customer' })
+    userMock.count.mockResolvedValue(2)
+    userMock.update.mockResolvedValue({
       id: 'u1',
       email: 'customer1@foodflow.vn',
       phone: '090',
@@ -150,7 +165,7 @@ describe('AdminService getUsers mapping', () => {
       updatedAt: new Date('2026-01-02T00:00:00Z'),
     })
     const result = await service.toggleUserStatus('u1', { status: 'banned' })
-    expect(prisma.user.update).toHaveBeenCalledWith({
+    expect(userMock.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
       data: { isActive: false },
       select: expect.objectContaining({

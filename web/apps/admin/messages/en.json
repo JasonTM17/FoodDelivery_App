@@ -154,6 +154,7 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "passwordPlaceholder": "At least 8 characters",
+    "passwordHint": "Min 8 characters with uppercase, lowercase, and a digit.",
     "confirmPlaceholder": "Re-enter your new password",
     "submit": "Reset password",
     "submitting": "Resetting password...",
@@ -163,6 +164,7 @@
     "backToLogin": "Back to login",
     "missingToken": "This reset link is missing or invalid. Request a new password reset email.",
     "passwordMismatch": "Passwords do not match.",
+    "weakPassword": "Password must be at least 8 characters and include uppercase, lowercase, and a digit.",
     "error": "Could not reset the password. Please request a new link and try again."
   },
   "topbar": {
@@ -943,7 +945,8 @@
       "empty": "No messages yet",
       "agentRole": "(Agent)",
       "customerRole": "(Customer)",
-      "internalNote": "Internal note"
+      "internalNote": "Internal note",
+      "unsafeAttachment": "Attachment blocked: only https links are allowed"
     },
     "internalNote": {
       "saveError": "Could not save internal note",

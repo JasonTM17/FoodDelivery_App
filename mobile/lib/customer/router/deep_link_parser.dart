@@ -24,19 +24,35 @@ class DeepLinkParser {
     return null;
   }
 
+  /// foodflow://orders/id has host=`orders` and path=`/id`.
+  /// foodflow:///orders/id has empty host and path=`/orders/id`.
+  static List<String> _segments(Uri uri) {
+    if (uri.scheme == DeepLinkScheme.foodflow) {
+      final segments = <String>[];
+      if (uri.host.isNotEmpty) {
+        segments.add(uri.host);
+      }
+      segments.addAll(uri.pathSegments);
+      return segments;
+    }
+    return uri.pathSegments;
+  }
+
   static String? _parseFoodflowLink(Uri uri) {
-    final pathSegments = uri.pathSegments;
+    final pathSegments = _segments(uri);
     if (pathSegments.isEmpty) return null;
 
     switch (pathSegments[0]) {
+      // B-MOB-09: support both /order/{id} and /orders/{id}
       case 'order':
+      case 'orders':
         if (pathSegments.length >= 2) {
-          return '${Routes.orderTracking}';
+          return Routes.orderTracking;
         }
         return null;
       case 'restaurant':
         if (pathSegments.length >= 2) {
-          return '${Routes.restaurantDetail}';
+          return Routes.restaurantDetail;
         }
         return null;
       case 'promo':
@@ -59,28 +75,32 @@ class DeepLinkParser {
     if (uri == null) return null;
 
     final scheme = uri.scheme;
-    final pathSegments = uri.pathSegments;
+    if (scheme != DeepLinkScheme.foodflow &&
+        !(scheme == DeepLinkScheme.https && uri.host == 'foodflow.vn')) {
+      return null;
+    }
+
+    final pathSegments = _segments(uri);
     if (pathSegments.isEmpty) return null;
 
-    if (scheme == DeepLinkScheme.foodflow ||
-        (scheme == DeepLinkScheme.https && uri.host == 'foodflow.vn')) {
-      switch (pathSegments[0]) {
-        case 'order':
-          if (pathSegments.length >= 2) {
-            return (path: Routes.orderTracking, extra: pathSegments[1]);
-          }
-          break;
-        case 'restaurant':
-          if (pathSegments.length >= 2) {
-            return (path: Routes.restaurantDetail, extra: pathSegments[1]);
-          }
-          break;
-        case 'promo':
-          if (pathSegments.length >= 2) {
-            return (path: Routes.vouchers, extra: null);
-          }
-          break;
-      }
+    switch (pathSegments[0]) {
+      // B-MOB-09: map /orders/{id} → order-tracking with orderId extra.
+      case 'order':
+      case 'orders':
+        if (pathSegments.length >= 2) {
+          return (path: Routes.orderTracking, extra: pathSegments[1]);
+        }
+        break;
+      case 'restaurant':
+        if (pathSegments.length >= 2) {
+          return (path: Routes.restaurantDetail, extra: pathSegments[1]);
+        }
+        break;
+      case 'promo':
+        if (pathSegments.length >= 2) {
+          return (path: Routes.vouchers, extra: null);
+        }
+        break;
     }
 
     return null;

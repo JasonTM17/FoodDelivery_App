@@ -53,6 +53,10 @@ export class DispatchGateway implements OnGatewayConnection {
     this.offerCallbacks.set(key, callback)
   }
 
+  unregisterOfferResponse(key: string): void {
+    this.offerCallbacks.delete(key)
+  }
+
   resolveOffer(orderId: string, driverId: string, accepted: boolean): boolean {
     const key = `${orderId}:${driverId}`
     const callback = this.offerCallbacks.get(key)
@@ -69,7 +73,8 @@ export class DispatchGateway implements OnGatewayConnection {
   }
 
   emitToAdmins(event: string, data: Record<string, unknown>): void {
-    this.server.emit(event, data)
+    // Admin room only — never broadcast to all driver sockets
+    this.server.to('admins').emit(event, data)
   }
 
   @SubscribeMessage('dispatch:accept')
@@ -89,10 +94,9 @@ export class DispatchGateway implements OnGatewayConnection {
     }
 
     await this.redis.del(offerKey)
-    const resolved = this.resolveOffer(data.orderId, driverId, true)
-    if (!resolved) {
-      return { event: 'error', data: { message: 'Offer already resolved' } }
-    }
+    // Write Redis result so multi-process offer waiters observe accept
+    await this.redis.setex(`offer:result:${data.orderId}:${driverId}`, 60, 'accepted')
+    this.resolveOffer(data.orderId, driverId, true)
 
     return { event: 'dispatch:accepted', data: { orderId: data.orderId } }
   }
@@ -114,10 +118,8 @@ export class DispatchGateway implements OnGatewayConnection {
     }
 
     await this.redis.del(offerKey)
-    const resolved = this.resolveOffer(data.orderId, driverId, false)
-    if (!resolved) {
-      return { event: 'error', data: { message: 'Offer already resolved' } }
-    }
+    await this.redis.setex(`offer:result:${data.orderId}:${driverId}`, 60, 'rejected')
+    this.resolveOffer(data.orderId, driverId, false)
 
     return { event: 'dispatch:rejected', data: { orderId: data.orderId } }
   }

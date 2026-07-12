@@ -60,7 +60,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
       if (mounted) {
-        _currentLocation = position;
+        setState(() {
+          _currentLocation = position;
+        });
         ref
             .read(restaurantProvider.notifier)
             .fetchNearbyRestaurants(
@@ -282,7 +284,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context).locating,
+                        _currentLocation != null
+                            ? '${_currentLocation!.latitude.toStringAsFixed(4)}, ${_currentLocation!.longitude.toStringAsFixed(4)}'
+                            : AppLocalizations.of(context).locating,
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,

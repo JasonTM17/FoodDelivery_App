@@ -1,5 +1,5 @@
-import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq'
-import { Job } from 'bullmq'
+import { Processor, WorkerHost, OnWorkerEvent, InjectQueue } from '@nestjs/bullmq'
+import { Job, Queue } from 'bullmq'
 import { Logger, Inject } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../../database/prisma.service'
@@ -21,6 +21,7 @@ export class SmtpProcessor extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    @InjectQueue(QUEUE_TWILIO) private readonly twilioQueue: Queue,
   ) {
     super()
   }
@@ -69,10 +70,7 @@ export class SmtpProcessor extends WorkerHost {
 
       // For critical messages, fall back to SMS queue
       if (critical) {
-        await this.redis.rpush(
-          QUEUE_TWILIO,
-          JSON.stringify({ userId, body, eventType: 'email_fallback' }),
-        )
+        await this.twilioQueue.add('send-sms', { userId, body, eventType: 'email_fallback' })
         this.logger.warn(`Critical email failed for ${userId}; pushed to SMS fallback`)
       }
 

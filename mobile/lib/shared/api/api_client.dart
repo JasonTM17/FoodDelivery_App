@@ -8,8 +8,15 @@ import '../config/app_config.dart';
 class ApiClient {
   static ApiClient? _instance;
   static final _logoutController = StreamController<void>.broadcast();
+  static final _tokenRefreshController = StreamController<String>.broadcast();
   static final Random _idempotencyRandom = Random.secure();
+
+  /// Emits when the session is forcibly cleared (refresh failure / logout).
   static Stream<void> get onLogout => _logoutController.stream;
+
+  /// Emits the new access token after a successful silent refresh.
+  static Stream<String> get onTokenRefreshed => _tokenRefreshController.stream;
+
   late final Dio dio;
   final FlutterSecureStorage _storage;
 
@@ -77,6 +84,13 @@ class ApiClient {
       hex.substring(16, 20),
       hex.substring(20),
     ].join('-');
+  }
+
+  /// Notify listeners that tokens were wiped (e.g. explicit logout).
+  static void notifyLogout() {
+    if (!_logoutController.isClosed) {
+      _logoutController.add(null);
+    }
   }
 
   // Convenience methods
@@ -162,7 +176,9 @@ class ApiClient {
 class _AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
-  bool _isRefreshing = false;
+
+  /// Single-flight refresh: parallel 401s await the same Completer.
+  Completer<String?>? _refreshCompleter;
 
   _AuthInterceptor(this._storage, this._dio);
 
@@ -171,6 +187,12 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // Refresh calls must not carry a stale access token.
+    if (options.extra['_isRefreshCall'] == true) {
+      options.headers.remove('Authorization');
+      handler.next(options);
+      return;
+    }
     final token = await _storage.read(key: 'auth_token');
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -182,52 +204,111 @@ class _AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final is401 = err.response?.statusCode == 401;
     final alreadyRetried = err.requestOptions.extra['_retried'] == true;
+    final isRefreshCall = err.requestOptions.extra['_isRefreshCall'] == true ||
+        err.requestOptions.path.contains('/auth/refresh');
 
-    if (is401 && !alreadyRetried && !_isRefreshing) {
-      final refreshToken = await _storage.read(key: 'refresh_token');
-      if (refreshToken != null && refreshToken.isNotEmpty) {
-        _isRefreshing = true;
-        try {
-          final refreshDio = Dio(
-            BaseOptions(
-              baseUrl: err.requestOptions.baseUrl,
-              headers: {'Content-Type': 'application/json'},
-            ),
-          );
-          final res = await refreshDio.post(
-            '/auth/refresh',
-            data: {'refreshToken': refreshToken},
-          );
-          if (res.statusCode == 200) {
-            final body = res.data;
-            final payload =
-                (body is Map<String, dynamic> && body.containsKey('data'))
-                ? (body['data'] as Map<String, dynamic>? ?? body)
-                : body as Map<String, dynamic>;
-            final newToken = payload['accessToken'] as String?;
-            final newRefresh = payload['refreshToken'] as String?;
-            if (newToken != null) {
-              await _storage.write(key: 'auth_token', value: newToken);
-              if (newRefresh != null) {
-                await _storage.write(key: 'refresh_token', value: newRefresh);
-              }
-              err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-              err.requestOptions.extra['_retried'] = true;
-              final retryResponse = await _dio.fetch(err.requestOptions);
-              handler.resolve(retryResponse);
-              return;
-            }
-          }
-        } catch (_) {
-          await _storage.delete(key: 'auth_token');
-          await _storage.delete(key: 'refresh_token');
-          ApiClient._logoutController.add(null);
-        } finally {
-          _isRefreshing = false;
-        }
-      }
+    if (!is401 || alreadyRetried || isRefreshCall) {
+      handler.next(err);
+      return;
     }
+
+    try {
+      final newToken = await _refreshAccessToken();
+      if (newToken != null && newToken.isNotEmpty) {
+        err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+        err.requestOptions.extra['_retried'] = true;
+        final retryResponse = await _dio.fetch(err.requestOptions);
+        handler.resolve(retryResponse);
+        return;
+      }
+    } catch (_) {
+      // Fall through to original error after logout was triggered.
+    }
+
     handler.next(err);
+  }
+
+  /// Single-flight token refresh. Concurrent callers share one network call.
+  Future<String?> _refreshAccessToken() async {
+    final inFlight = _refreshCompleter;
+    if (inFlight != null) {
+      return inFlight.future;
+    }
+
+    final completer = Completer<String?>();
+    _refreshCompleter = completer;
+
+    try {
+      final refreshToken = await _storage.read(key: 'refresh_token');
+      if (refreshToken == null || refreshToken.isEmpty) {
+        completer.complete(null);
+        return null;
+      }
+
+      // Use the shared Dio so adapters/interceptors (and tests) apply.
+      final res = await _dio.post<dynamic>(
+        '/auth/refresh',
+        data: {'refreshToken': refreshToken},
+        options: Options(
+          extra: {'_isRefreshCall': true, '_retried': true},
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      if (res.statusCode != 200) {
+        await _forceLogout();
+        completer.complete(null);
+        return null;
+      }
+
+      final body = res.data;
+      final payload = _unwrapRefreshPayload(body);
+      final newToken = payload['accessToken'] as String?;
+      final newRefresh = payload['refreshToken'] as String?;
+
+      if (newToken == null || newToken.isEmpty) {
+        await _forceLogout();
+        completer.complete(null);
+        return null;
+      }
+
+      await _storage.write(key: 'auth_token', value: newToken);
+      if (newRefresh != null && newRefresh.isNotEmpty) {
+        await _storage.write(key: 'refresh_token', value: newRefresh);
+      }
+
+      if (!ApiClient._tokenRefreshController.isClosed) {
+        ApiClient._tokenRefreshController.add(newToken);
+      }
+
+      completer.complete(newToken);
+      return newToken;
+    } catch (_) {
+      await _forceLogout();
+      completer.complete(null);
+      return null;
+    } finally {
+      _refreshCompleter = null;
+    }
+  }
+
+  Map<String, dynamic> _unwrapRefreshPayload(dynamic body) {
+    if (body is Map<String, dynamic>) {
+      if (body.containsKey('data') && body['data'] is Map<String, dynamic>) {
+        return body['data'] as Map<String, dynamic>;
+      }
+      return body;
+    }
+    if (body is Map) {
+      return Map<String, dynamic>.from(body);
+    }
+    return const {};
+  }
+
+  Future<void> _forceLogout() async {
+    await _storage.delete(key: 'auth_token');
+    await _storage.delete(key: 'refresh_token');
+    ApiClient.notifyLogout();
   }
 }
 

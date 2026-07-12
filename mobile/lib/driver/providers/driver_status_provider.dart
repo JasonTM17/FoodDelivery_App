@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'driver_provider.dart';
 
 enum DriverOnlineStatus { online, offline, paused }
 
@@ -32,9 +33,10 @@ class DriverStatus {
 }
 
 class DriverStatusNotifier extends StateNotifier<DriverStatus> {
+  final Ref ref;
   Timer? _pauseTimer;
 
-  DriverStatusNotifier() : super(const DriverStatus());
+  DriverStatusNotifier(this.ref) : super(const DriverStatus());
 
   void setOnline() {
     _pauseTimer?.cancel();
@@ -78,6 +80,7 @@ class DriverStatusNotifier extends StateNotifier<DriverStatus> {
       pausedUntil: null,
       pausedDuration: null,
     );
+    ref.read(driverProvider.notifier).goOnlineWithGps();
   }
 
   @override
@@ -89,5 +92,5 @@ class DriverStatusNotifier extends StateNotifier<DriverStatus> {
 
 final driverStatusProvider =
     StateNotifierProvider<DriverStatusNotifier, DriverStatus>((ref) {
-      return DriverStatusNotifier();
+      return DriverStatusNotifier(ref);
     });

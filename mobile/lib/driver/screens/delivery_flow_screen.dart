@@ -100,8 +100,15 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(driverProvider);
     final order = state.activeOrder;
-    ref.listen<DriverState>(driverProvider, (_, next) {
+    ref.listen<DriverState>(driverProvider, (previous, next) {
       final activeOrder = next.activeOrder;
+      if (previous != null && previous.activeOrder != null && activeOrder == null) {
+        if (GoRouter.of(context).canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
+      }
       if (activeOrder != null) {
         _fitMapToOrder(activeOrder, next);
       }

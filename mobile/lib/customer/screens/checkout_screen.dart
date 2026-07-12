@@ -67,11 +67,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           promotionCode: cartState.promoCode,
         );
 
+    if (orderId != null) {
+      ref.read(cartProvider.notifier).clearCart();
+    }
+
     if (!mounted) return;
     setState(() => _isPlacing = false);
 
     if (orderId != null) {
-      ref.read(cartProvider.notifier).clearCart();
       context.go(Routes.orderTracking, extra: orderId);
     } else {
       final error = ref.read(orderProvider).error;

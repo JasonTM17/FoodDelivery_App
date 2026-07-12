@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { NotImplementedException } from '@nestjs/common'
 import { RefundProcessor, PaymentRefundJobData } from './refund.processor'
 import { PrismaService } from '../database/prisma.service'
 import { SepayProvider } from './providers/sepay.provider'
@@ -8,8 +9,11 @@ describe('RefundProcessor', () => {
   let processor: RefundProcessor
 
   const mockTx = {
-    $executeRaw: jest.fn(),
-    walletTransaction: { create: jest.fn() },
+    $executeRaw: jest.fn().mockResolvedValue(undefined),
+    walletTransaction: {
+      create: jest.fn(),
+      aggregate: jest.fn().mockResolvedValue({ _sum: { amountDelta: 0 } }),
+    },
     payment: { update: jest.fn() },
     order: { update: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
@@ -39,6 +43,8 @@ describe('RefundProcessor', () => {
 
     processor = module.get(RefundProcessor)
     jest.clearAllMocks()
+    mockTx.$executeRaw.mockResolvedValue(undefined)
+    mockTx.walletTransaction.aggregate.mockResolvedValue({ _sum: { amountDelta: 0 } })
   })
 
   const baseJobData: PaymentRefundJobData = {
@@ -77,6 +83,7 @@ describe('RefundProcessor', () => {
 
     await processor.process(makeJob(baseJobData))
 
+    expect(mockTx.$executeRaw).toHaveBeenCalled()
     expect(mockSepay.refund).toHaveBeenCalledWith('TXN-001', 50_000, 'customer request')
     expect(mockTx.payment.update).toHaveBeenCalledWith({
       where: { orderId: 'order-1' },
@@ -115,6 +122,8 @@ describe('RefundProcessor', () => {
     }))
 
     expect(mockSepay.refund).not.toHaveBeenCalled()
+    expect(mockTx.$executeRaw).toHaveBeenCalled()
+    expect(mockTx.walletTransaction.aggregate).toHaveBeenCalled()
     expect(mockTx.walletTransaction.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 'customer-1',
@@ -132,6 +141,55 @@ describe('RefundProcessor', () => {
         note: expect.stringContaining('Partial refund processed'),
       }),
     })
+  })
+
+  it('credits wallet when SePay refund is not modelled (SEPAY_REFUND_NOT_MODELLED recovery)', async () => {
+    mockRedis.get.mockResolvedValueOnce(null)
+    mockPrisma.payment.findUnique.mockResolvedValueOnce(completedSepayPayment)
+    mockSepay.refund.mockRejectedValueOnce(new NotImplementedException('SEPAY_REFUND_NOT_MODELLED'))
+
+    await processor.process(makeJob(baseJobData))
+
+    expect(mockTx.walletTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'customer-1',
+        amountDelta: 50_000,
+        type: 'credit',
+        reason: 'sepay_refund_wallet_recovery',
+        refId: 'order-1',
+        status: 'CONFIRMED',
+      }),
+    })
+    expect(mockTx.payment.update).toHaveBeenCalledWith({
+      where: { orderId: 'order-1' },
+      data: { status: 'refunded' },
+    })
+  })
+
+  it('rejects cumulative over-refund after advisory lock', async () => {
+    mockRedis.get.mockResolvedValueOnce(null)
+    mockPrisma.payment.findUnique.mockResolvedValueOnce({
+      ...completedSepayPayment,
+      method: 'wallet',
+      amount: 100_000,
+      order: { customerId: 'customer-1', status: 'preparing' },
+    })
+    // Already refunded 80k; next 30k would exceed 100k cap
+    mockTx.walletTransaction.aggregate.mockResolvedValueOnce({
+      _sum: { amountDelta: 80_000 },
+    })
+
+    await expect(
+      processor.process(makeJob({
+        ...baseJobData,
+        refundId: 'partial-over',
+        amount: 30_000,
+        kind: 'partial',
+      })),
+    ).rejects.toThrow(/Cumulative refund would exceed payment/)
+
+    expect(mockTx.$executeRaw).toHaveBeenCalled()
+    expect(mockTx.walletTransaction.create).not.toHaveBeenCalled()
   })
 
   it('returns early when attemptNo exceeds max retries (3)', async () => {

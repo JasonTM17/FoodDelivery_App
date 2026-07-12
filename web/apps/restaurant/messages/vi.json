@@ -522,6 +522,11 @@
     "loading": {
       "label": "Đang tải trang nhà hàng"
     },
+    "globalError": {
+      "title": "Lỗi hệ thống",
+      "description": "Đã xảy ra lỗi nghiêm trọng. Hãy tải lại trang hoặc liên hệ hỗ trợ nếu sự cố tiếp diễn.",
+      "reload": "Tải lại trang"
+    },
     "notFound": {
       "title": "Không tìm thấy trang",
       "description": "Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển. Vui lòng kiểm tra lại đường dẫn.",

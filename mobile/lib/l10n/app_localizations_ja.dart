@@ -36,7 +36,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get passwordRequired => 'パスワードを入力してください';
 
   @override
-  String get passwordMinLength => 'パスワードは6文字以上必要です';
+  String get passwordMinLength => 'パスワードは8文字以上必要です';
+
+  @override
+  String get passwordComplexity => 'パスワードには大文字・小文字・数字が必要です';
 
   @override
   String get forgotPassword => 'パスワードを忘れた方';
@@ -96,7 +99,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phoneInvalid => '無効な電話番号です';
 
   @override
-  String get passwordHintLong => 'パスワードを入力（6文字以上）';
+  String get passwordHintLong => 'パスワードを入力（8文字以上、大文字/小文字/数字）';
 
   @override
   String get confirmPasswordLabel => 'パスワードの確認';

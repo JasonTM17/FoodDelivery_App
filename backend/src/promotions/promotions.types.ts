@@ -1,6 +1,12 @@
 export interface CartContext {
   subtotal: number
   restaurantId: string
+  /** Actual delivery fee for free_delivery clamp (default 0). */
+  deliveryFee?: number
+  /** Menu item ids in cart — used for item-scoped promos. */
+  menuItemIds?: string[]
+  /** Category ids of cart items — used for category-scoped promos. */
+  categoryIds?: string[]
 }
 
 export interface ValidationResult {

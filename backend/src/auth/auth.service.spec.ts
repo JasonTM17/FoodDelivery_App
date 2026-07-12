@@ -28,6 +28,7 @@ describe('AuthService', () => {
       deleteMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     user: { findUnique: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(),
@@ -52,6 +53,9 @@ describe('AuthService', () => {
   const mockRefreshTokenStore = {
     blocklist: jest.fn(),
     isBlocklisted: jest.fn(),
+    blocklistIfNew: jest.fn().mockResolvedValue(true),
+    revokeAllForUser: jest.fn().mockResolvedValue(undefined),
+    isUserRevoked: jest.fn().mockResolvedValue(false),
   }
 
   const mockEd25519 = {
@@ -240,10 +244,11 @@ describe('AuthService', () => {
         }),
       })
       expect(mockPrisma.user.update.mock.calls[0][0].data.passwordHash).not.toBe('NewPass123')
-      expect(mockPrisma.passwordResetToken.update).toHaveBeenCalledWith({
-        where: { id: 'reset-1' },
+      expect(mockPrisma.passwordResetToken.updateMany).toHaveBeenCalledWith({
+        where: { id: 'reset-1', usedAt: null },
         data: { usedAt: expect.any(Date) },
       })
+      expect(mockRefreshTokenStore.revokeAllForUser).toHaveBeenCalledWith('user-1')
       expect(result).toEqual({ message: 'Password reset successful' })
     })
   })

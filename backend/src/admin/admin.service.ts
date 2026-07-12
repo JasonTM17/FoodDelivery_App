@@ -137,6 +137,7 @@ export class AdminService {
   async toggleUserStatus(
     userId: string,
     body: { isActive?: boolean; status?: string },
+    actorId?: string,
   ) {
     let isActive = body.isActive
     if (typeof isActive !== 'boolean' && typeof body.status === 'string') {
@@ -144,6 +145,23 @@ export class AdminService {
     }
     if (typeof isActive !== 'boolean') {
       throw new BadRequestException('isActive or status is required')
+    }
+    if (actorId && userId === actorId && isActive === false) {
+      throw new BadRequestException('Cannot deactivate your own admin account')
+    }
+    if (isActive === false) {
+      const target = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })
+      if (target?.role === UserRole.admin) {
+        const activeAdmins = await this.prisma.user.count({
+          where: { role: UserRole.admin, isActive: true },
+        })
+        if (activeAdmins <= 1) {
+          throw new BadRequestException('Cannot deactivate the last active admin')
+        }
+      }
     }
     // Never return passwordHash or other credential fields to the web client
     const user = await this.prisma.user.update({

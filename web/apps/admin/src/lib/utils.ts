@@ -5,15 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | null | undefined): string {
+  if (amount == null || isNaN(amount)) return '-';
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
   }).format(amount);
 }
 
-export function formatDate(dateString: string): string {
+export function formatDate(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
   return new Intl.DateTimeFormat('vi-VN', {
     year: 'numeric',
     month: '2-digit',
@@ -23,8 +26,10 @@ export function formatDate(dateString: string): string {
   }).format(date);
 }
 
-export function formatDateShort(dateString: string): string {
+export function formatDateShort(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
   return new Intl.DateTimeFormat('vi-VN', {
     month: '2-digit',
     day: '2-digit',

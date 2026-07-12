@@ -32,7 +32,7 @@ const DEFAULT_CATEGORY_KEYS = [
   'combo',
 ] as const;
 
-export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFormProps) {
+export function MenuItemForm({ initialData, onSubmit, isSubmitting: externalIsSubmitting }: MenuItemFormProps) {
   const t = useTranslations('menu.form');
   const formId = useId();
   const defaultCategories = useMemo(
@@ -48,10 +48,15 @@ export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFo
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [options, setOptions] = useState<MenuItemOption[]>(initialData?.options || []);
   const [error, setError] = useState('');
+  const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
+  const isSubmitting = externalIsSubmitting || internalIsSubmitting;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (isSubmitting) return;
     setError('');
+    setInternalIsSubmitting(true);
+    try {
 
     const validationError = getMenuItemFormError({
       name,
@@ -68,15 +73,18 @@ export function MenuItemForm({ initialData, onSubmit, isSubmitting }: MenuItemFo
       return;
     }
 
-    await onSubmit({
-      name: name.trim(),
-      description: description.trim(),
-      price: Number(price),
-      category: showCustomCategory ? customCategory.trim() : category,
-      image: image.trim(),
-      available: initialData?.available ?? true,
-      options,
-    });
+      await onSubmit({
+        name: name.trim(),
+        description: description.trim(),
+        price: Number(price),
+        category: showCustomCategory ? customCategory.trim() : category,
+        image: image.trim(),
+        available: initialData?.available ?? true,
+        options,
+      });
+    } finally {
+      setInternalIsSubmitting(false);
+    }
   };
 
   return (

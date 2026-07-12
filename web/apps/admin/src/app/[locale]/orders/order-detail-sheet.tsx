@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { apiPatch } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import OrderStatusBadge from '@/components/badges/order-status-badge';
@@ -54,12 +55,22 @@ export default function OrderDetailSheet({
   const t = useTranslations('orders.detail');
   const ordersT = useTranslations('orders');
   const orderItems = order ? parseOrderItems(order.items) : null;
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   const updateStatus = async (status: string) => {
     if (!order) return;
-    await apiPatch(`/admin/orders/${order.id}/status`, { status });
-    onOpenChange(false);
-    onStatusChange?.();
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await apiPatch(`/admin/orders/${order.id}/status`, { status });
+      onOpenChange(false);
+      onStatusChange?.();
+    } catch (err: unknown) {
+      setUpdateError((err as { message?: string }).message || ordersT('loadError'));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -182,14 +193,20 @@ export default function OrderDetailSheet({
 
             <Separator />
 
+            {updateError && (
+              <div role="alert" className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                {updateError}
+              </div>
+            )}
+
             <div className="flex gap-2">
               {order.status === 'pending' && (
-                <Button className="flex-1" onClick={() => updateStatus('confirmed')}>
+                <Button className="flex-1" onClick={() => updateStatus('confirmed')} disabled={isUpdating}>
                   {t('confirmOrder')}
                 </Button>
               )}
               {order.status === 'confirmed' && (
-                <Button className="flex-1" onClick={() => updateStatus('preparing')}>
+                <Button className="flex-1" onClick={() => updateStatus('preparing')} disabled={isUpdating}>
                   {t('startPreparing')}
                 </Button>
               )}
@@ -198,6 +215,7 @@ export default function OrderDetailSheet({
                   variant="destructive"
                   className="flex-1"
                   onClick={() => updateStatus('cancelled')}
+                  disabled={isUpdating}
                 >
                   {t('cancelOrder')}
                 </Button>

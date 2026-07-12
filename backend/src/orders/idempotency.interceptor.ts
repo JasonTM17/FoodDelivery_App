@@ -69,11 +69,34 @@ export class IdempotencyInterceptor implements NestInterceptor {
     try {
       const cached = await this.redis.get(redisKey)
       if (cached !== null) {
-        this.logger.debug(`Idempotency hit: ${redisKey}`)
-        const parsed = JSON.parse(cached) as { status: number; body: unknown }
-        const response = context.switchToHttp().getResponse()
-        response.status(parsed.status)
-        return of(parsed.body)
+        // Wait if in-flight claim
+        if (cached === 'IN_FLIGHT') {
+          const waited = await this.waitForCachedResult(redisKey)
+          if (waited) {
+            const parsed = JSON.parse(waited) as { status: number; body: unknown }
+            const response = context.switchToHttp().getResponse()
+            response.status(parsed.status)
+            return of(parsed.body)
+          }
+        } else {
+          this.logger.debug(`Idempotency hit: ${redisKey}`)
+          const parsed = JSON.parse(cached) as { status: number; body: unknown }
+          const response = context.switchToHttp().getResponse()
+          response.status(parsed.status)
+          return of(parsed.body)
+        }
+      }
+
+      // Claim before executing handler so concurrent POSTs cannot double-apply
+      const claimed = await this.redis.set(redisKey, 'IN_FLIGHT', 'EX', TTL_SECONDS, 'NX')
+      if (!claimed) {
+        const waited = await this.waitForCachedResult(redisKey)
+        if (waited && waited !== 'IN_FLIGHT') {
+          const parsed = JSON.parse(waited) as { status: number; body: unknown }
+          const response = context.switchToHttp().getResponse()
+          response.status(parsed.status)
+          return of(parsed.body)
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
@@ -83,13 +106,23 @@ export class IdempotencyInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap({
         next: (data) => {
-          this.cacheResponse(redisKey, data, 200)
+          this.cacheResponse(redisKey, data, context.switchToHttp().getResponse().statusCode)
         },
         error: () => {
-          // Do not cache errors — client may retry with same key
+          // Release claim so client may retry with same key
+          void this.redis.del(redisKey)
         },
       }),
     )
+  }
+
+  private async waitForCachedResult(redisKey: string, attempts = 20): Promise<string | null> {
+    for (let i = 0; i < attempts; i += 1) {
+      await new Promise((r) => setTimeout(r, 50))
+      const value = await this.redis.get(redisKey)
+      if (value && value !== 'IN_FLIGHT') return value
+    }
+    return null
   }
 
   private cacheResponse(redisKey: string, body: unknown, status: number): void {

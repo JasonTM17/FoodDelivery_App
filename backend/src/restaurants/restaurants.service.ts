@@ -105,8 +105,12 @@ export class RestaurantsService {
   }
 
   async getDetail(id: string) {
-    const restaurant = await this.prisma.restaurant.findUnique({
-      where: { id },
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: {
+        id,
+        isActive: true,
+        approvalStatus: 'approved',
+      },
       include: {
         openingHours: {
           orderBy: { dayOfWeek: 'asc' },
@@ -180,7 +184,7 @@ export class RestaurantsService {
 
     const [items, total] = await Promise.all([
       this.prisma.review.findMany({
-        where: { restaurantId: id },
+        where: { restaurantId: id, isHidden: false },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -190,7 +194,7 @@ export class RestaurantsService {
           },
         },
       }),
-      this.prisma.review.count({ where: { restaurantId: id } }),
+      this.prisma.review.count({ where: { restaurantId: id, isHidden: false } }),
     ])
 
     return { items, total, page, limit }

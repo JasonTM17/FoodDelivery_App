@@ -180,14 +180,41 @@ export class DriversService {
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
     const now = new Date().toISOString()
 
-    await this.redis.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
-    await this.redis.set(`driver:${driverId}:status`, 'online')
-    await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
-    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, now)
-    await this.redis.set(`driver:${driverId}:rating`, profile.rating.toString())
-    await this.redis.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
-    await this.redis.set(`driver:${driverId}:idle_since`, Date.now().toString())
-    await this.redis.set(`driver:${driverId}:current_order`, '')
+    // Do not clear an in-progress trip when re-going online
+    const activeOrder = await this.prisma.order.findFirst({
+      where: {
+        driverId,
+        status: {
+          in: [
+            'driver_assigned',
+            'driver_arriving_restaurant',
+            'picked_up',
+            'delivering',
+          ],
+        },
+      },
+      select: { id: true },
+    })
+    const existingCurrent = await this.redis.get(`driver:${driverId}:current_order`)
+    const currentOrderId =
+      activeOrder?.id ??
+      (existingCurrent && existingCurrent.length > 0 ? existingCurrent : '')
+
+    const pipeline = this.redis.multi()
+    pipeline.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
+    pipeline.set(`driver:${driverId}:status`, currentOrderId ? 'busy' : 'online')
+    pipeline.setex(`driver:${driverId}:alive`, 35, '1')
+    pipeline.setex(`driver:${driverId}:last_seen_at`, 35, now)
+    pipeline.set(`driver:${driverId}:rating`, profile.rating.toString())
+    pipeline.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
+    if (currentOrderId) {
+      pipeline.set(`driver:${driverId}:current_order`, currentOrderId)
+      pipeline.del(`driver:${driverId}:idle_since`)
+    } else {
+      pipeline.set(`driver:${driverId}:idle_since`, Date.now().toString())
+      pipeline.set(`driver:${driverId}:current_order`, '')
+    }
+    await pipeline.exec()
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },

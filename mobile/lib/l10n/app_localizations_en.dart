@@ -36,7 +36,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Please enter your password';
 
   @override
-  String get passwordMinLength => 'Password must be at least 6 characters';
+  String get passwordMinLength => 'Password must be at least 8 characters';
+
+  @override
+  String get passwordComplexity =>
+      'Password must include uppercase, lowercase, and a number';
 
   @override
   String get forgotPassword => 'Forgot password?';
@@ -97,7 +101,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneInvalid => 'Invalid phone number';
 
   @override
-  String get passwordHintLong => 'Enter password (at least 6 characters)';
+  String get passwordHintLong =>
+      'Enter password (at least 8 characters, upper/lower/number)';
 
   @override
   String get confirmPasswordLabel => 'Confirm password';

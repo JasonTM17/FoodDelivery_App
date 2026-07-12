@@ -160,7 +160,7 @@ export class NotificationsService {
   }
 
   private isQuietHours(): boolean {
-    const h = new Date().getHours()
+    const h = (new Date().getUTCHours() + 7) % 24
     return h >= QUIET_HOUR_START || h < QUIET_HOUR_END
   }
 

@@ -27,7 +27,7 @@ export class WalletService {
 
   private async computeBalance(userId: string): Promise<number> {
     const result = await this.prisma.walletTransaction.aggregate({
-      where: { userId },
+      where: { userId, status: 'CONFIRMED' },
       _sum: { amountDelta: true },
     })
     return result._sum.amountDelta ?? 0

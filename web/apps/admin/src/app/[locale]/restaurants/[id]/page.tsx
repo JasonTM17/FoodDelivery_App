@@ -19,8 +19,12 @@ export default function RestaurantDetailPage() {
   const toggleStatus = async () => {
     if (!restaurant) return;
     const newStatus = restaurant.status === 'active' ? 'disabled' : 'active';
-    await apiPatch(`/admin/restaurants/${id}/status`, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['restaurant', id] });
+    try {
+      await apiPatch(`/admin/restaurants/${id}/status`, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['restaurant', id] });
+    } catch (error) {
+      console.error('Failed to toggle status', error);
+    }
   };
 
   if (isLoading) {

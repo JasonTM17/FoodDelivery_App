@@ -24,7 +24,10 @@ export class CartService {
   async addItem(userId: string, dto: AddCartItemDto) {
     const menuItem = await this.prisma.menuItem.findUnique({
       where: { id: dto.menuItemId },
-      include: { restaurant: true },
+      include: {
+        restaurant: true,
+        options: { include: { values: true } },
+      },
     })
     if (!menuItem || !menuItem.isAvailable) {
       throw new NotFoundException('MENU_ITEM_NOT_FOUND')
@@ -36,16 +39,20 @@ export class CartService {
       throw new BadRequestException('RESTAURANT_UNAVAILABLE')
     }
 
-    let cart = await this.prisma.cart.findUnique({ where: { userId } })
+    const selectedOptions = dto.selectedOptions ?? []
+    const unitPrice = this.resolveUnitPrice(menuItem, selectedOptions)
 
-    if (cart && cart.restaurantId !== dto.restaurantId) {
+    let cart = await this.prisma.cart.upsert({
+      where: { userId },
+      update: {},
+      create: { userId, restaurantId: dto.restaurantId },
+    })
+
+    if (cart.restaurantId !== dto.restaurantId) {
       await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } })
-      await this.prisma.cart.update({ where: { id: cart.id }, data: { restaurantId: dto.restaurantId, promotionCode: null } })
-    }
-
-    if (!cart) {
-      cart = await this.prisma.cart.create({
-        data: { userId, restaurantId: dto.restaurantId },
+      cart = await this.prisma.cart.update({
+        where: { id: cart.id },
+        data: { restaurantId: dto.restaurantId, promotionCode: null },
       })
     }
 
@@ -53,7 +60,7 @@ export class CartService {
       where: {
         cartId: cart.id,
         menuItemId: dto.menuItemId,
-        selectedOptions: { equals: dto.selectedOptions ?? [] },
+        selectedOptions: { equals: selectedOptions },
       },
     })
 
@@ -69,10 +76,68 @@ export class CartService {
         cartId: cart.id,
         menuItemId: dto.menuItemId,
         quantity: dto.quantity,
-        selectedOptions: dto.selectedOptions ?? [],
-        unitPrice: menuItem.basePrice,
+        selectedOptions,
+        unitPrice,
         notes: dto.notes,
       },
+    })
+  }
+
+  /**
+   * Server-side unit price = basePrice + Σ priceModifier for validated option values.
+   * Rejects unknown option/value ids and missing required options.
+   */
+  resolveUnitPrice(
+    menuItem: {
+      basePrice: { toString(): string } | number
+      options: Array<{
+        id: string
+        isRequired: boolean
+        values: Array<{ id: string; priceModifier: { toString(): string } | number }>
+      }>
+    },
+    selectedOptions: unknown[],
+  ): number {
+    const base = Number(menuItem.basePrice)
+    const selections = this.normalizeSelectedOptions(selectedOptions)
+    const optionById = new Map(menuItem.options.map((o) => [o.id, o]))
+    let modifiers = 0
+
+    for (const sel of selections) {
+      const option = optionById.get(sel.optionId)
+      if (!option) {
+        throw new BadRequestException('CART_OPTION_INVALID')
+      }
+      const value = option.values.find((v) => v.id === sel.valueId)
+      if (!value) {
+        throw new BadRequestException('CART_OPTION_VALUE_INVALID')
+      }
+      modifiers += Number(value.priceModifier)
+    }
+
+    for (const option of menuItem.options) {
+      if (option.isRequired && !selections.some((s) => s.optionId === option.id)) {
+        throw new BadRequestException('CART_OPTION_REQUIRED')
+      }
+    }
+
+    return base + modifiers
+  }
+
+  private normalizeSelectedOptions(
+    selectedOptions: unknown[],
+  ): Array<{ optionId: string; valueId: string }> {
+    return selectedOptions.map((raw) => {
+      if (!raw || typeof raw !== 'object') {
+        throw new BadRequestException('CART_OPTION_INVALID')
+      }
+      const obj = raw as Record<string, unknown>
+      const optionId = String(obj.optionId ?? obj.option_id ?? '')
+      const valueId = String(obj.valueId ?? obj.value_id ?? '')
+      if (!optionId || !valueId) {
+        throw new BadRequestException('CART_OPTION_INVALID')
+      }
+      return { optionId, valueId }
     })
   }
 
@@ -111,9 +176,15 @@ export class CartService {
     if (!cart.restaurantId) throw new BadRequestException('CART_NO_RESTAURANT')
 
     const subtotal = cart.items.reduce((sum, i) => sum + Number(i.unitPrice) * i.quantity, 0)
+    const deliveryFee = Number(process.env.DELIVERY_BASE_FEE_VND ?? 15000)
     const { discountAmount } = await this.promotionsService.preview(
       dto.code,
-      { subtotal, restaurantId: cart.restaurantId },
+      {
+        subtotal,
+        restaurantId: cart.restaurantId,
+        deliveryFee,
+        menuItemIds: cart.items.map((i) => i.menuItemId),
+      },
       userId,
     )
 

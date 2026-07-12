@@ -184,7 +184,9 @@ export class TrackingGateway implements OnGatewayConnection {
     const last = await this.trackingService.getDriverLocation(driverId)
     if (!last) return false
     const elapsedMs = sampleTimestamp.getTime() - new Date(last.timestamp).getTime()
-    if (elapsedMs <= 0 || elapsedMs > 60_000) return false
+    // Reject future / stale client timestamps (anti-spoof for teleport checks)
+    if (elapsedMs <= 0) return true
+    if (elapsedMs > 60_000) return true
     const distKm = haversineDistance(last.lat, last.lng, lat, lng)
     const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
     return distKm > maxKm

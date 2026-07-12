@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
+import { isHttpsUrl } from '@/lib/safe-url';
 import { formatDate } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -88,17 +89,28 @@ export default function TicketThread({ ticketId, className }: TicketThreadProps)
                     </div>
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {msg.attachments.map((att) => (
-                          <a
-                            key={att.name}
-                            href={att.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary underline hover:no-underline"
-                          >
-                            {att.name}
-                          </a>
-                        ))}
+                        {msg.attachments.map((att) =>
+                          // B-WEB-12: allowlist https: only for attachment hrefs
+                          isHttpsUrl(att.url) ? (
+                            <a
+                              key={att.name}
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary underline hover:no-underline"
+                            >
+                              {att.name}
+                            </a>
+                          ) : (
+                            <span
+                              key={att.name}
+                              className="text-xs text-muted-foreground"
+                              title={t('unsafeAttachment')}
+                            >
+                              {att.name}
+                            </span>
+                          ),
+                        )}
                       </div>
                     )}
                   </div>

@@ -35,12 +35,49 @@ describe('CartService', () => {
     })
   })
 
+  describe('resolveUnitPrice', () => {
+    it('adds option price modifiers to base price', () => {
+      const unit = service.resolveUnitPrice(
+        {
+          basePrice: 50000,
+          options: [
+            {
+              id: 'opt-1',
+              isRequired: false,
+              values: [{ id: 'val-1', priceModifier: 10000 }],
+            },
+          ],
+        },
+        [{ optionId: 'opt-1', valueId: 'val-1' }],
+      )
+      expect(unit).toBe(60000)
+    })
+
+    it('rejects invalid option values', () => {
+      expect(() =>
+        service.resolveUnitPrice(
+          {
+            basePrice: 50000,
+            options: [
+              {
+                id: 'opt-1',
+                isRequired: false,
+                values: [{ id: 'val-1', priceModifier: 10000 }],
+              },
+            ],
+          },
+          [{ optionId: 'opt-1', valueId: 'missing' }],
+        ),
+      ).toThrow(BadRequestException)
+    })
+  })
+
   describe('applyPromotion', () => {
     it('previews promotion eligibility with the authenticated user cart context', async () => {
       mockPrisma.cart.findUnique.mockResolvedValue({
         id: 'cart-1',
         restaurantId: 'restaurant-1',
-        items: [{ unitPrice: 50000, quantity: 2 }],
+        items: [{ unitPrice: 50000, quantity: 2, menuItemId: 'mi-1' }],
       })
       mockPromotionsService.preview.mockResolvedValue({ discountAmount: 10000 })
       mockPrisma.cart.update.mockResolvedValue({})
@@ -49,7 +86,11 @@ describe('CartService', () => {
 
       expect(mockPromotionsService.preview).toHaveBeenCalledWith(
         'SAVE10',
-        { subtotal: 100000, restaurantId: 'restaurant-1' },
+        expect.objectContaining({
+          subtotal: 100000,
+          restaurantId: 'restaurant-1',
+          deliveryFee: expect.any(Number),
+        }),
         'user-1',
       )
       expect(mockPrisma.cart.update).toHaveBeenCalledWith({

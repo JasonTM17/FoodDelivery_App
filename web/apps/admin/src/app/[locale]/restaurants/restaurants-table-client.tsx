@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Star, Store } from 'lucide-react';
+import { toast } from '@foodflow/ui';
 import { apiGet, apiPatch } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,10 +67,17 @@ export default function RestaurantsTableClient() {
 
   const toggleStatus = async (restaurantId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-    await apiPatch(`/admin/restaurants/${restaurantId}/status`, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['restaurants'] });
-    if (selectedRestaurant?.id === restaurantId) {
-      setSelectedRestaurant((prev) => (prev ? { ...prev, status: newStatus } : null));
+    try {
+      await apiPatch(`/admin/restaurants/${restaurantId}/status`, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+      if (selectedRestaurant?.id === restaurantId) {
+        setSelectedRestaurant((prev) => (prev ? { ...prev, status: newStatus } : null));
+      }
+    } catch (err: unknown) {
+      toast({
+        variant: 'destructive',
+        description: (err as { message?: string }).message || 'Failed to update status'
+      });
     }
   };
 
@@ -119,7 +127,7 @@ export default function RestaurantsTableClient() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span>{restaurant.rating.toFixed(1)}</span>
+                        <span>{restaurant.rating != null ? restaurant.rating.toFixed(1) : '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>{restaurant.totalOrders}</TableCell>

@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { UsersService } from './users.service'
@@ -69,7 +70,15 @@ export class UsersController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/^image\/(jpeg|png|webp)$/)) {
+        return cb(new BadRequestException('Only image files (jpeg, png, webp) are allowed'), false)
+      }
+      cb(null, true)
+    },
+  }))
   async uploadAvatar(
     @CurrentUser() user: JwtPayload,
     @UploadedFile() file: UploadedFileType,

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { TicketPriority } from '@prisma/client'
 import { AiToolsService } from './ai-tools.service'
 import { AiToolName, ToolJustificationService } from './tool-justification.service'
+import { RagRetrievalService } from './rag/rag-retrieval.service'
+import type { RagChunk } from './rag/rag-document.types'
 
 export interface AiToolCall {
   name: AiToolName
@@ -16,6 +18,7 @@ export interface AiGroundingEntry {
 export interface AiGroundingResult {
   toolCalls: AiToolCall[]
   entries: AiGroundingEntry[]
+  ragChunks: RagChunk[]
   escalated: boolean
   severity?: 'MEDIUM' | 'HIGH'
 }
@@ -33,6 +36,7 @@ export class AiGroundingService {
   constructor(
     private readonly tools: AiToolsService,
     private readonly justification: ToolJustificationService,
+    private readonly ragRetrieval: RagRetrievalService,
   ) {}
 
   async collect(input: GroundingInput): Promise<AiGroundingResult> {
@@ -82,7 +86,10 @@ export class AiGroundingService {
       }
     }
 
-    return { toolCalls, entries, escalated: Boolean(severity), severity }
+    const locale = detectLocale(input.message)
+    const ragChunks = await this.ragRetrieval.search(input.message, { locale }).catch(() => [])
+
+    return { toolCalls, entries, ragChunks, escalated: Boolean(severity), severity }
   }
 
   private async execute(action: () => Promise<unknown>): Promise<unknown> {
@@ -141,4 +148,11 @@ function readString(value: unknown, key: string): string | undefined {
   if (!value || typeof value !== 'object') return undefined
   const field = (value as Record<string, unknown>)[key]
   return typeof field === 'string' ? field : undefined
+}
+
+function detectLocale(message: string): string {
+  if (/[\u3040-\u30ff\u3400-\u9fff]/.test(message)) return 'ja'
+  const isAsciiOnly = [...message].every(c => c.charCodeAt(0) <= 0x7f)
+  if (isAsciiOnly && /[a-z]/i.test(message)) return 'en'
+  return 'vi'
 }

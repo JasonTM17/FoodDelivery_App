@@ -24,10 +24,12 @@ info:
     email: support@foodflow.vn
 
 servers:
-  - url: https://api.foodflow.vn/v1
-    description: Production
-  - url: https://api-staging.foodflow.vn/v1
+  - url: https://api.foodflow.vn/api
+    description: Production (Nest global prefix /api)
+  - url: https://api-staging.foodflow.vn/api
     description: Staging
+  - url: http://localhost:3001/api
+    description: Local development
 
 tags:
   - name: auth
@@ -2598,7 +2600,7 @@ paths:
         "200": { description: "OTP verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
         "400": { description: "Invalid OTP", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /auth/jwks.json:
+  /.well-known/jwks.json:
     get:
       tags: [auth]
       summary: JWKS endpoint for Ed25519 public keys

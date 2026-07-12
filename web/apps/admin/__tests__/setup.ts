@@ -80,14 +80,15 @@ vi.mock('@/lib/api', () => ({
   apiDownload: vi.fn().mockResolvedValue(new Blob()),
 }));
 
-// Mock @tanstack/react-query
+// Mock @tanstack/react-query — keep real hooks; stub useQueryClient for AuthProvider logout
 vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
   return {
     ...actual,
-    useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+    useQueryClient: () => ({ invalidateQueries: vi.fn(), clear: vi.fn() }),
   };
 });
+
 
 // Mock recharts (quiet rendering in tests)
 vi.mock('recharts', async () => {

@@ -1,17 +1,41 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminLayoutClient } from '@/components/layout/admin-layout-client';
 import { PageHeader } from '@/components/layout/admin-page-header';
 import { AuthProvider, useAuth } from '@/lib/auth-provider';
+import { apiGet } from '@/lib/api';
+import { disconnectSocket } from '@/lib/socket';
+
+vi.mock('@/lib/socket', () => ({
+  disconnectSocket: vi.fn(),
+  getSocket: vi.fn(),
+}));
+
+const mockedApiGet = vi.mocked(apiGet);
+const mockedDisconnect = vi.mocked(disconnectSocket);
 
 function LogoutFixture() {
   const { logout } = useAuth();
   return <button onClick={logout}>logout fixture</button>;
 }
 
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{ui}</AuthProvider>
+    </QueryClientProvider>,
+  );
+}
+
 describe('Admin shell', () => {
   beforeEach(() => {
     localStorage.clear();
+    mockedApiGet.mockReset();
+    mockedDisconnect.mockReset();
   });
 
   it('opens mobile navigation as a labelled dialog and closes after navigation', async () => {
@@ -54,21 +78,23 @@ describe('Admin shell', () => {
     expect(screen.getByRole('link', { name: 'Users' })).toHaveAttribute('href', '/vi/users');
   });
 
-  it('clears the complete admin session on logout', async () => {
+  it('clears the complete admin session on logout and disconnects the socket', async () => {
     localStorage.setItem('admin_token', 'access-token');
     localStorage.setItem('admin_refresh_token', 'refresh-token');
-    localStorage.setItem('admin_user', JSON.stringify({ name: 'Admin' }));
+    localStorage.setItem('admin_user', JSON.stringify({ name: 'Admin', email: 'a@b.c', role: 'admin' }));
+    mockedApiGet.mockResolvedValueOnce({
+      email: 'a@b.c',
+      role: 'admin',
+      fullName: 'Admin',
+    });
 
-    render(
-      <AuthProvider>
-        <LogoutFixture />
-      </AuthProvider>,
-    );
+    renderWithProviders(<LogoutFixture />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'logout fixture' }));
 
     expect(localStorage.getItem('admin_token')).toBeNull();
     expect(localStorage.getItem('admin_refresh_token')).toBeNull();
     expect(localStorage.getItem('admin_user')).toBeNull();
+    expect(mockedDisconnect).toHaveBeenCalled();
   });
 });

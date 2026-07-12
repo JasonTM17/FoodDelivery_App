@@ -80,6 +80,9 @@ export class MenuService {
 
   async createCategory(userId: string, dto: CreateCategoryDto) {
     const restaurantId = await this.getOwnedRestaurantId(userId)
+    if (dto.parentId) {
+      await this.assertParentCategoryOwned(restaurantId, dto.parentId)
+    }
     const category = await this.prisma.category.create({
       data: {
         restaurantId,
@@ -101,6 +104,9 @@ export class MenuService {
     if (!category || category.restaurantId !== restaurantId) {
       throw new NotFoundException('Category not found')
     }
+    if (dto.parentId !== undefined && dto.parentId !== null) {
+      await this.assertParentCategoryOwned(restaurantId, dto.parentId)
+    }
     const updated = await this.prisma.category.update({
       where: { id: categoryId },
       data: {
@@ -113,6 +119,13 @@ export class MenuService {
       include: { _count: { select: { menuItems: true } } },
     })
     return toMenuCategoryNode(updated, updated._count.menuItems)
+  }
+
+  private async assertParentCategoryOwned(restaurantId: string, parentId: string): Promise<void> {
+    const parent = await this.prisma.category.findUnique({ where: { id: parentId } })
+    if (!parent || parent.restaurantId !== restaurantId) {
+      throw new NotFoundException('Parent category not found')
+    }
   }
 
   async deleteCategory(userId: string, categoryId: string) {

@@ -8,6 +8,8 @@ final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
   return OrderNotifier();
 });
 
+const _unset = Object();
+
 class OrderState {
   final bool isLoading;
   final String? error;
@@ -33,7 +35,7 @@ class OrderState {
     List<OrderModel>? activeOrders,
     List<OrderModel>? completedOrders,
     List<OrderModel>? cancelledOrders,
-    OrderModel? currentTrackingOrder,
+    Object? currentTrackingOrder = _unset,
     bool? isPlacingOrder,
   }) {
     return OrderState(
@@ -42,7 +44,7 @@ class OrderState {
       activeOrders: activeOrders ?? this.activeOrders,
       completedOrders: completedOrders ?? this.completedOrders,
       cancelledOrders: cancelledOrders ?? this.cancelledOrders,
-      currentTrackingOrder: currentTrackingOrder ?? this.currentTrackingOrder,
+      currentTrackingOrder: currentTrackingOrder == _unset ? this.currentTrackingOrder : currentTrackingOrder as OrderModel?,
       isPlacingOrder: isPlacingOrder ?? this.isPlacingOrder,
     );
   }
@@ -159,7 +161,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       state = state.copyWith(error: message);
       return false;
     } catch (e) {
-      state = state.copyWith(error: null);
+      state = state.copyWith(error: 'Có lỗi xảy ra khi hủy đơn hàng.');
       return false;
     }
   }

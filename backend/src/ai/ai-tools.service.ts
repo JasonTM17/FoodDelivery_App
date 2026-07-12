@@ -74,7 +74,16 @@ export class AiToolsService {
       select: { id: true, status: true, total: true, paymentMethod: true, createdAt: true },
     })
     if (!order) throw new NotFoundException('ORDER_NOT_FOUND')
-    const refundableStatuses = ['created', 'confirmed', 'preparing'] as const
+    // Align with order state machine cancel/refund-eligible statuses
+    const refundableStatuses = [
+      'pending_payment',
+      'paid',
+      'restaurant_pending',
+      'restaurant_accepted',
+      'preparing',
+      'ready_for_pickup',
+      'driver_assigned',
+    ] as const
     const eligible = (refundableStatuses as readonly string[]).includes(order.status)
     return {
       orderId: order.id,

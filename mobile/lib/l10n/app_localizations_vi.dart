@@ -36,7 +36,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get passwordRequired => 'Vui lòng nhập mật khẩu';
 
   @override
-  String get passwordMinLength => 'Mật khẩu phải có ít nhất 6 ký tự';
+  String get passwordMinLength => 'Mật khẩu phải có ít nhất 8 ký tự';
+
+  @override
+  String get passwordComplexity =>
+      'Mật khẩu phải có chữ hoa, chữ thường và số';
 
   @override
   String get forgotPassword => 'Quên mật khẩu?';
@@ -97,7 +101,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phoneInvalid => 'Số điện thoại không hợp lệ';
 
   @override
-  String get passwordHintLong => 'Nhập mật khẩu (ít nhất 6 ký tự)';
+  String get passwordHintLong =>
+      'Nhập mật khẩu (ít nhất 8 ký tự, hoa/thường/số)';
 
   @override
   String get confirmPasswordLabel => 'Xác nhận mật khẩu';

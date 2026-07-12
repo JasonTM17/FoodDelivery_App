@@ -22,9 +22,15 @@ export class EligibilityService {
     promotion: Promotion,
     cart: CartContext,
     userId: string,
-    db: Pick<Prisma.TransactionClient, 'order' | 'promotionUsage'> = this.prisma,
+    db: Pick<
+      Prisma.TransactionClient,
+      'order' | 'promotionUsage' | 'promotionItem'
+    > = this.prisma,
   ): Promise<ValidationResult> {
-    if (!promotion.isActive) {
+    if (!promotion.isActive || (promotion as { status?: string }).status === 'draft' || (promotion as { status?: string }).status === 'paused') {
+      return { valid: false, error: this.t('errors.promotion_invalid') }
+    }
+    if (promotion.status && promotion.status !== 'active') {
       return { valid: false, error: this.t('errors.promotion_invalid') }
     }
 
@@ -37,6 +43,10 @@ export class EligibilityService {
       return { valid: false, error: this.t('errors.promotion_exhausted') }
     }
 
+    if (promotion.budget != null && Number(promotion.usedBudget) >= Number(promotion.budget)) {
+      return { valid: false, error: this.t('errors.promotion_exhausted') }
+    }
+
     if (Number(promotion.minOrderAmount) > 0 && cart.subtotal < Number(promotion.minOrderAmount)) {
       const amount = Number(promotion.minOrderAmount).toLocaleString('vi-VN')
       return { valid: false, error: this.t('errors.promotion_min_order', { amount }) }
@@ -46,8 +56,42 @@ export class EligibilityService {
       return { valid: false, error: this.t('errors.promotion_wrong_restaurant') }
     }
 
+    // Item / category scope via PromotionItem rows
+    if ('promotionItem' in db && db.promotionItem) {
+      const scoped = await db.promotionItem.findMany({
+        where: { promotionId: promotion.id },
+        select: { menuItemId: true, categoryId: true },
+      })
+      if (scoped.length > 0) {
+        const menuIds = new Set(cart.menuItemIds ?? [])
+        const catIds = new Set(cart.categoryIds ?? [])
+        const matches = scoped.some(
+          (row) =>
+            (row.menuItemId && menuIds.has(row.menuItemId)) ||
+            (row.categoryId && catIds.has(row.categoryId)),
+        )
+        if (!matches) {
+          return { valid: false, error: this.t('errors.promotion_invalid') }
+        }
+      }
+    }
+
+    // Audience targeting JSON (optional): { userIds?: string[] }
+    const targeting = promotion.targeting as { userIds?: string[] } | null
+    if (targeting?.userIds?.length && !targeting.userIds.includes(userId)) {
+      return { valid: false, error: this.t('errors.promotion_invalid') }
+    }
+
     if (promotion.firstOrderOnly) {
-      const orderCount = await db.order.count({ where: { customerId: userId } })
+      // Only count fulfilled / paid-side orders — abandoned/cancelled do not burn first-order promos
+      const orderCount = await db.order.count({
+        where: {
+          customerId: userId,
+          status: {
+            notIn: ['created', 'pending_payment', 'cancelled', 'refunded'],
+          },
+        },
+      })
       if (orderCount > 0) {
         return { valid: false, error: this.t('errors.promotion_first_order_only') }
       }
@@ -65,10 +109,13 @@ export class EligibilityService {
       }
     }
 
-    return { valid: true, discountAmount: this.calculateDiscount(promotion, cart.subtotal) }
+    return {
+      valid: true,
+      discountAmount: this.calculateDiscount(promotion, cart.subtotal, cart.deliveryFee ?? 0),
+    }
   }
 
-  calculateDiscount(promotion: Promotion, subtotal: number): number {
+  calculateDiscount(promotion: Promotion, subtotal: number, deliveryFee = 0): number {
     const value = Number(promotion.value)
 
     if (promotion.type === 'percentage') {
@@ -83,7 +130,7 @@ export class EligibilityService {
       return Math.min(value, subtotal)
     }
 
-    // free_delivery: value represents the delivery fee waived
-    return value
+    // free_delivery: never waive more than the actual delivery fee
+    return Math.min(value, Math.max(0, deliveryFee))
   }
 }

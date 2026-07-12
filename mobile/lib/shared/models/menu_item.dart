@@ -93,12 +93,14 @@ class MenuItemModel {
 }
 
 class ItemOptionGroup {
+  final String? id;
   final String name;
   final String type;
   final bool required;
   final List<ItemOption> options;
 
   ItemOptionGroup({
+    this.id,
     required this.name,
     this.type = 'single',
     this.required = false,
@@ -112,6 +114,7 @@ class ItemOptionGroup {
     }
 
     return ItemOptionGroup(
+      id: _nullableStringFrom([json['id']], 'option.id'),
       name: _requiredStringFrom([json['name']], 'option.name'),
       type: type,
       required: _requiredBoolFrom([
@@ -135,6 +138,7 @@ class ItemOptionGroup {
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
       'name': name,
       'type': type,
       'required': required,
@@ -144,13 +148,15 @@ class ItemOptionGroup {
 }
 
 class ItemOption {
+  final String? id;
   final String name;
   final double price;
 
-  ItemOption({required this.name, this.price = 0.0});
+  ItemOption({this.id, required this.name, this.price = 0.0});
 
   factory ItemOption.fromJson(Map<String, dynamic> json) {
     return ItemOption(
+      id: _nullableStringFrom([json['id']], 'option.value.id'),
       name: _requiredStringFrom([json['name'], json['value']], 'option.value'),
       price: _requiredDoubleFrom([
         json['price'],
@@ -161,7 +167,11 @@ class ItemOption {
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'price': price};
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'price': price,
+    };
   }
 }
 

@@ -33,8 +33,15 @@ export class CommissionSplitProcessor extends WorkerHost {
         driverId: true,
         restaurantId: true,
         commissionRateAtOrderTime: true,
+        status: true,
       },
     })
+
+    // Do not ledger cancelled / refunded orders
+    if (order.status === 'cancelled' || order.status === 'refunded') {
+      this.logger.warn(`Skip commission split for ${orderId}: status=${order.status}`)
+      return
+    }
 
     const split = this.commission.calculateSplit({
       total: Number(order.total),
@@ -57,6 +64,7 @@ export class CommissionSplitProcessor extends WorkerHost {
       },
     ]
 
+    // Driver share only when assigned (re-run job after assignment / delivered)
     if (order.driverId) {
       entries.push({
         orderId,

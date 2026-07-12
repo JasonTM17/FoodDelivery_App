@@ -134,11 +134,11 @@ export class AdminSettingsService {
     patch: AdminSettingsValue,
   ): Promise<AdminSettingsValue> {
     const row = await this.prisma.platformSetting.findUnique({ where: { key: section } })
-    return {
+    const base = {
       ...DEFAULT_SETTINGS[section],
       ...jsonObject(row?.value),
-      ...patch,
     }
+    return deepMergeSettings(base, patch)
   }
 
   private toResponse(
@@ -201,6 +201,23 @@ function pickSectionPatches(patch: AdminSettingsPatchDto): Partial<Record<AdminS
 
 function jsonObject(value: Prisma.JsonValue | null | undefined): AdminSettingsValue {
   return isPlainObject(value) ? value as AdminSettingsValue : {}
+}
+
+/** Deep-merge plain objects so nested patches do not wipe sibling keys. */
+function deepMergeSettings(
+  base: AdminSettingsValue,
+  patch: AdminSettingsValue,
+): AdminSettingsValue {
+  const out: AdminSettingsValue = { ...base }
+  for (const [key, value] of Object.entries(patch)) {
+    const prev = out[key]
+    if (isPlainObject(prev) && isPlainObject(value)) {
+      out[key] = deepMergeSettings(prev as AdminSettingsValue, value as AdminSettingsValue)
+    } else {
+      out[key] = value
+    }
+  }
+  return out
 }
 
 function redactSensitiveSettings(settings: AdminSettingsValue): AdminSettingsValue {

@@ -3,6 +3,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/shared/providers/tracking_provider.dart';
 
 void main() {
+  group('order status event filtering (B-MOB-06)', () {
+    test('ignores missing orderId', () {
+      expect(
+        shouldApplyOrderStatusEvent({'status': 'preparing'}, 'order-1'),
+        isFalse,
+      );
+    });
+
+    test('ignores mismatched orderId', () {
+      expect(
+        shouldApplyOrderStatusEvent({
+          'orderId': 'other',
+          'status': 'preparing',
+        }, 'order-1'),
+        isFalse,
+      );
+    });
+
+    test('applies matching orderId', () {
+      expect(
+        shouldApplyOrderStatusEvent({
+          'orderId': 'order-1',
+          'status': 'delivering',
+        }, 'order-1'),
+        isTrue,
+      );
+    });
+  });
+
   group('resolveTrackingRoutePolyline', () {
     test(
       'does not draw persisted order geometry before tracking confirms route',

@@ -19,15 +19,16 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
 
   const isPublic = isAdminPublicPath(pathname)
 
+  // QueryClient wraps AuthProvider so logout can clear the cache (B-WEB-04).
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientRef.current!}>
+    <QueryClientProvider client={queryClientRef.current!}>
+      <AuthProvider>
         {isPublic ? (
           <div className="min-h-screen bg-background">{children}</div>
         ) : (
           <AdminLayoutClient>{children}</AdminLayoutClient>
         )}
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }

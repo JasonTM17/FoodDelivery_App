@@ -157,8 +157,14 @@ abstract class AppLocalizations {
   /// No description provided for @passwordMinLength.
   ///
   /// In vi, this message translates to:
-  /// **'Mật khẩu phải có ít nhất 6 ký tự'**
+  /// **'Mật khẩu phải có ít nhất 8 ký tự'**
   String get passwordMinLength;
+
+  /// No description provided for @passwordComplexity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu phải có chữ hoa, chữ thường và số'**
+  String get passwordComplexity;
 
   /// No description provided for @forgotPassword.
   ///

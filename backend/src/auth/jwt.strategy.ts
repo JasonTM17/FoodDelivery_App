@@ -44,6 +44,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       ) => {
         try {
           const alg = extractJwtAlg(rawJwt)
+          if (!['HS256', 'EdDSA'].includes(alg)) {
+            done(new UnauthorizedException('Token algorithm not allowed'))
+            return
+          }
           const key = ed25519.resolveKeyForAlg(alg, jwtSecret, legacyFallback)
           done(null, key)
         } catch (err) {
@@ -59,6 +63,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload) {
+    if (payload.type !== 'access') {
+      throw new UnauthorizedException('Invalid token type')
+    }
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: {

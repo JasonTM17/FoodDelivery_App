@@ -85,6 +85,8 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
             groupName: entry.key,
             optionName: optionName,
             price: option.price,
+            optionId: group.id,
+            valueId: option.id,
           ),
         );
       }

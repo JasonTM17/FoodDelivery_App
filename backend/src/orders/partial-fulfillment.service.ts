@@ -45,8 +45,9 @@ export class PartialFulfillmentService {
       throw new BadRequestException('ORDER_NOT_IN_MODIFIABLE_STATE')
     }
 
-    const removedItems = order.orderItems.filter(i =>
-      dto.unavailableItemIds.includes(i.id),
+    // Only items still on the order with qty > 0 (already-removed are not re-applied)
+    const removedItems = order.orderItems.filter(
+      (i) => dto.unavailableItemIds.includes(i.id) && i.quantity > 0,
     )
     if (!removedItems.length) throw new BadRequestException('NO_VALID_ITEMS_TO_REMOVE')
 
@@ -57,6 +58,18 @@ export class PartialFulfillmentService {
     const newTotal = Math.max(0, Number(order.total) - refundDelta)
 
     await this.prisma.$transaction(async (tx) => {
+      // Mark items removed so replay cannot subtract again
+      await tx.orderItem.updateMany({
+        where: {
+          id: { in: removedItems.map((i) => i.id) },
+          orderId,
+        },
+        data: {
+          notes: `[UNAVAILABLE] ${dto.reason ?? 'n/a'}`.slice(0, 500),
+          quantity: 0,
+        },
+      })
+
       await tx.order.update({
         where: { id: orderId },
         data: { total: newTotal },

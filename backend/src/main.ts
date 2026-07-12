@@ -8,7 +8,8 @@ import { parseCorsOrigins } from './common/config/cors-origins'
 import helmet from 'helmet'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  // rawBody required for webhook HMAC verification (SePay signs exact request bytes)
+  const app = await NestFactory.create(AppModule, { rawBody: true })
   const configService = app.get(ConfigService)
   const redisUrl = configService.get<string>('REDIS_URL')
   if (!redisUrl) throw new Error('REDIS_URL environment variable is not set')
@@ -35,28 +36,33 @@ async function bootstrap() {
     transform: true,
   }))
 
-  // Swagger / OpenAPI
-  const config = new DocumentBuilder()
-    .setTitle('FoodFlow API')
-    .setDescription('Food delivery platform API — orders, restaurants, dispatch, tracking')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .addTag('auth')
-    .addTag('orders')
-    .addTag('restaurants')
-    .addTag('menu')
-    .addTag('drivers')
-    .addTag('tracking')
-    .addTag('notifications')
-    .addTag('admin')
-    .build()
+  // Swagger only when explicitly enabled (never default-on in production)
+  const enableSwagger =
+    configService.get<string>('ENABLE_SWAGGER') === 'true' ||
+    configService.get<string>('NODE_ENV') !== 'production'
+  if (enableSwagger) {
+    const config = new DocumentBuilder()
+      .setTitle('FoodFlow API')
+      .setDescription('Food delivery platform API — orders, restaurants, dispatch, tracking')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .addTag('auth')
+      .addTag('orders')
+      .addTag('restaurants')
+      .addTag('menu')
+      .addTag('drivers')
+      .addTag('tracking')
+      .addTag('notifications')
+      .addTag('admin')
+      .build()
 
-  const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api/docs', app, document)
+    const document = SwaggerModule.createDocument(app, config)
+    SwaggerModule.setup('api/docs', app, document)
+  }
 
   app.setGlobalPrefix('api')
 
   await app.listen(port)
   console.log(`FoodFlow API listening on port ${port}`)
 }
-bootstrap()
+bootstrap().catch(err => { console.error(err); process.exit(1); })
