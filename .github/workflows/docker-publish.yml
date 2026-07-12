@@ -261,10 +261,10 @@ jobs:
           set -euo pipefail
           dockerhub_digest="$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
           ghcr_digest="$(docker buildx imagetools inspect "$GHCR_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
-          test -n "$dockerhub_digest" && test "$dockerhub_digest" = "$ghcr_digest" || {
+          if [[ -z "$dockerhub_digest" || "$dockerhub_digest" != "$ghcr_digest" ]]; then
             echo 'Docker Hub and GHCR manifest digests differ.'
             exit 1
-          }
+          fi
           echo "Both registries published $dockerhub_digest"
 
   runtime-smoke:
@@ -280,8 +280,10 @@ jobs:
             kind: migrate
           - image: foodflow-admin
             kind: web
+            port: 3000
           - image: foodflow-restaurant
             kind: web
+            port: 3002
 
     steps:
       - name: Set up QEMU
@@ -298,8 +300,18 @@ jobs:
         env:
           IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ github.sha }}
           KIND: ${{ matrix.kind }}
+          WEB_PORT: ${{ matrix.port }}
         run: |
           set -euo pipefail
+          current_container=""
+          cleanup_container() {
+            if [[ -n "${current_container:-}" ]]; then
+              docker rm -f "$current_container" >/dev/null 2>&1 || true
+              current_container=""
+            fi
+          }
+          trap cleanup_container EXIT
+
           for platform in linux/amd64 linux/arm64; do
             case "$KIND" in
               backend)
@@ -321,10 +333,16 @@ jobs:
                     if (!extract || typeof bullmq.Queue !== "function" || JSON.stringify(output) !== JSON.stringify(input)) {
                       throw new Error("BullMQ or MessagePack native runtime smoke failed");
                     }
+                    if (process.getuid?.() === 0) throw new Error("backend container runs as root");
                     console.log(JSON.stringify({ arch: process.arch, uid: process.getuid?.(), native: true }));
                   '
                 ;;
               migrate)
+                docker run --rm --pull always --platform "$platform" \
+                  --entrypoint /nodejs/bin/node "$IMAGE" -e '
+                    if (process.getuid?.() === 0) throw new Error("migrate container runs as root");
+                    console.log(JSON.stringify({ arch: process.arch, uid: process.getuid?.(), nonRoot: true }));
+                  '
                 docker run --rm --pull always --platform "$platform" "$IMAGE" \
                   node_modules/prisma/build/index.js --version
                 ;;
@@ -336,6 +354,7 @@ jobs:
                     const packageDir = fs.readdirSync(base).find((entry) => entry.startsWith("sharp@"));
                     if (!packageDir) throw new Error("sharp package is missing from the standalone image");
                     const sharp = require(`${base}/${packageDir}/node_modules/sharp`);
+                    if (process.getuid?.() === 0) throw new Error("web container runs as root");
                     sharp({
                       create: { width: 2, height: 2, channels: 4, background: { r: 14, g: 165, b: 164, alpha: 1 } },
                     }).png().toBuffer().then((buffer) => {
@@ -346,6 +365,44 @@ jobs:
                       process.exit(1);
                     });
                   '
+
+                image_name="${IMAGE##*/}"
+                platform_slug="${platform//\//-}"
+                current_container="${image_name%%:*}-${platform_slug}-smoke"
+                docker run -d --platform "$platform" --name "$current_container" \
+                  -p "127.0.0.1::${WEB_PORT}" "$IMAGE" >/dev/null
+                host_port="$(docker port "$current_container" "${WEB_PORT}/tcp" | awk -F: 'NR == 1 { print $NF }')"
+                test -n "$host_port"
+
+                ready=false
+                for _ in $(seq 1 60); do
+                  health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$current_container")"
+                  if [[ "$health" == "unhealthy" ]]; then
+                    docker logs "$current_container"
+                    exit 1
+                  fi
+                  if [[ "$health" == "healthy" ]] && curl --fail --silent --show-error \
+                    "http://127.0.0.1:${host_port}/api/healthz" >/dev/null; then
+                    ready=true
+                    break
+                  fi
+                  sleep 1
+                done
+                if [[ "$ready" != "true" ]]; then
+                  docker logs "$current_container"
+                  exit 1
+                fi
+
+                if ! login_html="$(curl --fail --silent --show-error "http://127.0.0.1:${host_port}/en/login")"; then
+                  docker logs "$current_container"
+                  exit 1
+                fi
+                if ! grep -Fq '<html lang="en"' <<<"$login_html"; then
+                  docker logs "$current_container"
+                  echo "English login route did not render the expected html lang attribute"
+                  exit 1
+                fi
+                cleanup_container
                 ;;
               *)
                 echo "Unsupported smoke kind: $KIND"
@@ -513,10 +570,10 @@ jobs:
               docker buildx imagetools create --tag "$target" "$source"
               source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
               target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-              test -n "$source_digest" && test "$source_digest" = "$target_digest" || {
+              if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
                 echo "Digest verification failed for $target"
                 exit 1
-              }
+              fi
               echo "$target promoted at $source_digest"
             done
           done
