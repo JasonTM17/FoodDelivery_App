@@ -79,16 +79,16 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Docker packages
 
-The current candidate has immutable Docker Hub images for the API/worker and migrator. Admin and Restaurant images remain gated until verified public API and Supabase build values exist. `latest` is intentionally untouched.
+The current candidate has immutable Docker Hub images for the API/worker and migrator. Admin and Restaurant images remain gated until verified public API and Supabase build values exist. `latest` remains on the prior candidate until the SHA artifacts below pass provider deployment and production smoke.
 
 | Artifact | Docker Hub tag | Remote digest |
 |---|---|---|
-| API + worker | [`nguyenson1710/foodflow-backend:sha-714d908ecab099876f5795a96ab6d0d6bca38514`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:7a2fa7e6482ede185ab15c8381385ccbd457e43535d1cf070218c0f64b5700f2` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-714d908ecab099876f5795a96ab6d0d6bca38514`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:b6eb0e3d379daf2e40294d4e791f8a43d48667e1ff5e1ba4aa1a73f2dad9e026` |
+| API + worker | [`nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
 | Admin | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 | Restaurant | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 
-The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Docker Hub was queried after push to record the digests above. Multi-architecture scanning and a clean-environment pull/smoke are still required before a semver or `latest` promotion.
+The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Docker Hub was queried after push and both SHA tags were pulled again for a Linux/amd64 local runtime smoke: API health returned 200 and both runtimes preserved their non-root users. Docker Scout found zero High/Critical CVEs for those Linux/amd64 images. Multi-architecture scanning, provider deployment, and production smoke are still required before semver or `latest` promotion.
 
 Release promotion order:
 

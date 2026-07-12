@@ -58,6 +58,17 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout |
 | Redis | Railway managed Redis | reference its private `REDIS_URL` from API and worker |
 
+### Current Docker Hub candidate
+
+Runtime commit `a627b597796965f4b991a5ab236a1fdedafa0b30` is published as immutable Docker Hub tags:
+
+| Artifact | SHA tag and verified digest |
+|---|---|
+| API + worker | `nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
+| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
+
+`latest` intentionally remains on the prior candidate until these SHA tags pass provider deployment and production smoke. This is not a Railway/Supabase/Vercel production approval; use the SHA tags for deployment and complete the provider stages below.
+
 Expected Vercel projects:
 
 | Project | Root directory | Framework/build |

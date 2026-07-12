@@ -82,23 +82,23 @@ Visual review found Vietnamese Admin overview KPI labels rendered in English and
 
 ## Registry audit
 
-Docker Hub and GHCR were verified on 2026-07-11:
+Docker Hub was verified on 2026-07-12 from the immutable SHA tags after a local build, pull, and runtime health smoke:
 
 | Artifact | Candidate tag | Verified digest | Status |
 |---|---|---|---|
-| `foodflow-backend` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` | Docker Hub/GHCR digest match; linked to repository |
-| `foodflow-migrate` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` | Docker Hub/GHCR digest match; linked to repository |
+| `foodflow-backend` | `sha-a627b597796965f4b991a5ab236a1fdedafa0b30` | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` | Docker Hub SHA pulled and runtime returned health 200 as uid 65534; Docker Scout Linux/amd64 High/Critical = 0; `latest` intentionally retained on the prior candidate |
+| `foodflow-migrate` | `sha-a627b597796965f4b991a5ab236a1fdedafa0b30` | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` | Docker Hub SHA pulled and runtime preserved uid 65532; Docker Scout Linux/amd64 High/Critical = 0; `latest` intentionally retained on the prior candidate |
 | `foodflow-admin` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
 | `foodflow-restaurant` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
 | `foodflow-worker` | no separate artifact | backend digest | worker runs from backend image |
 
-The two current SHA manifests are release-candidate evidence, not a production release. No `v4.0.0` tag was created and `latest` was not changed. Semver/latest promotion remains gated on current-head image scanning, all application gates, provider preflight, deployment, and production smoke.
+The two current SHA manifests are local Linux/amd64 release-candidate evidence, not a production release. No `v4.0.0` tag was created and `latest` was not promoted. Semver/latest promotion remains gated on multi-architecture image scanning, all application gates, provider preflight, deployment, and production smoke.
 
 ## External preflight status
 
 ### Supabase
 
-The project is linked and visible to the authenticated Supabase CLI account, but the remote database connection used by `supabase migration list --linked` timed out. No remote migration, schema dump, RLS advisor, or Storage change was attempted after that failure. Complete a non-local session/direct connection check and backup before rerunning the preflight; OAuth/CLI access is not a substitute for database connectivity.
+The active Food_Delivery_Crab project is linked and `supabase migration list --linked` returned an empty migration history. The only configured Prisma URLs in this worktree target local PostgreSQL; no production session/direct URL or database password is available. No remote migration, schema dump, RLS advisor, or Storage change was attempted. Enter the Supabase Connect-dialog session/direct URL through the secure prompt, back up the empty/new database, then run `prisma migrate deploy` before any API rollout.
 
 ### Railway and Vercel
 
