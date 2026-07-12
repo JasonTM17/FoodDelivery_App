@@ -5,5 +5,20 @@
   "seed": {
     "admin": "admin@foodflow.vn",
     "restaurant": "restaurant1@foodflow.vn"
+  },
+  "driverGps": {
+    "capturedAt": "2026-07-12T14:37:12Z",
+    "environment": "Android API 35 emulator connected to the isolated non-production E2E stack",
+    "realtimeProvider": "socketio",
+    "evidence": [
+      "authenticated Driver location command accepted",
+      "Redis liveness refreshed",
+      "PostGIS location history persisted",
+      "authorized Admin Socket.IO listener received one event"
+    ],
+    "files": [
+      "driver/driver-online-gps-e2e.webp",
+      "gps/driver-notification-permission.webp"
+    ]
   }
 }

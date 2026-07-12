@@ -1,6 +1,6 @@
 # FoodFlow Screenshot Inventory
 
-Current-source product stills for the root README and [product gallery](../product-gallery.md). They are captured from the isolated Docker/E2E stack with deterministic test data, not labeled as production screenshots.
+Current-source product stills for the root README and [product gallery](../product-gallery.md). Admin and Restaurant images are captured from the isolated Docker/E2E stack with deterministic test data. Driver GPS images are captured from an Android API 35 emulator connected to that non-production stack. None are labeled as production screenshots.
 
 | File | Surface | Route/content |
 |---|---|---|
@@ -24,7 +24,9 @@ Current-source product stills for the root README and [product gallery](../produ
 | `restaurant/08-staff.png` | Restaurant | Staff |
 | `restaurant/09-insights.png` | Restaurant | Insights |
 | `restaurant/10-settings.png` | Restaurant | Settings |
+| `driver/driver-online-gps-e2e.webp` | Driver | Online state after a verified emulator GPS update |
+| `gps/driver-notification-permission.webp` | Android | Runtime notification permission prompted when the driver enables tracking |
 
-`manifest.json` stores capture UTC, local base URLs, and seed identities. It must never contain passwords, access/refresh tokens, API keys, or provider secrets.
+`manifest.json` stores capture UTC, local base URLs, non-secret seed identities, and bounded local GPS evidence. It must never contain real coordinates, passwords, access/refresh tokens, API keys, or provider secrets.
 
 Regenerate with `node docs/scripts/capture-product-media.mjs` using the environment shown in the product gallery. Inspect every image after capture; successful automation can still record a CORS, API, or localization defect.

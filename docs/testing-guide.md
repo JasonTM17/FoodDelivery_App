@@ -19,6 +19,16 @@ Latest current-line evidence on 2026-07-11:
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, and current remote CI remain required.
 
+### 2026-07-12 focused Driver GPS E2E evidence
+
+This is bounded local evidence, not release approval:
+
+- Full Flutter analyze and all 312 Flutter tests passed after making GPS mutations use the authenticated REST command path, adding Android notification-permission coverage, and redacting precise coordinates from debug request logs.
+- `lib/main_driver.dart` built as the Android `driver` debug flavor, then ran on an Android API 35 emulator.
+- The Driver's explicit Online action prompted for notification permission; once allowed, Android reported a running location foreground service.
+- A simulated GPS update was accepted by the local E2E API, refreshed Redis liveness, reached PostGIS within seconds, and produced exactly one event for an authorized Admin Socket.IO subscriber.
+- This uses the explicit local `socketio` provider. It does not prove Supabase Broadcast, Railway, Vercel, or production device behavior.
+
 ## One-command local gate
 
 With production env/auth configured and a seeded browser stack available:

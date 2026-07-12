@@ -99,6 +99,20 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 
 ![Restaurant settings](./screenshots/restaurant/10-settings.png)
 
+## Driver GPS (local E2E)
+
+These Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action and the Android notification-permission flow; no real location, personal account, credential, or token was captured.
+
+The associated local E2E check accepted the authenticated GPS command, refreshed Redis liveness, persisted the sample to PostGIS, and delivered one authorized Admin Socket.IO event. This is local Socket.IO compatibility evidence only, **not** Supabase, Railway, Vercel, or production evidence.
+
+### Driver Online after GPS verification
+
+![Driver Online after verified GPS update](./screenshots/driver/driver-online-gps-e2e.webp)
+
+### Android foreground-tracking notification permission
+
+![Android notification permission prompt for Driver tracking](./screenshots/gps/driver-notification-permission.webp)
+
 ## Capture procedure
 
 1. Build the base + `docker-compose.e2e.yml` stack from the target source head.
@@ -108,6 +122,7 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 5. Authenticate through the real API, inject only short-lived local session state, and visit each route with Playwright Chromium.
 6. Render PNG files and palette-optimized GIFs through FFmpeg.
 7. Visually inspect every output for error states, stale data, mixed locale, clipping, secret exposure, and console/network failures.
+8. For Driver GPS media, use an Android emulator with a simulated route, verify the command/presence/PostGIS/authorized-fanout chain, and review the output for coordinates or personal data before approval.
 
 ```powershell
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
