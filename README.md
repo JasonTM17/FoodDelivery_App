@@ -47,7 +47,7 @@ Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The AP
 - Restaurant order kanban, menu/options, promotions, revenue, reviews, notifications, staff, opening hours, and insights.
 - Admin KPIs, orders, restaurants, users, drivers, live maps, promotions, audit, support, export, and AI telemetry.
 - Tenant-scoped authorization for restaurant staff, realtime channels, tracking, exports, and administrative resources.
-- Google Maps routing when configured; backend route snapshots and telemetry fail closed instead of inventing coordinates, polylines, or ETA.
+- Keyless MapLibre/OpenFreeMap basemaps plus backend Google Directions/owned OSRM routing when configured; route snapshots and telemetry fail closed instead of inventing coordinates, polylines, or ETA.
 - DeepSeek-backed support through the backend adapter, with fail-closed configuration/provider errors, persisted usage telemetry, and no embedded provider key.
 
 ## Production and local architecture
@@ -164,7 +164,7 @@ Health endpoints:
 
 - Treat any key pasted into chat, logs, screenshots, tickets, or git history as exposed and rotate it before production.
 - Never commit `.env`, database URLs, service-role keys, JWT secrets, private keys, provider tokens, or mobile signing files.
-- Browser-exposed Google Maps and Supabase anon keys are public identifiers but must still be origin/API restricted.
+- The Supabase anon/publishable key is a public identifier but still requires RLS and origin controls. MapLibre/OpenFreeMap needs no browser API key or billing account.
 - Keep DeepSeek, Supabase service role/JWT, SePay, SMTP, FCM, Twilio, database, and deployment credentials server-side.
 
 Run preflights without printing values:

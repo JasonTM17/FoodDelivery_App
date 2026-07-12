@@ -38,7 +38,7 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 - Restaurant order kanban、menu/options、promotion、revenue、review、notification、staff、opening hours、insight。
 - Admin KPI、order、restaurant、user、driver、live map、promotion、audit、support、export、AI telemetry。
 - Restaurant staff、realtime channel、tracking、export、admin resource の tenant isolation。
-- Google Maps と実 telemetry を使用し、座標・polyline・ETA が不足すると fake fallback を作らず fail closed。
+- Basemap は key/billing 不要の MapLibre/OpenFreeMap を使用し、GPS・route・ETA は実 backend telemetry のみを使って不足時は fail closed。
 - DeepSeek は backend adapter 経由です。Key 不足または provider error は fail closed とし、実 telemetry を保存し、client/repo に key を埋め込みません。
 
 ## Provider architecture
@@ -49,6 +49,7 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 | Realtime | `REALTIME_PROVIDER=supabase` | `socketio` |
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
+| Web basemap | MapLibre + OpenFreeMap | Same provider or self-hosted style |
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、allowlist 内の Supabase outbox event だけを受信します。Socket.IO は explicit local/self-hosted provider のみです。
 
@@ -96,7 +97,7 @@ Full stack は `docker compose up -d --build`。Health は API `:3001/api/health
 
 - Chat、log、screenshot、ticket、git history に貼られた key は exposed として production 前に rotate します。
 - `.env`、database URL、service-role key、JWT secret、private key、provider token、mobile signing file を commit しません。
-- Browser の Google Maps key と Supabase anon key は origin/API restriction を設定します。
+- OpenFreeMap は browser key/billing 不要です。Supabase anon/publishable key は RLS と適切な origin control を必須とします。
 - DeepSeek、Supabase service role/JWT、SePay、SMTP、FCM、Twilio、deploy credential は server-side secret manager のみです。
 
 ```powershell

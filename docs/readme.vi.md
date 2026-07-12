@@ -38,7 +38,7 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 - Restaurant: kanban đơn hàng, menu/options, promotion, revenue, review, notification, staff, giờ mở cửa, insight.
 - Admin: KPI, đơn hàng, nhà hàng, user, tài xế, bản đồ live, promotion, audit, support, export, AI telemetry.
 - Tenant isolation trên staff nhà hàng, realtime channel, tracking, export và tài nguyên quản trị.
-- Google Maps/route telemetry thật; thiếu dữ liệu thì UI fail closed, không tự tạo tọa độ, polyline hoặc ETA.
+- MapLibre/OpenFreeMap hiển thị nền bản đồ không cần key/billing; GPS, route và ETA vẫn chỉ lấy từ backend thật và fail closed khi thiếu.
 - DeepSeek qua backend adapter; thiếu key hoặc provider lỗi thì fail closed, có telemetry thật và không nhúng key vào client/repo.
 
 ## Kiến trúc provider
@@ -49,6 +49,7 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 | Realtime | `REALTIME_PROVIDER=supabase` | `socketio` |
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
+| Basemap web | MapLibre + OpenFreeMap | Cùng provider hoặc style tự host |
 
 Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và chỉ nhận event Supabase outbox nằm trong allowlist; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
@@ -98,7 +99,7 @@ Health: API `:3001/api/healthz`, Admin `:3000/api/healthz`, Restaurant `:3002/ap
 
 - Key từng xuất hiện trong chat/log/screenshot/ticket/git phải xem là đã lộ và rotate trước production.
 - Không commit `.env`, URL database, service-role key, JWT secret, private key, token provider hoặc mobile signing file.
-- Google Maps key và Supabase anon key có thể xuất hiện ở client nhưng phải giới hạn origin/API.
+- OpenFreeMap không cần browser key hay billing. Supabase anon/publishable key vẫn phải được bảo vệ bằng RLS và origin phù hợp.
 - DeepSeek, Supabase service role/JWT, SePay, SMTP, FCM, Twilio và deploy token chỉ ở server-side secret manager.
 
 Preflight không in value:

@@ -68,7 +68,10 @@ Override via shell: `ADMIN_URL=http://staging.example.com pnpm test:e2e`
 | `tests/restaurant-order-management.spec.ts` | Kanban board, accept/prepare/ready actions |
 | `tests/admin-dashboard.spec.ts` | KPI cards, driver map, orders table, filters |
 | `tests/realtime-tracking.spec.ts` | Status propagation, admin reflects live changes |
+| `tests/maplibre-basemap.spec.ts` | Keyless OpenFreeMap style, MapLibre canvas, attribution, and console-error gate |
 | `tests/batch4-contract.spec.ts` | Batch 4 API contracts and axe serious/critical accessibility smoke |
+
+The Chromium project opts into SwiftShader only for trusted E2E content so WebGL map tests stay deterministic on GPU-less local and CI runners. These launch flags are test-only and are never used by deployed browsers or containers.
 
 ## Debugging
 

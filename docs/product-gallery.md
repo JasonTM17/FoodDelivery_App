@@ -127,7 +127,7 @@ The script prints origins and file names, never access/refresh tokens or provide
 - The initial 2026-07-10 capture through `127.0.0.1` correctly showed CORS failures and was discarded.
 - The accepted capture source uses `localhost` and loads real seeded API data.
 - The Admin overview KPI locale and contrast findings were fixed, verified in vi/en/ja on Chromium and Firefox with axe serious/critical = 0, and recaptured in the accepted media.
-- Maps require a real browser-restricted Google Maps key. A blank/error map must not be edited into a successful screenshot.
+- Maps use the keyless MapLibre/OpenFreeMap basemap. A blank/error map or missing backend GPS/route must not be edited into a successful screenshot.
 - Empty order columns are valid only when the API response proves that state; capture must not hide errors as emptiness.
 
 ## Media review checklist

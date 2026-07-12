@@ -79,11 +79,12 @@ Admin:
 - `NEXT_PUBLIC_ADMIN_URL=https://<admin>.vercel.app`
 - `NEXT_PUBLIC_REALTIME_PROVIDER=supabase`
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- browser-restricted `NEXT_PUBLIC_GOOGLE_MAPS_KEY`
+- `NEXT_PUBLIC_MAP_PROVIDER=openfreemap`
+- `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty`
 
 Restaurant tương tự, dùng `NEXT_PUBLIC_RESTAURANT_URL`.
 
-Public env được bake vào bundle nên đổi value phải rebuild. Google/Supabase public key vẫn phải bị giới hạn bởi origin/API/RLS.
+Public env được bake vào bundle nên đổi value phải rebuild. OpenFreeMap không cần API key hay billing; Supabase public key vẫn phải được bảo vệ bằng RLS và realtime scope.
 
 ## 4. Supabase
 

@@ -19,7 +19,8 @@ flowchart TB
     DB[("Supabase PostgreSQL\n+ PostGIS")]
     Realtime["Supabase Realtime\nexplicit publication"]
     Storage["Supabase Storage\nscoped bucket policies"]
-    Maps["Google Maps / routing provider"]
+    Basemap["MapLibre + OpenFreeMap\nkeyless web basemap"]
+    Routing["Google Directions / owned OSRM\nbackend route provider"]
     AI["DeepSeek API\ndeepseek-v4-flash"]
     Integrations["SePay · SMTP · FCM · Twilio"]
 
@@ -27,9 +28,11 @@ flowchart TB
     Driver -->|HTTPS REST + GPS samples| API
     Admin -->|HTTPS REST| API
     Restaurant -->|HTTPS REST| API
+    Admin --> Basemap
+    Restaurant --> Basemap
     API --> DB
     API --> Storage
-    API --> Maps
+    API --> Routing
     API --> AI
     API --> Integrations
     Cron -->|GET /api/jobs/drain| API

@@ -161,7 +161,8 @@ Application/security values:
 
 - `NEXT_PUBLIC_API_URL=https://<verified-api-alias>.vercel.app/api`
 - `NEXT_PUBLIC_ADMIN_URL=https://<verified-admin-alias>.vercel.app`
-- `NEXT_PUBLIC_GOOGLE_MAPS_KEY=<origin/API-restricted browser key>`
+- `NEXT_PUBLIC_MAP_PROVIDER=openfreemap`
+- `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty`
 - `NEXT_PUBLIC_REALTIME_PROVIDER=supabase`
 - `NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY=<public anon key, origin/RLS constrained>`
@@ -170,7 +171,7 @@ Application/security values:
 
 Same as Admin, replacing `NEXT_PUBLIC_ADMIN_URL` with `NEXT_PUBLIC_RESTAURANT_URL`.
 
-Public variables are baked into Next.js assets. Changing them requires a rebuild/redeploy. “Public” does not mean unrestricted: Maps and Supabase policies must still enforce origins and row access.
+Public variables are baked into Next.js assets. Changing them requires a rebuild/redeploy. OpenFreeMap needs no browser key or billing account; Supabase still requires RLS and scoped realtime authorization.
 
 ## 4. Supabase deployment
 
