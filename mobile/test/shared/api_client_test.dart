@@ -44,13 +44,33 @@ void main() {
       });
 
       expect(redacted, {
-        'email': 'customer@example.com',
+        'email': '[REDACTED]',
         'password': '[REDACTED]',
         'refreshToken': '[REDACTED]',
         'deliveryAddress': '[REDACTED]',
         'items': [
-          {'name': 'Pho', 'paymentMethod': '[REDACTED]'},
+          {'name': '[REDACTED]', 'paymentMethod': '[REDACTED]'},
         ],
+      });
+    });
+
+    test('redacts precise GPS coordinates at every payload depth', () {
+      final redacted = redactHttpLogValue({
+        'lat': 10.7769,
+        'lng': 106.7009,
+        'driverLatitude': 10.7770,
+        'driverLongitude': 106.7010,
+        'location': {'latitude': 10.7771, 'longitude': 106.7011},
+        'platform': 'android',
+      });
+
+      expect(redacted, {
+        'lat': '[REDACTED]',
+        'lng': '[REDACTED]',
+        'driverLatitude': '[REDACTED]',
+        'driverLongitude': '[REDACTED]',
+        'location': '[REDACTED]',
+        'platform': 'android',
       });
     });
   });

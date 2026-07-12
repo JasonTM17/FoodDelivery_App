@@ -38,6 +38,7 @@ export class DispatchGateway implements OnGatewayConnection, OnGatewayInit {
         return
       }
       client.join(`driver:${user.sub}`)
+      client.emit('auth:ready')
     } catch {
       client.disconnect(true)
     }

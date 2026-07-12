@@ -21,6 +21,7 @@ describe('NotificationsGateway authentication', () => {
     await gateway.handleConnection(client)
 
     expect(client.join).toHaveBeenCalledWith('user:user-1:notifications')
+    expect(client.emit).toHaveBeenCalledWith('auth:ready')
     expect(client.disconnect).not.toHaveBeenCalled()
   })
 
@@ -54,6 +55,7 @@ function makeClient(user?: { sub: string; role: string }): Socket {
     data: user ? { user } : {},
     join: jest.fn(),
     leave: jest.fn(),
+    emit: jest.fn(),
     disconnect: jest.fn(),
   } as unknown as Socket
 }

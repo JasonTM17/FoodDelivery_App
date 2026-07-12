@@ -41,6 +41,43 @@ void main() {
     },
   );
 
+  test(
+    'accepts a dynamically typed JSON profile from the HTTP decoder',
+    () async {
+      apiInterceptor.profilePayload = Map<Object?, Object?>.from(
+        _driverProfile(),
+      );
+      final notifier = DriverNotifier();
+
+      await notifier.login('driver@foodflow.test', 'Password123');
+
+      expect(notifier.state.isAuthenticated, isTrue);
+      expect(notifier.state.driverName, 'Driver One');
+    },
+  );
+
+  test(
+    'accepts Decimal fields serialized as JSON strings by the API',
+    () async {
+      final profile = Map<String, dynamic>.from(_driverProfile());
+      profile['driverProfile'] = {
+        ...profile['driverProfile'] as Map<String, dynamic>,
+        'rating': '4.8',
+        'totalDeliveries': '42',
+        'totalEarnings': '1200000',
+      };
+      apiInterceptor.profilePayload = profile;
+      final notifier = DriverNotifier();
+
+      await notifier.login('driver@foodflow.test', 'Password123');
+
+      expect(notifier.state.isAuthenticated, isTrue);
+      expect(notifier.state.rating, 4.8);
+      expect(notifier.state.totalDeliveries, 42);
+      expect(notifier.state.totalEarnings, 1200000);
+    },
+  );
+
   test('clears tokens and rejects non-driver profiles after login', () async {
     apiInterceptor.profilePayload = {
       'id': 'customer-1',
@@ -97,7 +134,7 @@ Map<String, dynamic> _driverProfile() => {
 class _DriverAuthApiInterceptor extends Interceptor {
   _DriverAuthApiInterceptor({required this.profilePayload});
 
-  Map<String, dynamic> profilePayload;
+  Map<dynamic, dynamic> profilePayload;
   Map<String, dynamic> kycStatusPayload = {
     'status': 'pending',
     'isVerified': false,
@@ -108,7 +145,7 @@ class _DriverAuthApiInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (options.path == '/auth/login') {
       handler.resolve(
-        Response<Map<String, dynamic>>(
+        Response<dynamic>(
           requestOptions: options,
           statusCode: 200,
           data: {
@@ -134,7 +171,7 @@ class _DriverAuthApiInterceptor extends Interceptor {
     if (options.path == '/users/me') {
       profileAuthorization = options.headers['Authorization'] as String?;
       handler.resolve(
-        Response<Map<String, dynamic>>(
+        Response<dynamic>(
           requestOptions: options,
           statusCode: 200,
           data: profilePayload,

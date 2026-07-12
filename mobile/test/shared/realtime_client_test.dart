@@ -3,13 +3,12 @@ import 'package:foodflow_customer/shared/api/realtime_client.dart';
 import 'package:foodflow_customer/shared/config/app_config.dart';
 
 void main() {
-  test(
-    'Supabase mode sends GPS mutations through authenticated REST',
-    () async {
+  for (final provider in RealtimeProvider.values) {
+    test('${provider.name} mode sends GPS mutations through authenticated REST', () async {
       final transport = _FakeRealtimeTransport()..connected = true;
       final calls = <({String path, Map<String, dynamic> data})>[];
       final client = RealtimeClient.forTesting(
-        provider: RealtimeProvider.supabase,
+        provider: provider,
         transport: transport,
         postCommand: (path, data) async => calls.add((path: path, data: data)),
       );
@@ -33,8 +32,8 @@ void main() {
         'accuracy': 5,
         'timestamp': sampledAt.toIso8601String(),
       });
-    },
-  );
+    });
+  }
 
   test(
     'Supabase mode resolves dispatch offers through the one-time REST contract',

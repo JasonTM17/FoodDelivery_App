@@ -39,6 +39,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
       // Join user-specific notification room
       const room = `user:${user.sub}:notifications`
       client.join(room)
+      client.emit('auth:ready')
 
       this.logger.log(`User ${user.sub} connected to notifications (socket ${client.id})`)
     } catch {

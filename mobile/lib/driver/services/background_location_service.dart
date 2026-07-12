@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../shared/api/realtime_client.dart';
+import 'driver-foreground-notification-permission.dart';
 
 /// Throttle interval while an active order is in-progress (battery-aggressive).
 const _kActiveInterval = Duration(seconds: 4);
@@ -108,8 +109,16 @@ class BackgroundLocationService {
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();
     }
-    return perm != LocationPermission.denied &&
+    final hasLocationPermission =
+        perm != LocationPermission.denied &&
         perm != LocationPermission.deniedForever;
+    if (!hasLocationPermission) return false;
+
+    // Android 13+ hides foreground-service notifications from the drawer
+    // until the driver grants this runtime permission. Ask only after the
+    // driver explicitly chooses to share GPS, never at app startup.
+    await requestDriverForegroundNotificationPermission();
+    return true;
   }
 
   /// Start the location stream. Safe to call multiple times — idempotent.
@@ -189,6 +198,7 @@ class BackgroundLocationService {
   }
 
   void _onPosition(Position pos) {
+    if (kDebugMode) debugPrint('[GPS] native position update received');
     _lastPosition = pos;
     if (!_positionController.isClosed) {
       _positionController.add(pos);
@@ -231,33 +241,25 @@ class BackgroundLocationService {
     double? accuracy,
   }) async {
     final now = DateTime.now();
-    if (!_isLiveReplaySafe(ts, now)) return;
+    if (!_isLiveReplaySafe(ts, now)) {
+      if (kDebugMode) debugPrint('[GPS] discarded unsafe timestamp');
+      return;
+    }
 
-    if (_socket.isConnected) {
+    try {
+      if (kDebugMode) debugPrint('[GPS] sending location command');
       await _flushBuffer();
-      try {
-        await _socket.emitLocationPing(
-          lat,
-          lng,
-          bearing: bearing,
-          speed: speed,
-          accuracy: accuracy,
-          timestamp: ts,
-        );
-      } catch (_) {
-        _bufferPing(
-          _LocationPing(
-            lat,
-            lng,
-            ts,
-            bearing: bearing,
-            speed: speed,
-            accuracy: accuracy,
-          ),
-          now,
-        );
-      }
-    } else {
+      await _socket.emitLocationPing(
+        lat,
+        lng,
+        bearing: bearing,
+        speed: speed,
+        accuracy: accuracy,
+        timestamp: ts,
+      );
+    } catch (_) {
+      if (kDebugMode)
+        debugPrint('[GPS] buffering location until command transport recovers');
       _bufferPing(
         _LocationPing(
           lat,
@@ -274,13 +276,12 @@ class BackgroundLocationService {
 
   Future<void> _flushBuffer() async {
     if (_offlineBuffer.isEmpty) return;
-    if (!_socket.isConnected) return;
     if (_isFlushing) return;
     _isFlushing = true;
     final now = DateTime.now();
     try {
       _dropStaleBufferedPings(now);
-      while (_offlineBuffer.isNotEmpty && _socket.isConnected) {
+      while (_offlineBuffer.isNotEmpty) {
         final ping = _offlineBuffer.removeFirst();
         if (!_isLiveReplaySafe(ping.timestamp, now)) continue;
         try {

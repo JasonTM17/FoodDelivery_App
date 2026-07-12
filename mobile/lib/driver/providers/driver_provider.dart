@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
@@ -155,6 +156,32 @@ String _requiredString(Map<String, dynamic> json, String key) {
   final value = json[key];
   if (value is String && value.trim().isNotEmpty) return value;
   throw FormatException('Missing required string field: $key');
+}
+
+Map<String, dynamic>? _asJsonObject(Object? value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return null;
+}
+
+double? _asFiniteDouble(Object? value) {
+  final parsed = switch (value) {
+    num number => number.toDouble(),
+    String text => double.tryParse(text),
+    _ => null,
+  };
+  return parsed != null && parsed.isFinite ? parsed : null;
+}
+
+int? _asNonNegativeInt(Object? value) {
+  final parsed = switch (value) {
+    int number => number,
+    num number when number.isFinite && number == number.truncateToDouble() =>
+      number.toInt(),
+    String text => int.tryParse(text),
+    _ => null,
+  };
+  return parsed != null && parsed >= 0 ? parsed : null;
 }
 
 double _requiredDouble(Map<String, dynamic> json, String key) {
@@ -451,9 +478,9 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<bool> _fetchDriverProfile() async {
     try {
       final response = await _api.get('/users/me');
-      final data = response.data as Map<String, dynamic>;
-      final profile = data['driverProfile'] as Map<String, dynamic>?;
-      if (data['role'] != 'driver' || profile == null) {
+      final data = _asJsonObject(response.data);
+      final profile = _asJsonObject(data?['driverProfile']);
+      if (data == null || data['role'] != 'driver' || profile == null) {
         state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
         return false;
       }
@@ -462,16 +489,20 @@ class DriverNotifier extends StateNotifier<DriverState> {
         state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
         return false;
       }
+      final rating = _asFiniteDouble(profile['rating']);
+      final totalDeliveries = _asNonNegativeInt(profile['totalDeliveries']);
+      final totalEarnings = _asFiniteDouble(profile['totalEarnings']);
+      if (rating == null || totalDeliveries == null || totalEarnings == null) {
+        state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+        return false;
+      }
       state = state.copyWith(
         driverName: data['fullName'] as String?,
         driverPhone: data['phone'] as String?,
         driverAvatarUrl: data['avatarUrl'] as String?,
-        rating: (profile['rating'] as num?)?.toDouble() ?? state.rating,
-        totalDeliveries:
-            profile['totalDeliveries'] as int? ?? state.totalDeliveries,
-        totalEarnings:
-            (profile['totalEarnings'] as num?)?.toDouble() ??
-            state.totalEarnings,
+        rating: rating,
+        totalDeliveries: totalDeliveries,
+        totalEarnings: totalEarnings,
         vehicleType: profile['vehicleType'] as String?,
         vehiclePlate: profile['vehiclePlate'] as String?,
         isOnline: profile['isOnline'] as bool? ?? false,
@@ -479,7 +510,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
         hasAcceptedTerms: profile['termsAcceptedAt'] != null,
       );
       return true;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Driver profile bootstrap failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
       return false;
     }
@@ -488,8 +523,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<bool> _fetchKycStatus() async {
     try {
       final response = await _api.get('/driver/kyc/status');
-      final data = response.data;
-      if (data is! Map<String, dynamic>) {
+      final data = _asJsonObject(response.data);
+      if (data == null) {
         throw const FormatException('Invalid KYC status response');
       }
       final status = parseDriverKycStatus(data['status']);

@@ -95,7 +95,7 @@ class AppConfig {
 
   static String get socketBaseUrl {
     final configured = normalizeBaseUrl(_wsUrlDefine);
-    if (configured.isNotEmpty) return stripApiSuffix(configured);
+    if (configured.isNotEmpty) return socketBaseUrlFromSocketUrl(configured);
     return socketBaseUrlFromApiBaseUrl(apiBaseUrl);
   }
 
@@ -122,6 +122,24 @@ class AppConfig {
   static String socketBaseUrlFromApiBaseUrl(String apiBaseUrl) {
     final normalized = normalizeBaseUrl(apiBaseUrl);
     return stripApiSuffix(normalized);
+  }
+
+  /// Returns the Socket.IO origin from a canonical origin or a legacy
+  /// namespace URL. SocketClient appends each namespace itself, so leaving a
+  /// namespace here would produce paths such as `/events/tracking`.
+  static String socketBaseUrlFromSocketUrl(String socketUrl) {
+    final normalized = stripApiSuffix(normalizeBaseUrl(socketUrl));
+    for (final namespace in const [
+      '/events',
+      '/tracking',
+      '/dispatch',
+      '/notifications',
+    ]) {
+      if (normalized.endsWith(namespace)) {
+        return normalized.substring(0, normalized.length - namespace.length);
+      }
+    }
+    return normalized;
   }
 
   static String stripApiSuffix(String url) {

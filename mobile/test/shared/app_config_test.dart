@@ -21,10 +21,37 @@ void main() {
       );
     });
 
-    test('debug and test builds keep a local development API URL', () {
-      expect(AppConfig.apiBaseUrl, 'http://10.0.2.2:3001/api');
-      expect(AppConfig.socketBaseUrl, 'http://10.0.2.2:3001');
+    test('normalizes canonical and legacy Socket.IO namespace URLs', () {
+      expect(
+        AppConfig.socketBaseUrlFromSocketUrl('https://api.foodflow.vn/events/'),
+        'https://api.foodflow.vn',
+      );
+      expect(
+        AppConfig.socketBaseUrlFromSocketUrl(
+          'https://api.foodflow.vn/tracking',
+        ),
+        'https://api.foodflow.vn',
+      );
+      expect(
+        AppConfig.socketBaseUrlFromSocketUrl('https://api.foodflow.vn'),
+        'https://api.foodflow.vn',
+      );
     });
+
+    test(
+      'uses a local API default and an optional configured socket origin',
+      () {
+        expect(AppConfig.apiBaseUrl, 'http://10.0.2.2:3001/api');
+
+        const configuredSocketUrl = String.fromEnvironment('WS_URL');
+        expect(
+          AppConfig.socketBaseUrl,
+          configuredSocketUrl.isEmpty
+              ? 'http://10.0.2.2:3001'
+              : AppConfig.socketBaseUrlFromSocketUrl(configuredSocketUrl),
+        );
+      },
+    );
 
     test(
       'defaults only non-release builds to local Socket.IO compatibility',

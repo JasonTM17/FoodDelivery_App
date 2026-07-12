@@ -25,6 +25,16 @@ describe('OrdersGateway realtime room authorization', () => {
     expect(client.disconnect).toHaveBeenCalledWith(true)
   })
 
+  it('signals readiness after authenticating a client', async () => {
+    const client = makeClient()
+    authenticate.mockResolvedValue({ sub: 'customer-1', role: UserRole.customer })
+
+    await gateway.handleConnection(client)
+
+    expect(client.emit).toHaveBeenCalledWith('auth:ready')
+    expect(client.disconnect).not.toHaveBeenCalled()
+  })
+
   it('only lets admins subscribe to driver and order administration rooms', () => {
     const client = makeClient()
     getUser.mockReturnValue({ sub: 'restaurant-1', role: UserRole.restaurant })
@@ -99,6 +109,7 @@ function makeClient(): Socket {
   return {
     join: jest.fn(),
     leave: jest.fn(),
+    emit: jest.fn(),
     disconnect: jest.fn(),
     data: {},
   } as unknown as Socket

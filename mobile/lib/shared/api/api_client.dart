@@ -204,7 +204,8 @@ class _AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final is401 = err.response?.statusCode == 401;
     final alreadyRetried = err.requestOptions.extra['_retried'] == true;
-    final isRefreshCall = err.requestOptions.extra['_isRefreshCall'] == true ||
+    final isRefreshCall =
+        err.requestOptions.extra['_isRefreshCall'] == true ||
         err.requestOptions.path.contains('/auth/refresh');
 
     if (!is401 || alreadyRetried || isRefreshCall) {
@@ -316,7 +317,9 @@ class _LogInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('[HTTP] --> ${options.method} ${options.path}');
+      debugPrint(
+        '[HTTP] --> ${options.method} ${options.uri.origin}${options.path}',
+      );
       if (options.data != null) {
         debugPrint('[HTTP] Body: ${redactHttpLogValue(options.data)}');
       }
@@ -361,6 +364,9 @@ class _ResponseInterceptor extends Interceptor {
 
 const Set<String> _sensitiveHttpLogKeys = {
   'authorization',
+  'email',
+  'name',
+  'fullname',
   'password',
   'token',
   'accesstoken',
@@ -372,6 +378,14 @@ const Set<String> _sensitiveHttpLogKeys = {
   'phone',
   'address',
   'addressline',
+  'apartmentnumber',
+  'note',
+  'notes',
+  'comment',
+  'message',
+  'content',
+  'instructions',
+  'avatarurl',
   'payment',
   'paymentmethod',
   'card',
@@ -382,6 +396,17 @@ const Set<String> _sensitiveHttpLogKeys = {
   'licensenumber',
   'vehicleplate',
 };
+
+bool _isCoordinateHttpLogKey(String normalizedKey) {
+  return normalizedKey == 'location' ||
+      normalizedKey == 'coordinates' ||
+      normalizedKey == 'latitude' ||
+      normalizedKey == 'longitude' ||
+      normalizedKey.endsWith('latitude') ||
+      normalizedKey.endsWith('longitude') ||
+      normalizedKey.endsWith('lat') ||
+      normalizedKey.endsWith('lng');
+}
 
 Object? redactHttpLogValue(Object? value) {
   if (value is FormData) {
@@ -406,6 +431,7 @@ Object? redactHttpLogValue(Object? value) {
 
 bool _isSensitiveHttpLogKey(String key) {
   final normalized = key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  if (_isCoordinateHttpLogKey(normalized)) return true;
   return _sensitiveHttpLogKeys.any((sensitive) {
     final normalizedSensitive = sensitive.toLowerCase().replaceAll(
       RegExp(r'[^a-z0-9]'),

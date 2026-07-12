@@ -40,6 +40,7 @@ export class OrdersGateway implements OnGatewayConnection {
   async handleConnection(client: Socket): Promise<void> {
     try {
       await this.socketAuth.authenticate(client)
+      client.emit('auth:ready')
     } catch {
       client.disconnect(true)
     }

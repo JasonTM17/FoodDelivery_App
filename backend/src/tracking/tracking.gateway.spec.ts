@@ -46,6 +46,16 @@ describe('TrackingGateway authorization', () => {
     expect(client.disconnect).toHaveBeenCalledWith(true)
   })
 
+  it('signals readiness only after authenticating a client', async () => {
+    const client = makeClient()
+    authenticate.mockResolvedValue({ sub: 'driver-1', role: UserRole.driver })
+
+    await gateway.handleConnection(client)
+
+    expect(client.emit).toHaveBeenCalledWith('auth:ready')
+    expect(client.disconnect).not.toHaveBeenCalled()
+  })
+
   it('only accepts driver location events from driver accounts', async () => {
     const client = makeClient()
     getUser.mockReturnValue({ sub: 'customer-1', role: UserRole.customer })
@@ -167,6 +177,47 @@ describe('TrackingGateway authorization', () => {
     expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'future_timestamp' })
     expect(handleLocationUpdate).not.toHaveBeenCalled()
     expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it('accepts the idempotent initial GPS replay after going online', async () => {
+    const client = makeClient()
+    const timestamp = new Date().toISOString()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue({ lat: 10.8, lng: 106.7, timestamp })
+    handleLocationUpdate.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp,
+    })
+
+    expect(handleLocationUpdate).toHaveBeenCalledWith(
+      'driver-1',
+      expect.objectContaining({ timestamp }),
+    )
+    expect(client.emit).not.toHaveBeenCalledWith(
+      'driver:location_rejected',
+      expect.anything(),
+    )
+  })
+
+  it('rejects a different coordinate that reuses an initial GPS timestamp', async () => {
+    const client = makeClient()
+    const timestamp = new Date().toISOString()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue({ lat: 10.8, lng: 106.7, timestamp })
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.9,
+      lng: 106.8,
+      timestamp,
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', {
+      reason: 'teleportation',
+    })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
   })
 
   it('marks routed ETA updates as non-degraded provider values', async () => {

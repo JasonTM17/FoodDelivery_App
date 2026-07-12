@@ -35,14 +35,17 @@ class SocketClient implements RealtimeTransport, LocationPingEmitter {
   final _sockets = <String, io.Socket>{};
   final _connectedNamespaces = <String>{};
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  Future<void>? _connectInFlight;
 
   static const int _maxBuffer = 50;
   static const String _eventsNamespace = '/events';
   static const String _trackingNamespace = '/tracking';
   static const String _dispatchNamespace = '/dispatch';
   static const String _notificationsNamespace = '/notifications';
+  static const _legacyServerReadyDelay = Duration(seconds: 3);
 
   final _buffer = <_BufferedEvent>[];
+  final _readyFallbackTimers = <String, Timer>{};
   DateTime? _lastLocationEmit;
 
   final _driverLocationController =
@@ -85,9 +88,22 @@ class SocketClient implements RealtimeTransport, LocationPingEmitter {
     return _instance!;
   }
 
-  Future<void> connect() async {
-    if (_sockets.isNotEmpty) return;
+  Future<void> connect() {
+    if (_sockets.isNotEmpty) return Future.value();
 
+    return _connectInFlight ??= _connectAllNamespaces();
+  }
+
+  Future<void> _connectAllNamespaces() async {
+    try {
+      await _initializeNamespaces();
+    } catch (_) {
+      _connectInFlight = null;
+      rethrow;
+    }
+  }
+
+  Future<void> _initializeNamespaces() async {
     final token = await _storage.read(key: 'auth_token');
     final stored = await _storage.read(key: AppConfig.apiBaseUrlStorageKey);
     final wsUrl = stored != null && stored.trim().isNotEmpty
@@ -137,11 +153,23 @@ class SocketClient implements RealtimeTransport, LocationPingEmitter {
     );
 
     socket.onConnect((_) {
-      _connectedNamespaces.add(namespace);
-      _flushBuffer(namespace);
+      _debugSocket(namespace, 'transport connected; awaiting authentication');
+      _scheduleLegacyReadyFallback(namespace);
     });
 
-    socket.onDisconnect((_) => _connectedNamespaces.remove(namespace));
+    // Gate buffered events on server-side authentication. The Socket.IO
+    // transport can connect before the gateway finishes its async JWT/user
+    // lookup, so flushing on `connect` can silently drop the first GPS ping.
+    socket.on('auth:ready', (_) {
+      _debugSocket(namespace, 'server authentication complete');
+      _markNamespaceReady(namespace);
+    });
+
+    socket.onDisconnect((_) {
+      _readyFallbackTimers.remove(namespace)?.cancel();
+      _connectedNamespaces.remove(namespace);
+      _debugSocket(namespace, 'disconnected');
+    });
 
     socket.onConnectError((data) {
       // ignore: avoid_print
@@ -153,14 +181,38 @@ class SocketClient implements RealtimeTransport, LocationPingEmitter {
       print('[Socket][$namespace] Error: $data');
     });
 
-    socket.onReconnect((_) {
-      _connectedNamespaces.add(namespace);
-      _flushBuffer(namespace);
-    });
+    socket.onReconnect((_) => _scheduleLegacyReadyFallback(namespace));
 
     socket.on('auth:refresh_required', (_) => _authRefreshController.add(null));
+    socket.on('driver:location_rejected', (data) {
+      if (!kDebugMode) return;
+      final payload = _asStringMap(data);
+      debugPrint(
+        '[GPS] backend rejected location: ${payload?['reason'] ?? 'unknown'}',
+      );
+    });
 
     _sockets[namespace] = socket;
+  }
+
+  void _scheduleLegacyReadyFallback(String namespace) {
+    _readyFallbackTimers.remove(namespace)?.cancel();
+    _readyFallbackTimers[namespace] = Timer(_legacyServerReadyDelay, () {
+      // One release-cycle fallback for a rollback to a server which predates
+      // the auth-ready event. A successful current server always emits it.
+      _markNamespaceReady(namespace);
+    });
+  }
+
+  void _markNamespaceReady(String namespace) {
+    _readyFallbackTimers.remove(namespace)?.cancel();
+    if (!_connectedNamespaces.add(namespace)) return;
+    _debugSocket(namespace, 'ready for application events');
+    _flushBuffer(namespace);
+  }
+
+  void _debugSocket(String namespace, String message) {
+    if (kDebugMode) debugPrint('[Socket][$namespace] $message');
   }
 
   void _pipe(
@@ -194,6 +246,11 @@ class SocketClient implements RealtimeTransport, LocationPingEmitter {
   }
 
   Future<void> disconnect() async {
+    _connectInFlight = null;
+    for (final timer in _readyFallbackTimers.values) {
+      timer.cancel();
+    }
+    _readyFallbackTimers.clear();
     for (final socket in _sockets.values) {
       socket.disconnect();
     }

@@ -97,6 +97,7 @@ void main() {
         addTearDown(service.dispose);
 
         final capturedAt = DateTime.now().toUtc();
+        socket.shouldThrow = true;
         await service.bufferLocationPingForTesting(
           10.7769,
           106.7009,
@@ -108,7 +109,7 @@ void main() {
 
         expect(socket.sentPayloads, isEmpty);
 
-        socket.connected = true;
+        socket.shouldThrow = false;
         await service.flushBufferForTesting();
 
         expect(socket.sentPayloads, hasLength(1));
@@ -130,6 +131,7 @@ void main() {
 
       final firstCapturedAt = DateTime.now().toUtc();
       final secondCapturedAt = firstCapturedAt.add(const Duration(seconds: 4));
+      socket.shouldThrow = true;
       await service.bufferLocationPingForTesting(
         10.7769,
         106.7009,
@@ -141,7 +143,7 @@ void main() {
         timestamp: secondCapturedAt,
       );
 
-      socket.connected = true;
+      socket.shouldThrow = false;
       await service.flushBufferForTesting();
 
       expect(socket.sentPayloads, hasLength(2));
@@ -178,6 +180,7 @@ void main() {
 
 class _RecordingLocationPingEmitter implements LocationPingEmitter {
   bool connected = false;
+  bool shouldThrow = false;
   final sentPayloads = <Map<String, dynamic>>[];
   final bypassThrottleValues = <bool>[];
 
@@ -194,6 +197,7 @@ class _RecordingLocationPingEmitter implements LocationPingEmitter {
     required DateTime timestamp,
     bool bypassThrottle = false,
   }) async {
+    if (shouldThrow) throw StateError('transport unavailable');
     bypassThrottleValues.add(bypassThrottle);
     sentPayloads.add(
       buildDriverLocationPingPayload(

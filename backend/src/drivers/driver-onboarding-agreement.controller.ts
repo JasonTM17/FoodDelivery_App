@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, UsePipes } from '@nestjs/common'
+import { Body, Controller, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -21,8 +21,10 @@ export class DriverOnboardingAgreementController {
   constructor(private readonly agreementService: DriverOnboardingAgreementService) {}
 
   @Post()
-  @UsePipes(new ZodValidationPipe(acceptDriverAgreementSchema))
-  accept(@CurrentUser() user: JwtPayload, @Body() body: AcceptDriverAgreementInput) {
+  accept(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(acceptDriverAgreementSchema)) body: AcceptDriverAgreementInput,
+  ) {
     return this.agreementService.accept(user.sub, body)
   }
 }

@@ -54,6 +54,7 @@ export type DriverLocationUpdateResult =
 
 const MAX_LIVE_LOCATION_AGE_MS = 45_000
 const MAX_LOCATION_CLOCK_SKEW_FUTURE_MS = 15_000
+const IDEMPOTENT_LOCATION_TOLERANCE_KM = 0.02
 
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: websocketCorsOrigins() } })
 export class TrackingGateway implements OnGatewayConnection {
@@ -74,6 +75,7 @@ export class TrackingGateway implements OnGatewayConnection {
   async handleConnection(client: Socket): Promise<void> {
     try {
       await this.socketAuth.authenticate(client)
+      client.emit('auth:ready')
     } catch {
       client.disconnect(true)
     }
@@ -256,10 +258,14 @@ export class TrackingGateway implements OnGatewayConnection {
     const last = await this.trackingService.getDriverLocation(driverId)
     if (!last) return false
     const elapsedMs = sampleTimestamp.getTime() - new Date(last.timestamp).getTime()
-    // Reject future / stale client timestamps (anti-spoof for teleport checks)
-    if (elapsedMs <= 0) return true
-    if (elapsedMs > 60_000) return true
     const distKm = haversineDistance(last.lat, last.lng, lat, lng)
+    // /driver/online stores the initial sample before Socket.IO republishes it
+    // to subscribed maps. Treat that exact, stationary replay as idempotent;
+    // a timestamp reused at a materially different coordinate remains invalid.
+    if (elapsedMs === 0) return distKm > IDEMPOTENT_LOCATION_TOLERANCE_KM
+    // Reject future / stale client timestamps (anti-spoof for teleport checks)
+    if (elapsedMs < 0) return true
+    if (elapsedMs > 60_000) return true
     const maxKm = (180 / 3600) * (elapsedMs / 1000) * 1.5
     return distKm > maxKm
   }

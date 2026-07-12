@@ -99,19 +99,10 @@ class RealtimeClient implements LocationPingEmitter {
     }
     if (!bypassThrottle) _lastLocationEmit = now;
 
-    if (_provider == RealtimeProvider.socketio) {
-      await (_transport as SocketClient).emitLocationPing(
-        lat,
-        lng,
-        bearing: bearing,
-        speed: speed,
-        accuracy: accuracy,
-        timestamp: timestamp,
-        bypassThrottle: bypassThrottle,
-      );
-      return;
-    }
-
+    // GPS is a state-changing command, so it always uses the authenticated
+    // HTTP endpoint. Socket.IO and Supabase Broadcast remain receive-side
+    // transports for fan-out. This gives the mobile offline buffer a concrete
+    // request result to retry instead of silently losing an outbound event.
     await _postCommand(
       '/driver/location',
       buildDriverLocationPingPayload(

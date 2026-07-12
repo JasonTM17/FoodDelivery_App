@@ -4,16 +4,16 @@ services:
     container_name: foodflow-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: foodflow
-      POSTGRES_PASSWORD: foodflow_dev
-      POSTGRES_DB: foodflow
+      POSTGRES_USER: ${POSTGRES_USER:-foodflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-foodflow_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-foodflow}
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U foodflow -d foodflow"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,8 +38,8 @@ services:
     container_name: foodflow-minio
     restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
@@ -62,8 +62,10 @@ services:
     container_name: foodflow-migrate
     restart: "no"
     environment:
-      DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
-      DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+      # DATABASE_URL/DIRECT_URL are canonical so credentials with URL-special
+      # characters are supplied safely as a fully URL-encoded connection URI.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:foodflow_dev@postgres:5432/foodflow}
+      DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:-postgresql://foodflow:foodflow_dev@postgres:5432/foodflow}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,8 +85,8 @@ services:
       REALTIME_PROVIDER: socketio
       STORAGE_PROVIDER: minio
       QUEUE_PROVIDER: bullmq
-      DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
-      DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
+      DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:foodflow_dev@postgres:5432/foodflow}
+      DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:-postgresql://foodflow:foodflow_dev@postgres:5432/foodflow}}
       REDIS_URL: redis://redis:6379
       DELIVERY_BASE_FEE_VND: "${DELIVERY_BASE_FEE_VND:-15000}"
       AUTH_PUBLIC_THROTTLE_LIMIT: "500"
@@ -94,8 +96,10 @@ services:
       JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      # Keep client credentials aligned with the MinIO root credentials.
+      # Production uses Supabase Storage; these defaults are local-only.
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       MINIO_BUCKET: foodflow
       MINIO_PUBLIC_URL: http://localhost:9000
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002,http://localhost:3003,http://[::1]:3000,http://[::1]:3002,http://[::1]:3003}
@@ -122,7 +126,7 @@ services:
         BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001}
         NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-http://localhost:3000}
         NEXT_PUBLIC_MAP_PROVIDER: ${NEXT_PUBLIC_MAP_PROVIDER:-openfreemap}
@@ -135,7 +139,7 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
-      NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_WS_URL: http://localhost:3001
       NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_ADMIN_URL: http://localhost:3000
     depends_on:
@@ -155,7 +159,7 @@ services:
         BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001}
         NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_RESTAURANT_URL: ${NEXT_PUBLIC_RESTAURANT_URL:-http://localhost:3002}
         NEXT_PUBLIC_MAP_PROVIDER: ${NEXT_PUBLIC_MAP_PROVIDER:-openfreemap}
@@ -168,7 +172,7 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
-      NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_WS_URL: http://localhost:3001
       NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_RESTAURANT_URL: http://localhost:3002
     depends_on:

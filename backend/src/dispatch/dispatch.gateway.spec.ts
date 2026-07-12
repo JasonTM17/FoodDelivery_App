@@ -24,6 +24,7 @@ describe('DispatchGateway authentication', () => {
     await gateway.handleConnection(client)
 
     expect(client.join).toHaveBeenCalledWith('driver:driver-1')
+    expect(client.emit).toHaveBeenCalledWith('auth:ready')
     expect(client.disconnect).not.toHaveBeenCalled()
   })
 
@@ -86,6 +87,7 @@ function makeClient(): Socket {
   return {
     data: {},
     join: jest.fn(),
+    emit: jest.fn(),
     disconnect: jest.fn(),
   } as unknown as Socket
 }
