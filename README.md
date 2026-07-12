@@ -1,272 +1,221 @@
-# FoodFlow - Realtime Food Delivery Platform
+# FoodFlow — Food Delivery Operations Platform
 
-Documentation languages: [English](README.md) | [Tiếng Việt](docs/readme.vi.md) | [日本語](docs/readme.ja.md)
+Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語](docs/readme.ja.md)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/backend-NestJS-ea2845?logo=nestjs" alt="Backend">
-  <img src="https://img.shields.io/badge/mobile-Flutter-02569B?logo=flutter" alt="Mobile">
-  <img src="https://img.shields.io/badge/web-Next.js-black?logo=next.js" alt="Web">
-  <img src="https://img.shields.io/badge/db-PostgreSQL%2BPostGIS-336791?logo=postgresql" alt="Database">
-  <img src="https://img.shields.io/badge/realtime-Socket.IO-010101?logo=socket.io" alt="Realtime">
-  <img src="https://img.shields.io/badge/ai-LLM%20Chatbot-18e46a" alt="AI">
-  <img src="https://img.shields.io/badge/docker-Hub%20%2B%20GHCR-2496ED?logo=docker" alt="Docker packages">
-  <img src="https://img.shields.io/github/license/JasonTM17/foodflow" alt="License">
+  <img src="https://img.shields.io/badge/backend-NestJS%2011-ea2845?logo=nestjs" alt="NestJS 11 backend" />
+  <img src="https://img.shields.io/badge/web-Next.js%2015-000000?logo=next.js" alt="Next.js 15 web" />
+  <img src="https://img.shields.io/badge/mobile-Flutter-02569B?logo=flutter" alt="Flutter mobile" />
+  <img src="https://img.shields.io/badge/data-Supabase%20%2B%20PostGIS-3FCF8E?logo=supabase" alt="Supabase and PostGIS" />
+  <img src="https://img.shields.io/badge/containers-Docker%20Hub-2496ED?logo=docker" alt="Docker Hub" />
+  <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-client food delivery platform with a NestJS backend, Next.js Admin and Restaurant dashboards, Flutter mobile apps, PostgreSQL/PostGIS, Redis realtime primitives, Socket.IO, SePay payments, Google/OSRM routing, and an AI support assistant.
+FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage, with the API and both web dashboards on Vercel. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
+
+> **Release status — 2026-07-11:** Batch 4 hardening is still in progress and is **not production-deployed**. Supabase CLI credentials and required Vercel production variables are incomplete, and fresh remote CI is unavailable because GitHub Actions billing/auth is exhausted. Deployment and the `master` fast-forward remain fail-closed until the complete final-head gates and provider preflights pass.
 
 ## Product preview
 
-Real screenshots from production Vercel builds + seeded API. Full gallery: **[docs/product-gallery.md](docs/product-gallery.md)**.
+These images were captured from the current-source isolated Docker stack with deterministic seeded test data. They are not presented as production screenshots. See the [full product gallery](docs/product-gallery.md).
 
 <p align="center">
-  <img src="docs/screenshots/admin/01-login.png" alt="FoodFlow Admin login" width="48%" />
-  <img src="docs/screenshots/restaurant/01-login.png" alt="FoodFlow Restaurant login" width="48%" />
+  <img src="docs/screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
+  <img src="docs/screenshots/restaurant/04-menu.png" alt="FoodFlow Restaurant menu" width="48%" />
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/admin/02-overview.png" alt="Admin overview KPIs" width="48%" />
-  <img src="docs/screenshots/admin/05-users.png" alt="Admin users table with seed data" width="48%" />
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/restaurant/04-menu.png" alt="Restaurant menu with seed catalog" width="48%" />
-  <img src="docs/screenshots/restaurant/03-orders.png" alt="Restaurant order queue" width="48%" />
-</p>
-
-### Short motion demos
-
-| Flow | Preview |
-|------|---------|
-| Admin login | ![Admin login flow](docs/media/gifs/admin-login-flow.gif) |
-| Restaurant orders → menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
-
-### Try the web apps
-
-| App | URL |
-|-----|-----|
-| Admin | https://food-delivery-app-one-liard.vercel.app/vi/login |
-| Restaurant | https://foodflow-restaurant.vercel.app/vi/login |
-
-Backend API is **not** hosted on Vercel (Nest + workers + Redis). Use Docker Hub images or a tunnel for a public API — see [deployment guide](docs/deployment-guide.md).
-
-## Packages (Docker)
-
-Public container images for deploy (`latest` and git SHA tags):
-
-| Package | Docker Hub | GHCR |
-|---|---|---|
-| API | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-backend` |
-| Worker | [`nguyenson1710/foodflow-worker`](https://hub.docker.com/r/nguyenson1710/foodflow-worker) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-worker` |
-| Migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-migrate` |
-| Admin | [`nguyenson1710/foodflow-admin`](https://hub.docker.com/r/nguyenson1710/foodflow-admin) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-admin` |
-| Restaurant | [`nguyenson1710/foodflow-restaurant`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `ghcr.io/jasontm17/fooddelivery_app/foodflow-restaurant` |
-
-```bash
-# Pull from Docker Hub (default in docker-compose.prod.yml)
-docker pull nguyenson1710/foodflow-backend:latest
-
-# Or GitHub Container Registry
-docker pull ghcr.io/jasontm17/fooddelivery_app/foodflow-backend:latest
-```
-
-Deploy with compose: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d` (see [deployment guide](docs/deployment-guide.md)).
-
-FoodFlow does not use an external workflow automation runner in runtime. AI chat and food recommendations run through the backend LLM adapter, with explicit degraded responses when the model provider is unavailable.
+| Admin sign-in to overview | Restaurant orders to menu |
+|---|---|
+| ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
 
 ## Applications
 
-| Surface | Path | Runtime | Default URL |
+| Surface | Source | Runtime | Local URL |
 |---|---|---|---|
-| Backend API | `backend/` | NestJS, Prisma, Socket.IO | `http://localhost:3001/api` |
-| Admin dashboard | `web/apps/admin/` | Next.js 14, React 18, next-intl | `http://localhost:3000` |
-| Restaurant dashboard | `web/apps/restaurant/` | Next.js 14, React 18, next-intl | `http://localhost:3002` |
-| Customer and driver apps | `mobile/` | Flutter | Device/emulator |
-| Infrastructure | `infra/`, `docker-compose*.yml` | PostgreSQL/PostGIS, Redis, MinIO | Local containers |
+| Backend API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` |
+| Admin | `web/apps/admin/` | Next.js 15, React 18, next-intl | `http://localhost:3000` |
+| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18, next-intl | `http://localhost:3002` |
+| Customer | `mobile/lib/main_customer.dart` | Flutter/Riverpod | device or emulator |
+| Driver | `mobile/lib/main_driver.dart` | Flutter/Riverpod | device or emulator |
 
-## Core Capabilities
+Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The API uses a shared success envelope (`{ success: true, data, meta? }`) and RFC 7807 Problem Details for errors.
 
-- Customer ordering, wallet/COD/SePay payments, realtime delivery tracking, AI support.
-- Driver availability, location updates, dispatch, route guidance, earnings.
-- Restaurant order kanban, menu/categories/options, reviews, revenue, promotions, staff and insights.
-- Admin KPI dashboard, live driver map, restaurants/users/orders/promotions/support/audit/export management.
-- Web contract: successful web responses use `{ success: true, data, meta? }`; errors use RFC 7807 Problem Details.
-- Locale strategy: Admin and Restaurant web routes live under `/:locale` with `vi`, `en`, and `ja`.
+## Capabilities
 
-## Architecture
+- Customer ordering, carts, addresses, vouchers, wallet/COD/SePay, reviews, support, and AI assistance.
+- Driver online state, dispatch offers, fresh GPS validation, route guidance, ETA, heatmaps, earnings, KYC, and incentives.
+- Restaurant order kanban, menu/options, promotions, revenue, reviews, notifications, staff, opening hours, and insights.
+- Admin KPIs, orders, restaurants, users, drivers, live maps, promotions, audit, support, export, and AI telemetry.
+- Tenant-scoped authorization for restaurant staff, realtime channels, tracking, exports, and administrative resources.
+- Keyless MapLibre/OpenFreeMap basemaps plus backend Google Directions/owned OSRM routing when configured; route snapshots and telemetry fail closed instead of inventing coordinates, polylines, or ETA.
+- DeepSeek-backed support through the backend adapter, with fail-closed configuration/provider errors, persisted usage telemetry, and no embedded provider key.
+
+## Production and local architecture
 
 ```text
-Flutter apps         Next.js dashboards          NestJS backend
-customer/driver  ->  admin/restaurant   ->  REST + WebSocket + queues
-                                             |
-                                             v
-                         PostgreSQL/PostGIS + Redis + MinIO
+Flutter customer/driver ─┐
+Admin + Restaurant web ──┼── HTTPS ──> NestJS API on Vercel
+                         │                  │
+                         │                  ├── Supabase PostgreSQL/PostGIS
+                         │                  ├── Supabase Realtime outbox + scoped JWT
+                         │                  ├── Supabase Storage
+                         │                  └── Postgres job outbox + secured Vercel Cron
+                         └── authorized Supabase channel subscriptions
+
+Local/self-hosted compatibility: PostgreSQL + Socket.IO + Redis/BullMQ + MinIO
 ```
 
-Realtime flows use Socket.IO and Redis. Maps use Google Maps when configured and OSRM as the backend routing fallback. AI chat is LLM-first through the backend provider adapter and returns an explicit degraded state when no model key is configured.
+Provider selection is explicit:
+
+| Concern | Managed production | Local/self-hosted compatibility |
+|---|---|---|
+| Database | Supabase PostgreSQL/PostGIS | PostGIS container |
+| Realtime | `REALTIME_PROVIDER=supabase` | `socketio` |
+| Storage | `STORAGE_PROVIDER=supabase` | `minio` |
+| Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
+
+Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed Supabase outbox events; Socket.IO remains an explicit local/self-hosted compatibility provider.
+
+## Docker packages
+
+The current Batch 4 candidate publishes immutable, repository-linked images to both Docker Hub and GitHub Container Registry. Only the API/worker and migration artifacts are published at the current commit; Admin and Restaurant remain gated until the required public Supabase build variables are present.
+
+| Artifact | Docker Hub | GitHub Packages | Immutable manifest digest |
+|---|---|---|---|
+| API + worker | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | [`ghcr.io/jasontm17/foodflow-backend`](https://github.com/users/JasonTM17/packages/container/package/foodflow-backend) | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | [`ghcr.io/jasontm17/foodflow-migrate`](https://github.com/users/JasonTM17/packages/container/package/foodflow-migrate) | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
+| Admin | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Restaurant | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+
+Both published manifests use tag `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, contain `linux/amd64` and `linux/arm64`, and carry SBOM/provenance attestations plus the repository OCI source annotation. Docker Hub and GHCR resolve to the same digest for each artifact. The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Existing `latest` tags are **not** the Batch 4 release source of truth and will not be promoted before production smoke.
+
+Release promotion order:
+
+1. Build and push `sha-<full-commit>` for `linux/amd64` and `linux/arm64`.
+2. Smoke native dependencies on both architectures and block High/Critical Trivy findings.
+3. Pass production health checks.
+4. Create immutable `v4.0.0`; refuse overwrite if its digest differs.
+5. Promote `latest` only through an explicit manual release action.
+
+For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
 
 ## Repository layout
 
 | Path | Purpose |
 |---|---|
-| `backend/` | NestJS API, Prisma, BullMQ workers entry |
-| `web/` | pnpm monorepo: Admin + Restaurant, shared packages, Playwright e2e |
-| `mobile/` | Flutter customer + driver apps |
-| `infra/` | Nginx, monitoring, loadtest, release scripts |
-| `docs/` | Public docs, OpenAPI, ADRs |
-| `e2e/` | Cross-surface smoke / AI scenarios |
-| `docker-compose.yml` | Local full stack |
-| `docker-compose.prod.yml` | Deploy by pulling public Hub images |
-| `plans/` | Local-only private plans (**gitignored**) |
+| `backend/` | API, Prisma schema/migrations, Vercel handler, worker entry |
+| `web/` | pnpm workspace: Admin, Restaurant, shared packages, Playwright |
+| `mobile/` | Flutter customer and driver entry points plus shared API client |
+| `infra/` | Compose overlays, preflight, security, and release tooling |
+| `docs/` | Architecture, API/OpenAPI, deployment, testing, security, product media |
+| `e2e/` | Cross-surface and AI smoke scenarios |
 
-Build artifacts (`dist/`, `coverage/`, `.turbo/`, Playwright reports) are gitignored and should not be committed.
+Generated output, local agent files, dotenv files, credentials, and private plans are ignored and must not be committed.
 
 ## Prerequisites
 
-- Node.js 20+ or 22+ compatible with the checked-in lockfiles
-- pnpm 11.7.0 (or pnpm 11+)
-- Docker Desktop or Docker Engine
-- Flutter SDK for mobile work
-- Google Maps, SePay, DeepSeek, Supabase, and Vercel credentials only when enabling those integrations
+- Node.js 22.13 or newer
+- Corepack + pnpm 11.11.0
+- Docker Desktop/Engine
+- Flutter SDK matching `mobile/pubspec.yaml`
+- Provider credentials only for the integration being exercised
 
-## Quick Start: local development
+## Local development
 
-Use ignored `.env` files for real secrets. Never put production keys in committed files.
+Copy only example files to ignored local dotenv files. Do not put real credentials in tracked files.
 
 ```bash
-# 1. Start shared services for host-run development
+# Infrastructure
 docker compose up -d postgres redis minio
 
-# 2. Backend
+# API
 cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm prisma migrate dev
-pnpm db:seed
-pnpm start:dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm prisma migrate dev
+corepack pnpm db:seed
+corepack pnpm start:dev
 
-# 3. Web dashboards
+# Admin + Restaurant
 cd ../web
-pnpm install --frozen-lockfile
-pnpm dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
 
-# 4. Mobile
+# Customer or Driver
 cd ../mobile
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter run -t lib/main_customer.dart
 flutter run -t lib/main_driver.dart
 ```
 
-Useful local URLs:
-
-| Service | URL |
-|---|---|
-| Backend API | `http://localhost:3001/api` |
-| Backend health | `http://localhost:3001/api/healthz` |
-| Admin web | `http://localhost:3000` |
-| Restaurant web | `http://localhost:3002` |
-| MinIO console | `http://localhost:9001` |
-
-## Docker Compose
-
-Run the full stack locally:
+Or build the isolated full stack:
 
 ```bash
 docker compose up -d --build
 ```
 
-Production-style compose uses `docker-compose.prod.yml`. Do not deploy the development defaults as-is; override all secrets, passwords, CORS origins, public URLs, and provider keys in the target secret store.
+Health endpoints:
 
-## Environment and secrets
+- API: `GET http://localhost:3001/api/healthz`
+- Admin: `GET http://localhost:3000/api/healthz`
+- Restaurant: `GET http://localhost:3002/api/healthz`
 
-Start from:
+## Secrets and production preflight
 
-- Root: `.env.example`
-- Backend: `backend/.env.example`
-- Admin web: `web/apps/admin/.env.example`
-- Restaurant web: `web/apps/restaurant/.env.example`
+- Treat any key pasted into chat, logs, screenshots, tickets, or git history as exposed and rotate it before production.
+- Never commit `.env`, database URLs, service-role keys, JWT secrets, private keys, provider tokens, or mobile signing files.
+- The Supabase anon/publishable key is a public identifier but still requires RLS and origin controls. MapLibre/OpenFreeMap needs no browser API key or billing account.
+- Keep DeepSeek, Supabase service role/JWT, SePay, SMTP, FCM, Twilio, database, and deployment credentials server-side.
 
-Important production rules:
+Run preflights without printing values:
 
-- Rotate any key pasted into chat, logs, screenshots, tickets, or git history.
-- Keep `DATABASE_URL`, `DIRECT_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`, JWT secrets, database passwords, Vercel tokens, and Supabase service keys only in secret managers or ignored local env files.
-- Restrict browser-exposed Google Maps keys by HTTP referrer.
-- Keep backend Google Maps keys server-only.
-- SePay intents require both `SEPAY_API_KEY` and `SEPAY_ACCOUNT_NUMBER`; incomplete provider responses are rejected.
-
-## Test Gates
-
-Run narrow checks first, then broaden:
-
-```bash
-# Backend
-cd backend
-pnpm prisma validate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-
-# Web monorepo
-cd ../web
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-pnpm test:e2e -- --project=chromium
-pnpm test:e2e -- --project=firefox
-
-# Mobile
-cd ../mobile
-flutter test
-flutter analyze
+```powershell
+powershell -File infra/scripts/supabase-preflight.ps1
+powershell -File infra/scripts/vercel-web-preflight.ps1
 ```
 
-Batch 4 is not complete until backend, web, Playwright Chromium/Firefox, axe serious/critical, visual regression, tenant isolation, frozen install, and secret scans are all green.
+Current blockers are recorded in the [Batch 4 release report](docs/batch4-release-report.md). No deploy is authorized while either preflight fails.
 
-Latest local Batch 4 evidence is recorded in [docs/batch4-release-report.md](docs/batch4-release-report.md) for `64e46c795c9c15ae52bb0112f91e93a6f3851645`. Local backend, web, Docker, Playwright, mobile, OpenAPI Spectral, compose, and fallback secret-scan gates passed; production deploy is still blocked by missing current-head remote CI approval, missing Supabase CLI/auth, an unlinked Vercel project, and unverified production secrets.
+## Verification
 
-## Deployment Path
+```powershell
+# Complete local gate; production env/auth must be configured
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
+```
 
-Deployment is intentionally gated:
+The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-1. Keep `master` as the only live remote branch after the Batch 4 integration cleanup.
-2. Rerun remote CI once GitHub Actions token/auth/billing access is restored; local gates are not a substitute for production deploy approval.
-3. Provision Supabase database/realtime only with rotated production secrets; backend Prisma uses pooled `DATABASE_URL` at runtime and direct/session `DIRECT_URL` for migrations.
-4. Deploy Admin and Restaurant to Vercel after web builds, E2E, secret scans, and remote checks pass.
-5. Deploy backend with health checks, migrations, Redis, MinIO/storage, SePay webhook secrets, and CORS locked to production domains.
-6. Verify production health, realtime orders, maps, chatbot, exports, notifications, and tenant isolation.
-7. Enable keep-alive or external monitors only after health endpoints are stable.
+Latest current-line evidence includes 48 focused backend KYC/config/notification tests, backend typecheck/lint, all 274 Flutter tests, Flutter analyze, a real Driver debug APK build from `lib/main_driver.dart`, Admin KYC contract/typecheck with 5 component tests, and clean OpenAPI Spectral validation. Earlier broader web/container/browser evidence is retained in the release report, but a fresh all-suites final-head gate is still required before release.
 
-No deploy should happen from a dirty worktree or with unverified secrets.
+## Deployment order
+
+1. Restore GitHub Actions billing/auth and obtain fresh green remote checks.
+2. Rotate exposed credentials; complete Supabase and Vercel preflights.
+3. Deploy Supabase migrations, RLS, explicit Realtime publication/channels, and Storage bucket policies.
+4. Deploy Vercel API, then configure its verified alias and health/Cron paths.
+5. Build/deploy Admin and Restaurant with the verified API and Supabase public values.
+6. Smoke health, auth, tenant isolation, realtime, map/shipper route, chatbot, notifications, exports, and payments.
+7. Fast-forward local integration `HEAD` directly to `origin/master`; keep one remote branch.
+8. Publish immutable Docker manifests, then update `latest` only after production smoke.
 
 ## Documentation
 
-- [API contract](docs/api-contract.md)
-- [API reference](docs/api-reference.md)
-- [Architecture](docs/system-architecture.md)
+- [Product gallery](docs/product-gallery.md)
+- [System architecture](docs/system-architecture.md)
+- [API contract](docs/api-contract.md) and [OpenAPI](docs/openapi.yaml)
 - [Deployment guide](docs/deployment-guide.md)
-- [Docker/local development guide](docs/docker-local-dev-guide.md)
+- [Docker/local guide](docs/docker-local-dev-guide.md)
 - [Testing guide](docs/testing-guide.md)
 - [AI chatbot guide](docs/ai-chatbot-guide.md)
-- [Security audit guide](docs/security-audit-guide.md)
-- [Documentation localization policy](docs/documentation-localization.md)
-- [Code standards](docs/code-standards.md)
-- [Design guidelines](docs/design-guidelines.md) ([VI](docs/design-guidelines.vi.md), [JA](docs/design-guidelines.ja.md))
-- [i18n guide](docs/i18n-guide.md)
+- [Security guide](docs/security-audit-guide.md)
 - [Roadmap](docs/project-roadmap.md)
 - [Branch disposition](docs/branch-disposition.md)
 - [Batch 4 release report](docs/batch4-release-report.md)
 
-## Branch and integration policy
+## Branch policy
 
-- `master` is the only live remote branch; latest audit on 2026-07-06 showed `origin/master` at `64e46c795c9c15ae52bb0112f91e93a6f3851645`.
-- The clean worktree may still use a local `codex/batch4-integration` branch for Codex continuity, but it tracks `origin/master`; do not recreate the deleted remote branch unless an intentional review branch is needed.
-- Do not raw-merge stale team branches that pull old routes, mock data, wrong package managers, or mobile-generated clients into Batch 4.
-- Salvage branch work hunk-by-hunk with focused tests and small conventional commits.
-- Continue mobile reconciliation after web/backend Batch 4 is stable; if Violet/Indigo refs are unavailable, document that evidence instead of inventing a merge.
-- Do not delete local or remote branches until backups and [branch disposition](docs/branch-disposition.md) are verified.
+The remote currently has one branch: `master`. At the 2026-07-11 audit baseline, local `codex/batch4-integration@924808c` was a clean fast-forward candidate 106 commits ahead of `origin/master@df945dd`. Do not push the local branch by name because that would recreate a second remote branch; after every release gate passes, push its verified `HEAD` directly to `master`. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
 
 ## License
 
-MIT (see [LICENSE](LICENSE)).
+[MIT](LICENSE)

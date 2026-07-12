@@ -24,7 +24,17 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          // Deterministic WebGL for trusted E2E content on GPU-less local/CI runners.
+          args: [
+            '--use-gl=angle',
+            '--use-angle=swiftshader',
+            '--enable-unsafe-swiftshader',
+          ],
+        },
+      },
     },
     {
       name: 'firefox',

@@ -54,14 +54,15 @@ export type AdminExportResource =
   | 'revenue'
   | 'users';
 
-export type AdminExportFormat = 'csv' | 'xlsx' | 'parquet';
+export type AdminExportFormat = 'csv' | 'xlsx';
+export type AdminExportJobFormat = AdminExportFormat | 'parquet';
 export type AdminExportStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 export interface AdminExportJob {
   id: string;
   type: AdminExportResource;
   resource: AdminExportResource;
-  format: AdminExportFormat;
+  format: AdminExportJobFormat;
   status: AdminExportStatus;
   progress: number;
   rowCount: number;
@@ -106,6 +107,7 @@ export interface AdminSettingsPayload {
 }
 
 export type AiMonitorStatus = 'online' | 'degraded' | 'not_configured';
+export type AiTelemetryStatus = 'live' | 'awaiting_requests' | 'unavailable';
 
 export interface AdminAiMonitorOverview {
   instance: {
@@ -114,6 +116,12 @@ export interface AdminAiMonitorOverview {
     degradedReason: string | null;
     provider: 'deepseek';
     model: string;
+    telemetry: {
+      status: AiTelemetryStatus;
+      lastRequestAt: string | null;
+      lastSuccessfulRequestAt: string | null;
+      lastFailureCode: string | null;
+    };
   };
   stats: AdminAiMonitorStats;
 }
@@ -128,6 +136,7 @@ export interface AdminAiMonitorStats {
   inputTokens: number | null;
   outputTokens: number | null;
   requests: number | null;
+  failedRequests: number | null;
   averageLatencyMs: number | null;
 }
 
@@ -240,26 +249,42 @@ export interface AdminPromotionAnalytics {
 }
 
 export type AdminKycStatus = 'pending' | 'approved' | 'rejected';
+export type AdminKycDocumentKey =
+  | 'idCardFront'
+  | 'idCardBack'
+  | 'driverLicense'
+  | 'vehicleRegistration';
+export type AdminKycSignedDocuments = Record<AdminKycDocumentKey, string>;
 
 export interface AdminKycSubmission {
   id: string;
   status: AdminKycStatus;
-  documentUrls: Record<string, unknown>;
+  documentsAvailable: boolean;
+  documentUrls: AdminKycSignedDocuments | null;
   rejectionReason: string | null;
+  reviewedById: string | null;
   createdAt: string;
+  updatedAt: string;
   reviewedAt: string | null;
 }
 
-export interface AdminKycPayload {
-  available: boolean;
-  reason?: string;
-  submissions?: AdminKycSubmission[];
-}
+export type AdminKycPayload =
+  | { available: false; reason: 'NOT_A_DRIVER' }
+  | { available: true; submissions: AdminKycSubmission[] };
 
 export interface AdminKycReviewRequest {
   submissionId: string;
   status: 'approved' | 'rejected';
   reason?: string;
+}
+
+export interface AdminKycReviewResponse {
+  id: string;
+  status: Exclude<AdminKycStatus, 'pending'>;
+  rejectionReason: string | null;
+  reviewedById: string;
+  reviewedAt: string;
+  updatedAt: string;
 }
 
 export type RestaurantInsightSuggestionType = 'pricing' | 'menu_mix' | 'marketing' | 'operations';
@@ -342,7 +367,7 @@ export interface AiChatRequest {
 export interface AiChatReply {
   reply: string;
   sessionId: string;
-  action: 'answered' | 'escalated' | 'degraded';
+  action: 'answered' | 'escalated';
   escalated?: boolean;
   severity?: string;
   language: 'vi' | 'en' | 'ja';
@@ -358,4 +383,16 @@ export interface AiChatReply {
       | 'notifyAdmin';
     args: Record<string, unknown>;
   }>;
+}
+
+export interface AiChatHistoryMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export interface AiChatHistory {
+  sessionId: string | null;
+  messages: AiChatHistoryMessage[];
 }

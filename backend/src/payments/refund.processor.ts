@@ -1,8 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
-import { Inject, Logger } from '@nestjs/common'
-import { PaymentMethod, PaymentStatus } from '@prisma/client'
+import { Logger, ServiceUnavailableException } from '@nestjs/common'
+import { PaymentMethod, PaymentStatus, type PaymentRefundRequest } from '@prisma/client'
 import { Job } from 'bullmq'
-import type Redis from 'ioredis'
 import { PrismaService } from '../database/prisma.service'
 import { SepayProvider } from './providers/sepay.provider'
 
@@ -13,11 +12,11 @@ export interface PaymentRefundJobData {
   amount: number
   reason: string
   kind: 'full' | 'partial'
-  attemptNo: number
 }
 
-// Exponential backoff delays in ms: 30s, 90s, 270s
-const BACKOFF_DELAYS_MS = [30_000, 90_000, 270_000]
+const REFUND_REQUEST_LEASE_MS = 2 * 60_000
+const TERMINAL_REFUND_STATUSES = new Set(['completed', 'manual_review'])
+const SEPAY_MANUAL_REVIEW_CODE = 'SEPAY_BANK_TRANSFER_REFUND_REQUIRES_MANUAL_REVIEW'
 
 @Processor('payment-refund')
 export class RefundProcessor extends WorkerHost {
@@ -26,104 +25,96 @@ export class RefundProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sepay: SepayProvider,
-    @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {
     super()
   }
 
   async process(job: Job<PaymentRefundJobData>): Promise<void> {
-    const { refundId, orderId, amount, reason, kind, attemptNo } = job.data
-    const normalizedAmount = Math.trunc(amount)
-    const dedupeKey = `refund:${refundId}:attempt:${attemptNo}`
-
-    const alreadyProcessed = await this.redis.get(dedupeKey)
-    if (alreadyProcessed) {
-      this.logger.log(`Refund ${dedupeKey} already completed — skipping duplicate`)
-      return
-    }
-
-    if (attemptNo > BACKOFF_DELAYS_MS.length) {
-      this.logger.error(`Refund exhausted all retries for order ${orderId}`)
-      return
-    }
-
-    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
-      throw new Error(`Invalid refund amount for order ${orderId}`)
-    }
+    const { refundId, orderId, amount, reason, kind } = job.data
+    this.validateJob(job.data)
 
     const payment = await this.prisma.payment.findUnique({
       where: { orderId },
       include: { order: { select: { customerId: true, status: true } } },
     })
-    if (!payment) {
-      throw new Error(`No payment found for order ${orderId}`)
-    }
-    if (payment.status === PaymentStatus.refunded && kind === 'full') {
-      await this.redis.set(dedupeKey, '1', 'EX', 7 * 24 * 3600)
-      this.logger.log(`Refund ${refundId} already reflected in payment status — skipping duplicate`)
-      return
-    }
-    if (payment.status !== PaymentStatus.completed) {
-      throw new Error(`Cannot refund payment with status ${payment.status}`)
-    }
-    if (normalizedAmount > Number(payment.amount)) {
-      throw new Error(`Refund amount exceeds captured payment for order ${orderId}`)
-    }
+    if (!payment) throw new Error('REFUND_PAYMENT_NOT_FOUND')
+
+    const request = await this.ensureRequest(job.data, payment.id, payment.method)
+    if (TERMINAL_REFUND_STATUSES.has(request.status)) return
+
+    const jobId = String(job.id ?? refundId)
+    const claimed = await this.claimRequest(request, jobId)
+    if (!claimed) return
 
     try {
-      let sepayWalletRecovery = false
       if (payment.method === PaymentMethod.sepay) {
-        const transactionRef = job.data.transactionRef ?? payment.transactionId
-        if (!transactionRef) {
-          throw new Error(`Missing SePay transaction reference for order ${orderId}`)
-        }
         try {
-          await this.sepay.refund(transactionRef, normalizedAmount, reason)
-        } catch (err) {
-          // Bank refund not modelled: credit FoodFlow wallet so customer is not left unpaid
-          const msg = (err as Error).message ?? ''
-          if (msg.includes('SEPAY_REFUND_NOT_MODELLED') || (err as { status?: number }).status === 501) {
-            sepayWalletRecovery = true
-            this.logger.warn(
-              `SePay bank refund not modelled for ${orderId} — crediting wallet ${normalizedAmount} VND as recovery`,
-            )
-          } else {
-            throw err
+          await this.sepay.refund(
+            job.data.transactionRef ?? payment.transactionId,
+            amount,
+            reason,
+          )
+        } catch (error) {
+          if (error instanceof Error && error.message === SEPAY_MANUAL_REVIEW_CODE) {
+            await this.markManualReview(request.id, SEPAY_MANUAL_REVIEW_CODE)
+            this.logger.warn(`SePay refund ${refundId} queued for audited manual review`)
+            return
           }
+          throw error
         }
       } else if (payment.method !== PaymentMethod.wallet) {
-        throw new Error(`Refund is not supported for ${payment.method} payments`)
+        await this.markManualReview(request.id, `REFUND_${payment.method.toUpperCase()}_REQUIRES_MANUAL_REVIEW`)
+        return
       }
 
-      await this.prisma.$transaction(async (tx) => {
-        // Lock first so concurrent partial refunds cannot both pass the cap check
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${payment.order.customerId}))`
+      const result = await this.prisma.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orderId}))`
 
-        // Cumulative refund guard: sum prior wallet credits for this order
-        const priorCredits = await tx.walletTransaction.aggregate({
-          where: {
-            userId: payment.order.customerId,
-            refId: orderId,
-            type: 'credit',
-            reason: { in: ['order_refund', 'sepay_refund_wallet_recovery'] },
-            status: 'CONFIRMED',
-          },
-          _sum: { amountDelta: true },
+        const currentPayment = await tx.payment.findUnique({
+          where: { orderId },
+          include: { order: { select: { customerId: true, status: true } } },
         })
-        const alreadyRefunded = priorCredits._sum.amountDelta ?? 0
-        if (alreadyRefunded + normalizedAmount > Number(payment.amount)) {
-          throw new Error(
-            `Cumulative refund would exceed payment for order ${orderId}: already=${alreadyRefunded} next=${normalizedAmount} cap=${payment.amount}`,
-          )
+        if (!currentPayment) throw new Error('REFUND_PAYMENT_NOT_FOUND')
+        if (currentPayment.status === PaymentStatus.refunded && kind === 'full') {
+          await tx.paymentRefundRequest.update({
+            where: { id: request.id },
+            data: { status: 'completed', completedAt: new Date(), failureCode: null },
+          })
+          return { alreadyCompleted: true, manualReview: false }
+        }
+        if (currentPayment.status !== PaymentStatus.completed) {
+          throw new Error('REFUND_PAYMENT_NOT_CAPTURED')
         }
 
-        if (payment.method === PaymentMethod.wallet || sepayWalletRecovery) {
+        const refunded = await tx.paymentRefundRequest.aggregate({
+          where: {
+            orderId,
+            status: 'completed',
+            id: { not: request.id },
+          },
+          _sum: { amount: true },
+        })
+        const remaining = Number(currentPayment.amount) - (refunded._sum.amount ?? 0)
+        if (amount > remaining) {
+          await tx.paymentRefundRequest.update({
+            where: { id: request.id },
+            data: {
+              status: 'manual_review',
+              failureCode: 'REFUND_AMOUNT_EXCEEDS_REMAINING_CAPTURE',
+            },
+          })
+          return { alreadyCompleted: false, manualReview: true }
+        }
+
+        if (currentPayment.method === PaymentMethod.wallet) {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${currentPayment.order.customerId}))`
           await tx.walletTransaction.create({
             data: {
-              userId: payment.order.customerId,
-              amountDelta: normalizedAmount,
+              userId: currentPayment.order.customerId,
+              refundRequestId: request.id,
+              amountDelta: amount,
               type: 'credit',
-              reason: sepayWalletRecovery ? 'sepay_refund_wallet_recovery' : 'order_refund',
+              reason: 'order_refund',
               refId: orderId,
               status: 'CONFIRMED',
             },
@@ -139,49 +130,161 @@ export class RefundProcessor extends WorkerHost {
             where: { id: orderId },
             data: { status: 'refunded' },
           })
-          await tx.orderStatusHistory.create({
-            data: {
-              orderId,
-              status: 'refunded',
-              changedBy: 'system',
-              note: sepayWalletRecovery
-                ? `Refund via wallet recovery (SePay bank API not modelled): ${reason}`
-                : `Refund processed: ${reason}`,
-            },
-          })
-        } else {
-          await tx.orderStatusHistory.create({
-            data: {
-              orderId,
-              status: payment.order.status,
-              changedBy: 'system',
-              note: `Partial refund processed: ${normalizedAmount} VND. Reason: ${reason}`,
-            },
-          })
         }
 
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId,
+            status: kind === 'full' ? 'refunded' : currentPayment.order.status,
+            changedBy: 'system',
+            note: kind === 'full'
+              ? `Refund processed: ${reason}`
+              : `Partial refund processed: ${amount} VND. Reason: ${reason}`,
+          },
+        })
         await tx.payoutLedger.create({
           data: {
+            dedupeKey: `refund-${request.id}-platform`,
+            refundRequestId: request.id,
             orderId,
             recipientType: 'platform',
             recipientId: null,
-            amount: -normalizedAmount,
+            amount: -amount,
             currency: 'VND',
             status: 'pending',
           },
         })
+        await tx.paymentRefundRequest.update({
+          where: { id: request.id },
+          data: {
+            status: 'completed',
+            completedAt: new Date(),
+            failureCode: null,
+          },
+        })
+        return { alreadyCompleted: false, manualReview: false }
       })
 
-      // Idempotency key — TTL 7 days to cover settlement window
-      await this.redis.set(dedupeKey, '1', 'EX', 7 * 24 * 3600)
-
-      this.logger.log(`Refund completed for order ${orderId} attempt ${attemptNo}`)
-    } catch (err) {
-      const delay = BACKOFF_DELAYS_MS[attemptNo - 1] ?? 270_000
-      this.logger.warn(
-        `Refund attempt ${attemptNo} failed for order ${orderId}: ${(err as Error).message} — retry in ${delay}ms`,
-      )
-      throw err
+      if (result.manualReview) {
+        this.logger.warn(`Refund ${refundId} exceeds the remaining captured amount; manual review required`)
+        return
+      }
+      this.logger.log(result.alreadyCompleted
+        ? `Refund ${refundId} was already reflected in payment state`
+        : `Refund ${refundId} completed`)
+    } catch (error) {
+      await this.prisma.paymentRefundRequest.updateMany({
+        where: { id: request.id, status: 'processing' },
+        data: {
+          status: 'failed',
+          failureCode: safeFailureCode(error),
+        },
+      })
+      throw error
     }
   }
+
+  private validateJob(data: PaymentRefundJobData): void {
+    if (!data.refundId || data.refundId.length > 200) throw new Error('REFUND_ID_INVALID')
+    if (!Number.isSafeInteger(data.amount) || data.amount <= 0) throw new Error('REFUND_AMOUNT_INVALID')
+    if (!data.reason.trim()) throw new Error('REFUND_REASON_REQUIRED')
+  }
+
+  private async ensureRequest(
+    data: PaymentRefundJobData,
+    paymentId: string,
+    method: PaymentMethod,
+  ): Promise<PaymentRefundRequest> {
+    const existing = await this.prisma.paymentRefundRequest.findUnique({
+      where: { refundKey: data.refundId },
+    })
+    if (existing) {
+      this.assertRequestMatches(existing, data, paymentId, method)
+      return existing
+    }
+
+    try {
+      return await this.prisma.paymentRefundRequest.create({
+        data: {
+          refundKey: data.refundId,
+          orderId: data.orderId,
+          paymentId,
+          amount: data.amount,
+          kind: data.kind,
+          reason: data.reason,
+          method,
+        },
+      })
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error
+      const concurrent = await this.prisma.paymentRefundRequest.findUnique({
+        where: { refundKey: data.refundId },
+      })
+      if (!concurrent) throw error
+      this.assertRequestMatches(concurrent, data, paymentId, method)
+      return concurrent
+    }
+  }
+
+  private assertRequestMatches(
+    request: PaymentRefundRequest,
+    data: PaymentRefundJobData,
+    paymentId: string,
+    method: PaymentMethod,
+  ): void {
+    if (
+      request.orderId !== data.orderId
+      || request.paymentId !== paymentId
+      || request.amount !== data.amount
+      || request.kind !== data.kind
+      || request.method !== method
+    ) {
+      throw new Error('REFUND_REQUEST_CONFLICT')
+    }
+  }
+
+  private async claimRequest(request: PaymentRefundRequest, jobId: string): Promise<boolean> {
+    if (TERMINAL_REFUND_STATUSES.has(request.status)) return false
+    if (request.status === 'processing' && request.processingJobId === jobId) return true
+
+    const staleBefore = new Date(Date.now() - REFUND_REQUEST_LEASE_MS)
+    const claimed = await this.prisma.paymentRefundRequest.updateMany({
+      where: {
+        id: request.id,
+        OR: [
+          { status: { in: ['queued', 'failed'] } },
+          { status: 'processing', updatedAt: { lt: staleBefore } },
+        ],
+      },
+      data: {
+        status: 'processing',
+        processingJobId: jobId,
+        attempts: { increment: 1 },
+        failureCode: null,
+      },
+    })
+    if (claimed.count === 1) return true
+    throw new ServiceUnavailableException('REFUND_REQUEST_PROCESSING')
+  }
+
+  private async markManualReview(id: string, failureCode: string): Promise<void> {
+    await this.prisma.paymentRefundRequest.update({
+      where: { id },
+      data: { status: 'manual_review', failureCode },
+    })
+  }
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === 'object'
+    && error !== null
+    && 'code' in error
+    && (error as { code?: unknown }).code === 'P2002'
+}
+
+function safeFailureCode(error: unknown): string {
+  const message = error instanceof Error ? error.message : ''
+  return /^[A-Z][A-Z0-9_]+$/.test(message)
+    ? message.slice(0, 100)
+    : 'REFUND_PROCESSING_FAILED'
 }

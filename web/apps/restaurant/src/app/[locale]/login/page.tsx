@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api, setToken, setStoredRestaurant } from '@/lib/api';
-import type { AuthResponse } from '@/lib/types';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -99,8 +98,8 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+                  aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

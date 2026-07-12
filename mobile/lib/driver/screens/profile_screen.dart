@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../../shared/widgets/locale_switcher.dart';
 import '../providers/driver_provider.dart';
 
@@ -214,7 +215,7 @@ class ProfileScreen extends ConsumerWidget {
                   const Divider(color: Color(0xFF374151), height: 20),
                   _buildInfoRow(
                     l10n.totalEarnings,
-                    '${state.totalEarnings.toStringAsFixed(0)}đ',
+                    formatVnd(context, state.totalEarnings),
                   ),
                 ],
               ),

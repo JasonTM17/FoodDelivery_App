@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/order_status_labels.dart';
 
 class ActiveOrderCard extends StatelessWidget {
   final OrderModel order;
@@ -10,6 +12,8 @@ class ActiveOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return InkWell(
       onTap: () => context.push(
         '/delivery-flow',
@@ -62,9 +66,9 @@ class ActiveOrderCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Đơn đang thực hiện',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  Text(
+                    l10n.driverActiveOrderTitle,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -76,7 +80,7 @@ class ActiveOrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    order.statusText,
+                    localizedOrderStatus(l10n, order.status),
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.primary,

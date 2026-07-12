@@ -41,12 +41,12 @@ export function AiSuggestionCard({ suggestion, onApply, onDismiss, loading }: Ai
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 uppercase">{t(`types.${suggestion.type}`)}</span>
+              <span className="text-xs uppercase text-gray-600">{t(`types.${suggestion.type}`)}</span>
             </div>
             <h3 className="text-sm font-semibold text-gray-900 mt-0.5">{title}</h3>
             <p className="text-sm text-gray-600 mt-1">{description}</p>
             {predictedImpact && (
-              <p className="text-xs text-green-600 mt-1.5 font-medium">{predictedImpact}</p>
+              <p className="mt-1.5 text-xs font-medium text-green-700">{predictedImpact}</p>
             )}
           </div>
         </div>

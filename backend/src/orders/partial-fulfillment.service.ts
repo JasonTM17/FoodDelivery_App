@@ -97,7 +97,6 @@ export class PartialFulfillmentService {
           amount: Math.trunc(refundDelta),
           reason: dto.reason ?? 'Partial fulfillment adjustment',
           kind: 'partial',
-          attemptNo: 1,
         } satisfies PaymentRefundJobData,
         { attempts: 3, backoff: { type: 'exponential', delay: 1000 }, jobId: `payment-refund-${refundId}` },
       )

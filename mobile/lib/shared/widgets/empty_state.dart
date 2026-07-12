@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
-  final String title;
+  final String? title;
   final String? subtitle;
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -12,7 +13,7 @@ class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
     this.icon = Icons.inbox_outlined,
-    this.title = 'Không có dữ liệu',
+    this.title,
     this.subtitle,
     this.actionLabel,
     this.onAction,
@@ -20,6 +21,8 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -37,7 +40,7 @@ class EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              title,
+              title ?? l10n.commonEmptyTitle,
               style: AppTextStyles.headline4,
               textAlign: TextAlign.center,
             ),

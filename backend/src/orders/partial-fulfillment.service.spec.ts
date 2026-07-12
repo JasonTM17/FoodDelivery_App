@@ -82,7 +82,6 @@ describe('PartialFulfillmentService', () => {
         transactionRef: 'TXN-001',
         amount: 30_000,
         kind: 'partial',
-        attemptNo: 1,
       }),
       expect.objectContaining({
         attempts: 3,

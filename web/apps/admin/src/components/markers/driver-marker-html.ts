@@ -6,6 +6,7 @@ export interface DriverMarkerCopy {
   order: string;
   vehicle: string;
   lastSeen: string;
+  stale: string;
 }
 
 export function buildDriverInfoWindowHtml(
@@ -13,9 +14,10 @@ export function buildDriverInfoWindowHtml(
   statusLabel: string,
   copy: DriverMarkerCopy,
 ): string {
+  const statusValue = driver.isStale ? `${statusLabel} (${copy.stale})` : statusLabel;
   const rows = [
     [copy.rating, driver.rating.toFixed(1)],
-    [copy.status, statusLabel],
+    [copy.status, statusValue],
     driver.vehicleType ? [copy.vehicle, driver.vehicleType] : null,
     [copy.lastSeen, new Date(driver.lastSeenAt).toLocaleTimeString()],
     driver.currentOrder ? [copy.order, driver.currentOrder] : null,

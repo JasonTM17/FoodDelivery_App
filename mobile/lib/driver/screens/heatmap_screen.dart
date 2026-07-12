@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/driver_provider.dart';
 import '../providers/heatmap_provider.dart';
 import '../widgets/heatmap_canvas.dart';
@@ -229,7 +230,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                   ),
                   Text(
                     l10n.driver_heatmap_avg_payout(
-                      point.avgPayout.toStringAsFixed(0),
+                      formatVnd(context, point.avgPayout),
                     ),
                     style: const TextStyle(
                       fontSize: 13,

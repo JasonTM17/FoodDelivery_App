@@ -1,5 +1,13 @@
 # OpenAPI Changelog
 
+- 2026-07-11: Added the implemented public `GET /healthz` liveness contract and strict `GET /readyz` dependency-readiness contract. Readiness now returns 503 when database, Redis, or the explicit Storage provider is unavailable.
+- 2026-07-10: Replaced the legacy public-URL driver KYC contract with driver-scoped `POST /driver/kyc/uploads` signed grants, four private object keys, image metadata/signature validation, atomic one-pending submission enforcement, typed status responses, and five-minute admin signed reads. Mobile no longer derives public URLs or drops vehicle/license onboarding data; review responses omit raw private object keys.
+- 2026-07-10: Replaced RAM-bound dispatch offer callbacks with server-only PostgreSQL `dispatch_offers`, one-time hashed tokens, delayed timeout jobs, atomic driver/order claims, and driver-only `POST /driver/dispatch/offers/{orderId}/respond`. Fixed delivery-task raw SQL to use the migrated PostGIS column names and an explicit UUID.
+- 2026-07-10: Added driver-only `POST /driver/location` so production mobile GPS mutations use authenticated REST while Supabase remains the receive-only realtime transport. The contract preserves device timestamps and explicitly rejects stale, future, out-of-bounds, over-speed, and teleporting samples.
+- 2026-07-10: Corrected the canonical base from the retired `/v1`/`api.foodflow.vn` examples to `/api` on a verified Vercel API alias. Added documented `POST /realtime/token` Supabase private-channel authorization, the `cronBearer` scheme, and secured `GET|POST /jobs/drain` PostgreSQL outbox contracts. These routes were implemented but absent from the prior public OpenAPI surface.
+- 2026-07-10: Hardened AI chat input/session contracts (4,000-character cap, UUID ownership checks, 400/404 errors), role-scoped grounding, and allow-listed SSE failures.
+- 2026-07-10: AI chat now fails closed instead of returning a `degraded` assistant payload. The contract adds `GET /ai/history`, documents SSE `response`/`error` events, constrains actions to `answered` or `escalated`, and records real DeepSeek token/latency telemetry without estimating cost.
+- 2026-07-07: Customer `GET /orders` and `GET /orders/{orderId}` now serialize the documented `OrderDetail` item contract with `menuItemId`, real unit price, line totals, and selected option metadata; Prisma Decimal values are converted to JSON numbers so mobile/shared clients do not infer blank items or fake zero prices.
 - 2026-07-06: Mobile restaurant/review rating parsing now preserves missing ratings as unknown instead of rendering fabricated `0.0` restaurant scores or perfect `5.0` review scores.
 - 2026-07-06: Tightened `GET /restaurant/insights` suggestions to require i18n keys plus `params`; legacy localized text fields are no longer part of the OpenAPI or shared web API-client contract.
 - 2026-07-06: Admin support replies now load macros from `GET /admin/support-macros`; the web composer no longer ships default runtime macro templates.
@@ -67,7 +75,9 @@ Authored the canonical OpenAPI 3.1 contract covering all 12 backend modules:
 | audit | 3 | list logs, full-text search, export |
 | analytics | 7 | dashboard KPIs, top restaurants, revenue chart, heatmap, per-restaurant KPI, admin user/restaurant/order lists |
 
-**Total: 75 endpoints, ~2,600 lines**
+### Release inventory
+
+Total: 75 endpoints, ~2,600 lines
 
 ### Conventions Established
 

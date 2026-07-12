@@ -1,6 +1,7 @@
 import { Injectable, Logger, InternalServerErrorException, BadRequestException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { extname } from 'path'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
@@ -27,17 +28,29 @@ export interface UploadedFile {
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name)
-  private readonly client: Client
+  private readonly provider: 'minio' | 'supabase'
+  private readonly client?: Client
+  private readonly supabase?: SupabaseClient
   private readonly bucket: string
-  private readonly publicUrl: string
+  private readonly publicUrl?: string
   private readonly maxFileSizeBytes: number
   private readonly maxFileSizeMb: number
 
   constructor(private readonly config: ConfigService) {
-    const minio = resolveMinioRuntimeConfig(config, { requirePublicUrl: true })
-    this.client = new Client(minio.client)
-    this.bucket = minio.bucket
-    this.publicUrl = minio.publicUrl!
+    this.provider = config.get<string>('STORAGE_PROVIDER') === 'supabase' ? 'supabase' : 'minio'
+    if (this.provider === 'supabase') {
+      this.bucket = requireStringConfig(config, 'SUPABASE_STORAGE_BUCKET')
+      this.supabase = createClient(
+        requireStringConfig(config, 'SUPABASE_URL'),
+        requireStringConfig(config, 'SUPABASE_SERVICE_ROLE_KEY'),
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      )
+    } else {
+      const minio = resolveMinioRuntimeConfig(config, { requirePublicUrl: true })
+      this.client = new Client(minio.client)
+      this.bucket = minio.bucket
+      this.publicUrl = minio.publicUrl!
+    }
     this.maxFileSizeMb = this.numberConfig('STORAGE_MAX_UPLOAD_MB', DEFAULT_MAX_UPLOAD_MB, 1, 50)
     this.maxFileSizeBytes = this.maxFileSizeMb * 1024 * 1024
   }
@@ -55,13 +68,17 @@ export class StorageService {
     const key = `${prefix}/${Date.now()}-${randomBytes(8).toString('hex')}${ext}`
 
     try {
+      if (this.provider === 'supabase') {
+        return await this.uploadToSupabase(key, file)
+      }
+
       await this.ensureBucket()
 
-      await this.client.putObject(this.bucket, key, file.buffer, file.size, {
+      await this.client!.putObject(this.bucket, key, file.buffer, file.size, {
         'Content-Type': file.mimetype,
       })
 
-      const url = `${this.publicUrl.replace(/\/$/, '')}/${this.bucket}/${key}`
+      const url = `${this.publicUrl!.replace(/\/$/, '')}/${this.bucket}/${key}`
       this.logger.log(`Uploaded file to ${key} (${file.size} bytes)`)
 
       return { url, key }
@@ -76,7 +93,12 @@ export class StorageService {
    */
   async deleteFile(key: string): Promise<void> {
     try {
-      await this.client.removeObject(this.bucket, key)
+      if (this.provider === 'supabase') {
+        const { error } = await this.supabase!.storage.from(this.bucket).remove([key])
+        if (error) throw error
+      } else {
+        await this.client!.removeObject(this.bucket, key)
+      }
       this.logger.log(`Deleted file ${key}`)
     } catch (err) {
       this.logger.error(`Failed to delete file ${key}: ${(err as Error).message}`)
@@ -116,9 +138,9 @@ export class StorageService {
 
   private async ensureBucket(): Promise<void> {
     try {
-      const exists = await this.client.bucketExists(this.bucket)
+      const exists = await this.client!.bucketExists(this.bucket)
       if (!exists) {
-        await this.client.makeBucket(this.bucket)
+        await this.client!.makeBucket(this.bucket)
         this.logger.log(`Created bucket '${this.bucket}'`)
       }
     } catch (err) {
@@ -133,6 +155,26 @@ export class StorageService {
     if (!Number.isFinite(value)) return fallback
     return Math.min(max, Math.max(min, Math.round(value)))
   }
+
+  private async uploadToSupabase(filePath: string, file: UploadedFile): Promise<{ url: string; key: string }> {
+    const bucket = this.supabase!.storage.from(this.bucket)
+    const { error } = await bucket.upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    })
+    if (error) throw error
+
+    const { data } = bucket.getPublicUrl(filePath)
+    this.logger.log(`Uploaded file to Supabase Storage ${filePath} (${file.size} bytes)`)
+    return { url: data.publicUrl, key: filePath }
+  }
+}
+
+function requireStringConfig(config: ConfigService, key: string): string {
+  const value = config.get<string | number>(key)
+  const stringValue = value === undefined || value === null ? '' : String(value).trim()
+  if (!stringValue) throw new Error(`${key} is required when STORAGE_PROVIDER=supabase`)
+  return stringValue
 }
 
 function matchesImageMimeType(buffer: Buffer, mimetype: string): boolean {

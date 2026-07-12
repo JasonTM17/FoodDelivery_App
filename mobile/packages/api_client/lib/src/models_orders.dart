@@ -1,7 +1,5 @@
 // ── Orders ──
 
-import 'models_user_restaurant.dart';
-
 class PlaceOrderRequest {
   final String addressId;
   final String paymentMethod;
@@ -25,13 +23,13 @@ class PlaceOrderRequest {
 
 class OrderResponse {
   final String id;
-  final String orderCode;
+  final String? orderCode;
   final String customerId;
   final String restaurantId;
   final String restaurantName;
   final String? driverId;
   final String? driverName;
-  final UserAddress deliveryAddress;
+  final OrderAddressSnapshot deliveryAddress;
   final String status;
   final List<OrderItemSnapshot> items;
   final int subtotal;
@@ -39,7 +37,7 @@ class OrderResponse {
   final int promotionDiscount;
   final int total;
   final String paymentMethod;
-  final String paymentStatus;
+  final String? paymentStatus;
   final String? notes;
   final int? estimatedPrepTimeMinutes;
   final int? estimatedDeliveryTimeMinutes;
@@ -49,7 +47,7 @@ class OrderResponse {
 
   const OrderResponse({
     required this.id,
-    required this.orderCode,
+    this.orderCode,
     required this.customerId,
     required this.restaurantId,
     required this.restaurantName,
@@ -63,7 +61,7 @@ class OrderResponse {
     required this.promotionDiscount,
     required this.total,
     required this.paymentMethod,
-    required this.paymentStatus,
+    this.paymentStatus,
     this.notes,
     this.estimatedPrepTimeMinutes,
     this.estimatedDeliveryTimeMinutes,
@@ -73,34 +71,81 @@ class OrderResponse {
   });
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) => OrderResponse(
-        id: json['id'] as String,
-        orderCode: json['orderCode'] as String,
-        customerId: json['customerId'] as String,
-        restaurantId: json['restaurantId'] as String,
-        restaurantName: json['restaurantName'] as String,
+        id: _requiredString(json, 'id'),
+        orderCode: json['orderCode'] as String?,
+        customerId: _requiredStringFrom(
+          json,
+          const ['customerId', 'userId'],
+          'customerId',
+        ),
+        restaurantId: _requiredString(json, 'restaurantId'),
+        restaurantName: _requiredStringFrom(
+          json,
+          const ['restaurantName'],
+          'restaurantName',
+          nestedObjectKey: 'restaurant',
+          nestedFieldKey: 'name',
+        ),
         driverId: json['driverId'] as String?,
         driverName: json['driverName'] as String?,
-        deliveryAddress: UserAddress.fromJson(
+        deliveryAddress: OrderAddressSnapshot.fromJson(
             json['deliveryAddress'] as Map<String, dynamic>),
-        status: json['status'] as String,
+        status: _requiredString(json, 'status'),
         items: (json['items'] as List<dynamic>)
             .map((e) => OrderItemSnapshot.fromJson(e as Map<String, dynamic>))
             .toList(),
-        subtotal: json['subtotal'] as int,
-        deliveryFee: json['deliveryFee'] as int,
-        promotionDiscount: json['promotionDiscount'] as int,
-        total: json['total'] as int,
-        paymentMethod: json['paymentMethod'] as String,
-        paymentStatus: json['paymentStatus'] as String,
+        subtotal: _requiredInt(json, 'subtotal'),
+        deliveryFee: _requiredInt(json, 'deliveryFee'),
+        promotionDiscount: _requiredIntFrom(
+          json,
+          const ['promotionDiscount', 'discount'],
+          'discount',
+        ),
+        total: _requiredInt(json, 'total'),
+        paymentMethod: _requiredString(json, 'paymentMethod'),
+        paymentStatus: json['paymentStatus'] as String?,
         notes: json['notes'] as String?,
         estimatedPrepTimeMinutes: json['estimatedPrepTimeMinutes'] as int?,
         estimatedDeliveryTimeMinutes:
             json['estimatedDeliveryTimeMinutes'] as int?,
-        statusHistory: (json['statusHistory'] as List<dynamic>?)
+        statusHistory: ((json['statusHistory'] ?? json['timeline'])
+                as List<dynamic>?)
             ?.map((e) => StatusHistoryEntry.fromJson(e as Map<String, dynamic>))
             .toList(),
-        createdAt: json['createdAt'] as String,
-        updatedAt: json['updatedAt'] as String,
+        createdAt: _requiredString(json, 'createdAt'),
+        updatedAt: _requiredString(json, 'updatedAt'),
+      );
+}
+
+class OrderAddressSnapshot {
+  final String? id;
+  final String? label;
+  final String addressLine;
+  final double? latitude;
+  final double? longitude;
+  final bool? isDefault;
+
+  const OrderAddressSnapshot({
+    this.id,
+    this.label,
+    required this.addressLine,
+    this.latitude,
+    this.longitude,
+    this.isDefault,
+  });
+
+  factory OrderAddressSnapshot.fromJson(Map<String, dynamic> json) =>
+      OrderAddressSnapshot(
+        id: json['id'] as String?,
+        label: json['label'] as String?,
+        addressLine: _requiredStringFrom(
+          json,
+          const ['addressLine', 'address'],
+          'deliveryAddress.addressLine',
+        ),
+        latitude: _optionalDoubleFrom(json, const ['latitude', 'lat']),
+        longitude: _optionalDoubleFrom(json, const ['longitude', 'lng']),
+        isDefault: json['isDefault'] as bool?,
       );
 }
 
@@ -129,6 +174,7 @@ class DriverOrderResponse {
   final double restaurantLatitude;
   final double restaurantLongitude;
   final int? estimatedDeliveryTimeMinutes;
+  final String? routePhase;
   final String? routePolyline;
 
   const DriverOrderResponse({
@@ -156,6 +202,7 @@ class DriverOrderResponse {
     required this.restaurantLatitude,
     required this.restaurantLongitude,
     this.estimatedDeliveryTimeMinutes,
+    this.routePhase,
     this.routePolyline,
   });
 
@@ -195,6 +242,7 @@ class DriverOrderResponse {
         restaurantLongitude: (json['restaurantLongitude'] as num).toDouble(),
         estimatedDeliveryTimeMinutes:
             (json['estimatedDeliveryTimeMinutes'] as num?)?.toInt(),
+        routePhase: json['routePhase'] as String?,
         routePolyline: json['routePolyline'] as String?,
       );
 }
@@ -269,26 +317,55 @@ class DriverOrderStatusHistory {
 }
 
 class OrderItemSnapshot {
-  final String id;
+  final String? id;
+  final String menuItemId;
+  final String name;
   final String nameSnapshot;
   final int quantity;
   final int unitPrice;
+  final int price;
+  final int lineTotal;
+  final int totalPrice;
+  final List<String>? options;
   final List<Map<String, dynamic>>? selectedOptions;
 
   const OrderItemSnapshot({
-    required this.id,
+    this.id,
+    required this.menuItemId,
+    required this.name,
     required this.nameSnapshot,
     required this.quantity,
     required this.unitPrice,
+    required this.price,
+    required this.lineTotal,
+    required this.totalPrice,
+    this.options,
     this.selectedOptions,
   });
 
   factory OrderItemSnapshot.fromJson(Map<String, dynamic> json) =>
       OrderItemSnapshot(
-        id: json['id'] as String,
-        nameSnapshot: json['nameSnapshot'] as String,
-        quantity: json['quantity'] as int,
-        unitPrice: json['unitPrice'] as int,
+        id: json['id'] as String?,
+        menuItemId: _requiredString(json, 'menuItemId'),
+        name: _requiredString(json, 'name'),
+        nameSnapshot:
+            (json['nameSnapshot'] as String?) ?? _requiredString(json, 'name'),
+        quantity: _requiredInt(json, 'quantity'),
+        unitPrice: _requiredInt(json, 'unitPrice'),
+        price: _requiredIntFrom(json, const ['price', 'unitPrice'], 'price'),
+        lineTotal: _requiredIntFrom(
+          json,
+          const ['lineTotal', 'totalPrice'],
+          'lineTotal',
+        ),
+        totalPrice: _requiredIntFrom(
+          json,
+          const ['totalPrice', 'lineTotal'],
+          'totalPrice',
+        ),
+        options: (json['options'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
         selectedOptions: (json['selectedOptions'] as List<dynamic>?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList(),
@@ -297,24 +374,85 @@ class OrderItemSnapshot {
 
 class StatusHistoryEntry {
   final String status;
-  final String changedBy;
+  final String? changedBy;
   final String? note;
-  final String createdAt;
+  final String timestamp;
 
   const StatusHistoryEntry({
     required this.status,
-    required this.changedBy,
+    this.changedBy,
     this.note,
-    required this.createdAt,
+    required this.timestamp,
   });
+
+  String get createdAt => timestamp;
 
   factory StatusHistoryEntry.fromJson(Map<String, dynamic> json) =>
       StatusHistoryEntry(
-        status: json['status'] as String,
-        changedBy: json['changedBy'] as String,
+        status: _requiredString(json, 'status'),
+        changedBy: json['changedBy'] as String?,
         note: json['note'] as String?,
-        createdAt: json['createdAt'] as String,
+        timestamp: _requiredStringFrom(
+          json,
+          const ['timestamp', 'createdAt'],
+          'timestamp',
+        ),
       );
+}
+
+String _requiredString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is String && value.trim().isNotEmpty) return value;
+  throw FormatException('Missing required order string field: $key');
+}
+
+String _requiredStringFrom(
+  Map<String, dynamic> json,
+  List<String> keys,
+  String field, {
+  String? nestedObjectKey,
+  String? nestedFieldKey,
+}) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is String && value.trim().isNotEmpty) return value;
+  }
+  final nested = nestedObjectKey == null ? null : json[nestedObjectKey];
+  if (nested is Map && nestedFieldKey != null) {
+    final value = nested[nestedFieldKey];
+    if (value is String && value.trim().isNotEmpty) return value;
+  }
+  throw FormatException('Missing required order string field: $field');
+}
+
+int _requiredInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is int) return value;
+  if (value is num && value.isFinite && value % 1 == 0) return value.toInt();
+  throw FormatException('Missing required order integer field: $key');
+}
+
+int _requiredIntFrom(
+  Map<String, dynamic> json,
+  List<String> keys,
+  String field,
+) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is int) return value;
+    if (value is num && value.isFinite && value % 1 == 0) return value.toInt();
+  }
+  throw FormatException('Missing required order integer field: $field');
+}
+
+double? _optionalDoubleFrom(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value == null) continue;
+    if (value is num && value.isFinite) return value.toDouble();
+    throw FormatException('Invalid order numeric field: $key');
+  }
+  return null;
 }
 
 // ── Dispatch ──

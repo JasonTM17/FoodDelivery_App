@@ -39,7 +39,7 @@ export function AnalyticsHourlyOrdersSection({ hourly, locale }: AnalyticsHourly
                   style={{ height: `${Math.max(4, (hour.orderCount / maxOrders) * 128)}px` }}
                   title={t('hourTooltip', { hour: hour.hour, count: hour.orderCount })}
                 />
-                <span className="truncate text-xs text-gray-400">{t('hourLabel', { hour: hour.hour })}</span>
+                <span className="truncate text-xs text-gray-600">{t('hourLabel', { hour: hour.hour })}</span>
               </div>
             ))}
           </div>
@@ -64,7 +64,7 @@ export function AnalyticsHourlyOrdersSection({ hourly, locale }: AnalyticsHourly
           </table>
         </>
       ) : (
-        <p className="py-10 text-center text-sm text-gray-400">{t('noData')}</p>
+        <p className="py-10 text-center text-sm text-gray-600">{t('noData')}</p>
       )}
     </section>
   );
@@ -80,7 +80,7 @@ export function AnalyticsCategoryRevenueSection({ categories, locale }: Analytic
         {t('byCategory')}
       </h2>
       {categories.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-400">{t('noCategories')}</p>
+        <p className="py-10 text-center text-sm text-gray-600">{t('noCategories')}</p>
       ) : (
         <div className="space-y-4">
           {categories.map((category) => (

@@ -16,6 +16,7 @@ describe('OrdersService', () => {
   let mockDispatchQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockRefundQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockOrderTimeoutQueue: jest.Mocked<Pick<Queue, 'add'>>
+  let mockCommissionQueue: jest.Mocked<Pick<Queue, 'add'>>
   let mockGateway: { broadcastToOrder: jest.Mock; notifyRestaurant: jest.Mock; notifyAdmins: jest.Mock }
   let mockCancellationService: { assertCanCancel: jest.Mock }
   let mockPaymentsService: { processPayment: jest.Mock }
@@ -28,11 +29,12 @@ describe('OrdersService', () => {
     restaurantProfile: { findUnique: jest.Mock }
     orderStatusHistory: { create: jest.Mock }
     payment: { findUnique: jest.Mock; update: jest.Mock }
+    paymentRefundRequest: { aggregate: jest.Mock }
     cartItem: { deleteMany: jest.Mock }
     cart: { delete: jest.Mock }
   }
   let mockPrisma: {
-    order: { findUniqueOrThrow: jest.Mock; findFirst: jest.Mock }
+    order: { findUniqueOrThrow: jest.Mock; findFirst: jest.Mock; findMany: jest.Mock; count: jest.Mock }
     restaurantProfile: { findFirst: jest.Mock }
     cart: { findUnique: jest.Mock }
     restaurant: { findUniqueOrThrow: jest.Mock }
@@ -55,11 +57,14 @@ describe('OrdersService', () => {
       restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }) },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
+      paymentRefundRequest: {
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }),
+      },
       cartItem: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       cart: { delete: jest.fn().mockResolvedValue({}) },
     }
     mockPrisma = {
-      order: { findUniqueOrThrow: jest.fn(), findFirst: jest.fn() },
+      order: { findUniqueOrThrow: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), count: jest.fn() },
       restaurantProfile: { findFirst: jest.fn() },
       cart: { findUnique: jest.fn() },
       restaurant: { findUniqueOrThrow: jest.fn() },
@@ -88,6 +93,7 @@ describe('OrdersService', () => {
     mockDispatchQueue = { add: jest.fn().mockResolvedValue({}) }
     mockRefundQueue = { add: jest.fn().mockResolvedValue({}) }
     mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
+    mockCommissionQueue = { add: jest.fn().mockResolvedValue({}) }
 
     service = new OrdersService(
       mockPrisma as unknown as PrismaService,
@@ -100,6 +106,7 @@ describe('OrdersService', () => {
       mockDispatchQueue as unknown as Queue,
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
+      mockCommissionQueue as unknown as Queue,
     )
   })
 
@@ -224,6 +231,106 @@ describe('OrdersService', () => {
           routePolyline: true,
         },
       })
+    })
+  })
+
+  describe('getCustomerOrders()', () => {
+    it('returns the mobile/OpenAPI order item contract without Prisma Decimal leakage', async () => {
+      const createdAt = new Date('2026-07-05T10:00:00.000Z')
+      const updatedAt = new Date('2026-07-05T10:05:00.000Z')
+      mockPrisma.order.findMany.mockResolvedValue([
+        {
+          id: orderId,
+          customerId: userId,
+          restaurantId: 'restaurant-1',
+          driverId: 'driver-1',
+          status: 'preparing',
+          subtotal: new Prisma.Decimal(95_000),
+          deliveryFee: new Prisma.Decimal(20_000),
+          promotionDiscount: new Prisma.Decimal(0),
+          total: new Prisma.Decimal(115_000),
+          paymentMethod: 'cash',
+          notes: 'Leave at reception',
+          estimatedDeliveryTimeMinutes: 25,
+          routePolyline: 'encoded-route',
+          createdAt,
+          updatedAt,
+          restaurant: { id: 'restaurant-1', name: 'Pho 24', logoUrl: 'https://cdn.test/pho.png', phone: '0900000000' },
+          driver: { id: 'driver-1', fullName: 'Driver One', phone: '0911111111' },
+          deliveryAddress: { id: 'addr-1', addressLine: '2 Le Loi' },
+          statusHistory: [{ status: 'preparing', createdAt: updatedAt, note: null }],
+          orderItems: [{
+            id: 'item-1',
+            menuItemId: 'menu-1',
+            nameSnapshot: 'Pho bo',
+            quantity: 1,
+            unitPrice: new Prisma.Decimal(95_000),
+            selectedOptions: [{ groupName: 'Size', optionName: 'Large', price: 15_000 }],
+          }],
+        },
+      ])
+      mockPrisma.order.count.mockResolvedValue(1)
+
+      const result = await service.getCustomerOrders(userId)
+
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { customerId: userId },
+        include: expect.objectContaining({
+          orderItems: {
+            select: {
+              id: true,
+              menuItemId: true,
+              nameSnapshot: true,
+              quantity: true,
+              unitPrice: true,
+              selectedOptions: true,
+            },
+          },
+          deliveryAddress: true,
+          statusHistory: { orderBy: { createdAt: 'asc' } },
+        }),
+      }))
+      expect(result.meta).toEqual({ page: 1, limit: 20, total: 1, totalPages: 1 })
+      expect(result.orders[0]).toMatchObject({
+        id: orderId,
+        customerId: userId,
+        restaurantId: 'restaurant-1',
+        restaurantName: 'Pho 24',
+        subtotal: 95_000,
+        deliveryFee: 20_000,
+        discount: 0,
+        total: 115_000,
+        paymentMethod: 'cash',
+      })
+      expect(result.orders[0].items[0]).toMatchObject({
+        menuItemId: 'menu-1',
+        name: 'Pho bo',
+        nameSnapshot: 'Pho bo',
+        quantity: 1,
+        unitPrice: 95_000,
+        price: 95_000,
+        totalPrice: 95_000,
+        lineTotal: 95_000,
+        options: ['Size: Large'],
+        selectedOptions: [{ groupName: 'Size', optionName: 'Large', price: 15_000 }],
+      })
+      expect(result.orders[0].orderItems[0]).toEqual(result.orders[0].items[0])
+      expect(result.orders[0].timeline[0]).toMatchObject({ status: 'preparing', timestamp: updatedAt })
+    })
+  })
+
+  describe('getRestaurantOrders()', () => {
+    it('fails closed instead of returning an empty order list when the active restaurant profile is missing', async () => {
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(service.getRestaurantOrders('restaurant-user-1'))
+        .rejects.toThrow(NotFoundException)
+
+      expect(mockPrisma.restaurantProfile.findFirst).toHaveBeenCalledWith({
+        where: { userId: 'restaurant-user-1', isActive: true },
+        select: { restaurantId: true },
+      })
+      expect(mockPrisma.order.findMany).not.toHaveBeenCalled()
     })
   })
 
@@ -435,7 +542,6 @@ describe('OrdersService', () => {
           amount: 50_000,
           reason: 'reason',
           kind: 'full',
-          attemptNo: 1,
         }),
         expect.objectContaining({
           attempts: 3,
@@ -451,6 +557,7 @@ describe('OrdersService', () => {
         driverId: 'driver-1',
       })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockTx.payment.findUnique.mockResolvedValue({ method: 'cash', status: 'pending' })
       mockRedis.get.mockResolvedValueOnce(orderId).mockResolvedValueOnce('1')
 
       await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')
@@ -460,6 +567,15 @@ describe('OrdersService', () => {
       expect(mockRedis.get).toHaveBeenCalledWith('driver:driver-1:alive')
       expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:status', 'online')
       expect(mockRedis.set).toHaveBeenCalledWith('driver:driver-1:idle_since', expect.any(String))
+      expect(mockTx.payment.update).toHaveBeenCalledWith({
+        where: { orderId },
+        data: { status: 'completed', paidAt: expect.any(Date) },
+      })
+      expect(mockCommissionQueue.add).toHaveBeenCalledWith(
+        'commission-split',
+        { orderId },
+        { jobId: `commission-split-${orderId}` },
+      )
     })
 
     it('does not release a driver assignment that has already moved to another order', async () => {
@@ -469,6 +585,7 @@ describe('OrdersService', () => {
         driverId: 'driver-1',
       })
       mockTx.order.update.mockResolvedValue({ id: orderId, status: 'delivered', driverId: 'driver-1' })
+      mockTx.payment.findUnique.mockResolvedValue({ method: 'wallet', status: 'completed' })
       mockRedis.get.mockResolvedValueOnce('other-order')
 
       await service.transition(orderId, 'delivered', 'driver-1', 'driver', 'Completed delivery')

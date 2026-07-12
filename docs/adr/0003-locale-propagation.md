@@ -14,7 +14,7 @@ A user's locale must flow from HTTP request through synchronous handlers and int
 
 Locale is resolved and carried explicitly at each hop:
 
-```
+```text
 HTTP request
   → NestJS I18nMiddleware reads Accept-Language header
   → Falls back to cookie `NEXT_LOCALE`
@@ -24,7 +24,7 @@ HTTP request
 Notification fanout (BullMQ job)
   → Caller serialises `locale: LocaleCode` into job data
   → Processor reads `job.data.locale` (never uses request context)
-  → `fallbackT(locale, key)` used when nestjs-i18n service is unavailable
+  → `I18nService.t(key, { lang: job.data.locale, args })` renders from locale JSON
 
 User profile update
   → PATCH /users/me { preferredLocale: 'en' }
@@ -40,7 +40,7 @@ User profile update
 
 - Async jobs always send in the correct user locale.
 - Resolution chain handles unauthenticated requests gracefully (Accept-Language → `vi` default).
-- `fallbackT` provides safe offline rendering without the i18n service.
+- Missing i18n injection/configuration fails during tests or module boot instead of returning stale hardcoded strings.
 
 ### Negative
 
@@ -61,6 +61,5 @@ User profile update
 
 ## References
 
-- `backend/src/i18n/fallback-translations.ts` — fallbackT implementation
 - `backend/src/i18n/i18n.module.ts` — nestjs-i18n module config
 - [ADR-0002](0002-i18n-strategy.md) — library selection rationale

@@ -141,12 +141,13 @@ void main() {
           'timestampsEstimated': true,
           'totalDistanceKm': 1.2,
           'totalDurationSeconds': 240,
-          'avgSpeedKmh': 18,
+          'avgSpeedKmh': 0,
           'payout': 25000,
         });
 
         expect(route.routeSource, 'persisted_geometry');
         expect(route.timestampsEstimated, isTrue);
+        expect(route.avgSpeedKmh, 0);
         expect(route.points.single.source, 'persisted_geometry');
         expect(route.points.single.timestampEstimated, isTrue);
       },

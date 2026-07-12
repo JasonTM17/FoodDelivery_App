@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../models/driver_flow_args.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 
 class DeliveryCompleteScreen extends StatefulWidget {
   final DeliveryCompleteArgs? args;
@@ -202,7 +203,7 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            _formatVnd(args.total),
+            formatVnd(context, args.total),
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
@@ -214,13 +215,13 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
           const SizedBox(height: 12),
           _earningRow(
             l10n.driverHistoryDeliveryFee,
-            _formatVnd(args.deliveryFee),
+            formatVnd(context, args.deliveryFee),
           ),
           if (args.bonus > 0) ...[
             const SizedBox(height: 8),
             _earningRow(
               l10n.driverDeliveryBonus,
-              '+${_formatVnd(args.bonus)}',
+              formatSignedVnd(context, args.bonus),
               highlight: true,
             ),
           ],
@@ -298,6 +299,4 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen>
       ],
     );
   }
-
-  String _formatVnd(double amount) => '${amount.toStringAsFixed(0)}đ';
 }

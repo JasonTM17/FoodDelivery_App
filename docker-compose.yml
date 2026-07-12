@@ -57,6 +57,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: migrator
+      args:
+        BUILD_SHA: ${BUILD_SHA:-local}
     container_name: foodflow-migrate
     restart: "no"
     environment:
@@ -70,12 +72,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        BUILD_SHA: ${BUILD_SHA:-local}
     container_name: foodflow-backend
     restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
       NODE_ENV: development
+      REALTIME_PROVIDER: socketio
+      STORAGE_PROVIDER: minio
+      QUEUE_PROVIDER: bullmq
       DATABASE_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       DIRECT_URL: postgresql://foodflow:foodflow_dev@postgres:5432/foodflow
       REDIS_URL: redis://redis:6379
@@ -112,11 +119,14 @@ services:
       context: ./web
       dockerfile: apps/admin/Dockerfile
       args:
+        BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-http://localhost:3000}
-        NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
+        NEXT_PUBLIC_MAP_PROVIDER: ${NEXT_PUBLIC_MAP_PROVIDER:-openfreemap}
+        NEXT_PUBLIC_MAP_STYLE_URL: ${NEXT_PUBLIC_MAP_STYLE_URL:-https://tiles.openfreemap.org/styles/liberty}
     container_name: foodflow-admin
     restart: unless-stopped
     ports:
@@ -126,6 +136,7 @@ services:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
       NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_ADMIN_URL: http://localhost:3000
     depends_on:
       backend:
@@ -141,11 +152,14 @@ services:
       context: ./web
       dockerfile: apps/restaurant/Dockerfile
       args:
+        BUILD_SHA: ${BUILD_SHA:-local}
         NEXT_PUBLIC_APP_ENV: development
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001/events}
+        NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_RESTAURANT_URL: ${NEXT_PUBLIC_RESTAURANT_URL:-http://localhost:3002}
-        NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
+        NEXT_PUBLIC_MAP_PROVIDER: ${NEXT_PUBLIC_MAP_PROVIDER:-openfreemap}
+        NEXT_PUBLIC_MAP_STYLE_URL: ${NEXT_PUBLIC_MAP_STYLE_URL:-https://tiles.openfreemap.org/styles/liberty}
     container_name: foodflow-restaurant
     restart: unless-stopped
     ports:
@@ -155,8 +169,8 @@ services:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001/api
       NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+      NEXT_PUBLIC_REALTIME_PROVIDER: socketio
       NEXT_PUBLIC_RESTAURANT_URL: http://localhost:3002
-      NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
     depends_on:
       backend:
         condition: service_healthy

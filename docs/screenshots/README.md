@@ -1,23 +1,23 @@
-# Screenshots inventory
+# FoodFlow Screenshot Inventory
 
-Professional product stills for README and gallery docs.
+Current-source product stills for the root README and [product gallery](../product-gallery.md). They are captured from the isolated Docker/E2E stack with deterministic test data, not labeled as production screenshots.
 
-| File | Surface | Description |
-|------|---------|-------------|
-| `admin/01-login.png` | Admin | Sign-in |
-| `admin/02-overview.png` | Admin | KPI overview |
-| `admin/03-orders.png` | Admin | Orders list |
-| `admin/04-restaurants.png` | Admin | Restaurants list |
-| `admin/05-users.png` | Admin | Users list |
+| File | Surface | Route/content |
+|---|---|---|
+| `admin/01-login.png` | Admin | `/vi/login` |
+| `admin/02-overview.png` | Admin | Overview KPIs/charts |
+| `admin/03-orders.png` | Admin | Orders |
+| `admin/04-restaurants.png` | Admin | Restaurants |
+| `admin/05-users.png` | Admin | Users |
 | `admin/06-drivers.png` | Admin | Drivers |
 | `admin/07-promotions.png` | Admin | Promotions |
 | `admin/08-support.png` | Admin | Support |
 | `admin/09-analytics.png` | Admin | Analytics |
 | `admin/10-settings.png` | Admin | Settings |
-| `restaurant/01-login.png` | Restaurant | Sign-in |
-| `restaurant/02-dashboard.png` | Restaurant | Home dashboard |
-| `restaurant/03-orders.png` | Restaurant | Order kanban |
-| `restaurant/04-menu.png` | Restaurant | Menu board |
+| `restaurant/01-login.png` | Restaurant | `/vi/login` |
+| `restaurant/02-dashboard.png` | Restaurant | Dashboard |
+| `restaurant/03-orders.png` | Restaurant | Order queue |
+| `restaurant/04-menu.png` | Restaurant | Menu |
 | `restaurant/05-promotions.png` | Restaurant | Promotions |
 | `restaurant/06-revenue.png` | Restaurant | Revenue |
 | `restaurant/07-reviews.png` | Restaurant | Reviews |
@@ -25,6 +25,6 @@ Professional product stills for README and gallery docs.
 | `restaurant/09-insights.png` | Restaurant | Insights |
 | `restaurant/10-settings.png` | Restaurant | Settings |
 
-Regenerate with `node docs/scripts/capture-product-media.mjs` (see [product gallery](../product-gallery.md)).
+`manifest.json` stores capture UTC, local base URLs, and seed identities. It must never contain passwords, access/refresh tokens, API keys, or provider secrets.
 
-`manifest.json` records capture timestamp and base URLs (no secrets).
+Regenerate with `node docs/scripts/capture-product-media.mjs` using the environment shown in the product gallery. Inspect every image after capture; successful automation can still record a CORS, API, or localization defect.

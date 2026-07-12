@@ -16,6 +16,13 @@ describe('staff-permissions', () => {
     expect(resolveStaffPermissions('kitchen', ['orders', 'menu'])).toEqual(['orders', 'menu']);
   });
 
+  it('drops unknown explicit capabilities at the parsing boundary', () => {
+    expect(resolveStaffPermissions('manager', ['orders', 'billing', 'staff'])).toEqual([
+      'orders',
+      'staff',
+    ]);
+  });
+
   it('gates nav paths by capability', () => {
     const kitchen = resolveStaffPermissions('kitchen');
     expect(canAccessPath(kitchen, '/orders')).toBe(true);

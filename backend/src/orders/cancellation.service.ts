@@ -1,7 +1,6 @@
-import { ForbiddenException, Injectable, Optional } from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 import { I18nService, I18nContext } from 'nestjs-i18n'
 import { OrderStatus } from './order-state-machine'
-import { fallbackT } from '../i18n/fallback-translations'
 
 interface CancellationPolicy {
   allowed: boolean
@@ -21,11 +20,9 @@ const TERMINAL_STATES: OrderStatus[] = ['completed', 'refunded']
 
 @Injectable()
 export class CancellationService {
-  constructor(@Optional() private readonly i18n?: I18nService) {}
+  constructor(private readonly i18n: I18nService) {}
 
-  // Translates key; falls back to vi strings when I18nService is absent (unit tests).
   private t(key: string): string {
-    if (!this.i18n) return fallbackT(key)
     return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi' })
   }
 

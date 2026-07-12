@@ -1,138 +1,75 @@
-# Changelog
+# FoodFlow Project Changelog
 
-All notable changes to FoodFlow are documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+This file records release-level, user-relevant changes. The Git history is the
+authoritative source for individual commits and implementation detail.
 
----
-
-## [Unreleased]
-
-### Fixed (Batch 4 — Web/Backend Integration)
-- Registered the backend AI module so `POST /ai/chat` is available in the runtime app.
-- Changed `GET /driver/incentives` to fail explicitly until a durable campaign source exists instead of returning fake-empty campaign data.
-- Hardened referral snapshots so generated codes are returned only after persistence, and referral stat database errors are no longer masked as zero totals.
-- Scoped menu, cart, and order Zod validation pipes to request bodies so authenticated user and route params are not validated as payload objects.
-- Added authenticated `GET /users/addresses` support for real cart-to-order checkout flows.
-- Constrained generated order codes to the existing 12-character database column width.
-- Flattened admin order detail responses for address, customer, restaurant, driver, discount, note, and items fields used by Next.js pages.
-- Updated admin dynamic detail pages to use Next.js 14 client `params` objects directly.
-- Added accessible login error announcement on the restaurant web login page.
-
-### Test (Batch 4 — Web/Backend Integration)
-- Stabilized Playwright API helpers around real cart checkout, address lookup, restaurant profile lookup, menu item lookup, and restaurant order status transitions.
-- Verified the localized Batch 4 web E2E suite on Chromium and Firefox against local backend, database, Redis, and web dev servers.
-
-### Added (Batch 3 — Stitch Finalize + Production Hardening)
-- Customer profile menu wired to loyalty/wallet/referral/help screens
-- Driver support contact buttons wired to `url_launcher` (tel/mailto/https)
-- Restaurant sidebar navigation extended with Promotions + Analytics links
-- `/[locale]/promotions` list page on restaurant app with i18n keys × 3 locales
-- `/[locale]/promotions/[id]` read-only detail page (clickable rows from list)
-- `/[locale]/promotions/[id]/edit` edit page (active/description/endDate fields)
-- Backend `LoyaltyModule` — `GET /users/loyalty` returns points + tier + transactions
-- Backend `WalletModule` — `GET /users/wallet` returns balance + transactions
-- Backend `ReferralModule` — `GET /users/referral` returns code + invitees + rewards
-- Backend `DriverIncentivesController` — `GET /driver/incentives` (later changed to explicit unsupported response until campaign storage exists)
-- Admin endpoints `GET /admin/dispatch/heatmap` + `GET /admin/restaurants/:id/kpi` (later backed by aggregate database queries)
-- Prisma `LoyaltyTransaction` model + `LoyaltyTxnType` enum
-- Admin overview heatmap widget consuming `/admin/dispatch/heatmap` (auto-refresh 30s)
-- Admin restaurant detail KPI card consuming `/admin/restaurants/:id/kpi` (7-day stats)
-
-### Changed
-- `@foodflow/ui` package: added `next` as peer + dev dependency for breadcrumb component (fixes admin typecheck)
-
-### Deferred to v0.3
-- JWT Ed25519 cutover phase 1 (dual verify) — security-critical, requires red-team review
-- Backend stub APIs (loyalty/wallet/referral/incentives + admin heatmap/KPI)
-- Admin web gaps (overview heatmap widget, restaurant detail KPIs)
-- Promotion edit page + detail page
-- Test init fixes (dayjs ESM/CJS interop, BullMQ DI mock)
-- 8 dependabot major bumps (TypeScript 6, Prisma 7, zod 4, node 26, tailwind 4, day-picker 10, lucide-react 1, @hookform/resolvers 5) tracked in issues #35-42
-
-## [0.2.0] — 2026-06-07
-
-### Added
-
-**Internationalisation (i18n)**
-- `nestjs-i18n` module with vi/en/ja locales: errors, notifications, ai_templates, constants namespaces
-- `User.preferredLocale` field — `LocaleCode` enum (`vi | en | ja`), default `vi`
-- Accept-Language → cookie → `User.preferredLocale` resolution chain
-- Locale threaded into BullMQ notification fanout jobs via explicit `job.data.locale`
-- `fallbackT` utility for offline-safe translation outside request context
-- Flutter `flutter_localizations` with ARB files for vi/en/ja on customer + driver apps
-- Locale provider + locale switcher widget (Flutter)
-- `next-intl` routing with `[locale]` URL segments on admin and restaurant web apps
-- `LocaleSwitcher` component in both Next.js apps
-- `@foodflow/i18n` shared messages package for admin + restaurant translations
-
-**Payments**
-- SePay provider with HMAC-SHA256 webhook signature verification
-- `PaymentIntent` + `PayoutLedger` + commission snapshot Prisma models
-- Commission-split BullMQ processor: platform 15 %, restaurant 70 %, driver 15 %
-- Refund processor with idempotency guard
-- SePay payment-success webhook route wired to `PaymentsModule`
-
-**Reviews**
-- Review aggregation pipeline (avg rating, count rollup on restaurant)
-- Review moderation queue (admin approve / reject)
-- Photo upload per review (MinIO presigned URL flow)
-- Reply thread on reviews (restaurant reply)
-
-**Dispatch**
-- BullMQ-backed dispatch scoring processor
-- Dispatch metrics instrumentation (Prometheus counters)
-
-**Admin**
-- Audit logs page: full-text filter, date range, role filter, CSV export, pagination
-- Vocabulary sweep across overview/orders/restaurants/users/promotions/support/settings/analytics/drivers/ai-monitor
-
-**Mobile (Driver)**
-- Real GPS online/offline toggle wired to backend state
-- Dispatch offer dialog with accept/decline + 30 s countdown
-- KYC document upload service using MinIO presigned URLs
-
-**Restaurant Web**
-- Reviews and notifications wired to real API
-- Restaurant profile image upload
-
-**UI / Web**
-- Shared `PageHeader` component (breadcrumb + gradient H1) — applied across all admin pages
-
-**CI / Quality**
-- Integration smoke gate workflow (4 parallel jobs: auth, orders, dispatch, AI)
-- E2E smoke-runner orchestrator (bash + PowerShell scripts)
-- AI scenario smoke gate (5 canonical conversations)
-- Lighthouse CI config — perf ≥ 80, a11y ≥ 90, bundle ≤ 200 KB gzip
-- k6 mixed load test — 100 RPS × 5 min, p95 < 500 ms target
-- Backend: dispatch metrics, dispatch processor, SePay provider unit tests
+## Unreleased
 
 ### Changed
 
-- Admin pages: inline breadcrumb + title markup replaced with `<PageHeader>`
-- `timeSince` utility now accepts `lang` param — returns vi/en/ja relative-time strings
-- `getOrderStatusLabel` and `getRoleLabel` wired to i18n with fallback
+- Refreshed release, deployment, Docker, security, API, testing, architecture,
+  branch, and roadmap documentation for the Node 22, pnpm 11.11, and Next.js 15
+  runtime.
+- Defined Supabase as the managed database, Realtime, and Storage provider, and
+  Vercel as the managed API/Admin/Restaurant host.
+- Kept Socket.IO, Redis, MinIO, and BullMQ as local or self-hosted compatibility
+  providers rather than presenting them as the managed-production path.
+- Documented immutable Docker release and SHA tags, multi-architecture scans,
+  and manual post-smoke promotion of latest.
+- Added current-source product screenshots and optimized Admin/Restaurant GIF
+  flows with capture provenance. They are not production media.
 
 ### Fixed
 
-- `TrackingModule`: `onModuleDestroy` cleanup hook was missing, leaving Redis subscribers open
+- Hardened GPS/ETA processing so stale buffered locations and planned geometry
+  do not masquerade as live delivery movement.
+- Removed runtime hard-coded i18n fallbacks and added locale routing/error-state
+  hardening for the web workspaces.
+- Replaced fake-empty business responses with explicit unavailable/error paths
+  in affected incentives, referral, and AI flows.
+- Registered the AI module and documented fail-closed provider behavior and
+  real telemetry requirements.
+- Added tenant-scoped Supabase realtime token, outbox, RLS, and job-drain
+  contracts to the public API documentation.
+- Migrated managed mobile realtime to scoped Supabase subscriptions while
+  keeping GPS and dispatch decisions on authenticated REST; Socket.IO remains
+  an explicit local/self-hosted provider.
+- Replaced legacy public-URL driver KYC with private owner-scoped signed
+  uploads, object/signature validation, atomic review state, signed Admin
+  previews, and typed vi/en/ja mobile onboarding.
 
----
+### Release blockers
 
-## [0.1.0] — 2026-05-01
+- Production secrets, Supabase CLI migration credentials, and Vercel production
+  environment variables still require secure configuration.
+- Final Android production signing and iOS build/signing evidence still require
+  authorized release credentials/runners; local debug APKs are not publishable.
+- Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
+  and production smoke gates remain mandatory before deployment.
+
+## 0.2.0 - 2026-06-07
 
 ### Added
 
-- JWT auth with RBAC (role guards: customer, driver, restaurant_owner, admin)
-- Restaurant nearby search via PostGIS `ST_DWithin` + GIST index
-- Menu management CRUD with categories and item options
-- Cart session + order placement with stock validation
-- Order state machine (14 states with history tracking)
-- Driver dispatch: Redis GEO scoring (distance + rating), 30 s offer timeout, retry expansion to 10 km
-- Real-time GPS tracking: WebSocket 3 s driver push → throttled 2 s broadcast → batch DB flush 15 s
-- Customer mobile app (Flutter, Riverpod)
-- Driver mobile app (Flutter, Riverpod)
-- Admin dashboard (Next.js App Router)
-- Restaurant dashboard (Next.js App Router)
-- AI assistant migrated toward an LLM-first backend adapter (chat classify + support tickets)
-- Docker Compose stack with Prometheus, Grafana, Loki monitoring
-- MinIO for food image + document storage
+- Vietnamese, English, and Japanese foundations across backend, web, and mobile.
+- Payments, audit/review, dispatch, loyalty, wallet, referral, promotions, and
+  Admin/Restaurant portal feature work.
+- Flutter customer/driver flows, driver GPS controls, and merchant management
+  screens.
+- Docker Compose, observability resources, API contracts, Playwright helpers,
+  and quality-gate foundations.
+
+### Changed
+
+- Shared web UI gained common page-header and breadcrumb patterns.
+- Notifications and background jobs began carrying locale explicitly.
+
+## 0.1.0 - 2026-05-01
+
+### Added
+
+- JWT/RBAC authentication, restaurant search with PostGIS, menu/cart/order
+  lifecycle, driver dispatch, tracking, and administrative dashboards.
+- Flutter customer and driver applications plus Admin and Restaurant Next.js
+  applications.
+- Initial AI-support, Docker Compose, MinIO, and observability foundations.

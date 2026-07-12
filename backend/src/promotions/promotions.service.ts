@@ -1,11 +1,10 @@
-import { Injectable, BadRequestException, NotFoundException, Optional } from '@nestjs/common'
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import type { Prisma, Promotion } from '@prisma/client'
 import { I18nService, I18nContext } from 'nestjs-i18n'
 import { PrismaService } from '../database/prisma.service'
 import { EligibilityService } from './eligibility.service'
 import { FraudDetectionService } from './fraud-detection.service'
 import { CartContext } from './promotions.types'
-import { fallbackT } from '../i18n/fallback-translations'
 
 @Injectable()
 export class PromotionsService {
@@ -13,11 +12,10 @@ export class PromotionsService {
     private readonly prisma: PrismaService,
     private readonly eligibility: EligibilityService,
     private readonly fraud: FraudDetectionService,
-    @Optional() private readonly i18n?: I18nService,
+    private readonly i18n: I18nService,
   ) {}
 
   private t(key: string): string {
-    if (!this.i18n) return fallbackT(key)
     return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi' })
   }
 

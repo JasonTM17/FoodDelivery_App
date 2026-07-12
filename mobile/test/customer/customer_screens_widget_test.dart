@@ -83,6 +83,8 @@ void main() {
 
       expect(find.byType(TextFormField), findsNWidgets(2));
       expect(find.text('Đăng nhập'), findsWidgets);
+      expect(find.bySemanticsLabel('FoodFlow'), findsOneWidget);
+      expect(find.byTooltip('Hiện mật khẩu'), findsOneWidget);
     });
 
     testWidgets('shows validation error when fields are empty on submit', (

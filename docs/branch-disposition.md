@@ -1,70 +1,78 @@
-# Branch disposition — Batch 4 integration
+# Branch Disposition — Batch 4
 
-Last audited: 2026-07-06. Remote cleanup has been rechecked at `64e46c795c9c15ae52bb0112f91e93a6f3851645`: `git ls-remote --heads origin` returns only `refs/heads/master`. The clean worktree still uses the local branch `codex/batch4-integration` for continuity, and that local branch is patch-identical to `origin/master`.
+## Audit snapshot
 
-This record documents the branch state used for Batch 4 salvage and cleanup decisions. It is intentionally evidence-based: do not delete, force-push, or raw-merge any branch from this table without a fresh backup and a new audit.
+Last audited: **2026-07-11** from `D:\Food_Delivery-worktrees\batch4-integration-restored` after `git fetch --prune origin`.
+
+| Scope | Ref | Commit | Decision |
+|---|---|---|---|
+| Remote | `origin/master` | `df945dd2c572e690a3c9e7aa31130c517ef83880` | Keep as the only long-lived remote branch. |
+| Local integration | `codex/batch4-integration` | `924808c47ca7de1aa001693bdfcca3c4ff293a9f` before this docs update | Keep until its verified `HEAD` is pushed directly to `master`. |
+| Local root | `master` | `df945dd` | Do not touch; the root worktree contains user-owned dirty files. |
+| Backup tag | `backup/batch4-integration-20260704-032a6c0` | preserved tag | Keep until release and cleanup evidence are complete. |
+| Release tag | `v0.1.0` | historical | Keep as historical; it is not Batch 4. |
+
+GitHub connector branch search and `git ls-remote --heads origin` both returned exactly one remote head: `master`. No remote `codex/batch4-integration`, Dependabot, Violet, Indigo, or other feature head exists at this snapshot.
+
+Before the current docs edits:
+
+```text
+origin/master...codex/batch4-integration = 0 behind / 106 ahead
+```
+
+The integration line is therefore a fast-forward candidate, not a merge-commit candidate.
 
 ## Audit commands
 
 ```bash
-git fetch --all --prune
+git fetch --prune origin
 git ls-remote --heads origin
-git branch -vv --all
-git rev-list --left-right --count origin/master...<branch>
-git merge-base --is-ancestor <base> <head>
-git diff --stat <base>...<head>
-git tag -l "backup/*" --format="%(refname:short) %(objectname:short) %(subject)"
+git branch -vv
+git worktree list --porcelain
+git rev-list --left-right --count origin/master...codex/batch4-integration
+git log --left-right --cherry-pick --oneline origin/master...codex/batch4-integration
+git status --short --branch
 ```
 
-## Remote heads after cleanup
+Run the same commands immediately before push and cleanup. Remote UI screenshots are not sufficient evidence because they may be stale.
 
-| Branch | Head at audit | Relationship | Disposition |
-|---|---:|---|---|
-| `origin/master` | `64e46c7` | Contains the tested Batch 4 integration work, tracking authorization fix, and Restaurant live delivery map. `git ls-remote --heads origin` returns only `refs/heads/master`. | Keep as the only live remote branch. |
+## Salvage and merge policy
 
-`origin/codex/batch4-integration` was deleted only after `origin/master` and `origin/codex/batch4-integration` both pointed at `3857433` and `git rev-list --left-right --count origin/master...origin/codex/batch4-integration` returned `0 0`.
+- Never raw-merge a stale feature branch into Batch 4.
+- First preserve a backup ref, inspect commits/files, and compare patch equivalence.
+- Salvage one bounded cluster at a time with focused tests and a conventional commit.
+- Reject changes that restore mock/fallback/random business data, stale generated API clients, unsafe secrets, or obsolete package-manager/runtime choices.
+- Do not delete a branch merely because it was “merged”; confirm its unique patch set is present or intentionally superseded.
+- Missing remote Violet/Indigo refs cannot be reconstructed or claimed as merged. Mobile reconciliation must proceed from code that actually exists in the current history.
 
-## Local heads after cleanup
+## Why the local branch still exists
 
-| Branch | Head at audit | Relationship | Disposition |
-|---|---:|---|---|
-| `codex/batch4-integration` | Tracks `origin/master` | Current clean worktree branch in `D:\Food_Delivery-worktrees\batch4-integration`, now tracking `origin/master` after the remote integration branch was deleted. | Safe local worktree branch for continued Batch 4 work; push future commits explicitly to `master` unless a new review branch is intentionally opened. |
-| `master` | `4fb2799` | Checked out in dirty root worktree `D:\Food_Delivery`; behind `origin/master` after Batch 4 was merged. | Do not switch, reset, delete, or mutate from the Batch 4 clean worktree. |
+Deleting local `codex/batch4-integration` now would discard unpushed release work. Pushing it by name would recreate a second remote branch, violating the requested single-branch repository state. The safe release operation is a direct fast-forward from the verified integration `HEAD` to `origin/master`.
 
-## Cleaned-up branch refs
+No branch mutation may touch the dirty root `D:\Food_Delivery`. The root is only relevant because it currently holds local `master`; its user-owned dirty files must remain intact.
 
-| Branch ref | Deleted head | Cleanup evidence | Backup |
-|---|---:|---|---|
-| `origin/codex/batch4-integration` | `3857433` | Fast-forwarded into `origin/master`; patch-equivalent to `master` (`0 0`) before deletion on 2026-07-05. | Covered by `origin/master@3857433`; no unique branch-only commits remained at deletion time. |
-| `origin/batch4-integration` | `032a6c0` | `merge-base --is-ancestor origin/batch4-integration HEAD` passed; `git log --cherry-pick --right-only HEAD...origin/batch4-integration` returned zero commits; remote branch deleted on 2026-07-04. | Remote tag `backup/batch4-integration-20260704-032a6c0` points to the deleted head. |
-| local `batch4-integration` | `032a6c0` | Same head as the deleted remote branch; local branch deleted after the backup tag was pushed. | Remote tag `backup/batch4-integration-20260704-032a6c0` points to the deleted head. |
+## Final push procedure
 
-## Missing branch refs
+Only after every release gate and production preflight is green:
 
-The current remote head list does not include Violet, Indigo, Amber, Steel, audit, or mobile reconciliation branches. That means there is no live branch ref to raw-merge or cherry-pick from in the current repository state.
+```bash
+git fetch --prune origin
+git rev-list --left-right --count origin/master...HEAD   # must be 0 <ahead>
+git merge-base --is-ancestor origin/master HEAD
+git status --short                                # must be empty
+git push origin HEAD:master
+git fetch --prune origin
+git rev-list --left-right --count origin/master...HEAD   # must be 0 0
+git ls-remote --heads origin                       # must show only master
+```
 
-When those branches become available again, reconcile them with this workflow:
+Then, without switching or cleaning the dirty root:
 
-1. Fetch the branch and record its head SHA here.
-2. Compare with `git diff --stat origin/master...origin/<branch>`.
-3. Inspect changed files before applying any patch.
-4. Salvage hunk-by-hunk into the clean worktree.
-5. Run focused tests for each salvaged behavior.
-6. Commit with a small conventional commit.
-7. Mark the source branch as `patch-equivalent`, `superseded`, `partially salvaged`, or `rejected` with the commit SHA that proves it.
-
-## Latest local evidence for merged Batch 4 worktree
-
-- Backend passed frozen install, Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (108 suites / 773 tests), and `pnpm build`.
-- Web passed frozen install, `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), and `pnpm build`.
-- Docker Compose rebuilt Backend/Admin/Restaurant from the current source and all three containers were healthy. Health endpoints returned OK for backend, Admin, and Restaurant.
-- Playwright passed Chromium + Firefox together: 70/70 tests. Coverage includes admin dashboard, Restaurant order management, customer order flow, realtime tracking, tenant isolation, visual contract, and the axe serious/critical smoke check. The verified local run used IPv6 loopback URLs because a separate local Node process was listening on `127.0.0.1:3000`.
-- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (168 tests), and `flutter build apk --debug`.
-- OpenAPI/Spectral lint passed via `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
-- High-confidence tracked-file and staged-diff secret scans returned no live provider token or private key matches. `gitleaks` is not installed in the local PATH, so run Gitleaks again in CI when Actions auth is restored.
+1. Detach/remove the clean integration worktree after confirming `HEAD == origin/master`.
+2. Delete local `codex/batch4-integration` only when no worktree uses it.
+3. Retain the backup tag until the release report, Docker digests, and production health evidence are archived.
+4. Remove obsolete Docker Hub artifacts separately; deleting a Git branch does not delete registry tags.
 
 ## Current conclusion
 
-GitHub should show only one remote branch: `master`. The former remote `codex/batch4-integration` branch was deleted after it was patch-equivalent to `master`.
-
-Batch 4 is not production-deployed yet. Remote GitHub Actions for the current master head have not produced fresh green workflow evidence because the user reported token/auth access issues. Deploy readiness is also blocked because Supabase CLI/auth is not available locally and this repo is not linked to a Vercel project. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after Actions access is restored and before any Supabase or Vercel deployment.
+Remote branch cleanup is already complete: only `master` remains. Mobile Supabase realtime parity is now present on the integration line, including scoped token/channel tests and REST GPS/dispatch mutations. Final local cleanup and push remain intentionally pending because production secrets/preflights, current-head remote CI, and the final full release gates are not yet complete.

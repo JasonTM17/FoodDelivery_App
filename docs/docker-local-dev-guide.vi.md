@@ -1,17 +1,12 @@
 # Hướng dẫn Docker và phát triển local
 
-Tài liệu này mô tả cách dựng FoodFlow Batch 4 trên máy local. Nó được tách khỏi deployment guide vì các giá trị mặc định trong Docker local chỉ dành cho phát triển, không được sao chép sang secret manager production.
+## Phạm vi
 
-## Điều kiện cần
+Tài liệu này dành cho local development, isolated E2E, kiểm tra container current source và self-hosted compatibility. Managed production Supabase + Vercel nằm trong [deployment guide](deployment-guide.vi.md).
 
-- Docker Desktop hoặc Docker Engine có Compose v2
-- Node.js 20+ và pnpm nếu chạy backend hoặc web từ host
-- Flutter stable nếu kiểm tra mobile
-- Worktree sạch khi xác minh release gate
+Yêu cầu: Docker Compose v2/Buildx, Node.js 22.13+, Corepack pnpm 11.11.0, Flutter SDK; FFmpeg chỉ cần khi tạo GIF.
 
-## Quy tắc env và secret
-
-Khi cần chạy lệnh từ host, copy các file example sang file env local đã bị ignore:
+## Env và secret
 
 ```powershell
 Copy-Item .env.example .env
@@ -20,124 +15,123 @@ Copy-Item web/apps/admin/.env.example web/apps/admin/.env.local
 Copy-Item web/apps/restaurant/.env.example web/apps/restaurant/.env.local
 ```
 
-Credential production phải nằm trong Supabase, Vercel hoặc secret manager của backend host. Không commit `.env`, file auth của CLI, storage state, certificate riêng tư, database dump hoặc provider token. Bất kỳ key AI hoặc map nào từng được dán vào chat/log đều phải xem là đã lộ và phải rotate trước production.
+Chỉ tạo file bị ignore. Không commit dotenv thật, auth CLI, dump, certificate, token hoặc signing material. Key từng xuất hiện trong chat/log phải rotate. Default `foodflow_dev`, `minioadmin` và JWT development bị cấm trong production.
 
-## Các chế độ chạy local
+Local dùng explicit Socket.IO + Redis/BullMQ + MinIO; managed production dùng explicit Supabase Realtime/Storage/Postgres queue.
 
-### Chỉ chạy hạ tầng
-
-Dùng chế độ này khi muốn chạy backend, web hoặc mobile từ host, còn PostgreSQL/PostGIS, Redis và MinIO chạy trong container:
+## Hạ tầng container, app chạy host
 
 ```powershell
 docker compose up -d postgres redis minio
-```
 
-Sau đó chạy lệnh theo từng app từ host, ví dụ:
-
-```powershell
 cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm prisma migrate dev
-pnpm db:seed
-pnpm start:dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm prisma migrate dev
+corepack pnpm db:seed
+corepack pnpm start:dev
 ```
 
-### Full standalone stack
+Web: `cd web; corepack pnpm install --frozen-lockfile; corepack pnpm dev`.
 
-Dùng cho E2E trình duyệt và xác minh local kiểu release. Dockerfile web bake `NEXT_PUBLIC_API_URL` lúc build, nên cần set trước khi rebuild image:
+Mobile: `flutter pub get --enforce-lockfile`, sau đó chạy `lib/main_customer.dart` hoặc `lib/main_driver.dart`.
+
+## Full local stack
 
 ```powershell
-$env:NEXT_PUBLIC_API_URL = "http://[::1]:3001/api"
-$env:CORS_ORIGINS = "http://localhost:3000,http://localhost:3002,http://localhost:3003,http://[::1]:3000,http://[::1]:3002,http://[::1]:3003"
-docker compose up -d --build backend admin restaurant
+docker compose up -d --build
+docker compose ps
 ```
 
-Compose sẽ khởi động PostgreSQL/PostGIS, Redis, MinIO, job migration, backend, Admin và Restaurant. Job migration phải hoàn tất trước khi backend healthy.
+Migration container phải exit `0` trước khi API healthy. `NEXT_PUBLIC_*` được bake lúc build nên đổi value phải rebuild web image.
 
-### Backend hot reload trong Docker
+Health: API `localhost:3001/api/healthz`, Admin `localhost:3000/api/healthz`, Restaurant `localhost:3002/api/healthz`.
 
-Dùng override local khi muốn mount source backend và Prisma vào container:
+## Isolated Batch 4 stack
+
+Không đụng root stack:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+```
+
+Port: Admin `13000`, API `13001`, Restaurant `13002`, Postgres `15432`, Redis `16379`, MinIO `19000/19001`.
+
+Origin CORS được cấu hình cho `localhost`; dùng `127.0.0.1` sẽ cố ý rơi vào error state. Seed test từ host:
+
+```powershell
+$env:DATABASE_URL='postgresql://foodflow:foodflow_dev@localhost:15432/foodflow'
+$env:DIRECT_URL=$env:DATABASE_URL
+cd backend
+corepack pnpm db:seed      # fixture nhỏ
+corepack pnpm db:big-seed  # dashboard/E2E rộng khi cần
+cd ..
+Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
+```
+
+Seed deterministic chỉ là test fixture và bị chặn trong production; không phải runtime fallback data.
+
+## Hot reload backend
 
 ```powershell
 docker compose -f docker-compose.yml -f docker-compose.local.yml up backend
 ```
 
-Chế độ này dành cho vòng lặp phát triển, không dùng làm bằng chứng release.
+Mode này mount source và không phải release evidence.
 
-## Health check
+## Docker artifact
 
-Kiểm tra trạng thái container trước:
+| Artifact | Dockerfile/target |
+|---|---|
+| Backend | `backend/Dockerfile` → `runner` |
+| Migrate | `backend/Dockerfile` → `migrator` |
+| Admin | `web/apps/admin/Dockerfile` |
+| Restaurant | `web/apps/restaurant/Dockerfile` |
 
-```powershell
-docker compose ps
-```
-
-Sau đó xác minh endpoint:
-
-```powershell
-Invoke-WebRequest http://[::1]:3001/api/healthz
-Invoke-WebRequest http://[::1]:3000/api/healthz
-Invoke-WebRequest http://[::1]:3002/api/healthz
-```
-
-Dùng URL loopback `[::1]` rõ ràng cho E2E nếu một app local khác đang chiếm `127.0.0.1:3000`. CORS mặc định của backend đã bao gồm cả localhost và origin `[::1]` cho môi trường phát triển.
-
-## Vòng đời dữ liệu
-
-- Volume compose giữ PostgreSQL, Redis và MinIO giữa các lần restart.
-- `docker compose down` dừng stack nhưng không xoá dữ liệu.
-- `docker compose down -v` xoá database, Redis và MinIO local. Chỉ dùng khi chủ động reset sạch local.
-- Migration production phải theo deployment guide và dùng secret manager production, không dùng default local compose.
+Không còn generic `web/Dockerfile`; worker chạy `dist/workers/main.js` từ backend image. Final image là distroless non-root, hỗ trợ `linux/amd64` và `linux/arm64`. Workflow smoke bcrypt/BullMQ/MessagePack, Prisma, Sharp, UID, manifest/SBOM và Trivy cho cả hai kiến trúc.
 
 ## Release gate local
 
-Chạy gate tương ứng với phần đã đụng. Trước deploy, toàn bộ gate phải xanh:
-
 ```powershell
-cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 ```
 
-```powershell
-cd web
-pnpm install --frozen-lockfile
-pnpm --filter foodflow-admin typecheck
-pnpm --filter foodflow-admin lint
-pnpm --filter foodflow-admin test
-pnpm --filter foodflow-admin build
-pnpm --filter foodflow-restaurant typecheck
-pnpm --filter foodflow-restaurant lint
-pnpm --filter foodflow-restaurant test
-pnpm --filter foodflow-restaurant build
-pnpm test:e2e --project=chromium --project=firefox
-```
+Partial run chỉ dùng trong development và phải ghi rõ partial:
 
 ```powershell
-cd mobile
-flutter analyze
-flutter test
+powershell -File infra/scripts/local-release-gate.ps1 \
+  -AllowDirty -SkipInstall -SkipBuild -SkipDeployPreflight
 ```
 
-Playwright phải bao phủ Chromium và Firefox, smoke accessibility axe serious/critical, visual contract và tenant isolation.
+Partial không được approve release.
 
-## Guardrail production
+## Tạo screenshot/GIF
 
-- JWT, MinIO và database trong dev compose chỉ dùng local.
-- Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel.
-- Không deploy khi GitHub Actions đang lỗi auth, billing hoặc token; sau khi khôi phục quyền truy cập phải chạy lại remote CI.
-- Chỉ deploy Supabase và Vercel sau khi local gate, secret scan, frozen install và production secret đều đã hợp lệ.
-- Sau deploy phải xác minh backend health, web health, realtime order, map, chatbot, export, notification, tenant isolation và mobile API connectivity.
+Khi isolated stack đã healthy và seed:
+
+```powershell
+$env:FOODFLOW_ADMIN_URL='http://localhost:13000'
+$env:FOODFLOW_RESTAURANT_URL='http://localhost:13002'
+$env:FOODFLOW_API_URL='http://localhost:13001/api'
+node docs/scripts/capture-product-media.mjs
+Remove-Item Env:FOODFLOW_ADMIN_URL,Env:FOODFLOW_RESTAURANT_URL,Env:FOODFLOW_API_URL
+```
+
+Script dùng API thật, tối ưu palette GIF và xóa frame trung gian. Vẫn phải xem từng ảnh vì exit code xanh có thể chỉ chụp error state.
+
+## Data và self-hosted
+
+- `docker compose down` giữ volume; `down -v` xóa dữ liệu local và chỉ dùng sau khi xác nhận đúng compose project.
+- Không cleanup toàn bộ container/volume trên máy dùng chung.
+- Self-hosted phải pin `IMAGE_TAG=v4.0.0` hoặc `sha-<full-commit>`, điền `.env.production` thật và dùng base + `docker-compose.prod.yml`.
+- Self-hosted Socket.IO/Redis/MinIO không phải fallback cho Supabase/Vercel cấu hình sai.
 
 ## Xử lý sự cố
 
-- Nếu container distroless web hoặc backend báo unhealthy, xem `docker compose logs <service>` và kiểm tra healthcheck vẫn dùng đúng đường dẫn Node runtime được bundle.
-- Nếu Admin gọi sai API, rebuild với `NEXT_PUBLIC_API_URL` đúng vì đây là giá trị build-time.
-- Nếu map không render local, kiểm tra browser map key trong env web và referrer restriction trên Google Cloud.
-- Nếu map hoặc chatbot production lỗi vì key đã lộ, rotate key trước; không dùng lại credential đã lộ.
-- Nếu remote CI không chạy được vì GitHub Actions hết quyền/token/billing, tiếp tục làm local và ghi lại bằng chứng gate local gần nhất cho tới khi chạy lại được remote check.
+- Sai API/CORS: kiểm tra `NEXT_PUBLIC_API_URL` bake trong image và origin `localhost`/`127.0.0.1`.
+- Migration fail: xem log `migrate`, không bypass dependency.
+- Sharp/native fail: không trộn Alpine/musl build với Debian/glibc runtime.
+- Redis: BullMQ cần `maxmemory-policy noeviction`.
+- Map: dùng key bị giới hạn và telemetry thật, không thêm hardcoded coordinate.
+- AI: thêm key rotate qua secret manager, không bịa fallback LLM.
+- CI hết hạn: được tiếp tục local có evidence nhưng không deploy/merge/publish cho tới khi CI khôi phục.

@@ -1,12 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 import type { DeliveryRoutePhase, OrderTrackingResponse } from '@foodflow/api-client';
 import { AlertTriangle, Clock3, LocateFixed, MapPin, Navigation, RefreshCw, Route, Wifi, WifiOff } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import {
+  OrderTrackingMapCanvas,
+  type DeliveryLatLng,
+} from '@/components/orders/order-tracking-map-canvas';
 import { api } from '@/lib/api';
-import { resolveGoogleMapsApiKey } from '@/lib/google-maps-key';
+import { resolvePublicMapConfig } from '@/lib/map-config';
 import {
   connectToTrackingOrder,
   leaveTrackingOrder,
@@ -16,7 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/types';
 
-const GOOGLE_MAPS_KEY = resolveGoogleMapsApiKey();
+const MAP_CONFIG = resolvePublicMapConfig();
 const DEFAULT_CENTER = { lat: 14.0583, lng: 108.2772 };
 const DEFAULT_ZOOM = 6;
 const VIETNAM_BOUNDS = {
@@ -203,30 +206,19 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
           aria-label={t('mapRegionLabel')}
           className="relative min-h-[360px] bg-gray-50"
         >
-          {GOOGLE_MAPS_KEY ? (
-            <APIProvider apiKey={GOOGLE_MAPS_KEY}>
-              <Map
-                mapId="foodflow-restaurant-order-tracking"
-                defaultCenter={mapCenter}
-                defaultZoom={hasDriverLocation || hasRoute ? 13 : DEFAULT_ZOOM}
-                gestureHandling="greedy"
-                disableDefaultUI
-                style={{ width: '100%', height: '100%' }}
-              >
-                <TrackingMapOverlays
-                  driverLocation={tracking?.driverLocation ?? null}
-                  routePoints={routePoints}
-                />
-              </Map>
-            </APIProvider>
-          ) : (
-            <MapUnavailableState
-              title={t('missingKeyTitle')}
-              description={t('missingKeyDescription')}
-            />
-          )}
+          <OrderTrackingMapCanvas
+            driverLocation={tracking?.driverLocation ?? null}
+            routePoints={routePoints}
+            initialCenter={mapCenter}
+            initialZoom={hasDriverLocation || hasRoute ? 13 : DEFAULT_ZOOM}
+            styleUrl={MAP_CONFIG.styleUrl}
+            loadingLabel={t('mapLoading')}
+            errorTitle={t('mapErrorTitle')}
+            errorDescription={t('mapErrorDescription')}
+            driverMarkerLabel={t('driverMarkerLabel')}
+          />
 
-          {GOOGLE_MAPS_KEY && !hasDriverLocation && !hasRoute ? (
+          {!hasDriverLocation && !hasRoute ? (
             <div className="absolute inset-x-4 bottom-4 rounded-xl border border-amber-200 bg-white/95 p-3 text-sm text-amber-800 shadow-sm backdrop-blur">
               <AlertTriangle className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
               {t('telemetryUnavailable')}
@@ -283,61 +275,6 @@ export function OrderLiveTrackingMap({ orderId, orderStatus, customerAddress }: 
   );
 }
 
-function TrackingMapOverlays({
-  driverLocation,
-  routePoints,
-}: {
-  driverLocation: OrderTrackingResponse['driverLocation'];
-  routePoints: google.maps.LatLngLiteral[];
-}) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map || typeof google === 'undefined') return undefined;
-
-    const overlays: Array<google.maps.Marker | google.maps.Polyline> = [];
-    if (routePoints.length > 1) {
-      overlays.push(new google.maps.Polyline({
-        map,
-        path: routePoints,
-        geodesic: true,
-        strokeColor: '#16a34a',
-        strokeOpacity: 0.88,
-        strokeWeight: 5,
-      }));
-    }
-
-    if (driverLocation) {
-      overlays.push(new google.maps.Marker({
-        map,
-        position: { lat: driverLocation.lat, lng: driverLocation.lng },
-        title: 'Driver',
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: '#f97316',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
-        },
-      }));
-    }
-
-    const bounds = new google.maps.LatLngBounds();
-    routePoints.forEach(point => bounds.extend(point));
-    if (driverLocation) bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
-    if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, 72);
-    }
-
-    return () => {
-      overlays.forEach(overlay => overlay.setMap(null));
-    };
-  }, [driverLocation, map, routePoints]);
-
-  return null;
-}
-
 function MetricRow({
   icon,
   label,
@@ -355,18 +292,6 @@ function MetricRow({
       <div>
         <p className="text-xs uppercase tracking-wide text-gray-400">{label}</p>
         <p className="mt-0.5 text-sm font-medium text-gray-900">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function MapUnavailableState({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="flex h-full min-h-[360px] items-center justify-center p-6 text-center">
-      <div>
-        <MapPin className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
-        <p className="mt-3 text-sm font-medium text-gray-700">{title}</p>
-        <p className="mt-1 max-w-sm text-xs text-gray-500">{description}</p>
       </div>
     </div>
   );
@@ -398,9 +323,9 @@ function isValidDeliveryLatLng(lat: number, lng: number): boolean {
     !(lat === 0 && lng === 0);
 }
 
-export function decodeEncodedPolyline(encoded: string | null): google.maps.LatLngLiteral[] {
+export function decodeEncodedPolyline(encoded: string | null): DeliveryLatLng[] {
   if (!encoded) return [];
-  const points: google.maps.LatLngLiteral[] = [];
+  const points: DeliveryLatLng[] = [];
   let index = 0;
   let lat = 0;
   let lng = 0;

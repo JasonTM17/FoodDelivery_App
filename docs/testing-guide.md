@@ -1,176 +1,274 @@
 # FoodFlow Testing Guide
 
-## Latest local evidence (2026-07-06)
+## Release rule
 
-Verified code head: `33e90ea` on `origin/master` before this docs-only refresh. Remote `codex/batch4-integration` is deleted; the clean local worktree still uses local branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions remains pending because GitHub token/auth/billing access is unavailable.
+A release is green only when the final source head passes every required local gate, fresh remote CI, provider preflight, and production smoke. A focused test proves only its bounded change. Historical counts and partially skipped scripts must never be presented as current full-release approval.
 
-- Frozen install passed for backend and web with pinned `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` passed.
-- Backend passed Prisma validate with explicit test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (110 suites / 795 tests), and `pnpm build`.
-- Web passed `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 153 tests; Restaurant 31 files / 100 tests), and `pnpm build` (Admin 70 localized pages; Restaurant 55 localized pages).
-- Docker Compose rebuilt Backend/Admin/Restaurant images from the current source with frozen installs; health checks passed for `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, and `http://[::1]:3002/api/healthz` after the rebuild.
-- Playwright passed Chromium + Firefox together: 70/70 tests with IPv6 loopback URLs. Coverage includes axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation.
-- Mobile passed `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (224 tests), focused tracking/driver route/heatmap tests 22/22, and `flutter build apk --debug`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin.
-- OpenAPI/Spectral passed with `npx -y @stoplight/spectral-cli lint docs/openapi.yaml --ruleset docs/openapi/.spectral.yaml --fail-severity error`.
-- Security evidence: high-confidence tracked/staged scans found no live provider token or private key matches. No tracked dotenv/key/credential files exist outside `.env.example` files. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. `gitleaks` is not installed locally; rerun Gitleaks in CI when Actions auth is restored.
+## Current evidence snapshot
 
-Languages: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
+Latest current-line evidence on 2026-07-11:
 
-## Backend
+| Area | Result |
+|---|---|
+| Backend KYC/config/notifications | 5 suites / 48 tests, typecheck and lint passed |
+| Fresh database | All 24 migrations applied to isolated PostGIS; KYC RLS and partial unique index verified |
+| Flutter | Analyze passed; all 274 tests passed; Driver debug APK built from the real `lib/main_driver.dart` entry |
+| Admin KYC contract | Shared API-client and Admin typecheck passed; 5 component/security tests passed |
+| OpenAPI | Spectral reported no errors after private KYC contract alignment |
+| Secret hygiene | Staged high-confidence scan passed before `924808c`; no dotenv/private key was committed |
 
-```bash
-cd backend
-pnpm prisma validate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-```
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, and current remote CI remain required.
 
-Focused examples:
+## One-command local gate
 
-```bash
-pnpm test -- sepay.provider.spec.ts payments.service.spec.ts
-pnpm test -- ai-chat.service.spec.ts deepseek-chat-provider.service.spec.ts ai-chat.controller.spec.ts
-pnpm test -- restaurant-revenue.service.spec.ts
-```
-
-Backend tests must prove real behavior: no runtime mock payments, no fabricated AI answers, no random business values, and tenant-scoped queries for restaurant/admin surfaces.
-
-Backend coverage thresholds are enforced in `backend/jest.config.ts`; do not pass JSON thresholds through shell-specific CLI quoting.
-
-### AI scenario smoke gate
-
-`pnpm db:big-seed` creates deterministic AI smoke orders `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009`, and `FF-010` for `customer1@foodflow.vn`. The integration workflow logs in through `/api/auth/login` and runs `e2e/ai-scenarios/run-ai-scenarios.ts` against the authenticated `/api/ai/chat` endpoint.
-
-CI may set `AI_ALLOW_DEGRADED=true` when no LLM provider secret is available; this still verifies auth, tool grounding, tenant-scoped order lookup, support-ticket escalation, and hallucination guards. Release verification must run without degraded mode and with a rotated, valid `DEEPSEEK_API_KEY` from the secret manager.
-
-## Post-deploy production smoke
-
-After Supabase migrations/realtime/storage and Vercel API/Admin/Restaurant deployments are promoted, run the production smoke checks from a release shell. Tokens and smoke entity IDs must come from env or provider dashboards; do not paste them into chat or commit them:
+With production env/auth configured and a seeded browser stack available:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\post-deploy-smoke.ps1 -PlanOnly `
-  -ApiUrl https://<api-domain>/api `
-  -AdminUrl https://<admin-domain> `
-  -RestaurantUrl https://<restaurant-domain>
+powershell -NoProfile -ExecutionPolicy Bypass \
+  -File infra/scripts/local-release-gate.ps1 -RunE2E
 ```
 
-For release approval, set `FOODFLOW_ADMIN_TOKEN`, `FOODFLOW_CUSTOMER_TOKEN`, `FOODFLOW_RESTAURANT_TOKEN`, `FOODFLOW_DRIVER_TOKEN`, `FOODFLOW_SMOKE_ORDER_ID`, and `FOODFLOW_SMOKE_RESTAURANT_ID`, then run with `-RequireAuthenticatedChecks`. Use `-CreateExportJob` to verify export creation/download readiness when a production smoke export side effect is approved, and `-RequireRoutePolyline` only for an assigned smoke order with real route geometry.
+The script checks clean git/diffs, tracked/staged secrets, frozen installs, Prisma, backend, web, OpenAPI, Compose, mobile, optional E2E, Supabase preflight, and Vercel preflight.
 
-## Web
+Development-only partial runs must use explicit skip flags and be labeled partial:
 
-```bash
+```powershell
+powershell -File infra/scripts/local-release-gate.ps1 \
+  -AllowDirty -SkipInstall -SkipBuild -SkipDeployPreflight
+```
+
+## Backend gate
+
+```powershell
+cd backend
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+$env:DATABASE_URL='postgresql://foodflow:foodflow_dev@localhost:5432/foodflow'
+$env:DIRECT_URL=$env:DATABASE_URL
+corepack pnpm exec prisma validate --schema prisma/schema.prisma
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm exec jest --runInBand
+corepack pnpm build
+Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
+```
+
+Fresh-migration test:
+
+1. Start an isolated empty PostGIS database.
+2. Run `prisma migrate deploy`, never `migrate dev`.
+3. Confirm all 24 migrations complete.
+4. Start the API and require healthy DB/provider components.
+5. Run integration/E2E against that schema.
+
+Backend coverage must include:
+
+- Auth access/refresh/RBAC and expired/wrong-token rejection.
+- Restaurant active-profile tenant scoping.
+- Order state transitions, payment/webhook replay, promotions, notifications, exports, audit/support.
+- Realtime token channel authorization and RLS-oriented claims.
+- Supabase Storage and PostgreSQL queue adapters plus local compatibility adapters.
+- GPS freshness/bounds, route phase, dispatch retries, route geometry/ETA, and participant tracking access.
+- DeepSeek provider success, timeout/error/unconfigured, session ownership, escalation, and usage telemetry.
+- Production environment validation, including weak/example/local value rejection.
+
+## OpenAPI and client contract
+
+```powershell
+npx -y @stoplight/spectral-cli lint docs/openapi.yaml \
+  --ruleset docs/openapi/.spectral.yaml --fail-severity error
+```
+
+Contract checks must prove:
+
+- Web uses the shared success envelope and RFC 7807 errors.
+- `POST /api/realtime/token` and secured job drain are documented.
+- Mobile models are generated/reconciled from the canonical contract rather than a stale or hand-invented schema.
+- Runtime validators reject malformed “successful” business payloads instead of rendering fake empty/zero data.
+
+## Web gate
+
+```powershell
 cd web
-pnpm install --frozen-lockfile
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+corepack pnpm install --frozen-lockfile
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm test
+
+$env:NEXT_PUBLIC_ADMIN_URL='https://admin.foodflow.test'
+$env:NEXT_PUBLIC_RESTAURANT_URL='https://restaurant.foodflow.test'
+corepack pnpm --filter foodflow-admin build
+corepack pnpm --filter restaurant build
+Remove-Item Env:NEXT_PUBLIC_ADMIN_URL,Env:NEXT_PUBLIC_RESTAURANT_URL
 ```
 
-Focused dashboard checks:
+Builds without required production public env must fail. Placeholder test domains are local build evidence only and must never be deployed.
 
-```bash
-pnpm --filter foodflow-admin typecheck
-pnpm --filter foodflow-admin lint
-pnpm --filter foodflow-admin test
-pnpm --filter foodflow-admin build
+Unit/component coverage should include response validation, loading/empty/error states, locale routing, auth refresh, tenant-safe mutations, realtime provider selection, maps/geometry, keyboard interaction, and accessible names.
 
-pnpm --filter restaurant typecheck
-pnpm --filter restaurant lint
-pnpm --filter restaurant test
-pnpm --filter restaurant build
+## Isolated browser stack
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
 ```
 
-Latest local web/API-contract evidence: 2026-07-06 on `33e90ea`, OpenAPI Spectral lint passed with `--fail-severity error`. `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed for the full web workspace; Vitest passed Admin 37 files / 153 tests and Restaurant 31 files / 100 tests. Backend validation passed Prisma validate, `pnpm typecheck`, `pnpm lint`, full Jest (110 suites / 795 tests), and build.
-Earlier map/tracking evidence remains useful for history, but the current-head verification is the 2026-07-06 matrix in [Batch 4 release report](batch4-release-report.md).
-Latest current-head Restaurant web evidence: 2026-07-04 at `2cd87e5`, `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, `pnpm --filter restaurant test` (27 files / 79 tests), and `pnpm --filter restaurant build` all passed. The production build generated the localized `vi`, `en`, and `ja` route set plus `/api/healthz`.
-Latest current-head backend/web gate evidence: 2026-07-04 after `ad3b730`, backend `pnpm install --frozen-lockfile`, `pnpm prisma generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 752 tests), and `pnpm build` all passed. Web workspace `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 files / 139 tests; Restaurant 27 files / 79 tests), and `pnpm build` all passed. The Admin build generated 70 localized pages and the Restaurant build generated 55 localized pages across `vi`, `en`, and `ja`. Remote CI/Actions evidence for this head is still pending because account token/auth is unavailable.
+Ports: Admin `13000`, API `13001`, Restaurant `13002`, Postgres `15432`, Redis `16379`, MinIO `19000/19001`.
 
-## Playwright E2E
+Use these origins:
 
-Install browsers once:
+```powershell
+$env:ADMIN_URL='http://localhost:13000'
+$env:API_URL='http://localhost:13001/api'
+$env:RESTAURANT_URL='http://localhost:13002'
+```
 
-```bash
+`127.0.0.1` is intentionally outside this overlay's normal CORS origins and is reserved for explicit fail-closed/error-state tests.
+
+## Playwright
+
+```powershell
 cd web
-pnpm test:e2e:install
+corepack pnpm test:e2e:install
+corepack pnpm test:e2e --project=chromium --project=firefox
 ```
 
-Run seeded E2E against real local services:
+The suite runs one worker to keep seeded state deterministic. Required coverage:
 
-```bash
-pnpm test:e2e --project=chromium
-pnpm test:e2e --project=firefox
-```
+| Spec | Contract |
+|---|---|
+| `auth.spec.ts` | login/session/RBAC |
+| `admin-dashboard.spec.ts` | Admin data and actions |
+| `restaurant-order-management.spec.ts` | queue and status transitions |
+| `customer-order-flow.spec.ts` | cart/address/order end-to-end |
+| `realtime-tracking.spec.ts` | active order/tracking availability |
+| `tenant-isolation.spec.ts` | cross-restaurant read/write denial |
+| `batch4-contract.spec.ts` | exports, promotions, accessibility, AI fail-closed |
+| `visual-contract.spec.ts` | responsive brand/form structural contract |
 
-Latest local E2E evidence: 2026-07-06 on `33e90ea`, Docker Compose rebuilt healthy Backend/Admin/Restaurant standalone containers with `NEXT_PUBLIC_API_URL` provided at image build time. Because another local process was bound to `127.0.0.1:3000`, the verified local run used explicit IPv6 loopback endpoints: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Full desktop Playwright passed Chromium + Firefox together, 70/70 tests, covering axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows, and tenant isolation. The E2E harness now fails fast if a local route resolves to a Next.js 404 shell.
+No test may silently accept a Next.js/Vercel 404 shell, console error, mixed-origin API request, or unavailable business data as a pass.
 
-Batch 4 E2E coverage should include:
+## Accessibility
 
-- Login and RBAC
-- Locale redirects and `/:locale` navigation
-- Admin order feed/WebSocket and controlled polling fallback
-- Promotion CRUD and overlap validation
-- Support queue/detail/messages/macros/CSAT
-- Export job create/progress/download
-- Restaurant menu/category/item/option CRUD and reorder
-- Revenue, staff, insights, benchmark
-- Notifications
-- Tenant isolation, including `web/e2e/tests/tenant-isolation.spec.ts`: restaurant users must not list, read, or update another restaurant tenant's orders.
+Use `@axe-core/playwright` and fail on `serious` or `critical` violations. Test normal and error states in Chromium and Firefox.
 
-Realtime security regression coverage must also verify:
+Also verify manually/semantically:
 
-- Missing, refresh, expired, or invalid Socket.IO tokens cannot connect.
-- Non-admin users cannot join Admin order or driver rooms.
-- Restaurants cannot join another tenant's room.
-- Customers, drivers, and restaurant staff cannot join unrelated order rooms.
-- Only authenticated drivers can publish GPS updates.
-- Mobile driver GPS metadata is normalized before publish: Geolocator speed is converted from m/s to backend km/h, and invalid heading/speed/accuracy values are dropped.
-- Driver/customer maps must draw backend `routePolyline` separately from raw telemetry trails.
-- Route deviation checks must snap to connected polyline segments, not only vertices, so sparse provider routes do not falsely mark a driver as off-route.
-- Route geometry is cleared when an order changes from pickup phase to dropoff phase so clients do not draw stale restaurant-bound routes after pickup.
-- If Google/OSRM route providers are unavailable, tracking emits `etaMinutes: null` and `source: route_unavailable`; the backend must not fabricate straight-line ETA minutes.
-- Admin driver maps must clear stale `currentOrder` when realtime sends `orderId: null` and ignore invalid realtime coordinates before passing them to Google Maps.
-- Mobile driver “Open directions” must pass the current driver coordinates as Google Maps `origin` when available, use navigation mode, and show an explicit unavailable state for invalid destinations.
-- Mobile driver route replay and demand heatmap must render real Google Maps overlays from backend route/demand coordinates; do not replace them with schematic canvas-only maps or generated local points.
-- Notification clients cannot subscribe or mutate data as another user.
-- Dispatch offer rooms and accept/reject actions are bound to the authenticated driver ID.
-- Admin and Restaurant web clients send the latest access token during reconnect.
+- Keyboard-only order, menu, promotion, export, login, map controls.
+- Visible `:focus-visible` state.
+- Correct heading hierarchy, form labels, error associations, live regions, and button types.
+- Contrast for validation/retry/error text.
+- Locale-correct title, `html lang`, labels, and `aria-label` on fresh browser contexts.
+- No focus trap or inaccessible portal/dialog.
 
-## Accessibility and Visual QA
+Release requirement: axe serious/critical **0** on all agreed critical pages in both browsers, not only the two focused error-state tests.
 
-- Run axe checks and require zero serious/critical issues.
-- Validate keyboard navigation, visible focus, dialog focus trap, and chart/table alternatives.
-- Run `web/e2e/tests/visual-contract.spec.ts` with the Playwright suite. It verifies the Admin and Restaurant FoodFlow login brand shells, responsive centering, SVG logo tokens, CTA contrast, and stores review screenshots under Playwright `test-results`.
-- Compare Admin and Restaurant screens against approved Stitch references.
-- No approved Stitch bitmap baseline is currently stored in this repo; add reviewed Stitch exports before replacing the contract guard with pixel `toHaveScreenshot` snapshots.
-- Check desktop 1440/1280, tablet, and mobile responsive layouts.
+## Visual and Stitch regression
 
-## Mobile
+`visual-contract.spec.ts` currently validates layout/branding and saves evidence screenshots; it is not a full pixel-baseline diff. Before release:
 
-Mobile is reconciled after web/backend Batch 4 stabilizes.
+1. Compare current-source screenshots against approved Admin/Restaurant/Stitch artifacts.
+2. Cover desktop and responsive widths for dashboard, approval, promotions, audit/export, staff, benchmark, map/tracking, and mobile flows.
+3. Disable motion and use deterministic seed/time where visual baselines require it.
+4. Review differences manually; do not auto-update baselines to make a failure green.
+5. Regenerate docs media only after accepted UI changes.
 
-```bash
+## Maps and shipper route tests
+
+Backend tests must validate:
+
+- Google/routing provider response parsing, cache invalidation, and provider failure.
+- Valid Vietnam/service-area coordinate bounds and encoded geometry limits.
+- Fresh `sampledAt`, order/driver ownership, pickup/drop-off route phase.
+- Persisted `delivery_tasks.route_geojson`, real distance/duration, and remaining ETA.
+- Cross-tenant/unauthorized tracking denial.
+
+Web/mobile tests must verify:
+
+- No hardcoded fallback city/camera/polyline/ETA.
+- Wrong-order/wrong-phase/stale events do not replace current state.
+- Driver-to-pickup and pickup-to-customer routes switch only on valid status/telemetry.
+- Missing data produces localized unavailable/error UI.
+- Real provider key smoke is run only with an origin/package-restricted key.
+
+Production smoke should use `post-deploy-smoke.ps1 -RequireRoutePolyline` and an authorized active order.
+
+## Supabase Realtime and tenant tests
+
+Required cases:
+
+- Token TTL and claim shape; channels all begin `private:`.
+- Customer receives only owned order/user channels.
+- Restaurant requires active profile and exact tenant/order.
+- Driver receives only self/assigned-order channels.
+- Admin receives only documented admin channels plus explicitly requested order.
+- Cross-tenant requests return forbidden before token issue.
+- Expired/invalid JWT cannot subscribe; anon cannot read outbox.
+- Authorized insert is delivered exactly once to the intended handler.
+- Local Socket.IO provider remains covered separately and is never an implicit production fallback.
+
+## AI chatbot
+
+Local fail-closed tests run without a key and expect `AI_PROVIDER_NOT_CONFIGURED`; timeout/provider errors must terminate with the documented error event rather than a fabricated assistant reply. Live smoke requires a newly rotated `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL=deepseek-v4-flash`, and a server-side environment.
+
+Verify answer, escalation, session ownership, order context, token usage, latency, cost telemetry, budget display, and provider timeout/error. Never accept canned/random text as proof of an LLM call.
+
+## Mobile gate
+
+```powershell
 cd mobile
-flutter pub get
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
-Mobile API clients must use the stabilized Batch 4 OpenAPI contract; do not commit generated mobile clients before the contract is final.
-The Batch 4 mobile gate currently requires frozen install, `flutter analyze` with zero issues, the full Flutter test suite passing, and Android debug APK compilation for both customer and driver entrypoints.
-Latest local mobile evidence: 2026-07-06 on `33e90ea`. `flutter pub get --enforce-lockfile` passed, `flutter analyze` found no issues, full `flutter test` passed 224 tests, focused tracking/driver route/heatmap tests passed 22/22, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. The APK build emitted only a non-fatal future-compatibility warning from `share_plus` applying the Kotlin Gradle Plugin. Google Maps native keys are env/local-xcconfig only, and Android release signing fails closed until `FOODFLOW_UPLOAD_*` signing secrets are provided.
+Production release additionally requires:
 
-Remote CI last fully ran green for `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252`, and Integration Smoke Gate `28704171294`. Subsequent heads, including the latest Batch 4 local commits, could not start or complete remote jobs because GitHub Actions reported account billing/spending-limit or token/auth blockers. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests, and Integration Smoke Gate after billing/auth is fixed.
+- Supabase token/channel claims, cross-scope denial, reconnect/refresh, and receive-only event dispatch.
+- Customer/driver app entry smoke.
+- Maps/GPS permission denied, stale/future sample, background update, route phase, offline/reconnect.
+- Driver terms/KYC private upload grants, credential-header denial, object-key submission, pending/rejected routing, and Admin signed review.
+- vi/en/ja generated localization and no hardcoded business labels.
+- API contract and base URL fail-closed checks.
+- Android/iOS production signing and provider-key injection through secure platform config.
 
-## Security Checks
+## Docker and supply-chain tests
 
-Before every commit:
+- Build Backend/Migrate/Admin/Restaurant for `linux/amd64,linux/arm64`.
+- Verify bcrypt, BullMQ/MessagePack native addon, Prisma engine, and Sharp PNG on both architectures.
+- Verify non-root UID and health endpoint.
+- Inspect multi-arch manifest, provenance, and SBOM.
+- Trivy both architectures; block `HIGH,CRITICAL`.
+- Actionlint and ShellCheck workflows/scripts.
+- Refuse semver overwrite; compare promoted digest with SHA source.
 
-```bash
+Do not publish or promote from local evidence while remote CI is unavailable.
+
+## Security and secret checks
+
+```powershell
+powershell -File infra/scripts/secret-scan.ps1
 git diff --check
 git diff --cached --check
+git ls-files | Select-String -Pattern '(^|/)(\.env|.*\.(pem|key|p12|pfx))$'
 ```
 
-Run staged and tracked-file secret scans. Ignore placeholders in `.env.example`, but block real tokens, private keys, database credentials, and service-role secrets.
+CI must rerun Gitleaks, CodeQL, dependency audit, Trivy, and SBOM. Review generic matches; test/example values must be obviously non-live. Any real match stops release and triggers rotation/history assessment.
+
+## Production smoke and evidence
+
+Run [production health](../infra/scripts/production-health-check.ps1) and [authenticated post-deploy smoke](../infra/scripts/post-deploy-smoke.ps1) exactly as described in the deployment guide.
+
+Record for each gate:
+
+- Exact source SHA and UTC timestamp.
+- Command, environment class (local/preview/production), and pass/fail.
+- Test/suite count where emitted.
+- Image manifest digest and per-architecture scan result.
+- Production aliases and health status, never secret values or bearer tokens.
+- Explicit skips/blockers.
+
+Artifacts and reports must be gitignored unless intentionally curated under `docs/`. Never commit Playwright traces/videos containing tokens or user data.

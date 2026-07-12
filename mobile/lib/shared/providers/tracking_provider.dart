@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'package:api_client/api_client.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
-import '../api/socket_client.dart';
+import '../api/realtime_client.dart';
 import '../maps/lat_lng_validation.dart';
 import '../utils/backend_date_time.dart';
 import 'order_provider.dart';
 
 const _trackingUnset = Object();
+const trackingSnapshotUnavailable = 'tracking_snapshot_unavailable';
+const trackingSnapshotMalformed = 'tracking_snapshot_malformed';
+const trackingSnapshotOrderMismatch = 'tracking_snapshot_order_mismatch';
 
 final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
   (ref) {
@@ -28,6 +33,7 @@ class TrackingState {
   final String? routePolyline;
   final String? routePhase;
   final bool routeUpdateReceived;
+  final String? snapshotError;
 
   const TrackingState({
     this.isConnected = false,
@@ -41,6 +47,7 @@ class TrackingState {
     this.routePolyline,
     this.routePhase,
     this.routeUpdateReceived = false,
+    this.snapshotError,
   });
 
   TrackingState copyWith({
@@ -55,6 +62,7 @@ class TrackingState {
     Object? routePolyline = _trackingUnset,
     Object? routePhase = _trackingUnset,
     bool? routeUpdateReceived,
+    Object? snapshotError = _trackingUnset,
   }) {
     return TrackingState(
       isConnected: isConnected ?? this.isConnected,
@@ -80,6 +88,9 @@ class TrackingState {
           ? this.routePhase
           : routePhase as String?,
       routeUpdateReceived: routeUpdateReceived ?? this.routeUpdateReceived,
+      snapshotError: identical(snapshotError, _trackingUnset)
+          ? this.snapshotError
+          : snapshotError as String?,
     );
   }
 }
@@ -88,14 +99,12 @@ String? resolveTrackingRoutePolyline(TrackingState tracking, String? _) {
   return tracking.routeUpdateReceived ? tracking.routePolyline : null;
 }
 
-/// B-MOB-06: only apply status events that target the tracked order.
 bool shouldApplyOrderStatusEvent(
-  Map<String, dynamic> data,
-  String trackedOrderId,
+  Map<String, dynamic> event,
+  String activeOrderId,
 ) {
-  final eventOrderId = data['orderId']?.toString();
-  if (eventOrderId == null || eventOrderId.isEmpty) return false;
-  return eventOrderId == trackedOrderId;
+  final eventOrderId = event['orderId'];
+  return eventOrderId is String && eventOrderId == activeOrderId;
 }
 
 TrackingState mergeTrackingSnapshot(
@@ -126,13 +135,34 @@ TrackingState mergeTrackingSnapshot(
     routePolyline: snapshot.routePolyline,
     routePhase: snapshot.routePhase,
     routeUpdateReceived: true,
+    snapshotError: null,
   );
+}
+
+@visibleForTesting
+TrackingResponse parseTrackingSnapshotPayload(Object? data, String orderId) {
+  if (data is! Map) {
+    throw const FormatException('Tracking snapshot response must be an object');
+  }
+
+  late final TrackingResponse snapshot;
+  try {
+    snapshot = TrackingResponse.fromJson(Map<String, dynamic>.from(data));
+  } catch (_) {
+    throw const FormatException('Tracking snapshot contract mismatch');
+  }
+
+  if (snapshot.orderId != orderId) {
+    throw const FormatException('Tracking snapshot orderId mismatch');
+  }
+
+  return snapshot;
 }
 
 class TrackingNotifier extends StateNotifier<TrackingState> {
   final OrderNotifier _orderNotifier;
   final ApiClient _api;
-  final SocketClient _socketClient;
+  final RealtimeClient _realtimeClient;
   StreamSubscription<Map<String, dynamic>>? _locationSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _statusSub;
@@ -140,9 +170,9 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   TrackingNotifier(
     this._orderNotifier, {
     ApiClient? apiClient,
-    SocketClient? socketClient,
+    RealtimeClient? realtimeClient,
   }) : _api = apiClient ?? ApiClient.instance,
-       _socketClient = socketClient ?? SocketClient.instance,
+       _realtimeClient = realtimeClient ?? RealtimeClient.instance,
        super(const TrackingState());
 
   Future<void> startTracking(String orderId) async {
@@ -152,12 +182,12 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = TrackingState(currentOrderId: orderId);
 
     await _loadTrackingSnapshot(orderId);
-    await _socketClient.connect();
+    await _realtimeClient.connect();
 
-    _socketClient.subscribeOrder(orderId);
-    state = state.copyWith(isConnected: _socketClient.isConnected);
+    await _realtimeClient.subscribeOrder(orderId);
+    state = state.copyWith(isConnected: _realtimeClient.isConnected);
 
-    _locationSub = _socketClient.onDriverLocation.listen((data) {
+    _locationSub = _realtimeClient.onDriverLocation.listen((data) {
       final lat =
           (data['lat'] as num?)?.toDouble() ??
           (data['latitude'] as num?)?.toDouble();
@@ -184,7 +214,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       }
     });
 
-    _etaSub = _socketClient.onEtaUpdate.listen((data) {
+    _etaSub = _realtimeClient.onEtaUpdate.listen((data) {
       if (data['orderId'] != orderId) return;
       final eta = (data['etaMinutes'] as num?)?.toInt();
       state = state.copyWith(
@@ -197,8 +227,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       );
     });
 
-    // B-MOB-06: ignore status events with missing/mismatched orderId.
-    _statusSub = _socketClient.onOrderStatus.listen((data) {
+    _statusSub = _realtimeClient.onOrderStatus.listen((data) {
       if (!shouldApplyOrderStatusEvent(data, orderId)) return;
       final status = data['status'] as String?;
       if (status != null) {
@@ -214,7 +243,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   void stopTracking() {
     final orderId = state.currentOrderId;
     if (orderId != null) {
-      _socketClient.unsubscribeOrder(orderId);
+      unawaited(_realtimeClient.unsubscribeOrder(orderId));
     }
     _locationSub?.cancel();
     _etaSub?.cancel();
@@ -228,7 +257,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _etaSub?.cancel();
     _statusSub?.cancel();
     if (state.currentOrderId != null) {
-      _socketClient.unsubscribeOrder(state.currentOrderId!);
+      unawaited(_realtimeClient.unsubscribeOrder(state.currentOrderId!));
     }
     super.dispose();
   }
@@ -236,11 +265,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   Future<void> _loadTrackingSnapshot(String orderId) async {
     try {
       final response = await _api.get('/orders/$orderId/tracking');
-      final data = response.data;
-      if (data is! Map<String, dynamic>) return;
-
-      final snapshot = TrackingResponse.fromJson(data);
-      if (snapshot.orderId != orderId) return;
+      final snapshot = parseTrackingSnapshotPayload(response.data, orderId);
 
       state = mergeTrackingSnapshot(state, snapshot);
       _orderNotifier.updateOrderStatus(orderId, snapshot.status);
@@ -253,8 +278,16 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
           driverLocation.lng,
         );
       }
+    } on DioException catch (_) {
+      state = state.copyWith(snapshotError: trackingSnapshotUnavailable);
+    } on FormatException catch (error) {
+      state = state.copyWith(
+        snapshotError: error.message.contains('orderId')
+            ? trackingSnapshotOrderMismatch
+            : trackingSnapshotMalformed,
+      );
     } catch (_) {
-      // Tracking remains realtime-first when the snapshot endpoint is temporarily unavailable.
+      state = state.copyWith(snapshotError: trackingSnapshotMalformed);
     }
   }
 }

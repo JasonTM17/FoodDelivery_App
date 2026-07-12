@@ -4,9 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AdminDriverLocation } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
+import { resolveRealtimeProvider, subscribeToSupabaseOutbox } from '@/lib/supabase-realtime';
 
 export type DriverMapConnectionStatus = 'connecting' | 'connected' | 'disconnected';
-export type DriverLocation = AdminDriverLocation;
+export type DriverLocation = AdminDriverLocation & {
+  isStale?: boolean;
+  staleReason?: 'refresh_failed';
+};
 
 interface DriverLocationChangedEvent {
   driverId: string;
@@ -28,6 +32,7 @@ export interface DriverLocationsState {
 }
 
 const fallbackPollingIntervalMs = 15_000;
+const staleRefreshThresholdMs = 60_000;
 const hasOwn = Object.prototype.hasOwnProperty;
 const vietnamDeliveryBounds = {
   south: 3.8,
@@ -43,6 +48,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<DriverMapConnectionStatus>('connecting');
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
+  const lastSuccessfulRefreshAtRef = useRef<number | null>(null);
 
   const loadDrivers = useCallback(async (options: { background?: boolean } = {}) => {
     setError(null);
@@ -50,9 +56,15 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
     try {
       const locations = await apiGet<DriverLocation[]>('/admin/online-drivers');
       setDrivers(locations.filter(isValidDriverLocation));
-      setLastRefreshedAt(new Date().toISOString());
+      const refreshedAt = new Date();
+      lastSuccessfulRefreshAtRef.current = refreshedAt.getTime();
+      setLastRefreshedAt(refreshedAt.toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'DRIVER_MAP_LOAD_FAILED');
+      const lastSuccess = lastSuccessfulRefreshAtRef.current;
+      if (lastSuccess && Date.now() - lastSuccess >= staleRefreshThresholdMs) {
+        setDrivers((prev) => prev.map(markDriverStale));
+      }
     } finally {
       if (!options.background) setIsLoading(false);
     }
@@ -80,7 +92,7 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
       if (index < 0) return prev;
 
       const next = [...prev];
-      next[index] = {
+      const updatedDriver: DriverLocation = {
         ...next[index],
         lat: update.lat,
         lng: update.lng,
@@ -90,6 +102,9 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
         status: update.status ?? next[index].status,
         lastSeenAt: update.timestamp ?? next[index].lastSeenAt,
       };
+      delete updatedDriver.isStale;
+      delete updatedDriver.staleReason;
+      next[index] = updatedDriver;
       return next;
     });
   }, [loadDrivers]);
@@ -99,6 +114,20 @@ export function useRealtimeDriverLocations(): DriverLocationsState {
   }, [loadDrivers]);
 
   useEffect(() => {
+    if (resolveRealtimeProvider() === 'supabase') {
+      return subscribeToSupabaseOutbox({
+        channel: 'private:admin:drivers',
+        events: {
+          'admin:driver_location_changed': (payload) => applyLocationUpdate(payload as DriverLocationChangedEvent),
+        },
+        onStatus: (nextStatus) => {
+          if (nextStatus === 'connected') setConnectionStatus('connected');
+          else if (nextStatus === 'connecting') setConnectionStatus('connecting');
+          else setConnectionStatus('disconnected');
+        },
+      });
+    }
+
     const socket = getSocket();
     const subscribe = () => {
       setConnectionStatus('connected');
@@ -159,4 +188,12 @@ function isValidLatLng(lat: number, lng: number): boolean {
     lat <= vietnamDeliveryBounds.north &&
     lng >= vietnamDeliveryBounds.west &&
     lng <= vietnamDeliveryBounds.east;
+}
+
+function markDriverStale(driver: DriverLocation): DriverLocation {
+  return {
+    ...driver,
+    isStale: true,
+    staleReason: 'refresh_failed',
+  };
 }

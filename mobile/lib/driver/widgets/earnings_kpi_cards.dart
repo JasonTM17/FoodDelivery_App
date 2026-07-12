@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/driver_provider.dart';
 
 class EarningsKpiCards extends StatelessWidget {
@@ -40,7 +41,7 @@ class EarningsKpiCards extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${earnings.total.toStringAsFixed(0)}đ',
+                formatVnd(context, earnings.total),
                 style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w800,
@@ -65,7 +66,7 @@ class EarningsKpiCards extends StatelessWidget {
             Expanded(
               child: _MiniKpi(
                 label: l10n.driverEarningsAverage,
-                value: '${earnings.averagePerOrder.toStringAsFixed(0)}đ',
+                value: formatVnd(context, earnings.averagePerOrder),
                 color: AppColors.accent,
                 icon: Icons.trending_up,
               ),

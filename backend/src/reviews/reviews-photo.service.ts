@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'minio'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
 
@@ -11,13 +12,25 @@ const PRESIGN_EXPIRY_SECONDS = 900 // 15 min
 @Injectable()
 export class ReviewsPhotoService {
   private readonly logger = new Logger(ReviewsPhotoService.name)
-  private readonly client: Client
+  private readonly provider: 'minio' | 'supabase'
+  private readonly client?: Client
+  private readonly supabase?: SupabaseClient
   private readonly bucket: string
 
   constructor(private readonly config: ConfigService) {
-    const minio = resolveMinioRuntimeConfig(config)
-    this.client = new Client(minio.client)
-    this.bucket = minio.bucket
+    this.provider = config.get<string>('STORAGE_PROVIDER') === 'supabase' ? 'supabase' : 'minio'
+    if (this.provider === 'supabase') {
+      this.bucket = requireStringConfig(config, 'SUPABASE_STORAGE_BUCKET')
+      this.supabase = createClient(
+        requireStringConfig(config, 'SUPABASE_URL'),
+        requireStringConfig(config, 'SUPABASE_SERVICE_ROLE_KEY'),
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      )
+    } else {
+      const minio = resolveMinioRuntimeConfig(config)
+      this.client = new Client(minio.client)
+      this.bucket = minio.bucket
+    }
   }
 
   async getUploadUrl(contentType: string): Promise<{ url: string; key: string }> {
@@ -31,7 +44,15 @@ export class ReviewsPhotoService {
     const key = `reviews/photos/${Date.now()}-${randomBytes(8).toString('hex')}.${ext}`
 
     try {
-      const url = await this.client.presignedPutObject(
+      if (this.provider === 'supabase') {
+        const { data, error } = await this.supabase!.storage
+          .from(this.bucket)
+          .createSignedUploadUrl(key)
+        if (error) throw error
+        return { url: data.signedUrl, key }
+      }
+
+      const url = await this.client!.presignedPutObject(
         this.bucket,
         key,
         PRESIGN_EXPIRY_SECONDS,
@@ -52,4 +73,11 @@ export class ReviewsPhotoService {
       )
     }
   }
+}
+
+function requireStringConfig(config: ConfigService, key: string): string {
+  const value = config.get<string | number>(key)
+  const stringValue = value === undefined || value === null ? '' : String(value).trim()
+  if (!stringValue) throw new Error(`${key} is required when STORAGE_PROVIDER=supabase`)
+  return stringValue
 }

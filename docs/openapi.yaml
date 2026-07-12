@@ -5,7 +5,7 @@ info:
   description: |
     FoodFlow -- Food Delivery Platform REST API.
 
-    **Base URL:** `https://api.foodflow.vn`
+    **Base path:** `/api`. The production origin is the verified Vercel API alias.
 
     **Conventions:**
     - All monetary values are in **VND**, represented as integers.
@@ -17,17 +17,15 @@ info:
     - Inbound HMAC: SePay webhooks are verified with `x-sepay-signature`.
     - Outbound HMAC: generic outbound webhooks use `X-Signature-SHA256` when configured.
 
-    **Versioning:** Path-based `/v1/`. Breaking changes bump the version path.
+    **Versioning:** Batch 4 currently uses the `/api` base without a `/v1` prefix. A future version prefix requires an updated server contract and migration policy.
   version: "1.0.0"
   contact:
     name: FoodFlow Team
     email: support@foodflow.vn
 
 servers:
-  - url: https://api.foodflow.vn/api
-    description: Production (Nest global prefix /api)
-  - url: https://api-staging.foodflow.vn/api
-    description: Staging
+  - url: https://replace-with-foodflow-api.vercel.app/api
+    description: Production placeholder; replace with the verified Vercel API alias before publishing external client configuration
   - url: http://localhost:3001/api
     description: Local development
 
@@ -44,6 +42,8 @@ tags:
     description: Menu management (categories, items, options, availability) -- restaurant owner only
   - name: restaurant-staff
     description: Restaurant tenant staff invitations, permissions, and shift schedules
+  - name: restaurant-reviews
+    description: Restaurant tenant review inbox and merchant replies
   - name: orders
     description: Order lifecycle (place, status transitions, cancel, refund, assign driver, tracking)
   - name: drivers
@@ -64,6 +64,12 @@ tags:
     description: FoodFlow AI chatbot and service integration
   - name: analytics
     description: KPI aggregations, business dashboards, heat maps -- admin only
+  - name: realtime
+    description: Short-lived Supabase Realtime authorization for authenticated private channels
+  - name: jobs
+    description: Secured PostgreSQL outbox drain used by Vercel Cron and approved workers
+  - name: health
+    description: Public platform liveness and strict dependency readiness probes
 
 security:
   - bearerAuth: []
@@ -75,6 +81,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT bearer access token. Obtain via `POST /auth/login`; the signing algorithm follows the active JWT cutover phase.
+    cronBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Exact server-side CRON_SECRET value. Never expose this credential to browser or mobile clients.
   parameters:
     PageParam:
       name: page
@@ -115,11 +126,57 @@ components:
         code:    { type: string, description: "Application-specific error code (e.g. AUTH_INVALID_CREDENTIALS)" }
       required: [type, title, status, detail]
       example:
-        type: "https://api.foodflow.vn/errors/validation"
+        type: "about:blank"
         title: "Validation Error"
         status: 422
-        detail: "Email không đúng định dạng"
+        detail: "Email is not valid"
         code: "VALIDATION_INVALID_EMAIL"
+
+    HealthComponentStatus:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [up, down] }
+        latencyMs: { type: integer, minimum: 0 }
+      required: [status, latencyMs]
+
+    StorageHealthComponentStatus:
+      type: object
+      additionalProperties: false
+      properties:
+        provider: { type: string, enum: [minio, supabase] }
+        status: { type: string, enum: [up, down] }
+        latencyMs: { type: integer, minimum: 0 }
+      required: [provider, status, latencyMs]
+
+    HealthComponents:
+      type: object
+      additionalProperties: false
+      properties:
+        db: { $ref: '#/components/schemas/HealthComponentStatus' }
+        redis: { $ref: '#/components/schemas/HealthComponentStatus' }
+        storage: { $ref: '#/components/schemas/StorageHealthComponentStatus' }
+      required: [db, redis, storage]
+
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        uptime: { type: number, minimum: 0 }
+        timestamp: { type: string, format: date-time }
+        components: { $ref: '#/components/schemas/HealthComponents' }
+      required: [status, uptime, timestamp, components]
+
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ready, not_ready] }
+        ready: { type: boolean }
+        timestamp: { type: string, format: date-time }
+        components: { $ref: '#/components/schemas/HealthComponents' }
+      required: [status, ready, timestamp, components]
 
     PaginationMeta:
       type: object
@@ -129,6 +186,74 @@ components:
         limit:    { type: integer, description: "Items per page" }
         hasMore:  { type: boolean, description: "Whether more pages exist" }
       required: [total, page, limit, hasMore]
+
+    RealtimeTokenRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Optional order scope; the actor must be an authorized participant or admin.
+        restaurantId:
+          type: string
+          format: uuid
+          description: Optional restaurant scope; the actor must have an active profile for this tenant.
+
+    RealtimeTokenData:
+      type: object
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          const: supabase
+        token:
+          type: string
+          minLength: 1
+          description: Five-minute Supabase-compatible JWT carrying explicit realtime_channels claims.
+        expiresAt:
+          type: string
+          format: date-time
+        channels:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^private:'
+      required: [provider, token, expiresAt, channels]
+
+    RealtimeTokenEnvelope:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          $ref: '#/components/schemas/RealtimeTokenData'
+      required: [success, data]
+
+    JobDrainStats:
+      type: object
+      additionalProperties: false
+      properties:
+        claimed: { type: integer, minimum: 0 }
+        completed: { type: integer, minimum: 0 }
+        failed: { type: integer, minimum: 0 }
+        retried: { type: integer, minimum: 0 }
+      required: [claimed, completed, failed, retried]
+
+    JobDrainEnvelope:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          $ref: '#/components/schemas/JobDrainStats'
+      required: [success, data]
 
     # ── Auth ──
 
@@ -220,7 +345,7 @@ components:
       type: object
       properties:
         accessToken:  { type: string, description: "JWT access token (15 min TTL; algorithm follows the active backend cutover phase)" }
-        refreshToken: { type: string, description: "Opaque rotating refresh token" }
+        refreshToken: { type: string, description: "Rotating refresh JWT (7 day TTL; invalidated through the server-side blocklist)" }
         expiresAt:    { type: string, format: date-time }
         user:
           $ref: "#/components/schemas/UserProfile"
@@ -239,7 +364,8 @@ components:
         avatarUrl: { type: string }
         isActive:  { type: boolean }
         createdAt: { type: string, format: date-time }
-      required: [id, email, fullName, role, isActive, createdAt]
+        updatedAt: { type: string, format: date-time }
+      required: [id, email, fullName, role, isActive, createdAt, updatedAt]
       example:
         id: "550e8400-e29b-41d4-a716-446655440000"
         email: "nguyenvana@example.com"
@@ -249,6 +375,7 @@ components:
         avatarUrl: "https://cdn.foodflow.vn/avatars/default.png"
         isActive: true
         createdAt: "2026-01-15T08:30:00Z"
+        updatedAt: "2026-07-11T08:30:00Z"
 
     UpdateUserRequest:
       type: object
@@ -582,11 +709,18 @@ components:
           items:
             type: object
             properties:
+              id:         { type: string, format: uuid }
+              menuItemId: { type: string, format: uuid }
               name:       { type: string }
+              nameSnapshot: { type: string }
               quantity:   { type: integer }
               unitPrice:  { type: integer, description: "VND" }
+              price:      { type: integer, description: "Alias of unitPrice for legacy clients" }
               options:    { type: array, items: { type: string }, description: "Selected option values" }
+              selectedOptions: { type: array, items: { type: object, additionalProperties: true }, description: "Persisted selected option JSON" }
+              totalPrice: { type: integer, description: "VND" }
               lineTotal:  { type: integer, description: "VND" }
+            required: [menuItemId, name, quantity, unitPrice, lineTotal]
         restaurant:
           type: object
           properties:
@@ -624,19 +758,23 @@ components:
         paymentMethod: "wallet"
         notes: "Không hành, thêm ớt"
         items:
-          - { name: "Phở bò tái chín", quantity: 2, unitPrice: 65000, options: ["Size Lớn"], lineTotal: 130000 }
+          - { menuItemId: "44444444-4444-4444-8444-444444444444", name: "Phở bò tái chín", nameSnapshot: "Phở bò tái chín", quantity: 2, unitPrice: 65000, price: 65000, selectedOptions: [{ groupName: "Size", optionName: "Lớn", price: 15000 }], lineTotal: 130000, totalPrice: 130000 }
         restaurant: { id: "33333333-3333-4333-8333-333333333333", name: "Phở 24" }
         deliveryAddress:
 
           id: "11111111-1111-4111-8111-111111111111"
+          addressLine: "123 Nguyen Hue, Quan 1, TP. Ho Chi Minh"
           label: "Nhà riêng"
           street: "123 Nguyễn Huệ"
           ward: "Phường Bến Nghé"
           district: "Quận 1"
           city: "TP. Hồ Chí Minh"
+          latitude: 10.7769
+          longitude: 106.7009
           lat: 10.7769
           lng: 106.7009
           isDefault: true
+          createdAt: "2026-07-06T00:00:00Z"
         createdAt: "2026-06-09T11:00:00Z"
         estimatedDelivery: "2026-06-09T11:35:00Z"
         timeline:
@@ -735,11 +873,143 @@ components:
 
     KycReviewRequest:
       type: object
+      additionalProperties: false
       properties:
         submissionId: { type: string, format: uuid }
         status: { type: string, enum: [approved, rejected] }
-        reason: { type: string }
+        reason: { type: string, minLength: 1, maxLength: 1000, description: "Required when status is rejected." }
       required: [submissionId, status]
+
+    DriverKycUploadRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        documentType: { type: string, enum: [idCardFront, idCardBack, driverLicense, vehicleRegistration] }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        sizeBytes: { type: integer, minimum: 1024, maximum: 4194304 }
+      required: [documentType, contentType, sizeBytes]
+
+    DriverKycUploadGrant:
+      type: object
+      additionalProperties: false
+      description: Short-lived upload capability for one private KYC object. Clients must not derive or persist a public URL.
+      properties:
+        uploadUrl: { type: string, format: uri, description: "Provider-signed PUT URL. HTTPS is mandatory in release clients." }
+        objectKey: { type: string, minLength: 1, maxLength: 512, description: "Opaque private object key returned unchanged in the final KYC submission." }
+        headers:
+          type: object
+          description: Exact non-credential headers that the client must include in the signed PUT request.
+          additionalProperties: { type: string }
+      required: [uploadUrl, objectKey, headers]
+
+    DriverKycDocumentObjects:
+      type: object
+      additionalProperties: false
+      description: Private storage object keys owned by the authenticated driver; URI values are rejected.
+      properties:
+        idCardFront: { type: string, minLength: 1, maxLength: 512 }
+        idCardBack: { type: string, minLength: 1, maxLength: 512 }
+        driverLicense: { type: string, minLength: 1, maxLength: 512 }
+        vehicleRegistration: { type: string, minLength: 1, maxLength: 512 }
+      required: [idCardFront, idCardBack, driverLicense, vehicleRegistration]
+
+    SubmitDriverKycRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        licenseNumber: { type: string, minLength: 5, maxLength: 50, pattern: "^[A-Z0-9./-]+$" }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: string, minLength: 5, maxLength: 20, pattern: "^[A-Z0-9.-]+$" }
+        documents: { $ref: "#/components/schemas/DriverKycDocumentObjects" }
+      required: [licenseNumber, vehicleType, vehiclePlate, documents]
+      example:
+        licenseNumber: "A1-123456789"
+        vehicleType: "motorbike"
+        vehiclePlate: "59-F1-12345"
+        documents:
+          idCardFront: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000000-0123456789abcdef01234567-idCardFront.jpg"
+          idCardBack: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000001-0123456789abcdef01234567-idCardBack.jpg"
+          driverLicense: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000002-0123456789abcdef01234567-driverLicense.jpg"
+          vehicleRegistration: "kyc/9c8a7a32-6f2d-4c7d-a40f-7de8629f84a9/1730000000003-0123456789abcdef01234567-vehicleRegistration.jpg"
+
+    DriverKycSubmissionReceipt:
+      type: object
+      additionalProperties: false
+      properties:
+        submissionId: { type: string, format: uuid }
+        status: { type: string, enum: [pending] }
+        submittedAt: { type: string, format: date-time }
+      required: [submissionId, status, submittedAt]
+
+    DriverKycLatestSubmission:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        submittedAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, "null"], format: date-time }
+      required: [id, status, rejectionReason, submittedAt, reviewedAt]
+
+    DriverKycStatusResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        isVerified: { type: boolean }
+        status: { type: string, enum: [not_submitted, pending, approved, rejected] }
+        licenseNumber: { type: [string, "null"] }
+        vehicleType: { type: string, enum: [motorbike, car, bicycle] }
+        vehiclePlate: { type: [string, "null"] }
+        termsAcceptedAt: { type: [string, "null"], format: date-time }
+        termsVersion: { type: [string, "null"] }
+        latestSubmission:
+          oneOf:
+            - $ref: "#/components/schemas/DriverKycLatestSubmission"
+            - type: "null"
+        attemptsRemaining: { type: integer, minimum: 0 }
+      required: [isVerified, status, licenseNumber, vehicleType, vehiclePlate, termsAcceptedAt, termsVersion, latestSubmission, attemptsRemaining]
+
+    AdminKycSignedDocuments:
+      type: object
+      additionalProperties: false
+      description: Five-minute signed read URLs generated only for authorized admin review.
+      properties:
+        idCardFront: { type: string, format: uri }
+        idCardBack: { type: string, format: uri }
+        driverLicense: { type: string, format: uri }
+        vehicleRegistration: { type: string, format: uri }
+      required: [idCardFront, idCardBack, driverLicense, vehicleRegistration]
+
+    AdminKycSubmission:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        reviewedById: { type: [string, "null"], format: uuid }
+        reviewedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        documentsAvailable: { type: boolean }
+        documentUrls:
+          oneOf:
+            - $ref: "#/components/schemas/AdminKycSignedDocuments"
+            - type: "null"
+      required: [id, status, rejectionReason, reviewedById, reviewedAt, createdAt, updatedAt, documentsAvailable, documentUrls]
+
+    AdminKycReviewResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [approved, rejected] }
+        rejectionReason: { type: [string, "null"] }
+        reviewedById: { type: string, format: uuid }
+        reviewedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, status, rejectionReason, reviewedById, reviewedAt, updatedAt]
 
     CreateReviewRequest:
       type: object
@@ -764,6 +1034,46 @@ components:
       example:
         lat: 10.7769
         lng: 106.7009
+
+    DriverLocationUpdateRequest:
+      type: object
+      additionalProperties: false
+      description: A fresh GPS sample captured by the authenticated driver's device. Speed is expressed in kilometres per hour.
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+        bearing: { type: number, minimum: 0, exclusiveMaximum: 360 }
+        speed: { type: number, minimum: 0, maximum: 150 }
+        accuracy: { type: number, minimum: 0, maximum: 10000 }
+        timestamp: { type: string, format: date-time }
+      required: [lat, lng, timestamp]
+
+    DriverLocationUpdateResponse:
+      type: object
+      properties:
+        accepted: { type: boolean, const: true }
+        orderId: { type: [string, "null"], format: uuid }
+        timestamp: { type: string, format: date-time }
+      required: [accepted, orderId, timestamp]
+
+    DispatchOfferResponseRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        offerToken:
+          type: string
+          format: uuid
+          description: Single-use token delivered only on the authenticated driver's private realtime channel.
+        decision: { type: string, enum: [accept, reject] }
+      required: [offerToken, decision]
+
+    DispatchOfferResolution:
+      type: object
+      properties:
+        orderId: { type: string, format: uuid }
+        decision: { type: string, enum: [accept, reject] }
+        status: { type: string, enum: [assigned, rejected] }
+      required: [orderId, decision, status]
 
     DriverEarningEntry:
       type: object
@@ -1347,23 +1657,86 @@ components:
           required: [deleted]
       required: [success, data]
 
+    RestaurantReview:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        customerName: { type: string }
+        customerInitial: { type: string, minLength: 0, maxLength: 2 }
+        customerAvatar: { type: [string, "null"], format: uri }
+        dishName: { type: string }
+        dishId: { type: [string, "null"], format: uuid }
+        photos:
+          type: array
+          items: { type: string, format: uri }
+        reply: { type: [string, "null"] }
+        repliedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+      required: [id, orderId, rating, comment, customerName, customerInitial, customerAvatar, dishName, dishId, photos, reply, repliedAt, createdAt]
+
+    RestaurantReviewsPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        reviews:
+          type: array
+          items: { $ref: "#/components/schemas/RestaurantReview" }
+        distribution:
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+      required: [reviews, distribution, meta]
+
+    RestaurantReviewReplyRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reply: { type: string, minLength: 1, maxLength: 1000 }
+      required: [reply]
+
+    RestaurantReviewReplyResult:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        reply: { type: string }
+        replyAt: { type: string, format: date-time }
+      required: [id, reply, replyAt]
+
     # ── Payments ──
 
     SepayWebhookPayload:
       type: object
       properties:
-        transaction_ref: { type: string }
-        amount:          { type: integer, description: "VND" }
-        account_number:  { type: string }
+        id:              { type: integer, minimum: 1, description: "Stable SePay transaction id used for deduplication" }
+        gateway:         { type: string, example: "Vietcombank" }
+        transactionDate: { type: string, description: "Vietnam local time in YYYY-MM-DD HH:mm:ss format" }
+        accountNumber:   { type: string }
+        subAccount:      { type: string, description: "Matched virtual account, or an empty string" }
+        code:            { type: [string, "null"], description: "Payment code extracted by SePay" }
+        content:         { type: string }
+        transferType:    { type: string, enum: [in, out] }
         description:     { type: string }
-        transaction_time: { type: string, format: date-time }
-      required: [transaction_ref, amount]
+        transferAmount:  { type: integer, minimum: 1, description: "Positive VND amount" }
+        accumulated:     { type: integer, minimum: 0 }
+        referenceCode:   { type: string, description: "Bank transaction reference" }
+      required: [id, gateway, transactionDate, accountNumber, code, content, transferType, transferAmount]
       example:
-        transaction_ref: "sepay-ref-abc123"
-        amount: 200000
-        account_number: "0011001234567"
-        description: "FoodFlow nap tien"
-        transaction_time: "2026-06-09T10:30:00Z"
+        id: 92704
+        gateway: "Vietcombank"
+        transactionDate: "2026-07-11 14:30:00"
+        accountNumber: "0011001234567"
+        subAccount: ""
+        code: "FF-ORDERABC123"
+        content: "FF-ORDERABC123 thanh toan"
+        transferType: "in"
+        description: "NGUYEN VAN A chuyen tien"
+        transferAmount: 200000
+        accumulated: 1000000
+        referenceCode: "FT2607110001"
 
     PaymentIntent:
       type: object
@@ -1984,7 +2357,7 @@ components:
       properties:
         resource: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users] }
         type: { type: string, enum: [audit_logs, drivers, orders, promotions, restaurants, revenue, users], deprecated: true }
-        format: { type: string, enum: [csv, xlsx, parquet] }
+        format: { type: string, enum: [csv, xlsx], description: "Parquet is intentionally not accepted until a real parquet writer/storage pipeline exists." }
         period: { type: string, enum: [today, 7d, 30d, thisMonth, thisQuarter, custom] }
         dateFrom: { type: string, format: date }
         dateTo: { type: string, format: date }
@@ -2032,7 +2405,15 @@ components:
             degradedReason: { type: string, nullable: true }
             provider: { type: string, enum: [deepseek] }
             model: { type: string }
-          required: [status, dashboardUrl, degradedReason, provider, model]
+            telemetry:
+              type: object
+              properties:
+                status: { type: string, enum: [live, awaiting_requests, unavailable] }
+                lastRequestAt: { type: string, format: date-time, nullable: true }
+                lastSuccessfulRequestAt: { type: string, format: date-time, nullable: true }
+                lastFailureCode: { type: string, nullable: true }
+              required: [status, lastRequestAt, lastSuccessfulRequestAt, lastFailureCode]
+          required: [status, dashboardUrl, degradedReason, provider, model, telemetry]
         stats: { $ref: "#/components/schemas/AdminAiMonitorStats" }
       required: [instance, stats]
 
@@ -2048,6 +2429,7 @@ components:
         inputTokens: { type: integer, nullable: true }
         outputTokens: { type: integer, nullable: true }
         requests: { type: integer, nullable: true }
+        failedRequests: { type: integer, nullable: true }
         averageLatencyMs: { type: integer, nullable: true }
       required:
         - totalConversations
@@ -2059,22 +2441,23 @@ components:
         - inputTokens
         - outputTokens
         - requests
+        - failedRequests
         - averageLatencyMs
 
     AiChatRequest:
       type: object
       properties:
-        message: { type: string, minLength: 1 }
-        sessionId: { type: string }
-        orderId: { type: string, description: "Customer-scoped order UUID or order code reference." }
+        message: { type: string, minLength: 1, maxLength: 4000 }
+        sessionId: { type: string, format: uuid, description: "An active AI-support session owned by the authenticated caller." }
+        orderId: { type: string, maxLength: 36, pattern: "^(?:FD\\d{10}|F[DF]-?\\d{3,10}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$", description: "A customer-scoped order UUID or FoodFlow order code; ownership is resolved before grounding." }
       required: [message]
 
     AiChatReply:
       type: object
       properties:
         reply: { type: string }
-        sessionId: { type: string }
-        action: { type: string, enum: [answered, escalated, degraded] }
+        sessionId: { type: string, format: uuid }
+        action: { type: string, enum: [answered, escalated] }
         escalated: { type: boolean }
         severity: { type: string }
         language: { type: string, enum: [vi, en, ja] }
@@ -2099,6 +2482,25 @@ components:
                 additionalProperties: true
             required: [name, args]
       required: [reply, sessionId, action, language]
+
+    AiChatHistoryMessage:
+      type: object
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, role, content, createdAt]
+
+    AiChatHistory:
+      type: object
+      properties:
+        sessionId: { type: string, nullable: true, format: uuid }
+        messages:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/AiChatHistoryMessage" }
+      required: [sessionId, messages]
 
     DashboardKpi:
       type: object
@@ -2445,6 +2847,129 @@ components:
 
 paths:
 
+  /healthz:
+    get:
+      tags: [health]
+      operationId: getApiHealth
+      summary: Report API liveness and dependency state
+      description: Database and Redis failures return 503. A storage-only outage is reported as degraded with 200 so the platform does not restart an otherwise live instance.
+      security: []
+      responses:
+        "200":
+          description: API is live; all components are up or only storage is degraded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+        "503":
+          description: A dependency required for API liveness is down
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+
+  /readyz:
+    get:
+      tags: [health]
+      operationId: getApiReadiness
+      summary: Report strict readiness for production traffic
+      description: Returns 200 only when database, Redis, and the explicitly configured storage provider are all reachable. Any dependency failure returns 503 and not_ready.
+      security: []
+      responses:
+        "200":
+          description: Every configured dependency is ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessResponse' }
+        "503":
+          description: At least one configured dependency is not ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessResponse' }
+
+  /realtime/token:
+    post:
+      tags: [realtime]
+      operationId: issueRealtimeToken
+      summary: Issue a short-lived Supabase Realtime token for authorized private channels
+      description: Verifies the authenticated actor's requested order and restaurant scopes before signing a five-minute Supabase JWT with an explicit private channel allowlist.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RealtimeTokenRequest'
+      responses:
+        "200":
+          description: Supabase token and explicit channel allowlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeTokenEnvelope'
+        "401":
+          description: Missing, invalid, expired, or inactive user access token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        "403":
+          description: Requested order or restaurant channel is outside the authenticated actor's scope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        "500":
+          description: Supabase realtime signing is not configured
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /jobs/drain:
+    get:
+      tags: [jobs]
+      operationId: drainPostgresJobsFromCron
+      summary: Drain due PostgreSQL outbox jobs from Vercel Cron
+      description: Claims and executes due PostgreSQL outbox jobs up to the bounded limit. This server-to-server route requires the exact CRON_SECRET bearer value.
+      security:
+        - cronBearer: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Drain execution statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobDrainEnvelope' }
+        "401":
+          description: Missing or invalid CRON_SECRET bearer value
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+    post:
+      tags: [jobs]
+      operationId: drainPostgresJobsFromWorker
+      summary: Drain due PostgreSQL outbox jobs from an approved worker invocation
+      description: Provides the same bounded drain contract for an approved secure worker call and rejects browser or user access tokens.
+      security:
+        - cronBearer: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Drain execution statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobDrainEnvelope' }
+        "401":
+          description: Missing or invalid CRON_SECRET bearer value
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
   # ═══════════════════════════════════════════════
   # AUTH
   # ═══════════════════════════════════════════════
@@ -2600,7 +3125,7 @@ paths:
         "200": { description: "OTP verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
         "400": { description: "Invalid OTP", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /.well-known/jwks.json:
+  /auth/jwks.json:
     get:
       tags: [auth]
       summary: JWKS endpoint for Ed25519 public keys
@@ -2930,6 +3455,64 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/ImageUploadResult" }
         "400": { description: "Missing or invalid image", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/reviews:
+    get:
+      tags: [restaurant-reviews]
+      summary: List reviews for the authenticated restaurant
+      description: Returns only reviews owned by the authenticated restaurant tenant, including the stable fields consumed by the Restaurant dashboard.
+      operationId: restaurantReviews_list
+      x-foo-actor: restaurant_owner
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: rating
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        "200":
+          description: "Tenant-scoped restaurant reviews"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantReviewsPayload" }
+        "403": { description: "Restaurant profile unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /restaurant/reviews/{id}/reply:
+    post:
+      tags: [restaurant-reviews]
+      summary: Reply to a tenant-owned review
+      description: Creates or edits the merchant reply for a review owned by the authenticated restaurant. Existing replies can be edited only during the 24-hour edit window.
+      operationId: restaurantReviews_reply
+      x-foo-actor: restaurant_owner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestaurantReviewReplyRequest" }
+      responses:
+        "201":
+          description: "Review reply saved"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RestaurantReviewReplyResult" }
+        "400": { description: "Reply edit window closed or invalid reply", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "403": { description: "Review belongs to another restaurant tenant", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Review not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /restaurant/staff:
     get:
@@ -3614,6 +4197,59 @@ paths:
       responses:
         "200": { description: "Now offline", content: { application/json: { schema: { type: object, properties: { isOnline: { type: boolean } } } } } }
 
+  /driver/location:
+    post:
+      tags: [drivers]
+      summary: Submit a live driver GPS sample
+      description: Reuses the authenticated tracking pipeline and rejects stale, future, out-of-bounds, implausibly fast, or teleporting samples before updating Redis/PostGIS and publishing authorized realtime order/admin events.
+      operationId: tracking_updateDriverLocation
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverLocationUpdateRequest" }
+      responses:
+        "201":
+          description: Location sample accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DriverLocationUpdateResponse" }
+        "422":
+          description: Location rejected as stale, future, invalid, outside the service area, or physically implausible
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
+
+  /driver/dispatch/offers/{orderId}/respond:
+    post:
+      tags: [drivers]
+      summary: Resolve a short-lived dispatch offer
+      description: Accepts or rejects the authenticated driver's persisted offer exactly once. The API stores only a SHA-256 token hash, enforces expiry and driver ownership, atomically claims assignment, and never relies on an in-memory WebSocket callback.
+      operationId: dispatch_respondToOffer
+      x-foo-actor: driver
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DispatchOfferResponseRequest" }
+      responses:
+        "200":
+          description: Offer resolved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DispatchOfferResolution" }
+        "409":
+          description: Offer token is invalid, expired, already resolved, or the order/driver can no longer be assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetail" }
+
   /driver/orders/active:
     get:
       tags: [drivers]
@@ -3829,12 +4465,11 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver incentives
-      description: Returns active and completed driver incentive campaigns when a durable campaign source exists. Until then, the endpoint fails explicitly instead of returning fake-empty campaign data.
+      description: Returns active and completed driver incentive campaigns from persisted driver incentive campaign records. Progress is computed from the authenticated driver's delivered tasks in each campaign window; empty arrays mean no persisted campaigns match, not fabricated sample data.
       operationId: drivers_getIncentives
       x-foo-actor: driver
       responses:
         "200": { description: "Driver incentives", content: { application/json: { schema: { $ref: "#/components/schemas/DriverIncentivesResponse" } } } }
-        "501": { description: "Driver incentives are not modelled yet", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/trips:
     get:
@@ -3872,35 +4507,42 @@ paths:
         "400": { description: "Invalid terms version", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
+  /driver/kyc/uploads:
+    post:
+      tags: [drivers]
+      summary: Create a private KYC upload grant
+      description: Validates ownership prerequisites and returns a provider-signed upload capability for exactly one private driver document. The grant never returns a public asset URL.
+      operationId: drivers_createKycUploadGrant
+      x-foo-actor: driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DriverKycUploadRequest" }
+      responses:
+        "201": { description: "Private upload grant", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycUploadGrant" } } } }
+        "400": { description: "Terms, file metadata, retry eligibility, or private storage configuration is invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Driver is already verified or already has a pending submission", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "Private storage signing is temporarily unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
   /driver/kyc:
     post:
       tags: [drivers]
       summary: Submit KYC documents
-      description: Submits driver KYC and vehicle information for platform review.
+      description: Validates four authenticated-driver-owned private objects, image metadata and signatures, then atomically creates one pending KYC submission and updates vehicle information. Public URLs and duplicate object keys are rejected.
       operationId: drivers_submitKyc
       x-foo-actor: driver
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              properties:
-                licenseNumber: { type: string }
-                vehicleType: { type: string, enum: [motorbike, car, bicycle] }
-                vehiclePlate: { type: string }
-                idCardFront: { type: string, format: uri, description: "Uploaded front image URL" }
-                idCardBack: { type: string, format: uri, description: "Uploaded back image URL" }
-              required: [licenseNumber, vehicleType, vehiclePlate]
-              example:
-                licenseNumber: "A1-123456789"
-                vehicleType: "motorbike"
-                vehiclePlate: "59-F1-12345"
-                idCardFront: "https://cdn.foodflow.vn/kyc/id-front-001.jpg"
-                idCardBack: "https://cdn.foodflow.vn/kyc/id-back-001.jpg"
+            schema: { $ref: "#/components/schemas/SubmitDriverKycRequest" }
       responses:
-        "200": { description: "KYC submitted" }
-        "409": { description: "Already submitted", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "201": { description: "KYC submitted", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycSubmissionReceipt" } } } }
+        "400": { description: "Terms, identifiers, object ownership, image metadata, or signatures are invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "Driver is verified, has a pending submission, or exhausted automatic retries", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Driver profile or private document not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/kyc/status:
     get:
@@ -3910,7 +4552,8 @@ paths:
       operationId: drivers_kycStatus
       x-foo-actor: driver
       responses:
-        "200": { description: "KYC status", content: { application/json: { schema: { type: object, properties: { isVerified: { type: boolean }, licenseNumber: { type: string }, vehicleType: { type: string }, vehiclePlate: { type: string } } } } } }
+        "200": { description: "KYC status", content: { application/json: { schema: { $ref: "#/components/schemas/DriverKycStatusResponse" } } } }
+        "404": { description: "Driver profile not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /driver/withdrawals:
     post:
@@ -4002,15 +4645,31 @@ paths:
           in: header
           required: true
           schema: { type: string }
-          description: HMAC-SHA256 signature of request body
+          description: HMAC-SHA256 signature in `sha256={hex}` format
+        - name: x-sepay-timestamp
+          in: header
+          required: true
+          schema: { type: string, pattern: "^[0-9]{10}$" }
+          description: Unix timestamp included in the signed `{timestamp}.{raw_body}` message
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/SepayWebhookPayload" }
       responses:
-        "200": { description: "Received", content: { application/json: { schema: { type: object, properties: { received: { type: boolean }, duplicate: { type: boolean } } } } } }
-        "400": { description: "Bad request / invalid signature / unknown ref", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "200":
+          description: "Accepted; exact response required by SePay. Non-payable signed transfers are durably audited as ignored or manual review."
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [success]
+                properties:
+                  success: { type: boolean, const: true }
+              example: { success: true }
+        "400": { description: "Invalid/stale signature or malformed payload", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "A concurrent receipt is still processing or a durable claim could not be acquired; SePay should retry", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   # ═══════════════════════════════════════════════
   # PROMOTIONS
@@ -4414,7 +5073,7 @@ paths:
     post:
       tags: [audit]
       summary: Create an admin export job
-      description: Creates a canonical export job for CSV/XLSX/Parquet. CSV and XLSX complete inline from real database rows; Parquet returns a failed degraded job until a real file worker/storage writer is configured.
+      description: Creates a canonical CSV or XLSX export job from real database rows. Parquet is not accepted until a real writer/storage pipeline exists.
       operationId: admin_exports_create
       x-foo-actor: admin
       requestBody:
@@ -4615,7 +5274,7 @@ paths:
     get:
       tags: [ai]
       summary: Get AI chatbot monitor overview
-      description: Returns the DeepSeek configuration state plus DB-backed AI conversation, escalation, and resolution metrics. Usage-cost/token/latency telemetry stays null until a real telemetry source is connected.
+      description: Returns DeepSeek configuration plus DB-backed conversations, escalations, actual provider token/latency telemetry, and provider status. Cost stays null until an approved billing source is connected.
       operationId: admin_aiMonitor_getOverview
       x-foo-actor: admin
       responses:
@@ -4634,7 +5293,7 @@ paths:
     post:
       tags: [ai]
       summary: Create one chatbot reply
-      description: Runs the FoodFlow chatbot pipeline once through DeepSeek and returns answered, escalated, or degraded state without streaming.
+      description: Runs the role-scoped FoodFlow chatbot pipeline once through DeepSeek and returns a safety-filtered answered or escalated state. Requested sessions are ownership-checked before any memory read. Provider/context failures fail closed with HTTP 503; no fallback assistant reply is returned.
       operationId: ai_chat_create
       x-foo-actor: user
       requestBody:
@@ -4653,13 +5312,40 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/AiChatReply" }
-        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "400": { description: "Missing/overlong/unsafe message, malformed UUID, or session/order mismatch", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "404": { description: "Requested AI session or customer-scoped order was not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "503": { description: "Provider unconfigured, unavailable, or grounded context unavailable", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+
+  /ai/history:
+    get:
+      tags: [ai]
+      summary: Get the authenticated user's persisted AI chat history
+      description: Returns at most fifty turns belonging to the caller only. Omit sessionId to select the caller's latest active AI-support session.
+      operationId: ai_chat_getHistory
+      x-foo-actor: user
+      parameters:
+        - in: query
+          name: sessionId
+          required: false
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "User-scoped AI chat history"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/AiChatHistory" }
+        "400": { description: "Invalid session ID", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /ai/stream:
     post:
       tags: [ai]
       summary: Stream a chatbot reply as server-sent events
-      description: Streams thinking/token/escalated/degraded/done events from the same chatbot service used by `POST /ai/chat`.
+      description: Streams thinking/response/escalated/done events from the same safety-filtered chatbot service. It does not synthesize word tokens; failures emit an allow-listed public error code and no assistant fallback.
       operationId: ai_chat_stream
       x-foo-actor: user
       requestBody:
@@ -4668,8 +5354,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/AiChatRequest" }
       responses:
-        "200": { description: "SSE stream with thinking/token/escalated/degraded/done events", content: { text/event-stream: { schema: { type: string } } } }
-        "400": { description: "Missing or invalid message", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "200": { description: "SSE stream with thinking/response/escalated/done or error events", content: { text/event-stream: { schema: { type: string } } } }
+        "400": { description: "Missing/overlong/unsafe message or malformed UUID", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/kpis:
     get:
@@ -4897,8 +5583,8 @@ paths:
   /admin/users/{userId}/vouchers:
     get:
       tags: [analytics]
-      summary: Get voucher wallet availability for one user
-      description: Returns an explicit unavailable contract until a voucher wallet model is added; the backend does not synthesize voucher rows.
+      summary: Get voucher and promotion usage for one user
+      description: Returns currently usable persisted promotions and real promotion usage history for the user. Empty arrays mean no matching persisted promotions/usages; no placeholder voucher rows are synthesized.
       operationId: admin_getUserVouchers
       x-foo-actor: admin
       parameters:
@@ -4908,16 +5594,49 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200":
-          description: "Voucher wallet status"
+          description: "User voucher and promotion usage summary"
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  available: { type: boolean, const: false }
-                  vouchers: { type: array, maxItems: 0, items: { type: object } }
-                  reason: { type: string, enum: [VOUCHER_WALLET_NOT_MODELLED] }
-                required: [available, vouchers, reason]
+                  owned:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        promotionId: { type: string, format: uuid }
+                        code: { type: string }
+                        description: { type: string }
+                        discountType: { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
+                        discountValue: { type: number }
+                        minOrder: { type: number }
+                        maxDiscount: { type: number }
+                        validUntil: { type: string, format: date-time }
+                        usedAt: { type: string, format: date-time, nullable: true }
+                        orderCode: { type: string, nullable: true }
+                      required: [id, promotionId, code, description, discountType, discountValue, minOrder, maxDiscount, validUntil, usedAt]
+                  used:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        promotionId: { type: string, format: uuid }
+                        code: { type: string }
+                        description: { type: string }
+                        discountType: { type: string, enum: [percentage, fixed, free_delivery, bogo, combo] }
+                        discountValue: { type: number }
+                        minOrder: { type: number }
+                        maxDiscount: { type: number }
+                        validUntil: { type: string, format: date-time }
+                        usedAt: { type: string, format: date-time, nullable: true }
+                        orderCode: { type: string, nullable: true }
+                      required: [id, promotionId, code, description, discountType, discountValue, minOrder, maxDiscount, validUntil, usedAt]
+                  totalSaved: { type: number }
+                required: [owned, used, totalSaved]
+        "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/refunds:
     get:
@@ -4939,7 +5658,7 @@ paths:
     get:
       tags: [drivers]
       summary: Get driver KYC submissions for one user
-      description: Returns an explicit unavailable reason for non-driver users or real driver KYC submissions for driver users.
+      description: Returns an explicit unavailable reason for non-driver users or real driver KYC submissions with five-minute signed private-document read URLs for authorized admin review. Raw object keys are never returned.
       operationId: admin_getUserKyc
       x-foo-actor: admin
       parameters:
@@ -4953,14 +5672,21 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  available: { type: boolean }
-                  reason: { type: string }
-                  submissions:
-                    type: array
-                    items: { type: object, additionalProperties: true }
-                required: [available]
+                oneOf:
+                  - type: object
+                    additionalProperties: false
+                    properties:
+                      available: { type: boolean, const: false }
+                      reason: { type: string, enum: [NOT_A_DRIVER] }
+                    required: [available, reason]
+                  - type: object
+                    additionalProperties: false
+                    properties:
+                      available: { type: boolean, const: true }
+                      submissions:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminKycSubmission" }
+                    required: [available, submissions]
         "404": { description: "User not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/kyc/review:
@@ -4981,7 +5707,9 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/KycReviewRequest" }
       responses:
-        "201": { description: "KYC review saved", content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        "201": { description: "KYC review saved without private object keys", content: { application/json: { schema: { $ref: "#/components/schemas/AdminKycReviewResponse" } } } }
+        "400": { description: "Rejection reason or private document manifest is invalid", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
+        "409": { description: "KYC submission was already reviewed", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
         "404": { description: "KYC submission not found", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /admin/users/{userId}/status:

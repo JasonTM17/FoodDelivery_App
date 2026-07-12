@@ -20,6 +20,8 @@
     "emailPlaceholder": "nhahang@email.com",
     "loginButton": "Đăng nhập",
     "loggingIn": "Đang đăng nhập...",
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
     "restaurantOnly": "Bảng điều khiển này chỉ dành cho tài khoản nhà hàng."
   },
   "sidebar": {
@@ -164,8 +166,10 @@
       "refresh": "Làm mới",
       "loading": "Đang tải tracking trực tiếp",
       "loadError": "Không thể tải tracking trực tiếp",
-      "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",
-      "missingKeyDescription": "Thêm public Google Maps key vào môi trường Restaurant để hiển thị bản đồ giao hàng trực tiếp.",
+      "mapLoading": "Đang tải bản đồ giao hàng",
+      "mapErrorTitle": "Không tải được bản đồ giao hàng",
+      "mapErrorDescription": "Không tải được dữ liệu nền bản đồ mở. Kiểm tra kết nối mạng rồi thử lại.",
+      "driverMarkerLabel": "Vị trí GPS hiện tại của shipper",
       "telemetryUnavailable": "Chưa có GPS shipper hoặc tuyến đường thật. FoodFlow sẽ không tự bịa ETA.",
       "noSnapshotDescription": "Tracking sẽ xuất hiện khi backend ghi nhận shipper và telemetry thật.",
       "etaLabel": "ETA",
@@ -1337,6 +1341,17 @@
     "error": "Không kết nối được trợ lý. Vui lòng thử lại.",
     "degraded": "Trợ lý đang hạn chế tạm thời",
     "you": "Bạn",
-    "assistant": "Trợ lý"
+    "assistant": "Trợ lý",
+    "historyLoading": "Đang tải hội thoại của bạn…",
+    "historyError": "Không thể tải các tin nhắn trước đó. Bạn vẫn có thể gửi một yêu cầu mới.",
+    "retryHistory": "Tải lại lịch sử",
+    "providerNotConfigured": "Trợ lý AI chưa được cấu hình. Hãy yêu cầu chủ nền tảng hoàn tất thiết lập phía máy chủ.",
+    "providerUnavailable": "Trợ lý AI tạm thời không khả dụng. Không có câu trả lời nào được tạo; vui lòng thử lại sau ít phút.",
+    "suggestions": "Gợi ý để bắt đầu",
+    "suggestionOne": "Nên xử lý đơn giao trễ như thế nào?",
+    "suggestionTwo": "Làm sao để cập nhật một món ăn?",
+    "suggestionThree": "Giải thích các lựa chọn khuyến mãi của tôi",
+    "conversationLoaded": "Đã tải hội thoại",
+    "characterCount": "{count} / {limit} ký tự"
   }
 }

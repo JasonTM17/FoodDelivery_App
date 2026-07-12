@@ -69,7 +69,7 @@ describe('ReviewsDashboard', () => {
 
     render(<ReviewsDashboard />);
 
-    expect(await screen.findByText('REVIEWS_CONTRACT_MISMATCH')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Could not load reviews' })).toBeVisible();
     expect(screen.queryByText('No reviews yet')).not.toBeInTheDocument();
   });
 

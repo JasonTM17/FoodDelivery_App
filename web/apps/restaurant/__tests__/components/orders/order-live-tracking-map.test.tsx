@@ -41,8 +41,10 @@ const mocks = vi.hoisted(() => {
         refresh: 'Refresh',
         loading: 'Loading live tracking',
         loadError: 'Could not load live tracking',
-        missingKeyTitle: 'Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY',
-        missingKeyDescription: 'Add the public Google Maps key to the restaurant environment.',
+        mapLoading: 'Loading the delivery map',
+        mapErrorTitle: 'Delivery map is unavailable',
+        mapErrorDescription: 'Open map tiles could not be loaded.',
+        driverMarkerLabel: 'Current driver GPS position',
         telemetryUnavailable: 'No real driver GPS or route has been recorded yet.',
         noSnapshotDescription: 'Tracking will appear when telemetry exists.',
         etaLabel: 'ETA',
@@ -77,6 +79,12 @@ vi.mock('@/lib/api', () => ({
 vi.mock('@/lib/tracking-socket', () => ({
   connectToTrackingOrder: mocks.connectToTrackingOrder,
   leaveTrackingOrder: mocks.leaveTrackingOrder,
+}));
+
+vi.mock('@/components/orders/order-tracking-map-canvas', () => ({
+  OrderTrackingMapCanvas: ({ styleUrl }: { styleUrl: string }) => (
+    <div data-testid="restaurant-order-tracking-map-canvas" data-style-url={styleUrl} />
+  ),
 }));
 
 vi.mock('next-intl', () => ({
@@ -117,7 +125,10 @@ describe('OrderLiveTrackingMap', () => {
     expect(screen.getByText('Live location available')).toBeInTheDocument();
     expect(screen.getByText('Driver to customer')).toBeInTheDocument();
     expect(screen.getByText('12 Nguyen Trai')).toBeInTheDocument();
-    expect(screen.getByText('Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY')).toBeInTheDocument();
+    expect(screen.getByTestId('restaurant-order-tracking-map-canvas')).toHaveAttribute(
+      'data-style-url',
+      'https://tiles.openfreemap.org/styles/liberty',
+    );
     expect(mocks.apiGet).toHaveBeenCalledWith('/orders/order-1/tracking');
     expect(mocks.connectToTrackingOrder).toHaveBeenCalledWith('order-1');
     expect(mocks.socket.on).toHaveBeenCalledWith('driver:location_changed', expect.any(Function));

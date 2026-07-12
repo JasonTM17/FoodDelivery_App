@@ -1,0 +1,6 @@
+{
+  "title": "KYC書類の更新が必要です",
+  "body": "KYC申請は承認されませんでした。理由: {{reason}}。書類を更新して再申請してください。",
+  "channels": ["in_app", "push"],
+  "critical": true
+}

@@ -10,8 +10,9 @@
   "passwordLabel": "パスワード",
   "passwordHint": "パスワードを入力してください",
   "passwordRequired": "パスワードを入力してください",
-  "passwordMinLength": "パスワードは8文字以上必要です",
-  "passwordComplexity": "パスワードには大文字・小文字・数字が必要です",
+  "passwordMinLength": "8～72文字で英大文字・英小文字・数字を含めてください",
+  "showPassword": "パスワードを表示",
+  "hidePassword": "パスワードを隠す",
   "forgotPassword": "パスワードを忘れた方",
   "forgotPasswordTitle": "パスワードを忘れた方",
   "forgotPasswordContent": "メールにてサポートにご連絡ください。",
@@ -20,6 +21,8 @@
   "noAccount": "アカウントをお持ちでない方",
   "registerLink": "登録",
   "registerAsDriver": "ドライバーとして登録",
+  "driverLoginTitle": "FoodFlow Driver",
+  "driverLoginSubtitle": "ログインして配達依頼の受付を開始",
 
   "registerTitle": "登録",
   "registerCreateAccount": "新しいアカウントを作成",
@@ -29,10 +32,10 @@
   "fullNameRequired": "氏名を入力してください",
   "fullNameMinLength": "名前は2文字以上必要です",
   "phoneLabel": "電話番号",
-  "phoneHint": "電話番号を入力してください（例: +819012345678）",
+  "phoneHint": "電話番号を入力してください",
   "phoneRequired": "電話番号を入力してください",
   "phoneInvalid": "無効な電話番号です",
-  "passwordHintLong": "パスワードを入力（8文字以上、大文字/小文字/数字）",
+  "passwordHintLong": "8～72文字、英大文字・英小文字・数字を含む",
   "confirmPasswordLabel": "パスワードの確認",
   "confirmPasswordHint": "パスワードを再入力してください",
   "confirmPasswordRequired": "パスワードを確認してください",
@@ -68,6 +71,7 @@
   "cuisineJapanese": "日本料理",
   "cuisineKorean": "韓国料理",
   "cuisineChinese": "中華料理",
+  "cuisineItalian": "イタリア料理",
   "cuisineDessert": "デザート",
   "cuisineDrinks": "ドリンク",
 
@@ -108,6 +112,11 @@
   "logoutConfirm": "ログアウトしてもよろしいですか？",
   "cancel": "キャンセル",
   "commonRetry": "再試行",
+  "commonErrorTitle": "問題が発生しました",
+  "commonErrorMessage": "もう一度お試しください。",
+  "commonEmptyTitle": "データがありません",
+  "restaurantClosed": "営業時間外",
+  "foodSoldOut": "売り切れ",
 
   "driverProfileTitle": "プロフィール",
   "defaultDriver": "ドライバー",
@@ -177,6 +186,10 @@
   "restaurantViewMap": "マップ",
   "restaurantNoResults": "レストランが見つかりません",
   "restaurantNoResultsSubtitle": "別のフィルターをお試しください",
+  "restaurantLocationRequired": "近くのレストランを探すには位置情報を許可してください。",
+  "restaurantLoadFailed": "レストランを読み込めません。もう一度お試しください。",
+  "restaurantDetailLoadFailed": "レストラン情報を読み込めません。もう一度お試しください。",
+  "restaurantMenuLoadFailed": "メニューを読み込めません。もう一度お試しください。",
   "restaurantMenuTab": "メニュー",
   "restaurantReviewsTab": "レビュー",
   "restaurantInfoTab": "情報",
@@ -281,6 +294,7 @@
   "driverDashboardToday": "今日",
   "driverDashboardOrders": "最近の注文",
   "driverDashboardNoOrders": "注文はまだありません",
+  "driverActiveOrderTitle": "進行中の注文",
   "driverStatEarnings": "収益",
   "driverStatOnline": "オンライン",
   "driverStatusTitle": "稼働ステータス",
@@ -309,6 +323,57 @@
     }
   },
   "driverStatusInfoText": "オンライン中は、稼働エリア内の新しい注文通知を受け取ります。",
+  "driverOnlineStatusOnline": "オンライン",
+  "driverOnlineStatusPaused": "一時停止中",
+  "driverOnlineStatusOffline": "オフライン",
+  "driverOnlineReady": "注文を受け付けられます",
+  "driverOnlineEnable": "オンにして注文を受け付ける",
+  "driverOnlineAutoOffline": "一時停止終了後に自動でオフラインへ戻ります",
+  "driverDateToday": "今日",
+  "driverDateLastSevenDays": "過去7日間",
+  "driverDateLastThirtyDays": "過去30日間",
+  "driverDateCustom": "期間指定",
+  "driverDateClear": "クリア",
+  "driverDateFrom": "{date}から",
+  "@driverDateFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverDateTo": "{date}まで",
+  "@driverDateTo": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverStepRestaurant": "店舗へ",
+  "driverStepPickup": "受け取り",
+  "driverStepDeliver": "配達",
+  "driverStepComplete": "完了",
+  "driverPeakTitle": "ピーク時間",
+  "driverPeakProgress": "{completed}/{target}件",
+  "@driverPeakProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "driverPeakRewardEarned": "獲得済み報酬: {amount}",
+  "@driverPeakRewardEarned": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "driverPeakRewardRemaining": "あと{count}件で{amount}を獲得",
+  "@driverPeakRewardRemaining": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "driverEarningsDaily": "日別収益",
+  "driverDaysCount": "{count}日間",
+  "@driverDaysCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsReviewCount": "{count}件の評価",
+  "@driverRatingsReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "driverEarningsTitle": "収益",
   "driverEarningsPeriodToday": "今日",
@@ -335,6 +400,14 @@
   },
   "driverRatingsToday": "今日",
   "driverRatingsYesterday": "昨日",
+  "driverHistoryTodayAt": "今日 {time}",
+  "@driverHistoryTodayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "driverHistoryYesterdayAt": "昨日 {time}",
+  "@driverHistoryYesterdayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "driverTripDetailTitle": "配達詳細",
   "driverTripDetailSegments": "ルート手順",
   "driverTripDetailRetry": "再試行",
@@ -357,6 +430,8 @@
   "driverRouteReplayPlaying": "再生中...",
   "driverRouteReplayReady": "タップして再生",
   "driverRouteReplayCompleted": "再生が完了しました",
+  "driverRouteReplayEstimated": "予定ルートのみ — GPS再生は利用できません",
+  "driverRouteReplayEstimatedTooltip": "この配達のGPSテレメトリは利用できません",
 
   "driverKycTitle": "KYC認証",
   "driverKycUploadTitle": "書類をアップロード",
@@ -371,12 +446,23 @@
   "driverKycSubmit": "申請を送信",
   "driverKycNote": "申請は24〜48時間で審査されます。承認されたら通知が届きます。",
   "driverKycSubmitFailed": "申請を送信できませんでした。もう一度お試しください。",
+  "driverKycUploadFailed": "この書類をアップロードできませんでした。もう一度お試しください。",
+  "driverKycUnsupportedImage": "有効なJPEG、PNG、またはWebP画像を使用してください。",
+  "driverKycFileTooSmall": "画像が不完全または小さすぎます。書類を撮影し直してください。",
+  "driverKycFileTooLarge": "各書類のサイズは4 MB以下にしてください。",
+  "driverKycInvalidUploadGrant": "安全なアップロードセッションが無効です。もう一度お試しください。",
+  "driverKycSubmittedTitle": "申請を送信しました",
+  "driverKycSubmittedMessage": "非公開書類は安全に保存され、審査待ちです。承認されるまでオンラインにはできません。",
+  "driverKycGoHome": "ドライバーホームへ",
 
   "driverHistoryTitle": "配達履歴",
   "driverHistoryFilterDate": "日付でフィルター",
   "driverHistoryEmpty": "配達履歴はありません",
   "driverHistoryLoadError": "配達履歴を読み込めません。もう一度お試しください。",
   "driverHistoryRetry": "再試行",
+  "driverHistoryOrderNumberLabel": "注文",
+  "driverHistoryDeliveryAddressLabel": "配達先住所",
+  "driverHistoryNoteLabel": "メモ",
   "driverHistoryDeliveryFee": "配達料",
 
   "locationPermissionTitle": "位置情報へのアクセスを許可",
@@ -490,6 +576,7 @@
   "referralCopyCode": "コードをコピー",
   "referralCodeCopied": "コードをコピーしました！",
   "referralShareCode": "コードを共有",
+  "referralShareFailed": "共有シートを開けませんでした。もう一度お試しください。",
   "referralShareSheetTitle": "紹介コードを共有",
   "referralShareMessage": "FoodFlowの初回注文で特典を受け取るにはコード {code} を使ってください！",
   "@referralShareMessage": {
@@ -544,9 +631,14 @@
   "driver_onboarding_vehicle_type_bike": "自転車",
   "driver_onboarding_vehicle_type_motorbike": "バイク",
   "driver_onboarding_vehicle_type_car": "自動車",
+  "driver_onboarding_license_label": "運転免許証番号",
+  "driver_onboarding_license_hint": "運転免許証番号を入力",
+  "driver_onboarding_license_required": "運転免許証番号を入力してください",
+  "driver_onboarding_license_invalid": "5〜50文字の英数字、ピリオド、スラッシュ、ハイフンを使用してください",
   "driver_onboarding_plate_label": "ナンバープレート",
   "driver_onboarding_plate_hint": "ナンバープレートを入力",
   "driver_onboarding_plate_required": "ナンバープレートを入力してください",
+  "driver_onboarding_plate_invalid": "5〜20文字の英数字、ピリオド、ハイフンを使用してください",
   "driver_onboarding_next": "次へ",
   "driver_onboarding_documents_title": "必要書類",
   "driver_onboarding_documents_subtitle": "審査に必要な書類をすべてアップロードしてください",
@@ -597,7 +689,7 @@
   "@driver_heatmap_order_count": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "driver_heatmap_avg_payout": "平均 {amount}đ/件",
+  "driver_heatmap_avg_payout": "平均 {amount}/件",
   "@driver_heatmap_avg_payout": {
     "placeholders": { "amount": { "type": "String" } }
   },
@@ -637,6 +729,7 @@
   "driver_tip_confirm": "確認",
   "driver_tip_success_snackbar": "チップ報告を保存しました",
   "driver_tip_success_message": "チップ報告は照合用に保存されました。支払い精算は自動変更されません。",
+  "driver_tip_submit_failed": "チップ報告を保存できませんでした。もう一度お試しください。",
   "driver_notifications_read_all": "すべて既読",
   "driver_notifications_all": "すべて",
   "driver_notifications_orders": "注文",
@@ -661,6 +754,8 @@
   "driver_support_faq_q2": "配達エリアを変更するには？",
   "driver_support_faq_a2": "設定 > 活動エリアから変更できます。",
   "driver_settings_title": "設定",
+  "driver_settings_notifications_section": "通知",
+  "driver_settings_general_section": "一般",
   "driver_settings_notifications": "プッシュ通知",
   "driver_settings_notifications_subtitle": "新しい注文の通知を受け取る",
   "driver_settings_language": "言語",
@@ -697,6 +792,7 @@
   "searchFilterTopRated": "評価が高い",
   "searchFilterPriceLowHigh": "価格が安い順",
   "searchFilterOpenNow": "営業中",
+  "searchLoadFailed": "現在検索できません。もう一度お試しください。",
 
   "vouchersTitle": "オファー＆バウチャー",
   "vouchersTabMine": "マイバウチャー",

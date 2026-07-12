@@ -21,7 +21,7 @@ void main() {
     });
 
     test('loads the backend notification envelope contract', () async {
-      final notifier = NotificationNotifier();
+      final notifier = NotificationNotifier(autoConnectRealtime: false);
 
       await notifier.fetchNotifications();
 
@@ -38,7 +38,7 @@ void main() {
       'rejects legacy list responses instead of recomputing unread count',
       () async {
         apiInterceptor.payload = [_notificationPayload()];
-        final notifier = NotificationNotifier();
+        final notifier = NotificationNotifier(autoConnectRealtime: false);
 
         await notifier.fetchNotifications();
 
@@ -56,7 +56,7 @@ void main() {
         apiInterceptor.payload = _notificationsEnvelope(
           notification: _notificationPayload()..remove('body'),
         );
-        final notifier = NotificationNotifier();
+        final notifier = NotificationNotifier(autoConnectRealtime: false);
 
         await notifier.fetchNotifications();
 
@@ -72,7 +72,7 @@ void main() {
       () async {
         apiInterceptor.payload = _notificationsEnvelope()
           ..remove('unreadCount');
-        final notifier = NotificationNotifier();
+        final notifier = NotificationNotifier(autoConnectRealtime: false);
 
         await notifier.fetchNotifications();
 

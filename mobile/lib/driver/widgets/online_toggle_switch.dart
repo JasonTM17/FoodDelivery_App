@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/driver_status_provider.dart';
 
@@ -9,6 +10,7 @@ class OnlineToggleSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(driverStatusProvider);
+    final l10n = AppLocalizations.of(context);
 
     final isOnline = status.status == DriverOnlineStatus.online;
     final isPaused = status.status == DriverOnlineStatus.paused;
@@ -54,10 +56,10 @@ class OnlineToggleSwitch extends ConsumerWidget {
             children: [
               Text(
                 isOnline
-                    ? 'Đang trực tuyến'
+                    ? l10n.driverOnlineStatusOnline
                     : isPaused
-                    ? 'Đang tạm dừng'
-                    : 'Đang ngoại tuyến',
+                    ? l10n.driverOnlineStatusPaused
+                    : l10n.driverOnlineStatusOffline,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -70,10 +72,10 @@ class OnlineToggleSwitch extends ConsumerWidget {
               ),
               Text(
                 isOnline
-                    ? 'Sẵn sàng nhận đơn'
+                    ? l10n.driverOnlineReady
                     : isPaused
-                    ? 'Sẽ tự động offline khi hết giờ'
-                    : 'Bật để nhận đơn hàng',
+                    ? l10n.driverOnlineAutoOffline
+                    : l10n.driverOnlineEnable,
                 style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
               ),
             ],
@@ -83,7 +85,7 @@ class OnlineToggleSwitch extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Text(
-                '${status.pausedDuration!.inMinutes}ph',
+                l10n.driverStatusPauseMinutes(status.pausedDuration!.inMinutes),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

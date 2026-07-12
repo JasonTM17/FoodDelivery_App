@@ -9,6 +9,7 @@ import '../../shared/maps/encoded_polyline.dart';
 import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../providers/driver_provider.dart';
 import '../utils/directions_uri.dart';
@@ -784,7 +785,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
           ),
         ),
         Text(
-          '${amount.toStringAsFixed(0)}đ',
+          formatVnd(context, amount),
           style: TextStyle(
             fontSize: isHighlight ? 20 : 15,
             fontWeight: FontWeight.w700,
@@ -810,6 +811,7 @@ class _DeliveryFlowScreenState extends ConsumerState<DeliveryFlowScreen> {
     return [
       order.id,
       order.status,
+      order.routePhase ?? '',
       order.routePolyline ?? '',
       driverLat?.toStringAsFixed(4) ?? '',
       driverLng?.toStringAsFixed(4) ?? '',

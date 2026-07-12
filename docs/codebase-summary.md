@@ -1,115 +1,124 @@
 # FoodFlow Codebase Summary
 
-A quick orientation for new contributors.
+## Overview
 
-## Repository Layout
+FoodFlow is a TypeScript/Dart monorepo-style repository. Backend and web have independent pnpm lockfiles/workspaces; mobile is a Flutter package with customer and driver entry points. Documentation, OpenAPI, Compose overlays, and release tooling live alongside the applications.
 
+Current tracked text-code footprint (excluding generated/test-output directories): approximately 62.7k LOC web, 50.8k LOC mobile, 50.4k LOC backend, 11.8k LOC docs, and 2.8k LOC infrastructure.
+
+## Repository layout
+
+```text
+backend/                   NestJS API, Prisma, Vercel handler, worker entry
+  api/[...path].ts         Vercel function adapter
+  prisma/                  Schema, 27 migrations, deterministic seed tooling
+  src/                     Feature modules
+web/                       pnpm workspace
+  apps/admin/              Admin Next.js application
+  apps/restaurant/         Restaurant Next.js application
+  packages/                Shared UI/i18n/client utilities
+  e2e/                     Playwright Chromium/Firefox contracts
+mobile/                    Flutter package
+  lib/main_customer.dart   Customer entry
+  lib/main_driver.dart     Driver entry
+  packages/api_client/     Shared typed HTTP models/client
+  test/                    Widget/provider/contract tests
+infra/                     Compose, preflight, release, monitoring, load tests
+docs/                      Guides, ADRs, OpenAPI, screenshots, GIFs
+e2e/                       Cross-surface/AI scenario tooling
+.github/workflows/         CI, security, E2E, mobile, OpenAPI, Docker release
 ```
-Food_Delivery/
-├── backend/          NestJS API (modular monolith)
-├── mobile/           Flutter apps — customer + driver (shared workspace)
-├── web/              Next.js apps — admin + restaurant
-│   └── apps/
-│       ├── admin/    Admin dashboard
-│       └── restaurant/ Restaurant portal
-├── infra/            Docker Compose, nginx, observability, deployment support
-├── packages/
-│   └── i18n/         Shared web translation messages (@foodflow/i18n)
-├── docs/             Project docs and ADRs
-└── plans/            Implementation plans (not committed to public repo)
-```
 
-## Backend (NestJS)
+## Backend
 
-Modular monolith. One process, one Docker image, logically separated by feature module.
+Runtime: NestJS 11, Prisma 6, PostgreSQL/PostGIS. Main entries:
+
+- `src/main.ts`: local/self-hosted HTTP process; disables long-lived sockets for Supabase realtime mode.
+- `src/bootstrap/create-foodflow-app.ts`: reusable application factory.
+- `api/[...path].ts`: Vercel handler.
+- `src/workers/main.ts`: BullMQ compatibility worker.
+
+Major module groups:
 
 | Module | Responsibility |
 |---|---|
-| `auth` | JWT issue/refresh, RBAC guards, API-key guard |
-| `users` | Profile CRUD, preferredLocale persistence |
-| `restaurants` | Restaurant CRUD, nearby search (PostGIS), profile images |
-| `menu` | Menu items, categories, option groups |
-| `cart` | Shopping cart sessions |
-| `orders` | Order state machine (14 states), payments service |
-| `dispatch` | Driver assignment — Redis GEO scoring, BullMQ retry |
-| `tracking` | WebSocket gateway for real-time GPS |
-| `payments` | SePay provider, commission split, PayoutLedger |
-| `webhooks` | Inbound SePay payment-success webhook |
-| `loyalty` | Loyalty transaction ledger, points snapshot (GET /users/loyalty) |
-| `wallet` | Wallet transaction ledger, balance snapshot (GET /users/wallet) |
-| `referral` | Referral code generation + redemption tracking (GET /users/referral) |
-| `reviews` | Aggregation, moderation, photo upload, reply thread |
-| `notifications` | FCM/WebSocket fan-out, locale-aware templates |
-| `chat` | WebSocket chat between customer and support |
-| `ai` | LLM chatbot adapter, chat classify, AI templates |
-| `i18n` | nestjs-i18n module, vi/en/ja locale files |
-| `admin` | Admin REST endpoints, audit logs, promotions, dispatch heatmap, restaurant KPI |
-| `drivers` | Driver profiles, location history, KYC, IncentivesController (GET /driver/incentives) |
-| `storage` | MinIO presigned URL service |
-| `metrics` | Prometheus `/metrics` endpoint |
-| `health` | `/healthz` + `/readyz` endpoints |
-| `redis` | Shared Redis module (GEO + PubSub) |
-| `database` | Prisma service singleton |
+| `auth`, `users` | Access/refresh JWT, RBAC, profile/preferred locale |
+| `restaurants`, `restaurant-portal`, `menu` | Tenant profile, nearby search, menu, staff, analytics |
+| `cart`, `orders`, `payments`, `promotions` | Checkout, order state, SePay/COD/wallet, voucher rules |
+| `drivers`, `dispatch`, `tracking` | Online GPS, assignment, route/ETA, live telemetry |
+| `notifications`, `webhooks` | Locale-aware fanout and authenticated callbacks |
+| `reviews`, `storage` | Reviews and provider-selected object storage |
+| `ai` | DeepSeek chat, session ownership, support escalation, usage telemetry |
+| `admin` | KPI/resources, audit, support, exports, AI monitor |
+| `realtime` | Supabase outbox publisher and scoped token endpoint |
+| `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
+| `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-Entry point: `backend/src/main.ts` (HTTP) and `backend/src/workers/main.ts` (BullMQ worker process).
+The Prisma schema currently declares 57 models across 27 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
-## Mobile (Flutter)
+## Web
 
-Single Dart workspace, two apps under `mobile/apps/`:
+Both applications use Next.js 15 App Router, React 18, TypeScript, Tailwind, TanStack Query, and `next-intl`.
 
-| App | Users | Key screens |
+| App | Primary users | Major areas |
 |---|---|---|
-| `customer` | End consumers | Home, search, cart, order tracking, chat, reviews |
-| `driver` | Delivery drivers | Online toggle, dispatch offer dialog, active delivery, earnings, KYC |
+| Admin | Platform operators | overview, orders, restaurants, users, drivers/map, promotions, support, analytics, audit, exports, AI monitor |
+| Restaurant | Owners/staff | dashboard, order queue/tracking, menu, promotions, analytics, staff, revenue, reviews, notifications, settings |
 
-Shared code in `mobile/packages/`:
-- `api_client` — Dio-based HTTP + WebSocket singletons
-- `shared_ui` — reusable widgets, locale switcher
+Important contracts:
 
-State management: **Riverpod**. Localization: `flutter_localizations` + ARB files (vi/en/ja).
+- Routes start at `app/[locale]/` for `vi`, `en`, and `ja`.
+- Production public env validation is fail-closed.
+- API responses are validated at runtime before rendering business data.
+- `src/lib/supabase-realtime.ts` exchanges the API access token for scoped Supabase realtime authorization.
+- Socket.IO modules remain only for local/self-hosted provider mode.
+- Production builds generate 70 localized Admin pages and 55 localized Restaurant pages at the current route set.
 
-## Web (Next.js App Router)
+## Mobile
 
-| App | Users | Key pages |
-|---|---|---|
-| `admin` | Platform admins | Dashboard, orders, restaurants, users, drivers, promotions, audit logs, AI monitor |
-| `restaurant` | Restaurant owners | Menu, orders, reviews, notifications, profile |
+The Flutter package has two app entry points but shares domain/provider/UI code under `mobile/lib/`.
 
-Both apps use:
-- `shadcn/ui` component library
-- TanStack Query for server state
-- `next-intl` for vi/en/ja routing (`/[locale]/...`)
-- `PageHeader` shared component for breadcrumb + gradient title
+- State: Riverpod.
+- HTTP: Dio through `mobile/packages/api_client` and shared providers.
+- Maps/location: `google_maps_flutter` + `geolocator`.
+- Localization: generated ARB resources for `vi`, `en`, `ja`.
+- Secrets: Maps key and release signing are injected through ignored platform config/`--dart-define` inputs.
 
-## Infrastructure
+Managed mobile realtime uses the same scoped `POST /api/realtime/token` + Supabase channel contract as web. `RealtimeClient` selects `SupabaseRealtimeClient` in managed release builds; GPS samples and dispatch decisions use authenticated REST while allow-listed outbox records are receive-only. `socket_io_client` remains installed solely for the explicit local/self-hosted provider. Driver KYC uses private signed uploads, opaque object keys, authenticated status checks, and a typed terms → vehicle → documents flow.
 
-| Service | Image | Purpose |
-|---|---|---|
-| `api` | `nguyenson1710/foodflow-api` | NestJS HTTP server |
-| `worker` | `nguyenson1710/foodflow-worker` | BullMQ job processors |
-| `postgres` | `postgis/postgis:16-3.4` | Primary database + GIS |
-| `redis` | `redis:7-alpine` | GEO, PubSub, BullMQ broker |
-| `minio` | `minio/minio` | Object storage |
-| `prometheus` | `prom/prometheus` | Metrics scraping |
-| `grafana` | `grafana/grafana` | Dashboards |
-| `loki` | `grafana/loki` | Log aggregation |
+## Infrastructure and release tooling
 
-Start everything: `docker compose up`.
+| Path | Purpose |
+|---|---|
+| `docker-compose.yml` | Local full stack |
+| `docker-compose.local.yml` | Hot-reload/local overrides |
+| `docker-compose.e2e.yml` | Isolated test ports and deterministic stack |
+| `docker-compose.prod.yml` | Self-hosted Docker Hub compatibility overlay |
+| `infra/scripts/local-release-gate.ps1` | Unified local quality gate |
+| `infra/scripts/supabase-preflight.ps1` | Auth/project/database migration readiness |
+| `infra/scripts/vercel-web-preflight.ps1` | API/Admin/Restaurant project/env readiness |
+| `.github/workflows/docker-publish.yml` | Multi-arch SHA build, runtime smoke, Trivy, immutable promotion |
 
-## Key Data Flows
+Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The worker reuses the backend artifact.
 
-**Order placement:** Customer app → `POST /orders` → order state machine → dispatch BullMQ job → driver offered via WebSocket → accepted → delivery task created.
+## Key data flows
 
-**Real-time tracking:** Driver app emits GPS every 3 s → WebSocket → Redis GEOADD → throttled broadcast to customer → batch flush to `driver_location_history`.
+**Order:** customer cart → `POST /orders` → persisted state/history → restaurant transitions → dispatch → delivery task → payment/notification.
 
-**Payment success:** SePay → `POST /webhooks/sepay` (HMAC verified) → BullMQ job → commission split → PayoutLedger entries → notification to restaurant + driver.
+**Tracking:** driver GPS with `sampledAt` → authorization/freshness/bounds validation → route provider/cache → PostGIS/delivery task → authorized snapshot and realtime channel.
 
-**i18n propagation:** Accept-Language header → i18n middleware → `req.i18nLang` → used in response messages; async jobs carry `locale` in job data explicitly.
+**Supabase realtime:** API event → `realtime_outbox` row → explicit Supabase publication → RLS filter against short-lived JWT channel claims → Admin/Restaurant/Customer/Driver handler.
 
-## Where to Start
+**Queue:** service adds abstract job → PostgreSQL `job_outbox` in managed mode or BullMQ locally → secured drain/worker → status/attempt/error persisted.
 
-- Bug in an order flow → `backend/src/orders/`
-- Driver not receiving dispatch → `backend/src/dispatch/`
-- Translation missing → `backend/src/i18n/locales/<lang>/` or `packages/i18n/messages/`
-- Admin page broken → `web/apps/admin/app/[locale]/`
-- Mobile UI issue → `mobile/apps/customer/` or `mobile/apps/driver/`
+**AI:** authenticated message → session/order context validation → DeepSeek adapter → persisted turn and usage event → answer or support escalation; missing configuration/provider failures return explicit errors and never synthesize an assistant reply.
+
+## Contributor entry points
+
+- API contract: `docs/openapi.yaml`, `docs/api-contract.md`.
+- Environment validation: `backend/src/config/env.validation.ts` and each `.env.example`.
+- Restaurant tenancy: `backend/src/restaurant-portal/` and `RestaurantProfile` checks.
+- Realtime: `backend/src/realtime/`, web `src/lib/supabase-realtime.ts`.
+- Shipper route: `backend/src/tracking/`, `backend/src/dispatch/`, mobile tracking/driver providers.
+- UI localization: `web/apps/*/messages/` or shared i18n package; Flutter ARB under `mobile/lib/l10n/`.
+- Full release commands: [testing guide](testing-guide.md) and [deployment guide](deployment-guide.md).

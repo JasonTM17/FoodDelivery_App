@@ -216,6 +216,13 @@ type CanonicalAiOrder = {
   note: string
 }
 
+const ACTIVE_DRIVER_ORDER_STATUSES = new Set<OrderStatus>([
+  OrderStatus.driver_assigned,
+  OrderStatus.driver_arriving_restaurant,
+  OrderStatus.picked_up,
+  OrderStatus.delivering,
+])
+
 async function upsertCanonicalAiSmokeOrders(
   restaurantIds: string[],
   driverIds: string[],
@@ -225,9 +232,9 @@ async function upsertCanonicalAiSmokeOrders(
     select: { id: true },
   })
   const restaurantId = restaurantIds[0]
-  const driverId = driverIds[0]
-  if (!customer || !restaurantId || !driverId) {
-    throw new Error('Canonical AI smoke seed requires customer1, one restaurant, and one driver')
+  const smokeDriverIds = driverIds.slice(0, 6)
+  if (!customer || !restaurantId || smokeDriverIds.length !== 6 || new Set(smokeDriverIds).size !== 6) {
+    throw new Error('Canonical AI smoke seed requires customer1, one restaurant, and six distinct drivers')
   }
 
   const address = await prisma.address.findFirst({
@@ -244,16 +251,23 @@ async function upsertCanonicalAiSmokeOrders(
   }
 
   const orders: CanonicalAiOrder[] = [
-    { orderCode: 'FF-001', status: OrderStatus.delivering, total: 85_000, driverId, createdMinutesAgo: 24, note: 'AI smoke: status happy path' },
-    { orderCode: 'FF-002', status: OrderStatus.delivering, total: 120_000, driverId, createdMinutesAgo: 75, note: 'AI smoke: delayed angry escalation' },
-    { orderCode: 'FF-003', status: OrderStatus.completed, total: 92_000, driverId, createdMinutesAgo: 5, note: 'AI smoke: short delay refund ineligible' },
-    { orderCode: 'FF-004', status: OrderStatus.delivering, total: 68_000, driverId, createdMinutesAgo: 18, note: 'AI smoke: multi-turn retention' },
-    { orderCode: 'FF-006', status: OrderStatus.preparing, total: 50_000, driverId, createdMinutesAgo: 12, note: 'AI smoke: eligible partial refund grounding' },
-    { orderCode: 'FF-007', status: OrderStatus.delivering, total: 110_000, driverId, createdMinutesAgo: 45, note: 'AI smoke: driver unreachable escalation' },
-    { orderCode: 'FF-008', status: OrderStatus.preparing, total: 73_000, driverId, createdMinutesAgo: 8, note: 'AI smoke: cancellation safety' },
-    { orderCode: 'FF-009', status: OrderStatus.delivering, total: 77_000, driverId, createdMinutesAgo: 16, note: 'AI smoke: English language match' },
-    { orderCode: 'FF-010', status: OrderStatus.preparing, total: 64_000, driverId, createdMinutesAgo: 6, note: 'AI smoke: allergy support priority' },
+    { orderCode: 'FF-001', status: OrderStatus.delivering, total: 85_000, driverId: smokeDriverIds[0], createdMinutesAgo: 24, note: 'AI smoke: status happy path' },
+    { orderCode: 'FF-002', status: OrderStatus.delivering, total: 120_000, driverId: smokeDriverIds[1], createdMinutesAgo: 75, note: 'AI smoke: delayed angry escalation' },
+    { orderCode: 'FF-003', status: OrderStatus.completed, total: 92_000, driverId: smokeDriverIds[2], createdMinutesAgo: 5, note: 'AI smoke: short delay refund ineligible' },
+    { orderCode: 'FF-004', status: OrderStatus.delivering, total: 68_000, driverId: smokeDriverIds[3], createdMinutesAgo: 18, note: 'AI smoke: multi-turn retention' },
+    { orderCode: 'FF-006', status: OrderStatus.preparing, total: 50_000, createdMinutesAgo: 12, note: 'AI smoke: eligible partial refund grounding' },
+    { orderCode: 'FF-007', status: OrderStatus.delivering, total: 110_000, driverId: smokeDriverIds[4], createdMinutesAgo: 45, note: 'AI smoke: driver unreachable escalation' },
+    { orderCode: 'FF-008', status: OrderStatus.preparing, total: 73_000, createdMinutesAgo: 8, note: 'AI smoke: cancellation safety' },
+    { orderCode: 'FF-009', status: OrderStatus.delivering, total: 77_000, driverId: smokeDriverIds[5], createdMinutesAgo: 16, note: 'AI smoke: English language match' },
+    { orderCode: 'FF-010', status: OrderStatus.preparing, total: 64_000, createdMinutesAgo: 6, note: 'AI smoke: allergy support priority' },
   ]
+
+  const activeDriverIds = orders
+    .filter(order => ACTIVE_DRIVER_ORDER_STATUSES.has(order.status))
+    .map(order => order.driverId)
+  if (activeDriverIds.some(driverId => !driverId) || new Set(activeDriverIds).size !== activeDriverIds.length) {
+    throw new Error('Canonical AI smoke seed must assign one distinct driver to each active order')
+  }
 
   for (const canonical of orders) {
     const createdAt = new Date(Date.now() - canonical.createdMinutesAgo * 60_000)
@@ -272,7 +286,7 @@ async function upsertCanonicalAiSmokeOrders(
         data: {
           customerId: customer.id,
           restaurantId,
-          driverId: canonical.driverId,
+          driverId: canonical.driverId ?? null,
           deliveryAddressId: address.id,
           status: canonical.status,
           subtotal,
@@ -302,7 +316,7 @@ async function upsertCanonicalAiSmokeOrders(
           orderCode: canonical.orderCode,
           customerId: customer.id,
           restaurantId,
-          driverId: canonical.driverId,
+          driverId: canonical.driverId ?? null,
           deliveryAddressId: address.id,
           status: canonical.status,
           subtotal,
@@ -353,6 +367,12 @@ async function upsertCanonicalAiSmokeOrders(
 }
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Refusing to run prisma/big-seed.ts in production because it creates demo identities and synthetic business data. Use a reviewed production data import/bootstrap instead.',
+    )
+  }
+
   console.log('🌱 FoodFlow BIG SEED — generating rich data...\n')
 
   // ─── 1. Admin ───
@@ -595,7 +615,7 @@ async function main() {
   console.log(`✅ ${promos.length} promotions created`)
 
   // ─── 6. Historical Orders (500+) ───
-  const ORDER_STATUSES: OrderStatus[] = [
+  const HISTORICAL_ORDER_STATUSES: OrderStatus[] = [
     OrderStatus.completed,
     OrderStatus.completed,
     OrderStatus.completed,
@@ -605,7 +625,7 @@ async function main() {
     OrderStatus.completed,
     OrderStatus.completed,
     OrderStatus.completed,
-    OrderStatus.delivering,
+    OrderStatus.cancelled,
   ]
   let ordersCreated = 0
 
@@ -613,7 +633,7 @@ async function main() {
     const customerId = pick(customerIds)
     const restaurant = pick(restaurantLocations)
     const driverId = pick(driverIds)
-    const status = pick(ORDER_STATUSES)
+    const status = pick(HISTORICAL_ORDER_STATUSES)
 
     // Get a random address for this customer
     const address = await prisma.address.findFirst({
@@ -632,9 +652,17 @@ async function main() {
     const orderCode = `FD${String(i + 1).padStart(10, '0')}`
     const existingOrder = await prisma.order.findUnique({
       where: { orderCode },
-      select: { id: true },
+      select: { id: true, status: true },
     })
-    if (existingOrder) continue
+    if (existingOrder) {
+      if (ACTIVE_DRIVER_ORDER_STATUSES.has(existingOrder.status)) {
+        await prisma.order.update({
+          where: { id: existingOrder.id },
+          data: { status: OrderStatus.completed },
+        })
+      }
+      continue
+    }
 
     const selectedItems = items.map(item => ({ item, quantity: randInt(1, 3) }))
     const subtotal = selectedItems.reduce(

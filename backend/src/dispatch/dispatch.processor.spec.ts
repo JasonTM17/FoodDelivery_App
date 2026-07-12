@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { DispatchProcessor } from './dispatch.processor'
 import { DispatchService } from './dispatch.service'
 import { getQueueToken } from '@nestjs/bullmq'
+import { DispatchOfferService } from './dispatch-offer.service'
 
 describe('DispatchProcessor', () => {
   let processor: DispatchProcessor
@@ -12,6 +13,7 @@ describe('DispatchProcessor', () => {
   }
 
   const mockQueue = { add: jest.fn().mockResolvedValue({ id: 'job-2' }) }
+  const mockOffers = { expireOffer: jest.fn() }
 
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -19,6 +21,7 @@ describe('DispatchProcessor', () => {
       providers: [
         DispatchProcessor,
         { provide: DispatchService, useValue: mockDispatchService },
+        { provide: DispatchOfferService, useValue: mockOffers },
         { provide: getQueueToken('dispatch'), useValue: mockQueue },
       ],
     }).compile()
@@ -66,7 +69,7 @@ describe('DispatchProcessor', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'dispatch.driver',
         expect.objectContaining({ orderId: 'order-1', attempt: 2 }),
-        expect.objectContaining({ jobId: 'dispatch:order-1:2' }),
+        expect.objectContaining({ jobId: 'dispatch-order-1-2' }),
       )
     })
 
@@ -82,6 +85,32 @@ describe('DispatchProcessor', () => {
       await processor.process({ id: 'j1', data: baseData } as never)
       expect(mockQueue.add).not.toHaveBeenCalled()
       expect(mockDispatchService.autoCancelOrder).not.toHaveBeenCalled()
+    })
+
+    it('does not requeue while a persisted offer is awaiting a response', async () => {
+      mockDispatchService.dispatchOrder.mockResolvedValue({
+        assigned: false,
+        pending: true,
+        driverId: 'd1',
+        offerId: 'offer-1',
+      })
+
+      await expect(processor.process({ id: 'j1', data: baseData } as never))
+        .resolves.toMatchObject({ pending: true, offerId: 'offer-1' })
+      expect(mockQueue.add).not.toHaveBeenCalled()
+      expect(mockDispatchService.autoCancelOrder).not.toHaveBeenCalled()
+    })
+
+    it('expires a persisted offer without starting a long-lived worker wait', async () => {
+      mockOffers.expireOffer.mockResolvedValue({ expired: true })
+
+      await expect(processor.process({
+        id: 'timeout-1',
+        name: 'dispatch.offer-timeout',
+        data: { offerId: 'offer-1' },
+      } as never)).resolves.toEqual({ expired: true })
+      expect(mockOffers.expireOffer).toHaveBeenCalledWith('offer-1')
+      expect(mockDispatchService.dispatchOrder).not.toHaveBeenCalled()
     })
 
     it('returns the dispatch result from the service', async () => {

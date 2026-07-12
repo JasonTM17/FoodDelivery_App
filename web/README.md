@@ -9,7 +9,7 @@
 - `packages/api-client`: shared web API client and generated/contract types.
 - `packages/ui` and `packages/i18n`: shared UI and localization utilities.
 
-Both dashboards use Next.js 14, React 18, next-intl locale routes, and the NestJS backend API.
+Both dashboards use Next.js 15, React 18, next-intl locale routes, MapLibre GL JS, and the NestJS backend API.
 
 ## Runtime URLs
 
@@ -18,7 +18,7 @@ Both dashboards use Next.js 14, React 18, next-intl locale routes, and the NestJ
 | Admin | 3000 | `http://localhost:3000` |
 | Restaurant | 3002 | `http://localhost:3002` |
 | Backend API | 3001 | `http://localhost:3001/api` |
-| WebSocket | 3001 | `ws://localhost:3001` |
+| Local Socket.IO | 3001 | `ws://localhost:3001` |
 
 ## Environment Variables
 
@@ -30,9 +30,13 @@ Each app uses an ignored `.env.local` copied from its example file.
 |---|---|---|
 | `NEXT_PUBLIC_APP_ENV` | Yes | Use `development` for local/CI localhost builds; use `production` for real public deployments |
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
-| `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
+| `NEXT_PUBLIC_REALTIME_PROVIDER` | Yes | `supabase` in production; `socketio` for local Docker/E2E |
+| `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL used by Realtime |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Browser-safe Supabase anonymous/publishable key |
+| `NEXT_PUBLIC_WS_URL` | Local Socket.IO only | Socket.IO gateway URL; ignored when provider is `supabase` |
 | `NEXT_PUBLIC_ADMIN_URL` | Yes | Public Admin base URL for metadata and canonical links |
-| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Only for live map | Browser Google Maps key. Restrict by HTTP referrer. |
+| `NEXT_PUBLIC_MAP_PROVIDER` | Production | Must be `openfreemap`; local development defaults to the same provider |
+| `NEXT_PUBLIC_MAP_STYLE_URL` | Production | HTTPS OpenFreeMap style URL; the default Liberty style needs no key or billing account |
 
 ### Restaurant
 
@@ -40,9 +44,13 @@ Each app uses an ignored `.env.local` copied from its example file.
 |---|---|---|
 | `NEXT_PUBLIC_APP_ENV` | Yes | Use `development` for local/CI localhost builds; use `production` for real public deployments |
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL |
-| `NEXT_PUBLIC_WS_URL` | Yes | Socket.IO gateway URL |
+| `NEXT_PUBLIC_REALTIME_PROVIDER` | Yes | `supabase` in production; `socketio` for local Docker/E2E |
+| `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL used by Realtime |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Browser-safe Supabase anonymous/publishable key |
+| `NEXT_PUBLIC_WS_URL` | Local Socket.IO only | Socket.IO gateway URL; ignored when provider is `supabase` |
 | `NEXT_PUBLIC_RESTAURANT_URL` | Yes | Public Restaurant base URL for metadata and canonical links |
-| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Only for live map locally; required in production | Browser Google Maps key for order tracking. Restrict by HTTP referrer. |
+| `NEXT_PUBLIC_MAP_PROVIDER` | Production | Must be `openfreemap`; local development defaults to the same provider |
+| `NEXT_PUBLIC_MAP_STYLE_URL` | Production | HTTPS OpenFreeMap style URL; the default Liberty style needs no key or billing account |
 
 ## Run Locally
 
@@ -102,5 +110,6 @@ pnpm --filter restaurant build
 
 - Do not add runtime mock data, fake chart values, or fabricated connection states.
 - Query UIs need loading, empty, retryable error, and permission-denied states.
-- Admin order feed should use WebSocket `/events`; polling is only a controlled fallback.
+- Production order/driver feeds subscribe to authorized Supabase Realtime channels. Local Docker/E2E can explicitly select Socket.IO; polling is only a controlled recovery path.
+- Admin and Restaurant render OpenStreetMap-derived tiles with MapLibre/OpenFreeMap. Route geometry, shipper GPS, and ETA still come only from authenticated backend telemetry; the basemap never invents them.
 - Keep generated API client changes in `web/packages/api-client`, not a root package.

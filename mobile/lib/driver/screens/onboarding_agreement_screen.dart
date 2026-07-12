@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/theme/app_colors.dart';
+import '../providers/driver_provider.dart';
 
 const _driverTermsVersion = 'driver-terms-2026-07';
 
@@ -36,7 +37,8 @@ class _OnboardingAgreementScreenState
         data: {'termsVersion': _driverTermsVersion},
       );
       if (!mounted) return;
-      context.go('/kyc');
+      ref.read(driverProvider.notifier).markTermsAccepted();
+      context.go('/onboarding-vehicle');
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _errorMessage(error));
@@ -138,7 +140,7 @@ class _OnboardingAgreementScreenState
                           color: Colors.white,
                         ),
                       )
-                    : Text(l10n.driver_onboarding_agreement_submit),
+                    : Text(l10n.driver_onboarding_agreement_accept),
               ),
             ),
           ],

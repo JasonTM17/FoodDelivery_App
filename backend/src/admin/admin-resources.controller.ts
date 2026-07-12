@@ -91,7 +91,7 @@ export class AdminResourcesController {
   getUserWallet(@Param('id') id: string) { return this.resources.getUserWallet(id) }
 
   @Get('users/:id/vouchers')
-  getUserVouchers() { return { available: false, vouchers: [], reason: 'VOUCHER_WALLET_NOT_MODELLED' } }
+  getUserVouchers(@Param('id') id: string) { return this.resources.getUserVouchers(id) }
 
   @Get('users/:id/refunds')
   getUserRefunds(@Param('id') id: string) { return this.resources.getUserRefunds(id) }

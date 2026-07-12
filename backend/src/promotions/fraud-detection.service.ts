@@ -1,9 +1,8 @@
-import { Injectable, Inject, Optional } from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 import { I18nService, I18nContext } from 'nestjs-i18n'
 import { randomUUID } from 'crypto'
 import Redis from 'ioredis'
 import { FraudCheckResult } from './promotions.types'
-import { fallbackT } from '../i18n/fallback-translations'
 
 const WINDOW_SECONDS = 3600
 const MAX_CLAIMS_PER_HOUR = 3
@@ -12,11 +11,10 @@ const MAX_CLAIMS_PER_HOUR = 3
 export class FraudDetectionService {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
-    @Optional() private readonly i18n?: I18nService,
+    private readonly i18n: I18nService,
   ) {}
 
   private t(key: string, args?: Record<string, unknown>): string {
-    if (!this.i18n) return fallbackT(key, args)
     return this.i18n.t(key, { lang: I18nContext.current()?.lang ?? 'vi', args })
   }
 

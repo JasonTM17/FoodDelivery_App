@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class ErrorState extends StatelessWidget {
-  final String message;
+  final String? message;
   final String? retryLabel;
   final VoidCallback? onRetry;
   final IconData icon;
 
   const ErrorState({
     super.key,
-    this.message = 'Có lỗi xảy ra',
+    this.message,
     this.retryLabel,
     this.onRetry,
     this.icon = Icons.error_outline,
@@ -18,6 +19,8 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -35,13 +38,13 @@ class ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Rất tiếc!',
+              l10n.commonErrorTitle,
               style: AppTextStyles.headline4,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              message ?? l10n.commonErrorMessage,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -52,7 +55,7 @@ class ErrorState extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: Text(retryLabel ?? 'Thử lại'),
+                label: Text(retryLabel ?? l10n.commonRetry),
               ),
             ],
           ],

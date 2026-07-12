@@ -31,6 +31,7 @@ export type SanitizedUser = {
   avatarUrl: string | null
   isActive: boolean
   createdAt: Date
+  updatedAt: Date
 }
 
 export interface JwtPayload {
@@ -48,6 +49,7 @@ export interface TokenPair {
 export interface AuthResult {
   accessToken: string
   refreshToken: string
+  expiresAt: Date
   user: SanitizedUser
 }
 
@@ -58,7 +60,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name)
 
   private static readonly BCRYPT_ROUNDS = 12
-  private static readonly ACCESS_TOKEN_TTL = '15m'
+  private static readonly ACCESS_TOKEN_TTL_SECONDS = 15 * 60
   private static readonly REFRESH_TOKEN_TTL = '7d'
   private static readonly PASSWORD_RESET_TTL_MINUTES = 60
   private static readonly PASSWORD_RESET_MESSAGE =
@@ -283,6 +285,7 @@ export class AuthService {
         avatarUrl: true,
         isActive: true,
         createdAt: true,
+        updatedAt: true,
       },
     })
 
@@ -295,7 +298,8 @@ export class AuthService {
   private async buildAuthResult(user: { id: string; role: UserRole }): Promise<AuthResult> {
     const tokenPair = await this.generateTokens(user)
     const sanitized = await this.validateUser(user.id)
-    return { ...tokenPair, user: sanitized! }
+    const expiresAt = new Date(Date.now() + AuthService.ACCESS_TOKEN_TTL_SECONDS * 1000)
+    return { ...tokenPair, expiresAt, user: sanitized! }
   }
 
   private async generateTokens(user: { id: string; role: UserRole }): Promise<TokenPair> {
@@ -329,13 +333,13 @@ export class AuthService {
           secret: privateKey as unknown as string,
           algorithm: 'EdDSA',
           keyid: this.ed25519.kid,
-          expiresIn: AuthService.ACCESS_TOKEN_TTL,
+          expiresIn: AuthService.ACCESS_TOKEN_TTL_SECONDS,
         } as unknown as Parameters<JwtService['sign']>[1],
       )
     }
 
     return this.jwtService.sign(payload, {
-      expiresIn: AuthService.ACCESS_TOKEN_TTL,
+      expiresIn: AuthService.ACCESS_TOKEN_TTL_SECONDS,
     })
   }
 

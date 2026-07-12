@@ -1,22 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { NextIntlClientProvider } from 'next-intl';
-import { Inter } from 'next/font/google';
-import { cookies } from 'next/headers';
-import { getSharedMessages, type Locale } from '@foodflow/i18n';
-import viMessages from '../../messages/vi.json';
-import enMessages from '../../messages/en.json';
-import jaMessages from '../../messages/ja.json';
+import { getLocale, getMessages } from 'next-intl/server';
 import { resolveAdminMetadataBase } from '@/lib/metadata-url';
-
-const inter = Inter({ subsets: ['latin', 'vietnamese'] });
-
-const LOCALES = ['vi', 'en', 'ja'] as const;
-const appMessages = {
-  vi: viMessages,
-  en: enMessages,
-  ja: jaMessages,
-} as const;
 
 export const metadata: Metadata = {
   metadataBase: resolveAdminMetadataBase(),
@@ -43,17 +30,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get('NEXT_LOCALE')?.value ?? 'vi';
-  const locale: Locale = (LOCALES as readonly string[]).includes(raw) ? (raw as Locale) : 'vi';
-  const messages = {
-    ...getSharedMessages(locale),
-    rootStates: appMessages[locale].rootStates,
-  };
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
 
   return (
     <html lang={locale}>
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

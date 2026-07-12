@@ -34,11 +34,11 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: '11.7.0'
+          version: '11.11.0'
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
@@ -110,7 +110,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: '11.7.0'
+          version: '11.11.0'
 
       - name: Start Docker Compose stack
         run: docker compose up -d postgres redis minio backend
@@ -121,6 +121,7 @@ jobs:
         run: |
           for i in $(seq 1 40); do
             if curl -sf http://localhost:3001/api/healthz; then echo "Ready"; exit 0; fi
+            echo "Waiting for backend ($i/40)..."
             sleep 5
           done; exit 1
 
@@ -176,11 +177,11 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: '11.7.0'
+          version: '11.11.0'
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
@@ -190,7 +191,9 @@ jobs:
       - name: Wait for backend health
         run: |
           for i in $(seq 1 40); do
-            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi; sleep 5
+            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi
+            echo "Waiting for backend ($i/40)..."
+            sleep 5
           done; exit 1
 
       - name: Seed database
@@ -212,6 +215,7 @@ jobs:
           NEXT_PUBLIC_APP_ENV: development
           NEXT_PUBLIC_API_URL: http://localhost:3001/api
           NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+          NEXT_PUBLIC_REALTIME_PROVIDER: socketio
           NEXT_PUBLIC_ADMIN_URL: http://localhost:3000
           NEXT_PUBLIC_RESTAURANT_URL: http://localhost:3002
 
@@ -258,11 +262,11 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: '11.7.0'
+          version: '11.11.0'
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Start Docker Compose stack
         run: docker compose up -d postgres redis minio backend
@@ -270,7 +274,9 @@ jobs:
       - name: Wait for backend health
         run: |
           for i in $(seq 1 40); do
-            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi; sleep 5
+            if curl -sf http://localhost:3001/api/healthz; then exit 0; fi
+            echo "Waiting for backend ($i/40)..."
+            sleep 5
           done; exit 1
 
       - name: Seed database

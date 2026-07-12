@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../utils/order_status_labels.dart';
 
 class OrderStatusBadge extends StatelessWidget {
   final String status;
@@ -8,7 +10,7 @@ class OrderStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _getStatusConfig(status);
+    final config = _getStatusConfig(status, AppLocalizations.of(context));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -41,46 +43,48 @@ class OrderStatusBadge extends StatelessWidget {
     );
   }
 
-  _StatusConfig _getStatusConfig(String status) {
+  _StatusConfig _getStatusConfig(String status, AppLocalizations l10n) {
     switch (status) {
       case 'pending':
         return _StatusConfig(
-          label: 'Chờ xác nhận',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderPending.withValues(alpha: 0.1),
           borderColor: AppColors.orderPending.withValues(alpha: 0.3),
           textColor: AppColors.orderPending,
         );
       case 'confirmed':
         return _StatusConfig(
-          label: 'Đã xác nhận',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderConfirmed.withValues(alpha: 0.1),
           borderColor: AppColors.orderConfirmed.withValues(alpha: 0.3),
           textColor: AppColors.orderConfirmed,
         );
       case 'preparing':
         return _StatusConfig(
-          label: 'Đang chuẩn bị',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderPreparing.withValues(alpha: 0.1),
           borderColor: AppColors.orderPreparing.withValues(alpha: 0.3),
           textColor: AppColors.orderPreparing,
         );
+      case 'picked_up':
       case 'delivering':
         return _StatusConfig(
-          label: 'Đang giao',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderDelivering.withValues(alpha: 0.1),
           borderColor: AppColors.orderDelivering.withValues(alpha: 0.3),
           textColor: AppColors.orderDelivering,
         );
       case 'delivered':
         return _StatusConfig(
-          label: 'Đã giao',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderDelivered.withValues(alpha: 0.1),
           borderColor: AppColors.orderDelivered.withValues(alpha: 0.3),
           textColor: AppColors.orderDelivered,
         );
+      case 'canceled':
       case 'cancelled':
         return _StatusConfig(
-          label: 'Đã hủy',
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderCancelled.withValues(alpha: 0.1),
           borderColor: AppColors.orderCancelled.withValues(alpha: 0.3),
           textColor: AppColors.orderCancelled,

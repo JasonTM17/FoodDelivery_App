@@ -23,11 +23,11 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: '11.7.0'
+          version: '11.11.0'
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: |
             backend/pnpm-lock.yaml
@@ -72,13 +72,13 @@ jobs:
         run: |
           cd web/apps/admin
           npx next dev --port 3000 &
-          echo "ADMIN_PID=$!" >> $GITHUB_ENV
+          echo "ADMIN_PID=$!" >> "$GITHUB_ENV"
 
       - name: Start restaurant app (background)
         run: |
           cd web/apps/restaurant
           npx next dev --port 3002 &
-          echo "RESTAURANT_PID=$!" >> $GITHUB_ENV
+          echo "RESTAURANT_PID=$!" >> "$GITHUB_ENV"
 
       - name: Wait for web apps
         run: |
@@ -116,5 +116,5 @@ jobs:
       - name: Stop background apps
         if: always()
         run: |
-          kill $ADMIN_PID $RESTAURANT_PID 2>/dev/null || true
+          kill "$ADMIN_PID" "$RESTAURANT_PID" 2>/dev/null || true
           docker compose down

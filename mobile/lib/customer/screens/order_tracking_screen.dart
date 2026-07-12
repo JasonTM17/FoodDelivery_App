@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,16 +25,61 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
       _OrderTrackingScreenState();
 }
 
+@visibleForTesting
+List<LatLng> orderTrackingCameraPoints(
+  OrderModel? order,
+  TrackingState tracking,
+) {
+  final points = <LatLng>[
+    ...orderTrackingRoutePoints(order, tracking),
+    if (isValidDeliveryLatLng(
+      order?.restaurantLatitude,
+      order?.restaurantLongitude,
+    ))
+      LatLng(order!.restaurantLatitude!, order.restaurantLongitude!),
+    if (order != null &&
+        isValidDeliveryLatLng(
+          order.deliveryAddress.latitude,
+          order.deliveryAddress.longitude,
+        ))
+      LatLng(order.deliveryAddress.latitude, order.deliveryAddress.longitude),
+  ];
+
+  final driverLat = tracking.driverLatitude ?? order?.driverLatitude;
+  final driverLng = tracking.driverLongitude ?? order?.driverLongitude;
+  if (isValidDeliveryLatLng(driverLat, driverLng)) {
+    points.add(LatLng(driverLat!, driverLng!));
+  }
+
+  return points;
+}
+
+@visibleForTesting
+LatLng? orderTrackingInitialCameraTarget(
+  OrderModel? order,
+  TrackingState tracking,
+) {
+  final points = orderTrackingCameraPoints(order, tracking);
+  return points.isEmpty ? null : points.first;
+}
+
+@visibleForTesting
+List<LatLng> orderTrackingRoutePoints(
+  OrderModel? order,
+  TrackingState tracking,
+) {
+  final encoded = resolveTrackingRoutePolyline(tracking, order?.routePolyline);
+  return tryDecodeEncodedPolyline(encoded)
+      .map((point) => LatLng(point.latitude, point.longitude))
+      .where((point) => isValidDeliveryLatLng(point.latitude, point.longitude))
+      .toList(growable: false);
+}
+
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
-  final Completer<GoogleMapController> _mapController = Completer();
+  GoogleMapController? _mapController;
   bool _showBottomSheet = true;
   Set<Polygon> _boundaryPolygons = {};
   String _lastCameraSignature = '';
-
-  static const CameraPosition _defaultCamera = CameraPosition(
-    target: LatLng(10.7769, 106.7009),
-    zoom: 14,
-  );
 
   @override
   void initState() {
@@ -64,6 +108,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final trackingState = ref.watch(trackingProvider);
     final order = orderState.currentTrackingOrder;
     final l10n = AppLocalizations.of(context);
+    final initialCameraTarget = orderTrackingInitialCameraTarget(
+      order,
+      trackingState,
+    );
 
     ref.listen<OrderModel?>(
       orderProvider.select((s) => s.currentTrackingOrder),
@@ -79,25 +127,33 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       body: Stack(
         children: [
           // Map
-          GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: _defaultCamera,
-            onMapCreated: (controller) {
-              _mapController.complete(controller);
-              _updateMapPins(order, trackingState);
-            },
-            markers: _buildMarkers(order, trackingState, l10n),
-            polylines: _buildPolylines(order, trackingState),
-            polygons: _boundaryPolygons,
-            minMaxZoomPreference: const MinMaxZoomPreference(
-              VietnamMapConstants.minZoom,
-              VietnamMapConstants.maxZoom,
+          if (initialCameraTarget == null)
+            _TrackingMapUnavailable(
+              message: l10n.driverNavDirectionsUnavailable,
+            )
+          else
+            GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: CameraPosition(
+                target: initialCameraTarget,
+                zoom: 14,
+              ),
+              onMapCreated: (controller) {
+                _mapController = controller;
+                _updateMapPins(order, trackingState);
+              },
+              markers: _buildMarkers(order, trackingState, l10n),
+              polylines: _buildPolylines(order, trackingState),
+              polygons: _boundaryPolygons,
+              minMaxZoomPreference: const MinMaxZoomPreference(
+                VietnamMapConstants.minZoom,
+                VietnamMapConstants.maxZoom,
+              ),
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: false,
+              padding: EdgeInsets.only(bottom: _showBottomSheet ? 300 : 80),
             ),
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false,
-            padding: EdgeInsets.only(bottom: _showBottomSheet ? 300 : 80),
-          ),
 
           // Back button
           Positioned(
@@ -547,7 +603,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
   Set<Polyline> _buildPolylines(OrderModel? order, TrackingState tracking) {
     final polylines = <Polyline>{};
-    final plannedRoute = _routePoints(order, tracking);
+    final plannedRoute = orderTrackingRoutePoints(order, tracking);
     if (plannedRoute.length >= 2) {
       polylines.add(
         Polyline(
@@ -584,70 +640,43 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   Future<void> _updateMapPins(OrderModel? order, TrackingState tracking) async {
-    if (order == null) return;
     final signature = _cameraSignature(order, tracking);
     if (signature == _lastCameraSignature) return;
     _lastCameraSignature = signature;
-    final controller = await _mapController.future;
-    if (!mounted) return;
 
-    final points = <LatLng>[
-      ..._routePoints(order, tracking),
-      if (isValidDeliveryLatLng(
-        order.restaurantLatitude,
-        order.restaurantLongitude,
-      ))
-        LatLng(order.restaurantLatitude!, order.restaurantLongitude!),
-      if (isValidDeliveryLatLng(
-        order.deliveryAddress.latitude,
-        order.deliveryAddress.longitude,
-      ))
-        LatLng(order.deliveryAddress.latitude, order.deliveryAddress.longitude),
-    ];
-    final driverLat = tracking.driverLatitude ?? order.driverLatitude;
-    final driverLng = tracking.driverLongitude ?? order.driverLongitude;
-    if (isValidDeliveryLatLng(driverLat, driverLng)) {
-      points.add(LatLng(driverLat!, driverLng!));
-    }
+    final points = orderTrackingCameraPoints(order, tracking);
+    if (points.isEmpty) return;
+
+    final controller = _mapController;
+    if (controller == null || !mounted) return;
 
     if (points.length >= 2) {
-      controller.animateCamera(
+      await controller.animateCamera(
         CameraUpdate.newLatLngBounds(_boundsFor(points), 80),
       );
     } else if (points.length == 1) {
-      controller.animateCamera(CameraUpdate.newLatLngZoom(points.single, 15));
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(points.single, 15),
+      );
     }
   }
 
-  List<LatLng> _routePoints(OrderModel? order, TrackingState tracking) {
-    final encoded = resolveTrackingRoutePolyline(
+  String _cameraSignature(OrderModel? order, TrackingState tracking) {
+    final driverLat = tracking.driverLatitude ?? order?.driverLatitude;
+    final driverLng = tracking.driverLongitude ?? order?.driverLongitude;
+    final routePolyline = resolveTrackingRoutePolyline(
       tracking,
       order?.routePolyline,
     );
-    return tryDecodeEncodedPolyline(encoded)
-        .map((point) => LatLng(point.latitude, point.longitude))
-        .where(
-          (point) => isValidDeliveryLatLng(point.latitude, point.longitude),
-        )
-        .toList(growable: false);
-  }
-
-  String _cameraSignature(OrderModel order, TrackingState tracking) {
-    final driverLat = tracking.driverLatitude ?? order.driverLatitude;
-    final driverLng = tracking.driverLongitude ?? order.driverLongitude;
-    final routePolyline = resolveTrackingRoutePolyline(
-      tracking,
-      order.routePolyline,
-    );
     return [
-      order.id,
+      order?.id ?? '',
       routePolyline ?? '',
       driverLat?.toStringAsFixed(4) ?? '',
       driverLng?.toStringAsFixed(4) ?? '',
-      order.restaurantLatitude?.toStringAsFixed(4) ?? '',
-      order.restaurantLongitude?.toStringAsFixed(4) ?? '',
-      order.deliveryAddress.latitude.toStringAsFixed(4),
-      order.deliveryAddress.longitude.toStringAsFixed(4),
+      order?.restaurantLatitude?.toStringAsFixed(4) ?? '',
+      order?.restaurantLongitude?.toStringAsFixed(4) ?? '',
+      order?.deliveryAddress.latitude.toStringAsFixed(4) ?? '',
+      order?.deliveryAddress.longitude.toStringAsFixed(4) ?? '',
     ].join('|');
   }
 
@@ -673,6 +702,63 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     return LatLngBounds(
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
+    );
+  }
+}
+
+class _TrackingMapUnavailable extends StatelessWidget {
+  final String message;
+
+  const _TrackingMapUnavailable({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFFF3F4F6),
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.location_off_outlined,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

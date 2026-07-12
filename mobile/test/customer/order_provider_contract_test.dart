@@ -71,6 +71,25 @@ void main() {
     },
   );
 
+  test(
+    'fetchOrders rejects malformed envelopes instead of faking empty orders',
+    () async {
+      final notifier = OrderNotifier();
+
+      await notifier.fetchOrders();
+      expect(notifier.state.activeOrders, hasLength(1));
+
+      apiInterceptor.ordersResponseOverride = {
+        'meta': {'total': 0},
+      };
+
+      await notifier.fetchOrders();
+
+      expect(notifier.state.error, isNotNull);
+      expect(notifier.state.activeOrders, hasLength(1));
+    },
+  );
+
   test('submitReview posts to singular backend review endpoint', () async {
     final notifier = OrderNotifier();
 
@@ -140,6 +159,25 @@ void main() {
     expect(notifier.state.currentTrackingOrder?.updatedAt, backendTimestamp);
   });
 
+  test('OrderModel preserves backend route phase metadata', () {
+    final order = OrderModel.fromJson({
+      ..._orderPayload(id: 'order-active', status: 'delivering'),
+      'routePhase': 'dropoff',
+      'routePolyline': 'dropoff-route',
+    });
+
+    expect(order.routePhase, 'dropoff');
+    expect(order.routePolyline, 'dropoff-route');
+    expect(
+      order.copyWith(routePhase: 'pickup', routePolyline: null).routePhase,
+      'pickup',
+    );
+    expect(
+      order.copyWith(routePhase: 'pickup', routePolyline: null).routePolyline,
+      isNull,
+    );
+  });
+
   test(
     'OrderModel rejects missing required backend money and state fields',
     () {
@@ -159,6 +197,13 @@ void main() {
             ..['statusHistory'] = [
               {'timestamp': '2026-07-05T10:01:00.000Z'},
             ];
+      final missingItemPrice =
+          Map<String, dynamic>.from(
+              _orderPayload(id: 'order-active', status: 'preparing'),
+            )
+            ..['orderItems'] = [
+              {'menuItemId': 'menu-1', 'nameSnapshot': 'Pho bo', 'quantity': 1},
+            ];
 
       expect(
         () => OrderModel.fromJson(missingDeliveryFee),
@@ -176,6 +221,30 @@ void main() {
         () => OrderModel.fromJson(missingTimelineStatus),
         throwsA(isA<FormatException>()),
       );
+      expect(
+        () => OrderModel.fromJson(missingItemPrice),
+        throwsA(isA<FormatException>()),
+      );
+    },
+  );
+
+  test(
+    'OrderItem computes line total from backend unit price and quantity',
+    () {
+      final order = OrderModel.fromJson(
+        _orderPayload(id: 'order-active', status: 'preparing')
+          ..['orderItems'] = [
+            {
+              'menuItemId': 'menu-1',
+              'nameSnapshot': 'Pho bo',
+              'quantity': 2,
+              'unitPrice': 95000,
+            },
+          ],
+      );
+
+      expect(order.items.single.unitPrice, 95000);
+      expect(order.items.single.totalPrice, 190000);
     },
   );
 }
@@ -185,6 +254,7 @@ class _OrderApiInterceptor extends Interceptor {
   String? placeOrderIdempotencyKey;
   Map<String, dynamic>? reviewPayload;
   String? reviewPath;
+  Map<String, dynamic>? ordersResponseOverride;
   int ordersFetchCount = 0;
   int addressPostCount = 0;
 
@@ -212,14 +282,16 @@ class _OrderApiInterceptor extends Interceptor {
         Response<Map<String, dynamic>>(
           requestOptions: options,
           statusCode: 200,
-          data: {
-            'orders': [
-              _orderPayload(id: 'order-active', status: 'preparing'),
-              _orderPayload(id: 'order-complete', status: 'delivered'),
-              _orderPayload(id: 'order-cancelled', status: 'cancelled'),
-            ],
-            'meta': {'total': 3},
-          },
+          data:
+              ordersResponseOverride ??
+              {
+                'orders': [
+                  _orderPayload(id: 'order-active', status: 'preparing'),
+                  _orderPayload(id: 'order-complete', status: 'delivered'),
+                  _orderPayload(id: 'order-cancelled', status: 'cancelled'),
+                ],
+                'meta': {'total': 3},
+              },
         ),
       );
       return;

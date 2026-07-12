@@ -24,6 +24,9 @@ async function gotoAppRoute(page: Page, targetUrl: string): Promise<void> {
   const response = await page.goto(targetUrl)
   expect(response?.status(), `${targetUrl} should not return the Next.js 404 shell`).not.toBe(404)
   await expect(page.getByRole('heading', { name: /^404$/ })).toHaveCount(0)
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
 }
 
 export function gotoAdminRoute(page: Page, path: string, locale?: 'vi' | 'en' | 'ja'): Promise<void> {
@@ -34,7 +37,11 @@ export function gotoRestaurantRoute(page: Page, path: string, locale?: 'vi' | 'e
   return gotoAppRoute(page, restaurantUrl(path, locale))
 }
 
-export async function loginAdminApp(page: Page, request: APIRequestContext): Promise<void> {
+export async function loginAdminApp(
+  page: Page,
+  request: APIRequestContext,
+  locale?: 'vi' | 'en' | 'ja',
+): Promise<void> {
   const auth = await loginViaApi(request, TEST_USERS.admin.email, TEST_USERS.admin.password)
   await seedLocalStorage(page, {
     admin_token: auth.accessToken,
@@ -46,7 +53,7 @@ export async function loginAdminApp(page: Page, request: APIRequestContext): Pro
     }),
   })
 
-  await gotoAdminRoute(page, '/overview')
+  await gotoAdminRoute(page, '/overview', locale)
   await expect(page).toHaveURL(/\/overview/, { timeout: 15_000 })
 }
 

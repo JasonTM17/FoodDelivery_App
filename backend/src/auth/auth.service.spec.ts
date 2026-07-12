@@ -109,14 +109,16 @@ describe('AuthService', () => {
       mockUsersService.create.mockResolvedValueOnce({ id: 'new-user', role: 'customer' })
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'new-user', email: 'test@test.com', fullName: 'Test', role: 'customer',
-        phone: null, avatarUrl: null, isActive: true, createdAt: new Date(),
+        phone: null, avatarUrl: null, isActive: true, createdAt: new Date(), updatedAt: new Date(),
       })
       const result = await service.register({
         email: 'test@test.com', password: 'Test1234!', fullName: 'Test',
       })
       expect(result.accessToken).toBeDefined()
       expect(result.refreshToken).toBeDefined()
+      expect(result.expiresAt).toBeInstanceOf(Date)
       expect(result.user.id).toBe('new-user')
+      expect(result.user.updatedAt).toBeInstanceOf(Date)
     })
 
     it('forces public registration to create customer accounts only', async () => {
@@ -124,7 +126,7 @@ describe('AuthService', () => {
       mockUsersService.create.mockResolvedValueOnce({ id: 'new-user', role: 'customer' })
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'new-user', email: 'test@test.com', fullName: 'Test', role: 'customer',
-        phone: null, avatarUrl: null, isActive: true, createdAt: new Date(),
+        phone: null, avatarUrl: null, isActive: true, createdAt: new Date(), updatedAt: new Date(),
       })
 
       await service.register({

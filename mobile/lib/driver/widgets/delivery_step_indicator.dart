@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class DeliveryStepIndicator extends StatelessWidget {
   final int currentStep;
 
-  static const List<String> _labels = [
-    'Đến NH',
-    'Lấy hàng',
-    'Giao hàng',
-    'Hoàn tất',
-  ];
-
   const DeliveryStepIndicator({super.key, required this.currentStep});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final labels = [
+      l10n.driverStepRestaurant,
+      l10n.driverStepPickup,
+      l10n.driverStepDeliver,
+      l10n.driverStepComplete,
+    ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
-        children: List.generate(_labels.length * 2 - 1, (index) {
+        children: List.generate(labels.length * 2 - 1, (index) {
           if (index.isOdd) return _buildConnector(index ~/ 2);
           final stepIndex = index ~/ 2;
-          return _buildStep(stepIndex);
+          return _buildStep(stepIndex, labels[stepIndex]);
         }),
       ),
     );
   }
 
-  Widget _buildStep(int index) {
+  Widget _buildStep(int index, String label) {
     final isCompleted = index < currentStep;
     final isCurrent = index == currentStep;
 
@@ -76,7 +77,7 @@ class DeliveryStepIndicator extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            _labels[index],
+            label,
             style: TextStyle(
               fontSize: 11,
               fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,

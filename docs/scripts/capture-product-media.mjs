@@ -7,7 +7,7 @@
  *
  * Does not print secrets. Uses seed accounts only.
  */
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
@@ -225,13 +225,31 @@ async function buildGifsWithFfmpeg() {
     const last = job.frames[job.frames.length - 1]
     const body = `${listBody}\nfile '${path.join(GIFS, last).replace(/\\/g, '/')}'\n`
     await writeFile(listPath, body, 'utf8')
-    const r = spawnSync(
-      'ffmpeg',
-      ['-y', '-f', 'concat', '-safe', '0', '-i', listPath, '-vf', 'fps=8,scale=960:-1:flags=lanczos', job.out],
-      { encoding: 'utf8' },
-    )
-    if (r.status === 0) console.log('gif', path.relative(ROOT, job.out))
-    else console.warn('gif failed', job.out, r.stderr?.slice(0, 400))
+    try {
+      const r = spawnSync(
+        'ffmpeg',
+        [
+          '-y',
+          '-f',
+          'concat',
+          '-safe',
+          '0',
+          '-i',
+          listPath,
+          '-filter_complex',
+          'fps=4,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=64:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+          job.out,
+        ],
+        { encoding: 'utf8' },
+      )
+      if (r.status === 0) console.log('gif', path.relative(ROOT, job.out))
+      else console.warn('gif failed', job.out, r.stderr?.slice(0, 400))
+    } finally {
+      await Promise.all([
+        rm(listPath, { force: true }),
+        ...job.frames.map((frame) => rm(path.join(GIFS, frame), { force: true })),
+      ])
+    }
   }
 }
 

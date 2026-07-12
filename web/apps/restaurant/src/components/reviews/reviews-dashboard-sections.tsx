@@ -140,7 +140,7 @@ export function ReviewListItem({
             <p className="text-sm font-semibold text-gray-900">{review.customerName}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <ReviewStarDisplay rating={review.rating} ariaLabel={t('ratingAria', { rating: review.rating })} />
-              <span className="text-xs text-gray-400">{formatReviewDate(review.createdAt, locale)}</span>
+              <span className="text-xs text-gray-600">{formatReviewDate(review.createdAt, locale)}</span>
             </div>
           </div>
         </div>

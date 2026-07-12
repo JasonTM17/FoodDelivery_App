@@ -8,6 +8,7 @@ const finiteCoordinate = z.number().refine(Number.isFinite, {
 export const goOnlineSchema = z.object({
   lat: finiteCoordinate,
   lng: finiteCoordinate,
+  sampledAt: z.string().min(1),
 }).refine(({ lat, lng }) => isWithinVietnamDeliveryBounds(lat, lng), {
   message: 'LOCATION_OUT_OF_DELIVERY_AREA',
   path: ['lat'],

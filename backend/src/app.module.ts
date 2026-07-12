@@ -1,7 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
-import { BullModule } from '@nestjs/bullmq'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { PrismaModule } from './database/prisma.module'
 import { RedisModule } from './redis/redis.module'
@@ -27,6 +26,7 @@ import { RestaurantPortalModule } from './restaurant-portal/restaurant-portal.mo
 import { AiModule } from './ai/ai.module'
 import { HealthModule } from './health/health.module'
 import { MetricsModule } from './metrics/metrics.module'
+import { RealtimeModule } from './realtime/realtime.module'
 import { I18nSetupModule } from './i18n/i18n.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
@@ -34,6 +34,8 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware'
 import { PrometheusMiddleware } from './common/middleware/prometheus.middleware'
+import { QueueProviderModule } from './common/queue/queue-provider.module'
+import { JobOutboxModule } from './common/queue/job-outbox.module'
 import { ThrottlerStorageRedis } from './common/storage/throttler-storage-redis'
 import { validateEnv } from './config/env.validation'
 import Redis from 'ioredis'
@@ -54,7 +56,7 @@ import Redis from 'ioredis'
         }),
       }),
     }),
-    BullModule.forRootAsync({
+    QueueProviderModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const redisUrl = config.get<string>('REDIS_URL')
@@ -66,6 +68,8 @@ import Redis from 'ioredis'
     RedisModule,
     HealthModule,
     MetricsModule,
+    RealtimeModule,
+    JobOutboxModule,
     I18nSetupModule,
     AuthModule,
     UsersModule,

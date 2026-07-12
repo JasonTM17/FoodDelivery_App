@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../providers/earnings_chart_provider.dart';
 
@@ -16,6 +17,7 @@ class EarningsDailyBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (byDay.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
     final effectiveMax = maxAmount > 0
         ? maxAmount
         : byDay.map((d) => d.amount).reduce(max);
@@ -34,9 +36,9 @@ class EarningsDailyBarChart extends StatelessWidget {
             children: [
               const Icon(Icons.bar_chart, color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
-              const Text(
-                'Thu nhập hàng ngày',
-                style: TextStyle(
+              Text(
+                l10n.driverEarningsDaily,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -50,7 +52,7 @@ class EarningsDailyBarChart extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${byDay.length} ngày',
+                  l10n.driverDaysCount(byDay.length),
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.primary,

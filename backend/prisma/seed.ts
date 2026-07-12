@@ -17,6 +17,12 @@ function chance(probability: number): boolean {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Refusing to run prisma/seed.ts in production because it creates demo users, restaurants, drivers, customers, and sample orders. Use a reviewed production data import/bootstrap instead.',
+    )
+  }
+
   console.log('Seeding FoodFlow database...')
 
   // ── Admin User ──

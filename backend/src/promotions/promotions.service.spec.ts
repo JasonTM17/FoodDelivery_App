@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import { PromotionsService } from './promotions.service'
 import { EligibilityService } from './eligibility.service'
 import { FraudDetectionService } from './fraud-detection.service'
 import { PrismaService } from '../database/prisma.service'
+import { createI18nTestService } from '../../test/i18n-test-utils'
 
 const PROMO = {
   id: 'promo-uuid',
@@ -90,6 +92,7 @@ describe('PromotionsService', () => {
             record: jest.fn().mockResolvedValue(undefined),
           },
         },
+        { provide: I18nService, useValue: createI18nTestService() },
       ],
     }).compile()
 

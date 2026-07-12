@@ -18,6 +18,10 @@ const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.delivering,
 ]
 
+export function isLiveTrackingStatus(status: string): boolean {
+  return ACTIVE_DRIVER_ORDER_STATUSES.includes(status as OrderStatus)
+}
+
 export function routePhaseForStatus(status: string): DeliveryRoutePhase {
   return status === 'driver_assigned' || status === 'driver_arriving_restaurant'
     ? 'pickup'
@@ -28,13 +32,40 @@ export function routeCacheKey(orderId: string, phase: DeliveryRoutePhase): strin
   return `${orderId}:${phase}`
 }
 
+export function routeResultFromPersistedPhase(
+  routeGeojson: Prisma.JsonValue | null | undefined,
+  phase: DeliveryRoutePhase,
+): RouteResult | null {
+  const routes = asJsonRecord(routeGeojson)
+  const route = asJsonRecord(routes?.[phase])
+  if (!route) return null
+
+  const polyline = typeof route.polyline === 'string' ? route.polyline.trim() : ''
+  const distanceMeters = finiteNumber(route.distanceMeters)
+  const durationSeconds = finiteNumber(route.durationSeconds)
+  const provider = route.provider
+
+  if (!polyline) return null
+  if (distanceMeters === null || distanceMeters < 0) return null
+  if (durationSeconds === null || durationSeconds <= 0) return null
+  if (provider !== 'google' && provider !== 'osrm') return null
+
+  return {
+    polyline,
+    distanceMeters,
+    durationSeconds,
+    waypoints: persistedWaypoints(route.waypoints),
+    provider,
+  }
+}
+
 interface LocationData {
   lat: number
   lng: number
   bearing?: number
   speed?: number
   accuracy?: number
-  timestamp?: string
+  timestamp: string
 }
 
 interface LocationRecord {
@@ -110,7 +141,7 @@ export class TrackingService implements OnModuleDestroy {
       )
       await this.etaCache.setRoute(cacheKey, route)
       // Persist to DB non-blocking; failure is logged, not thrown
-      void this.persistRouteToOrder(orderId, route)
+      void this.persistRouteToOrder(orderId, phase, route)
       return route
     } catch (err) {
       this.logger.error(`Route fetch failed for order ${orderId}: ${(err as Error).message}`)
@@ -140,7 +171,7 @@ export class TrackingService implements OnModuleDestroy {
           removeOnComplete: true,
           removeOnFail: 100,
           // Deduplicate: only one pending recompute per order at a time
-          jobId: `recompute:${orderId}:${phase}`,
+          jobId: `recompute-${orderId}-${phase}`,
         },
       )
     }
@@ -157,8 +188,25 @@ export class TrackingService implements OnModuleDestroy {
     return { lat: parseFloat(lat), lng: parseFloat(lng), timestamp }
   }
 
+  async getOrderDriverLocation(
+    orderId: string,
+    driverId: string,
+  ): Promise<{ lat: number; lng: number; timestamp: string } | null> {
+    const activeOrderId = await this.resolveActiveOrderForDriver(driverId)
+    if (activeOrderId !== orderId) return null
+    return this.getDriverLocation(driverId)
+  }
+
   getCachedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {
     return this.etaCache.getRoute(routeCacheKey(orderId, phase))
+  }
+
+  async getPersistedRoute(orderId: string, phase: DeliveryRoutePhase = 'dropoff'): Promise<RouteResult | null> {
+    const task = await this.prisma.deliveryTask.findUnique({
+      where: { orderId },
+      select: { routeGeojson: true },
+    })
+    return routeResultFromPersistedPhase(task?.routeGeojson, phase)
   }
 
   async resolveActiveOrderForDriver(driverId: string): Promise<string | null> {
@@ -224,7 +272,7 @@ export class TrackingService implements OnModuleDestroy {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private async persistRouteToOrder(orderId: string, route: RouteResult): Promise<void> {
+  private async persistRouteToOrder(orderId: string, phase: DeliveryRoutePhase, route: RouteResult): Promise<void> {
     try {
       await this.prisma.order.update({
         where: { id: orderId },
@@ -233,9 +281,41 @@ export class TrackingService implements OnModuleDestroy {
           routeWaypoints: route.waypoints as unknown as Prisma.InputJsonValue,
         },
       })
+      await this.persistRouteToDeliveryTask(orderId, phase, route)
     } catch (err) {
       this.logger.warn(`Failed to persist route for order ${orderId}: ${(err as Error).message}`)
     }
+  }
+
+  private async persistRouteToDeliveryTask(orderId: string, phase: DeliveryRoutePhase, route: RouteResult): Promise<void> {
+    const distanceKm = Number((route.distanceMeters / 1000).toFixed(2))
+    const otherPhase: DeliveryRoutePhase = phase === 'pickup' ? 'dropoff' : 'pickup'
+    const distanceUpdate = phase === 'pickup'
+      ? Prisma.sql`pickup_distance_km = CAST(${distanceKm} AS numeric)`
+      : Prisma.sql`delivery_distance_km = CAST(${distanceKm} AS numeric)`
+    const routeJson = JSON.stringify({
+      provider: route.provider,
+      polyline: route.polyline,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+      waypoints: route.waypoints,
+    })
+
+    await this.prisma.$executeRaw(Prisma.sql`
+      UPDATE delivery_tasks
+      SET
+        ${distanceUpdate},
+        duration_in_traffic =
+          COALESCE((route_geojson #>> ARRAY[CAST(${otherPhase} AS text), 'durationSeconds'])::int, 0)
+          + CAST(${route.durationSeconds} AS int),
+        route_geojson = jsonb_set(
+          COALESCE(route_geojson, '{}'::jsonb),
+          ARRAY[CAST(${phase} AS text)],
+          CAST(${routeJson} AS jsonb),
+          true
+        )
+      WHERE order_id = CAST(${orderId} AS uuid)
+    `)
   }
 
   private async flush(): Promise<void> {
@@ -267,8 +347,33 @@ function normalizeRedisOrderId(value: string | null): string | null {
   return trimmed ? trimmed : null
 }
 
+function asJsonRecord(value: Prisma.JsonValue | null | undefined): Record<string, Prisma.JsonValue> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as Record<string, Prisma.JsonValue>
+}
+
+function finiteNumber(value: Prisma.JsonValue | undefined): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return value
+}
+
+function persistedWaypoints(value: Prisma.JsonValue | undefined): RouteResult['waypoints'] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(point => {
+      const record = asJsonRecord(point)
+      if (!record) return null
+      const lat = finiteNumber(record.lat)
+      const lng = finiteNumber(record.lng)
+      if (lat === null || lng === null) return null
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+      return { lat, lng }
+    })
+    .filter((point): point is { lat: number; lng: number } => point !== null)
+}
+
 function parseLocationRecordedAt(timestamp?: string): Date {
-  if (!timestamp) return new Date()
+  if (!timestamp) throw new Error('INVALID_DRIVER_LOCATION_TIMESTAMP')
   const recordedAt = new Date(timestamp)
   if (!Number.isFinite(recordedAt.getTime())) {
     throw new Error('INVALID_DRIVER_LOCATION_TIMESTAMP')

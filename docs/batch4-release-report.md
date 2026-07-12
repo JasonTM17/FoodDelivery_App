@@ -1,128 +1,129 @@
-# Batch 4 release report
+# FoodFlow Batch 4 Release Report
 
-Last updated: 2026-07-09.
+Last updated: **2026-07-11**. Status: **local hardening in progress; production release blocked**.
 
-Verified remote code head: `118459e` (`origin/master`) before this local hardening refresh. A fresh 2026-07-09 remote branch audit found `master` plus new Dependabot heads; no remote `codex/batch4-integration` branch exists. The local `codex/batch4-integration` branch remains checked out in the clean worktree and tracks `origin/master`. The latest local code head before this docs evidence update is `43d577d`, is a fast-forward candidate for `master`, and `git status --short --branch` returned `codex/batch4-integration...origin/master [ahead 79]`; re-run the ahead/behind check after each evidence commit before deleting the local branch. The latest broad non-deploy release gate passed after `edd906d` with install/build/E2E/deploy preflight intentionally skipped for speed and safety; newer focused hardening commits, the 2026-07-09 Docker/E2E refresh, the Supabase/Vercel production-preflight work, and controlled Dependabot salvage have their evidence listed below.
+## Release identity
 
-## What landed
-
-- Batch 4 backend, Admin web, Restaurant web, and mobile client changes are consolidated in the clean integration branch as a fast-forward candidate for `master`; remote branch cleanup must wait until the current integration head is pushed/verified on `master`.
-- Admin and Restaurant E2E navigation now fails fast when the suite hits a wrong local Next.js 404 shell, and the axe focus smoke ignores Next.js devtools portal focus noise while still requiring a visible in-app focusable control.
-- Backend tracking/route/dispatch tests verify route snapshots, admin tracking, heatmap, dispatch retries, Redis route cache invalidation, and route fetch failure behavior.
-- Mobile tracking/driver route tests verify realtime route confirmation, stale route clearing, invalid coordinate rejection, backend route telemetry parsing, and heatmap rows without invented fallback metrics.
-- The local hardening refresh removes runtime hardcoded i18n fallback maps, rejects stale/future GPS samples before they mutate live driver state, prevents stale queued ETA jobs from overwriting the current route phase, marks Admin driver markers stale when refreshes fail, blocks demo seed execution in production, and labels planned route geometry distinctly from telemetry replay.
-- A local release-gate wrapper now lives at `infra/scripts/local-release-gate.ps1` so frozen installs, backend/web/mobile checks, OpenAPI Spectral lint, Docker Compose config validation, optional Playwright Chromium/Firefox, secret scan, and Supabase/Vercel preflight guards can be run consistently before push/deploy.
-- Mobile order status labels and shared empty/error/availability labels now resolve through generated vi/en/ja localization instead of hardcoded Vietnamese model/UI strings.
-- Mobile nearby browse now sends the backend `/restaurants/nearby` contract (`lat`/`lng` plus canonical cuisine values), fails closed when GPS is unavailable instead of using fake coordinates, builds list/map cuisine filters from real `cuisineTypes`, and localizes browse/search/driver-history error and filter labels through generated vi/en/ja strings.
-- Backend dispatch/tracking now routes customer/restaurant order-facing dispatch events through the `/events` orders gateway, keeps `/dispatch` driver-only, and persists real provider pickup/dropoff route distance, duration, and geometry into `delivery_tasks` without fabricated ETA fallbacks.
-- Driver incentives now use persisted `driver_incentive_campaigns` records and delivered driver tasks to compute active/completed campaign progress instead of returning `501 DRIVER_INCENTIVES_NOT_MODELLED`.
-- Admin user vouchers now return real persisted `Promotion` and `PromotionUsage` data for owned/used vouchers and total savings instead of the `VOUCHER_WALLET_NOT_MODELLED` placeholder contract.
-- Admin exports no longer advertise or accept Parquet create requests until a real Parquet writer/storage pipeline exists; CSV/XLSX remain completed inline from database rows, while legacy Parquet jobs still render as historical job rows and cannot be downloaded as fake files.
-- Admin user and restaurant lifecycle screens now consume the backend `isActive`/`meta` contract, send `{ isActive }` status toggles, use the canonical `restaurant` role filter, and render unavailable metrics as `—` instead of inventing zero order/revenue values.
-- Mobile customer tracking and driver route replay maps no longer fall back to a hardcoded Ho Chi Minh City camera when backend route/driver coordinates are missing; they render localized unavailable states until real valid delivery coordinates arrive.
-- Tracking now requires a real driver GPS sample timestamp end-to-end; backend rejects missing timestamps before mutating live map state, mobile location pings no longer default to local `now`, and idle heartbeats do not refresh stale coordinates as live driver positions.
-- Driver online activation now requires a fresh GPS `sampledAt` timestamp; backend rejects stale/malformed/future online coordinates before writing Redis GEO live state, and mobile no longer reuses in-memory coordinates when the fresh GPS read times out.
-- Live shipper ETA now estimates remaining route distance/duration from the driver's progress along the provider polyline instead of reusing the original cached route duration for every location update.
-- Driver heatmap no longer centers on a hardcoded Ho Chi Minh City coordinate or draws a driver marker when GPS is unavailable; it uses real backend demand geometry when present and otherwise renders an unavailable map state.
-- Live tracking snapshots and driver active-order route rendering now require phase-matched route geometry from cache or `delivery_tasks.route_geojson`; legacy `orders.routePolyline` is no longer used as live route fallback, and mobile driver ETA events without the current `routePhase` are ignored instead of overwriting the visible route.
-- Mobile tracking snapshots now surface malformed, wrong-order, and unavailable REST snapshot states explicitly in `TrackingState.snapshotError` while still allowing realtime sockets to continue; valid snapshots clear the error instead of silently swallowing contract failures.
-- Customer restaurant map browse no longer centers on a hardcoded Ho Chi Minh City coordinate when GPS is missing; it uses valid backend restaurant coordinates when present and otherwise renders a localized location-required state instead of inventing a camera target.
-- Restaurant analytics section endpoints now reject unknown section names with a typed 400 response before loading insights instead of returning a fake empty list for made-up analytics data.
-- Admin order detail views now validate order item rows at runtime and show localized contract errors for missing/malformed `items` instead of rendering a fake empty item list.
-- Mobile order item parsing now requires real backend menu item identity, display name, and unit price, and computes missing line totals from backend unit price/quantity instead of rendering blank items or fake zero-value prices.
-- Customer order list/detail responses now serialize real `OrderDetail` item and money fields for mobile/OpenAPI clients, including `menuItemId`, unit price, line totals, and selected option metadata instead of leaking partial Prisma rows.
-- Restaurant order list/detail lookup now requires an active restaurant profile and fails closed when provisioning/tenant context is missing instead of rendering a fake empty order list.
-- Mobile order list fetching now treats malformed `/orders` envelopes as contract errors and preserves the last valid state instead of rendering a fake empty order history.
-- Admin support queue and ticket thread screens now fail closed on network or malformed `tickets`/`messages` envelopes instead of rendering fake empty queues/conversations.
-- Restaurant menu, promotions, insights, and staff management now fail closed on initial API failures or malformed response envelopes instead of showing empty lists, zero summaries, or blank charts as if they were real business data.
-- Restaurant notifications and reviews now validate response envelopes and rows before rendering; malformed responses show contract errors instead of being treated as honest empty notification/review lists.
-- Admin overview KPI and heatmap widgets now validate successful API envelopes at runtime and throw contract errors for malformed payloads instead of rendering fake empty dashboard cards/maps.
-- Restaurant live tracking route overlays and driver GPS events now fail closed for malformed, overflowing, or out-of-Vietnam geometry, while preserving valid zero-minute ETA display from backend telemetry.
-- Restaurant promotions now require explicit category/item targets for scoped promotions on both backend and Restaurant UI, preventing category/item campaign drafts from silently widening into global promotions.
-- Notification fanout now reports delivery failure when any selected channel fails or returns `success:false`, settings/locale lookup failures stop fanout instead of falling back to defaults, and missing notification templates fail closed instead of fabricating event-name notifications.
-- Restaurant menu item editing now requires the backend to return explicit editable `options` and `allergens` arrays before rendering the form, preventing malformed payloads from being saved back as empty arrays.
-- Admin analytics KPI/chart clients now validate successful API envelopes at runtime and show retryable errors for malformed payloads instead of rendering fake empty KPI cards, funnels, restaurants, or retention panels.
-- Docker image publishing now targets the repository's live production branch, `master`, while retaining `v*` release-tag publishing.
-- Backend production realtime now supports `REALTIME_PROVIDER=supabase` via a database-backed `realtime_outbox`, short-lived Supabase realtime JWT issuance at `POST /api/realtime/token`, explicit tenant/channel authorization, and dual publishing from existing gateways while local Socket.IO remains available for development.
-- Admin and Restaurant web clients now support `NEXT_PUBLIC_REALTIME_PROVIDER=supabase` with Supabase Realtime subscriptions to authorized outbox channels; legacy socket URL fallback is no longer required for production preflight.
-- Production storage can use Supabase Storage through `STORAGE_PROVIDER=supabase`, including signed review photo upload URLs and restaurant asset upload/delete paths, while MinIO remains the local/default adapter.
-- Production queue writes can use `QUEUE_PROVIDER=supabase-postgres` through a Prisma-backed `job_outbox`, and Vercel can drain due jobs through the secured `/api/jobs/drain` endpoint authenticated with `Authorization: Bearer ${CRON_SECRET}`.
-- Vercel project shells now exist for all production surfaces: API `foodflow-api` (`prj_cyLgfsLT47wTU0N9SxsorddrkSzU`, root `backend`), Admin `food-delivery-app` (`prj_ZK7SpdUATQIY5zSEMvLZS4Tppnkj`, root `web/apps/admin`), and Restaurant `foodflow-restaurant` (`prj_4uqtS8dRs66wttI8K7W5vsjQccAE`, root `web/apps/restaurant`).
-- Supabase MCP was added and OAuth login succeeded for project ref `lvanszgszzfopusboich`; Supabase agent skills were installed locally for future database/realtime work.
-- Controlled Dependabot salvage landed in the local integration branch: `actions/checkout@7` was patch-equivalent cherry-picked as `0b44a54`, and safe web minor/patch package bumps were combined into `43d577d` with a single `pnpm` lockfile. Riskier major/runtime Dependabot heads (Node 26 Docker, ESLint 10, jsdom 29, React 19, Vitest coverage 4) remain unmerged pending dedicated migrations.
-
-## Local verification
-
-| Area | Result |
+| Item | Current value |
 |---|---|
-| Backend install | `pnpm install --frozen-lockfile` passed |
-| Backend Prisma | `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public DIRECT_URL=postgresql://postgres:postgres@localhost:5432/foodflow?schema=public pnpm exec prisma validate --schema prisma/schema.prisma` passed |
-| Backend quality | `pnpm typecheck`, `pnpm lint`, full `pnpm exec jest --runInBand` (110 suites / 803 tests), and `pnpm build` passed in the 2026-07-07 local release gate at `89f0d0e`. |
-| Backend map/route | Targeted Jest route/tracking/admin-tracking/dispatch run passed 8 suites / 76 tests. Latest tracking/dispatch hardening through `c825ad5` passed 5 focused suites / 60 tests plus backend `pnpm typecheck` and `pnpm lint`. |
-| Backend driver incentives | `9c32d01` passed Prisma generate/validate, focused Jest for incentives/env validation (3 suites / 10 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, and focused mobile incentives tests 7/7 |
-| Admin user vouchers | `GET /admin/users/:id/vouchers` now reads persisted promotions/usages; focused backend Jest passed `src/admin/admin-resources.service.spec.ts` (7 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, Admin `pnpm --filter foodflow-admin typecheck`, Admin `pnpm --filter foodflow-admin lint`, focused Admin voucher Vitest, and full Admin Vitest 38 files / 156 tests. |
-| Admin export formats | Parquet create requests are rejected until real writer/storage support exists; focused backend Jest passed `src/admin/admin-export.service.spec.ts` (6 tests), backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, OpenAPI Spectral, Admin export/report Vitest (8 tests), Admin `pnpm --filter foodflow-admin typecheck`, and Admin `pnpm --filter foodflow-admin lint`. |
-| Admin lifecycle contract | Users and restaurants now normalize real backend `fullName`/`profiles`/`isActive`/`meta` responses and PATCH `{ isActive }`; focused `pnpm --filter foodflow-admin exec vitest run __tests__/app/admin-lifecycle-contract.test.tsx` passed 4/4, Admin `pnpm --filter foodflow-admin typecheck` passed, Admin `pnpm --filter foodflow-admin lint` passed, and full Admin Vitest passed 39 files / 160 tests. |
-| Web install | `pnpm install --frozen-lockfile` passed |
-| Web quality | `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 files / 155 tests; Restaurant 31 files / 100 tests), and full Admin + Restaurant builds passed in the 2026-07-07 local release gate at `89f0d0e`. Restaurant build validation used an explicit secure public build-time URL; production deployment still correctly requires the real `NEXT_PUBLIC_RESTAURANT_URL` to be configured in Vercel. |
-| OpenAPI | Spectral lint passed with `--fail-severity error` |
-| Docker | On 2026-07-09 at `7c6d1c2`, `docker compose build backend admin restaurant` passed and produced current-source `batch4-integration-backend`, `batch4-integration-admin`, and `batch4-integration-restaurant` images; `docker compose up -d backend admin restaurant` recreated the app containers after migration; backend, Admin, and Restaurant health endpoints returned 200 OK. |
-| Playwright | On 2026-07-09 after the refreshed Docker stack at `7c6d1c2`, Chromium + Firefox passed 70/70 tests using `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, and `API_URL=http://[::1]:3001/api`, including realtime, tenant isolation, visual contract, and axe serious/critical smoke. |
-| Mobile | `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` passed 225/225 tests, and `flutter build apk --debug` produced `build/app/outputs/flutter-apk/app-debug.apk`. Latest 2026-07-07 hardening rerun after `94d4e18` passed `flutter analyze`, focused `flutter test test/shared/restaurant_provider_nearby_contract_test.dart test/i18n/i18n_test.dart` 19/19, and full `flutter test` again: 229/229 tests. |
-| Mobile map/route | Targeted tracking/driver route/heatmap Flutter tests passed 22/22 tests |
-| Mobile map fail-closed | Focused `flutter test test\driver\route_replay_map_test.dart test\customer\order_tracking_camera_test.dart` passed 6/6 and `flutter analyze` passed after removing hardcoded fallback camera targets from customer tracking and driver route replay. |
-| Shipper route live ETA/timestamps | Focused backend `pnpm exec jest src/tracking/tracking.gateway.spec.ts src/tracking/tracking.service.spec.ts src/tracking/route-utils.spec.ts --runInBand` passed 3 suites / 44 tests, backend `pnpm typecheck` passed, backend `pnpm lint` passed, focused mobile `flutter test test\driver\services\background_location_service_test.dart` passed 13/13, and `flutter analyze` passed after requiring real GPS timestamps and deriving live ETA from route progress. |
-| Driver heatmap fail-closed | Focused `flutter test test\driver\heatmap_canvas_test.dart test\driver\heatmap_provider_test.dart` passed 13/13, `flutter analyze` passed, and full `flutter test` passed 241/241 after removing the hardcoded HCMC fallback camera/marker from driver heatmap rendering. |
-| Phase-matched live route geometry | Focused backend `pnpm exec jest src/tracking/tracking.controller.spec.ts src/tracking/tracking.service.spec.ts src/tracking/eta-recompute.processor.spec.ts src/drivers/drivers.service.spec.ts --runInBand` passed 4 suites / 48 tests, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed; focused mobile `flutter test test\driver\driver_route_phase_test.dart test\customer\order_provider_contract_test.dart test\driver\heatmap_canvas_test.dart` passed 16/16, `flutter analyze` passed, and full `flutter test` passed 244/244 after requiring phase-matched persisted route geometry and ignoring wrong-phase driver ETA route events. |
-| Driver online GPS freshness | Focused backend `pnpm exec jest src/drivers/drivers.service.spec.ts --runInBand` passed 21/21, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed; focused mobile `flutter test test\driver\driver_route_phase_test.dart` passed 4/4, `flutter analyze` passed, and full `flutter test` passed 246/246 after requiring fresh `sampledAt` for `/driver/online` and blocking stale/future GPS samples from live Redis/admin map state. |
-| Customer restaurant map camera | Focused `flutter test test\customer\restaurant_list_map_test.dart test\shared\restaurant_provider_nearby_contract_test.dart` passed 5/5, `flutter analyze` passed, and full `flutter test` passed 249/249 after removing the hardcoded HCMC browse-map camera and failing closed when neither GPS nor backend restaurant coordinates are available. |
-| Tracking snapshot contract errors | Focused `flutter test test\shared\tracking_provider_test.dart test\customer\order_tracking_camera_test.dart` passed 13/13, `flutter analyze` passed, and full `flutter test` passed 252/252 after replacing silent malformed tracking snapshot catches with explicit `snapshotError` state while preserving realtime-first tracking. |
-| Restaurant analytics sections | Focused backend `pnpm exec jest src/restaurant-portal/restaurant-analytics.controller.spec.ts src/restaurant-portal/restaurant-insights.service.spec.ts --runInBand` passed 2 suites / 7 tests, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed after rejecting unknown analytics section names instead of returning `[]` as if the section had real empty data. |
-| Admin order item contract | Focused `pnpm --filter foodflow-admin exec vitest run __tests__/app/admin-detail-fallbacks.test.tsx` passed 5/5, Admin `pnpm --filter foodflow-admin typecheck` and `pnpm --filter foodflow-admin lint` passed, and full Admin Vitest passed 40 files / 167 tests after removing `(order.items || [])` fallbacks from order detail views. |
-| Admin overview contract | Focused `pnpm --filter foodflow-admin exec vitest run __tests__/app/overview-contract.test.ts` passed 4/4, Admin `pnpm --filter foodflow-admin typecheck` and `pnpm --filter foodflow-admin lint` passed, full Admin Vitest passed 41 files / 171 tests with `NODE_OPTIONS=--max-old-space-size=4096` and `--maxWorkers=1` after the default worker run exhausted local heap, and Admin `pnpm --filter foodflow-admin build` passed 70 localized pages. |
-| Restaurant live tracking geometry | Backend `pnpm exec jest src/tracking/route-utils.spec.ts --runInBand` passed 15/15, Restaurant focused `pnpm --filter restaurant exec vitest run __tests__/components/orders/order-live-tracking-map.test.tsx --maxWorkers=1` passed 7/7, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed, and Restaurant `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, and `pnpm --filter restaurant build` passed after fail-closing malformed/out-of-region route geometry and preserving `0 min` ETA rendering. |
-| Restaurant promotion scope | Backend `pnpm exec jest src/restaurant-portal/restaurant-promotions.service.spec.ts --runInBand` passed 13/13, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed, focused Restaurant Vitest passed promotion form/engine tests 14/14, Restaurant `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, full Restaurant Vitest passed 33 files / 111 tests, and Restaurant `pnpm --filter restaurant build` passed 55 localized pages after requiring explicit category/item targets and rendering a real menu category selector backed by `/restaurant/menu/categories`. |
-| Notification delivery contracts | Focused `pnpm exec jest src/notifications/notifications.service.spec.ts src/notifications/templates/template.loader.spec.ts --runInBand` passed 16/16, full notifications Jest `pnpm exec jest src/notifications --runInBand` passed 4 suites / 20 tests, and backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed after removing success reporting for failed channels, DB-error settings/locale fallback, and fabricated missing-template copy. |
-| Restaurant menu item editor contract | Focused `pnpm --filter restaurant exec vitest run __tests__/components/menu/menu-item-editor.test.tsx --maxWorkers=1` passed 3/3, Restaurant `pnpm --filter restaurant typecheck` passed, `pnpm --filter restaurant lint` passed with no warnings, and Restaurant `pnpm --filter restaurant build` passed 55 localized pages after rejecting malformed edit payloads that omit `options` or `allergens`. |
-| Admin analytics contracts | Focused `pnpm --filter foodflow-admin exec vitest run __tests__/app/analytics-contract.test.ts __tests__/app/analytics-charts.test.tsx --maxWorkers=1` passed 5/5, Admin `pnpm --filter foodflow-admin typecheck` and `pnpm --filter foodflow-admin lint` passed with no warnings, Admin `pnpm --filter foodflow-admin build` passed 70 localized pages, and full Admin Vitest passed 42 files / 175 tests after adding runtime contract guards for `/admin/kpis` and `/admin/charts`. |
-| Restaurant notifications/reviews contracts | Focused `pnpm --filter restaurant exec vitest run __tests__/components/notifications/notifications-list.test.tsx __tests__/components/reviews/reviews-dashboard.test.tsx` passed 2 files / 5 tests, Restaurant `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, full Restaurant Vitest passed 33 files / 107 tests, and Restaurant `pnpm --filter restaurant build` passed after replacing `data.notifications ?? []` and `data.reviews ?? []` with runtime contract guards. |
-| Mobile order item contract | Focused `flutter test test\customer\order_provider_contract_test.dart` passed 8/8 and full `flutter test` passed 236/236 after requiring real order item identity/name/unit price and deriving line totals from unit price/quantity only when the backend omits an explicit total. |
-| Customer order contract | Backend `pnpm exec jest src/orders/orders.service.spec.ts --runInBand` passed 30/30, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed, full backend Jest passed 110 suites / 807 tests, OpenAPI Spectral passed, `dart analyze packages/api_client` passed, and focused mobile `flutter test test\customer\order_provider_contract_test.dart` passed 8/8 after serializing `/orders` list/detail item money fields and updating the Dart api-client. |
-| Restaurant order tenant guard | Focused `pnpm exec jest src/orders/orders.service.spec.ts --runInBand` passed 31/31 and backend `pnpm typecheck` passed after changing restaurant order list/detail profile lookup to active-profile-only fail-closed behavior. |
-| Mobile order envelope guard | Focused `flutter test test\customer\order_provider_contract_test.dart` passed 9/9, `flutter analyze` passed, and full `flutter test` passed 237/237 after requiring object `/orders` responses to contain a real `orders` list. |
-| Admin support fail-closed UI | Focused `pnpm --filter foodflow-admin exec vitest run __tests__/app/support-fail-closed.test.tsx` passed 4/4, `pnpm --filter foodflow-admin typecheck` passed, `pnpm --filter foodflow-admin lint` passed, and full Admin Vitest passed 40 files / 164 tests after adding support queue/thread error states for network failures and malformed `tickets`/`messages` envelopes. |
-| Restaurant runtime fallback guards | Focused `pnpm --filter restaurant exec vitest run __tests__/components/runtime-fallbacks.test.tsx __tests__/components/menu/menu-board.test.tsx` passed 2 files / 6 tests, `pnpm --filter restaurant typecheck` passed, `pnpm --filter restaurant lint` passed, and full Restaurant Vitest passed 32 files / 104 tests after preventing menu/promotions/insights/staff load failures from rendering fake empty business data. |
-| Current non-deploy release gate | After `edd906d`, `infra/scripts/local-release-gate.ps1 -SkipInstall -SkipBuild -SkipDeployPreflight` passed: clean worktree, high-confidence secret scan, backend Prisma validate/typecheck/lint/full Jest 111 suites / 823 tests, web typecheck/lint/full Vitest, OpenAPI Spectral, Docker Compose config, mobile analyze, and full mobile tests 252/252. Full web Vitest evidence includes Admin 40 files / 167 tests and Restaurant 32 files / 104 tests. E2E/build/install/deploy preflights were intentionally skipped in this quick gate. |
-| Frozen install and build refresh | After `5c20ec8`, backend `pnpm install --frozen-lockfile`, web `pnpm install --frozen-lockfile`, and mobile `flutter pub get --enforce-lockfile` passed. Backend `pnpm build`, Admin `pnpm --filter foodflow-admin build`, Restaurant `pnpm --filter restaurant build`, and mobile `flutter build apk --debug` passed with safe placeholder public URLs for local build validation. After `c461115`, Restaurant build was rerun and passed again. Mobile build emitted a non-fatal Flutter warning that `share_plus` still applies Kotlin Gradle Plugin and should be upgraded before future Flutter releases require built-in Kotlin plugins. |
-| Compose | `docker compose -f docker-compose.yml config --quiet` passed; production override passed with placeholder `POSTGRES_PASSWORD` and `REDIS_PASSWORD` |
-| CI workflow syntax | `.github/workflows/docker-publish.yml` parsed successfully after retargeting Docker Publish from `main` to `master` |
-| Secrets/runtime data | High-confidence tracked/staged scans found no live provider tokens or private keys; no tracked dotenv files were found. Generic candidates were reviewed as test variable names, local-only forbidden production defaults, or static Redis Lua scripts. Latest runtime keyword scan over production source found no `Math.random`, faker, or mock business-data generator; remaining hits were UI placeholders/loading fallbacks, fail-closed config guards, or localization metadata. |
-| Supabase realtime/storage/queue foundation | After `fcdcfbd`, `f924a6f`, `eab4eaf`, `d5a0c5a`, and `f5ba366`, backend `pnpm exec prisma generate`, focused realtime/storage/queue/env Jest, backend `pnpm typecheck`, `pnpm lint`, `pnpm build`, and full `pnpm exec jest --runInBand` passed 116 suites / 849 tests. Admin/Restaurant focused realtime Vitest, typecheck, lint, and production-like builds passed with safe placeholder public values before commit. |
-| Current web full gates | On 2026-07-09 after `7b84949`, Admin `pnpm --filter foodflow-admin typecheck`, `lint`, full `vitest run --maxWorkers=1` (42 files / 175 tests), and production-like `build` passed 70 localized pages. Restaurant `pnpm --filter restaurant typecheck`, `lint`, full `vitest run --maxWorkers=1` (33 files / 112 tests), and production-like `build` passed 55 localized pages. Build-time public values were safe placeholders except the public Supabase project URL; no production secret values were used. |
-| Current mobile gates | On 2026-07-09 after `9cc19b9`, `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (252/252), and `flutter build apk --debug` passed, producing `mobile/build/app/outputs/flutter-apk/app-debug.apk`. Build emitted the existing non-fatal `share_plus` Kotlin Gradle Plugin compatibility warning for future Flutter releases. |
-| Current non-deploy release-gate tail | On 2026-07-09 after `900e70d`, `infra/scripts/local-release-gate.ps1 -SkipBackend -SkipWeb -SkipMobile -SkipDeployPreflight` passed: clean worktree, high-confidence secret scan, OpenAPI Spectral lint with no error-severity findings, and Docker Compose config validation for default/prod/local compose files. Playwright E2E and deploy preflights were intentionally skipped in this tail run because local services/production secrets remain separately gated. |
-| Current Playwright/Docker E2E | On 2026-07-09 after `aeae405`, Docker Desktop was started, `docker compose up -d postgres redis minio backend admin restaurant` brought the local stack healthy, and backend/Admin/Restaurant health endpoints returned 200. `ADMIN_URL=http://localhost:3000 RESTAURANT_URL=http://localhost:3002 API_URL=http://localhost:3001/api pnpm test:e2e --project=chromium --project=firefox` passed 70/70 tests, including AI chatbot contract, restaurant queue/order flows, realtime tracking, tenant isolation, axe serious smoke, and visual contract regression. |
-| Controlled Dependabot salvage | On 2026-07-09, `0b44a54` salvaged `actions/checkout@7`; staged whitespace and high-confidence secret scans passed before commit. `43d577d` combined safe web dependency bumps (`autoprefixer`, Radix accordion/dropdown/slot/switch, `react-hook-form`) using `pnpm`, then passed `pnpm install --frozen-lockfile`, Admin and Restaurant typecheck, lint, full Vitest (Admin 42 files / 175 tests; Restaurant 33 files / 112 tests), and local-env production builds (Admin 70 localized pages; Restaurant 55 localized pages). |
-| Vercel production preflight | `vercel project inspect` confirmed API/Admin/Restaurant roots and build settings after creating/configuring `foodflow-api` and `foodflow-restaurant`. Generated sensitive `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` were added directly to `foodflow-api` production env via Vercel sensitive env API without printing values. Known non-secret provider/public env defaults were added where safe. `infra/scripts/vercel-web-preflight.ps1` and `.sh` now check all three projects and aggregate missing env/settings before failing safely because real external secrets/keys are still missing. `infra/scripts/vercel-env-prompt.ps1` prints safe per-project env-add commands and can link per-project Vercel directories plus prompt locally for explicitly named values without writing `.env`, printing secrets, or deploying. |
-| Supabase production preflight | `codex mcp add supabase --url https://mcp.supabase.com/mcp?project_ref=lvanszgszzfopusboich`, `codex mcp login supabase`, and `codex mcp list` succeeded; `npx supabase projects list --output json` and `infra/scripts/supabase-preflight.ps1` still fail safely because `SUPABASE_ACCESS_TOKEN` is not set for the Supabase CLI release shell. `infra/scripts/supabase-env-prompt.ps1` now prints the required release-shell env contract and can run `supabase-preflight.ps1` after prompting locally for session-only values without writing `.env`, printing secrets, or running migrations. |
-| Secret scan tooling | `infra/scripts/secret-scan.ps1` now provides reusable high-confidence tracked-file and staged-added-line scanning without printing secret values. The local release gate calls this script in its Git hygiene step. On 2026-07-09, `secret-scan.ps1`, `secret-scan.ps1 -StagedOnly`, and a lightweight `local-release-gate.ps1 -AllowDirty -SkipBackend -SkipWeb -SkipMobile -SkipDeployPreflight -SkipOpenApi -SkipDockerConfig` run passed while this tooling patch was staged. |
-| Production health storage provider | Backend `/api/healthz` now checks `components.storage.provider` and uses Supabase Storage bucket lookup when `STORAGE_PROVIDER=supabase` instead of requiring MinIO in production. Focused `pnpm exec jest src/health/health.controller.spec.ts --runInBand`, `pnpm exec jest src/health --runInBand`, backend `pnpm typecheck`, `pnpm lint`, and `pnpm build` passed after the patch. |
-| Production health smoke helper | `infra/scripts/production-health-check.ps1` now resolves API/Admin/Restaurant `/api/healthz` endpoints from `API_URL`, `ADMIN_URL`, and `RESTAURANT_URL`, rejects localhost/http unless explicitly allowed for local smoke checks, validates JSON `status: ok`, and supports `-PlanOnly` for dry-run endpoint inspection before production traffic checks. |
-| Post-deploy contract smoke helper | `infra/scripts/post-deploy-smoke.ps1` now checks API/Admin/Restaurant health, Admin/Restaurant localized login pages for 404-shell regressions, `POST /api/realtime/token`, `POST /api/ai/chat`, `GET /api/admin/exports`, and `GET /api/orders/:id/tracking` with bearer tokens read only from release-shell env. It supports `-PlanOnly`, `-RequireAuthenticatedChecks`, optional `-CreateExportJob`, and optional `-RequireRoutePolyline` so production verification can require real Supabase realtime, chatbot, export, and map/shipper-route contracts without committing or printing secrets. |
+| Remote repository | `JasonTM17/FoodDelivery_App` (private) |
+| Remote branches | `master` only |
+| Remote head | `origin/master@df945dd2c572e690a3c9e7aa31130c517ef83880` |
+| Local release branch | `codex/batch4-integration` in the isolated worktree |
+| Local code head before docs | `924808c47ca7de1aa001693bdfcca3c4ff293a9f` |
+| Ahead/behind before docs | `0 / 106` relative to `origin/master` |
+| Planned release | `v4.0.0` after all gates |
+| Production deployment | Not completed |
 
-Note: the verified Playwright run used `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, and `API_URL=http://[::1]:3001/api` because a separate local Node process is listening on `127.0.0.1:3000` outside the clean worktree.
+The local branch has not been pushed by name because that would recreate a second remote branch. Final integration is a direct fast-forward `HEAD:master` after release approval.
 
-## Deploy readiness
+## Landed hardening
 
-No production deploy was performed.
+### Backend and data
 
-Current blockers:
+- Provider-selectable Supabase Realtime, Storage, and PostgreSQL job outbox with fail-closed production validation.
+- `POST /api/realtime/token` issues five-minute Supabase JWTs only after order/restaurant ownership checks and returns explicit channel names.
+- `realtime_outbox` RLS permits authenticated reads only when the row channel is present in JWT claims; only that table is added to the explicit Supabase Realtime publication.
+- `GET|POST /api/jobs/drain` requires `CRON_SECRET`; Vercel Cron uses the persisted job outbox instead of relying on a long-lived BullMQ worker.
+- Storage supports Supabase server-side upload/delete and dedicated private driver KYC signed upload/read capabilities; MinIO remains the compatibility provider.
+- DeepSeek `deepseek-v4-flash` adapter, session ownership, explicit fail-closed states, support escalation, and persisted token/cost/latency telemetry.
+- Tracking and dispatch reject stale/future/malformed GPS, preserve route phase, persist provider geometry, and avoid fabricated location/ETA fallbacks.
+- Admin exports, promotions, support, notifications, restaurant analytics/menu/staff/reviews, and mobile order/tracking paths validate successful envelopes instead of turning contract failures into fake empty business data.
+- Driver KYC now requires accepted terms, four owner-scoped private objects, MIME/size/signature validation, one pending submission, bounded retries, atomic review, RLS, and short-lived signed Admin reads. Public document URLs are rejected.
 
-- GitHub Actions cannot be treated as current-head green until the user restores token/auth/billing access and reruns CI/security/E2E workflows.
-- GitHub remote currently shows `master` plus new Dependabot heads fetched on 2026-07-09. The clean-worktree integration branch was ahead of `origin/master` by 79 commits after `43d577d` and before this docs evidence update. The local `master` branch is checked out in dirty root `D:\Food_Delivery`, is behind the remote, and must not be touched from this worktree; keep `codex/batch4-integration` until all local commits are safely pushed/merged to remote `master` and patch-equivalence is rechecked. Safe Dependabot branches may be deleted only after their salvage commits reach `origin/master`; major/runtime Dependabot branches remain unmerged pending dedicated migrations.
-- Supabase MCP is configured and logged in for project ref `lvanszgszzfopusboich`; `codex mcp list` reports `supabase` enabled with OAuth. Supabase CLI deployment still requires `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `DATABASE_URL`, and `DIRECT_URL`. The 2026-07-09 rerun of `infra/scripts/supabase-preflight.ps1` fails safely at missing `SUPABASE_ACCESS_TOKEN`, so migration deployment is not verified.
-- Vercel CLI auth is present. API/Admin/Restaurant projects exist and have expected roots/build settings. The 2026-07-09 rerun of `infra/scripts/vercel-web-preflight.ps1` fails safely because the API project is still missing production env names: `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `GOOGLE_MAPS_API_KEY`, `OSRM_URL`, `DEEPSEEK_API_KEY`, `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `FCM_SERVER_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Admin is still missing `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; Restaurant is still missing `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Vercel Hobby cron limits mean the committed cron schedule is daily (`0 17 * * *`) to avoid deployment failure on the current Hobby account. Production-grade minute-level queue draining for dispatch/timeouts requires upgrading the Vercel team to Pro or adding an approved scheduler before relying on `QUEUE_PROVIDER=supabase-postgres` for time-sensitive jobs.
-- Production secrets are not fully verified: Supabase database URLs, service role/JWT/anon keys, Redis, SePay, DeepSeek, Google Maps, SMTP, FCM, Twilio, and any key previously pasted in chat must be rotated and stored only in provider secret managers. Generated app-owned `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `CRON_SECRET` have been set as sensitive production env vars on `foodflow-api`.
+### Web
 
-Deploy only after these blockers are resolved, remote current-head checks are green, and production health checks pass.
+- Admin and Restaurant support Supabase Realtime subscriptions while retaining explicit Socket.IO local mode.
+- Restaurant locale is URL-authoritative under one `NextIntlClientProvider`; fresh `/vi`, `/en`, and `/ja` contexts no longer inherit stale cookie/session locale.
+- Error/validation states meet the tested serious/critical accessibility contrast threshold and expose keyboard focus.
+- Production public env is fail-closed; legacy socket URL is not required when the provider is Supabase.
+- Current product media is generated from the isolated current-source stack, not a stale production alias.
+
+### Mobile
+
+- Existing hardening covers fresh GPS timestamps, route phase/geometry validation, non-fabricated map cameras/ETA, nearby contract alignment, and vi/en/ja generated localization.
+- Managed Customer/Driver realtime now uses scoped Supabase token/channel grants and allow-listed receive-only outbox events; GPS and dispatch decisions remain authenticated REST mutations. `socket_io_client` is retained only for explicit local/self-hosted mode.
+- Driver login checks the authenticated KYC status, onboarding preserves normalized license/vehicle data, uploads never forward bearer credentials or derive public URLs, and the actual release entry point delegates to the complete Driver router.
+
+### DevOps and supply chain
+
+- Node.js baseline is 22.13+ and pnpm is pinned to 11.11.0.
+- Backend, migration, Admin, and Restaurant images are non-root and support `linux/amd64` plus `linux/arm64`.
+- Debian/glibc builders and architecture-aware Sharp/native dependencies prevent Alpine-to-distroless ABI mismatches.
+- GitHub Actions in the Docker release workflow are pinned to full commits; Trivy is pinned to a post-remediation immutable release commit.
+- CI pushes SHA manifests first, smokes native runtime dependencies on both architectures, scans both architectures, checks production health, then creates an immutable semver tag. A conflicting existing semver digest causes failure.
+- `latest` promotion is manual and occurs only after semver release success.
+
+## Latest local evidence
+
+Evidence below distinguishes current-line checks from historical broader runs. Historical evidence is never release approval for the final head.
+
+| Gate | Evidence |
+|---|---|
+| Backend current-line | Prisma validate/generate, typecheck, lint, build, and all 129 Jest suites / 972 tests passed at `1f761a6`. |
+| Database current-line | Fresh isolated PostGIS applied all 27 migrations; payment receipt/refund, job dedupe, RLS, and unique-index invariants were verified. |
+| Mobile current-line | Flutter analyze and all 274 tests passed; the real `lib/main_driver.dart` entry built a Driver debug APK. |
+| Admin/OpenAPI current-line | Shared API client + Admin typecheck passed, KYC modal 5/5 passed, and Spectral reported no errors. |
+| Web historical | Admin/Restaurant typecheck/lint, 305 Vitest tests, and 70/55 localized production pages passed before the latest KYC/docs commits. Rerun required. |
+| Browser/a11y historical | Contract 18/18 plus locale/cookie 6/6 passed across Chromium/Firefox; focused axe serious/critical = 0. Full cross-page rerun required. |
+| Docker current-line | Backend and migrate were published from `1f761a6` to Docker Hub and repository-linked GHCR packages; both registries resolve to identical `amd64`/`arm64` manifest digests with SBOM/provenance. Current-head Trivy/runtime smoke is still required. |
+| Workflow/config historical | Actionlint, Compose configs, and the local release mini-gate passed before current head. Rerun required. |
+| Secret hygiene | The staged scan for `924808c` found no live token/private key; real dotenv files remained untracked. A full final-head Gitleaks scan is still required. |
+| Documentation media | 20 current-source Admin/Restaurant screenshots and two optimized GIFs captured through the real seeded API. |
+
+A fresh full backend Prisma/typecheck/lint/Jest/build gate, full web/mobile builds, complete cross-page visual/axe suite, production-like tenant/realtime/map/KYC/AI smoke, and all remote workflows are still required before release. Historical counts are not substituted for those final gates.
+
+## Product-media QA finding
+
+The first capture used `127.0.0.1`, correctly triggered the isolated stack's CORS fail-closed behavior, and was discarded. Recapture through the configured `localhost` origin loaded real seeded API data.
+
+Visual review found Vietnamese Admin overview KPI labels rendered in English and two serious contrast failures. Commit 7ab9633 localized KPI labels by stable metric key, made URL locale authoritative for the Admin root, and hardened semantic color tokens. Fresh vi/en/ja Chromium and Firefox checks passed with conflicting cookies and axe serious/critical = 0; the accepted media was then recaptured from that build.
+
+## Registry audit
+
+Docker Hub and GHCR were verified on 2026-07-11:
+
+| Artifact | Candidate tag | Verified digest | Status |
+|---|---|---|---|
+| `foodflow-backend` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` | Docker Hub/GHCR digest match; linked to repository |
+| `foodflow-migrate` | `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0` | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` | Docker Hub/GHCR digest match; linked to repository |
+| `foodflow-admin` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
+| `foodflow-restaurant` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
+| `foodflow-worker` | no separate artifact | backend digest | worker runs from backend image |
+
+The two current SHA manifests are release-candidate evidence, not a production release. No `v4.0.0` tag was created and `latest` was not changed. Semver/latest promotion remains gated on current-head image scanning, all application gates, provider preflight, deployment, and production smoke.
+
+## External preflight status
+
+### Supabase
+
+The 2026-07-11 `infra/scripts/supabase-preflight.ps1` run stopped before mutation because `SUPABASE_ACCESS_TOKEN` is absent from the secure CLI environment. It also requires a visible `SUPABASE_PROJECT_REF`, non-local pooled `DATABASE_URL`, and direct `DIRECT_URL`. OAuth/MCP access is not treated as a substitute for CLI migration credentials.
+
+### Vercel
+
+Project settings are visible, but production env preflight reports:
+
+- API missing `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, Supabase service/JWT/KYC values, KYC limits, Maps/routing, DeepSeek, SePay, webhook, SMTP, FCM, and Twilio production values.
+- Admin missing `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Restaurant missing `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
+
+### GitHub Actions
+
+The user reports billing/token/auth exhaustion. No local result may be represented as fresh remote CI. Required workflows include CI, Build, Lint, Mobile, E2E, Integration, OpenAPI, Gitleaks, CodeQL, Trivy, and SBOM.
+
+## Remaining release gates
+
+1. Complete critical-page visual/i18n/axe review and recapture media only if accepted UI changes require it.
+2. Run fresh frozen installs and complete backend/web/mobile suites and signed-build checks at the final source head.
+3. Validate private KYC Storage/RLS/upload/review behavior against the target Supabase project.
+4. Run Chromium + Firefox full E2E, axe serious/critical, visual, tenant isolation, realtime authorization, shipper route/map, export, payment, and AI fail-closed/live smoke.
+5. Rotate exposed keys and complete Supabase/Vercel secure preflights.
+6. Restore remote CI and obtain green current-head workflow evidence.
+7. Deploy Supabase, then Vercel API, Admin, and Restaurant; verify production health and behavior.
+8. Fast-forward `HEAD` to `master`, publish immutable Docker manifests, and only then manually promote `latest`.
+
+## Release decision
+
+**NO-GO** at this snapshot. The repository is materially hardened, remote branch cleanup is complete, and mobile realtime parity has landed, but production credentials, final current-head gates, remote CI, provider deployment, signed mobile release evidence, and production smoke are mandatory and unresolved. No secret should be invented, copied from chat, committed, or bypassed to change this decision.

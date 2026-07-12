@@ -36,11 +36,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Please enter your password';
 
   @override
-  String get passwordMinLength => 'Password must be at least 8 characters';
+  String get passwordMinLength =>
+      'Use 8–72 characters with uppercase, lowercase, and a number';
 
   @override
-  String get passwordComplexity =>
-      'Password must include uppercase, lowercase, and a number';
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
 
   @override
   String get forgotPassword => 'Forgot password?';
@@ -66,6 +69,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'Register as a driver';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'Sign in to start accepting deliveries';
 
   @override
   String get registerTitle => 'Register';
@@ -102,7 +111,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordHintLong =>
-      'Enter password (at least 8 characters, upper/lower/number)';
+      '8–72 characters with uppercase, lowercase, and a number';
 
   @override
   String get confirmPasswordLabel => 'Confirm password';
@@ -201,6 +210,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cuisineChinese => 'Chinese';
+
+  @override
+  String get cuisineItalian => 'Italian';
 
   @override
   String get cuisineDessert => 'Dessert';
@@ -319,6 +331,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonRetry => 'Retry';
+
+  @override
+  String get commonErrorTitle => 'Something went wrong';
+
+  @override
+  String get commonErrorMessage => 'Please try again.';
+
+  @override
+  String get commonEmptyTitle => 'No data available';
+
+  @override
+  String get restaurantClosed => 'Closed';
+
+  @override
+  String get foodSoldOut => 'Sold out';
 
   @override
   String get driverProfileTitle => 'Profile';
@@ -499,6 +526,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => 'Try a different filter';
+
+  @override
+  String get restaurantLocationRequired =>
+      'Allow location access to find nearby restaurants.';
+
+  @override
+  String get restaurantLoadFailed =>
+      'Could not load restaurants. Please try again.';
+
+  @override
+  String get restaurantDetailLoadFailed =>
+      'Could not load restaurant details. Please try again.';
+
+  @override
+  String get restaurantMenuLoadFailed =>
+      'Could not load this menu. Please try again.';
 
   @override
   String get restaurantMenuTab => 'Menu';
@@ -769,6 +812,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverDashboardNoOrders => 'No orders yet';
 
   @override
+  String get driverActiveOrderTitle => 'Active order';
+
+  @override
   String get driverStatEarnings => 'Earnings';
 
   @override
@@ -816,6 +862,93 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driverStatusInfoText =>
       'When online, you will receive new order alerts in your active area.';
+
+  @override
+  String get driverOnlineStatusOnline => 'Online';
+
+  @override
+  String get driverOnlineStatusPaused => 'Paused';
+
+  @override
+  String get driverOnlineStatusOffline => 'Offline';
+
+  @override
+  String get driverOnlineReady => 'Ready to receive orders';
+
+  @override
+  String get driverOnlineEnable => 'Turn on to receive orders';
+
+  @override
+  String get driverOnlineAutoOffline =>
+      'Automatically returns offline when the pause ends';
+
+  @override
+  String get driverDateToday => 'Today';
+
+  @override
+  String get driverDateLastSevenDays => 'Last 7 days';
+
+  @override
+  String get driverDateLastThirtyDays => 'Last 30 days';
+
+  @override
+  String get driverDateCustom => 'Custom';
+
+  @override
+  String get driverDateClear => 'Clear';
+
+  @override
+  String driverDateFrom(String date) {
+    return 'From $date';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return 'To $date';
+  }
+
+  @override
+  String get driverStepRestaurant => 'Restaurant';
+
+  @override
+  String get driverStepPickup => 'Pick up';
+
+  @override
+  String get driverStepDeliver => 'Deliver';
+
+  @override
+  String get driverStepComplete => 'Complete';
+
+  @override
+  String get driverPeakTitle => 'Peak hours';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target orders';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return 'Reward earned: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'Complete $count more orders to earn $amount';
+  }
+
+  @override
+  String get driverEarningsDaily => 'Daily earnings';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count days';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count reviews';
+  }
 
   @override
   String get driverEarningsTitle => 'Earnings';
@@ -879,6 +1012,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverRatingsYesterday => 'Yesterday';
 
   @override
+  String driverHistoryTodayAt(String time) {
+    return 'Today, $time';
+  }
+
+  @override
+  String driverHistoryYesterdayAt(String time) {
+    return 'Yesterday, $time';
+  }
+
+  @override
   String get driverTripDetailTitle => 'Trip details';
 
   @override
@@ -931,6 +1074,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverRouteReplayCompleted => 'Replay finished';
 
   @override
+  String get driverRouteReplayEstimated =>
+      'Planned route only — GPS replay unavailable';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip =>
+      'GPS telemetry is unavailable for this trip';
+
+  @override
   String get driverKycTitle => 'KYC Verification';
 
   @override
@@ -972,6 +1123,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not submit application. Please try again.';
 
   @override
+  String get driverKycUploadFailed =>
+      'Could not upload this document. Please try again.';
+
+  @override
+  String get driverKycUnsupportedImage =>
+      'Use a valid JPEG, PNG, or WebP image.';
+
+  @override
+  String get driverKycFileTooSmall =>
+      'This image is incomplete or too small. Capture the document again.';
+
+  @override
+  String get driverKycFileTooLarge => 'Each document must be 4 MB or smaller.';
+
+  @override
+  String get driverKycInvalidUploadGrant =>
+      'The secure upload session is invalid. Please try again.';
+
+  @override
+  String get driverKycSubmittedTitle => 'Application submitted';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      'Your private documents are securely stored and awaiting review. You cannot go online until approval.';
+
+  @override
+  String get driverKycGoHome => 'Go to driver home';
+
+  @override
   String get driverHistoryTitle => 'Delivery history';
 
   @override
@@ -986,6 +1166,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => 'Try again';
+
+  @override
+  String get driverHistoryOrderNumberLabel => 'Order';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => 'Delivery address';
+
+  @override
+  String get driverHistoryNoteLabel => 'Note';
 
   @override
   String get driverHistoryDeliveryFee => 'Delivery fee';
@@ -1283,6 +1472,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referralShareCode => 'Share Code';
 
   @override
+  String get referralShareFailed =>
+      'Could not open the share sheet. Please try again.';
+
+  @override
   String get referralShareSheetTitle => 'Share referral code';
 
   @override
@@ -1412,6 +1605,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => 'Car';
 
   @override
+  String get driver_onboarding_license_label => 'Driver license number';
+
+  @override
+  String get driver_onboarding_license_hint => 'Enter driver license number';
+
+  @override
+  String get driver_onboarding_license_required =>
+      'Please enter your driver license number';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      'Use 5-50 letters, numbers, dots, slashes, or hyphens';
+
+  @override
   String get driver_onboarding_plate_label => 'License plate';
 
   @override
@@ -1419,6 +1626,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'Please enter license plate';
+
+  @override
+  String get driver_onboarding_plate_invalid =>
+      'Use 5-20 letters, numbers, dots, or hyphens';
 
   @override
   String get driver_onboarding_next => 'Next';
@@ -1545,7 +1756,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String driver_heatmap_avg_payout(String amount) {
-    return 'Average $amountđ/order';
+    return 'Average $amount/order';
   }
 
   @override
@@ -1660,6 +1871,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip report saved for audit. Payout settlement is not changed automatically.';
 
   @override
+  String get driver_tip_submit_failed =>
+      'Could not save the tip report. Please try again.';
+
+  @override
   String get driver_notifications_read_all => 'Read all';
 
   @override
@@ -1733,6 +1948,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driver_settings_title => 'Settings';
+
+  @override
+  String get driver_settings_notifications_section => 'Notifications';
+
+  @override
+  String get driver_settings_general_section => 'General';
 
   @override
   String get driver_settings_notifications => 'Push notifications';
@@ -1826,6 +2047,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => 'Open now';
+
+  @override
+  String get searchLoadFailed =>
+      'Could not search right now. Please try again.';
 
   @override
   String get vouchersTitle => 'Offers & Vouchers';

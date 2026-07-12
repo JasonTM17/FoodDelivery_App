@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/widgets/foodflow_mark.dart';
 import '../router/route_names.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -65,21 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.delivery_dining,
-                      size: 44,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                const Center(child: FoodFlowMark(size: 80)),
                 const SizedBox(height: 24),
                 Text(
                   l10n.loginTitle,
@@ -165,6 +152,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     hintText: l10n.passwordHint,
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? l10n.showPassword
+                          : l10n.hidePassword,
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_off
@@ -177,9 +167,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return l10n.passwordRequired;
-                    }
-                    if (value.length < 8) {
-                      return l10n.passwordMinLength;
                     }
                     return null;
                   },
@@ -253,18 +240,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-
-                TextButton(
-                  onPressed: () => context.push(Routes.registerDriver),
-                  child: Text(
-                    l10n.registerAsDriver,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ),
               ],
             ),

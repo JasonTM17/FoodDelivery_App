@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
-import { RestaurantApprovalStatus, SupportChannel, TicketPriority, TicketStatus } from '@prisma/client'
+import { OrderStatus, RestaurantApprovalStatus, SupportChannel, TicketPriority, TicketStatus } from '@prisma/client'
 import { AiToolsService } from './ai-tools.service'
 
 describe('AiToolsService', () => {
@@ -52,6 +52,43 @@ describe('AiToolsService', () => {
         ],
       },
     }))
+  })
+
+  it('grounds driver tracking only for the customer active order without exposing coordinates to the LLM', async () => {
+    prisma.order.findFirst.mockResolvedValue({
+      id: 'order-1',
+      driverId: 'driver-1',
+      status: OrderStatus.delivering,
+    })
+    prisma.$queryRaw.mockResolvedValue([{ recorded_at: new Date('2026-07-11T06:00:00.000Z') }])
+
+    const result = await service.getDriverLocation('FD0000000001', 'customer-1')
+
+    expect(result).toEqual({
+      available: true,
+      orderStatus: OrderStatus.delivering,
+      recordedAt: '2026-07-11T06:00:00.000Z',
+    })
+    expect(result).not.toHaveProperty('lat')
+    expect(result).not.toHaveProperty('lng')
+    const query = prisma.$queryRaw.mock.calls[0][0]
+    expect(query.sql).toContain('order_id')
+    expect(query.sql).toContain("INTERVAL '30 seconds'")
+    expect(query.values).toEqual(['driver-1', 'order-1'])
+  })
+
+  it('does not retrieve a driver current location for a completed order', async () => {
+    prisma.order.findFirst.mockResolvedValue({
+      id: 'order-1',
+      driverId: 'driver-1',
+      status: OrderStatus.completed,
+    })
+
+    await expect(service.getDriverLocation('FD0000000001', 'customer-1')).resolves.toEqual({
+      available: false,
+      orderStatus: OrderStatus.completed,
+    })
+    expect(prisma.$queryRaw).not.toHaveBeenCalled()
   })
 
   it('deduplicates open support tickets for the same customer-owned order and issue', async () => {

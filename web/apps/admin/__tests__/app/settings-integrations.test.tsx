@@ -41,6 +41,12 @@ describe('settings integrations page', () => {
             degradedReason: null,
             provider: 'deepseek',
             model: 'deepseek-v4-flash',
+            telemetry: {
+              status: 'awaiting_requests',
+              lastRequestAt: null,
+              lastSuccessfulRequestAt: null,
+              lastFailureCode: null,
+            },
           },
           stats: {
             totalConversations: null,
@@ -52,6 +58,7 @@ describe('settings integrations page', () => {
             inputTokens: null,
             outputTokens: null,
             requests: null,
+            failedRequests: null,
             averageLatencyMs: null,
           },
         };

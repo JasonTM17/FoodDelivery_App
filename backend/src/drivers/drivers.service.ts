@@ -4,7 +4,11 @@ import { PrismaService } from '../database/prisma.service'
 import { decodePolyline } from '../common/utils/route.utils'
 import { isWithinVietnamDeliveryBounds } from '../common/utils/delivery-area.utils'
 import { haversineDistance } from '../common/utils/geo.utils'
+import { routePhaseForStatus, routeResultFromPersistedPhase, type DeliveryRoutePhase } from '../tracking/tracking.service'
 import Redis from 'ioredis'
+
+const MAX_LIVE_DRIVER_LOCATION_AGE_MS = 45_000
+const MAX_DRIVER_LOCATION_CLOCK_SKEW_FUTURE_MS = 15_000
 
 export interface DriverHeatmapQuery {
   lat: number
@@ -107,6 +111,7 @@ const driverOrderInclude = Prisma.validator<Prisma.OrderInclude>()({
   },
   customer: { select: { fullName: true, phone: true } },
   deliveryAddress: { select: { label: true, addressLine: true } },
+  deliveryTask: { select: { routeGeojson: true } },
   orderItems: true,
   statusHistory: { orderBy: { createdAt: 'asc' } },
 })
@@ -157,6 +162,7 @@ export interface DriverOrderResponse {
   restaurantLatitude: number
   restaurantLongitude: number
   estimatedDeliveryTimeMinutes: number | null
+  routePhase: DeliveryRoutePhase
   routePolyline: string | null
 }
 
@@ -171,50 +177,25 @@ export class DriversService {
     driverId: string,
     lat: number,
     lng: number,
+    sampledAt: string,
   ): Promise<{ isOnline: true; lat: number; lng: number }> {
     if (!isWithinVietnamDeliveryBounds(lat, lng)) {
       throw new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA')
     }
+    const sampledAtDate = parseFreshOnlineSampleTimestamp(sampledAt)
 
     const profile = await this.prisma.driverProfile.findUniqueOrThrow({ where: { userId: driverId } })
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
-    const now = new Date().toISOString()
+    const recordedAt = sampledAtDate.toISOString()
 
-    // Do not clear an in-progress trip when re-going online
-    const activeOrder = await this.prisma.order.findFirst({
-      where: {
-        driverId,
-        status: {
-          in: [
-            'driver_assigned',
-            'driver_arriving_restaurant',
-            'picked_up',
-            'delivering',
-          ],
-        },
-      },
-      select: { id: true },
-    })
-    const existingCurrent = await this.redis.get(`driver:${driverId}:current_order`)
-    const currentOrderId =
-      activeOrder?.id ??
-      (existingCurrent && existingCurrent.length > 0 ? existingCurrent : '')
-
-    const pipeline = this.redis.multi()
-    pipeline.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
-    pipeline.set(`driver:${driverId}:status`, currentOrderId ? 'busy' : 'online')
-    pipeline.setex(`driver:${driverId}:alive`, 35, '1')
-    pipeline.setex(`driver:${driverId}:last_seen_at`, 35, now)
-    pipeline.set(`driver:${driverId}:rating`, profile.rating.toString())
-    pipeline.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
-    if (currentOrderId) {
-      pipeline.set(`driver:${driverId}:current_order`, currentOrderId)
-      pipeline.del(`driver:${driverId}:idle_since`)
-    } else {
-      pipeline.set(`driver:${driverId}:idle_since`, Date.now().toString())
-      pipeline.set(`driver:${driverId}:current_order`, '')
-    }
-    await pipeline.exec()
+    await this.redis.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
+    await this.redis.set(`driver:${driverId}:status`, 'online')
+    await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
+    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt)
+    await this.redis.set(`driver:${driverId}:rating`, profile.rating.toString())
+    await this.redis.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
+    await this.redis.set(`driver:${driverId}:idle_since`, Date.now().toString())
+    await this.redis.set(`driver:${driverId}:current_order`, '')
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },
@@ -500,7 +481,9 @@ export class DriversService {
       timestampsEstimated: points.some(point => point.timestampEstimated),
       totalDistanceKm,
       totalDurationSeconds,
-      avgSpeedKmh: totalDurationSeconds > 0 ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600)) : 0,
+      avgSpeedKmh: routeSource === 'telemetry' && totalDurationSeconds > 0
+        ? roundOneDecimal(totalDistanceKm / (totalDurationSeconds / 3600))
+        : 0,
       payout,
     }
   }
@@ -559,6 +542,8 @@ export class DriversService {
   }
 
   private async serializeDriverOrder(order: DriverOrderRecord): Promise<DriverOrderResponse> {
+    const routePhase = routePhaseForStatus(order.status)
+    const phaseRoute = routeResultFromPersistedPhase(order.deliveryTask?.routeGeojson, routePhase)
     const locations = await this.prisma.$queryRaw<DriverOrderLocationRow[]>(Prisma.sql`
       SELECT
         ST_Y(r.location::geometry)::float8 AS "restaurantLat",
@@ -615,7 +600,8 @@ export class DriversService {
       restaurantLatitude: Number(location.restaurantLat),
       restaurantLongitude: Number(location.restaurantLng),
       estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes,
-      routePolyline: order.routePolyline,
+      routePhase,
+      routePolyline: phaseRoute?.polyline ?? null,
     }
   }
 }
@@ -658,6 +644,21 @@ function demandLevel(orderCount: number): 0 | 1 | 2 {
   if (orderCount >= 10) return 2
   if (orderCount >= 4) return 1
   return 0
+}
+
+function parseFreshOnlineSampleTimestamp(sampledAt: string): Date {
+  const parsed = new Date(sampledAt)
+  if (!Number.isFinite(parsed.getTime())) {
+    throw new BadRequestException('INVALID_DRIVER_LOCATION_TIMESTAMP')
+  }
+  const ageMs = Date.now() - parsed.getTime()
+  if (ageMs > MAX_LIVE_DRIVER_LOCATION_AGE_MS) {
+    throw new BadRequestException('STALE_DRIVER_LOCATION_TIMESTAMP')
+  }
+  if (ageMs < -MAX_DRIVER_LOCATION_CLOCK_SKEW_FUTURE_MS) {
+    throw new BadRequestException('FUTURE_DRIVER_LOCATION_TIMESTAMP')
+  }
+  return parsed
 }
 
 function normalizeEarningsPeriod(period: string | undefined): '7d' | '30d' | '90d' {

@@ -46,19 +46,22 @@ vi.mock('next-intl/server', () => ({
 vi.mock('@/navigation', () => {
   const React = require('react');
   const Link = React.forwardRef(
-    ({ children, href, onClick, ...props }: Record<string, unknown>, ref: unknown) => React.createElement(
-      'a',
-      {
-        ref,
-        href,
-        ...props,
-        onClick: (event: { preventDefault: () => void }) => {
-          event.preventDefault();
-          if (typeof onClick === 'function') onClick(event);
+    ({ children, href, onClick, prefetch, ...props }: Record<string, unknown>, ref: unknown) => {
+      void prefetch;
+      return React.createElement(
+        'a',
+        {
+          ref,
+          href,
+          ...props,
+          onClick: (event: { preventDefault: () => void }) => {
+            event.preventDefault();
+            if (typeof onClick === 'function') onClick(event);
+          },
         },
-      },
-      children,
-    ),
+        children,
+      );
+    },
   );
   Link.displayName = 'MockNavigationLink';
 

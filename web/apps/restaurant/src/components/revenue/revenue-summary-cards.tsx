@@ -53,11 +53,11 @@ function KpiCard({ label, value, sub, delta }: { label: string; value: string; s
     <div className="card text-center">
       <p className="text-xs text-gray-500 mb-1">{label}</p>
       <p className="text-xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      {sub && <p className="mt-0.5 text-xs text-gray-600">{sub}</p>}
       {delta !== undefined && delta !== null && delta !== 0 && (
         <p className={cn(
           'flex items-center justify-center gap-0.5 text-xs mt-1',
-          delta > 0 ? 'text-green-600' : 'text-red-500'
+          delta > 0 ? 'text-green-700' : 'text-red-700'
         )}>
           {delta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
           {delta > 0 ? '+' : ''}{delta}%

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, CheckCheck, DollarSign, MessageSquare } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCheck, DollarSign, MessageSquare } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAiMonitorOverview } from './ai-monitor-query';
 import type { AiMonitorStats } from './ai-monitor-types';
@@ -63,7 +63,7 @@ export default function AiMonitorStatsClient() {
             <div className="border-t pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{t('resolutionRate')}</span>
-                <span className="text-sm font-semibold text-emerald-600">
+                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                   {formatPercent(stats?.resolutionRate, locale)}
                 </span>
               </div>
@@ -93,7 +93,7 @@ export default function AiMonitorStatsClient() {
               ) : null}
             </div>
             {budgetPercent == null ? (
-              <p className="text-xs text-muted-foreground">{t('telemetryUnavailable')}</p>
+              <p className="text-xs leading-5 text-muted-foreground">{t('costUnavailableDescription')}</p>
             ) : null}
             <div className="grid grid-cols-2 gap-4 pt-1">
               <div>
@@ -115,6 +115,17 @@ export default function AiMonitorStatsClient() {
                 </p>
               </div>
             </div>
+            {stats?.failedRequests != null && stats.failedRequests > 0 ? (
+              <div className="flex items-center justify-between gap-3 border-t border-amber-500/20 pt-3 text-sm" aria-live="polite">
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                  {t('failedRequests')}
+                </span>
+                <span className="font-medium tabular-nums text-amber-700 dark:text-amber-400">
+                  {formatMetric(stats.failedRequests, locale)}
+                </span>
+              </div>
+            ) : null}
           </div>
         </CardContent>
       </Card>

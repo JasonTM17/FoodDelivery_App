@@ -376,6 +376,11 @@ const Set<String> _sensitiveHttpLogKeys = {
   'paymentmethod',
   'card',
   'cvv',
+  'documents',
+  'documenturls',
+  'objectkey',
+  'licensenumber',
+  'vehicleplate',
 };
 
 Object? redactHttpLogValue(Object? value) {
@@ -402,9 +407,10 @@ Object? redactHttpLogValue(Object? value) {
 bool _isSensitiveHttpLogKey(String key) {
   final normalized = key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
   return _sensitiveHttpLogKeys.any((sensitive) {
-    final normalizedSensitive = sensitive
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final normalizedSensitive = sensitive.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
     return normalized == normalizedSensitive ||
         normalized.contains(normalizedSensitive);
   });

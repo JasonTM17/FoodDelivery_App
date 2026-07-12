@@ -67,6 +67,7 @@ describe('TrackingGateway authorization', () => {
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: new Date().toISOString(),
     })
     expect(handleLocationUpdate).toHaveBeenCalledWith('driver-1', expect.any(Object))
   })
@@ -75,7 +76,7 @@ describe('TrackingGateway authorization', () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
     handleLocationUpdate.mockResolvedValue(null)
-    const sampledAt = '2026-07-06T01:02:03.456Z'
+    const sampledAt = new Date().toISOString()
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -121,6 +122,53 @@ describe('TrackingGateway authorization', () => {
     expect(emitToRoom).not.toHaveBeenCalled()
   })
 
+  it('rejects missing driver GPS timestamps before mutating tracking state', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'invalid_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it('rejects stale buffered GPS timestamps before mutating live map state', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp: new Date(Date.now() - 60_000).toISOString(),
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'stale_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it('rejects GPS timestamps beyond the accepted future clock-skew window', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      timestamp: new Date(Date.now() + 20_000).toISOString(),
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'future_timestamp' })
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
   it('marks routed ETA updates as non-degraded provider values', async () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
@@ -140,7 +188,7 @@ describe('TrackingGateway authorization', () => {
       provider: 'google',
     })
 
-    const sampledAt = '2026-07-06T01:02:04.456Z'
+    const sampledAt = new Date().toISOString()
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
       lng: 106.7,
@@ -190,6 +238,7 @@ describe('TrackingGateway authorization', () => {
       deliveryLng: 106.65,
     }])
     getOrFetchRoute.mockResolvedValue(null)
+    const sampledAt = new Date().toISOString()
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -197,6 +246,7 @@ describe('TrackingGateway authorization', () => {
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: sampledAt,
     })
 
     expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
@@ -227,6 +277,7 @@ describe('TrackingGateway authorization', () => {
       waypoints: [],
       provider: 'osrm',
     })
+    const sampledAt = new Date().toISOString()
 
     await gateway.handleLocationUpdate(makeClient(), {
       lat: 10.8,
@@ -234,6 +285,7 @@ describe('TrackingGateway authorization', () => {
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: sampledAt,
     })
 
     expect(getOrFetchRoute).toHaveBeenCalledWith(
@@ -254,6 +306,44 @@ describe('TrackingGateway authorization', () => {
     })
   })
 
+  it('estimates live ETA from route progress instead of reusing stale cached duration', async () => {
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockResolvedValue('order-1')
+    queryRaw.mockResolvedValue([{
+      status: 'delivering',
+      restaurantLat: 10.77,
+      restaurantLng: 106.68,
+      deliveryLat: 10.75,
+      deliveryLng: 106.65,
+    }])
+    getOrFetchRoute.mockResolvedValue({
+      polyline: '_k|`A_zfjSf{Cf{Cf{Cf{C',
+      distanceMeters: 6000,
+      durationSeconds: 600,
+      waypoints: [],
+      provider: 'google',
+    })
+
+    await gateway.handleLocationUpdate(makeClient(), {
+      lat: 10.75,
+      lng: 106.65,
+      bearing: 0,
+      speed: 5,
+      accuracy: 5,
+      timestamp: new Date().toISOString(),
+    })
+
+    expect(emitToRoom).toHaveBeenCalledWith('delivery:eta_updated', {
+      orderId: 'order-1',
+      etaMinutes: 0,
+      source: 'google',
+      degraded: false,
+      routePolyline: '_k|`A_zfjSf{Cf{Cf{Cf{C',
+      routePhase: 'dropoff',
+    })
+  })
+
   it('does not broadcast into an order room when the active order is not assigned to the driver', async () => {
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
     getDriverLocation.mockResolvedValue(null)
@@ -266,6 +356,7 @@ describe('TrackingGateway authorization', () => {
       bearing: 0,
       speed: 20,
       accuracy: 5,
+      timestamp: new Date().toISOString(),
     })
 
     expect(getOrFetchRoute).not.toHaveBeenCalled()

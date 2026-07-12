@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/foodflow_colors.dart';
+import '../../shared/utils/order_status_labels.dart';
 
 class StatusBadge extends StatelessWidget {
   final String label;
@@ -15,8 +17,8 @@ class StatusBadge extends StatelessWidget {
     Color? dotColor,
   }) : dotColor = dotColor ?? textColor;
 
-  factory StatusBadge.fromOrderStatus(String status) {
-    final cfg = _configFor(status);
+  factory StatusBadge.fromOrderStatus(BuildContext context, String status) {
+    final cfg = _configFor(status, AppLocalizations.of(context));
     return StatusBadge(
       label: cfg.label,
       backgroundColor: cfg.bg,
@@ -55,32 +57,39 @@ class StatusBadge extends StatelessWidget {
     );
   }
 
-  static ({String label, Color bg, Color fg}) _configFor(String status) {
+  static ({String label, Color bg, Color fg}) _configFor(
+    String status,
+    AppLocalizations l10n,
+  ) {
     Color c;
-    String label;
     switch (status) {
       case 'pending':
         c = FoodFlowColors.orderPending;
-        label = 'Chờ xác nhận';
+        break;
       case 'confirmed':
         c = FoodFlowColors.orderConfirmed;
-        label = 'Đã xác nhận';
+        break;
       case 'preparing':
         c = FoodFlowColors.orderPreparing;
-        label = 'Đang chuẩn bị';
+        break;
+      case 'picked_up':
       case 'delivering':
         c = FoodFlowColors.orderDelivering;
-        label = 'Đang giao';
+        break;
       case 'delivered':
         c = FoodFlowColors.orderDelivered;
-        label = 'Đã giao';
+        break;
+      case 'canceled':
       case 'cancelled':
         c = FoodFlowColors.orderCancelled;
-        label = 'Đã hủy';
+        break;
       default:
         c = FoodFlowColors.neutral400;
-        label = status;
     }
-    return (label: label, bg: c.withValues(alpha: 0.1), fg: c);
+    return (
+      label: localizedOrderStatus(l10n, status),
+      bg: c.withValues(alpha: 0.1),
+      fg: c,
+    );
   }
 }

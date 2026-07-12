@@ -10,8 +10,9 @@
   "passwordLabel": "Mật khẩu",
   "passwordHint": "Nhập mật khẩu",
   "passwordRequired": "Vui lòng nhập mật khẩu",
-  "passwordMinLength": "Mật khẩu phải có ít nhất 8 ký tự",
-  "passwordComplexity": "Mật khẩu phải có chữ hoa, chữ thường và số",
+  "passwordMinLength": "Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số",
+  "showPassword": "Hiện mật khẩu",
+  "hidePassword": "Ẩn mật khẩu",
   "forgotPassword": "Quên mật khẩu?",
   "forgotPasswordTitle": "Quên mật khẩu",
   "forgotPasswordContent": "Vui lòng liên hệ hỗ trợ qua email để được cấp lại mật khẩu.",
@@ -20,6 +21,8 @@
   "noAccount": "Chưa có tài khoản?",
   "registerLink": "Đăng ký",
   "registerAsDriver": "Đăng ký làm tài xế",
+  "driverLoginTitle": "FoodFlow Driver",
+  "driverLoginSubtitle": "Đăng nhập để bắt đầu nhận đơn giao hàng",
 
   "registerTitle": "Đăng ký",
   "registerCreateAccount": "Tạo tài khoản mới",
@@ -29,10 +32,10 @@
   "fullNameRequired": "Vui lòng nhập họ và tên",
   "fullNameMinLength": "Họ tên phải có ít nhất 2 ký tự",
   "phoneLabel": "Số điện thoại",
-  "phoneHint": "Nhập số điện thoại (vd: +84901234567)",
+  "phoneHint": "Nhập số điện thoại",
   "phoneRequired": "Vui lòng nhập số điện thoại",
   "phoneInvalid": "Số điện thoại không hợp lệ",
-  "passwordHintLong": "Nhập mật khẩu (ít nhất 8 ký tự, hoa/thường/số)",
+  "passwordHintLong": "8–72 ký tự, gồm chữ hoa, chữ thường và số",
   "confirmPasswordLabel": "Xác nhận mật khẩu",
   "confirmPasswordHint": "Nhập lại mật khẩu",
   "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
@@ -74,6 +77,7 @@
   "cuisineJapanese": "Nhật Bản",
   "cuisineKorean": "Hàn Quốc",
   "cuisineChinese": "Trung Hoa",
+  "cuisineItalian": "Ý",
   "cuisineDessert": "Tráng miệng",
   "cuisineDrinks": "Đồ uống",
 
@@ -114,6 +118,11 @@
   "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
   "cancel": "Hủy",
   "commonRetry": "Thử lại",
+  "commonErrorTitle": "Rất tiếc!",
+  "commonErrorMessage": "Có lỗi xảy ra. Vui lòng thử lại.",
+  "commonEmptyTitle": "Không có dữ liệu",
+  "restaurantClosed": "Đóng cửa",
+  "foodSoldOut": "Hết",
 
   "driverProfileTitle": "Hồ sơ",
   "defaultDriver": "Tài xế",
@@ -183,6 +192,10 @@
   "restaurantViewMap": "Bản đồ",
   "restaurantNoResults": "Không có nhà hàng nào",
   "restaurantNoResultsSubtitle": "Thử chọn bộ lọc khác",
+  "restaurantLocationRequired": "Cho phép truy cập vị trí để tìm nhà hàng gần bạn.",
+  "restaurantLoadFailed": "Không thể tải danh sách nhà hàng. Vui lòng thử lại.",
+  "restaurantDetailLoadFailed": "Không thể tải thông tin nhà hàng. Vui lòng thử lại.",
+  "restaurantMenuLoadFailed": "Không thể tải thực đơn. Vui lòng thử lại.",
   "restaurantMenuTab": "Thực đơn",
   "restaurantReviewsTab": "Đánh giá",
   "restaurantInfoTab": "Thông tin",
@@ -287,6 +300,7 @@
   "driverDashboardToday": "Hôm nay",
   "driverDashboardOrders": "Đơn gần đây",
   "driverDashboardNoOrders": "Chưa có đơn hàng nào",
+  "driverActiveOrderTitle": "Đơn đang thực hiện",
   "driverStatEarnings": "Thu nhập",
   "driverStatOnline": "Online",
   "driverStatusTitle": "Trạng thái hoạt động",
@@ -315,6 +329,57 @@
     }
   },
   "driverStatusInfoText": "Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.",
+  "driverOnlineStatusOnline": "Đang trực tuyến",
+  "driverOnlineStatusPaused": "Đang tạm dừng",
+  "driverOnlineStatusOffline": "Đang ngoại tuyến",
+  "driverOnlineReady": "Sẵn sàng nhận đơn",
+  "driverOnlineEnable": "Bật để nhận đơn hàng",
+  "driverOnlineAutoOffline": "Tự động ngoại tuyến khi hết thời gian tạm dừng",
+  "driverDateToday": "Hôm nay",
+  "driverDateLastSevenDays": "7 ngày qua",
+  "driverDateLastThirtyDays": "30 ngày qua",
+  "driverDateCustom": "Tùy chỉnh",
+  "driverDateClear": "Xóa",
+  "driverDateFrom": "Từ {date}",
+  "@driverDateFrom": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverDateTo": "Đến {date}",
+  "@driverDateTo": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "driverStepRestaurant": "Đến NH",
+  "driverStepPickup": "Lấy hàng",
+  "driverStepDeliver": "Giao hàng",
+  "driverStepComplete": "Hoàn tất",
+  "driverPeakTitle": "Giờ cao điểm",
+  "driverPeakProgress": "{completed}/{target} đơn",
+  "@driverPeakProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "driverPeakRewardEarned": "Đã nhận thưởng: {amount}",
+  "@driverPeakRewardEarned": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "driverPeakRewardRemaining": "Hoàn thành thêm {count} đơn để nhận {amount}",
+  "@driverPeakRewardRemaining": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "driverEarningsDaily": "Thu nhập hàng ngày",
+  "driverDaysCount": "{count} ngày",
+  "@driverDaysCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "driverRatingsReviewCount": "{count} đánh giá",
+  "@driverRatingsReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "driverEarningsTitle": "Thu nhập",
   "driverEarningsPeriodToday": "Hôm nay",
@@ -341,6 +406,14 @@
   },
   "driverRatingsToday": "Hôm nay",
   "driverRatingsYesterday": "Hôm qua",
+  "driverHistoryTodayAt": "Hôm nay, {time}",
+  "@driverHistoryTodayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "driverHistoryYesterdayAt": "Hôm qua, {time}",
+  "@driverHistoryYesterdayAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "driverTripDetailTitle": "Chi tiết chuyến đi",
   "driverTripDetailSegments": "Hướng dẫn từng chặng",
   "driverTripDetailRetry": "Thử lại",
@@ -363,6 +436,8 @@
   "driverRouteReplayPlaying": "Đang phát...",
   "driverRouteReplayReady": "Nhấn để phát lại",
   "driverRouteReplayCompleted": "Đã phát xong",
+  "driverRouteReplayEstimated": "Chỉ có tuyến dự kiến — chưa có GPS để phát lại",
+  "driverRouteReplayEstimatedTooltip": "Chuyến này chưa có telemetry GPS",
 
   "driverKycTitle": "Xác minh KYC",
   "driverKycUploadTitle": "Tải lên giấy tờ",
@@ -377,12 +452,23 @@
   "driverKycSubmit": "GỬI ĐĂNG KÝ",
   "driverKycNote": "Đơn xét duyệt trong 24-48h. Bạn sẽ nhận thông báo khi được duyệt.",
   "driverKycSubmitFailed": "Gửi đơn thất bại. Vui lòng thử lại.",
+  "driverKycUploadFailed": "Không thể tải giấy tờ này lên. Vui lòng thử lại.",
+  "driverKycUnsupportedImage": "Vui lòng dùng ảnh JPEG, PNG hoặc WebP hợp lệ.",
+  "driverKycFileTooSmall": "Ảnh chưa đầy đủ hoặc quá nhỏ. Vui lòng chụp lại giấy tờ.",
+  "driverKycFileTooLarge": "Mỗi giấy tờ phải có dung lượng tối đa 4 MB.",
+  "driverKycInvalidUploadGrant": "Phiên tải lên bảo mật không hợp lệ. Vui lòng thử lại.",
+  "driverKycSubmittedTitle": "Đã gửi hồ sơ",
+  "driverKycSubmittedMessage": "Giấy tờ riêng tư của bạn đã được lưu an toàn và đang chờ xét duyệt. Bạn chưa thể trực tuyến trước khi được duyệt.",
+  "driverKycGoHome": "Về trang tài xế",
 
   "driverHistoryTitle": "Lịch sử giao hàng",
   "driverHistoryFilterDate": "Lọc theo ngày",
   "driverHistoryEmpty": "Chưa có lịch sử giao hàng",
   "driverHistoryLoadError": "Không thể tải lịch sử giao hàng. Vui lòng thử lại.",
   "driverHistoryRetry": "Thử lại",
+  "driverHistoryOrderNumberLabel": "Đơn hàng",
+  "driverHistoryDeliveryAddressLabel": "Địa chỉ giao",
+  "driverHistoryNoteLabel": "Ghi chú",
   "driverHistoryDeliveryFee": "Phí giao hàng",
 
   "locationPermissionTitle": "Cho phép truy cập vị trí",
@@ -496,6 +582,7 @@
   "referralCopyCode": "Sao chép mã",
   "referralCodeCopied": "Đã sao chép mã!",
   "referralShareCode": "Chia sẻ mã",
+  "referralShareFailed": "Không thể mở bảng chia sẻ. Vui lòng thử lại.",
   "referralShareSheetTitle": "Chia sẻ mã giới thiệu",
   "referralShareMessage": "Dùng mã {code} để nhận ưu đãi khi đặt đơn đầu tiên trên FoodFlow!",
   "@referralShareMessage": {
@@ -550,9 +637,14 @@
   "driver_onboarding_vehicle_type_bike": "Xe đạp",
   "driver_onboarding_vehicle_type_motorbike": "Xe máy",
   "driver_onboarding_vehicle_type_car": "Ô tô",
+  "driver_onboarding_license_label": "Số giấy phép lái xe",
+  "driver_onboarding_license_hint": "Nhập số giấy phép lái xe",
+  "driver_onboarding_license_required": "Vui lòng nhập số giấy phép lái xe",
+  "driver_onboarding_license_invalid": "Dùng 5-50 chữ cái, chữ số, dấu chấm, gạch chéo hoặc gạch nối",
   "driver_onboarding_plate_label": "Biển số xe",
   "driver_onboarding_plate_hint": "Nhập biển số xe",
   "driver_onboarding_plate_required": "Vui lòng nhập biển số",
+  "driver_onboarding_plate_invalid": "Dùng 5-20 chữ cái, chữ số, dấu chấm hoặc gạch nối",
   "driver_onboarding_next": "Tiếp theo",
   "driver_onboarding_documents_title": "Giấy tờ cần thiết",
   "driver_onboarding_documents_subtitle": "Tải lên đầy đủ giấy tờ để được xét duyệt",
@@ -603,7 +695,7 @@
   "@driver_heatmap_order_count": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "driver_heatmap_avg_payout": "Trung bình {amount}đ/đơn",
+  "driver_heatmap_avg_payout": "Trung bình {amount}/đơn",
   "@driver_heatmap_avg_payout": {
     "placeholders": { "amount": { "type": "String" } }
   },
@@ -643,6 +735,7 @@
   "driver_tip_confirm": "Xác nhận",
   "driver_tip_success_snackbar": "Đã lưu báo cáo tip",
   "driver_tip_success_message": "Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.",
+  "driver_tip_submit_failed": "Không thể lưu báo cáo tip. Vui lòng thử lại.",
   "driver_notifications_read_all": "Đọc tất cả",
   "driver_notifications_all": "Tất cả",
   "driver_notifications_orders": "Đơn hàng",
@@ -667,6 +760,8 @@
   "driver_support_faq_q2": "Làm sao để thay đổi khu vực giao hàng?",
   "driver_support_faq_a2": "Vào Cài đặt > Khu vực hoạt động để thay đổi.",
   "driver_settings_title": "Cài đặt",
+  "driver_settings_notifications_section": "Thông báo",
+  "driver_settings_general_section": "Chung",
   "driver_settings_notifications": "Thông báo đẩy",
   "driver_settings_notifications_subtitle": "Nhận thông báo về đơn hàng mới",
   "driver_settings_language": "Ngôn ngữ",
@@ -703,6 +798,7 @@
   "searchFilterTopRated": "Đánh giá cao",
   "searchFilterPriceLowHigh": "Giá thấp → cao",
   "searchFilterOpenNow": "Đang mở",
+  "searchLoadFailed": "Không thể tìm kiếm lúc này. Vui lòng thử lại.",
 
   "vouchersTitle": "Ưu đãi & Voucher",
   "vouchersTabMine": "Của tôi",

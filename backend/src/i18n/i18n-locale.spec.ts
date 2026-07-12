@@ -2,42 +2,66 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { INestApplication } from '@nestjs/common'
 import { I18nModule, AcceptLanguageResolver, QueryResolver, CookieResolver } from 'nestjs-i18n'
 import * as path from 'path'
-import { fallbackT } from './fallback-translations'
+import { loadLocaleNamespace, translateTestKey } from '../../test/i18n-test-utils'
 
-// ─── fallbackT unit tests (no NestJS DI required) ────────────────────────────
+const REQUIRED_ERROR_KEYS = [
+  'promotion_not_found',
+  'promotion_invalid',
+  'promotion_expired',
+  'promotion_exhausted',
+  'promotion_min_order',
+  'promotion_wrong_restaurant',
+  'promotion_first_order_only',
+  'promotion_max_per_user',
+  'promotion_device_blocked',
+  'promotion_fixed_cannot_stack',
+  'promotion_one_per_type',
+  'order_cannot_cancel',
+  'order_already_completed',
+  'order_processing_cannot_cancel',
+  'order_driver_picked_up',
+  'order_cancel_reason_required',
+  'order_invalid_role',
+]
 
-describe('fallbackT', () => {
-  it('returns vi string for known key', () => {
-    expect(fallbackT('errors.promotion_not_found')).toBe('Mã khuyến mãi không tồn tại')
+const REQUIRED_NOTIFICATION_KEYS = [
+  'order_update_title',
+  'order_update_body',
+  'driver_delay_title',
+  'driver_delay_body',
+]
+
+describe('i18n locale catalog', () => {
+  it.each(['vi', 'en', 'ja'])('has all service error keys for %s', (lang) => {
+    const errors = loadLocaleNamespace(lang, 'errors')
+    for (const key of REQUIRED_ERROR_KEYS) {
+      expect(errors[key]).toEqual(expect.any(String))
+    }
   })
 
-  it('substitutes {arg} placeholders', () => {
-    const result = fallbackT('errors.promotion_max_per_user', { max: 3 })
-    expect(result).toBe('Bạn đã dùng mã này tối đa 3 lần')
+  it.each(['vi', 'en', 'ja'])('has all notification keys for %s', (lang) => {
+    const notifications = loadLocaleNamespace(lang, 'notifications')
+    for (const key of REQUIRED_NOTIFICATION_KEYS) {
+      expect(notifications[key]).toEqual(expect.any(String))
+    }
   })
 
-  it('substitutes amount in promotion_min_order', () => {
-    const result = fallbackT('errors.promotion_min_order', { amount: '50,000' })
-    expect(result).toBe('Đơn tối thiểu phải đạt 50,000đ')
-  })
-
-  it('substitutes multiple args in device blocked', () => {
-    const result = fallbackT('errors.promotion_device_blocked', { max: 3 })
+  it('interpolates promotion max-per-user placeholders from the real locale catalog', () => {
+    const result = translateTestKey('errors.promotion_max_per_user', { max: 3 })
     expect(result).toContain('3')
-    expect(result).toContain('1 giờ')
   })
 
-  it('returns key as-is for unknown key', () => {
-    expect(fallbackT('errors.unknown_key')).toBe('errors.unknown_key')
+  it('interpolates minimum-order placeholders from the real locale catalog', () => {
+    const result = translateTestKey('errors.promotion_min_order', { amount: '50,000' })
+    expect(result).toContain('50,000')
   })
 
-  it('returns notification strings', () => {
-    expect(fallbackT('notifications.order_update_title')).toBe('Cập nhật đơn hàng')
-    expect(fallbackT('notifications.driver_delay_title')).toBe('Cảnh báo trễ giao hàng')
+  it('returns the key for unknown locale entries', () => {
+    expect(translateTestKey('errors.unknown_key')).toBe('errors.unknown_key')
   })
 
-  it('substitutes notification body args', () => {
-    const result = fallbackT('notifications.driver_delay_body', {
+  it('interpolates notification body placeholders from the real locale catalog', () => {
+    const result = translateTestKey('notifications.driver_delay_body', {
       orderId: 'ABC123',
       delayMinutes: 15,
     })
@@ -45,8 +69,6 @@ describe('fallbackT', () => {
     expect(result).toContain('15')
   })
 })
-
-// ─── I18n module locale resolution chain ─────────────────────────────────────
 
 describe('I18nModule locale resolution chain', () => {
   let app: INestApplication

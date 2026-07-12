@@ -135,9 +135,36 @@ if (-not $SkipDockerConfig) {
     Invoke-Native docker compose -f docker-compose.yml config --quiet
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
     Invoke-Native docker compose -f docker-compose.yml -f docker-compose.local.yml config --quiet
+    Invoke-Native docker compose -f docker-compose.yml -f docker-compose.e2e.yml config --quiet
   } @{
+    IMAGE_TAG = 'sha-compose-config'
     POSTGRES_PASSWORD = 'compose-config-placeholder'
     REDIS_PASSWORD = 'compose-config-placeholder'
+    JWT_SECRET = 'compose-config-only-jwt-secret-32-chars'
+    JWT_REFRESH_SECRET = 'compose-config-only-refresh-secret-32-chars'
+    CORS_ORIGINS = 'https://admin.foodflow.test,https://restaurant.foodflow.test'
+    PASSWORD_RESET_URL_BASE = 'https://admin.foodflow.test/reset-password'
+    MINIO_ROOT_USER = 'compose-config-user'
+    MINIO_ROOT_PASSWORD = 'compose-config-password'
+    MINIO_ACCESS_KEY = 'compose-config-access'
+    MINIO_SECRET_KEY = 'compose-config-secret'
+    MINIO_PUBLIC_URL = 'https://storage.foodflow.test'
+    GOOGLE_MAPS_API_KEY = 'compose-config-google-maps-key'
+    OSRM_URL = 'https://routes.foodflow.test'
+    DEEPSEEK_API_KEY = 'compose-config-deepseek-key'
+    SEPAY_API_KEY = 'compose-config-sepay-key'
+    SEPAY_ACCOUNT_NUMBER = '0000000000'
+    SEPAY_BANK_NAME = 'Vietcombank'
+    SEPAY_WEBHOOK_SECRET = 'compose-config-sepay-webhook-secret'
+    WEBHOOK_SECRET = 'compose-config-webhook-secret'
+    SMTP_HOST = 'smtp.foodflow.test'
+    SMTP_USER = 'compose-config-smtp-user'
+    SMTP_PASS = 'compose-config-smtp-password'
+    SMTP_FROM = 'FoodFlow <noreply@foodflow.test>'
+    FCM_SERVER_KEY = 'compose-config-fcm-key'
+    TWILIO_ACCOUNT_SID = 'compose-config-twilio-sid'
+    TWILIO_AUTH_TOKEN = 'compose-config-twilio-token'
+    TWILIO_FROM_NUMBER = '+10000000000'
   }
 }
 

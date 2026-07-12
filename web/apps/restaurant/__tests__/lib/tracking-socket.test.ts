@@ -43,12 +43,12 @@ describe('restaurant tracking socket', () => {
     disconnectTrackingSocket();
   });
 
-  it('normalizes a legacy events namespace URL to tracking', async () => {
+  it('does not use the removed NEXT_PUBLIC_SOCKET_URL fallback', async () => {
     vi.stubEnv('NEXT_PUBLIC_SOCKET_URL', 'https://legacy-realtime.foodflow.test/events');
 
     const { resolveTrackingSocketUrl } = await import('@/lib/tracking-socket');
 
-    expect(resolveTrackingSocketUrl()).toBe('https://legacy-realtime.foodflow.test/tracking');
+    expect(resolveTrackingSocketUrl()).toBe('http://localhost:3001/tracking');
   });
 
   it('subscribes to an order room and reads the current restaurant access token', async () => {

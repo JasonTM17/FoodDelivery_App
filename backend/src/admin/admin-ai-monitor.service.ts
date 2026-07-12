@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ChatSessionType, SupportChannel } from '@prisma/client'
+import { AiUsageOutcome, ChatSessionType, SupportChannel } from '@prisma/client'
 import { PrismaService } from '../database/prisma.service'
 
 export type AiMonitorStatus = 'online' | 'degraded' | 'not_configured'
+export type AiTelemetryStatus = 'live' | 'awaiting_requests' | 'unavailable'
 
 export interface AdminAiMonitorOverview {
   instance: {
@@ -12,6 +13,12 @@ export interface AdminAiMonitorOverview {
     degradedReason: string | null
     provider: 'deepseek'
     model: string
+    telemetry: {
+      status: AiTelemetryStatus
+      lastRequestAt: string | null
+      lastSuccessfulRequestAt: string | null
+      lastFailureCode: string | null
+    }
   }
   stats: AdminAiMonitorStats
 }
@@ -26,7 +33,19 @@ export interface AdminAiMonitorStats {
   inputTokens: number | null
   outputTokens: number | null
   requests: number | null
+  failedRequests: number | null
   averageLatencyMs: number | null
+}
+
+interface AiUsageStats {
+  inputTokens: number | null
+  outputTokens: number | null
+  requests: number
+  failedRequests: number
+  averageLatencyMs: number | null
+  lastRequestAt: Date | null
+  lastSuccessfulRequestAt: Date | null
+  lastFailureCode: string | null
 }
 
 @Injectable()
@@ -38,32 +57,55 @@ export class AdminAiMonitorService {
 
   async getOverview(): Promise<AdminAiMonitorOverview> {
     const configured = Boolean(this.firstConfigured('DEEPSEEK_API_KEY'))
-    const conversationStats = await this.getConversationStats()
-    const statsAvailable = conversationStats !== null
+    const [conversationStats, usageStats] = await Promise.all([
+      this.getConversationStats(),
+      this.getUsageStats(),
+    ])
+    const instanceState = this.instanceState(configured, usageStats)
 
     return {
       instance: {
-        status: configured ? (statsAvailable ? 'online' : 'degraded') : 'not_configured',
+        status: instanceState.status,
         dashboardUrl: this.firstConfigured('DEEPSEEK_DASHBOARD_URL'),
-        degradedReason: configured
-          ? (statsAvailable ? null : 'AI_MONITOR_STATS_UNAVAILABLE')
-          : 'DEEPSEEK_NOT_CONFIGURED',
+        degradedReason: instanceState.degradedReason,
         provider: 'deepseek',
         model: this.firstConfigured('DEEPSEEK_MODEL') ?? 'deepseek-v4-flash',
+        telemetry: {
+          status: usageStats === null
+            ? 'unavailable'
+            : usageStats.requests === 0 ? 'awaiting_requests' : 'live',
+          lastRequestAt: usageStats?.lastRequestAt?.toISOString() ?? null,
+          lastSuccessfulRequestAt: usageStats?.lastSuccessfulRequestAt?.toISOString() ?? null,
+          lastFailureCode: usageStats?.lastFailureCode ?? null,
+        },
       },
       stats: {
         totalConversations: conversationStats?.totalConversations ?? null,
         selfResolved: conversationStats?.selfResolved ?? null,
         escalated: conversationStats?.escalated ?? null,
         resolutionRate: conversationStats?.resolutionRate ?? null,
+        // Do not estimate pricing from token counts. Provider billing is the
+        // only source of truth for cost.
         costTodayUsd: null,
         budgetTodayUsd: this.numberConfig('DEEPSEEK_DAILY_BUDGET_USD', 'AI_DAILY_BUDGET_USD'),
-        inputTokens: null,
-        outputTokens: null,
-        requests: null,
-        averageLatencyMs: null,
+        inputTokens: usageStats?.inputTokens ?? null,
+        outputTokens: usageStats?.outputTokens ?? null,
+        requests: usageStats?.requests ?? null,
+        failedRequests: usageStats?.failedRequests ?? null,
+        averageLatencyMs: usageStats?.averageLatencyMs ?? null,
       },
     }
+  }
+
+  private instanceState(
+    configured: boolean,
+    usageStats: AiUsageStats | null,
+  ): { status: AiMonitorStatus; degradedReason: string | null } {
+    if (!configured) return { status: 'not_configured', degradedReason: 'DEEPSEEK_NOT_CONFIGURED' }
+    if (usageStats === null) return { status: 'degraded', degradedReason: 'AI_MONITOR_TELEMETRY_UNAVAILABLE' }
+    if (usageStats.requests === 0) return { status: 'degraded', degradedReason: 'AI_TELEMETRY_PENDING' }
+    if (usageStats.lastFailureCode) return { status: 'degraded', degradedReason: usageStats.lastFailureCode }
+    return { status: 'online', degradedReason: null }
   }
 
   private async getConversationStats(): Promise<Pick<
@@ -93,13 +135,56 @@ export class AdminAiMonitorService {
 
       const totalConversations = sessions.length
       const selfResolved = sessions.filter(session => !escalatedSessionIds.has(session.id)).length
-      const escalated = escalatedTickets.length
+      const escalated = totalConversations - selfResolved
 
       return {
         totalConversations,
         selfResolved,
         escalated,
         resolutionRate: totalConversations > 0 ? round1(selfResolved / totalConversations * 100) : 0,
+      }
+    } catch {
+      return null
+    }
+  }
+
+  private async getUsageStats(): Promise<AiUsageStats | null> {
+    const now = new Date()
+    const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+
+    try {
+      const [aggregate, failedRequests, latest, latestSuccess] = await Promise.all([
+        this.prisma.aiUsageEvent.aggregate({
+          where: { createdAt: { gte: since } },
+          _sum: { inputTokens: true, outputTokens: true },
+          _avg: { latencyMs: true },
+          _count: { _all: true },
+        }),
+        this.prisma.aiUsageEvent.count({
+          where: { createdAt: { gte: since }, outcome: AiUsageOutcome.failed },
+        }),
+        this.prisma.aiUsageEvent.findFirst({
+          orderBy: { createdAt: 'desc' },
+          select: { createdAt: true, outcome: true, errorCode: true },
+        }),
+        this.prisma.aiUsageEvent.findFirst({
+          where: { outcome: AiUsageOutcome.succeeded },
+          orderBy: { createdAt: 'desc' },
+          select: { createdAt: true },
+        }),
+      ])
+
+      return {
+        inputTokens: aggregate._sum.inputTokens ?? null,
+        outputTokens: aggregate._sum.outputTokens ?? null,
+        requests: aggregate._count._all,
+        failedRequests,
+        averageLatencyMs: aggregate._avg.latencyMs == null
+          ? null
+          : Math.round(aggregate._avg.latencyMs),
+        lastRequestAt: latest?.createdAt ?? null,
+        lastSuccessfulRequestAt: latestSuccess?.createdAt ?? null,
+        lastFailureCode: latest?.outcome === AiUsageOutcome.failed ? latest.errorCode ?? 'AI_PROVIDER_UNAVAILABLE' : null,
       }
     } catch {
       return null

@@ -156,8 +156,8 @@ export class AdminSettingsService {
 
   private integrationRuntimeSettings(): AdminSettingsValue {
     const sepayConfigured = allConfigured(
-      this.config.get<string>('SEPAY_API_KEY'),
       this.config.get<string>('SEPAY_ACCOUNT_NUMBER'),
+      this.config.get<string>('SEPAY_BANK_NAME'),
       this.config.get<string>('SEPAY_WEBHOOK_SECRET'),
     )
     const notificationProviderConfigured = anyConfigured(

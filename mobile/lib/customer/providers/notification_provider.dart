@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../shared/api/api_client.dart';
-import '../../shared/api/socket_client.dart';
+import '../../shared/api/realtime_client.dart';
 import '../../shared/utils/backend_date_time.dart';
 
 final notificationProvider =
@@ -86,16 +86,21 @@ class NotificationState {
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
   final ApiClient _api;
+  final RealtimeClient _realtime;
   StreamSubscription<Map<String, dynamic>>? _notifSub;
 
-  NotificationNotifier({ApiClient? apiClient})
-    : _api = apiClient ?? ApiClient.instance,
-      super(const NotificationState()) {
-    _subscribeToWs();
+  NotificationNotifier({
+    ApiClient? apiClient,
+    RealtimeClient? realtimeClient,
+    bool autoConnectRealtime = false,
+  }) : _api = apiClient ?? ApiClient.instance,
+       _realtime = realtimeClient ?? RealtimeClient.instance,
+       super(const NotificationState()) {
+    _subscribeToRealtime(autoConnect: autoConnectRealtime);
   }
 
-  void _subscribeToWs() {
-    _notifSub = SocketClient.instance.onNotification.listen((data) {
+  void _subscribeToRealtime({required bool autoConnect}) {
+    _notifSub = _realtime.onNotification.listen((data) {
       try {
         final notif = NotificationModel.fromJson(data);
         state = state.copyWith(
@@ -108,6 +113,13 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         );
       }
     });
+    if (autoConnect) {
+      unawaited(
+        _realtime.connect().catchError((_) {
+          state = state.copyWith(error: 'NOTIFICATIONS_REALTIME_UNAVAILABLE');
+        }),
+      );
+    }
   }
 
   Future<void> fetchNotifications() async {

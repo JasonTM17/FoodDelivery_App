@@ -1,125 +1,83 @@
 # Roadmap dự án FoodFlow
 
-Ngôn ngữ: [English](./project-roadmap.md) | [Tiếng Việt](./project-roadmap.vi.md) | [日本語](./project-roadmap.ja.md)
+## Mục tiêu hiện tại
 
-Roadmap này phản ánh hướng Batch 4 đã merge trên `master`. Nó tách phần đã landing khỏi phần còn phải test trước production deployment.
+Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Vercel, smoke production, fast-forward integration `HEAD` vào `master`, rồi publish Docker immutable.
 
-## Ưu tiên hiện tại: hardening sau merge và sẵn sàng deploy
+Trạng thái 11/07/2026: **đang hardening; chưa đủ điều kiện production**.
 
-Mục tiêu: giữ Admin, Restaurant, backend và mobile khớp Batch 4 contract đã merge, đóng các gap sẵn sàng deploy và rerun remote CI sau khi GitHub Actions auth được khôi phục, đồng thời giữ Next.js 14, React 18, ESLint 8, pnpm 11.7.0 đã pin và constraints Flutter hiện có.
+## Đã hoàn thành trên local integration
 
-Batch 4 chưa hoàn tất nếu local gates, E2E, accessibility, visual checks, tenant-isolation checks, remote CI/security checks và deployment validation chưa pass.
+- Consolidate có kiểm soát các phần backend, Admin, Restaurant, mobile, AI, realtime, map/tracking, docs và DevOps có thật.
+- Remote chỉ còn `master`; giữ local integration tới final fast-forward.
+- Loại fake empty/zero fallback và thêm runtime contract validation trên critical Admin/Restaurant screens.
+- Sửa locale Restaurant theo URL vi/en/ja, contrast/focus accessibility.
+- Supabase realtime outbox/RLS/token, Storage adapter, Postgres job outbox/Cron; web hỗ trợ Supabase provider explicit.
+- DeepSeek `deepseek-v4-flash`, session/usage telemetry và fail-closed states.
+- GPS fresh-only, route phase/provider geometry/ETA, tenant tracking và bỏ hardcoded map fallback.
+- Node 22.13+, pnpm 11.11, frozen install.
+- Bốn image non-root multi-arch và Docker promotion fail-closed.
+- Pipeline screenshot/GIF current source và docs architecture/deploy/testing mới.
+- Admin dùng locale URL làm nguồn chuẩn, KPI overview đã dịch, token màu đạt accessibility và media đã recapture; targeted vi/en/ja Chromium/Firefox locale + axe đều pass.
+- Mobile managed realtime đã dùng token/channel Supabase scope chặt; GPS và quyết định dispatch đi qua REST xác thực, Socket.IO chỉ còn local/self-hosted.
+- KYC tài xế dùng private signed upload, object key theo owner, kiểm tra ảnh, một hồ sơ pending, Admin signed review và onboarding mobile vi/en/ja có kiểu/test.
 
-## Đã landing trên `master`
+## Đang làm trước release
 
-- `origin/master` đã verify local tại `64e46c795c9c15ae52bb0112f91e93a6f3851645`; `git ls-remote --heads origin` hiện chỉ có `master`. Branch local `codex/batch4-integration` vẫn dùng cho worktree continuity và tracking `origin/master`.
-- Web response contract `{ success: true, data, meta? }` đã document.
-- Error contract RFC 7807 Problem Details đã document.
-- OpenAPI validation workflow và Spectral rules đã thêm.
-- Shared web API client giữ dưới `web/packages/api-client`.
-- Restaurant revenue và analytics formatting đã localize.
-- SePay runtime không còn tự tạo intent thành công khi thiếu cấu hình bắt buộc.
-- Vietnamese AI chat fast paths có focused tests.
-- Core setup, testing và deployment docs đã bắt đầu có English, Vietnamese, Japanese.
-- Mobile Flutter gate đã được kiểm lại local ngày 2026-07-06 với `flutter pub get --enforce-lockfile`, `flutter analyze` sạch, `flutter test` pass 168 test và `flutter build apk --debug` pass. GitHub Actions đang bị chặn do token/auth hoặc billing account, nên cần rerun remote checks sau khi xử lý.
-- Mobile runtime UI hiện không còn hardcoded presentation string theo targeted scanner cho các flow dispatch/cancel đã chạm, không còn action runtime "coming soon", parse timestamp backend bằng sentinel deterministic thay vì fallback current-time, và release build bắt buộc cấu hình `API_BASE_URL` rõ ràng.
-- Bản đồ tracking customer/driver/Restaurant hiện dùng `routePolyline` thật từ backend, hydrate snapshot REST `/orders/:id/tracking` trước realtime, tách telemetry trail khỏi planned route, hỗ trợ route phase pickup/dropoff, xoá route geometry stale khi đổi phase hoặc snapshot không có route, normalize GPS metadata của driver theo contract km/h của backend và không tự bịa ETA đường thẳng khi route provider không khả dụng. Event `driver:assigned` ban đầu để `etaMinutes` null cho tới khi tracking có route Google/OSRM thật.
-- Dispatch hiện enqueue job có tọa độ nhà hàng và attempt metadata, xử lý an toàn legacy malformed queue jobs và parse đúng ioredis `GEOSEARCH WITHDIST` tuple rows.
-- Shared tag input của Admin không còn tự sinh placeholder tiếng Anh mặc định; caller phải truyền placeholder đã localize.
-- Evidence local mới nhất cho Batch 4 merged worktree: backend Prisma validate/typecheck/lint/build và Jest (108 suites / 773 tests), web typecheck/lint/build và Vitest (Admin 36 files / 150 tests; Restaurant 31 files / 100 tests), Playwright Chromium + Firefox 70/70, Docker health checks, tenant isolation, visual contract, axe serious/critical smoke, Flutter tests mobile (168), Android debug APK build, OpenAPI Spectral lint và fallback secret scan đều pass.
-- Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks, Lint, Build Check, SBOM, Trivy, CodeQL, CI, E2E Tests và Integration Smoke Gate. CI head hiện tại bị GitHub token/auth hoặc billing chặn trước khi jobs start.
+### UI/UX/i18n/media
 
-### Mobile
+- Audit fresh context `vi/en/ja`: title, `html lang`, visible/aria text, number/date/currency, cookie isolation.
+- Hoàn thiện responsive/keyboard/axe cho dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map/order.
+- So implementation với Stitch/design artifact và chốt visual regression.
 
-- Giữ app Flutter customer/driver khớp Batch 4 API contract đã ổn định.
-- Không regenerate hoặc commit mobile API client nếu OpenAPI contract chưa được refresh có chủ đích.
-- Chỉ reconcile Violet/Indigo khi branch refs hoặc patch artifacts đã review xuất hiện; danh sách head hiện tại của `origin` không có các branch này.
-- Chạy lại `flutter analyze` và `flutter test` sau các thay đổi backend/web contract ảnh hưởng mobile.
+### Mobile release validation
 
-## Đang làm trước deployment
+- Reconcile Violet/Indigo chỉ khi ref thật tồn tại; không bịa branch.
+- Rerun API contract, vi/en/ja, customer/driver, map/GPS, offline/reconnect, realtime denial, KYC và signed release build.
+- Xác minh Android production signing và iOS signing trên runner macOS được cấp quyền; debug keystore local chỉ là bằng chứng compile.
 
-### Backend
+### Backend/production
 
-- Xóa runtime mock/fallback còn lại trong payment, promotion, support, analytics và reporting.
-- Hoàn thiện Admin export jobs canonical trên model `AdminExportJob`.
-- Hoàn thiện Platform Settings endpoints dựa trên `PlatformSetting`.
-- Verify order/revenue/category attribution theo giá trị từng order item.
-- Verify benchmark privacy: cohort ít nhất 10 nhà hàng, nếu không dùng aggregate platform không lộ danh tính.
-- Verify support SLA theo giờ ICT, pause khi chờ khách.
+- Audit dependency Redis còn lại trên Vercel: provision rõ ràng hoặc loại bỏ an toàn.
+- Validate 24 migration trên fresh PostGIS và Supabase target.
+- Test RLS/publication/storage/cross-tenant trực tiếp trên Supabase.
+- Live smoke DeepSeek, route, SePay, notification, export, storage, Cron bằng secret đã rotate.
+- Pin mutable third-party Compose image liên quan release.
 
-### Admin dashboard
+### Test/security
 
-- Hoàn thiện dashboard KPI, comparison, timeseries, heatmap và recent orders bằng dữ liệu thật.
-- Hoàn thiện orders list/detail/status update và WebSocket `/events` status thật với polling fallback có kiểm soát.
-- Hoàn thiện restaurant approval detail, menu/orders/reviews/finance/KPI.
-- Hoàn thiện users, wallet, voucher, refund và KYC.
-- Hoàn thiện promotions CRUD, toggle, analytics và overlap validation.
-- Hoàn thiện support queue/detail/messages/reply/internal note/bulk action/macros/CSAT.
-- Hoàn thiện audit logs và exports với progress/download.
-- Settings và AI monitor phải dùng dữ liệu thật hoặc degraded state rõ.
+- Full backend Prisma/typecheck/lint/Jest/build.
+- Full web frozen install/typecheck/ESLint/Vitest/build.
+- Full Playwright Chromium+Firefox, axe critical pages = 0, visual/Stitch, tenant isolation.
+- Flutter frozen fetch/analyze/full tests và customer/driver release build tại final head.
+- Secret scan/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck.
 
-### Restaurant dashboard
+## Blocker bên ngoài
 
-- Hoàn thiện profile, onboarding và operating hours.
-- Hoàn thiện overview KPI từ dữ liệu thật.
-- Hoàn thiện menu categories/items/options visibility và reorder.
-- Hoàn thiện kanban orders, detail, status transitions và order chat.
-- Hoàn thiện reviews và merchant reply.
-- Hoàn thiện revenue drill-down và export formats.
-- Hoàn thiện promotions CRUD, targeting preview, scheduling, analytics và broadcast.
-- Hoàn thiện staff invitations, permissions và shift schedule.
-- Hoàn thiện insights, menu analytics và privacy-safe benchmark.
-- Dùng shared notifications từ `/notifications`.
+- GitHub Actions hết billing/auth/token nên chưa có current-head remote green.
+- Supabase CLI thiếu access token và production database URLs.
+- Vercel API thiếu database, Supabase KYC/service credential, Maps/routing, DeepSeek, SePay, SMTP, FCM và Twilio; Admin/Restaurant thiếu Supabase anon key.
+- Key provider từng paste phải rotate.
 
-### UI, UX và thiết kế
+Không được dùng fake value hoặc bypass validation để vượt blocker.
 
-- Giữ 7 màn Stitch desktop hiện có làm visual baseline.
-- Chỉ thêm Stitch design có chọn lọc khi còn screen gap thật.
-- Áp dụng dark sidebar, orange/green accents, dense cards, filter/action bar nhất quán.
-- Thêm loading, empty, retryable error, permission-denied, disabled, success và destructive-confirmation states.
-- Validate responsive ở 1440, 1280, tablet và mobile.
-- Logo/asset đã duyệt phải nằm trong app `public/` hoặc docs asset folders, không đặt ở repo root.
+## Chuỗi release
 
-### Maps và AI chatbot
+1. Freeze final source và full local gate.
+2. Khôi phục/pass mọi GitHub workflow.
+3. Nhập secret rotate qua prompt/dashboard và pass preflight.
+4. Deploy Supabase migration/RLS/Realtime/Storage.
+5. Deploy Vercel API, health/readiness/Cron.
+6. Deploy Admin/Restaurant với verified API alias.
+7. Smoke realtime/map/chatbot/export/payment/notification/tenant.
+8. Push `HEAD` trực tiếp vào `origin/master`, xác minh remote một branch và `0 0`.
+9. Publish Docker SHA → immutable `v4.0.0` → manual `latest`.
+10. Chốt report, digest, GitHub About/topics/homepage và landing notes.
 
-- Maps phải phản ánh trạng thái provider thật: Google Maps khi có cấu hình, OSRM/backend fallback khi đúng product behavior, degraded state rõ nếu không có đường chạy.
-- AI chatbot dùng LLM provider adapter, DeepSeek là mặc định hiện tại; thiếu cấu hình thì trả degraded response rõ.
-- API key từng bị lộ phải rotate trước production và chỉ lưu trong ignored env hoặc secret store của provider.
+## Sau release
 
-### Repository hygiene và branch salvage
+Monitor health/Cron/realtime/AI cost-map-storage-payment; rollout mobile sau production signing; đặt retention outbox/telemetry; cleanup worker tags sau consumer audit; xóa local integration chỉ khi `HEAD == origin/master`.
 
-- Không raw-merge stale team branches.
-- Chỉ port hành vi đã chứng minh từ Amber, Steel và audit branches bằng focused tests.
-- Nếu ref Violet hoặc Indigo xuất hiện lại, salvage mobile hunk-by-hunk với focused Flutter tests và ghi disposition tại đây.
-- Generated screenshots, local caches, backup folders và assistant private files không được vào Git.
-- Giữ `master` là remote branch live duy nhất trừ khi chủ ý mở review branch mới.
+## Deferred có chủ đích
 
-## Gate bắt buộc trước deployment
-
-- `pnpm install --frozen-lockfile` trong môi trường sạch.
-- Backend Prisma validate/generate/migration checks, typecheck, lint, Jest, contract tests và build.
-- Web API client generation/typecheck và OpenAPI validation.
-- Admin và Restaurant typecheck, ESLint không warning, Vitest và production builds.
-- Playwright Chromium và Firefox cho login, RBAC, locale, promotions, support, exports, WebSocket orders, menu, revenue, staff, insights, maps và AI chatbot.
-- Axe không có serious/critical.
-- Visual regression với Stitch screens đã duyệt.
-- Tenant-isolation tests cho restaurant-scoped reads/writes.
-- Secret scan, artifact scan và `.gitignore` hygiene check.
-
-## Kế hoạch deploy sau khi gate xanh
-
-1. Giữ `master` sạch và đã push.
-2. Khôi phục GitHub Actions token/auth/billing và rerun các workflow CI/security đang bị chặn.
-3. Đính kèm branch disposition, test matrix, rejected changes và known degraded states vào release report.
-4. Cài/auth Supabase CLI, xác minh project access và chỉ deploy database/realtime khi secret đã rotate hợp lệ.
-5. Link repo tới đúng Vercel projects, xác minh env và chỉ deploy web sau khi local/remote gates xanh.
-6. Chạy production smoke tests, realtime checks, map checks, AI chatbot checks, export checks, mobile API checks và keep-alive monitoring.
-
-## Deferred khỏi Batch 4
-
-- Migration major Next.js, React, ESLint hoặc Node.
-- httpOnly cookie auth migration.
-- Data warehouse hoặc OLAP redesign.
-- Nodemailer major migration.
-- Dependency major trái Next.js 14, React 18 hoặc ESLint 8.
-- Deployment trước khi tất cả gates xanh.
+Kubernetes/microservice khi chưa có metric; Parquet khi chưa có writer thật; broad public realtime/RLS bypass; recreate branch không tồn tại; deploy từ local-only evidence.

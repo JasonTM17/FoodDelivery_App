@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { AdminRecentOrder, AdminRecentOrdersResponse } from '@foodflow/api-client';
 import { apiGet } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
+import { resolveRealtimeProvider, subscribeToSupabaseOutbox } from '@/lib/supabase-realtime';
 
 export type LiveOrder = AdminRecentOrder;
 
@@ -48,14 +49,6 @@ export function useRealtimeOrders(): UseRealtimeOrdersResult {
   }, [query.data?.orders]);
 
   useEffect(() => {
-    const socket = getSocket();
-    const subscribe = () => {
-      setStatus('connected');
-      socket.emit('admin:subscribe_orders');
-    };
-    const disconnect = () => setStatus('disconnected');
-    const reconnecting = () => setStatus('reconnecting');
-    const markError = () => setStatus('error');
     const refreshOrders = () => void refetch();
     const applyStatusUpdate = (event: OrderStatusChangedEvent) => {
       setOrders((currentOrders) => {
@@ -67,6 +60,27 @@ export function useRealtimeOrders(): UseRealtimeOrdersResult {
         return nextOrders;
       });
     };
+
+    if (resolveRealtimeProvider() === 'supabase') {
+      return subscribeToSupabaseOutbox({
+        channel: 'private:admin:orders',
+        events: {
+          'admin:new_order': refreshOrders,
+          'admin:order_payment_failed': refreshOrders,
+          'admin:order_status_changed': (payload) => applyStatusUpdate(payload as OrderStatusChangedEvent),
+        },
+        onStatus: (nextStatus) => setStatus(nextStatus),
+      });
+    }
+
+    const socket = getSocket();
+    const subscribe = () => {
+      setStatus('connected');
+      socket.emit('admin:subscribe_orders');
+    };
+    const disconnect = () => setStatus('disconnected');
+    const reconnecting = () => setStatus('reconnecting');
+    const markError = () => setStatus('error');
 
     if (socket.connected) subscribe();
     else setStatus('connecting');

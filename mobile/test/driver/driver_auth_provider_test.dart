@@ -35,6 +35,9 @@ void main() {
       expect(notifier.state.isAuthenticated, isTrue);
       expect(notifier.state.driverName, 'Driver One');
       expect(notifier.state.totalDeliveries, 42);
+      expect(notifier.state.isVerified, isFalse);
+      expect(notifier.state.hasAcceptedTerms, isTrue);
+      expect(notifier.state.kycStatus, DriverKycStatus.pending);
     },
   );
 
@@ -56,6 +59,21 @@ void main() {
     expect(notifier.state.isAuthenticated, isFalse);
     expect(notifier.state.error, 'DRIVER_PROFILE_UNAVAILABLE');
   });
+
+  test('clears tokens when the authenticated KYC status is invalid', () async {
+    apiInterceptor.kycStatusPayload = {
+      'status': 'unknown',
+      'isVerified': false,
+    };
+    final notifier = DriverNotifier();
+
+    await notifier.login('driver@foodflow.test', 'Password123');
+
+    const storage = FlutterSecureStorage();
+    expect(await storage.read(key: 'auth_token'), isNull);
+    expect(notifier.state.isAuthenticated, isFalse);
+    expect(notifier.state.error, 'DRIVER_KYC_STATUS_UNAVAILABLE');
+  });
 }
 
 Map<String, dynamic> _driverProfile() => {
@@ -71,6 +89,8 @@ Map<String, dynamic> _driverProfile() => {
     'vehicleType': 'motorbike',
     'vehiclePlate': '59A1-12345',
     'isOnline': false,
+    'isVerified': false,
+    'termsAcceptedAt': '2026-07-10T14:00:00.000Z',
   },
 };
 
@@ -78,6 +98,10 @@ class _DriverAuthApiInterceptor extends Interceptor {
   _DriverAuthApiInterceptor({required this.profilePayload});
 
   Map<String, dynamic> profilePayload;
+  Map<String, dynamic> kycStatusPayload = {
+    'status': 'pending',
+    'isVerified': false,
+  };
   String? profileAuthorization;
 
   @override
@@ -91,6 +115,17 @@ class _DriverAuthApiInterceptor extends Interceptor {
             'accessToken': 'driver-access-token',
             'refreshToken': 'driver-refresh-token',
           },
+        ),
+      );
+      return;
+    }
+
+    if (options.path == '/driver/kyc/status') {
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: kycStatusPayload,
         ),
       );
       return;

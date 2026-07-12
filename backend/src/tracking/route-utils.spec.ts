@@ -1,8 +1,14 @@
-import { decodePolyline, snapToPolylineDistanceKm, hasDeviatedFromRoute } from '../common/utils/route.utils'
+import {
+  decodePolyline,
+  estimateRemainingRouteMetrics,
+  snapToPolylineDistanceKm,
+  hasDeviatedFromRoute,
+} from '../common/utils/route.utils'
 
 // Well-known Google example polyline: encodes [(38.5,-120.2),(40.7,-120.95),(43.252,-126.453)]
 // Source: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 const GOOGLE_EXAMPLE_POLYLINE = '_p~iF~ps|U_ulLnnqC_mqNvxq`@'
+const VIETNAM_ROUTE_POLYLINE = '_k|`A_zfjSf{Cf{Cf{Cf{C'
 
 describe('decodePolyline', () => {
   it('decodes Google example polyline to correct coordinates', () => {
@@ -82,5 +88,33 @@ describe('hasDeviatedFromRoute', () => {
     const deviated = hasDeviatedFromRoute(GOOGLE_EXAMPLE_POLYLINE, 38.5, -120.19, 100)
     expect(notDeviated).toBe(false)
     expect(deviated).toBe(true)
+  })
+})
+
+describe('estimateRemainingRouteMetrics', () => {
+  it('reduces ETA and distance as the driver progresses along the route', () => {
+    const start = estimateRemainingRouteMetrics(VIETNAM_ROUTE_POLYLINE, 10.8, 106.7, 6000, 900)
+    const middle = estimateRemainingRouteMetrics(VIETNAM_ROUTE_POLYLINE, 10.775, 106.675, 6000, 900)
+
+    expect(start?.remainingDurationSeconds).toBeGreaterThan(middle!.remainingDurationSeconds)
+    expect(start?.remainingDistanceMeters).toBeGreaterThan(middle!.remainingDistanceMeters)
+    expect(middle?.progressRatio).toBeGreaterThan(0.45)
+    expect(middle?.progressRatio).toBeLessThan(0.55)
+  })
+
+  it('returns zero remaining metrics at the route destination', () => {
+    const result = estimateRemainingRouteMetrics(VIETNAM_ROUTE_POLYLINE, 10.75, 106.65, 6000, 900)
+
+    expect(result).toEqual({
+      remainingDistanceMeters: 0,
+      remainingDurationSeconds: 0,
+      progressRatio: 1,
+    })
+  })
+
+  it('does not invent progress from malformed or incomplete route data', () => {
+    expect(estimateRemainingRouteMetrics('', 10.8, 106.7, 6000, 900)).toBeNull()
+    expect(estimateRemainingRouteMetrics('_k|`A_zfjS', 10.8, 106.7, 6000, 900)).toBeNull()
+    expect(estimateRemainingRouteMetrics(VIETNAM_ROUTE_POLYLINE, 10.8, 106.7, 0, 900)).toBeNull()
   })
 })

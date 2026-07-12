@@ -6,6 +6,23 @@ import { apiGet, apiPatch } from '@/lib/api';
 import { RestaurantDetailContent } from './restaurant-detail-content';
 import { RestaurantDetailEmptyState, RestaurantDetailLoading } from './restaurant-detail-state-panels';
 import type { Restaurant } from './restaurant-detail-types';
+import { normalizeRestaurantDetail, type RawRestaurant } from '../restaurants-table-client';
+
+type RawRestaurantPageDetail = RawRestaurant & {
+  description?: string;
+  revenue?: number | null;
+  recentOrders?: Restaurant['recentOrders'];
+};
+
+function normalizeRestaurantPageDetail(restaurant: RawRestaurantPageDetail): Restaurant {
+  const normalized = normalizeRestaurantDetail(restaurant);
+  return {
+    ...normalized,
+    description: restaurant.description,
+    revenue: restaurant.revenue ?? null,
+    recentOrders: restaurant.recentOrders ?? [],
+  };
+}
 
 export default function RestaurantDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,18 +30,13 @@ export default function RestaurantDetailPage() {
 
   const { data: restaurant, isLoading } = useQuery<Restaurant>({
     queryKey: ['restaurant', id],
-    queryFn: () => apiGet<Restaurant>(`/admin/restaurants/${id}`),
+    queryFn: async () => normalizeRestaurantPageDetail(await apiGet<RawRestaurantPageDetail>(`/admin/restaurants/${id}`)),
   });
 
   const toggleStatus = async () => {
     if (!restaurant) return;
-    const newStatus = restaurant.status === 'active' ? 'disabled' : 'active';
-    try {
-      await apiPatch(`/admin/restaurants/${id}/status`, { status: newStatus });
-      queryClient.invalidateQueries({ queryKey: ['restaurant', id] });
-    } catch (error) {
-      console.error('Failed to toggle status', error);
-    }
+    await apiPatch(`/admin/restaurants/${id}/status`, { isActive: restaurant.status !== 'active' });
+    queryClient.invalidateQueries({ queryKey: ['restaurant', id] });
   };
 
   if (isLoading) {

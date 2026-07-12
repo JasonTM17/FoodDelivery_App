@@ -1,5 +1,6 @@
 import { StackingService, PromotionWithDiscount } from './stacking.service'
 import { Promotion, PromotionType } from '@prisma/client'
+import { createI18nTestService } from '../../test/i18n-test-utils'
 
 function makePromo(
   code: string,
@@ -31,7 +32,7 @@ describe('StackingService', () => {
   let service: StackingService
 
   beforeEach(() => {
-    service = new StackingService()
+    service = new StackingService(createI18nTestService())
   })
 
   it('returns empty result for empty input', () => {

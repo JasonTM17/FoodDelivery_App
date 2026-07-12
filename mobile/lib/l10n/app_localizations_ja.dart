@@ -36,10 +36,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get passwordRequired => 'パスワードを入力してください';
 
   @override
-  String get passwordMinLength => 'パスワードは8文字以上必要です';
+  String get passwordMinLength => '8～72文字で英大文字・英小文字・数字を含めてください';
 
   @override
-  String get passwordComplexity => 'パスワードには大文字・小文字・数字が必要です';
+  String get showPassword => 'パスワードを表示';
+
+  @override
+  String get hidePassword => 'パスワードを隠す';
 
   @override
   String get forgotPassword => 'パスワードを忘れた方';
@@ -64,6 +67,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'ドライバーとして登録';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'ログインして配達依頼の受付を開始';
 
   @override
   String get registerTitle => '登録';
@@ -99,7 +108,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phoneInvalid => '無効な電話番号です';
 
   @override
-  String get passwordHintLong => 'パスワードを入力（8文字以上、大文字/小文字/数字）';
+  String get passwordHintLong => '8～72文字、英大文字・英小文字・数字を含む';
 
   @override
   String get confirmPasswordLabel => 'パスワードの確認';
@@ -198,6 +207,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cuisineChinese => '中華料理';
+
+  @override
+  String get cuisineItalian => 'イタリア料理';
 
   @override
   String get cuisineDessert => 'デザート';
@@ -315,6 +327,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get commonRetry => '再試行';
+
+  @override
+  String get commonErrorTitle => '問題が発生しました';
+
+  @override
+  String get commonErrorMessage => 'もう一度お試しください。';
+
+  @override
+  String get commonEmptyTitle => 'データがありません';
+
+  @override
+  String get restaurantClosed => '営業時間外';
+
+  @override
+  String get foodSoldOut => '売り切れ';
 
   @override
   String get driverProfileTitle => 'プロフィール';
@@ -494,6 +521,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => '別のフィルターをお試しください';
+
+  @override
+  String get restaurantLocationRequired => '近くのレストランを探すには位置情報を許可してください。';
+
+  @override
+  String get restaurantLoadFailed => 'レストランを読み込めません。もう一度お試しください。';
+
+  @override
+  String get restaurantDetailLoadFailed => 'レストラン情報を読み込めません。もう一度お試しください。';
+
+  @override
+  String get restaurantMenuLoadFailed => 'メニューを読み込めません。もう一度お試しください。';
 
   @override
   String get restaurantMenuTab => 'メニュー';
@@ -759,6 +798,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverDashboardNoOrders => '注文はまだありません';
 
   @override
+  String get driverActiveOrderTitle => '進行中の注文';
+
+  @override
   String get driverStatEarnings => '収益';
 
   @override
@@ -804,6 +846,92 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverStatusInfoText => 'オンライン中は、稼働エリア内の新しい注文通知を受け取ります。';
+
+  @override
+  String get driverOnlineStatusOnline => 'オンライン';
+
+  @override
+  String get driverOnlineStatusPaused => '一時停止中';
+
+  @override
+  String get driverOnlineStatusOffline => 'オフライン';
+
+  @override
+  String get driverOnlineReady => '注文を受け付けられます';
+
+  @override
+  String get driverOnlineEnable => 'オンにして注文を受け付ける';
+
+  @override
+  String get driverOnlineAutoOffline => '一時停止終了後に自動でオフラインへ戻ります';
+
+  @override
+  String get driverDateToday => '今日';
+
+  @override
+  String get driverDateLastSevenDays => '過去7日間';
+
+  @override
+  String get driverDateLastThirtyDays => '過去30日間';
+
+  @override
+  String get driverDateCustom => '期間指定';
+
+  @override
+  String get driverDateClear => 'クリア';
+
+  @override
+  String driverDateFrom(String date) {
+    return '$dateから';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return '$dateまで';
+  }
+
+  @override
+  String get driverStepRestaurant => '店舗へ';
+
+  @override
+  String get driverStepPickup => '受け取り';
+
+  @override
+  String get driverStepDeliver => '配達';
+
+  @override
+  String get driverStepComplete => '完了';
+
+  @override
+  String get driverPeakTitle => 'ピーク時間';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target件';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return '獲得済み報酬: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'あと$count件で$amountを獲得';
+  }
+
+  @override
+  String get driverEarningsDaily => '日別収益';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count日間';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count件の評価';
+  }
 
   @override
   String get driverEarningsTitle => '収益';
@@ -867,6 +995,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverRatingsYesterday => '昨日';
 
   @override
+  String driverHistoryTodayAt(String time) {
+    return '今日 $time';
+  }
+
+  @override
+  String driverHistoryYesterdayAt(String time) {
+    return '昨日 $time';
+  }
+
+  @override
   String get driverTripDetailTitle => '配達詳細';
 
   @override
@@ -919,6 +1057,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverRouteReplayCompleted => '再生が完了しました';
 
   @override
+  String get driverRouteReplayEstimated => '予定ルートのみ — GPS再生は利用できません';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip => 'この配達のGPSテレメトリは利用できません';
+
+  @override
   String get driverKycTitle => 'KYC認証';
 
   @override
@@ -958,6 +1102,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverKycSubmitFailed => '申請を送信できませんでした。もう一度お試しください。';
 
   @override
+  String get driverKycUploadFailed => 'この書類をアップロードできませんでした。もう一度お試しください。';
+
+  @override
+  String get driverKycUnsupportedImage => '有効なJPEG、PNG、またはWebP画像を使用してください。';
+
+  @override
+  String get driverKycFileTooSmall => '画像が不完全または小さすぎます。書類を撮影し直してください。';
+
+  @override
+  String get driverKycFileTooLarge => '各書類のサイズは4 MB以下にしてください。';
+
+  @override
+  String get driverKycInvalidUploadGrant => '安全なアップロードセッションが無効です。もう一度お試しください。';
+
+  @override
+  String get driverKycSubmittedTitle => '申請を送信しました';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      '非公開書類は安全に保存され、審査待ちです。承認されるまでオンラインにはできません。';
+
+  @override
+  String get driverKycGoHome => 'ドライバーホームへ';
+
+  @override
   String get driverHistoryTitle => '配達履歴';
 
   @override
@@ -971,6 +1140,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => '再試行';
+
+  @override
+  String get driverHistoryOrderNumberLabel => '注文';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => '配達先住所';
+
+  @override
+  String get driverHistoryNoteLabel => 'メモ';
 
   @override
   String get driverHistoryDeliveryFee => '配達料';
@@ -1258,6 +1436,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get referralShareCode => 'コードを共有';
 
   @override
+  String get referralShareFailed => '共有シートを開けませんでした。もう一度お試しください。';
+
+  @override
   String get referralShareSheetTitle => '紹介コードを共有';
 
   @override
@@ -1387,6 +1568,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => '自動車';
 
   @override
+  String get driver_onboarding_license_label => '運転免許証番号';
+
+  @override
+  String get driver_onboarding_license_hint => '運転免許証番号を入力';
+
+  @override
+  String get driver_onboarding_license_required => '運転免許証番号を入力してください';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      '5〜50文字の英数字、ピリオド、スラッシュ、ハイフンを使用してください';
+
+  @override
   String get driver_onboarding_plate_label => 'ナンバープレート';
 
   @override
@@ -1394,6 +1588,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'ナンバープレートを入力してください';
+
+  @override
+  String get driver_onboarding_plate_invalid => '5〜20文字の英数字、ピリオド、ハイフンを使用してください';
 
   @override
   String get driver_onboarding_next => '次へ';
@@ -1514,7 +1711,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String driver_heatmap_avg_payout(String amount) {
-    return '平均 $amountđ/件';
+    return '平均 $amount/件';
   }
 
   @override
@@ -1626,6 +1823,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driver_tip_success_message => 'チップ報告は照合用に保存されました。支払い精算は自動変更されません。';
 
   @override
+  String get driver_tip_submit_failed => 'チップ報告を保存できませんでした。もう一度お試しください。';
+
+  @override
   String get driver_notifications_read_all => 'すべて既読';
 
   @override
@@ -1696,6 +1896,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driver_settings_title => '設定';
+
+  @override
+  String get driver_settings_notifications_section => '通知';
+
+  @override
+  String get driver_settings_general_section => '一般';
 
   @override
   String get driver_settings_notifications => 'プッシュ通知';
@@ -1784,6 +1990,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => '営業中';
+
+  @override
+  String get searchLoadFailed => '現在検索できません。もう一度お試しください。';
 
   @override
   String get vouchersTitle => 'オファー＆バウチャー';

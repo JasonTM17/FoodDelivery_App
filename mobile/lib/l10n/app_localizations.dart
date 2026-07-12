@@ -157,14 +157,20 @@ abstract class AppLocalizations {
   /// No description provided for @passwordMinLength.
   ///
   /// In vi, this message translates to:
-  /// **'Mật khẩu phải có ít nhất 8 ký tự'**
+  /// **'Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số'**
   String get passwordMinLength;
 
-  /// No description provided for @passwordComplexity.
+  /// No description provided for @showPassword.
   ///
   /// In vi, this message translates to:
-  /// **'Mật khẩu phải có chữ hoa, chữ thường và số'**
-  String get passwordComplexity;
+  /// **'Hiện mật khẩu'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get hidePassword;
 
   /// No description provided for @forgotPassword.
   ///
@@ -213,6 +219,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký làm tài xế'**
   String get registerAsDriver;
+
+  /// No description provided for @driverLoginTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'FoodFlow Driver'**
+  String get driverLoginTitle;
+
+  /// No description provided for @driverLoginSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để bắt đầu nhận đơn giao hàng'**
+  String get driverLoginSubtitle;
 
   /// No description provided for @registerTitle.
   ///
@@ -283,7 +301,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordHintLong.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập mật khẩu (ít nhất 6 ký tự)'**
+  /// **'8–72 ký tự, gồm chữ hoa, chữ thường và số'**
   String get passwordHintLong;
 
   /// No description provided for @confirmPasswordLabel.
@@ -477,6 +495,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Trung Hoa'**
   String get cuisineChinese;
+
+  /// No description provided for @cuisineItalian.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ý'**
+  String get cuisineItalian;
 
   /// No description provided for @cuisineDessert.
   ///
@@ -711,6 +735,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử lại'**
   String get commonRetry;
+
+  /// No description provided for @commonErrorTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rất tiếc!'**
+  String get commonErrorTitle;
+
+  /// No description provided for @commonErrorMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra. Vui lòng thử lại.'**
+  String get commonErrorMessage;
+
+  /// No description provided for @commonEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dữ liệu'**
+  String get commonEmptyTitle;
+
+  /// No description provided for @restaurantClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng cửa'**
+  String get restaurantClosed;
+
+  /// No description provided for @foodSoldOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết'**
+  String get foodSoldOut;
 
   /// No description provided for @driverProfileTitle.
   ///
@@ -1065,6 +1119,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử chọn bộ lọc khác'**
   String get restaurantNoResultsSubtitle;
+
+  /// No description provided for @restaurantLocationRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép truy cập vị trí để tìm nhà hàng gần bạn.'**
+  String get restaurantLocationRequired;
+
+  /// No description provided for @restaurantLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách nhà hàng. Vui lòng thử lại.'**
+  String get restaurantLoadFailed;
+
+  /// No description provided for @restaurantDetailLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông tin nhà hàng. Vui lòng thử lại.'**
+  String get restaurantDetailLoadFailed;
+
+  /// No description provided for @restaurantMenuLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thực đơn. Vui lòng thử lại.'**
+  String get restaurantMenuLoadFailed;
 
   /// No description provided for @restaurantMenuTab.
   ///
@@ -1576,6 +1654,12 @@ abstract class AppLocalizations {
   /// **'Chưa có đơn hàng nào'**
   String get driverDashboardNoOrders;
 
+  /// No description provided for @driverActiveOrderTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn đang thực hiện'**
+  String get driverActiveOrderTitle;
+
   /// No description provided for @driverStatEarnings.
   ///
   /// In vi, this message translates to:
@@ -1653,6 +1737,150 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.'**
   String get driverStatusInfoText;
+
+  /// No description provided for @driverOnlineStatusOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang trực tuyến'**
+  String get driverOnlineStatusOnline;
+
+  /// No description provided for @driverOnlineStatusPaused.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạm dừng'**
+  String get driverOnlineStatusPaused;
+
+  /// No description provided for @driverOnlineStatusOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ngoại tuyến'**
+  String get driverOnlineStatusOffline;
+
+  /// No description provided for @driverOnlineReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẵn sàng nhận đơn'**
+  String get driverOnlineReady;
+
+  /// No description provided for @driverOnlineEnable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật để nhận đơn hàng'**
+  String get driverOnlineEnable;
+
+  /// No description provided for @driverOnlineAutoOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động ngoại tuyến khi hết thời gian tạm dừng'**
+  String get driverOnlineAutoOffline;
+
+  /// No description provided for @driverDateToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get driverDateToday;
+
+  /// No description provided for @driverDateLastSevenDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'7 ngày qua'**
+  String get driverDateLastSevenDays;
+
+  /// No description provided for @driverDateLastThirtyDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'30 ngày qua'**
+  String get driverDateLastThirtyDays;
+
+  /// No description provided for @driverDateCustom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chỉnh'**
+  String get driverDateCustom;
+
+  /// No description provided for @driverDateClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get driverDateClear;
+
+  /// No description provided for @driverDateFrom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ {date}'**
+  String driverDateFrom(String date);
+
+  /// No description provided for @driverDateTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến {date}'**
+  String driverDateTo(String date);
+
+  /// No description provided for @driverStepRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến NH'**
+  String get driverStepRestaurant;
+
+  /// No description provided for @driverStepPickup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lấy hàng'**
+  String get driverStepPickup;
+
+  /// No description provided for @driverStepDeliver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao hàng'**
+  String get driverStepDeliver;
+
+  /// No description provided for @driverStepComplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get driverStepComplete;
+
+  /// No description provided for @driverPeakTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ cao điểm'**
+  String get driverPeakTitle;
+
+  /// No description provided for @driverPeakProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'{completed}/{target} đơn'**
+  String driverPeakProgress(int completed, int target);
+
+  /// No description provided for @driverPeakRewardEarned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã nhận thưởng: {amount}'**
+  String driverPeakRewardEarned(String amount);
+
+  /// No description provided for @driverPeakRewardRemaining.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành thêm {count} đơn để nhận {amount}'**
+  String driverPeakRewardRemaining(int count, String amount);
+
+  /// No description provided for @driverEarningsDaily.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập hàng ngày'**
+  String get driverEarningsDaily;
+
+  /// No description provided for @driverDaysCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày'**
+  String driverDaysCount(int count);
+
+  /// No description provided for @driverRatingsReviewCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đánh giá'**
+  String driverRatingsReviewCount(int count);
 
   /// No description provided for @driverEarningsTitle.
   ///
@@ -1768,6 +1996,18 @@ abstract class AppLocalizations {
   /// **'Hôm qua'**
   String get driverRatingsYesterday;
 
+  /// No description provided for @driverHistoryTodayAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay, {time}'**
+  String driverHistoryTodayAt(String time);
+
+  /// No description provided for @driverHistoryYesterdayAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua, {time}'**
+  String driverHistoryYesterdayAt(String time);
+
   /// No description provided for @driverTripDetailTitle.
   ///
   /// In vi, this message translates to:
@@ -1864,6 +2104,18 @@ abstract class AppLocalizations {
   /// **'Đã phát xong'**
   String get driverRouteReplayCompleted;
 
+  /// No description provided for @driverRouteReplayEstimated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ có tuyến dự kiến — chưa có GPS để phát lại'**
+  String get driverRouteReplayEstimated;
+
+  /// No description provided for @driverRouteReplayEstimatedTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyến này chưa có telemetry GPS'**
+  String get driverRouteReplayEstimatedTooltip;
+
   /// No description provided for @driverKycTitle.
   ///
   /// In vi, this message translates to:
@@ -1942,6 +2194,54 @@ abstract class AppLocalizations {
   /// **'Gửi đơn thất bại. Vui lòng thử lại.'**
   String get driverKycSubmitFailed;
 
+  /// No description provided for @driverKycUploadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải giấy tờ này lên. Vui lòng thử lại.'**
+  String get driverKycUploadFailed;
+
+  /// No description provided for @driverKycUnsupportedImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng dùng ảnh JPEG, PNG hoặc WebP hợp lệ.'**
+  String get driverKycUnsupportedImage;
+
+  /// No description provided for @driverKycFileTooSmall.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh chưa đầy đủ hoặc quá nhỏ. Vui lòng chụp lại giấy tờ.'**
+  String get driverKycFileTooSmall;
+
+  /// No description provided for @driverKycFileTooLarge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi giấy tờ phải có dung lượng tối đa 4 MB.'**
+  String get driverKycFileTooLarge;
+
+  /// No description provided for @driverKycInvalidUploadGrant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên tải lên bảo mật không hợp lệ. Vui lòng thử lại.'**
+  String get driverKycInvalidUploadGrant;
+
+  /// No description provided for @driverKycSubmittedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi hồ sơ'**
+  String get driverKycSubmittedTitle;
+
+  /// No description provided for @driverKycSubmittedMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giấy tờ riêng tư của bạn đã được lưu an toàn và đang chờ xét duyệt. Bạn chưa thể trực tuyến trước khi được duyệt.'**
+  String get driverKycSubmittedMessage;
+
+  /// No description provided for @driverKycGoHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về trang tài xế'**
+  String get driverKycGoHome;
+
   /// No description provided for @driverHistoryTitle.
   ///
   /// In vi, this message translates to:
@@ -1971,6 +2271,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử lại'**
   String get driverHistoryRetry;
+
+  /// No description provided for @driverHistoryOrderNumberLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn hàng'**
+  String get driverHistoryOrderNumberLabel;
+
+  /// No description provided for @driverHistoryDeliveryAddressLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ giao'**
+  String get driverHistoryDeliveryAddressLabel;
+
+  /// No description provided for @driverHistoryNoteLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú'**
+  String get driverHistoryNoteLabel;
 
   /// No description provided for @driverHistoryDeliveryFee.
   ///
@@ -2524,6 +2842,12 @@ abstract class AppLocalizations {
   /// **'Chia sẻ mã'**
   String get referralShareCode;
 
+  /// No description provided for @referralShareFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở bảng chia sẻ. Vui lòng thử lại.'**
+  String get referralShareFailed;
+
   /// No description provided for @referralShareSheetTitle.
   ///
   /// In vi, this message translates to:
@@ -2770,6 +3094,30 @@ abstract class AppLocalizations {
   /// **'Ô tô'**
   String get driver_onboarding_vehicle_type_car;
 
+  /// No description provided for @driver_onboarding_license_label.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số giấy phép lái xe'**
+  String get driver_onboarding_license_label;
+
+  /// No description provided for @driver_onboarding_license_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số giấy phép lái xe'**
+  String get driver_onboarding_license_hint;
+
+  /// No description provided for @driver_onboarding_license_required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập số giấy phép lái xe'**
+  String get driver_onboarding_license_required;
+
+  /// No description provided for @driver_onboarding_license_invalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng 5-50 chữ cái, chữ số, dấu chấm, gạch chéo hoặc gạch nối'**
+  String get driver_onboarding_license_invalid;
+
   /// No description provided for @driver_onboarding_plate_label.
   ///
   /// In vi, this message translates to:
@@ -2787,6 +3135,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vui lòng nhập biển số'**
   String get driver_onboarding_plate_required;
+
+  /// No description provided for @driver_onboarding_plate_invalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng 5-20 chữ cái, chữ số, dấu chấm hoặc gạch nối'**
+  String get driver_onboarding_plate_invalid;
 
   /// No description provided for @driver_onboarding_next.
   ///
@@ -3001,7 +3355,7 @@ abstract class AppLocalizations {
   /// No description provided for @driver_heatmap_avg_payout.
   ///
   /// In vi, this message translates to:
-  /// **'Trung bình {amount}đ/đơn'**
+  /// **'Trung bình {amount}/đơn'**
   String driver_heatmap_avg_payout(String amount);
 
   /// No description provided for @driver_bank_title.
@@ -3220,6 +3574,12 @@ abstract class AppLocalizations {
   /// **'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.'**
   String get driver_tip_success_message;
 
+  /// No description provided for @driver_tip_submit_failed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu báo cáo tip. Vui lòng thử lại.'**
+  String get driver_tip_submit_failed;
+
   /// No description provided for @driver_notifications_read_all.
   ///
   /// In vi, this message translates to:
@@ -3363,6 +3723,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cài đặt'**
   String get driver_settings_title;
+
+  /// No description provided for @driver_settings_notifications_section.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo'**
+  String get driver_settings_notifications_section;
+
+  /// No description provided for @driver_settings_general_section.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chung'**
+  String get driver_settings_general_section;
 
   /// No description provided for @driver_settings_notifications.
   ///
@@ -3531,6 +3903,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đang mở'**
   String get searchFilterOpenNow;
+
+  /// No description provided for @searchLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tìm kiếm lúc này. Vui lòng thử lại.'**
+  String get searchLoadFailed;
 
   /// No description provided for @vouchersTitle.
   ///

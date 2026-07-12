@@ -61,7 +61,7 @@ export default function StaffPage() {
         </button>
       </div>
 
-      {error ? (
+      {error && (loading || staff.length > 0) ? (
         <div role="alert" className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <span>{error}</span>
           <button type="button" onClick={() => void loadStaff()} className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium">
@@ -83,6 +83,14 @@ export default function StaffPage() {
       {loading ? (
         <div className="space-y-3" aria-label={t('loading')}>
           {[1, 2, 3].map(item => <div key={item} className="h-24 animate-pulse rounded-lg bg-gray-100" />)}
+        </div>
+      ) : error && staff.length === 0 ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => void loadStaff()} className="mt-3 inline-flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium">
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('retry')}
+          </button>
         </div>
       ) : (
         <>

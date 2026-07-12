@@ -1,6 +1,7 @@
-# Production / Hub overlay — pull public images (no local build).
+# Self-hosted production / Docker Hub compatibility overlay (no local build).
+# FoodFlow's managed production target remains Supabase + Vercel.
 #
-#   $env:IMAGE_TAG = "latest"   # or short git SHA
+#   $env:IMAGE_TAG = "v4.0.0"   # or sha-<full commit>
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
@@ -43,7 +44,7 @@ services:
 
   # Migrations: use published migrator image (builder stage with pnpm+prisma).
   migrate:
-    image: nguyenson1710/foodflow-migrate:${IMAGE_TAG:-latest}
+    image: nguyenson1710/foodflow-migrate:${IMAGE_TAG:?IMAGE_TAG must be an immutable release or sha tag}
     pull_policy: always
     restart: "no"
     environment:
@@ -56,7 +57,7 @@ services:
   # Backend + worker load the full production env file (fail-closed validation).
   # Explicit environment: overrides keep compose-network hosts correct.
   backend:
-    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:-latest}
+    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:?IMAGE_TAG must be an immutable release or sha tag}
     pull_policy: always
     restart: always
     env_file:
@@ -64,13 +65,16 @@ services:
         required: false
     environment:
       NODE_ENV: production
+      REALTIME_PROVIDER: socketio
+      STORAGE_PROVIDER: minio
+      QUEUE_PROVIDER: bullmq
       DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
       DIRECT_URL: ${DIRECT_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
       REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379}
       JWT_SECRET: ${JWT_SECRET:?required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
       DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://admin.foodflow.vn,https://restaurant.foodflow.vn}
+      CORS_ORIGINS: ${CORS_ORIGINS:?required}
       PASSWORD_RESET_URL_BASE: ${PASSWORD_RESET_URL_BASE:?required}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
       MINIO_PORT: ${MINIO_PORT:-9000}
@@ -102,7 +106,7 @@ services:
       start_period: 20s
 
   worker:
-    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:-latest}
+    image: nguyenson1710/foodflow-backend:${IMAGE_TAG:?IMAGE_TAG must be an immutable release or sha tag}
     pull_policy: always
     restart: always
     container_name: foodflow-worker
@@ -112,13 +116,16 @@ services:
         required: false
     environment:
       NODE_ENV: production
+      REALTIME_PROVIDER: socketio
+      STORAGE_PROVIDER: minio
+      QUEUE_PROVIDER: bullmq
       DATABASE_URL: ${DATABASE_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
       DIRECT_URL: ${DIRECT_URL:-postgresql://foodflow:${POSTGRES_PASSWORD}@postgres:5432/foodflow}
       REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379}
       JWT_SECRET: ${JWT_SECRET:?required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
       DELIVERY_BASE_FEE_VND: ${DELIVERY_BASE_FEE_VND:-15000}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://admin.foodflow.vn,https://restaurant.foodflow.vn}
+      CORS_ORIGINS: ${CORS_ORIGINS:?required}
       PASSWORD_RESET_URL_BASE: ${PASSWORD_RESET_URL_BASE:?required}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
       MINIO_PORT: ${MINIO_PORT:-9000}
@@ -151,7 +158,7 @@ services:
         condition: service_healthy
 
   admin:
-    image: nguyenson1710/foodflow-admin:${IMAGE_TAG:-latest}
+    image: nguyenson1710/foodflow-admin:${IMAGE_TAG:?IMAGE_TAG must be an immutable release or sha tag}
     pull_policy: always
     restart: always
     environment:
@@ -163,7 +170,7 @@ services:
       start_period: 15s
 
   restaurant:
-    image: nguyenson1710/foodflow-restaurant:${IMAGE_TAG:-latest}
+    image: nguyenson1710/foodflow-restaurant:${IMAGE_TAG:?IMAGE_TAG must be an immutable release or sha tag}
     pull_policy: always
     restart: always
     environment:

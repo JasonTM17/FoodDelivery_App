@@ -16,14 +16,15 @@ Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSo
 - `driver_assigned` / `driver_arriving_restaurant` use `pickup` phase and route the driver to the restaurant.
 - `picked_up` / `delivering` use `dropoff` phase and route the driver to the customer address.
 - Redis route keys include the phase (`route:<orderId>:pickup` or `route:<orderId>:dropoff`) so a restaurant-bound polyline is never reused as the customer-bound route.
+- Provider routes persist to `delivery_tasks` by phase: pickup routes update `pickup_distance_km`, dropoff routes update `delivery_distance_km`, and both phases update real `duration_in_traffic` + `route_geojson`.
 - `delivery:eta_updated` includes `{ orderId, etaMinutes, source, degraded, routePolyline, routePhase }`; mobile must draw `routePolyline` only when present and keep telemetry trail separate.
 
 ## Env vars
 
 | Name | Required | Default | Description |
 |---|---|---|---|
-| `GOOGLE_MAPS_API_KEY` | no | — | Directions API key (preferred) |
-| `OSRM_URL` | no | `https://router.project-osrm.org` | Fallback router |
+| `GOOGLE_MAPS_API_KEY` | production | — | Directions API key (preferred) |
+| `OSRM_URL` | production | `https://router.project-osrm.org` in local/test only | Owned fallback router; production rejects the public OSRM demo |
 | `LOCATION_FLUSH_INTERVAL_MS` | no | `15000` | Batch DB flush cadence |
 | `ETA_CACHE_TTL_SEC` | no | `120` | Redis TTL for ETA snapshot |
 | `ROUTE_DEVIATION_THRESHOLD_M` | no | `100` | Trigger recompute if driver off route > N meters |

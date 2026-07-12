@@ -3,15 +3,14 @@ import type { Socket } from 'socket.io'
 import { DispatchGateway } from './dispatch.gateway'
 
 describe('DispatchGateway authentication', () => {
-  const redis = {
-    get: jest.fn(),
-    del: jest.fn(),
-  }
   const authenticate = jest.fn()
   const getUser = jest.fn()
+  const respondToOffer = jest.fn()
+  const attachSocketServer = jest.fn()
   const gateway = new DispatchGateway(
-    redis as never,
     { authenticate, getUser } as never,
+    { respondToOffer } as never,
+    { attachSocketServer } as never,
   )
 
   beforeEach(() => {
@@ -38,7 +37,7 @@ describe('DispatchGateway authentication', () => {
     expect(client.join).not.toHaveBeenCalled()
   })
 
-  it('rejects non-driver clients before reading offer tokens', async () => {
+  it('rejects non-driver clients before resolving offer tokens', async () => {
     const client = makeClient()
     getUser.mockReturnValue({ sub: 'customer-1', role: UserRole.customer })
 
@@ -49,16 +48,17 @@ describe('DispatchGateway authentication', () => {
       event: 'error',
       data: { message: 'Unauthorized driver' },
     })
-    expect(redis.get).not.toHaveBeenCalled()
+    expect(respondToOffer).not.toHaveBeenCalled()
   })
 
   it('accepts a valid offer only for the authenticated driver', async () => {
     const client = makeClient()
     getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
-    redis.get.mockResolvedValue('offer-token')
-    redis.del.mockResolvedValue(1)
-    const callback = jest.fn()
-    gateway.registerOfferResponse('order-1:driver-1', callback)
+    respondToOffer.mockResolvedValue({
+      orderId: 'order-1',
+      decision: 'accept',
+      status: 'assigned',
+    })
 
     await expect(gateway.handleAccept(client, {
       orderId: 'order-1',
@@ -67,8 +67,18 @@ describe('DispatchGateway authentication', () => {
       event: 'dispatch:accepted',
       data: { orderId: 'order-1' },
     })
-    expect(callback).toHaveBeenCalledWith(true)
-    expect(redis.del).toHaveBeenCalledWith('offer:order-1:driver-1')
+    expect(respondToOffer).toHaveBeenCalledWith(
+      'order-1',
+      'driver-1',
+      'offer-token',
+      'accept',
+    )
+  })
+
+  it('attaches the Socket.IO server to the shared notifier', () => {
+    const server = {} as never
+    gateway.afterInit(server)
+    expect(attachSocketServer).toHaveBeenCalledWith(server)
   })
 })
 

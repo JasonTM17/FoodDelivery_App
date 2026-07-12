@@ -22,6 +22,9 @@ describe('TrackingService', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({ id: 'order-1' }),
     },
+    deliveryTask: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     $executeRaw: jest.fn().mockResolvedValue(1),
     $queryRaw: jest.fn().mockResolvedValue([]),
   }
@@ -56,15 +59,16 @@ describe('TrackingService', () => {
     it('stores driver location in Redis and returns orderId', async () => {
       mockRedis.get.mockResolvedValueOnce('order-123')
       mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-123' })
+      const sampledAt = '2026-07-06T01:02:03.456Z'
       const orderId = await service.handleLocationUpdate('d1', {
-        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
+        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10, timestamp: sampledAt,
       })
       expect(mockRedis.geoadd).toHaveBeenCalled()
       expect(mockRedis.setex).toHaveBeenCalledWith('driver:d1:alive', 35, '1')
       expect(mockRedis.setex).toHaveBeenCalledWith(
         'driver:d1:last_seen_at',
         35,
-        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        sampledAt,
       )
       expect(orderId).toBe('order-123')
     })
@@ -73,7 +77,7 @@ describe('TrackingService', () => {
       mockRedis.get.mockResolvedValueOnce(null)
       mockPrisma.order.findFirst.mockResolvedValueOnce(null)
       const orderId = await service.handleLocationUpdate('d1', {
-        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10,
+        lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10, timestamp: '2026-07-06T01:02:03.456Z',
       })
       expect(orderId).toBeNull()
     })
@@ -87,6 +91,7 @@ describe('TrackingService', () => {
       const orderId = await service.handleLocationUpdate('driver-1', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
 
       expect(orderId).toBeNull()
@@ -100,6 +105,7 @@ describe('TrackingService', () => {
       const orderId = await service.handleLocationUpdate('driver-1', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
 
       expect(orderId).toBe('order-from-db')
@@ -128,6 +134,16 @@ describe('TrackingService', () => {
       const [query] = mockPrisma.$executeRaw.mock.calls[0]
       expect((query.values[4] as Date).toISOString()).toBe(sampledAt)
     })
+
+    it('rejects missing GPS sample timestamps instead of fabricating last-seen time', async () => {
+      await expect(service.handleLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+      } as never)).rejects.toThrow('INVALID_DRIVER_LOCATION_TIMESTAMP')
+
+      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+      expect(mockRedis.setex).not.toHaveBeenCalled()
+    })
   })
 
   describe('getDriverLocation', () => {
@@ -150,6 +166,31 @@ describe('TrackingService', () => {
     })
   })
 
+  describe('getOrderDriverLocation', () => {
+    it('returns coordinates only when the driver is still assigned to that active order', async () => {
+      mockRedis.get
+        .mockResolvedValueOnce('order-1')
+        .mockResolvedValueOnce('2026-07-03T01:00:00.000Z')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-1' })
+      mockRedis.geopos.mockResolvedValueOnce([['106.7001', '10.8001']])
+
+      await expect(service.getOrderDriverLocation('order-1', 'driver-1')).resolves.toEqual({
+        lat: 10.8001,
+        lng: 106.7001,
+        timestamp: '2026-07-03T01:00:00.000Z',
+      })
+    })
+
+    it('does not leak a driver location when the active assignment belongs to another order', async () => {
+      mockRedis.get.mockResolvedValueOnce('order-2')
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-2' })
+
+      await expect(service.getOrderDriverLocation('order-1', 'driver-1')).resolves.toBeNull()
+
+      expect(mockRedis.geopos).not.toHaveBeenCalled()
+    })
+  })
+
   describe('location history flush', () => {
     it('binds one driver/order/lng/lat/timestamp parameter group per buffered location', async () => {
       mockRedis.get
@@ -162,10 +203,12 @@ describe('TrackingService', () => {
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000001', {
         lat: 10.8,
         lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
       })
       await service.handleLocationUpdate('00000000-0000-0000-0000-000000000002', {
         lat: 10.81,
         lng: 106.71,
+        timestamp: '2026-07-06T01:02:07.456Z',
       })
 
       await (service as unknown as { flush: () => Promise<void> }).flush()
@@ -218,6 +261,43 @@ describe('TrackingService', () => {
       expect(result).toEqual(mockRoute)
     })
 
+    it('persists provider distance, duration and geometry to the delivery task by phase', async () => {
+      const orderId = '10000000-0000-0000-0000-000000000001'
+
+      await (service as unknown as {
+        persistRouteToOrder: (
+          orderId: string,
+          phase: 'pickup' | 'dropoff',
+          route: typeof mockRoute,
+        ) => Promise<void>
+      }).persistRouteToOrder(orderId, 'dropoff', mockRoute)
+
+      expect(mockPrisma.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: {
+          routePolyline: mockRoute.polyline,
+          routeWaypoints: mockRoute.waypoints,
+        },
+      })
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+      const [query] = mockPrisma.$executeRaw.mock.calls[0]
+      expect(query.sql).toContain('UPDATE delivery_tasks')
+      expect(query.sql).toContain('delivery_distance_km')
+      expect(query.values).toEqual(
+        expect.arrayContaining([5, 'pickup', 900, 'dropoff', orderId]),
+      )
+      const routeJson = query.values.find(
+        (value: unknown) =>
+          typeof value === 'string' && value.includes('"provider"'),
+      ) as string
+      expect(JSON.parse(routeJson)).toMatchObject({
+        provider: 'google',
+        polyline: 'abcd',
+        distanceMeters: 5000,
+        durationSeconds: 900,
+      })
+    })
+
     it('keeps pickup and dropoff route cache entries separate', async () => {
       mockEtaCache.getRoute.mockResolvedValueOnce(null)
       mockDirectionsApi.fetchRoute.mockResolvedValueOnce(mockRoute)
@@ -261,7 +341,7 @@ describe('TrackingService', () => {
       expect(mockEtaQueue.add).toHaveBeenCalledWith(
         'recompute-route',
         expect.objectContaining({ orderId: 'ord-1', lat: 10.85, lng: 106.75, phase: 'dropoff' }),
-        expect.objectContaining({ jobId: 'recompute:ord-1:dropoff' }),
+        expect.objectContaining({ jobId: 'recompute-ord-1-dropoff' }),
       )
     })
 
@@ -276,6 +356,62 @@ describe('TrackingService', () => {
       })
       await service.maybeEnqueueRecompute('ord-1', 38.5, -120.2)
       expect(mockEtaQueue.add).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getPersistedRoute', () => {
+    it('returns only the route geometry for the requested delivery phase', async () => {
+      mockPrisma.deliveryTask.findUnique.mockResolvedValueOnce({
+        routeGeojson: {
+          pickup: {
+            provider: 'google',
+            polyline: 'pickup-polyline',
+            distanceMeters: 1200,
+            durationSeconds: 360,
+            waypoints: [{ lat: 10.77, lng: 106.68 }],
+          },
+          dropoff: {
+            provider: 'osrm',
+            polyline: 'dropoff-polyline',
+            distanceMeters: 4200,
+            durationSeconds: 840,
+            waypoints: [{ lat: 10.78, lng: 106.69 }],
+          },
+        },
+      })
+
+      await expect(service.getPersistedRoute('ord-1', 'dropoff')).resolves.toEqual({
+        provider: 'osrm',
+        polyline: 'dropoff-polyline',
+        distanceMeters: 4200,
+        durationSeconds: 840,
+        waypoints: [{ lat: 10.78, lng: 106.69 }],
+      })
+      expect(mockPrisma.deliveryTask.findUnique).toHaveBeenCalledWith({
+        where: { orderId: 'ord-1' },
+        select: { routeGeojson: true },
+      })
+    })
+
+    it('returns null for missing or malformed phase geometry', async () => {
+      mockPrisma.deliveryTask.findUnique.mockResolvedValueOnce({
+        routeGeojson: {
+          pickup: {
+            provider: 'google',
+            polyline: 'pickup-polyline',
+            distanceMeters: 1200,
+            durationSeconds: 360,
+            waypoints: [],
+          },
+          dropoff: {
+            provider: 'google',
+            distanceMeters: 4200,
+            durationSeconds: 840,
+          },
+        },
+      })
+
+      await expect(service.getPersistedRoute('ord-1', 'dropoff')).resolves.toBeNull()
     })
   })
 })

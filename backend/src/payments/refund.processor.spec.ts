@@ -1,51 +1,60 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { NotImplementedException } from '@nestjs/common'
-import { RefundProcessor, PaymentRefundJobData } from './refund.processor'
-import { PrismaService } from '../database/prisma.service'
-import { SepayProvider } from './providers/sepay.provider'
+import { PaymentMethod, PaymentStatus } from '@prisma/client'
 import type { Job } from 'bullmq'
+import { PrismaService } from '../database/prisma.service'
+import { RefundProcessor, type PaymentRefundJobData } from './refund.processor'
+import { SepayProvider } from './providers/sepay.provider'
 
 describe('RefundProcessor', () => {
-  let processor: RefundProcessor
-
-  const mockTx = {
-    $executeRaw: jest.fn().mockResolvedValue(undefined),
-    walletTransaction: {
-      create: jest.fn(),
-      aggregate: jest.fn().mockResolvedValue({ _sum: { amountDelta: 0 } }),
-    },
-    payment: { update: jest.fn() },
+  const request = {
+    id: 'refund-request-1',
+    refundKey: 'full-order-1',
+    orderId: 'order-1',
+    paymentId: 'payment-1',
+    amount: 50_000,
+    kind: 'full',
+    reason: 'customer request',
+    method: PaymentMethod.wallet,
+    status: 'queued',
+    attempts: 0,
+    processingJobId: null,
+    failureCode: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    completedAt: null,
+  }
+  const payment = {
+    id: 'payment-1',
+    orderId: 'order-1',
+    amount: 50_000,
+    method: PaymentMethod.wallet,
+    status: PaymentStatus.completed,
+    transactionId: 'TXN-001',
+    order: { customerId: 'customer-1', status: 'cancelled' },
+  }
+  const tx = {
+    $executeRaw: jest.fn(),
+    payment: { findUnique: jest.fn(), update: jest.fn() },
+    paymentRefundRequest: { aggregate: jest.fn(), update: jest.fn() },
+    walletTransaction: { create: jest.fn() },
     order: { update: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
     payoutLedger: { create: jest.fn() },
   }
-  const mockPrisma = {
+  const prisma = {
     payment: { findUnique: jest.fn() },
-    $transaction: jest.fn().mockImplementation(
-      (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
-    ),
+    paymentRefundRequest: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
   }
-  const mockSepay = { refund: jest.fn() }
-  const mockRedis = { get: jest.fn(), set: jest.fn() }
-
-  const makeJob = (data: PaymentRefundJobData) =>
-    ({ data } as Job<PaymentRefundJobData>)
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RefundProcessor,
-        { provide: PrismaService, useValue: mockPrisma },
-        { provide: SepayProvider, useValue: mockSepay },
-        { provide: 'REDIS_CLIENT', useValue: mockRedis },
-      ],
-    }).compile()
-
-    processor = module.get(RefundProcessor)
-    jest.clearAllMocks()
-    mockTx.$executeRaw.mockResolvedValue(undefined)
-    mockTx.walletTransaction.aggregate.mockResolvedValue({ _sum: { amountDelta: 0 } })
-  })
+  const sepay = { refund: jest.fn() }
+  const processor = new RefundProcessor(
+    prisma as unknown as PrismaService,
+    sepay as unknown as SepayProvider,
+  )
 
   const baseJobData: PaymentRefundJobData = {
     refundId: 'full-order-1',
@@ -54,159 +63,177 @@ describe('RefundProcessor', () => {
     amount: 50_000,
     reason: 'customer request',
     kind: 'full',
-    attemptNo: 1,
   }
+  const makeJob = (data: PaymentRefundJobData = baseJobData) => ({
+    id: `payment-refund-${data.refundId}`,
+    data,
+  }) as Job<PaymentRefundJobData>
 
-  const completedSepayPayment = {
-    orderId: 'order-1',
-    amount: 50_000,
-    method: 'sepay',
-    status: 'completed',
-    transactionId: 'TXN-001',
-    order: { customerId: 'customer-1', status: 'cancelled' },
-  }
-
-  it('skips processing when dedup key exists in Redis', async () => {
-    mockRedis.get.mockResolvedValueOnce('1')
-
-    await processor.process(makeJob(baseJobData))
-
-    expect(mockSepay.refund).not.toHaveBeenCalled()
-    expect(mockTx.payment.update).not.toHaveBeenCalled()
-  })
-
-  it('processes refund successfully and sets dedup key', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    mockPrisma.payment.findUnique.mockResolvedValueOnce(completedSepayPayment)
-    mockSepay.refund.mockResolvedValueOnce(undefined)
-    mockRedis.set.mockResolvedValueOnce('OK')
-
-    await processor.process(makeJob(baseJobData))
-
-    expect(mockTx.$executeRaw).toHaveBeenCalled()
-    expect(mockSepay.refund).toHaveBeenCalledWith('TXN-001', 50_000, 'customer request')
-    expect(mockTx.payment.update).toHaveBeenCalledWith({
-      where: { orderId: 'order-1' },
-      data: { status: 'refunded' },
-    })
-    expect(mockTx.order.update).toHaveBeenCalledWith({
-      where: { id: 'order-1' },
-      data: { status: 'refunded' },
-    })
-    expect(mockTx.payoutLedger.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ amount: -50_000, recipientType: 'platform' }),
-    })
-    expect(mockRedis.set).toHaveBeenCalledWith(
-      'refund:full-order-1:attempt:1',
-      '1',
-      'EX',
-      7 * 24 * 3600,
+  beforeEach(() => {
+    jest.clearAllMocks()
+    prisma.payment.findUnique.mockResolvedValue(payment)
+    prisma.paymentRefundRequest.findUnique.mockResolvedValue(null)
+    prisma.paymentRefundRequest.create.mockResolvedValue(request)
+    prisma.paymentRefundRequest.updateMany.mockResolvedValue({ count: 1 })
+    prisma.paymentRefundRequest.update.mockResolvedValue(request)
+    prisma.$transaction.mockImplementation(
+      (fn: (client: typeof tx) => Promise<unknown>) => fn(tx),
     )
+    tx.$executeRaw.mockResolvedValue(1)
+    tx.payment.findUnique.mockResolvedValue(payment)
+    tx.payment.update.mockResolvedValue({})
+    tx.paymentRefundRequest.aggregate.mockResolvedValue({ _sum: { amount: null } })
+    tx.paymentRefundRequest.update.mockResolvedValue(request)
+    tx.walletTransaction.create.mockResolvedValue({})
+    tx.order.update.mockResolvedValue({})
+    tx.orderStatusHistory.create.mockResolvedValue({})
+    tx.payoutLedger.create.mockResolvedValue({})
   })
 
-  it('credits wallet refunds without calling SePay or marking a partial refund as fully refunded', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    mockPrisma.payment.findUnique.mockResolvedValueOnce({
-      ...completedSepayPayment,
-      method: 'wallet',
-      amount: 100_000,
-      order: { customerId: 'customer-1', status: 'preparing' },
+  it('completes a wallet refund atomically with durable request and ledger keys', async () => {
+    await processor.process(makeJob())
+
+    expect(prisma.paymentRefundRequest.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        refundKey: 'full-order-1',
+        paymentId: 'payment-1',
+        method: PaymentMethod.wallet,
+      }),
+    })
+    expect(tx.walletTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        refundRequestId: 'refund-request-1',
+        userId: 'customer-1',
+        amountDelta: 50_000,
+      }),
+    })
+    expect(tx.payment.update).toHaveBeenCalledWith({
+      where: { orderId: 'order-1' },
+      data: { status: PaymentStatus.refunded },
+    })
+    expect(tx.payoutLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        dedupeKey: 'refund-refund-request-1-platform',
+        refundRequestId: 'refund-request-1',
+        amount: -50_000,
+      }),
+    })
+    expect(tx.paymentRefundRequest.update).toHaveBeenLastCalledWith({
+      where: { id: 'refund-request-1' },
+      data: expect.objectContaining({ status: 'completed', failureCode: null }),
+    })
+  })
+
+  it('does not replay an already completed durable refund request', async () => {
+    prisma.paymentRefundRequest.findUnique.mockResolvedValueOnce({
+      ...request,
+      status: 'completed',
     })
 
-    await processor.process(makeJob({
+    await processor.process(makeJob())
+
+    expect(prisma.paymentRefundRequest.updateMany).not.toHaveBeenCalled()
+    expect(prisma.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('routes SePay bank-transfer refunds to audited manual review without mutating payment state', async () => {
+    const sepayPayment = { ...payment, method: PaymentMethod.sepay }
+    prisma.payment.findUnique.mockResolvedValueOnce(sepayPayment)
+    prisma.paymentRefundRequest.create.mockResolvedValueOnce({
+      ...request,
+      method: PaymentMethod.sepay,
+    })
+    sepay.refund.mockRejectedValueOnce(
+      new Error('SEPAY_BANK_TRANSFER_REFUND_REQUIRES_MANUAL_REVIEW'),
+    )
+
+    await processor.process(makeJob())
+
+    expect(prisma.paymentRefundRequest.update).toHaveBeenCalledWith({
+      where: { id: 'refund-request-1' },
+      data: {
+        status: 'manual_review',
+        failureCode: 'SEPAY_BANK_TRANSFER_REFUND_REQUIRES_MANUAL_REVIEW',
+      },
+    })
+    expect(prisma.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('keeps a partial wallet refund from marking the full order refunded', async () => {
+    const data: PaymentRefundJobData = {
       ...baseJobData,
       refundId: 'partial-order-1-item-1',
       amount: 30_000,
       kind: 'partial',
-      reason: 'item unavailable',
-    }))
-
-    expect(mockSepay.refund).not.toHaveBeenCalled()
-    expect(mockTx.$executeRaw).toHaveBeenCalled()
-    expect(mockTx.walletTransaction.aggregate).toHaveBeenCalled()
-    expect(mockTx.walletTransaction.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: 'customer-1',
-        amountDelta: 30_000,
-        type: 'credit',
-        reason: 'order_refund',
-        refId: 'order-1',
-      }),
+    }
+    prisma.paymentRefundRequest.create.mockResolvedValueOnce({
+      ...request,
+      refundKey: data.refundId,
+      amount: data.amount,
+      kind: data.kind,
     })
-    expect(mockTx.payment.update).not.toHaveBeenCalled()
-    expect(mockTx.order.update).not.toHaveBeenCalled()
-    expect(mockTx.orderStatusHistory.create).toHaveBeenCalledWith({
+
+    await processor.process(makeJob(data))
+
+    expect(tx.payment.update).not.toHaveBeenCalled()
+    expect(tx.order.update).not.toHaveBeenCalled()
+    expect(tx.orderStatusHistory.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        status: 'preparing',
+        status: 'cancelled',
         note: expect.stringContaining('Partial refund processed'),
       }),
     })
   })
 
-  it('credits wallet when SePay refund is not modelled (SEPAY_REFUND_NOT_MODELLED recovery)', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    mockPrisma.payment.findUnique.mockResolvedValueOnce(completedSepayPayment)
-    mockSepay.refund.mockRejectedValueOnce(new NotImplementedException('SEPAY_REFUND_NOT_MODELLED'))
+  it('moves over-refunds to manual review under the per-order advisory lock', async () => {
+    tx.payment.findUnique.mockResolvedValueOnce({ ...payment, amount: 100_000 })
+    tx.paymentRefundRequest.aggregate.mockResolvedValueOnce({ _sum: { amount: 75_000 } })
 
-    await processor.process(makeJob(baseJobData))
+    await processor.process(makeJob())
 
-    expect(mockTx.walletTransaction.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: 'customer-1',
-        amountDelta: 50_000,
-        type: 'credit',
-        reason: 'sepay_refund_wallet_recovery',
-        refId: 'order-1',
-        status: 'CONFIRMED',
-      }),
-    })
-    expect(mockTx.payment.update).toHaveBeenCalledWith({
-      where: { orderId: 'order-1' },
-      data: { status: 'refunded' },
+    expect(tx.walletTransaction.create).not.toHaveBeenCalled()
+    expect(tx.paymentRefundRequest.update).toHaveBeenCalledWith({
+      where: { id: 'refund-request-1' },
+      data: {
+        status: 'manual_review',
+        failureCode: 'REFUND_AMOUNT_EXCEEDS_REMAINING_CAPTURE',
+      },
     })
   })
 
-  it('rejects cumulative over-refund after advisory lock', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    mockPrisma.payment.findUnique.mockResolvedValueOnce({
-      ...completedSepayPayment,
-      method: 'wallet',
-      amount: 100_000,
-      order: { customerId: 'customer-1', status: 'preparing' },
-    })
-    // Already refunded 80k; next 30k would exceed 100k cap
-    mockTx.walletTransaction.aggregate.mockResolvedValueOnce({
-      _sum: { amountDelta: 80_000 },
+  it('fails conflicting reuse of a refund id without processing money', async () => {
+    prisma.paymentRefundRequest.findUnique.mockResolvedValueOnce({
+      ...request,
+      amount: 1,
     })
 
-    await expect(
-      processor.process(makeJob({
-        ...baseJobData,
-        refundId: 'partial-over',
-        amount: 30_000,
-        kind: 'partial',
-      })),
-    ).rejects.toThrow(/Cumulative refund would exceed payment/)
-
-    expect(mockTx.$executeRaw).toHaveBeenCalled()
-    expect(mockTx.walletTransaction.create).not.toHaveBeenCalled()
+    await expect(processor.process(makeJob())).rejects.toThrow('REFUND_REQUEST_CONFLICT')
+    expect(prisma.paymentRefundRequest.updateMany).not.toHaveBeenCalled()
+    expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 
-  it('returns early when attemptNo exceeds max retries (3)', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    const job = makeJob({ ...baseJobData, attemptNo: 4 })
-
-    await processor.process(job)
-
-    expect(mockSepay.refund).not.toHaveBeenCalled()
+  it.each([0, -1, 1.5, Number.NaN])('rejects invalid refund amount %s', async amount => {
+    await expect(processor.process(makeJob({ ...baseJobData, amount })))
+      .rejects.toThrow('REFUND_AMOUNT_INVALID')
+    expect(prisma.payment.findUnique).not.toHaveBeenCalled()
   })
 
-  it('throws on SePay failure so BullMQ can retry', async () => {
-    mockRedis.get.mockResolvedValueOnce(null)
-    mockPrisma.payment.findUnique.mockResolvedValueOnce(completedSepayPayment)
-    mockSepay.refund.mockRejectedValueOnce(new Error('gateway timeout'))
+  it('marks transient provider failures retryable without exposing raw details in the database', async () => {
+    const sepayPayment = { ...payment, method: PaymentMethod.sepay }
+    prisma.payment.findUnique.mockResolvedValueOnce(sepayPayment)
+    prisma.paymentRefundRequest.create.mockResolvedValueOnce({
+      ...request,
+      method: PaymentMethod.sepay,
+    })
+    sepay.refund.mockRejectedValueOnce(new Error('upstream included sensitive response'))
 
-    await expect(processor.process(makeJob(baseJobData))).rejects.toThrow('gateway timeout')
-    expect(mockTx.payment.update).not.toHaveBeenCalled()
+    await expect(processor.process(makeJob())).rejects.toThrow('upstream included sensitive response')
+    expect(prisma.paymentRefundRequest.updateMany).toHaveBeenLastCalledWith({
+      where: { id: 'refund-request-1', status: 'processing' },
+      data: {
+        status: 'failed',
+        failureCode: 'REFUND_PROCESSING_FAILED',
+      },
+    })
   })
 })

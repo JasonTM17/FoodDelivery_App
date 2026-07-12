@@ -4,6 +4,7 @@ import { AiChatService } from './ai-chat.service'
 describe('AiController', () => {
   const chat = {
     createReply: jest.fn(),
+    getHistory: jest.fn(),
   }
   const controller = new AiController(chat as unknown as AiChatService)
 
@@ -29,5 +30,17 @@ describe('AiController', () => {
     )
     expect(result.reply).toBe('Tracked by the AI service')
     expect(result.reply).not.toContain('user-1')
+  })
+
+  it('delegates scoped history reads to AiChatService', async () => {
+    chat.getHistory.mockResolvedValue({ sessionId: 'session-1', messages: [] })
+
+    const result = await controller.history(
+      { sub: 'user-1', role: 'customer' },
+      'session-1',
+    )
+
+    expect(chat.getHistory).toHaveBeenCalledWith({ sub: 'user-1', role: 'customer' }, 'session-1')
+    expect(result).toEqual({ sessionId: 'session-1', messages: [] })
   })
 })

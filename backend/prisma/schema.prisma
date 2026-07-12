@@ -99,8 +99,14 @@ enum ChatSenderType {
   customer
   driver
   restaurant
+  admin
   ai
   system
+}
+
+enum AiUsageOutcome {
+  succeeded
+  failed
 }
 
 enum ChatSessionType {
@@ -211,39 +217,41 @@ model User {
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
 
-  customerProfile       CustomerProfile?
-  driverProfile         DriverProfile?
-  restaurantProfile     RestaurantProfile?
-  addresses             Address[]
-  reviews               Review[]                @relation("ReviewCustomer")
-  driverReviews         Review[]                @relation("ReviewDriver")
-  notifications         Notification[]
-  loyaltyTransactions   LoyaltyTransaction[]
-  walletTransactions    WalletTransaction[]
-  referralCode          ReferralCode?
-  referralAsReferrer    ReferralRedemption[]    @relation("Referrer")
-  referralAsInvitee     ReferralRedemption[]    @relation("Invitee")
-  chatSessions          ChatSession[]
-  ordersAsCustomer      Order[]                 @relation("CustomerOrders")
-  ordersAsDriver        Order[]                 @relation("DriverOrders")
-  deliveryTasks         DeliveryTask[]
-  driverLocationHistory DriverLocationHistory[]
-  supportTickets        AiSupportTicket[]
-  assignedSupportTickets AiSupportTicket[]       @relation("SupportAssignee")
-  supportMessages       SupportTicketMessage[]
-  auditLogs             AdminAuditLog[]
-  requestedExports      AdminExportJob[]
+  customerProfile         CustomerProfile?
+  driverProfile           DriverProfile?
+  restaurantProfile       RestaurantProfile?
+  addresses               Address[]
+  reviews                 Review[]                 @relation("ReviewCustomer")
+  driverReviews           Review[]                 @relation("ReviewDriver")
+  notifications           Notification[]
+  loyaltyTransactions     LoyaltyTransaction[]
+  walletTransactions      WalletTransaction[]
+  referralCode            ReferralCode?
+  referralAsReferrer      ReferralRedemption[]     @relation("Referrer")
+  referralAsInvitee       ReferralRedemption[]     @relation("Invitee")
+  chatSessions            ChatSession[]
+  ordersAsCustomer        Order[]                  @relation("CustomerOrders")
+  ordersAsDriver          Order[]                  @relation("DriverOrders")
+  deliveryTasks           DeliveryTask[]
+  driverLocationHistory   DriverLocationHistory[]
+  supportTickets          AiSupportTicket[]
+  assignedSupportTickets  AiSupportTicket[]        @relation("SupportAssignee")
+  supportMessages         SupportTicketMessage[]
+  auditLogs               AdminAuditLog[]
+  requestedExports        AdminExportJob[]
   updatedPlatformSettings PlatformSetting[]
-  createdStaffInvites   StaffInvite[]             @relation("StaffInviteCreator")
-  reviewedKycSubmissions DriverKycSubmission[]     @relation("KycReviewer")
-  driverBankAccounts    DriverBankAccount[]
-  driverTipReports      DriverTipReport[]
-  promotionUsages       PromotionUsage[]
-  cart                  Cart?
-  notificationSettings  NotificationSetting[]
+  createdStaffInvites     StaffInvite[]            @relation("StaffInviteCreator")
+  reviewedKycSubmissions  DriverKycSubmission[]    @relation("KycReviewer")
+  driverBankAccounts      DriverBankAccount[]
+  driverTipReports        DriverTipReport[]
+  promotionUsages         PromotionUsage[]
+  cart                    Cart?
+  notificationSettings    NotificationSetting[]
   emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens    PasswordResetToken[]
-  fcmTokens             UserFcmToken[]
+  passwordResetTokens     PasswordResetToken[]
+  fcmTokens               UserFcmToken[]
+  aiUsageEvents           AiUsageEvent[]
+  dispatchOffers          DispatchOffer[]
 
   @@index([email])
   @@index([phone])
@@ -316,8 +324,8 @@ model RestaurantProfile {
   joinedAt              DateTime  @default(now()) @map("joined_at") @db.Timestamptz()
   onboardingCompletedAt DateTime? @map("onboarding_completed_at") @db.Timestamptz()
 
-  user       User       @relation(fields: [userId], references: [id])
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  user       User         @relation(fields: [userId], references: [id])
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id])
   shifts     StaffShift[]
 
   @@index([restaurantId, staffRole, isActive])
@@ -352,16 +360,16 @@ model Restaurant {
   createdAt          DateTime                              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime                              @updatedAt @map("updated_at") @db.Timestamptz()
 
-  profiles     RestaurantProfile[]
-  openingHours RestaurantOpeningHour[]
+  profiles        RestaurantProfile[]
+  openingHours    RestaurantOpeningHour[]
   holidayClosures RestaurantHolidayClosure[]
-  categories   Category[]
-  menuItems    MenuItem[]
-  orders       Order[]
-  reviews      Review[]
-  promotions   Promotion[]
-  staffInvites StaffInvite[]
-  staffShifts  StaffShift[]
+  categories      Category[]
+  menuItems       MenuItem[]
+  orders          Order[]
+  reviews         Review[]
+  promotions      Promotion[]
+  staffInvites    StaffInvite[]
+  staffShifts     StaffShift[]
 
   @@index([city])
   @@index([approvalStatus, createdAt(sort: Desc)])
@@ -447,10 +455,10 @@ model Category {
   sortOrder    Int      @default(0) @map("sort_order")
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
-  parent     Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children   Category[] @relation("CategoryTree")
-  menuItems  MenuItem[]
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id])
+  parent         Category?       @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Category[]      @relation("CategoryTree")
+  menuItems      MenuItem[]
   promotionItems PromotionItem[]
 
   @@index([restaurantId, parentId, sortOrder])
@@ -471,11 +479,11 @@ model MenuItem {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  restaurant Restaurant       @relation(fields: [restaurantId], references: [id])
-  category   Category         @relation(fields: [categoryId], references: [id])
-  options    MenuItemOption[]
-  orderItems OrderItem[]
-  cartItems  CartItem[]
+  restaurant     Restaurant       @relation(fields: [restaurantId], references: [id])
+  category       Category         @relation(fields: [categoryId], references: [id])
+  options        MenuItemOption[]
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
   promotionItems PromotionItem[]
 
   @@index([restaurantId, categoryId, sortOrder])
@@ -561,21 +569,24 @@ model Order {
   createdAt                    DateTime      @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                    DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
 
-  customer        User                 @relation("CustomerOrders", fields: [customerId], references: [id])
-  restaurant      Restaurant           @relation(fields: [restaurantId], references: [id])
-  driver          User?                @relation("DriverOrders", fields: [driverId], references: [id])
-  deliveryAddress Address              @relation(fields: [deliveryAddressId], references: [id])
-  orderItems      OrderItem[]
-  statusHistory   OrderStatusHistory[]
-  payment         Payment?
-  paymentIntent   PaymentIntent?
-  payoutLedgers   PayoutLedger[]
-  deliveryTask    DeliveryTask?
-  driverTipReports DriverTipReport[]
-  reviews         Review[]
-  supportTickets  AiSupportTicket[]
-  promotionUsages PromotionUsage[]
-  chatSessions    ChatSession[]
+  customer               User                    @relation("CustomerOrders", fields: [customerId], references: [id])
+  restaurant             Restaurant              @relation(fields: [restaurantId], references: [id])
+  driver                 User?                   @relation("DriverOrders", fields: [driverId], references: [id])
+  deliveryAddress        Address                 @relation(fields: [deliveryAddressId], references: [id])
+  orderItems             OrderItem[]
+  statusHistory          OrderStatusHistory[]
+  payment                Payment?
+  paymentIntent          PaymentIntent?
+  paymentWebhookReceipts PaymentWebhookReceipt[]
+  refundRequests         PaymentRefundRequest[]
+  payoutLedgers          PayoutLedger[]
+  deliveryTask           DeliveryTask?
+  driverTipReports       DriverTipReport[]
+  reviews                Review[]
+  supportTickets         AiSupportTicket[]
+  promotionUsages        PromotionUsage[]
+  chatSessions           ChatSession[]
+  dispatchOffers         DispatchOffer[]
 
   @@index([customerId, createdAt(sort: Desc)])
   @@index([restaurantId, status])
@@ -608,7 +619,8 @@ model OrderStatusHistory {
   note      String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order          Order                  @relation(fields: [orderId], references: [id])
+  refundRequests PaymentRefundRequest[]
 
   @@index([orderId, createdAt])
   @@map("order_status_history")
@@ -624,7 +636,8 @@ model Payment {
   paidAt        DateTime?     @map("paid_at") @db.Timestamptz()
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order                 Order                  @relation(fields: [orderId], references: [id])
+  paymentRefundRequests PaymentRefundRequest[]
 
   @@map("payments")
 }
@@ -649,6 +662,21 @@ model DeliveryTask {
   driver User  @relation(fields: [driverId], references: [id])
 
   @@map("delivery_tasks")
+}
+
+model DriverIncentiveCampaign {
+  id           String   @id @default(uuid()) @db.Uuid
+  title        String   @db.VarChar(150)
+  rewardAmount Int      @map("reward_amount")
+  targetOrders Int      @map("target_orders")
+  startsAt     DateTime @map("starts_at") @db.Timestamptz()
+  endsAt       DateTime @map("ends_at") @db.Timestamptz()
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([isActive, startsAt, endsAt])
+  @@map("driver_incentive_campaigns")
 }
 
 model DriverLocationHistory {
@@ -705,33 +733,33 @@ model Review {
 }
 
 model Promotion {
-  id                String        @id @default(uuid()) @db.Uuid
-  code              String        @unique @db.VarChar(50)
-  name              String        @default("") @db.VarChar(150)
-  description       String?       @db.Text
+  id                String          @id @default(uuid()) @db.Uuid
+  code              String          @unique @db.VarChar(50)
+  name              String          @default("") @db.VarChar(150)
+  description       String?         @db.Text
   type              PromotionType
   status            PromotionStatus @default(active)
-  value             Decimal       @db.Decimal(10, 0)
-  minOrderAmount    Decimal       @default(0) @map("min_order_amount") @db.Decimal(10, 0)
-  maxDiscount       Decimal?      @map("max_discount") @db.Decimal(10, 0)
-  usageLimit        Int           @map("usage_limit")
-  usageCount        Int           @default(0) @map("usage_count")
-  currentUsageCount Int           @default(0) @map("current_usage_count")
-  maxPerUser        Int?          @map("max_per_user")
-  firstOrderOnly    Boolean       @default(false) @map("first_order_only")
-  isStackable       Boolean       @default(false) @map("is_stackable")
-  budget            Decimal?      @db.Decimal(12, 0)
-  usedBudget        Decimal       @default(0) @map("used_budget") @db.Decimal(12, 0)
-  recurrence        Json?         @db.JsonB
-  targeting         Json?         @db.JsonB
-  channels          String[]      @default([])
-  restaurantId      String?       @map("restaurant_id") @db.Uuid
-  createdById       String?       @map("created_by_id") @db.Uuid
-  startsAt          DateTime      @map("starts_at") @db.Timestamptz()
-  expiresAt         DateTime      @map("expires_at") @db.Timestamptz()
-  isActive          Boolean       @default(true) @map("is_active")
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+  value             Decimal         @db.Decimal(10, 0)
+  minOrderAmount    Decimal         @default(0) @map("min_order_amount") @db.Decimal(10, 0)
+  maxDiscount       Decimal?        @map("max_discount") @db.Decimal(10, 0)
+  usageLimit        Int             @map("usage_limit")
+  usageCount        Int             @default(0) @map("usage_count")
+  currentUsageCount Int             @default(0) @map("current_usage_count")
+  maxPerUser        Int?            @map("max_per_user")
+  firstOrderOnly    Boolean         @default(false) @map("first_order_only")
+  isStackable       Boolean         @default(false) @map("is_stackable")
+  budget            Decimal?        @db.Decimal(12, 0)
+  usedBudget        Decimal         @default(0) @map("used_budget") @db.Decimal(12, 0)
+  recurrence        Json?           @db.JsonB
+  targeting         Json?           @db.JsonB
+  channels          String[]        @default([])
+  restaurantId      String?         @map("restaurant_id") @db.Uuid
+  createdById       String?         @map("created_by_id") @db.Uuid
+  startsAt          DateTime        @map("starts_at") @db.Timestamptz()
+  expiresAt         DateTime        @map("expires_at") @db.Timestamptz()
+  isActive          Boolean         @default(true) @map("is_active")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
 
   restaurant Restaurant?      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   usages     PromotionUsage[]
@@ -800,9 +828,10 @@ model ChatSession {
   createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   closedAt  DateTime?       @map("closed_at") @db.Timestamptz()
 
-  user     User          @relation(fields: [userId], references: [id])
-  order    Order?        @relation(fields: [orderId], references: [id])
-  messages ChatMessage[]
+  user        User           @relation(fields: [userId], references: [id])
+  order       Order?         @relation(fields: [orderId], references: [id])
+  messages    ChatMessage[]
+  usageEvents AiUsageEvent[]
 
   @@map("chat_sessions")
 }
@@ -821,28 +850,50 @@ model ChatMessage {
   @@map("chat_messages")
 }
 
-model AiSupportTicket {
-  id              String          @id @default(uuid()) @db.Uuid
-  userId          String          @map("user_id") @db.Uuid
-  orderId         String?         @map("order_id") @db.Uuid
-  issueType       TicketIssueType @map("issue_type")
-  summary         String          @db.Text
-  priority        TicketPriority  @default(medium)
-  status          TicketStatus    @default(open)
-  assignedAdminId String?         @map("assigned_admin_id") @db.Uuid
-  channel         SupportChannel  @default(in_app)
-  tags            String[]        @default([])
-  resolutionNotes String?         @map("resolution_notes") @db.Text
-  firstRespondedAt DateTime?      @map("first_responded_at") @db.Timestamptz()
-  waitingStartedAt DateTime?      @map("waiting_started_at") @db.Timestamptz()
-  slaDeadlineAt   DateTime?       @map("sla_deadline_at") @db.Timestamptz()
-  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
-  resolvedAt      DateTime?       @map("resolved_at") @db.Timestamptz()
+model AiUsageEvent {
+  id           String         @id @default(uuid()) @db.Uuid
+  sessionId    String?        @map("session_id") @db.Uuid
+  userId       String?        @map("user_id") @db.Uuid
+  provider     String         @db.VarChar(64)
+  model        String         @db.VarChar(128)
+  outcome      AiUsageOutcome
+  inputTokens  Int?           @map("input_tokens")
+  outputTokens Int?           @map("output_tokens")
+  latencyMs    Int            @map("latency_ms")
+  errorCode    String?        @map("error_code") @db.VarChar(128)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
 
-  user          User                  @relation(fields: [userId], references: [id])
-  assignedAdmin User?                 @relation("SupportAssignee", fields: [assignedAdminId], references: [id])
-  order         Order?                @relation(fields: [orderId], references: [id])
+  session ChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([provider, outcome, createdAt])
+  @@index([userId, createdAt])
+  @@map("ai_usage_events")
+}
+
+model AiSupportTicket {
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @map("user_id") @db.Uuid
+  orderId          String?         @map("order_id") @db.Uuid
+  issueType        TicketIssueType @map("issue_type")
+  summary          String          @db.Text
+  priority         TicketPriority  @default(medium)
+  status           TicketStatus    @default(open)
+  assignedAdminId  String?         @map("assigned_admin_id") @db.Uuid
+  channel          SupportChannel  @default(in_app)
+  tags             String[]        @default([])
+  resolutionNotes  String?         @map("resolution_notes") @db.Text
+  firstRespondedAt DateTime?       @map("first_responded_at") @db.Timestamptz()
+  waitingStartedAt DateTime?       @map("waiting_started_at") @db.Timestamptz()
+  slaDeadlineAt    DateTime?       @map("sla_deadline_at") @db.Timestamptz()
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
+  resolvedAt       DateTime?       @map("resolved_at") @db.Timestamptz()
+
+  user          User                   @relation(fields: [userId], references: [id])
+  assignedAdmin User?                  @relation("SupportAssignee", fields: [assignedAdminId], references: [id])
+  order         Order?                 @relation(fields: [orderId], references: [id])
   messages      SupportTicketMessage[]
   csat          SupportCsatResponse?
 
@@ -896,20 +947,20 @@ model SupportCsatResponse {
 }
 
 model AdminAuditLog {
-  id         BigInt   @id @default(autoincrement()) @db.BigInt
-  adminId    String   @map("admin_id") @db.Uuid
-  action     String   @db.VarChar(100)
-  targetType String   @map("target_type") @db.VarChar(50)
-  targetId   String?  @map("target_id") @db.Uuid
-  oldValue   Json?    @map("old_value") @db.JsonB
-  newValue   Json?    @map("new_value") @db.JsonB
-  ipAddress  String   @map("ip_address") @db.Inet
-  userAgent  String?  @map("user_agent") @db.VarChar(500)
-  correlationId String? @map("correlation_id") @db.VarChar(100)
-  severity   String   @default("info") @db.VarChar(20)
-  metadata   Json?    @db.JsonB
-  searchVector Unsupported("tsvector")? @map("search_vector")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id            BigInt                   @id @default(autoincrement()) @db.BigInt
+  adminId       String                   @map("admin_id") @db.Uuid
+  action        String                   @db.VarChar(100)
+  targetType    String                   @map("target_type") @db.VarChar(50)
+  targetId      String?                  @map("target_id") @db.Uuid
+  oldValue      Json?                    @map("old_value") @db.JsonB
+  newValue      Json?                    @map("new_value") @db.JsonB
+  ipAddress     String                   @map("ip_address") @db.Inet
+  userAgent     String?                  @map("user_agent") @db.VarChar(500)
+  correlationId String?                  @map("correlation_id") @db.VarChar(100)
+  severity      String                   @default("info") @db.VarChar(20)
+  metadata      Json?                    @db.JsonB
+  searchVector  Unsupported("tsvector")? @map("search_vector")
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
 
   admin User @relation(fields: [adminId], references: [id])
 
@@ -917,6 +968,66 @@ model AdminAuditLog {
   @@index([targetType, targetId])
   @@index([correlationId])
   @@map("admin_audit_logs")
+}
+
+model RealtimeOutbox {
+  id          String    @id @default(uuid()) @db.Uuid
+  channel     String
+  event       String
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deliveredAt DateTime? @map("delivered_at")
+  error       String?
+
+  @@index([channel, createdAt])
+  @@map("realtime_outbox")
+}
+
+model JobOutbox {
+  id          String    @id @default(uuid()) @db.Uuid
+  queue       String
+  dedupeKey   String?   @map("dedupe_key") @db.VarChar(200)
+  name        String
+  payload     Json
+  options     Json?
+  status      String    @default("queued")
+  attempts    Int       @default(0)
+  runAt       DateTime  @default(now()) @map("run_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+  failedAt    DateTime? @map("failed_at")
+  error       String?
+
+  @@unique([queue, dedupeKey])
+  @@index([queue, status, runAt])
+  @@map("job_outbox")
+}
+
+model DispatchOffer {
+  id              String    @id @default(uuid()) @db.Uuid
+  orderId         String    @map("order_id") @db.Uuid
+  driverId        String    @map("driver_id") @db.Uuid
+  tokenHash       String    @map("token_hash") @db.Char(64)
+  status          String    @default("pending") @db.VarChar(20)
+  attempt         Int       @db.SmallInt
+  restaurantLat   Float     @map("restaurant_lat")
+  restaurantLng   Float     @map("restaurant_lng")
+  distanceKm      Float     @map("distance_km")
+  driverRating    Float     @map("driver_rating")
+  totalDeliveries Int       @map("total_deliveries")
+  surgeMultiplier Float     @map("surge_multiplier")
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz()
+  respondedAt     DateTime? @map("responded_at") @db.Timestamptz()
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver User  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, status])
+  @@index([driverId, status, expiresAt])
+  @@map("dispatch_offers")
 }
 
 model AdminExportJob {
@@ -986,12 +1097,12 @@ model EmailVerificationToken {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  token     String   @unique @db.VarChar(128)
-  expiresAt DateTime @map("expires_at") @db.Timestamptz()
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar(128)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz()
   usedAt    DateTime? @map("used_at") @db.Timestamptz()
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1043,14 +1154,69 @@ model PaymentIntent {
   expiresAt      DateTime @map("expires_at") @db.Timestamptz()
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order           Order                   @relation(fields: [orderId], references: [id])
+  webhookReceipts PaymentWebhookReceipt[]
 
   @@map("payment_intents")
 }
 
+model PaymentWebhookReceipt {
+  id                    String    @id @default(uuid()) @db.Uuid
+  provider              String    @db.VarChar(20)
+  providerTransactionId String    @map("provider_transaction_id") @db.VarChar(100)
+  paymentIntentId       String?   @map("payment_intent_id") @db.Uuid
+  orderId               String?   @map("order_id") @db.Uuid
+  amount                Int
+  bankReference         String?   @map("bank_reference") @db.VarChar(100)
+  status                String    @default("processing") @db.VarChar(20)
+  failureCode           String?   @map("failure_code") @db.VarChar(100)
+  receivedAt            DateTime  @default(now()) @map("received_at") @db.Timestamptz()
+  processedAt           DateTime? @map("processed_at") @db.Timestamptz()
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  paymentIntent PaymentIntent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  order         Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerTransactionId])
+  @@index([orderId, receivedAt(sort: Desc)])
+  @@index([status, updatedAt])
+  @@map("payment_webhook_receipts")
+}
+
+model PaymentRefundRequest {
+  id              String        @id @default(uuid()) @db.Uuid
+  refundKey       String        @unique @map("refund_key") @db.VarChar(200)
+  orderId         String        @map("order_id") @db.Uuid
+  paymentId       String        @map("payment_id") @db.Uuid
+  amount          Int
+  kind            String        @db.VarChar(20)
+  reason          String        @db.Text
+  method          PaymentMethod
+  status          String        @default("queued") @db.VarChar(20)
+  attempts        Int           @default(0)
+  processingJobId String?       @map("processing_job_id") @db.VarChar(200)
+  failureCode     String?       @map("failure_code") @db.VarChar(100)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+  completedAt     DateTime?     @map("completed_at") @db.Timestamptz()
+
+  order                Order               @relation(fields: [orderId], references: [id])
+  payment              Payment             @relation(fields: [paymentId], references: [id])
+  walletTransaction    WalletTransaction?
+  payoutLedger         PayoutLedger?
+  orderStatusHistory   OrderStatusHistory? @relation(fields: [orderStatusHistoryId], references: [id])
+  orderStatusHistoryId String?             @db.Uuid
+
+  @@index([orderId, status])
+  @@index([status, updatedAt])
+  @@map("payment_refund_requests")
+}
+
 model PayoutLedger {
   id                String    @id @default(uuid()) @db.Uuid
+  dedupeKey         String    @unique @map("dedupe_key") @db.VarChar(200)
   orderId           String    @map("order_id") @db.Uuid
+  refundRequestId   String?   @unique @map("refund_request_id") @db.Uuid
   recipientType     String    @map("recipient_type") @db.VarChar(20)
   recipientId       String?   @map("recipient_id") @db.Uuid
   amount            Int
@@ -1060,7 +1226,8 @@ model PayoutLedger {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   settledAt         DateTime? @map("settled_at") @db.Timestamptz()
 
-  order Order @relation(fields: [orderId], references: [id])
+  order         Order                 @relation(fields: [orderId], references: [id])
+  refundRequest PaymentRefundRequest? @relation(fields: [refundRequestId], references: [id], onDelete: SetNull)
 
   @@unique([orderId, recipientType, recipientId])
   @@index([orderId])
@@ -1112,15 +1279,17 @@ enum WalletTxnType {
 }
 
 model WalletTransaction {
-  id          String        @id @default(uuid()) @db.Uuid
-  userId      String        @map("user_id") @db.Uuid
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amountDelta Int           @map("amount_delta")
-  type        WalletTxnType
-  reason      String
-  refId       String?       @map("ref_id") @db.Uuid
-  status      String        @default("CONFIRMED") @db.VarChar(20)
-  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @map("user_id") @db.Uuid
+  refundRequestId String?               @unique @map("refund_request_id") @db.Uuid
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refundRequest   PaymentRefundRequest? @relation(fields: [refundRequestId], references: [id], onDelete: SetNull)
+  amountDelta     Int                   @map("amount_delta")
+  type            WalletTxnType
+  reason          String
+  refId           String?               @map("ref_id") @db.Uuid
+  status          String                @default("CONFIRMED") @db.VarChar(20)
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([userId, status])
   @@index([userId, createdAt(sort: Desc)])
@@ -1156,12 +1325,12 @@ model ReferralRedemption {
 }
 
 model IdempotencyRequest {
-  id              String   @id @default(uuid()) @db.Uuid
-  userId          String?  @map("user_id") @db.Uuid
-  idempotencyKey  String   @map("idempotency_key") @db.VarChar(64)
-  statusCode      Int      @map("status_code")
-  responseBody    Json     @map("response_body") @db.JsonB
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  idempotencyKey String   @map("idempotency_key") @db.VarChar(64)
+  statusCode     Int      @map("status_code")
+  responseBody   Json     @map("response_body") @db.JsonB
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@unique([userId, idempotencyKey])
   @@index([userId])

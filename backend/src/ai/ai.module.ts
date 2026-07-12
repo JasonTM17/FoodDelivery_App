@@ -9,6 +9,7 @@ import { ConversationMemoryService } from './conversation-memory.service'
 import { SentimentDetectionService } from './sentiment-detection.service'
 import { ToolJustificationService } from './tool-justification.service'
 import { OutputFilterService } from './output-filter.service'
+import { AiUsageTelemetryService } from './ai-usage-telemetry.service'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { RagModule } from './rag/rag.module'
 
@@ -24,6 +25,7 @@ import { RagModule } from './rag/rag.module'
     SentimentDetectionService,
     ToolJustificationService,
     OutputFilterService,
+    AiUsageTelemetryService,
   ],
   exports: [AiChatService, ConversationMemoryService, SentimentDetectionService, ToolJustificationService, OutputFilterService],
 })

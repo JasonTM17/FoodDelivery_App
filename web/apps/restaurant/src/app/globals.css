@@ -81,3 +81,13 @@
     border-radius: 3px;
   }
 }
+
+.foodflow-tracking-driver-marker {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 3px solid #ffffff;
+  border-radius: 9999px;
+  background: #f97316;
+  box-shadow: 0 3px 12px rgb(15 23 42 / 40%);
+}

@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../shared/api/api_client.dart';
-import '../../shared/api/socket_client.dart';
+import '../../shared/api/realtime_client.dart';
 import '../../shared/models/order.dart';
 import '../../shared/services/secure_storage_service.dart';
 import '../services/background_location_service.dart';
+
+const _kMaxOnlineSampleAge = Duration(seconds: 45);
+const _kMaxOnlineSampleFutureSkew = Duration(seconds: 15);
 
 // ---------------------------------------------------------------------------
 // Models
@@ -178,6 +181,18 @@ int _requiredNonNegativeInt(Map<String, dynamic> json, String key) {
 
 const _driverStateUnset = Object();
 
+enum DriverKycStatus { notSubmitted, pending, approved, rejected }
+
+DriverKycStatus parseDriverKycStatus(Object? value) {
+  return switch (value) {
+    'not_submitted' => DriverKycStatus.notSubmitted,
+    'pending' => DriverKycStatus.pending,
+    'approved' => DriverKycStatus.approved,
+    'rejected' => DriverKycStatus.rejected,
+    _ => throw const FormatException('Invalid driver KYC status'),
+  };
+}
+
 class DriverState {
   final bool isLoading;
   final bool isAuthenticated;
@@ -191,6 +206,9 @@ class DriverState {
   final double totalEarnings;
   final String? vehicleType;
   final String? vehiclePlate;
+  final bool isVerified;
+  final bool hasAcceptedTerms;
+  final DriverKycStatus kycStatus;
   final DriverTodayStats todayStats;
   final List<OrderModel> recentOrders;
   final OrderModel? activeOrder;
@@ -213,6 +231,9 @@ class DriverState {
     this.totalEarnings = 0.0,
     this.vehicleType,
     this.vehiclePlate,
+    this.isVerified = false,
+    this.hasAcceptedTerms = false,
+    this.kycStatus = DriverKycStatus.notSubmitted,
     this.todayStats = const DriverTodayStats(),
     this.recentOrders = const [],
     this.activeOrder,
@@ -236,6 +257,9 @@ class DriverState {
     double? totalEarnings,
     String? vehicleType,
     String? vehiclePlate,
+    bool? isVerified,
+    bool? hasAcceptedTerms,
+    DriverKycStatus? kycStatus,
     DriverTodayStats? todayStats,
     List<OrderModel>? recentOrders,
     Object? activeOrder = _driverStateUnset,
@@ -258,6 +282,9 @@ class DriverState {
       totalEarnings: totalEarnings ?? this.totalEarnings,
       vehicleType: vehicleType ?? this.vehicleType,
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      isVerified: isVerified ?? this.isVerified,
+      hasAcceptedTerms: hasAcceptedTerms ?? this.hasAcceptedTerms,
+      kycStatus: kycStatus ?? this.kycStatus,
       todayStats: todayStats ?? this.todayStats,
       recentOrders: recentOrders ?? this.recentOrders,
       activeOrder: identical(activeOrder, _driverStateUnset)
@@ -287,6 +314,9 @@ class DriverState {
     totalEarnings: totalEarnings,
     vehicleType: vehicleType,
     vehiclePlate: vehiclePlate,
+    isVerified: isVerified,
+    hasAcceptedTerms: hasAcceptedTerms,
+    kycStatus: kycStatus,
     todayStats: todayStats,
     recentOrders: recentOrders,
     activeOrder: activeOrder,
@@ -310,28 +340,26 @@ final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((
 
 class DriverNotifier extends StateNotifier<DriverState> {
   final ApiClient _api = ApiClient.instance;
-  final SocketClient _socket = SocketClient.instance;
+  final RealtimeClient _realtime = RealtimeClient.instance;
   final SecureStorageService _storage = SecureStorageService.instance;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
-  StreamSubscription<void>? _logoutSub;
-  StreamSubscription<String>? _tokenRefreshSub;
 
-  DriverNotifier() : super(const DriverState()) {
-    // B-MOB-04 / B-MOB-05: clear session + sockets on forced logout; reconnect on refresh.
-    _logoutSub = ApiClient.onLogout.listen((_) {
-      _stopLocationUpdates();
-      _socket.disconnect();
-      if (!mounted) return;
-      state = const DriverState();
-    });
-    _tokenRefreshSub = ApiClient.onTokenRefreshed.listen((newToken) {
-      if (_socket.isConnected) {
-        unawaited(_socket.reconnectWithToken(newToken));
-      }
-    });
+  DriverNotifier() : super(const DriverState());
+
+  void markTermsAccepted() {
+    state = state.copyWith(hasAcceptedTerms: true);
+  }
+
+  void markKycPending() {
+    state = state.copyWith(
+      isVerified: false,
+      isOnline: false,
+      hasAcceptedTerms: true,
+      kycStatus: DriverKycStatus.pending,
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -370,6 +398,17 @@ class DriverNotifier extends StateNotifier<DriverState> {
           isLoading: false,
           isAuthenticated: false,
           error: profileError,
+        );
+        return;
+      }
+      final kycLoaded = await _fetchKycStatus();
+      if (!kycLoaded) {
+        final kycError = state.error;
+        await _clearAuthTokens();
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          error: kycError,
         );
         return;
       }
@@ -418,6 +457,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
         state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
         return false;
       }
+      final isVerified = profile['isVerified'];
+      if (isVerified is! bool) {
+        state = state.copyWith(error: 'DRIVER_PROFILE_UNAVAILABLE');
+        return false;
+      }
       state = state.copyWith(
         driverName: data['fullName'] as String?,
         driverPhone: data['phone'] as String?,
@@ -431,6 +475,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
         vehicleType: profile['vehicleType'] as String?,
         vehiclePlate: profile['vehiclePlate'] as String?,
         isOnline: profile['isOnline'] as bool? ?? false,
+        isVerified: isVerified,
+        hasAcceptedTerms: profile['termsAcceptedAt'] != null,
       );
       return true;
     } catch (_) {
@@ -439,10 +485,29 @@ class DriverNotifier extends StateNotifier<DriverState> {
     }
   }
 
+  Future<bool> _fetchKycStatus() async {
+    try {
+      final response = await _api.get('/driver/kyc/status');
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        throw const FormatException('Invalid KYC status response');
+      }
+      final status = parseDriverKycStatus(data['status']);
+      final isVerified = data['isVerified'];
+      if (isVerified is! bool ||
+          (isVerified && status != DriverKycStatus.approved)) {
+        throw const FormatException('Inconsistent KYC status response');
+      }
+      state = state.copyWith(isVerified: isVerified, kycStatus: status);
+      return true;
+    } catch (_) {
+      state = state.copyWith(error: 'DRIVER_KYC_STATUS_UNAVAILABLE');
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _stopLocationUpdates();
-    // B-MOB-05: disconnect sockets on logout.
-    _socket.disconnect();
     try {
       await _api.post('/auth/logout');
     } catch (_) {}
@@ -454,21 +519,41 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Online / Offline
   // -----------------------------------------------------------------------
 
-  Future<void> goOnline(double lat, double lng) async {
+  Future<void> goOnline(double lat, double lng, {DateTime? sampledAt}) async {
     state = state.copyWith(isLoading: true, error: null);
+    final sample = sampledAt;
+    if (sample == null || !isFreshDriverOnlineSample(sample, DateTime.now())) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Không lấy được vị trí GPS mới',
+      );
+      return;
+    }
     try {
-      await _api.post('/driver/online', data: {'lat': lat, 'lng': lng});
+      await _api.post(
+        '/driver/online',
+        data: {
+          'lat': lat,
+          'lng': lng,
+          'sampledAt': sample.toUtc().toIso8601String(),
+        },
+      );
+      await startDispatchOfferListener();
       state = state.copyWith(isLoading: false, isOnline: true);
-      _startLocationUpdates(lat, lng);
+      _startLocationUpdates(lat, lng, sampledAt: sample);
     } on DioException catch (e) {
+      try {
+        await _api.post('/driver/offline');
+      } catch (_) {}
       final msg =
           e.response?.data?['message'] as String? ??
           'Không thể chuyển sang trực tuyến';
       state = state.copyWith(isLoading: false, error: msg);
-      rethrow;
     } catch (e) {
+      try {
+        await _api.post('/driver/offline');
+      } catch (_) {}
       state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
-      rethrow;
     }
   }
 
@@ -479,19 +564,18 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _assignedOrderSub?.cancel();
     try {
       await _api.post('/driver/offline');
-      state = state.copyWith(isOnline: false);
-    } catch (e) {
-      state = state.copyWith(isOnline: true, error: e.toString());
-    }
+    } catch (_) {}
+    state = state.copyWith(isOnline: false);
   }
 
   /// Goes online after acquiring real device GPS.
-  /// Uses the last real device position when a fresh GPS read times out.
+  /// Requires a fresh GPS sample before publishing the driver as live.
   Future<void> goOnlineWithGps() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      double? lat = state.currentLat;
-      double? lng = state.currentLng;
+      double? lat;
+      double? lng;
+      DateTime? sampledAt;
       final permitted = await BackgroundLocationService.instance
           .requestPermissions();
       if (permitted) {
@@ -503,11 +587,15 @@ class DriverNotifier extends StateNotifier<DriverState> {
           ).timeout(const Duration(seconds: 8));
           lat = pos.latitude;
           lng = pos.longitude;
+          sampledAt = pos.timestamp;
         } catch (_) {
-          // GPS timed out — fall through to last-known coords if present.
+          // GPS timed out; do not reuse in-memory coordinates as live.
         }
       }
-      if (lat == null || lng == null) {
+      if (lat == null ||
+          lng == null ||
+          sampledAt == null ||
+          !isFreshDriverOnlineSample(sampledAt, DateTime.now())) {
         state = state.copyWith(
           isLoading: false,
           error: 'Không lấy được vị trí GPS',
@@ -515,16 +603,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
         return;
       }
       state = state.copyWith(
+        isLoading: false,
         currentLat: lat,
         currentLng: lng,
       );
-      try {
-        await goOnline(lat, lng);
-        startDispatchOfferListener();
-      } catch (e) {
-        // error already set in goOnline, we can just return
-        return;
-      }
+      await goOnline(lat, lng, sampledAt: sampledAt);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -537,9 +620,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Location
   // -----------------------------------------------------------------------
 
-  void _startLocationUpdates(double lat, double lng) {
-    // Emit initial known position immediately before the stream kicks in.
-    _socket.emitLocationPing(lat, lng);
+  void _startLocationUpdates(double lat, double lng, {DateTime? sampledAt}) {
+    // Emit the initial known position only when it came from a real GPS sample.
+    if (sampledAt != null) {
+      unawaited(_realtime.emitLocationPing(lat, lng, timestamp: sampledAt));
+    }
     BackgroundLocationService.instance.start(
       hasActiveOrder: state.activeOrder != null,
     );
@@ -549,10 +634,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
     BackgroundLocationService.instance.stop();
   }
 
-  void updateLocation(double lat, double lng) {
+  void updateLocation(double lat, double lng, {DateTime? sampledAt}) {
     state = state.copyWith(currentLat: lat, currentLng: lng);
-    if (state.isOnline) {
-      _socket.emitLocationPing(lat, lng);
+    if (state.isOnline && sampledAt != null) {
+      unawaited(_realtime.emitLocationPing(lat, lng, timestamp: sampledAt));
     }
   }
 
@@ -560,22 +645,39 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Orders
   // -----------------------------------------------------------------------
 
-  void acceptOrder(DispatchOffer offer) {
+  Future<void> acceptOrder(DispatchOffer offer) async {
     state = state.copyWith(isLoading: true, error: null).withOfferCleared();
-    _socket.respondToDispatchOffer(
-      orderId: offer.orderId,
-      offerToken: offer.offerToken,
-      accepted: true,
-    );
+    try {
+      await _realtime.respondToDispatchOffer(
+        orderId: offer.orderId,
+        offerToken: offer.offerToken,
+        accepted: true,
+      );
+      await fetchActiveOrder();
+      state = state.copyWith(isLoading: false);
+    } on DioException {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'DISPATCH_OFFER_RESPONSE_FAILED',
+        pendingOffer: offer,
+      );
+    }
   }
 
-  void declineOrder(DispatchOffer offer) {
-    _socket.respondToDispatchOffer(
-      orderId: offer.orderId,
-      offerToken: offer.offerToken,
-      accepted: false,
-    );
+  Future<void> declineOrder(DispatchOffer offer) async {
     state = state.withOfferCleared();
+    try {
+      await _realtime.respondToDispatchOffer(
+        orderId: offer.orderId,
+        offerToken: offer.offerToken,
+        accepted: false,
+      );
+    } on DioException {
+      state = state.copyWith(
+        error: 'DISPATCH_OFFER_RESPONSE_FAILED',
+        pendingOffer: offer,
+      );
+    }
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
@@ -586,7 +688,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         data: {'status': status},
       );
 
-      if (status == 'delivered' || status == 'completed') {
+      if (status == 'delivered') {
         // Refresh stats & clear active order after a moment
         await fetchTodayStats();
         state = state.copyWith(
@@ -596,16 +698,15 @@ class DriverNotifier extends StateNotifier<DriverState> {
         BackgroundLocationService.instance.setActiveOrderMode(false);
       } else {
         await fetchActiveOrder();
+        state = state.copyWith(isLoading: false);
       }
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] as String? ??
           'Cập nhật trạng thái thất bại';
-      state = state.copyWith(error: msg);
+      state = state.copyWith(isLoading: false, error: msg);
     } catch (e) {
-      state = state.copyWith(error: 'Có lỗi xảy ra');
-    } finally {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
     }
   }
 
@@ -652,7 +753,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
           response.data as Map<String, dynamic>,
         );
         state = state.copyWith(activeOrder: order);
-        _listenOrderStatus(order.id);
+        await _listenOrderStatus(order.id);
         BackgroundLocationService.instance.setActiveOrderMode(true);
       } else {
         _orderStatusSub?.cancel();
@@ -704,13 +805,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // WebSocket
   // -----------------------------------------------------------------------
 
-  void _listenOrderStatus(String orderId) {
+  Future<void> _listenOrderStatus(String orderId) async {
     _orderStatusSub?.cancel();
     _etaSub?.cancel();
-    _socket.connect();
-    _socket.subscribeOrder(orderId);
+    await _realtime.connect();
+    await _realtime.subscribeOrder(orderId);
 
-    _orderStatusSub = _socket.onOrderStatus.listen((data) async {
+    _orderStatusSub = _realtime.onOrderStatus.listen((data) async {
       final id = data['orderId'] as String? ?? data['order_id'] as String?;
       final status = data['status'] as String?;
       if (id == orderId && status != null && state.activeOrder?.id == id) {
@@ -727,15 +828,24 @@ class DriverNotifier extends StateNotifier<DriverState> {
       }
     });
 
-    _etaSub = _socket.onEtaUpdate.listen((data) {
+    _etaSub = _realtime.onEtaUpdate.listen((data) {
       if (data['orderId'] != orderId || state.activeOrder?.id != orderId) {
+        return;
+      }
+      final activeOrder = state.activeOrder!;
+      final routePhase = data['routePhase'] as String?;
+      final activeRoutePhase =
+          activeOrder.routePhase ??
+          driverRoutePhaseForStatus(activeOrder.status);
+      if (routePhase == null || routePhase != activeRoutePhase) {
         return;
       }
       final eta = (data['etaMinutes'] as num?)?.toInt();
       final routePolyline = data['routePolyline'] as String?;
       state = state.copyWith(
-        activeOrder: state.activeOrder!.copyWith(
+        activeOrder: activeOrder.copyWith(
           estimatedDeliveryTimeMinutes: eta,
+          routePhase: routePhase,
           routePolyline: routePolyline,
         ),
       );
@@ -746,13 +856,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Dispatch Offers
   // -----------------------------------------------------------------------
 
-  /// Subscribe to incoming delivery offers via WebSocket.
+  /// Subscribe to incoming delivery offers through the configured realtime provider.
   /// Call after going online so the driver receives real-time offer events.
-  void startDispatchOfferListener() {
+  Future<void> startDispatchOfferListener() async {
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
-    _socket.connect();
-    _offerSub = _socket.onDriverOffer.listen((data) {
+    await _realtime.connect();
+    _offerSub = _realtime.onDriverOffer.listen((data) {
       try {
         final offer = DispatchOffer.fromJson(data);
         state = state.copyWith(pendingOffer: offer);
@@ -760,7 +870,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         state = state.copyWith(error: 'DISPATCH_OFFER_INVALID');
       }
     });
-    _assignedOrderSub = _socket.onDriverOrderAssigned.listen((data) async {
+    _assignedOrderSub = _realtime.onDriverOrderAssigned.listen((data) async {
       if (data['orderId'] is! String) return;
       await fetchActiveOrder();
       state = state.copyWith(isLoading: false);
@@ -790,9 +900,20 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _etaSub?.cancel();
     _offerSub?.cancel();
     _assignedOrderSub?.cancel();
-    _logoutSub?.cancel();
-    _tokenRefreshSub?.cancel();
     BackgroundLocationService.instance.stop();
     super.dispose();
   }
+}
+
+String driverRoutePhaseForStatus(String status) {
+  return status == 'driver_assigned' || status == 'driver_arriving_restaurant'
+      ? 'pickup'
+      : 'dropoff';
+}
+
+bool isFreshDriverOnlineSample(DateTime sampledAt, DateTime now) {
+  final age = now.difference(sampledAt);
+  if (age > _kMaxOnlineSampleAge) return false;
+  if (age < -_kMaxOnlineSampleFutureSkew) return false;
+  return true;
 }

@@ -31,7 +31,7 @@ describe('ReviewsService', () => {
   let service: ReviewsService
   let mockPrisma: {
     order: { findUnique: jest.Mock }
-    review: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock; count: jest.Mock; findMany: jest.Mock }
+    review: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock; count: jest.Mock; findMany: jest.Mock; groupBy: jest.Mock }
     restaurantProfile: { findUnique: jest.Mock; findMany: jest.Mock }
     $transaction: jest.Mock
   }
@@ -53,6 +53,7 @@ describe('ReviewsService', () => {
         update: jest.fn().mockResolvedValue({ id: REVIEW_ID }),
         count: jest.fn().mockResolvedValue(0),
         findMany: jest.fn().mockResolvedValue([]),
+        groupBy: jest.fn().mockResolvedValue([]),
       },
       restaurantProfile: {
         findUnique: jest.fn(),
@@ -204,6 +205,51 @@ describe('ReviewsService', () => {
         restaurantId: RESTAURANT_ID,
       })
       await expect(service.restaurantReply(REVIEW_ID, USER_ID, dto)).resolves.toBeDefined()
+    })
+  })
+
+  describe('getRestaurantReviews()', () => {
+    it('returns the complete restaurant dashboard contract for the authenticated tenant', async () => {
+      const createdAt = new Date('2026-07-02T08:00:00.000Z')
+      mockPrisma.restaurantProfile.findUnique.mockResolvedValue({
+        userId: USER_ID,
+        restaurantId: RESTAURANT_ID,
+      })
+      mockPrisma.review.findMany.mockResolvedValue([
+        {
+          id: REVIEW_ID,
+          orderId: ORDER_ID,
+          foodRating: 5,
+          comment: 'Great food',
+          photos: [],
+          reply: null,
+          replyAt: null,
+          createdAt,
+          customer: { fullName: 'Ánh Nguyễn', avatarUrl: null },
+          order: { orderItems: [{ menuItemId: 'menu-item-uuid', nameSnapshot: 'Phở bò' }] },
+        },
+      ])
+      mockPrisma.review.count.mockResolvedValue(1)
+      mockPrisma.review.groupBy.mockResolvedValue([{ foodRating: 5, _count: 1 }])
+
+      const result = await service.getRestaurantReviews(USER_ID, 1, 20)
+
+      expect(result.reviews).toEqual([
+        expect.objectContaining({
+          id: REVIEW_ID,
+          orderId: ORDER_ID,
+          customerName: 'Ánh Nguyễn',
+          customerInitial: 'Á',
+          rating: 5,
+          dishId: 'menu-item-uuid',
+          createdAt,
+        }),
+      ])
+      expect(result.meta).toEqual({ page: 1, limit: 20, total: 1, hasMore: false })
+      expect(result.distribution).toEqual({ 5: 1 })
+      expect(mockPrisma.review.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ restaurantId: RESTAURANT_ID }) }),
+      )
     })
   })
 

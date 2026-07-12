@@ -8,7 +8,14 @@ import { PaymentsService } from './payments.service'
 import { OrdersGateway } from './orders.gateway'
 import { CancellationService } from './cancellation.service'
 import { PlaceOrderDto, CancelOrderDto, CreateReviewDto } from './orders.dto'
-import { OrderStatus as PrismaOrderStatus, Prisma, UserRole, type Order } from '@prisma/client'
+import {
+  OrderStatus as PrismaOrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  Prisma,
+  UserRole,
+  type Order,
+} from '@prisma/client'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
@@ -46,6 +53,7 @@ export class OrdersService {
     type SideEffects = {
       refundJob: PaymentRefundJobData | null
       needsDispatch: boolean
+      needsCommission: boolean
       releaseDriverId: string | null
     }
 
@@ -88,17 +96,38 @@ export class OrdersService {
       })
 
       let refundJob: PaymentRefundJobData | null = null
+      if (toStatus === 'delivered') {
+        const payment = await tx.payment.findUnique({ where: { orderId } })
+        if (!payment) throw new BadRequestException('ORDER_PAYMENT_NOT_FOUND')
+        if (payment.method === PaymentMethod.cash && payment.status === PaymentStatus.pending) {
+          await tx.payment.update({
+            where: { orderId },
+            data: { status: PaymentStatus.completed, paidAt: new Date() },
+          })
+        } else if (payment.status !== PaymentStatus.completed) {
+          throw new BadRequestException('ORDER_PAYMENT_NOT_CAPTURED')
+        }
+      }
       if (toStatus === 'cancelled') {
         const payment = await tx.payment.findUnique({ where: { orderId } })
         if (payment?.status === 'completed') {
-          refundJob = {
-            refundId: `full-${orderId}`,
-            orderId,
-            transactionRef: payment.transactionId,
-            amount: Math.trunc(Number(payment.amount)),
-            reason: reason ?? 'Order cancelled',
-            kind: 'full',
-            attemptNo: 1,
+          const priorRefunds = await tx.paymentRefundRequest.aggregate({
+            where: { orderId, status: 'completed' },
+            _sum: { amount: true },
+          })
+          const remainingAmount = Math.max(
+            0,
+            Math.trunc(Number(payment.amount)) - (priorRefunds._sum.amount ?? 0),
+          )
+          if (remainingAmount > 0) {
+            refundJob = {
+              refundId: `full-${orderId}`,
+              orderId,
+              transactionRef: payment.transactionId,
+              amount: remainingAmount,
+              reason: reason ?? 'Order cancelled',
+              kind: 'full',
+            }
           }
         }
       }
@@ -108,6 +137,7 @@ export class OrdersService {
         fx: {
           refundJob,
           needsDispatch: toStatus === 'restaurant_accepted',
+          needsCommission: toStatus === 'delivered' || toStatus === 'completed',
           releaseDriverId: isDriverReleaseStatus(toStatus) ? order.driverId : null,
         } as SideEffects,
       }
@@ -138,21 +168,12 @@ export class OrdersService {
       await this.enqueueDispatch(orderId)
     }
 
-    // After driver assignment or delivery, (re)run commission so driver ledger row is created
-    if (toStatus === 'driver_assigned' || toStatus === 'delivered') {
+    if (fx.needsCommission) {
       await this.commissionQueue.add(
         'commission-split',
         { orderId },
-        { jobId: `commission:${orderId}:${toStatus}`, removeOnComplete: true },
+        { jobId: `commission-split-${orderId}` },
       )
-    }
-
-    // COD: mark payment completed when delivered
-    if (toStatus === 'delivered') {
-      await this.prisma.payment.updateMany({
-        where: { orderId, method: 'cash', status: 'pending' },
-        data: { status: 'completed', paidAt: new Date() },
-      })
     }
 
     return result
@@ -207,22 +228,12 @@ export class OrdersService {
   }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
-    // Serialize concurrent checkouts for the same user/cart
-    await this.prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`place-order:${userId}`}))`.catch(() => undefined)
-
     const cart = await this.prisma.cart.findUnique({
       where: { userId },
       include: { items: { include: { menuItem: true } } },
     })
     if (!cart || cart.items.length === 0) throw new BadRequestException('CART_EMPTY')
     if (!cart.restaurantId) throw new BadRequestException('CART_NO_RESTAURANT')
-
-    // Re-check menu availability at checkout
-    for (const item of cart.items) {
-      if (!item.menuItem?.isAvailable) {
-        throw new UnprocessableEntityException('MENU_ITEM_UNAVAILABLE')
-      }
-    }
 
     const restaurant = await this.prisma.restaurant.findUniqueOrThrow({
       where: { id: cart.restaurantId },
@@ -245,27 +256,12 @@ export class OrdersService {
 
     const code = (dto.promotionCode ?? cart.promotionCode)?.trim()
     const paymentMethod = normalizeOrderPaymentMethod(dto.paymentMethod)
-    const menuItemIds = cart.items.map((i) => i.menuItemId)
-    const categoryIds = cart.items
-      .map((i) => i.menuItem?.categoryId)
-      .filter((id): id is string => Boolean(id))
 
     let order: Order | null = null
     for (let attempt = 1; attempt <= ORDER_CODE_CREATE_ATTEMPTS; attempt += 1) {
       const orderCode = generateOrderCode()
       try {
         order = await this.prisma.$transaction(async (tx) => {
-          // Hold advisory lock inside the transaction for double place-order
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`place-order:${userId}`}))`
-
-          const liveCart = await tx.cart.findUnique({
-            where: { userId },
-            include: { items: { include: { menuItem: true } } },
-          })
-          if (!liveCart || liveCart.items.length === 0) {
-            throw new BadRequestException('CART_EMPTY')
-          }
-
           const baseTotal = subtotal + deliveryFee
           let createdOrder = await tx.order.create({
             data: {
@@ -302,13 +298,7 @@ export class OrdersService {
             const { discountAmount } = await this.promotionsService.claimInTransaction(
               tx,
               code,
-              {
-                subtotal,
-                restaurantId: cart.restaurantId!,
-                deliveryFee,
-                menuItemIds,
-                categoryIds,
-              },
+              { subtotal, restaurantId: cart.restaurantId! },
               userId,
               createdOrder.id,
             )
@@ -316,12 +306,12 @@ export class OrdersService {
               where: { id: createdOrder.id },
               data: {
                 promotionDiscount: discountAmount,
-                total: Math.max(0, baseTotal - discountAmount),
+                total: baseTotal - discountAmount,
               },
             })
           }
 
-          // Clear cart inside the same txn so a second concurrent place cannot reuse it
+          // Clean up cart atomically
           await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
           await tx.cart.delete({ where: { id: cart.id } })
 
@@ -343,23 +333,11 @@ export class OrdersService {
       paymentMethod,
     )
 
-    // Cart already cleared inside create transaction; only restore on payment failure
-    // is not done here — promo is released in failPayment.
-
     const status = paymentResult.failureCode
       ? 'cancelled'
       : paymentResult.readyForRestaurant
         ? 'restaurant_pending'
         : 'pending_payment'
-
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: { status },
-    })
-
-    await this.prisma.orderStatusHistory.create({
-      data: { orderId: order.id, status, changedBy: 'system' },
-    })
 
     // Schedule auto-timeout: cancel if restaurant doesn't accept in 5 min
     if (paymentResult.readyForRestaurant) {
@@ -371,14 +349,7 @@ export class OrdersService {
           targetStatus: 'cancelled',
           reason: 'Restaurant did not accept order in time',
         },
-        { delay: 5 * 60_000, jobId: `timeout:${order.id}:restaurant-accept`, removeOnComplete: true },
-      )
-
-      // Commission for wallet/COD (SePay enqueues from webhook after pay confirm)
-      await this.commissionQueue.add(
-        'commission-split',
-        { orderId: order.id },
-        { jobId: `commission:${order.id}`, removeOnComplete: true },
+        { delay: 5 * 60_000, jobId: `timeout-${order.id}-restaurant-accept`, removeOnComplete: true },
       )
 
       this.ordersGateway.notifyRestaurant(restaurant.id, {
@@ -407,29 +378,32 @@ export class OrdersService {
   }
 
   async getRestaurantOrders(userId: string, status?: string) {
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId }, select: { restaurantId: true } })
-    if (!profile) return { orders: [], meta: { page: 1, limit: 50, total: 0 } }
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+      select: { restaurantId: true },
+    })
+    if (!profile) throw new NotFoundException('RESTAURANT_PROFILE_NOT_FOUND')
 
     const where: Prisma.OrderWhereInput = { restaurantId: profile.restaurantId }
     if (status) where.status = status as PrismaOrderStatus
 
-    const [orders, total] = await this.prisma.$transaction([
-      this.prisma.order.findMany({
-        where, orderBy: { createdAt: 'desc' }, take: 50,
-        include: {
-          restaurant: { select: { name: true } },
-          orderItems: { select: { id: true, menuItemId: true, nameSnapshot: true, quantity: true, unitPrice: true, selectedOptions: true } },
-          customer: { select: { fullName: true, phone: true } },
-          deliveryAddress: { select: { addressLine: true } },
-        },
-      }),
-      this.prisma.order.count({ where })
-    ])
-    return { orders: orders.map(serializeRestaurantOrder), meta: { page: 1, limit: 50, total } }
+    const orders = await this.prisma.order.findMany({
+      where, orderBy: { createdAt: 'desc' }, take: 50,
+      include: {
+        restaurant: { select: { name: true } },
+        orderItems: { select: { id: true, menuItemId: true, nameSnapshot: true, quantity: true, unitPrice: true, selectedOptions: true } },
+        customer: { select: { fullName: true, phone: true } },
+        deliveryAddress: { select: { addressLine: true } },
+      },
+    })
+    return { orders: orders.map(serializeRestaurantOrder), meta: { page: 1, limit: 50, total: orders.length } }
   }
 
   async getRestaurantOrderDetail(orderId: string, userId: string) {
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+      select: { restaurantId: true },
+    })
     if (!profile) throw new NotFoundException('ORDER_NOT_FOUND')
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, restaurantId: profile.restaurantId },
@@ -454,9 +428,20 @@ export class OrdersService {
       this.prisma.order.findMany({
         where,
         include: {
-          restaurant: { select: { id: true, name: true, logoUrl: true } },
-          orderItems: { select: { nameSnapshot: true, quantity: true } },
-          driver: { select: { id: true, fullName: true } },
+          restaurant: { select: { id: true, name: true, logoUrl: true, phone: true } },
+          orderItems: {
+            select: {
+              id: true,
+              menuItemId: true,
+              nameSnapshot: true,
+              quantity: true,
+              unitPrice: true,
+              selectedOptions: true,
+            },
+          },
+          driver: { select: { id: true, fullName: true, phone: true } },
+          deliveryAddress: true,
+          statusHistory: { orderBy: { createdAt: 'asc' } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -465,7 +450,10 @@ export class OrdersService {
       this.prisma.order.count({ where }),
     ])
 
-    return { orders, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } }
+    return {
+      orders: orders.map(serializeCustomerOrder),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    }
   }
 
   async getOrderDetail(orderId: string, userId: string, role: string) {
@@ -482,18 +470,11 @@ export class OrdersService {
       },
     })
 
-    if (role === UserRole.restaurant) {
-      const profile = await this.prisma.restaurantProfile.findUnique({
-        where: { userId },
-      })
-      if (!profile || order.restaurantId !== profile.restaurantId) {
-        throw new NotFoundException('ORDER_NOT_FOUND')
-      }
-    } else if (role !== 'admin' && order.customerId !== userId && order.driverId !== userId) {
+    if (role !== 'admin' && order.customerId !== userId && order.driverId !== userId) {
       throw new NotFoundException('ORDER_NOT_FOUND')
     }
 
-    return order
+    return serializeCustomerOrder(order)
   }
 
   async cancelOrder(orderId: string, userId: string, role: string, dto?: CancelOrderDto) {
@@ -546,10 +527,6 @@ export class OrdersService {
     const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } })
     if (order.customerId !== userId) throw new NotFoundException('ORDER_NOT_FOUND')
 
-    if (order.status !== 'delivered' && order.status !== 'completed') {
-      throw new BadRequestException('ORDER_NOT_DELIVERED')
-    }
-
     const existing = await this.prisma.review.findUnique({ where: { orderId } })
     if (existing) throw new BadRequestException('ALREADY_REVIEWED')
 
@@ -565,6 +542,126 @@ export class OrdersService {
       },
     })
   }
+}
+
+type CustomerOrderView = {
+  id: string
+  customerId: string
+  restaurantId: string
+  driverId?: string | null
+  status: string
+  subtotal: Prisma.Decimal | number
+  deliveryFee: Prisma.Decimal | number
+  promotionDiscount: Prisma.Decimal | number
+  total: Prisma.Decimal | number
+  paymentMethod: string
+  notes?: string | null
+  promotionCode?: string | null
+  estimatedDeliveryTimeMinutes?: number | null
+  routePolyline?: string | null
+  createdAt: Date
+  updatedAt: Date
+  deliveredAt?: Date | null
+  restaurant?: { id: string; name: string; logoUrl?: string | null; phone?: string | null } | null
+  driver?: { id: string; fullName?: string | null; phone?: string | null } | null
+  deliveryAddress?: Record<string, unknown> | null
+  orderItems: Array<{
+    id?: string
+    menuItemId: string
+    nameSnapshot: string
+    quantity: number
+    unitPrice: Prisma.Decimal | number
+    selectedOptions?: Prisma.JsonValue
+  }>
+  statusHistory?: Array<{
+    status: string
+    createdAt: Date
+    note?: string | null
+  }>
+}
+
+function serializeCustomerOrder(order: CustomerOrderView) {
+  const items = order.orderItems.map(item => {
+    const unitPrice = Number(item.unitPrice)
+    const lineTotal = unitPrice * item.quantity
+    const selectedOptions = Array.isArray(item.selectedOptions) ? item.selectedOptions : []
+    const options = selectedOptions.map(formatSelectedOptionLabel).filter(Boolean)
+
+    return {
+      id: item.id,
+      menuItemId: item.menuItemId,
+      name: item.nameSnapshot,
+      nameSnapshot: item.nameSnapshot,
+      quantity: item.quantity,
+      unitPrice,
+      price: unitPrice,
+      totalPrice: lineTotal,
+      lineTotal,
+      selectedOptions,
+      options,
+    }
+  })
+  const statusHistory = (order.statusHistory ?? []).map(entry => ({
+    status: entry.status,
+    timestamp: entry.createdAt,
+    note: entry.note ?? undefined,
+  }))
+
+  return {
+    id: order.id,
+    customerId: order.customerId,
+    userId: order.customerId,
+    restaurantId: order.restaurantId,
+    restaurantName: order.restaurant?.name,
+    restaurantLogoUrl: order.restaurant?.logoUrl ?? undefined,
+    restaurantPhone: order.restaurant?.phone ?? undefined,
+    restaurant: order.restaurant
+      ? {
+          id: order.restaurant.id,
+          name: order.restaurant.name,
+          logoUrl: order.restaurant.logoUrl,
+          phone: order.restaurant.phone,
+        }
+      : undefined,
+    driverId: order.driverId ?? undefined,
+    driverName: order.driver?.fullName ?? undefined,
+    driverPhone: order.driver?.phone ?? undefined,
+    driver: order.driver ?? undefined,
+    status: order.status,
+    subtotal: Number(order.subtotal),
+    deliveryFee: Number(order.deliveryFee),
+    discount: Number(order.promotionDiscount),
+    total: Number(order.total),
+    paymentMethod: order.paymentMethod,
+    note: order.notes ?? undefined,
+    notes: order.notes ?? undefined,
+    promoCode: order.promotionCode ?? undefined,
+    promotionCode: order.promotionCode ?? undefined,
+    deliveryAddress: order.deliveryAddress ?? undefined,
+    items,
+    orderItems: items,
+    timeline: statusHistory,
+    statusHistory,
+    estimatedDeliveryTimeMinutes: order.estimatedDeliveryTimeMinutes ?? undefined,
+    routePolyline: order.routePolyline ?? undefined,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+    deliveredAt: order.deliveredAt ?? undefined,
+  }
+}
+
+function formatSelectedOptionLabel(option: Prisma.JsonValue): string {
+  if (!option || typeof option !== 'object' || Array.isArray(option)) return ''
+  const record = option as Record<string, Prisma.JsonValue>
+  const group = typeof record.groupName === 'string' ? record.groupName.trim() : ''
+  const optionName =
+    typeof record.optionName === 'string'
+      ? record.optionName.trim()
+      : typeof record.value === 'string'
+        ? record.value.trim()
+        : ''
+  if (group && optionName) return `${group}: ${optionName}`
+  return optionName || group
 }
 
 type RestaurantOrderView = {

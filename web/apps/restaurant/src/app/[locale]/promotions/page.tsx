@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Search, Tag } from 'lucide-react';
 import { PromotionBulkActions } from '@/components/promotions/promotion-bulk-actions';
@@ -23,14 +23,16 @@ export default function PromotionsListPage() {
   const [analytics, setAnalytics] = useState<PromotionAnalyticsData | undefined>();
   const [statusFilter, setStatusFilter] = useState<PromotionStatus | 'all'>('all');
   const [search, setSearch] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => {
+
+  const loadPromotions = useCallback(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     fetchPromotions()
       .then((data) => {
         if (!cancelled) {
-          setPromos(data.promotions ?? []);
+          if (!Array.isArray(data.promotions)) throw new Error(t('listError'));
+          setPromos(data.promotions);
           setAnalytics(data.analytics);
         }
       })
@@ -44,6 +46,8 @@ export default function PromotionsListPage() {
       cancelled = true;
     };
   }, [t]);
+
+  useEffect(() => loadPromotions(), [loadPromotions]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -87,9 +91,7 @@ export default function PromotionsListPage() {
   };
 
   const handleBulkAction = async (action: 'pause' | 'resume' | 'archive') => {
-    if (isSubmitting) return;
     if (action === 'archive' && !window.confirm(t('archiveConfirm'))) return;
-    setIsSubmitting(true);
     try {
       await api.post('/restaurant/promotions/bulk', { ids: Array.from(selectedIds), action });
       const nextStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'archived';
@@ -97,8 +99,6 @@ export default function PromotionsListPage() {
       setSelectedIds(new Set());
     } catch (err: unknown) {
       setError((err as { message?: string }).message || t('bulkError'));
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -108,6 +108,30 @@ export default function PromotionsListPage() {
         {[1, 2, 3].map(item => (
           <div key={item} className="h-20 animate-pulse rounded-lg bg-gray-100" />
         ))}
+      </div>
+    );
+  }
+
+  if (error && promos.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+              <Tag className="h-5 w-5 text-brand-600" aria-hidden="true" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{t('listTitle')}</h1>
+              <p className="text-sm text-gray-500">{t('listSubtitle')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => { loadPromotions(); }} className="mt-3 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-red-700">
+            {t('retry')}
+          </button>
+        </div>
       </div>
     );
   }

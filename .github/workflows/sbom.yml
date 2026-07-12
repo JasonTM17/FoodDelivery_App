@@ -22,8 +22,8 @@ jobs:
       - name: Build Docker image
         run: |
           IMAGE_TAG="${GITHUB_REF_NAME//\//-}"
-          docker build -t foodflow-backend:$IMAGE_TAG ./backend
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          docker build -t "foodflow-backend:$IMAGE_TAG" ./backend
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
 
       - name: Generate SBOM from Docker image
         uses: anchore/sbom-action@v0

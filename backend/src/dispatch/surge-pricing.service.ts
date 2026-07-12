@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { DispatchGateway } from './dispatch.gateway'
+import { DispatchNotifierService } from './dispatch-notifier.service'
 
 const BASE_MULTIPLIER = 1.0
 const SURGE_STEP_MULTIPLIER = 1.2
@@ -22,7 +22,7 @@ function zoneId(lat: number, lng: number): string {
 export class SurgePricingService {
   private readonly zones = new Map<string, ZoneState>()
 
-  constructor(private readonly gateway: DispatchGateway) {}
+  constructor(private readonly notifier: DispatchNotifierService) {}
 
   /**
    * Evaluate surge for a zone after a failed dispatch round.
@@ -47,7 +47,7 @@ export class SurgePricingService {
     if (!existing) {
       const multiplier = SURGE_STEP_MULTIPLIER
       this.zones.set(zone, { multiplier, activatedAt: Date.now() })
-      this.gateway.emitToAdmins('dispatch:surge_active', { zone, multiplier, lat, lng })
+      this.notifier.emitToAdmins('dispatch:surge_active', { zone, multiplier, lat, lng })
       return multiplier
     }
 

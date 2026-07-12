@@ -20,6 +20,8 @@
     "emailPlaceholder": "restaurant@email.com",
     "loginButton": "ログイン",
     "loggingIn": "ログイン中...",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを非表示",
     "restaurantOnly": "このダッシュボードはレストランアカウントのみ利用できます。"
   },
   "sidebar": {
@@ -164,8 +166,10 @@
       "refresh": "更新",
       "loading": "ライブ追跡を読み込み中",
       "loadError": "ライブ追跡を読み込めませんでした",
-      "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
-      "missingKeyDescription": "ライブ配達マップを表示するには、Restaurant環境に公開Google Mapsキーを追加してください。",
+      "mapLoading": "配達マップを読み込み中",
+      "mapErrorTitle": "配達マップを表示できません",
+      "mapErrorDescription": "オープンマップタイルを読み込めませんでした。ネットワーク接続を確認して再試行してください。",
+      "driverMarkerLabel": "ドライバーの現在のGPS位置",
       "telemetryUnavailable": "実際のドライバーGPSまたはルートはまだ記録されていません。FoodFlowはETAを捏造しません。",
       "noSnapshotDescription": "バックエンドがドライバー割り当てと実テレメトリを記録すると追跡が表示されます。",
       "etaLabel": "ETA",
@@ -1337,6 +1341,17 @@
     "error": "アシスタントに接続できません。再試行してください。",
     "degraded": "アシスタントは一時的に制限中",
     "you": "あなた",
-    "assistant": "アシスタント"
+    "assistant": "アシスタント",
+    "historyLoading": "会話を読み込んでいます…",
+    "historyError": "以前のメッセージを読み込めませんでした。新しいリクエストは送信できます。",
+    "retryHistory": "履歴を再試行",
+    "providerNotConfigured": "AIアシスタントはまだ設定されていません。プラットフォーム管理者にサーバー側の設定完了を依頼してください。",
+    "providerUnavailable": "AIアシスタントは一時的に利用できません。回答は生成されていません。しばらくしてから再試行してください。",
+    "suggestions": "はじめるための候補",
+    "suggestionOne": "配達が遅れている注文にはどう対応しますか？",
+    "suggestionTwo": "メニュー項目はどう更新しますか？",
+    "suggestionThree": "プロモーションの選択肢を説明して",
+    "conversationLoaded": "会話を読み込みました",
+    "characterCount": "{count} / {limit} 文字"
   }
 }

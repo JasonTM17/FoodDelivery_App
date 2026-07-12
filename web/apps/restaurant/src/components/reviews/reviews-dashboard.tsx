@@ -32,10 +32,7 @@ export function ReviewsDashboard() {
   useEffect(() => {
     api.get<{ reviews: RestaurantReview[] }>('/restaurant/reviews')
       .then((data) => setReviews(parseRestaurantReviewsResponse(data)))
-      .catch((err: unknown) => {
-        const e = err as { message?: string };
-        setFetchError(e.message || loadErrorMessage);
-      })
+      .catch(() => setFetchError(loadErrorMessage))
       .finally(() => setIsLoading(false));
   }, [loadErrorMessage]);
 
@@ -96,7 +93,7 @@ export function ReviewsDashboard() {
     return (
       <div className="card flex flex-col items-center py-12 text-center" role="alert">
         <MessageSquare className="h-10 w-10 text-red-300 mx-auto mb-3" />
-        <p className="text-sm font-medium text-red-600">{fetchError}</p>
+        <h1 className="text-base font-semibold text-red-800">{fetchError}</h1>
       </div>
     );
   }

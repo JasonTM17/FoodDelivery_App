@@ -31,6 +31,12 @@ describe('AI monitor provider state', () => {
         degradedReason: null,
         provider: 'deepseek',
         model: 'deepseek-v4-flash',
+        telemetry: {
+          status: 'live',
+          lastRequestAt: '2026-07-10T01:00:00.000Z',
+          lastSuccessfulRequestAt: '2026-07-10T01:00:00.000Z',
+          lastFailureCode: null,
+        },
       },
       stats: emptyStats(),
     });
@@ -54,6 +60,12 @@ describe('AI monitor provider state', () => {
         degradedReason: 'DEEPSEEK_NOT_CONFIGURED',
         provider: 'deepseek',
         model: 'deepseek-v4-flash',
+        telemetry: {
+          status: 'awaiting_requests',
+          lastRequestAt: null,
+          lastSuccessfulRequestAt: null,
+          lastFailureCode: null,
+        },
       },
       stats: emptyStats(),
     });
@@ -61,8 +73,9 @@ describe('AI monitor provider state', () => {
     renderWithClient(<AiMonitorProviderClient />);
 
     expect(await screen.findByText('statusNotConfigured')).toBeInTheDocument();
-    expect(screen.getByText(/DEEPSEEK_NOT_CONFIGURED/)).toBeInTheDocument();
-    expect(screen.getByText('dashboardUnavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('ai-monitor-configuration-needed')).toBeInTheDocument();
+    expect(screen.getByText('configurationRequiredTitle')).toBeInTheDocument();
+    expect(screen.queryByText(/DEEPSEEK_NOT_CONFIGURED/)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'openDashboard' })).not.toBeInTheDocument();
   });
 });
@@ -78,6 +91,7 @@ function emptyStats() {
     inputTokens: null,
     outputTokens: null,
     requests: null,
+    failedRequests: null,
     averageLatencyMs: null,
   };
 }

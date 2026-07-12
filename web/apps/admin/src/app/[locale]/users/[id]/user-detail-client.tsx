@@ -23,14 +23,30 @@ interface UserDetail {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   status: 'active' | 'banned';
   role: string;
   createdAt: string;
-  totalOrders: number;
-  totalSpent: number;
+  totalOrders: number | null;
+  totalSpent: number | null;
   kycStatus: 'none' | 'pending' | 'verified' | 'rejected';
   recentOrders: { id: string; orderCode: string; restaurant: { name: string }; total: number; status: string; createdAt: string }[];
+}
+
+interface RawUserDetail {
+  id: string;
+  name?: string;
+  fullName?: string;
+  email: string;
+  phone?: string | null;
+  status?: string;
+  isActive?: boolean;
+  role: string;
+  createdAt: string;
+  totalOrders?: number | null;
+  totalSpent?: number | null;
+  kycStatus?: 'none' | 'pending' | 'verified' | 'rejected';
+  recentOrders?: UserDetail['recentOrders'];
 }
 
 interface RefundRecord {
@@ -43,6 +59,24 @@ interface RefundRecord {
   createdAt: string;
 }
 
+export function normalizeUserDetail(user: RawUserDetail): UserDetail {
+  return {
+    id: user.id,
+    name: user.name ?? user.fullName ?? user.email,
+    email: user.email,
+    phone: user.phone ?? null,
+    status: typeof user.isActive === 'boolean'
+      ? user.isActive ? 'active' : 'banned'
+      : user.status === 'active' ? 'active' : 'banned',
+    role: user.role,
+    createdAt: user.createdAt,
+    totalOrders: user.totalOrders ?? null,
+    totalSpent: user.totalSpent ?? null,
+    kycStatus: user.kycStatus ?? 'none',
+    recentOrders: user.recentOrders ?? [],
+  };
+}
+
 export default function UserDetailClient({ userId }: { userId: string }) {
   const t = useTranslations('userDetail');
   const queryClient = useQueryClient();
@@ -50,7 +84,7 @@ export default function UserDetailClient({ userId }: { userId: string }) {
 
   const { data: user, isLoading } = useQuery<UserDetail>({
     queryKey: ['user', userId],
-    queryFn: () => apiGet<UserDetail>(`/admin/users/${userId}`),
+    queryFn: async () => normalizeUserDetail(await apiGet<RawUserDetail>(`/admin/users/${userId}`)),
   });
 
   const { data: refundData } = useQuery<{ refunds: RefundRecord[] }>({
@@ -62,7 +96,7 @@ export default function UserDetailClient({ userId }: { userId: string }) {
   const toggleStatus = async () => {
     if (!user) return;
     await apiPatch(`/admin/users/${userId}/status`, {
-      status: user.status === 'active' ? 'banned' : 'active',
+      isActive: user.status !== 'active',
     });
     queryClient.invalidateQueries({ queryKey: ['user', userId] });
   };

@@ -1,144 +1,129 @@
 # Hướng dẫn kiểm thử FoodFlow
 
-Ngôn ngữ: [English](testing-guide.md) | [Tiếng Việt](testing-guide.vi.md) | [日本語](testing-guide.ja.md)
+## Quy tắc release
+
+Chỉ được coi là xanh khi final source head pass toàn bộ local gate, remote CI mới, provider preflight và production smoke. Focused test chỉ chứng minh đúng cụm đó; số lịch sử hoặc script có skip không được dùng làm release approval.
+
+## Evidence hiện tại
+
+Evidence mới nhất trên integration line ngày 11/07/2026:
+
+| Khu vực | Kết quả |
+|---|---|
+| Backend KYC/config/notifications | 5 suite / 48 test, typecheck và lint pass |
+| Fresh database | Apply đủ 24 migration trên PostGIS isolated; đã xác minh KYC RLS và partial unique index |
+| Flutter | Analyze pass; đủ 274 test pass; build Driver debug APK từ entry thật `lib/main_driver.dart` |
+| Contract KYC Admin | Shared API-client và Admin typecheck pass; 5 component/security test pass |
+| OpenAPI | Spectral không báo error sau khi đồng bộ contract KYC private |
+| Secret hygiene | Staged high-confidence scan pass trước `924808c`; không commit dotenv/private key |
+
+Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
+
+## Gate tổng
+
+```powershell
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
+```
+
+Partial development phải ghi rõ partial và không được approve release:
+
+```powershell
+powershell -File infra/scripts/local-release-gate.ps1 \
+  -AllowDirty -SkipInstall -SkipBuild -SkipDeployPreflight
+```
 
 ## Backend
 
-```bash
+```powershell
 cd backend
-pnpm prisma validate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm exec prisma validate --schema prisma/schema.prisma
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm exec jest --runInBand
+corepack pnpm build
 ```
 
-Ví dụ focused:
+Phải test fresh PostGIS bằng `migrate deploy` đủ 24 migration. Coverage bắt buộc: auth/RBAC, tenant restaurant, order/payment/webhook replay, promotion/notification/export/audit, realtime token/RLS claims, Supabase Storage/job outbox, GPS/route/ETA/dispatch, DeepSeek/session/telemetry và production env validation.
 
-```bash
-pnpm test -- sepay.provider.spec.ts payments.service.spec.ts
-pnpm test -- ai-chat.service.spec.ts deepseek-chat-provider.service.spec.ts ai-chat.controller.spec.ts
-pnpm test -- restaurant-revenue.service.spec.ts
-```
+## OpenAPI và web
 
-Backend tests phải chứng minh behavior thật: không mock payment runtime, không AI answer giả, không business value random, và query phải tenant-scoped.
+```powershell
+npx -y @stoplight/spectral-cli lint docs/openapi.yaml \
+  --ruleset docs/openapi/.spectral.yaml --fail-severity error
 
-Ngưỡng coverage backend được cấu hình trong `backend/jest.config.ts`; không truyền JSON threshold qua CLI vì quoting khác nhau giữa shell.
-
-### AI scenario smoke gate
-
-`pnpm db:big-seed` tạo các đơn AI smoke deterministic `FF-001`, `FF-002`, `FF-003`, `FF-004`, `FF-006`, `FF-007`, `FF-008`, `FF-009` và `FF-010` cho `customer1@foodflow.vn`. Workflow integration đăng nhập qua `/api/auth/login` rồi chạy `e2e/ai-scenarios/run-ai-scenarios.ts` trên endpoint `/api/ai/chat` có auth.
-
-CI có thể đặt `AI_ALLOW_DEGRADED=true` khi chưa có secret LLM provider; gate vẫn kiểm auth, tool grounding, order lookup theo tenant, support-ticket escalation và hallucination guard. Release verification phải chạy không degraded mode và dùng `DEEPSEEK_API_KEY` hợp lệ/đã rotate từ secret manager.
-
-## Web
-
-```bash
 cd web
-pnpm install --frozen-lockfile
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+corepack pnpm install --frozen-lockfile
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm --filter foodflow-admin build
+corepack pnpm --filter restaurant build
 ```
 
-Focused dashboard checks:
+Test phải reject malformed success envelope, fake empty/zero business data, sai locale/auth refresh/tenant mutation/realtime provider/map geometry/accessibility.
 
-```bash
-pnpm --filter foodflow-admin typecheck
-pnpm --filter foodflow-admin lint
-pnpm --filter foodflow-admin test
-pnpm --filter foodflow-admin build
+## Isolated E2E
 
-pnpm --filter restaurant typecheck
-pnpm --filter restaurant lint
-pnpm --filter restaurant test
-pnpm --filter restaurant build
-```
-
-Evidence web/API-contract local mới nhất: 2026-07-04 trên `codex/batch4-integration`, OpenAPI YAML parse pass với 137 path và scanner coverage endpoint web local báo `MISSING_ENDPOINTS=0`. `pnpm typecheck`, `pnpm lint`, `pnpm test` và `pnpm build` pass cho toàn bộ web workspace; Vitest pass Admin 34 files / 137 test và Restaurant 27 files / 79 test. Backend cho cụm contract này pass `pnpm typecheck`, `pnpm lint` và Jest target (`admin-resources.service.spec.ts`, `admin.heatmap.spec.ts`: 2 suite / 9 test).
-Evidence map/tracking trước đó tại `3252c6a` vẫn là lịch sử hữu ích, nhưng ma trận verify current-head là evidence 2026-07-06 trong [Batch 4 release report](batch4-release-report.md).
-Evidence Restaurant web current-head mới nhất: 2026-07-04 tại `2cd87e5`, `pnpm --filter restaurant typecheck`, `pnpm --filter restaurant lint`, `pnpm --filter restaurant test` (27 files / 79 test) và `pnpm --filter restaurant build` đều pass. Production build sinh đầy đủ route localized `vi`, `en`, `ja` cùng `/api/healthz`.
-Evidence backend/web gate current-head mới nhất: 2026-07-04 sau `ad3b730`, backend `pnpm install --frozen-lockfile`, `pnpm prisma generate`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (106 suites / 752 test) và `pnpm build` đều pass. Web workspace `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (Admin 34 files / 139 test; Restaurant 27 files / 79 test) và `pnpm build` đều pass. Admin build sinh 70 page localized và Restaurant build sinh 55 page localized cho `vi`, `en`, `ja`. Evidence remote CI/Actions cho head này vẫn pending vì token/auth tài khoản đang chưa hợp lệ.
-
-## Playwright E2E
-
-```bash
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+$env:ADMIN_URL='http://localhost:13000'
+$env:API_URL='http://localhost:13001/api'
+$env:RESTAURANT_URL='http://localhost:13002'
 cd web
-pnpm test:e2e:install
-pnpm test:e2e --project=chromium
-pnpm test:e2e --project=firefox
+corepack pnpm test:e2e --project=chromium --project=firefox
 ```
 
-Evidence E2E local mới nhất: 2026-07-06 tại `33e90ea`, Docker Compose rebuild Backend/Admin/Restaurant standalone containers healthy với `NEXT_PUBLIC_API_URL` được truyền lúc build image. Vì máy local có process khác đang chiếm `127.0.0.1:3000`, lần verify dùng endpoint IPv6 loopback rõ ràng: `ADMIN_URL=http://[::1]:3000`, `RESTAURANT_URL=http://[::1]:3002`, `API_URL=http://[::1]:3001/api`. Chromium + Firefox pass 70/70 test, bao phủ axe serious/critical smoke, visual contract, điều hướng admin driver map, tracking endpoint availability, realtime status flows và tenant isolation. Harness E2E hiện fail-fast nếu route local trả về Next.js 404 shell.
+Port còn lại: Postgres `15432`, Redis `16379`, MinIO `19000/19001`. `127.0.0.1` chỉ dùng cho CORS error-state test.
 
-Batch 4 E2E cần bao phủ login/RBAC, locale routes, WebSocket order feed, promotion CRUD, support flow, exports, menu, revenue, staff, insights, notifications và tenant isolation. Spec `web/e2e/tests/tenant-isolation.spec.ts` phải chứng minh user nhà hàng không thể list, đọc hoặc update order thuộc tenant nhà hàng khác.
+Coverage: auth, Admin dashboard, Restaurant queue/status, customer order end-to-end, realtime/tracking, tenant isolation, Batch 4 contracts và visual brand/layout. Không được coi 404 shell, console error hoặc unavailable business data là pass.
 
-Regression bảo mật realtime cũng phải kiểm tra:
+## Accessibility và visual/Stitch
 
-- Socket.IO không cho kết nối khi thiếu token, dùng refresh token, token hết hạn hoặc chữ ký sai.
-- User không phải admin không thể join phòng đơn hàng hoặc tài xế của Admin.
-- Nhà hàng không thể join phòng của tenant khác.
-- Khách hàng, tài xế và nhân viên nhà hàng không thể join phòng đơn hàng không liên quan.
-- Chỉ tài khoản driver đã xác thực mới được gửi cập nhật GPS.
-- Mobile normalize GPS metadata của driver trước khi publish: speed từ Geolocator được đổi từ m/s sang km/h theo contract backend, và heading/speed/accuracy invalid bị bỏ.
-- Map driver/customer phải vẽ `routePolyline` từ backend tách riêng khỏi raw telemetry trail.
-- Kiểm tra lệch tuyến phải snap vào các đoạn polyline nối liền, không chỉ các vertex, để route provider trả polyline thưa không làm tài xế bị đánh dấu lệch tuyến sai.
-- Route geometry bị clear khi đơn hàng đổi từ pickup phase sang dropoff phase để client không vẽ nhầm tuyến cũ đến nhà hàng sau khi đã pickup.
-- Nếu Google/OSRM route provider không khả dụng, tracking trả `etaMinutes: null` và `source: route_unavailable`; backend không được tự bịa ETA đường thẳng.
-- Admin driver map phải xoá `currentOrder` cũ khi realtime gửi `orderId: null` và bỏ qua tọa độ realtime invalid trước khi đưa vào Google Maps.
-- Mobile driver “Mở chỉ đường” phải truyền tọa độ tài xế hiện tại làm Google Maps `origin` khi có, dùng navigation mode, và hiển thị trạng thái không khả dụng rõ ràng khi destination invalid.
-- Mobile driver route replay và demand heatmap phải render bằng Google Maps overlays thật từ route/demand coordinates của backend; không thay bằng canvas schematic hoặc điểm local tự sinh.
-- Client notification không thể subscribe hoặc sửa dữ liệu dưới danh nghĩa user khác.
-- Phòng offer dispatch và thao tác accept/reject phải gắn với driver ID đã xác thực.
-- Web Admin và Restaurant gửi access token mới nhất khi reconnect.
+- Axe serious/critical phải bằng 0 trên tất cả critical page ở Chromium và Firefox, cả normal/error state.
+- Kiểm tra keyboard, focus-visible, heading, label/error association, live region, contrast, dialog/portal và locale đúng cho title/`html lang`/aria.
+- `visual-contract.spec.ts` hiện kiểm tra cấu trúc và lưu screenshot, chưa phải pixel baseline đầy đủ.
+- Trước release phải đối chiếu desktop/responsive với artifact Admin/Restaurant/Stitch cho dashboard, approval, promotion, audit/export, staff, benchmark, map/tracking và mobile flows.
+- Không auto-update baseline để che regression; recapture docs media sau khi UI được duyệt.
 
-## Accessibility và visual QA
+## Bản đồ và route shipper
 
-- Axe không có serious/critical issue.
-- Keyboard navigation, visible focus, dialog focus trap, chart/table alternatives.
-- Chạy `web/e2e/tests/visual-contract.spec.ts` cùng Playwright suite. Spec này kiểm Admin và Restaurant login brand shell của FoodFlow, centering responsive, token SVG logo, contrast CTA và lưu screenshot review trong Playwright `test-results`.
-- So sánh với Stitch baseline đã duyệt.
-- Hiện repo chưa lưu Stitch bitmap baseline đã duyệt; chỉ thêm pixel snapshot `toHaveScreenshot` sau khi Stitch export đã được review và chấp thuận.
-- Kiểm desktop 1440/1280, tablet và mobile.
+Test backend: provider route/cache/failure, bound Việt Nam/service area, timestamp fresh, participant/phase, persisted polyline/distance/duration, remaining ETA và cross-tenant denial.
+
+Test web/mobile: không hardcoded camera/polyline/ETA, bỏ event stale/wrong-order/wrong-phase, chuyển pickup/dropoff đúng state, localized unavailable state, key thật bị giới hạn. Production dùng `post-deploy-smoke.ps1 -RequireRoutePolyline` với active order authorized.
+
+## Supabase Realtime
+
+Test TTL/claims, tất cả channel `private:`, role/customer/restaurant/driver/admin scope, cross-tenant forbidden trước token issue, expired/invalid/anon denial, event đúng tenant nhận đúng một lần. Socket.IO local phải test riêng và không được fallback implicit trong production.
+
+## AI
+
+Không key phải trả fail-closed typed state. Live smoke chỉ dùng `DEEPSEEK_API_KEY` mới rotate và `deepseek-v4-flash` trong server env. Xác minh answer/escalation/session ownership/order context/token/latency/cost/budget/provider error; canned/random text không phải bằng chứng LLM.
 
 ## Mobile
 
-Mobile reconcile sau khi web/backend Batch 4 ổn định.
-
-```bash
+```powershell
 cd mobile
-flutter pub get
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
+flutter build apk --debug --flavor customer -t lib/main_customer.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
+flutter build apk --debug --flavor driver -t lib/main_driver.dart \
+  --dart-define=REALTIME_PROVIDER=socketio
 ```
 
-Mobile API client phải dùng Batch 4 OpenAPI contract đã ổn định.
-Gate mobile Batch 4 hiện yêu cầu frozen install, `flutter analyze` không có issue, toàn bộ Flutter test suite pass và Android debug APK compile được cho cả entrypoint customer lẫn driver.
-Evidence mobile local mới nhất: 2026-07-06 tại `33e90ea`. `flutter pub get --enforce-lockfile` pass, `flutter analyze` không có issue, toàn bộ `flutter test` pass 224 test, focused tracking/driver route/heatmap tests pass 22/22, và `flutter build apk --debug` sinh `build/app/outputs/flutter-apk/app-debug.apk`. APK build chỉ có warning tương thích tương lai từ `share_plus` áp dụng Kotlin Gradle Plugin, không làm fail. Native Google Maps key chỉ lấy từ env/local xcconfig, còn Android release signing fail-closed cho tới khi có đủ secret `FOODFLOW_UPLOAD_*`.
+Production release còn phải test token/channel Supabase, cross-scope denial, reconnect/refresh và receive-only dispatch; entry Customer/Driver; permission/GPS/background/offline/reconnect/route phase; KYC upload private và Admin signed review; vi/en/ja; API/base URL fail-closed; cấu hình map và signing production an toàn.
 
-Remote CI xanh đầy đủ gần nhất ở `e776f5c`: Gitleaks `28704171253`, Lint `28704171260`, Build Check `28704171258`, SBOM `28704171266`, Trivy `28704171279`, CodeQL `28704171259`, CI `28704171265`, E2E Tests `28704171252` và Integration Smoke Gate `28704171294`. Các head sau đó, gồm những commit local Batch 4 mới nhất, chưa thể start hoặc hoàn tất remote jobs vì GitHub Actions báo blocker billing/spending-limit hoặc token/auth. Rerun Mobile CI, CI, Build Check, Lint, Gitleaks, CodeQL, Trivy, SBOM, E2E Tests và Integration Smoke Gate sau khi billing/auth được xử lý.
+## Docker và security
 
-## Evidence local mới nhất (2026-07-06)
+- Build/smoke `amd64` + `arm64`; kiểm tra bcrypt/BullMQ/MessagePack, Prisma, Sharp, non-root, health, manifest, provenance, SBOM.
+- Trivy cả hai kiến trúc, block High/Critical; actionlint/ShellCheck.
+- Refuse semver overwrite và so digest sau promotion.
+- Chạy `infra/scripts/secret-scan.ps1`, staged diff, Gitleaks/CodeQL/dependency audit/Trivy/SBOM trong CI.
+- CI đang hết hạn nên không publish/deploy từ local evidence.
 
-Code head đã verify hiện tại là `33e90ea` trên `origin/master` trước docs-only refresh này. Remote `codex/batch4-integration` đã xoá; worktree sạch local vẫn dùng branch `codex/batch4-integration`, tracking `origin/master`. Remote CI/Actions vẫn pending vì GitHub token/auth/billing chưa khả dụng.
+## Evidence
 
-- Frozen install pass cho backend và web với `pnpm 11.7.0`; mobile `flutter pub get --enforce-lockfile` pass.
-- Backend pass Prisma validate với test `DATABASE_URL`/`DIRECT_URL`, `pnpm typecheck`, `pnpm lint`, full `pnpm test` (110 suite / 795 test) và `pnpm build`.
-- Web pass `pnpm typecheck`, `pnpm lint`, full Vitest (Admin 37 file / 153 test; Restaurant 31 file / 100 test) và `pnpm build` (Admin 70 page localized; Restaurant 55 page localized).
-- Docker Compose rebuild image Backend/Admin/Restaurant từ source hiện tại với frozen install; health check pass cho `http://[::1]:3001/api/healthz`, `http://[::1]:3000/api/healthz`, `http://[::1]:3002/api/healthz` sau rebuild.
-- Playwright pass Chromium + Firefox cùng lúc: 70/70 test với IPv6 loopback URL. Coverage gồm axe serious/critical smoke, visual contract, admin driver map navigation, tracking endpoint availability, realtime status flows và tenant isolation.
-- Mobile pass `flutter pub get --enforce-lockfile`, `flutter analyze`, full `flutter test` (224 test), focused tracking/driver route/heatmap tests 22/22, và `flutter build apk --debug`.
-- Tracking contract refresh pass backend `pnpm exec jest src/tracking --runInBand` (5 suite / 41 test) và focused dispatch/tracking regression tests (2 suite / 16 test). OpenAPI YAML parse trước đó pass 137 path với `OrderTrackingResponse.routePhase` required.
-- Dispatch/map evidence: restaurant acceptance hiện enqueue route-aware dispatch jobs có restaurant latitude/longitude và attempt metadata; worker bỏ qua legacy malformed jobs, parse đúng ioredis `GEOSEARCH WITHDIST` tuple rows và không còn fail `raw[i].replace is not a function`. Event customer `driver:assigned` hiện trả `etaMinutes: null` để backend không tự bịa ETA theo vận tốc trước khi tracking có route Google/OSRM thật.
-- Security evidence: high-confidence tracked secret scan không có match. Không có tracked dotenv/key/credential file ngoài `.env.example`. Native Firebase/provisioning artifacts đã được ignore. Legacy fake refund processor đã xoá; refund hiện enqueue `payment-refund` và full refund chỉ đánh dấu sau khi SePay hoặc wallet ledger reversal thành công. Mobile idempotency key là UUID v4, HTTP body log mobile chỉ bật trong debug và đã redact.
-
-## Security checks
-
-```bash
-git diff --check
-git diff --cached --check
-```
-
-Chạy staged và tracked-file secret scan. Placeholder trong `.env.example` được phép, nhưng token thật, private key, database credential và service-role secret phải bị block.
+Ghi SHA, UTC, command, môi trường, pass/fail, test count, image digest/architecture và blocker/skip. Không ghi secret/bearer. Trace/video/report có token hoặc user data phải ignore, chỉ curate asset an toàn trong `docs/`.

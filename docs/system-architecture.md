@@ -1,118 +1,178 @@
 # FoodFlow System Architecture
 
-## High-Level Architecture
+## Overview
 
-FoodFlow is a real-time food delivery platform with 4 client applications, a monolithic NestJS backend (designed for future microservice decomposition), and an LLM assistant layer backed by the backend provider adapter.
+FoodFlow is a modular-monolith delivery platform with five user-facing surfaces: the NestJS API, Admin web, Restaurant web, Customer Flutter app, and Driver Flutter app. The managed-production target is Supabase + Vercel; Docker Compose is an explicit local/self-hosted compatibility topology rather than the production source of truth.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    CLIENT LAYER                          │
-│  Customer App │ Driver App │ Restaurant Web │ Admin Web  │
-│   (Flutter)   │ (Flutter)  │   (Next.js)   │ (Next.js)  │
-└──────┬────────┴─────┬──────┴───────┬────────┴─────┬─────┘
-       │              │              │              │
-       └──────┬───────┴──────┬───────┴──────┬───────┘
-              │              │              │
-       REST + WebSocket      │         REST + WebSocket
-              │              │              │
-┌─────────────┴──────────────┴──────────────┴─────────────┐
-│                   API GATEWAY                            │
-│              NestJS (Modular Monolith)                    │
-│  Auth │ Orders │ Dispatch │ Tracking │ Admin │ Menu      │
-└──────┬──────────┬──────────┬──────────┬─────────────────┘
-       │          │          │          │
-┌──────┴──────┬───┴──────┬───┴──────┬───┴─────────────────┐
-│ PostgreSQL  │  Redis   │  BullMQ  │  MinIO              │
-│  + PostGIS  │ (GEO +   │ (Queues) │  (File Storage)     │
-│             │  PubSub) │          │                      │
-└─────────────┴──────────┴──────────┴──────────────────────┘
-```
+Current schema snapshot (2026-07-11): **55 Prisma models** and **24 ordered migrations**, including PostGIS delivery geometry, realtime/job/dispatch outboxes, private driver KYC, audit/export records, and AI usage telemetry.
 
-## Database Design
+## Managed-production topology
 
-28 tables across 6 domains:
-- **Identity**: users, customer_profiles, driver_profiles, restaurant_profiles
-- **Restaurant**: restaurants, opening_hours, categories, menu_items, options
-- **Order**: carts, cart_items, orders, order_items, order_status_history, payments, delivery_tasks
-- **Location**: addresses, driver_location_history (PostGIS)
-- **Social**: reviews, chat_sessions, chat_messages
-- **Admin**: promotions, promotion_usages, notifications, ai_support_tickets, admin_audit_logs
+```mermaid
+flowchart TB
+    Customer["Customer Flutter"]
+    Driver["Driver Flutter"]
+    Admin["Admin Next.js 15"]
+    Restaurant["Restaurant Next.js 15"]
+    API["NestJS 11 API\nVercel Functions"]
+    Cron["Vercel Cron\nBearer CRON_SECRET"]
+    DB[("Supabase PostgreSQL\n+ PostGIS")]
+    Realtime["Supabase Realtime\nexplicit publication"]
+    Storage["Supabase Storage\nscoped bucket policies"]
+    Basemap["MapLibre + OpenFreeMap\nkeyless web basemap"]
+    Routing["Google Directions / owned OSRM\nbackend route provider"]
+    AI["DeepSeek API\ndeepseek-v4-flash"]
+    Integrations["SePay · SMTP · FCM · Twilio"]
 
-## Real-time Architecture
-
-```
-Driver GPS (3s interval)
-  → WebSocket: driver:location
-  → NestJS TrackingGateway
-    → Redis GEOADD drivers:active
-    → Throttled broadcast to order:{id} room (max 1/2s)
-    → Batch INSERT to driver_location_history (15s flush)
-  → Customer: interpolated marker animation
-  → Fallback: HTTP polling every 10s
+    Customer -->|HTTPS REST| API
+    Driver -->|HTTPS REST + GPS samples| API
+    Admin -->|HTTPS REST| API
+    Restaurant -->|HTTPS REST| API
+    Admin --> Basemap
+    Restaurant --> Basemap
+    API --> DB
+    API --> Storage
+    API --> Routing
+    API --> AI
+    API --> Integrations
+    Cron -->|GET /api/jobs/drain| API
+    DB -->|INSERT realtime_outbox| Realtime
+    API -->|5-minute scoped JWT| Admin
+    API -->|5-minute scoped JWT| Restaurant
+    API -->|5-minute scoped JWT| Customer
+    API -->|5-minute scoped JWT| Driver
+    Realtime -->|authorized table changes| Admin
+    Realtime -->|authorized table changes| Restaurant
+    Realtime -->|authorized table changes| Customer
+    Realtime -->|authorized table changes| Driver
 ```
 
-## Web Integration Contract
+The API can run without a long-lived WebSocket server when `REALTIME_PROVIDER=supabase`. Scheduled work is persisted in PostgreSQL and drained by a secured Cron endpoint when `QUEUE_PROVIDER=supabase-postgres`.
 
-Admin and Restaurant dashboards use locale-prefixed Next.js App Router routes (`/[locale]/...`) and share the web API envelope:
-
-- Success: `{ success: true, data, meta? }`
-- Error: RFC 7807 Problem Details with stable `code`
-- Pagination: collections in `data`, page context in `meta`
-
-The restaurant order flow used by web E2E is the same runtime path as customers: authenticated address lookup, cart item mutation, `POST /orders`, then restaurant status transitions through `/restaurant/orders/:id/status`. Admin order detail pages consume flattened order detail data from the admin resource service so UI fields do not depend on Prisma relation shapes.
-
-## Driver Dispatch Algorithm
-
-1. GEOSEARCH Redis for online drivers within 5km
-2. Filter: not busy, heartbeat alive (<30s)
-3. Sort: distance ASC, rating DESC
-4. Offer to driver with 30s timeout (WebSocket push)
-5. On timeout/decline: retry next driver
-6. Expand radius if all exhausted (max 10km)
-7. BullMQ delayed retry for durability
-
-## i18n Architecture
-
-Three independent layers, each using its ecosystem's canonical tool:
-
-```
-User request
-  ├─ HTTP: Accept-Language header → cookie 'lang' → User.preferredLocale
-  │         ↓ nestjs-i18n sets req.i18nLang
-  │         ↓ services call i18n.t('namespace.key', { lang })
-  │
-  ├─ BullMQ job: caller serialises locale: LocaleCode into job.data
-  │              processor reads job.data.locale — never from request context
-  │
-  ├─ Flutter mobile: device locale → User.preferredLocale
-  │                  AppLocalizations.of(context).keyName
-  │
-  └─ Next.js web: /[locale]/ URL segment → next-intl middleware
-                  useTranslations('namespace')('key')
-```
-
-Locale resolution chain (backend):
+## Local and self-hosted topology
 
 ```mermaid
 flowchart LR
-    A[?lang= query] -->|found| Z[req.i18nLang]
-    A -->|missing| B[Accept-Language header]
-    B -->|found| Z
-    B -->|missing| C[lang cookie]
-    C -->|found| Z
-    C -->|missing| D[vi fallback]
-    D --> Z
+    Clients["Web + Flutter clients"] --> API["NestJS API"]
+    API --> Postgres[("PostgreSQL/PostGIS")]
+    API --> Redis[("Redis GEO/cache/pubsub")]
+    API --> MinIO["MinIO"]
+    API --> Sockets["Socket.IO namespaces"]
+    Worker["Backend image\ndist/workers/main.js"] --> Redis
+    Worker --> Postgres
 ```
 
-Supported locales: **vi** (default), **en**, **ja**.
+This topology uses `REALTIME_PROVIDER=socketio`, `STORAGE_PROVIDER=minio`, and `QUEUE_PROVIDER=bullmq`. It is useful for development, E2E, and self-hosting, but its environment values must never be reused as managed-production defaults.
 
-`User.preferredLocale` (PostgreSQL `LocaleCode` enum) is the persisted anchor for async jobs and cross-device consistency.
+## HTTP and authentication boundaries
 
-See `docs/i18n-guide.md` for add-locale procedure and translation key conventions.
+- Global REST prefix: `/api`.
+- Success: `{ success: true, data, meta? }`.
+- Failure: RFC 7807 Problem Details with a stable application `code`.
+- Access and refresh JWTs are distinct; browser clients serialize refresh and block refresh loops.
+- RBAC guards enforce `admin`, `restaurant`, `driver`, and `customer` boundaries.
+- Restaurant access additionally requires an active `RestaurantProfile` for the target tenant.
+- Tracking access is order-participant scoped: owner customer, assigned driver, active staff for the order restaurant, or admin.
 
-## Scaling Path
+See [API contract](api-contract.md) and [OpenAPI](openapi.yaml).
 
-- Current: Monolithic NestJS on Docker Compose
-- >1000 orders/day: Extract dispatch into separate service
-- >5000 orders/day: Read replicas, Redis Cluster
-- >10000 orders/day: Kubernetes, Kafka for events
+## Supabase Realtime contract
+
+```mermaid
+sequenceDiagram
+    participant Client as Admin/Restaurant/Customer/Driver
+    participant API as NestJS API
+    participant DB as Supabase Postgres
+    participant RT as Supabase Realtime
+
+    Client->>API: POST /api/realtime/token {orderId?, restaurantId?}
+    API->>DB: Verify user/order/restaurant ownership
+    API-->>Client: HS256 JWT, expiresAt, allowed channels
+    Client->>RT: setAuth(token) + subscribe to realtime_outbox
+    API->>DB: INSERT realtime_outbox(channel,event,payload)
+    DB-->>RT: postgres_changes INSERT
+    RT-->>Client: Row only when RLS channel claim matches
+```
+
+The JWT TTL is five minutes. Claims contain `sub`, application role, and `realtime_channels`. RLS reads those claims and permits `SELECT` only for rows whose channel is explicitly allowed. The `realtime_outbox` table alone is added to `supabase_realtime`; broad public channels are not part of the design.
+
+Canonical channel families cover user notifications, admin orders/drivers, restaurant tenants, drivers, orders, and restaurant-driver chat. A requested order or restaurant scope is rejected before token issue when ownership cannot be proven.
+
+Admin, Restaurant, Customer, and Driver managed clients support this contract. Mobile GPS and dispatch decisions remain authenticated REST mutations; Supabase is receive-only for allow-listed business events. Socket.IO remains an explicit local/self-hosted transport.
+
+## Queue and outbox processing
+
+`QUEUE_PROVIDER=supabase-postgres` writes jobs to `job_outbox` with queue, name, JSON payload/options, status, attempts, and `run_at`. Vercel Cron calls `GET /api/jobs/drain?limit=50`; secure worker invocations may use `POST /api/jobs/drain`. Both require an exact `Authorization: Bearer ${CRON_SECRET}` value.
+
+Local BullMQ remains available. The worker is another entry point in the backend image, not a separate package/image contract.
+
+## Storage
+
+- Managed production: Supabase Storage through the server-side service-role client.
+- Local/self-hosted: MinIO.
+- Driver KYC uses a dedicated private `foodflow-kyc` bucket. The API issues owner-scoped signed uploads, validates stored MIME/signature/ownership, stores only object keys, and gives Admin five-minute signed reads.
+- Public restaurant/menu assets remain separate from private KYC data.
+- Restaurant assets are uploaded/deleted through backend authorization; service-role keys are never exposed to clients.
+- Storage health follows the selected provider and reports a degraded component instead of silently substituting another provider.
+
+## Maps, dispatch, and shipper tracking
+
+```mermaid
+sequenceDiagram
+    participant Driver as Driver app
+    participant API as Tracking/Dispatch API
+    participant Route as Routing provider
+    participant DB as PostgreSQL/PostGIS
+    participant Client as Customer/Restaurant/Admin
+
+    Driver->>API: GPS {lat,lng,sampledAt,orderId}
+    API->>API: Validate bounds, freshness, role, order phase
+    API->>Route: Route pickup/drop-off when needed
+    Route-->>API: distance, duration, encoded geometry
+    API->>DB: Persist phase-matched route + telemetry
+    API-->>Client: Authorized snapshot/realtime event
+```
+
+Key invariants:
+
+- Missing, stale, future, malformed, overflowing, or out-of-service-area coordinates are rejected.
+- Route geometry is tied to pickup/drop-off phase; wrong-phase data cannot replace the visible route.
+- ETA is derived from provider route/traffic data and remaining progress, not an invented speed fallback.
+- Driver maps do not center on a hardcoded city when both GPS and valid backend geometry are absent.
+- Redis GEO/cache is a local compatibility accelerator; persisted PostGIS/`delivery_tasks.route_geojson` remains the durable route source.
+
+## AI support
+
+The API owns all DeepSeek calls. `DEEPSEEK_MODEL` defaults to `deepseek-v4-flash`; the provider key is server-only. Chat sessions and turns are ownership-checked, usage events persist model/token/cost/latency telemetry, and Admin AI Monitor reads those persisted aggregates. Missing configuration and provider failures return explicit typed states; the system does not fabricate an LLM answer.
+
+Any key previously pasted into chat or logs must be rotated before live smoke or production deploy.
+
+## Tenant and data security
+
+- Prisma queries scope restaurant resources by the authenticated active profile.
+- Realtime channel authorization is verified before JWT signing and again through Supabase RLS.
+- Supabase outbox/job tables enable RLS; service-role policy is separate from authenticated read policy.
+- Export jobs are tied to the requesting admin; unsupported Parquet creation is rejected rather than generating fake output.
+- Webhooks require provider/generic secrets and replay protection.
+- Production environment validation rejects missing keys, example values, local URLs, weak JWT/Cron secrets, and implicit provider fallbacks.
+
+## Internationalization
+
+| Layer | Mechanism | Locales |
+|---|---|---|
+| Backend | `nestjs-i18n`, request locale + persisted preference | `vi`, `en`, `ja` |
+| Admin/Restaurant | URL segment + `next-intl` | `vi`, `en`, `ja` |
+| Flutter | generated ARB localizations | `vi`, `en`, `ja` |
+| Async jobs | locale serialized into job payload | `vi`, `en`, `ja` |
+
+URL locale is authoritative for web rendering, metadata, `html lang`, labels, and accessibility text. Cookie/session state must not override a fresh locale URL.
+
+## Operational health and release boundaries
+
+- API: `/api/healthz` and `/api/readyz`.
+- Admin/Restaurant: `/api/healthz`.
+- Vercel Cron is declared in `backend/vercel.json`.
+- Docker release images are multi-architecture, non-root, digest-promoted, and scanned before semver/latest promotion.
+- Supabase/Vercel deploy is blocked until their preflight scripts pass and current-head local plus remote gates are green.
+
+Related decisions: [ADR index](adr/0001-record-architecture-decisions.md), [deployment guide](deployment-guide.md), and [testing guide](testing-guide.md).

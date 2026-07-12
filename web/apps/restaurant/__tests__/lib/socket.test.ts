@@ -41,12 +41,12 @@ describe('restaurant realtime socket', () => {
     disconnectSocket();
   });
 
-  it('keeps legacy NEXT_PUBLIC_SOCKET_URL compatibility without duplicating events', async () => {
+  it('does not use the removed NEXT_PUBLIC_SOCKET_URL fallback', async () => {
     vi.stubEnv('NEXT_PUBLIC_SOCKET_URL', 'https://legacy-realtime.foodflow.test/events');
 
     const { resolveEventsSocketUrl } = await import('@/lib/socket');
 
-    expect(resolveEventsSocketUrl()).toBe('https://legacy-realtime.foodflow.test/events');
+    expect(resolveEventsSocketUrl()).toBe('http://localhost:3001/events');
   });
 
   it('reads the current restaurant access token when the socket connects', async () => {

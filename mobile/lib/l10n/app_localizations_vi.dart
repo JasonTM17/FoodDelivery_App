@@ -36,11 +36,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get passwordRequired => 'Vui lòng nhập mật khẩu';
 
   @override
-  String get passwordMinLength => 'Mật khẩu phải có ít nhất 8 ký tự';
+  String get passwordMinLength =>
+      'Mật khẩu phải có 8–72 ký tự, gồm chữ hoa, chữ thường và số';
 
   @override
-  String get passwordComplexity =>
-      'Mật khẩu phải có chữ hoa, chữ thường và số';
+  String get showPassword => 'Hiện mật khẩu';
+
+  @override
+  String get hidePassword => 'Ẩn mật khẩu';
 
   @override
   String get forgotPassword => 'Quên mật khẩu?';
@@ -66,6 +69,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get registerAsDriver => 'Đăng ký làm tài xế';
+
+  @override
+  String get driverLoginTitle => 'FoodFlow Driver';
+
+  @override
+  String get driverLoginSubtitle => 'Đăng nhập để bắt đầu nhận đơn giao hàng';
 
   @override
   String get registerTitle => 'Đăng ký';
@@ -101,8 +110,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phoneInvalid => 'Số điện thoại không hợp lệ';
 
   @override
-  String get passwordHintLong =>
-      'Nhập mật khẩu (ít nhất 8 ký tự, hoa/thường/số)';
+  String get passwordHintLong => '8–72 ký tự, gồm chữ hoa, chữ thường và số';
 
   @override
   String get confirmPasswordLabel => 'Xác nhận mật khẩu';
@@ -201,6 +209,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cuisineChinese => 'Trung Hoa';
+
+  @override
+  String get cuisineItalian => 'Ý';
 
   @override
   String get cuisineDessert => 'Tráng miệng';
@@ -318,6 +329,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get commonRetry => 'Thử lại';
+
+  @override
+  String get commonErrorTitle => 'Rất tiếc!';
+
+  @override
+  String get commonErrorMessage => 'Có lỗi xảy ra. Vui lòng thử lại.';
+
+  @override
+  String get commonEmptyTitle => 'Không có dữ liệu';
+
+  @override
+  String get restaurantClosed => 'Đóng cửa';
+
+  @override
+  String get foodSoldOut => 'Hết';
 
   @override
   String get driverProfileTitle => 'Hồ sơ';
@@ -498,6 +524,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restaurantNoResultsSubtitle => 'Thử chọn bộ lọc khác';
+
+  @override
+  String get restaurantLocationRequired =>
+      'Cho phép truy cập vị trí để tìm nhà hàng gần bạn.';
+
+  @override
+  String get restaurantLoadFailed =>
+      'Không thể tải danh sách nhà hàng. Vui lòng thử lại.';
+
+  @override
+  String get restaurantDetailLoadFailed =>
+      'Không thể tải thông tin nhà hàng. Vui lòng thử lại.';
+
+  @override
+  String get restaurantMenuLoadFailed =>
+      'Không thể tải thực đơn. Vui lòng thử lại.';
 
   @override
   String get restaurantMenuTab => 'Thực đơn';
@@ -769,6 +811,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverDashboardNoOrders => 'Chưa có đơn hàng nào';
 
   @override
+  String get driverActiveOrderTitle => 'Đơn đang thực hiện';
+
+  @override
   String get driverStatEarnings => 'Thu nhập';
 
   @override
@@ -816,6 +861,93 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get driverStatusInfoText =>
       'Khi trực tuyến, bạn sẽ nhận được thông báo đơn hàng mới trong khu vực hoạt động.';
+
+  @override
+  String get driverOnlineStatusOnline => 'Đang trực tuyến';
+
+  @override
+  String get driverOnlineStatusPaused => 'Đang tạm dừng';
+
+  @override
+  String get driverOnlineStatusOffline => 'Đang ngoại tuyến';
+
+  @override
+  String get driverOnlineReady => 'Sẵn sàng nhận đơn';
+
+  @override
+  String get driverOnlineEnable => 'Bật để nhận đơn hàng';
+
+  @override
+  String get driverOnlineAutoOffline =>
+      'Tự động ngoại tuyến khi hết thời gian tạm dừng';
+
+  @override
+  String get driverDateToday => 'Hôm nay';
+
+  @override
+  String get driverDateLastSevenDays => '7 ngày qua';
+
+  @override
+  String get driverDateLastThirtyDays => '30 ngày qua';
+
+  @override
+  String get driverDateCustom => 'Tùy chỉnh';
+
+  @override
+  String get driverDateClear => 'Xóa';
+
+  @override
+  String driverDateFrom(String date) {
+    return 'Từ $date';
+  }
+
+  @override
+  String driverDateTo(String date) {
+    return 'Đến $date';
+  }
+
+  @override
+  String get driverStepRestaurant => 'Đến NH';
+
+  @override
+  String get driverStepPickup => 'Lấy hàng';
+
+  @override
+  String get driverStepDeliver => 'Giao hàng';
+
+  @override
+  String get driverStepComplete => 'Hoàn tất';
+
+  @override
+  String get driverPeakTitle => 'Giờ cao điểm';
+
+  @override
+  String driverPeakProgress(int completed, int target) {
+    return '$completed/$target đơn';
+  }
+
+  @override
+  String driverPeakRewardEarned(String amount) {
+    return 'Đã nhận thưởng: $amount';
+  }
+
+  @override
+  String driverPeakRewardRemaining(int count, String amount) {
+    return 'Hoàn thành thêm $count đơn để nhận $amount';
+  }
+
+  @override
+  String get driverEarningsDaily => 'Thu nhập hàng ngày';
+
+  @override
+  String driverDaysCount(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String driverRatingsReviewCount(int count) {
+    return '$count đánh giá';
+  }
 
   @override
   String get driverEarningsTitle => 'Thu nhập';
@@ -879,6 +1011,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverRatingsYesterday => 'Hôm qua';
 
   @override
+  String driverHistoryTodayAt(String time) {
+    return 'Hôm nay, $time';
+  }
+
+  @override
+  String driverHistoryYesterdayAt(String time) {
+    return 'Hôm qua, $time';
+  }
+
+  @override
   String get driverTripDetailTitle => 'Chi tiết chuyến đi';
 
   @override
@@ -932,6 +1074,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverRouteReplayCompleted => 'Đã phát xong';
 
   @override
+  String get driverRouteReplayEstimated =>
+      'Chỉ có tuyến dự kiến — chưa có GPS để phát lại';
+
+  @override
+  String get driverRouteReplayEstimatedTooltip =>
+      'Chuyến này chưa có telemetry GPS';
+
+  @override
   String get driverKycTitle => 'Xác minh KYC';
 
   @override
@@ -973,6 +1123,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverKycSubmitFailed => 'Gửi đơn thất bại. Vui lòng thử lại.';
 
   @override
+  String get driverKycUploadFailed =>
+      'Không thể tải giấy tờ này lên. Vui lòng thử lại.';
+
+  @override
+  String get driverKycUnsupportedImage =>
+      'Vui lòng dùng ảnh JPEG, PNG hoặc WebP hợp lệ.';
+
+  @override
+  String get driverKycFileTooSmall =>
+      'Ảnh chưa đầy đủ hoặc quá nhỏ. Vui lòng chụp lại giấy tờ.';
+
+  @override
+  String get driverKycFileTooLarge =>
+      'Mỗi giấy tờ phải có dung lượng tối đa 4 MB.';
+
+  @override
+  String get driverKycInvalidUploadGrant =>
+      'Phiên tải lên bảo mật không hợp lệ. Vui lòng thử lại.';
+
+  @override
+  String get driverKycSubmittedTitle => 'Đã gửi hồ sơ';
+
+  @override
+  String get driverKycSubmittedMessage =>
+      'Giấy tờ riêng tư của bạn đã được lưu an toàn và đang chờ xét duyệt. Bạn chưa thể trực tuyến trước khi được duyệt.';
+
+  @override
+  String get driverKycGoHome => 'Về trang tài xế';
+
+  @override
   String get driverHistoryTitle => 'Lịch sử giao hàng';
 
   @override
@@ -987,6 +1167,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driverHistoryRetry => 'Thử lại';
+
+  @override
+  String get driverHistoryOrderNumberLabel => 'Đơn hàng';
+
+  @override
+  String get driverHistoryDeliveryAddressLabel => 'Địa chỉ giao';
+
+  @override
+  String get driverHistoryNoteLabel => 'Ghi chú';
 
   @override
   String get driverHistoryDeliveryFee => 'Phí giao hàng';
@@ -1284,6 +1473,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get referralShareCode => 'Chia sẻ mã';
 
   @override
+  String get referralShareFailed =>
+      'Không thể mở bảng chia sẻ. Vui lòng thử lại.';
+
+  @override
   String get referralShareSheetTitle => 'Chia sẻ mã giới thiệu';
 
   @override
@@ -1414,6 +1607,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driver_onboarding_vehicle_type_car => 'Ô tô';
 
   @override
+  String get driver_onboarding_license_label => 'Số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_hint => 'Nhập số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_required =>
+      'Vui lòng nhập số giấy phép lái xe';
+
+  @override
+  String get driver_onboarding_license_invalid =>
+      'Dùng 5-50 chữ cái, chữ số, dấu chấm, gạch chéo hoặc gạch nối';
+
+  @override
   String get driver_onboarding_plate_label => 'Biển số xe';
 
   @override
@@ -1421,6 +1628,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driver_onboarding_plate_required => 'Vui lòng nhập biển số';
+
+  @override
+  String get driver_onboarding_plate_invalid =>
+      'Dùng 5-20 chữ cái, chữ số, dấu chấm hoặc gạch nối';
 
   @override
   String get driver_onboarding_next => 'Tiếp theo';
@@ -1545,7 +1756,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String driver_heatmap_avg_payout(String amount) {
-    return 'Trung bình $amountđ/đơn';
+    return 'Trung bình $amount/đơn';
   }
 
   @override
@@ -1661,6 +1872,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Báo cáo tip đã được lưu để đối soát. Thanh toán không tự động thay đổi.';
 
   @override
+  String get driver_tip_submit_failed =>
+      'Không thể lưu báo cáo tip. Vui lòng thử lại.';
+
+  @override
   String get driver_notifications_read_all => 'Đọc tất cả';
 
   @override
@@ -1734,6 +1949,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get driver_settings_title => 'Cài đặt';
+
+  @override
+  String get driver_settings_notifications_section => 'Thông báo';
+
+  @override
+  String get driver_settings_general_section => 'Chung';
 
   @override
   String get driver_settings_notifications => 'Thông báo đẩy';
@@ -1825,6 +2046,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get searchFilterOpenNow => 'Đang mở';
+
+  @override
+  String get searchLoadFailed =>
+      'Không thể tìm kiếm lúc này. Vui lòng thử lại.';
 
   @override
   String get vouchersTitle => 'Ưu đãi & Voucher';

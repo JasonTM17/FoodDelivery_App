@@ -1,32 +1,34 @@
 import {
   ConnectedSocket,
+  OnGatewayInit,
   MessageBody,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { Inject } from '@nestjs/common'
 import { UserRole } from '@prisma/client'
 import { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
-import Redis from 'ioredis'
 import { WebSocketAuthService } from '../auth/websocket-auth.service'
 import { websocketCorsOrigins } from '../common/websocket/websocket-cors'
-
-type OfferCallback = (accepted: boolean) => void
+import { DispatchOfferService } from './dispatch-offer.service'
+import { DispatchNotifierService } from './dispatch-notifier.service'
 
 @WebSocketGateway({ namespace: '/dispatch', cors: { origin: websocketCorsOrigins() } })
-export class DispatchGateway implements OnGatewayConnection {
+export class DispatchGateway implements OnGatewayConnection, OnGatewayInit {
   @WebSocketServer()
   server: Server
 
-  private offerCallbacks = new Map<string, OfferCallback>()
-
   constructor(
-    @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly socketAuth: WebSocketAuthService,
+    private readonly offers: DispatchOfferService,
+    private readonly notifier: DispatchNotifierService,
   ) {}
+
+  afterInit(server: Server): void {
+    this.notifier.attachSocketServer(server)
+  }
 
   async handleConnection(client: Socket): Promise<void> {
     try {
@@ -41,42 +43,6 @@ export class DispatchGateway implements OnGatewayConnection {
     }
   }
 
-  sendNewOrderOffer(driverId: string, data: Record<string, unknown>): void {
-    this.server.to(`driver:${driverId}`).emit('driver:new_order', data)
-  }
-
-  sendAssignedOrder(driverId: string, data: { orderId: string }): void {
-    this.server.to(`driver:${driverId}`).emit('driver:order_assigned', data)
-  }
-
-  registerOfferResponse(key: string, callback: OfferCallback): void {
-    this.offerCallbacks.set(key, callback)
-  }
-
-  unregisterOfferResponse(key: string): void {
-    this.offerCallbacks.delete(key)
-  }
-
-  resolveOffer(orderId: string, driverId: string, accepted: boolean): boolean {
-    const key = `${orderId}:${driverId}`
-    const callback = this.offerCallbacks.get(key)
-    if (callback) {
-      this.offerCallbacks.delete(key)
-      callback(accepted)
-      return true
-    }
-    return false
-  }
-
-  broadcastToOrder(orderId: string, event: string, data: Record<string, unknown>): void {
-    this.server.to(`order:${orderId}`).emit(event, data)
-  }
-
-  emitToAdmins(event: string, data: Record<string, unknown>): void {
-    // Admin room only — never broadcast to all driver sockets
-    this.server.to('admins').emit(event, data)
-  }
-
   @SubscribeMessage('dispatch:accept')
   async handleAccept(
     @ConnectedSocket() client: Socket,
@@ -86,19 +52,12 @@ export class DispatchGateway implements OnGatewayConnection {
     if (!driverId) {
       return { event: 'error', data: { message: 'Unauthorized driver' } }
     }
-    const offerKey = `offer:${data.orderId}:${driverId}`
-    const storedToken = await this.redis.get(offerKey)
-
-    if (!storedToken || storedToken !== data.offerToken) {
-      return { event: 'error', data: { message: 'Offer expired or invalid token' } }
+    try {
+      await this.offers.respondToOffer(data.orderId, driverId, data.offerToken, 'accept')
+      return { event: 'dispatch:accepted', data: { orderId: data.orderId } }
+    } catch {
+      return { event: 'error', data: { message: 'Offer expired or already resolved' } }
     }
-
-    await this.redis.del(offerKey)
-    // Write Redis result so multi-process offer waiters observe accept
-    await this.redis.setex(`offer:result:${data.orderId}:${driverId}`, 60, 'accepted')
-    this.resolveOffer(data.orderId, driverId, true)
-
-    return { event: 'dispatch:accepted', data: { orderId: data.orderId } }
   }
 
   @SubscribeMessage('dispatch:reject')
@@ -110,18 +69,12 @@ export class DispatchGateway implements OnGatewayConnection {
     if (!driverId) {
       return { event: 'error', data: { message: 'Unauthorized driver' } }
     }
-    const offerKey = `offer:${data.orderId}:${driverId}`
-    const storedToken = await this.redis.get(offerKey)
-
-    if (!storedToken || storedToken !== data.offerToken) {
-      return { event: 'error', data: { message: 'Offer expired or invalid token' } }
+    try {
+      await this.offers.respondToOffer(data.orderId, driverId, data.offerToken, 'reject')
+      return { event: 'dispatch:rejected', data: { orderId: data.orderId } }
+    } catch {
+      return { event: 'error', data: { message: 'Offer expired or already resolved' } }
     }
-
-    await this.redis.del(offerKey)
-    await this.redis.setex(`offer:result:${data.orderId}:${driverId}`, 60, 'rejected')
-    this.resolveOffer(data.orderId, driverId, false)
-
-    return { event: 'dispatch:rejected', data: { orderId: data.orderId } }
   }
 
   private authenticatedDriverId(client: Socket): string | null {

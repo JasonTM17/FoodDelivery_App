@@ -1,15 +1,15 @@
 # web/apps/admin/Dockerfile — Multi-stage Next.js standalone runtime
-FROM node:22-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf AS deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.11.0 --activate
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/admin/package.json ./apps/admin/
 COPY packages ./packages
 RUN pnpm install --frozen-lockfile
 
-FROM node:22-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.11.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
@@ -18,21 +18,38 @@ COPY --from=deps /app/apps/admin/node_modules ./apps/admin/node_modules
 ARG NEXT_PUBLIC_APP_ENV
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_REALTIME_PROVIDER
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_ADMIN_URL
-ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY
+ARG NEXT_PUBLIC_MAP_PROVIDER
+ARG NEXT_PUBLIC_MAP_STYLE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_REALTIME_PROVIDER=$NEXT_PUBLIC_REALTIME_PROVIDER
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
-ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_KEY
+ENV NEXT_PUBLIC_MAP_PROVIDER=$NEXT_PUBLIC_MAP_PROVIDER
+ENV NEXT_PUBLIC_MAP_STYLE_URL=$NEXT_PUBLIC_MAP_STYLE_URL
 RUN pnpm --filter foodflow-admin build
 
-FROM gcr.io/distroless/nodejs22-debian12 AS runner
+FROM gcr.io/distroless/nodejs22-debian13@sha256:39d204f9061e310d3e090edd185f48b1e9f70ef4771819a555ed716ccb42d229 AS runner
 WORKDIR /app
 
 ARG BUILD_SHA
-LABEL org.opencontainers.image.source="https://github.com/JasonTM17/foodflow"
+ARG NEXT_PUBLIC_APP_ENV
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_REALTIME_PROVIDER
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_ADMIN_URL
+ARG NEXT_PUBLIC_MAP_PROVIDER
+ARG NEXT_PUBLIC_MAP_STYLE_URL
+LABEL org.opencontainers.image.source="https://github.com/JasonTM17/FoodDelivery_App"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA
 LABEL org.opencontainers.image.title="foodflow-admin"
@@ -40,6 +57,15 @@ LABEL org.opencontainers.image.title="foodflow-admin"
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_REALTIME_PROVIDER=$NEXT_PUBLIC_REALTIME_PROVIDER
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
+ENV NEXT_PUBLIC_MAP_PROVIDER=$NEXT_PUBLIC_MAP_PROVIDER
+ENV NEXT_PUBLIC_MAP_STYLE_URL=$NEXT_PUBLIC_MAP_STYLE_URL
 
 COPY --from=builder /app/apps/admin/.next/standalone ./
 COPY --from=builder /app/apps/admin/.next/static ./apps/admin/.next/static

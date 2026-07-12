@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
@@ -100,6 +99,14 @@ class TipNotifier extends StateNotifier<TipState> {
     );
   }
 
+  void clearCustomAmount() {
+    state = state.copyWith(
+      clearCustomAmount: true,
+      isSubmitted: false,
+      error: null,
+    );
+  }
+
   int get effectiveAmount => state.effectiveAmount;
 
   Future<bool> submitTip(String tripId) async {
@@ -113,8 +120,11 @@ class TipNotifier extends StateNotifier<TipState> {
       );
       state = state.copyWith(isSubmitting: false, isSubmitted: true);
       return true;
-    } catch (error) {
-      state = state.copyWith(isSubmitting: false, error: _errorMessage(error));
+    } catch (_) {
+      state = state.copyWith(
+        isSubmitting: false,
+        error: 'DRIVER_TIP_SUBMIT_FAILED',
+      );
       return false;
     }
   }
@@ -127,16 +137,3 @@ class TipNotifier extends StateNotifier<TipState> {
 final tipProvider = StateNotifierProvider<TipNotifier, TipState>((ref) {
   return TipNotifier();
 });
-
-String _errorMessage(Object error) {
-  if (error is DioException) {
-    final data = error.response?.data;
-    if (data is Map && data['detail'] is String)
-      return data['detail'] as String;
-    if (data is Map && data['message'] is String)
-      return data['message'] as String;
-    if (error.message != null && error.message!.isNotEmpty)
-      return error.message!;
-  }
-  return error.toString();
-}

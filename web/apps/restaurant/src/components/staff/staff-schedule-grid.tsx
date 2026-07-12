@@ -67,18 +67,23 @@ export function StaffScheduleGrid({
         <p className="mt-1 text-xs text-gray-500">{t('schedule.description')}</p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div
+        className="overflow-x-auto rounded-lg border border-gray-200"
+        role="region"
+        aria-label={t('schedule.title')}
+        tabIndex={0}
+      >
         <div className="grid min-w-[760px] grid-cols-[64px_repeat(7,1fr)] text-xs">
           <div className="border-b border-r border-gray-100 bg-gray-50" />
           {days.map((day, dayIndex) => (
             <div key={day} className="border-b border-r border-gray-100 bg-gray-50 py-2 text-center font-medium text-gray-600 last:border-r-0">
               <span className="block">{t(`schedule.days.${day}`)}</span>
-              <span className="font-normal text-gray-400">{dayFormatter.format(addDays(weekStart, dayIndex))}</span>
+              <span className="font-normal text-gray-600">{dayFormatter.format(addDays(weekStart, dayIndex))}</span>
             </div>
           ))}
           {hours.map(hour => (
             <div key={hour} className="contents">
-              <div className="border-b border-r border-gray-100 py-2 pr-2 text-right text-gray-400">
+              <div className="border-b border-r border-gray-100 py-2 pr-2 text-right text-gray-600">
                 {hourLabels[hour - 6]}
               </div>
               {days.map((day, dayIndex) => {

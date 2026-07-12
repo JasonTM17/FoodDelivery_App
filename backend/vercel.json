@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm prisma generate && pnpm build",
+  "functions": {
+    "api/[...path].ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/jobs/drain?limit=50",
+      "schedule": "0 17 * * *"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/[...path].ts"
+    }
+  ]
+}

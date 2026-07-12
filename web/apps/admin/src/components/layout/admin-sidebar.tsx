@@ -82,6 +82,7 @@ export default function AdminSidebar({ className, initialFocusRef, onNavigate }:
               key={item.href}
               ref={index === 0 ? initialFocusRef : undefined}
               href={item.href}
+              prefetch={false}
               onClick={onNavigate}
               aria-current={isActive ? 'page' : undefined}
               className={cn(

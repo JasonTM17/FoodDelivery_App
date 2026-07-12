@@ -9,10 +9,16 @@ import { DriverTripTipsController } from './driver-trip-tips.controller'
 import { DriverTripTipsService } from './driver-trip-tips.service'
 import { IncentivesController } from './incentives.controller'
 import { IncentivesService } from './incentives.service'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { DriverKycController } from './driver-kyc.controller'
+import { DriverKycService } from './driver-kyc.service'
+import { DriverKycStorageService } from './driver-kyc-storage.service'
 
 @Module({
+  imports: [NotificationsModule],
   controllers: [
     DriversController,
+    DriverKycController,
     DriverBankAccountsController,
     DriverOnboardingAgreementController,
     DriverTripTipsController,
@@ -20,11 +26,19 @@ import { IncentivesService } from './incentives.service'
   ],
   providers: [
     DriversService,
+    DriverKycService,
+    DriverKycStorageService,
     DriverBankAccountsService,
     DriverOnboardingAgreementService,
     DriverTripTipsService,
     IncentivesService,
   ],
-  exports: [DriversService, DriverBankAccountsService, DriverOnboardingAgreementService, DriverTripTipsService],
+  exports: [
+    DriversService,
+    DriverKycService,
+    DriverBankAccountsService,
+    DriverOnboardingAgreementService,
+    DriverTripTipsService,
+  ],
 })
 export class DriversModule {}

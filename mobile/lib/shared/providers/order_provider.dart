@@ -107,10 +107,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
     try {
       final response = await _api.get('/orders');
       final payload = response.data;
-      final dataList = payload is List<dynamic>
-          ? payload
-          : (payload as Map<String, dynamic>)['orders'] as List<dynamic>? ??
-                const [];
+      final dataList = _ordersListFromPayload(payload);
       final allOrders = dataList
           .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -146,6 +143,16 @@ class OrderNotifier extends StateNotifier<OrderState> {
         error: 'Có lỗi xảy ra khi tải đơn hàng.',
       );
     }
+  }
+
+  List<dynamic> _ordersListFromPayload(dynamic payload) {
+    if (payload is List<dynamic>) return payload;
+    if (payload is Map<String, dynamic>) {
+      final orders = payload['orders'];
+      if (orders is List<dynamic>) return orders;
+      throw const FormatException('ORDERS_RESPONSE_MISSING_ORDERS');
+    }
+    throw const FormatException('ORDERS_RESPONSE_INVALID');
   }
 
   Future<bool> cancelOrder(String orderId) async {

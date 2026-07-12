@@ -1,6 +1,6 @@
 'use client';
 
-import { Link, usePathname } from '@/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import {
   ShoppingBag,
@@ -21,11 +21,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { getStoredRestaurant } from '@/lib/api';
-import { useAuth } from '@/lib/auth-provider';
-import { canAccessPath } from '@/lib/staff-permissions';
+import { clearToken, getStoredRestaurant } from '@/lib/api';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 
 interface NavItem {
@@ -62,26 +60,16 @@ export function RestaurantSidebar() {
   const rawPathname = usePathname();
   // Strip locale prefix so active checks work for both /orders and /vi/orders
   const pathname = rawPathname.replace(/^\/(vi|en|ja)/, '') || '/';
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const t = useTranslations();
   const restaurant = getStoredRestaurant();
-  const { logout, permissions } = useAuth();
-
-  // B-WEB-06: gate nav by staff permissions
-  const visibleNavItems = useMemo(
-    () => NAV_ITEMS.filter((item) => canAccessPath(permissions, item.href)),
-    [permissions],
-  );
-  const visibleSettingsItems = useMemo(
-    () => SETTINGS_ITEMS.filter((item) => canAccessPath(permissions, item.href)),
-    [permissions],
-  );
-  const canAccessSettings = visibleSettingsItems.length > 0;
 
   const isSettingsActive = pathname.startsWith('/settings');
 
   const handleLogout = () => {
-    logout();
+    clearToken();
+    router.push('/login');
   };
 
   return (
@@ -111,12 +99,13 @@ export function RestaurantSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-1">
-        {visibleNavItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
@@ -132,49 +121,49 @@ export function RestaurantSidebar() {
         })}
 
         {/* Settings sub-navigation */}
-        {canAccessSettings && (
-          <div className="pt-2 mt-1 border-t border-sidebar-hover">
-            {collapsed ? (
-              <Link
-                href="/settings"
-                className={cn(
-                  'flex items-center justify-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors',
-                  isSettingsActive
-                    ? 'bg-sidebar-active text-white'
-                    : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
-                )}
-              >
-                <Settings className="h-5 w-5" />
-              </Link>
-            ) : (
-              <>
-                <p className="px-3 pb-1 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
-                  {t('sidebar.settingsGroup')}
-                </p>
-                {visibleSettingsItems.map((item) => {
-                  const isActive = item.exact
-                    ? pathname === item.href
-                    : pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-sidebar-active text-white'
-                          : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      <span>{t(item.tKey)}</span>
-                    </Link>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        )}
+        <div className="pt-2 mt-1 border-t border-sidebar-hover">
+          {collapsed ? (
+            <Link
+              href="/settings"
+              prefetch={false}
+              className={cn(
+                'flex items-center justify-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors',
+                isSettingsActive
+                  ? 'bg-sidebar-active text-white'
+                  : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
+              )}
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+          ) : (
+            <>
+              <p className="px-3 pb-1 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
+                {t('sidebar.settingsGroup')}
+              </p>
+              {SETTINGS_ITEMS.map((item) => {
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={false}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-sidebar-active text-white'
+                        : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span>{t(item.tKey)}</span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
+        </div>
       </nav>
 
       {/* Collapse toggle */}

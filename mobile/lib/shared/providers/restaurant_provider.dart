@@ -64,11 +64,24 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     String? cuisine,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
+    if (latitude == null ||
+        longitude == null ||
+        !latitude.isFinite ||
+        !longitude.isFinite) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'RESTAURANTS_LOCATION_REQUIRED',
+        nearbyRestaurants: const [],
+      );
+      return;
+    }
+
     try {
-      final queryParams = <String, dynamic>{};
-      if (latitude != null) queryParams['latitude'] = latitude;
-      if (longitude != null) queryParams['longitude'] = longitude;
-      if (cuisine != null) queryParams['cuisine'] = cuisine;
+      final queryParams = <String, dynamic>{'lat': latitude, 'lng': longitude};
+      final cuisineValue = cuisine?.trim();
+      if (cuisineValue != null && cuisineValue.isNotEmpty) {
+        queryParams['cuisine'] = cuisineValue;
+      }
 
       final response = await _api.get(
         '/restaurants/nearby',
@@ -81,14 +94,15 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
 
       state = state.copyWith(isLoading: false, nearbyRestaurants: restaurants);
     } on DioException catch (e) {
-      final message =
-          e.response?.data?['message'] as String? ??
-          'Không thể tải danh sách nhà hàng.';
-      state = state.copyWith(isLoading: false, error: message);
-    } catch (e) {
+      final message = e.response?.data?['message'] as String?;
       state = state.copyWith(
         isLoading: false,
-        error: 'Có lỗi xảy ra khi tải nhà hàng.',
+        error: message ?? 'RESTAURANTS_LOAD_FAILED',
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'RESTAURANTS_LOAD_FAILED',
       );
     }
   }
@@ -102,14 +116,15 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
       );
       state = state.copyWith(isLoading: false, selectedRestaurant: restaurant);
     } on DioException catch (e) {
-      final message =
-          e.response?.data?['message'] as String? ??
-          'Không thể tải thông tin nhà hàng.';
-      state = state.copyWith(isLoading: false, error: message);
-    } catch (e) {
+      final message = e.response?.data?['message'] as String?;
       state = state.copyWith(
         isLoading: false,
-        error: 'Có lỗi xảy ra khi tải thông tin nhà hàng.',
+        error: message ?? 'RESTAURANT_DETAIL_LOAD_FAILED',
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'RESTAURANT_DETAIL_LOAD_FAILED',
       );
     }
   }
@@ -122,19 +137,21 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
 
       state = state.copyWith(isLoadingMenu: false, menuItems: menuItems);
     } on DioException catch (e) {
-      final message =
-          e.response?.data?['message'] as String? ?? 'Không thể tải thực đơn.';
-      state = state.copyWith(isLoadingMenu: false, error: message);
+      final message = e.response?.data?['message'] as String?;
+      state = state.copyWith(
+        isLoadingMenu: false,
+        error: message ?? 'RESTAURANT_MENU_LOAD_FAILED',
+      );
     } on FormatException {
       state = state.copyWith(
         isLoadingMenu: false,
         error: 'MENU_CONTRACT_INVALID_RESPONSE',
         menuItems: const [],
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isLoadingMenu: false,
-        error: 'Có lỗi xảy ra khi tải thực đơn.',
+        error: 'RESTAURANT_MENU_LOAD_FAILED',
         menuItems: const [],
       );
     }
@@ -156,7 +173,7 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
           .map((e) => RestaurantModel.fromJson(e as Map<String, dynamic>))
           .toList();
       state = state.copyWith(searchResults: results, isSearching: false);
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(isSearching: false);
     }
   }

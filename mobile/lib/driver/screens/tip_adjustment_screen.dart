@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/tip_provider.dart';
 import '../widgets/tip_amount_picker.dart';
 
@@ -69,7 +70,7 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
                 _TipStatusCard(
                   icon: Icons.error_outline,
                   color: const Color(0xFFF87171),
-                  message: tipState.error!,
+                  message: l10n.driver_tip_submit_failed,
                 ),
               ],
               if (tipState.isSubmitted) ...[
@@ -125,7 +126,7 @@ class _TipAdjustmentScreenState extends ConsumerState<TipAdjustmentScreen> {
                   },
             child: effective > 0
                 ? Text(
-                    '${l10n.driver_tip_confirm} ${effective.toStringAsFixed(0)}đ',
+                    '${l10n.driver_tip_confirm} ${formatVnd(context, effective)}',
                   )
                 : Text(l10n.driver_tip_confirm),
           ),

@@ -1,4 +1,5 @@
 export { ApiClientError, FoodFlowApiClient } from './api-client';
+export { assertAiChatSessionId, parseAiChatHistory, parseAiChatReply } from './ai-chat-contract';
 export type {
   ApiClientOptions,
   ApiEnvelope,
@@ -22,12 +23,18 @@ export type {
   AdminDriverVehicleType,
   AiChatReply,
   AiChatRequest,
+  AiChatHistory,
+  AiChatHistoryMessage,
   AiMonitorStatus,
+  AiTelemetryStatus,
   DeliveryRoutePhase,
   AdminKpiCard,
   AdminKpisResponse,
   AdminKycPayload,
+  AdminKycDocumentKey,
   AdminKycReviewRequest,
+  AdminKycReviewResponse,
+  AdminKycSignedDocuments,
   AdminKycStatus,
   AdminKycSubmission,
   AdminPromotionAnalytics,

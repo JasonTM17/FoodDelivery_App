@@ -1,4 +1,11 @@
-import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator'
+import {
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator'
 
 export class AdminOrderStatusDto {
   @IsString()
@@ -25,7 +32,7 @@ export class RestaurantMenuAvailabilityDto {
 }
 
 export class KycReviewDto {
-  @IsString()
+  @IsUUID()
   submissionId: string
 
   @IsIn(['approved', 'rejected'])
@@ -33,5 +40,6 @@ export class KycReviewDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   reason?: string
 }

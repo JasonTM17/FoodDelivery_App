@@ -17,6 +17,10 @@ export const DEFAULT_STAFF_PERMISSIONS: Record<StaffRole, StaffCapability[]> = {
   viewer: ['reports'],
 };
 
+function isStaffCapability(value: string): value is StaffCapability {
+  return STAFF_CAPABILITIES.includes(value as StaffCapability);
+}
+
 /** Nav path → required capability. `null` = always visible when authenticated. */
 export const NAV_CAPABILITY_MAP: Record<string, StaffCapability | null> = {
   '/': null,
@@ -39,9 +43,8 @@ export function resolveStaffPermissions(
   permissions?: StaffCapability[] | string[] | null,
 ): StaffCapability[] {
   if (Array.isArray(permissions) && permissions.length > 0) {
-    return permissions.filter((cap): cap is StaffCapability =>
-      STAFF_CAPABILITIES.includes(cap as StaffCapability),
-    );
+    const rawPermissions: readonly string[] = permissions;
+    return rawPermissions.filter(isStaffCapability);
   }
   if (role && role in DEFAULT_STAFF_PERMISSIONS) {
     return [...DEFAULT_STAFF_PERMISSIONS[role as StaffRole]];

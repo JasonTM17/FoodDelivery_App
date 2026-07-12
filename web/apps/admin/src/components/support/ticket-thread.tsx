@@ -4,11 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
 import { isHttpsUrl } from '@/lib/safe-url';
 import { formatDate } from '@/lib/utils';
+import { EmptyState } from '@foodflow/ui/empty-state';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { AlertCircle } from 'lucide-react';
 
 interface ThreadMessage {
   id: string;
@@ -24,15 +26,19 @@ interface TicketThreadProps {
   className?: string;
 }
 
+interface TicketThreadResponse {
+  messages: ThreadMessage[];
+}
+
 export default function TicketThread({ ticketId, className }: TicketThreadProps) {
   const t = useTranslations('support.thread');
-  const { data, isLoading } = useQuery<{ messages: ThreadMessage[] }>({
+  const query = useQuery<unknown>({
     queryKey: ['ticket-thread', ticketId],
     queryFn: () => apiGet(`/admin/support-tickets/${ticketId}/messages`),
     refetchInterval: 10000,
   });
 
-  if (isLoading) {
+  if (query.isLoading) {
     return (
       <div className={cn('space-y-4', className)}>
         {Array.from({ length: 4 }).map((_, i) => (
@@ -42,7 +48,23 @@ export default function TicketThread({ ticketId, className }: TicketThreadProps)
     );
   }
 
-  const messages = data?.messages || [];
+  const response = parseTicketThreadResponse(query.data);
+  const hasContractError =
+    !query.isLoading && !query.isError && query.data !== undefined && response === null;
+  const messages = response?.messages ?? [];
+
+  if (query.isError || hasContractError) {
+    return (
+      <EmptyState
+        icon={AlertCircle}
+        title={query.isError ? t('loadErrorTitle') : t('contractErrorTitle')}
+        description={query.isError ? t('loadErrorDescription') : t('contractErrorDescription')}
+        actionLabel={t('retry')}
+        onAction={() => void query.refetch()}
+        className={cn('rounded-lg border border-destructive/20 bg-destructive/5', className)}
+      />
+    );
+  }
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -122,4 +144,11 @@ export default function TicketThread({ ticketId, className }: TicketThreadProps)
       )}
     </div>
   );
+}
+
+function parseTicketThreadResponse(value: unknown): TicketThreadResponse | null {
+  if (!value || typeof value !== 'object') return null;
+  const messages = (value as { messages?: unknown }).messages;
+  if (!Array.isArray(messages)) return null;
+  return { messages: messages as ThreadMessage[] };
 }

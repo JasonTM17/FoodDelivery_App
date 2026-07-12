@@ -1,8 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-import { API_URL, TEST_USERS } from '../fixtures/test-users';
+import { API_URL, adminUrl, restaurantUrl, TEST_USERS } from '../fixtures/test-users';
 import { loginViaApi } from '../fixtures/api-helpers';
-import { gotoAdminRoute } from '../fixtures/ui-auth';
+import { gotoAdminRoute, loginAdminApp, loginRestaurantApp } from '../fixtures/ui-auth';
+import {
+  expectNoSeriousOrCriticalAxeViolations,
+  focusFirstVisibleAppControl,
+} from '../fixtures/accessibility';
 
 interface Envelope<T> {
   success?: boolean;
@@ -29,30 +32,154 @@ function authHeaders(token: string): { Authorization: string } {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function focusFirstVisibleAppControl(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await page.keyboard.press('Tab');
-    const hasVisibleAppFocus = await page.evaluate(() => {
-      const active = document.activeElement;
-      if (!(active instanceof HTMLElement)) return false;
-      if (active.closest('nextjs-portal')) return false;
-      if (active.matches('[data-nextjs-dev-tools-button="true"]')) return false;
-      if (!active.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')) {
-        return false;
-      }
+const restaurantLoginLocales = [
+  {
+    locale: 'vi',
+    heading: 'Quản lý nhà hàng',
+    password: 'Mật khẩu',
+    submit: 'Đăng nhập',
+    showPassword: 'Hiện mật khẩu',
+    title: 'Đăng nhập | FoodFlow Nhà hàng',
+    conflictingCookie: 'en',
+  },
+  {
+    locale: 'en',
+    heading: 'Restaurant Manager',
+    password: 'Password',
+    submit: 'Sign In',
+    showPassword: 'Show password',
+    title: 'Sign In | FoodFlow Restaurant',
+    conflictingCookie: 'vi',
+  },
+  {
+    locale: 'ja',
+    heading: 'レストラン管理',
+    password: 'パスワード',
+    submit: 'ログイン',
+    showPassword: 'パスワードを表示',
+    title: 'ログイン | FoodFlow レストラン',
+    conflictingCookie: 'vi',
+  },
+] as const;
 
-      const rect = active.getBoundingClientRect();
-      const style = window.getComputedStyle(active);
-      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
-    });
-    if (hasVisibleAppFocus) return;
-  }
+const adminOverviewLocales = [
+  {
+    locale: 'vi',
+    title: 'Tổng quan | FoodFlow Admin',
+    heading: 'Tổng quan',
+    revenue: 'Doanh thu',
+    conflictingCookie: 'en',
+  },
+  {
+    locale: 'en',
+    title: 'Overview | FoodFlow Admin',
+    heading: 'Overview',
+    revenue: 'Revenue',
+    conflictingCookie: 'vi',
+  },
+  {
+    locale: 'ja',
+    title: '概要 | FoodFlow Admin',
+    heading: '概要',
+    revenue: '売上',
+    conflictingCookie: 'vi',
+  },
+] as const;
 
-  throw new Error('Expected keyboard Tab to focus a visible in-app control');
+async function expectRestaurantLoginLocale(
+  page: Page,
+  expected: (typeof restaurantLoginLocales)[number],
+): Promise<void> {
+  await expect(page.locator('html')).toHaveAttribute('lang', expected.locale);
+  await expect(page).toHaveTitle(expected.title);
+  await expect(page.getByRole('heading', { name: expected.heading, exact: true })).toBeVisible();
+  await expect(page.getByLabel(expected.password, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: expected.showPassword, exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: expected.submit, exact: true })).toBeVisible();
 }
 
+async function expectAdminOverviewLocale(
+  page: Page,
+  expected: (typeof adminOverviewLocales)[number],
+): Promise<void> {
+  await expect(page.locator('html')).toHaveAttribute('lang', expected.locale);
+  await expect(page).toHaveTitle(expected.title);
+  await expect(page.getByRole('heading', { name: expected.heading, exact: true })).toBeVisible();
+  await expect(
+    page.getByTestId('kpi-card-revenue').getByRole('heading', { name: expected.revenue, exact: true }),
+  ).toBeVisible();
+}
+
+test.describe('Batch 4 public locale contracts', () => {
+  for (const expected of restaurantLoginLocales) {
+    test(`restaurant login honors /${expected.locale} in a fresh browser context`, async ({ page }) => {
+      const pageErrors: string[] = [];
+      const consoleErrors: string[] = [];
+
+      page.on('pageerror', (error) => pageErrors.push(error.message));
+      page.on('console', (message) => {
+        if (message.type() === 'error') consoleErrors.push(message.text());
+      });
+
+      const loginUrl = restaurantUrl('/login', expected.locale);
+      const response = await page.goto(loginUrl);
+      expect(response?.status(), 'Restaurant login must not resolve to a 404 shell').toBeLessThan(400);
+      await expectRestaurantLoginLocale(page, expected);
+
+      await page.context().addCookies([{
+        name: 'NEXT_LOCALE',
+        value: expected.conflictingCookie,
+        url: new URL(loginUrl).origin,
+      }]);
+      const conflictingCookieResponse = await page.reload();
+      expect(conflictingCookieResponse?.status(), 'A stale locale cookie must not break the URL locale')
+        .toBeLessThan(400);
+      await expectRestaurantLoginLocale(page, expected);
+
+      await focusFirstVisibleAppControl(page);
+      await expectNoSeriousOrCriticalAxeViolations(page);
+      expect(pageErrors).toEqual([]);
+      expect(consoleErrors).toEqual([]);
+    });
+  }
+
+  for (const expected of adminOverviewLocales) {
+    test(
+      'admin overview honors /' + expected.locale + ' with a stale locale cookie',
+      async ({ page, request }) => {
+        const pageErrors: string[] = [];
+        const consoleErrors: string[] = [];
+
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        page.on('console', (message) => {
+          if (message.type() === 'error') consoleErrors.push(message.text());
+        });
+
+        await loginAdminApp(page, request, expected.locale);
+        await expectAdminOverviewLocale(page, expected);
+
+        const overviewUrl = adminUrl('/overview', expected.locale);
+        await page.context().addCookies([{
+          name: 'NEXT_LOCALE',
+          value: expected.conflictingCookie,
+          url: new URL(overviewUrl).origin,
+        }]);
+        const conflictingCookieResponse = await page.reload();
+        expect(conflictingCookieResponse?.status(), 'A stale locale cookie must not break the URL locale')
+          .toBeLessThan(400);
+        await expectAdminOverviewLocale(page, expected);
+
+        await focusFirstVisibleAppControl(page);
+        await expectNoSeriousOrCriticalAxeViolations(page);
+        expect(pageErrors).toEqual([]);
+        expect(consoleErrors).toEqual([]);
+      },
+    );
+  }
+});
+
 test.describe('Batch 4 API contracts', () => {
-  test('AI chatbot returns a protected, non-empty service reply', async ({ request }) => {
+  test('AI chatbot is protected and follows the configured-provider contract', async ({ request }) => {
     const { accessToken } = await loginViaApi(
       request,
       TEST_USERS.customer.email,
@@ -61,15 +188,24 @@ test.describe('Batch 4 API contracts', () => {
 
     const response = await request.post(`${API_URL}/ai/chat`, {
       headers: authHeaders(accessToken),
-      data: { message: 'hello', sessionId: `e2e-ai-${Date.now()}` },
+      data: { message: 'hello' },
     });
 
-    expect(response.ok()).toBeTruthy();
     const body = await response.json();
+    if (process.env.E2E_AI_LIVE !== 'true') {
+      expect(response.status()).toBe(503);
+      expect(body).toMatchObject({
+        status: 503,
+        code: 'AI_PROVIDER_NOT_CONFIGURED',
+      });
+      return;
+    }
+
+    expect(response.ok()).toBeTruthy();
     expect(body).toMatchObject({ success: true });
     const reply = unwrap<{ reply: string; sessionId: string; action: string }>(body);
     expect(reply.reply.trim().length).toBeGreaterThan(0);
-    expect(['answered', 'escalated', 'degraded']).toContain(reply.action);
+    expect(['answered', 'escalated']).toContain(reply.action);
   });
 
   test('admin settings and export jobs use canonical web envelopes', async ({ request }) => {
@@ -196,10 +332,21 @@ test.describe('Batch 4 accessibility smoke', () => {
       page.getByRole('table').or(page.getByRole('combobox')).or(page.getByRole('button')).first(),
     ).toBeVisible();
 
-    const results = await new AxeBuilder({ page }).analyze();
-    const seriousOrCritical = results.violations.filter(
-      (violation) => violation.impact === 'serious' || violation.impact === 'critical',
-    );
-    expect(seriousOrCritical).toEqual([]);
+    await expectNoSeriousOrCriticalAxeViolations(page);
+  });
+
+  test('restaurant order queue exposes keyboard focus and has no serious axe violations', async ({
+    page,
+    request,
+  }) => {
+    await loginRestaurantApp(page, request);
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
+
+    await focusFirstVisibleAppControl(page);
+    await expect(
+      page.getByRole('button').or(page.getByRole('link')).or(page.getByRole('combobox')).first(),
+    ).toBeVisible();
+
+    await expectNoSeriousOrCriticalAxeViolations(page);
   });
 });

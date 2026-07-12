@@ -45,23 +45,18 @@ export class AdminExportService {
     const resource = normalizeResource(dto.resource ?? dto.type)
     const format = normalizeFormat(dto.format)
     const filters = normalizeFilters(dto)
-    const canCompleteInline = format === ExportFormat.csv || format === ExportFormat.xlsx
-    const status = canCompleteInline ? ExportJobStatus.completed : ExportJobStatus.failed
-    const errorMessage = canCompleteInline
-      ? null
-      : `${format.toUpperCase()} export worker is not configured yet. Use CSV or XLSX until parquet file generation storage is available.`
 
     const job = await this.prisma.adminExportJob.create({
       data: {
         requestedById: adminId,
         resource,
         format,
-        status,
+        status: ExportJobStatus.completed,
         filters: filters as Prisma.InputJsonValue,
-        progress: canCompleteInline ? 100 : 0,
-        fileUrl: canCompleteInline ? 'download' : null,
-        errorMessage,
-        expiresAt: canCompleteInline ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
+        progress: 100,
+        fileUrl: 'download',
+        errorMessage: null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
       include: { requestedBy: { select: { id: true, email: true, fullName: true } } },
     })

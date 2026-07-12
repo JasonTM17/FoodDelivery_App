@@ -69,7 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _SectionHeader(title: 'Thông báo'),
+          _SectionHeader(title: l10n.driver_settings_notifications_section),
           _ToggleTile(
             icon: Icons.notifications_outlined,
             label: l10n.driver_settings_notifications,
@@ -86,7 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (v) => setState(() => _soundEnabled = v),
           ),
           const SizedBox(height: 20),
-          _SectionHeader(title: 'Chung'),
+          _SectionHeader(title: l10n.driver_settings_general_section),
           _NavTile(
             icon: Icons.language_outlined,
             label: l10n.driver_settings_language,
@@ -159,12 +159,13 @@ class _ToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+    return Material(
+      color: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF374151)),
+        side: const BorderSide(color: Color(0xFF374151)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         secondary: Icon(icon, color: AppColors.primary),
@@ -205,49 +206,51 @@ class _NavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF374151)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: labelColor ?? Colors.white,
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (subtitle != null)
+    return Material(
+      color: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFF374151)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle!,
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 12,
+                      label,
+                      style: TextStyle(
+                        color: labelColor ?? Colors.white,
+                        fontSize: 14,
                       ),
                     ),
-                ],
-              ),
-            ),
-            trailing ??
-                const Icon(
-                  Icons.chevron_right,
-                  color: Color(0xFF6B7280),
-                  size: 20,
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
                 ),
-          ],
+              ),
+              trailing ??
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF6B7280),
+                    size: 20,
+                  ),
+            ],
+          ),
         ),
       ),
     );

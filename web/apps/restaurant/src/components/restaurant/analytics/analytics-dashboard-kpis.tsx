@@ -53,7 +53,7 @@ export function AnalyticsKpiGrid({ data, locale, numberFormatter }: AnalyticsKpi
             </div>
           </div>
           <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
-          <p className="mt-1 text-xs text-gray-400">{kpi.sub}</p>
+          <p className="mt-1 text-xs text-gray-600">{kpi.sub}</p>
         </div>
       ))}
     </div>

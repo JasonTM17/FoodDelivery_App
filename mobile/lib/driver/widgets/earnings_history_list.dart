@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/currency_formatter.dart';
 import '../providers/driver_provider.dart';
 
 class EarningsHistoryList extends StatelessWidget {
@@ -20,16 +21,17 @@ class EarningsHistoryList extends StatelessWidget {
     }
     return Column(
       children: earnings!.entries
-          .map((entry) => _EarningEntryCard(entry: entry))
+          .map((entry) => _EarningEntryCard(entry: entry, l10n: l10n))
           .toList(growable: false),
     );
   }
 }
 
 class _EarningEntryCard extends StatelessWidget {
-  const _EarningEntryCard({required this.entry});
+  const _EarningEntryCard({required this.entry, required this.l10n});
 
   final DriverEarningEntry entry;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +72,11 @@ class _EarningEntryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  entry.orderCode.isNotEmpty
-                      ? 'ĐH: ${entry.orderCode}'
-                      : 'ĐH: ${entry.orderId.substring(0, 8).toUpperCase()}',
+                  l10n.driverRatingsOrder(
+                    entry.orderCode.isNotEmpty
+                        ? entry.orderCode
+                        : entry.orderId.substring(0, 8).toUpperCase(),
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF6B7280),
@@ -85,7 +89,7 @@ class _EarningEntryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '+${entry.amount.toStringAsFixed(0)}đ',
+                formatSignedVnd(context, entry.amount),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -93,7 +97,7 @@ class _EarningEntryCard extends StatelessWidget {
                 ),
               ),
               Text(
-                _formatDate(entry.completedAt),
+                _formatDate(entry.completedAt, l10n),
                 style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
               ),
             ],
@@ -132,10 +136,10 @@ class _EarningsEmptyState extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime date) {
+String _formatDate(DateTime date, AppLocalizations l10n) {
   final now = DateTime.now();
   final diff = now.difference(date);
-  if (diff.inDays == 0) return 'Hôm nay';
-  if (diff.inDays == 1) return 'Hôm qua';
+  if (diff.inDays == 0) return l10n.driverRatingsToday;
+  if (diff.inDays == 1) return l10n.driverRatingsYesterday;
   return '${date.day}/${date.month}';
 }

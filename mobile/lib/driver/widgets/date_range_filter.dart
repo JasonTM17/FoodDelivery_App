@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 
 class DateRangeFilter extends StatelessWidget {
@@ -17,15 +19,15 @@ class DateRangeFilter extends StatelessWidget {
     this.onClear,
   });
 
-  static const _quickOptions = [
-    ('Hôm nay', 0),
-    ('7 ngày qua', 7),
-    ('30 ngày qua', 30),
-    ('Tùy chỉnh', -1),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final quickOptions = [
+      (l10n.driverDateToday, 1),
+      (l10n.driverDateLastSevenDays, 7),
+      (l10n.driverDateLastThirtyDays, 30),
+      (l10n.driverDateCustom, -1),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -33,7 +35,7 @@ class DateRangeFilter extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            children: _quickOptions.map((option) {
+            children: quickOptions.map((option) {
               final isActive = _isQuickOptionActive(option.$2);
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -42,7 +44,6 @@ class DateRangeFilter extends StatelessWidget {
                   selected: isActive,
                   onSelected: (_) {
                     if (option.$2 == -1) {
-                      // Tuỳ chỉnh — prompt date picker
                       _pickDateRange(context);
                     } else {
                       final now = DateTime.now();
@@ -50,7 +51,7 @@ class DateRangeFilter extends StatelessWidget {
                         now.year,
                         now.month,
                         now.day,
-                      ).subtract(Duration(days: option.$2));
+                      ).subtract(Duration(days: option.$2 - 1));
                       onFromDateChanged?.call(start);
                       onToDateChanged?.call(now);
                     }
@@ -86,7 +87,7 @@ class DateRangeFilter extends StatelessWidget {
                 Icon(Icons.date_range, size: 14, color: AppColors.primary),
                 const SizedBox(width: 6),
                 Text(
-                  _formatRange(),
+                  _formatRange(context, l10n),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.primary,
@@ -94,11 +95,15 @@ class DateRangeFilter extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: onClear,
-                  child: const Text(
-                    'Xoá',
-                    style: TextStyle(
+                TextButton(
+                  onPressed: onClear,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(
+                    l10n.driverDateClear,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFFEF4444),
                       fontWeight: FontWeight.w500,
@@ -114,16 +119,16 @@ class DateRangeFilter extends StatelessWidget {
   }
 
   bool _isQuickOptionActive(int days) {
-    if (fromDate == null) return days == 0;
+    if (fromDate == null) return days == 1;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    if (days == 0) {
+    if (days == 1) {
       return fromDate!.year == today.year &&
           fromDate!.month == today.month &&
           fromDate!.day == today.day;
     }
     if (days > 0) {
-      final expected = today.subtract(Duration(days: days));
+      final expected = today.subtract(Duration(days: days - 1));
       return fromDate!.year == expected.year &&
           fromDate!.month == expected.month &&
           fromDate!.day == expected.day;
@@ -131,13 +136,14 @@ class DateRangeFilter extends StatelessWidget {
     return false;
   }
 
-  String _formatRange() {
-    final fmt = (DateTime d) => '${d.day}/${d.month}/${d.year}';
+  String _formatRange(BuildContext context, AppLocalizations l10n) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final fmt = (DateTime d) => DateFormat.yMd(locale).format(d);
     if (fromDate != null && toDate != null) {
       return '${fmt(fromDate!)} - ${fmt(toDate!)}';
     }
-    if (fromDate != null) return 'Từ ${fmt(fromDate!)}';
-    return 'Đến ${fmt(toDate!)}';
+    if (fromDate != null) return l10n.driverDateFrom(fmt(fromDate!));
+    return l10n.driverDateTo(fmt(toDate!));
   }
 
   Future<void> _pickDateRange(BuildContext context) async {

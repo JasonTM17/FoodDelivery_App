@@ -15,7 +15,7 @@ export function ProfileSaveBar({ restaurant, isSaving, uploading }: ProfileSaveB
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-end gap-3 border-t border-gray-200 bg-white px-6 py-3">
       {restaurant && (
-        <p className="mr-auto text-xs text-gray-400">
+        <p className="mr-auto text-xs text-gray-600">
           {t('lastUpdated', { date: new Date(restaurant.updatedAt).toLocaleDateString(locale) })}
         </p>
       )}

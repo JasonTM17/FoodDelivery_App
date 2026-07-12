@@ -11,17 +11,9 @@ import { RevenueForecastChart } from '@/components/insights/revenue-forecast-cha
 import { api } from '@/lib/api';
 import type { RestaurantInsights } from '@/lib/types';
 
-const EMPTY_INSIGHTS: RestaurantInsights = {
-  suggestions: [],
-  peakHours: [],
-  bestSellers: [],
-  slowMovers: [],
-  forecast: [],
-};
-
 export default function InsightsPage() {
   const t = useTranslations('insights');
-  const [insights, setInsights] = useState<RestaurantInsights>(EMPTY_INSIGHTS);
+  const [insights, setInsights] = useState<RestaurantInsights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -29,11 +21,11 @@ export default function InsightsPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await api.get<RestaurantInsights>('/restaurant/insights');
+      const data = await api.get<unknown>('/restaurant/insights');
+      if (!isRestaurantInsights(data)) throw new Error(t('loadError'));
       setInsights(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('loadError');
-      setInsights(EMPTY_INSIGHTS);
       setError(message);
     } finally {
       setLoading(false);
@@ -46,6 +38,23 @@ export default function InsightsPage() {
 
   if (loading) {
     return <InsightsSkeleton />;
+  }
+
+  if (!insights) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+            <Lightbulb className="h-5 w-5 text-brand-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+            <p className="text-sm text-gray-500">{t('description')}</p>
+          </div>
+        </div>
+        <RetryableError message={error || t('loadError')} onRetry={loadInsights} retryLabel={t('retry')} />
+      </div>
+    );
   }
 
   return (
@@ -134,5 +143,17 @@ function RetryableError({
         {retryLabel}
       </button>
     </div>
+  );
+}
+
+function isRestaurantInsights(value: unknown): value is RestaurantInsights {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<Record<keyof RestaurantInsights, unknown>>;
+  return (
+    Array.isArray(candidate.suggestions) &&
+    Array.isArray(candidate.peakHours) &&
+    Array.isArray(candidate.bestSellers) &&
+    Array.isArray(candidate.slowMovers) &&
+    Array.isArray(candidate.forecast)
   );
 }

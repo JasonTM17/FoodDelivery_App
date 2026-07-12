@@ -3,6 +3,8 @@ import { createElement, type AnchorHTMLAttributes } from 'react';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
+type MockLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean };
+
 afterEach(() => cleanup());
 
 vi.mock('next/navigation', () => ({
@@ -20,8 +22,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/navigation', () => ({
-  Link: ({ children, href, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) =>
-    createElement('a', { href, ...props }, children),
+  Link: ({ children, href, prefetch, ...props }: MockLinkProps) => {
+    void prefetch;
+    return createElement('a', { href, ...props }, children);
+  },
   usePathname: () => '/',
   useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
 }));

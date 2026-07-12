@@ -9,10 +9,8 @@ import {
 } from '@/app/[locale]/reports/report-export-config';
 
 describe('reports UI', () => {
-  it('enables inline CSV/XLSX exports and keeps unavailable Parquet disabled', () => {
-    expect(exportFormats.find(format => format.value === 'csv')?.disabled).toBe(false);
-    expect(exportFormats.find(format => format.value === 'xlsx')?.disabled).toBe(false);
-    expect(exportFormats.find(format => format.value === 'parquet')?.disabled).toBe(true);
+  it('offers only export formats backed by inline file generation', () => {
+    expect(exportFormats.map(format => format.value)).toEqual(['csv', 'xlsx']);
     expect(validateCustomDateRange('30d', '', '')).toBeNull();
     expect(validateCustomDateRange('custom', '', '')).toBe('required');
     expect(validateCustomDateRange('custom', '2026-07-03', '2026-07-02')).toBe('invalid');

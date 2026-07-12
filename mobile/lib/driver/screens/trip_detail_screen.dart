@@ -104,6 +104,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           fromLng: widget.fromLng ?? firstPoint.lng,
           toLat: widget.toLat ?? lastPoint.lat,
           toLng: widget.toLng ?? lastPoint.lng,
+          isEstimated:
+              route.routeSource == 'persisted_geometry' ||
+              route.timestampsEstimated,
         ),
         const SizedBox(height: 16),
         TripSummaryCard(

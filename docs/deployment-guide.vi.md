@@ -1,135 +1,192 @@
 # Hướng dẫn deploy FoodFlow
 
-Ngôn ngữ: [English](deployment-guide.md) | [Tiếng Việt](deployment-guide.vi.md) | [日本語](deployment-guide.ja.md)
+## Mục tiêu
 
-## Nguyên tắc deploy
+Topology production bắt buộc:
 
-Chỉ deploy sau khi integration branch sạch, đã push, đã review và đủ gate xanh. Không deploy từ dirty root worktree, không dùng key đã lộ, không deploy khi Batch 4 còn gate đỏ.
+- Supabase: PostgreSQL/PostGIS, Realtime, Storage.
+- Vercel: NestJS API, Admin, Restaurant.
+- Docker Hub: artifact multi-arch immutable sau production smoke.
 
-Trạng thái Batch 4 ngày 2026-07-06: `origin/master` đang ở `64e46c795c9c15ae52bb0112f91e93a6f3851645`, và `git ls-remote --heads origin` chỉ trả `refs/heads/master`. Các gate local cho backend, web, Docker, Playwright Chromium/Firefox, mobile, OpenAPI, compose và fallback secret scan đã pass cho head này; xem [Batch 4 release report](batch4-release-report.md). Đây là bằng chứng verify local, không phải approval deploy production. Deploy Supabase và Vercel vẫn bị chặn cho tới khi GitHub Actions access được khôi phục, remote checks của current head xanh, production secrets đã rotate/hợp lệ, Supabase CLI/auth khả dụng, và repo được link tới đúng Vercel projects.
+Không deploy khi secret/CLI auth, current-head test, remote CI hoặc health còn thiếu. Local green không thay thế approval production.
 
-## Docker local
+## Nguyên tắc
 
-Chạy service nền cho dev host-run:
+1. Chỉ làm trong clean integration worktree; không sửa `D:\Food_Delivery`.
+2. Remote chỉ giữ `master`; không push local integration branch theo tên.
+3. Rotate mọi key từng xuất hiện trong chat/log/screenshot/ticket/git.
+4. Nhập value qua prompt/dashboard, không đưa vào chat/docs/commit.
+5. Managed production phải đặt explicit `supabase`/`supabase-postgres`; không fallback Socket.IO/MinIO/BullMQ.
+6. Migrate database trước API, API trước hai web app.
+7. Docker chỉ promote semver/latest sau production smoke.
 
-```bash
-docker compose up -d postgres redis minio
+## Chuỗi release
+
+Full local gate → GitHub Actions current-head xanh → rotate secret + preflight → Supabase → Vercel API → Admin/Restaurant → production smoke → `HEAD:master` → Docker immutable.
+
+Bất kỳ bước nào fail đều dừng các bước sau.
+
+## 1. Gate source
+
+```powershell
+git fetch --prune origin
+git status --short
+git rev-list --left-right --count origin/master...HEAD
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 ```
 
-Chạy full stack container:
+Phải có frozen install, fresh DB migration, backend/web/mobile full suite, Chromium+Firefox, axe serious/critical = 0, visual, tenant isolation, realtime auth, route/ETA shipper, AI fail-closed + live, secret scan và Docker multi-arch scan. Sau đó vẫn cần remote workflows xanh.
 
-```bash
-docker compose up -d --build
+## 2. Nhập credential an toàn
+
+Supabase release shell:
+
+```powershell
+powershell -File infra/scripts/supabase-env-prompt.ps1 -RunPreflight
 ```
 
-Health checks:
+Prompt nhận `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, pooled `DATABASE_URL` và direct/session `DIRECT_URL`, chỉ giữ trong process rồi xóa.
 
-```bash
-curl http://localhost:3001/api/healthz
-curl http://localhost:3000/api/healthz
-curl http://localhost:3002/api/healthz
+Vercel:
+
+```powershell
+powershell -File infra/scripts/vercel-web-preflight.ps1
+powershell -File infra/scripts/vercel-env-prompt.ps1 \
+  -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
 ```
 
-## Secret stores bắt buộc
+Chỉ thêm đúng tên bị preflight báo thiếu và chạy preflight lại.
 
-| Khu vực | Secret cần có |
-|---|---|
-| Backend auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` |
-| Database/cache | `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, passwords |
-| Storage | MinIO/S3 access key và secret key |
-| SePay | `SEPAY_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_WEBHOOK_SECRET` |
-| AI | `DEEPSEEK_API_KEY` hoặc key của LLM provider được cấu hình |
-| Maps | backend `GOOGLE_MAPS_API_KEY` và `OSRM_URL` riêng; Admin/Restaurant browser `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Deploy CLI | Vercel token, Supabase access token |
+## 3. Env production
 
-Key đã xuất hiện trong chat, log, screenshot, ticket hoặc git history phải rotate trước production.
+API core:
 
-Production config không phải secret nhưng bắt buộc: cấu hình `DELIVERY_BASE_FEE_VND` theo base delivery fee đã duyệt. Backend boot validation sẽ chặn khi thiếu pricing config để không tạo đơn với phí MVP hardcoded.
+- `NODE_ENV=production`
+- Supabase pooled `DATABASE_URL`, direct `DIRECT_URL`
+- managed production `REDIS_URL` cho các cache/history path hiện còn sử dụng Redis
+- `REALTIME_PROVIDER=supabase`
+- `STORAGE_PROVIDER=supabase`
+- `QUEUE_PROVIDER=supabase-postgres`
+- `SUPABASE_URL`, server-only `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_STORAGE_BUCKET`
+- private `SUPABASE_KYC_BUCKET=foodflow-kyc`, `DRIVER_KYC_MAX_UPLOAD_MB=4`, `DRIVER_KYC_RETRY_LIMIT=3`
+- strong `CRON_SECRET`, `JWT_SECRET`, `JWT_REFRESH_SECRET`
+- verified `CORS_ORIGINS`, `PASSWORD_RESET_URL_BASE`
+- Maps/routing, DeepSeek, SePay, SMTP, FCM, Twilio và webhook secrets.
 
-Kiểm tra deploy readiness mới nhất: Vercel CLI đã có auth, nhưng repo chưa link tới Vercel project và danh sách project của account chưa có FoodFlow. Supabase CLI chưa có trong local PATH. Chưa deploy production.
+Admin:
 
-## Supabase
+- `NEXT_PUBLIC_API_URL=https://<api>.vercel.app/api`
+- `NEXT_PUBLIC_ADMIN_URL=https://<admin>.vercel.app`
+- `NEXT_PUBLIC_REALTIME_PROVIDER=supabase`
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_MAP_PROVIDER=openfreemap`
+- `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty`
 
-1. Tạo Supabase project.
-2. Lưu Supabase Postgres pooled transaction-mode URL vào backend `DATABASE_URL`.
-3. Lưu Supabase Postgres direct/session-mode URL vào backend `DIRECT_URL`; Prisma dùng biến này cho migration qua `directUrl`.
-4. Chạy migration trên staging trước:
+Restaurant tương tự, dùng `NEXT_PUBLIC_RESTAURANT_URL`.
 
-   ```bash
-   cd backend
-   pnpm prisma validate
-   pnpm prisma migrate deploy
-   ```
+Public env được bake vào bundle nên đổi value phải rebuild. OpenFreeMap không cần API key hay billing; Supabase public key vẫn phải được bảo vệ bằng RLS và realtime scope.
 
-5. Chỉ bật realtime cho bảng cần realtime. Chạy tenant isolation E2E trước khi mở production data.
-6. Supabase service-role key chỉ được lưu server-side, không đưa vào web/mobile.
+## 4. Supabase
 
-Mẫu env:
+Sau khi tất cả gate xanh:
 
-```bash
-DATABASE_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres"
+```powershell
+cd backend
+corepack pnpm exec prisma validate --schema prisma/schema.prisma
+corepack pnpm run db:migrate:prod
+cd ..
 ```
 
-## Vercel
+Không chạy `migrate dev`, reset hoặc demo seed trên production.
 
-Deploy web sau khi build Admin và Restaurant pass.
+Xác minh:
 
-| Vercel project | Root directory | Build command |
-|---|---|---|
-| FoodFlow Admin | `web` | `pnpm --filter foodflow-admin build` |
-| FoodFlow Restaurant | `web` | `pnpm --filter restaurant build` |
+- đủ 24 migration;
+- RLS bật cho `realtime_outbox`, `job_outbox`, `ai_usage_events`;
+- chỉ `realtime_outbox` cần thiết nằm trong publication `supabase_realtime`;
+- authenticated chỉ đọc channel nằm trong claim `realtime_channels`;
+- anon không đọc outbox/job/AI telemetry;
+- KYC bucket private; driver chỉ ghi bằng signed grant scope theo owner, Admin read URL hết hạn sau 5 phút, response browser không lộ raw object key;
+- Storage bucket/policy đúng và service-role key không xuất hiện trong client.
 
-Public env:
+Realtime smoke phải chứng minh authorized event nhận được, cross-tenant/expired token bị từ chối.
 
-| App | Variable |
-|---|---|
-| Admin | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
-| Restaurant | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_RESTAURANT_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` |
+## 5. Vercel API
 
-Admin và Restaurant cố ý fail-closed ở production khi thiếu API, realtime, canonical app URL hoặc map key bắt buộc. Giá trị localhost chỉ dành cho dev. Không bật `FOODFLOW_ENABLE_DEV_API_REWRITE` trên Vercel; biến này chỉ dùng proxy local cho Restaurant khi dev.
+Projects: `foodflow-api` root `backend`, `food-delivery-app` root `web/apps/admin`, `foodflow-restaurant` root `web/apps/restaurant`.
 
-Restrict `NEXT_PUBLIC_GOOGLE_MAPS_KEY` bằng HTTP referrer.
+```powershell
+vercel --cwd backend
+# test preview
+vercel --prod --cwd backend
+```
 
-## Backend
+Xác minh `/api/healthz`, `/api/readyz`, function log không lộ secret và Cron `/api/jobs/drain?limit=50` dùng bearer `CRON_SECRET`. Nếu API chưa xanh thì không deploy web.
 
-- Chạy `pnpm prisma migrate deploy` trước khi nhận traffic.
-- Set `NODE_ENV=production`.
-- Backend boot validation sẽ reject khi thiếu production infra secret hoặc còn dùng localhost default. Cấu hình `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, JWT secret dài 64+ ký tự, `PASSWORD_RESET_URL_BASE`, `CORS_ORIGINS` chính xác và MinIO/S3 trước khi start API hoặc workers.
-- CORS chỉ cho production dashboard/mobile origins.
-- Cấu hình SePay webhook URL và `SEPAY_WEBHOOK_SECRET`.
-- Cấu hình Redis cho Socket.IO/realtime và rate limiting.
-- Giữ `THROTTLER_MEMORY_FALLBACK=false` ở production để Redis outage fail rõ ràng thay vì làm yếu rate limit.
-- Cấu hình storage public URL.
-- Expose `/api/healthz` cho uptime checks.
+## 6. Admin và Restaurant
 
-## Keep-alive và monitoring
+Gắn verified API alias rồi:
 
-Keep-alive dùng để monitor health, không dùng để che lỗi runtime.
+```powershell
+vercel --cwd web/apps/admin
+vercel --cwd web/apps/restaurant
+# test preview
+vercel --prod --cwd web/apps/admin
+vercel --prod --cwd web/apps/restaurant
+```
 
-Checks khuyến nghị:
+Kiểm tra `/vi|en|ja/login`, `html lang`, title, console/network, `/api/healthz`, không có 404 shell, localhost request hoặc legacy socket fallback.
 
-- Backend: `GET /api/healthz`
-- Admin: `GET /api/healthz`
-- Restaurant: `GET /api/healthz`
-- Synthetic flows: login, restaurant order queue và live tracking map, admin exports, AI configured/degraded state, driver map
+## 7. Production smoke
 
-Không dùng keep-alive để che migration fail, thiếu secret hoặc realtime lỗi.
+```powershell
+$env:API_URL='https://<api>'
+$env:ADMIN_URL='https://<admin>'
+$env:RESTAURANT_URL='https://<restaurant>'
+powershell -File infra/scripts/production-health-check.ps1
+```
 
-## Gate trước deploy
+Sau đó nhập token smoke ngắn hạn qua process env và chạy:
 
-- Frozen install trong môi trường sạch.
-- Backend: Prisma validate/migrate checks, typecheck, lint, Jest, build.
-- Web: API client generation/typecheck, Spectral/OpenAPI lint, Admin/Restaurant typecheck/lint/Vitest/build.
-- E2E: Playwright Chromium và Firefox với seed data thật.
-- Accessibility: axe không có serious/critical.
-- Visual: so với Stitch baseline đã duyệt.
-- Security: tracked-file secret scan và staged diff secret scan.
-- Tenant isolation: nhà hàng không đọc/sửa dữ liệu nhà hàng khác.
+```powershell
+powershell -File infra/scripts/post-deploy-smoke.ps1 \
+  -RequireAuthenticatedChecks -RequireRoutePolyline -CreateExportJob
+```
 
-## Rollback
+Phải pass health, locale page, realtime token/channel, DeepSeek live, export, shipper route/polyline, tenant denial, SePay, notification và Storage. Script không in bearer token; xóa token khỏi process sau khi chạy.
 
-1. Chặn traffic vào release lỗi.
-2. Roll back container hoặc Vercel deployment.
-3. Không rollback database migration kiểu destructive nếu chưa có migration đảo chiều và review data impact.
-4. Giữ log, deployment ID và commit hash cho incident review.
+## 8. Merge và Docker
+
+Sau production smoke + remote CI xanh:
+
+```powershell
+git fetch --prune origin
+git push origin HEAD:master
+git fetch --prune origin
+git rev-list --left-right --count origin/master...HEAD # 0 0
+git ls-remote --heads origin                         # chỉ master
+```
+
+Tag `v4.0.0` đúng verified master commit. Workflow build `sha-<full-commit>` cho `amd64/arm64`, runtime smoke, Trivy, health rồi mới tạo semver. `latest` chỉ promote manual. Worker chạy từ backend image, không publish worker artifact mới.
+
+## Self-hosted Docker
+
+Đây là profile tương thích, không phải Supabase/Vercel production:
+
+```powershell
+Copy-Item .env.production.example .env.production
+$env:IMAGE_TAG='v4.0.0'
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Phải thay toàn bộ example values và pin semver/SHA, không dùng `latest`.
+
+## Rollback và điều kiện dừng
+
+- Rollback Vercel về deployment đã verify; database ưu tiên forward migration.
+- Không tắt RLS để chữa cháy.
+- Docker rollback bằng immutable semver/SHA cũ.
+- Dừng release nếu dirty/diverged, secret/auth thiếu, key chưa rotate, gate đỏ, RLS/tenant chưa chứng minh, smoke map/realtime/chatbot/export/payment fail, image chưa scan đủ hai kiến trúc hoặc semver đã tồn tại với digest khác.
+
+Xem [testing guide](testing-guide.vi.md), [security](security-audit-guide.vi.md), [release report](batch4-release-report.md).

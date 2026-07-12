@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: '22' }
       - uses: pnpm/action-setup@v6
-        with: { version: '11.7.0' }
+        with: { version: '11.11.0' }
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -66,7 +66,7 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: '22' }
       - uses: pnpm/action-setup@v6
-        with: { version: '11.7.0' }
+        with: { version: '11.11.0' }
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -86,7 +86,10 @@ jobs:
         env:
           NEXT_PUBLIC_APP_ENV: production
           NEXT_PUBLIC_API_URL: https://api.foodflow.test/api
-          NEXT_PUBLIC_WS_URL: wss://api.foodflow.test/events
+          NEXT_PUBLIC_REALTIME_PROVIDER: supabase
+          NEXT_PUBLIC_SUPABASE_URL: https://foodflow-ci.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-public-anon-key-for-contract-tests
           NEXT_PUBLIC_ADMIN_URL: https://admin.foodflow.test
           NEXT_PUBLIC_RESTAURANT_URL: https://restaurant.foodflow.test
-          NEXT_PUBLIC_GOOGLE_MAPS_KEY: ci-google-maps-browser-key
+          NEXT_PUBLIC_MAP_PROVIDER: openfreemap
+          NEXT_PUBLIC_MAP_STYLE_URL: https://tiles.openfreemap.org/styles/liberty

@@ -105,7 +105,7 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsS
       {errors.length > 0 && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4">
           <p className="text-sm font-medium text-red-700 mb-1">{t('errorsTitle')}</p>
-          <ul className="text-sm text-red-600 space-y-0.5 list-disc list-inside">
+          <ul className="list-inside list-disc space-y-0.5 text-sm text-red-700">
             {errors.map((e, i) => <li key={i}>{e}</li>)}
           </ul>
         </div>

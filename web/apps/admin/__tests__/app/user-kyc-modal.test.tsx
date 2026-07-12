@@ -31,10 +31,11 @@ describe('UserKycModal', () => {
     renderWithClient(<UserKycModal userId="user-1" open onOpenChange={vi.fn()} />);
 
     expect(await screen.findByText('kycStatuses.pending')).toBeInTheDocument();
-    expect(screen.getByText('kycDocuments.idFront')).toBeInTheDocument();
-    expect(screen.getByText('kycDocuments.idBack')).toBeInTheDocument();
-    expect(screen.getByText('kycDocuments.selfie')).toBeInTheDocument();
-    expect(screen.getAllByLabelText('kycDocumentPreview')).toHaveLength(2);
+    expect(screen.getByText('kycDocuments.idCardFront')).toBeInTheDocument();
+    expect(screen.getByText('kycDocuments.idCardBack')).toBeInTheDocument();
+    expect(screen.getByText('kycDocuments.driverLicense')).toBeInTheDocument();
+    expect(screen.getByText('kycDocuments.vehicleRegistration')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('kycOpenDocument')).toHaveLength(4);
   });
 
   it('trims reject reason before sending the review request', async () => {
@@ -44,7 +45,7 @@ describe('UserKycModal', () => {
     renderWithClient(<UserKycModal userId="user-1" open onOpenChange={vi.fn()} />);
 
     fireEvent.change(await screen.findByLabelText('kycRejectReason'), {
-      target: { value: '  Missing selfie  ' },
+      target: { value: '  Missing vehicle registration  ' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'kycReject' }));
 
@@ -52,7 +53,7 @@ describe('UserKycModal', () => {
       expect(mockedApiPost).toHaveBeenCalledWith('/admin/users/user-1/kyc/review', {
         submissionId: 'kyc-1',
         status: 'rejected',
-        reason: 'Missing selfie',
+        reason: 'Missing vehicle registration',
       });
     });
   });
@@ -86,6 +87,18 @@ describe('UserKycModal', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('kycReviewError');
     expect(screen.queryByText('internal stack trace')).not.toBeInTheDocument();
   });
+
+  it('fails closed instead of rendering a non-HTTP document URL', async () => {
+    const payload = makeKyc();
+    payload.submissions[0].documentUrls.idCardFront = 'javascript:alert(1)';
+    mockedApiGet.mockResolvedValueOnce(payload);
+
+    renderWithClient(<UserKycModal userId="user-1" open onOpenChange={vi.fn()} />);
+
+    expect(await screen.findByText('kycStatuses.pending')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('kycOpenDocument')).toHaveLength(3);
+    expect(screen.getByText('kycDocumentUnavailable')).toBeInTheDocument();
+  });
 });
 
 function makeKyc() {
@@ -97,11 +110,15 @@ function makeKyc() {
         status: 'pending',
         createdAt: '2026-07-01T00:00:00.000Z',
         reviewedAt: null,
+        reviewedById: null,
         rejectionReason: null,
+        documentsAvailable: true,
+        updatedAt: '2026-07-01T00:00:00.000Z',
         documentUrls: {
-          idFront: 'https://example.test/front.jpg',
-          idBack: 'https://example.test/back.jpg',
-          selfie: null,
+          idCardFront: 'https://example.test/front.jpg?token=short-lived',
+          idCardBack: 'https://example.test/back.jpg?token=short-lived',
+          driverLicense: 'https://example.test/license.jpg?token=short-lived',
+          vehicleRegistration: 'https://example.test/registration.jpg?token=short-lived',
         },
       },
     ],

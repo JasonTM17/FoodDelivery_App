@@ -19,7 +19,7 @@ export class DriversController {
 
   @Post('online')
   goOnline(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(goOnlineSchema)) body: GoOnlineInput) {
-    return this.driversService.goOnline(user.sub, body.lat, body.lng)
+    return this.driversService.goOnline(user.sub, body.lat, body.lng, body.sampledAt)
   }
 
   @Post('offline')

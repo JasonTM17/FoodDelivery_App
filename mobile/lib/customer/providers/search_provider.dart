@@ -27,12 +27,12 @@ class SearchResultItem {
 
   factory SearchResultItem.fromJson(Map<String, dynamic> json) {
     return SearchResultItem(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       type: json['type'] as String? ?? 'restaurant',
       name: json['name'] as String? ?? '',
-      imageUrl: json['imageUrl'] as String? ?? '',
+      imageUrl: json['imageUrl'] as String? ?? json['logoUrl'] as String? ?? '',
       rating: (json['rating'] as num?)?.toDouble(),
-      subtitle: json['subtitle'] as String?,
+      subtitle: json['subtitle'] as String? ?? json['addressLine'] as String?,
       price: json['price'] as int?,
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
       isOpen: json['isOpen'] as bool? ?? true,
@@ -42,17 +42,17 @@ class SearchResultItem {
 
 enum SearchSort { nearest, topRated, priceLowHigh, openNow }
 
-extension SearchSortLabel on SearchSort {
-  String labelVi() {
+extension SearchSortApi on SearchSort {
+  String get apiValue {
     switch (this) {
       case SearchSort.nearest:
-        return 'Gần nhất';
+        return 'distance';
       case SearchSort.topRated:
-        return 'Đánh giá cao';
+        return 'rating_desc';
       case SearchSort.priceLowHigh:
-        return 'Giá thấp → cao';
+        return 'price_asc';
       case SearchSort.openNow:
-        return 'Đang mở';
+        return 'open_now';
     }
   }
 }
@@ -136,23 +136,9 @@ class SearchNotifier extends StateNotifier<SearchState> {
     }
     state = state.copyWith(isLoading: true, error: null, query: query);
     try {
-      String sortParam;
-      switch (state.sort) {
-        case SearchSort.priceLowHigh:
-          sortParam = 'price_asc';
-          break;
-        case SearchSort.topRated:
-          sortParam = 'rating_desc';
-          break;
-        case SearchSort.openNow:
-          sortParam = 'open_now';
-          break;
-        default:
-          sortParam = 'distance';
-      }
       final response = await _api.get(
         '/restaurants/search',
-        queryParameters: {'q': query, 'sort': sortParam},
+        queryParameters: {'q': query, 'sort': state.sort.apiValue},
       );
       final dataList = response.data as List<dynamic>;
       final results = dataList
@@ -161,14 +147,13 @@ class SearchNotifier extends StateNotifier<SearchState> {
       state = state.copyWith(isLoading: false, results: results);
       addRecentSearch(query);
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] as String? ?? 'Không thể tìm kiếm.';
-      state = state.copyWith(isLoading: false, error: msg);
-    } catch (_) {
+      final message = e.response?.data?['message'] as String?;
       state = state.copyWith(
         isLoading: false,
-        error: 'Có lỗi xảy ra khi tìm kiếm.',
+        error: message ?? 'SEARCH_LOAD_FAILED',
       );
+    } catch (_) {
+      state = state.copyWith(isLoading: false, error: 'SEARCH_LOAD_FAILED');
     }
   }
 }

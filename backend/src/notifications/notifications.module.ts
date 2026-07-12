@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-import { BullModule } from '@nestjs/bullmq'
 import { AuthModule } from '../auth/auth.module'
 import { RedisModule } from '../redis/redis.module'
 import { NotificationsService } from './notifications.service'
@@ -14,12 +13,13 @@ import { TwilioChannel } from './channels/twilio.channel'
 import { TwilioProcessor } from './channels/twilio.processor'
 import { TemplateLoader } from './templates/template.loader'
 import { QUEUE_FCM, QUEUE_SMTP, QUEUE_TWILIO } from './notifications.constants'
+import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
   imports: [
     AuthModule,
     RedisModule,
-    BullModule.registerQueue(
+    QueueProviderModule.registerQueue(
       { name: QUEUE_FCM },
       { name: QUEUE_SMTP },
       { name: QUEUE_TWILIO },

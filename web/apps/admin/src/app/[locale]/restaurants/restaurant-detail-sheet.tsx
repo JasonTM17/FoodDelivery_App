@@ -20,8 +20,8 @@ export interface RestaurantDetail {
   name: string;
   owner?: { name?: string; email?: string; phone?: string };
   cuisine: string;
-  rating: number;
-  totalOrders: number;
+  rating: number | null;
+  totalOrders: number | null;
   status: string;
   address: string;
   createdAt: string;
@@ -109,10 +109,10 @@ export default function RestaurantDetailSheet({
                 <span className="text-muted-foreground">{t('rating')}</span>
                 <div className="flex items-center gap-1">
                   <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                  {restaurant.rating.toFixed(1)}
+                  {restaurant.rating === null ? '—' : restaurant.rating.toFixed(1)}
                 </div>
               </div>
-              <DetailRow label={t('totalOrders')} value={restaurant.totalOrders} />
+              <DetailRow label={t('totalOrders')} value={restaurant.totalOrders ?? '—'} />
               <DetailRow label={t('address')} value={restaurant.address} alignRight />
               <DetailRow label={t('createdAt')} value={formatDate(restaurant.createdAt)} />
             </div>

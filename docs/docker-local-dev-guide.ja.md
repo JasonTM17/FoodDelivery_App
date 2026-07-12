@@ -1,17 +1,12 @@
-# Docker とローカル開発ガイド
+# Docker and Local Development Guide
 
-このガイドは FoodFlow Batch 4 のローカル実行手順をまとめたものです。Docker のローカル既定値は開発専用なので、production の secret manager にコピーしないでください。
+## Scope
 
-## 前提条件
+Local development、isolated E2E、current-source container validation、self-hosted compatibility のガイドです。Supabase + Vercel managed production は [deployment guide](deployment-guide.ja.md) を参照してください。
 
-- Docker Desktop または Docker Engine と Compose v2
-- ホストで backend または web を実行する場合は Node.js 20+ と pnpm
-- mobile を検証する場合は Flutter stable
-- リリースゲートを確認する場合は clean worktree
+必要: Docker Compose v2/Buildx、Node.js 22.13+、Corepack pnpm 11.11.0、Flutter SDK。GIF 再生成時のみ FFmpeg。
 
-## 環境変数と secret のルール
-
-ホストからコマンドを実行する場合は、example ファイルを ignore 済みの local env にコピーします。
+## Env and secrets
 
 ```powershell
 Copy-Item .env.example .env
@@ -20,124 +15,123 @@ Copy-Item web/apps/admin/.env.example web/apps/admin/.env.local
 Copy-Item web/apps/restaurant/.env.example web/apps/restaurant/.env.local
 ```
 
-Production credentials は Supabase、Vercel、または backend host の secret manager に保存します。`.env`、CLI auth ファイル、storage state、private certificate、database dump、provider token は commit しないでください。チャットやログに貼られた AI key または map key は漏えい済みとして扱い、production 前に rotate してください。
+Ignored file のみ作成します。Real dotenv、CLI auth、dump、certificate、token、signing material を commit しません。Chat/log に出た key は rotate。`foodflow_dev`、`minioadmin`、development JWT は production 禁止です。
 
-## ローカル実行モード
+Local provider は Socket.IO + Redis/BullMQ + MinIO、managed production は Supabase Realtime/Storage/Postgres queue を明示します。
 
-### インフラのみ
-
-Backend、web、mobile をホストから実行し、PostgreSQL/PostGIS、Redis、MinIO だけを container で動かす場合に使います。
+## Infrastructure containers + host apps
 
 ```powershell
 docker compose up -d postgres redis minio
-```
 
-その後、各 app のコマンドをホストから実行します。
-
-```powershell
 cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm prisma migrate dev
-pnpm db:seed
-pnpm start:dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm prisma generate
+corepack pnpm prisma migrate dev
+corepack pnpm db:seed
+corepack pnpm start:dev
 ```
 
-### Full standalone stack
+Web: `cd web; corepack pnpm install --frozen-lockfile; corepack pnpm dev`。
 
-ブラウザ E2E と release に近いローカル検証で使います。Web Dockerfile は build 時に `NEXT_PUBLIC_API_URL` を埋め込むため、image を rebuild する前に設定してください。
+Mobile: `flutter pub get --enforce-lockfile` 後、`lib/main_customer.dart` または `lib/main_driver.dart`。
+
+## Full local stack
 
 ```powershell
-$env:NEXT_PUBLIC_API_URL = "http://[::1]:3001/api"
-$env:CORS_ORIGINS = "http://localhost:3000,http://localhost:3002,http://localhost:3003,http://[::1]:3000,http://[::1]:3002,http://[::1]:3003"
-docker compose up -d --build backend admin restaurant
+docker compose up -d --build
+docker compose ps
 ```
 
-Compose は PostgreSQL/PostGIS、Redis、MinIO、migration job、backend、Admin、Restaurant を起動します。Backend が healthy になる前に migration job が完了している必要があります。
+API healthy 前に migration container が exit `0` である必要があります。`NEXT_PUBLIC_*` は build-time なので変更後は web image を rebuild します。
 
-### Docker 内 backend hot reload
+Health: API `localhost:3001/api/healthz`、Admin `localhost:3000/api/healthz`、Restaurant `localhost:3002/api/healthz`。
 
-Backend source と Prisma files を container に mount したい場合は local override を使います。
+## Isolated Batch 4 stack
+
+Root stack を変更しない overlay:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+```
+
+Ports: Admin `13000`、API `13001`、Restaurant `13002`、Postgres `15432`、Redis `16379`、MinIO `19000/19001`。
+
+CORS origin は `localhost` です。`127.0.0.1` は意図的 error-state test になります。Host から test seed:
+
+```powershell
+$env:DATABASE_URL='postgresql://foodflow:foodflow_dev@localhost:15432/foodflow'
+$env:DIRECT_URL=$env:DATABASE_URL
+cd backend
+corepack pnpm db:seed
+corepack pnpm db:big-seed
+cd ..
+Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
+```
+
+Deterministic seed は test fixture であり production では block されます。Runtime fallback data ではありません。
+
+## Backend hot reload
 
 ```powershell
 docker compose -f docker-compose.yml -f docker-compose.local.yml up backend
 ```
 
-このモードは開発フィードバック用であり、release evidence には使いません。
+Source mount mode は release evidence ではありません。
 
-## Health check
+## Docker artifacts
 
-まず container 状態を確認します。
+| Artifact | Dockerfile/target |
+|---|---|
+| Backend | `backend/Dockerfile` → `runner` |
+| Migrate | `backend/Dockerfile` → `migrator` |
+| Admin | `web/apps/admin/Dockerfile` |
+| Restaurant | `web/apps/restaurant/Dockerfile` |
 
-```powershell
-docker compose ps
-```
+Generic `web/Dockerfile` はなく、worker は backend image の `dist/workers/main.js` を使用します。Final image は distroless/non-root、`linux/amd64` と `linux/arm64`。Workflow は両 architecture の native dependency、Prisma、Sharp、UID、manifest/SBOM、Trivy を検証します。
 
-次に endpoint を確認します。
-
-```powershell
-Invoke-WebRequest http://[::1]:3001/api/healthz
-Invoke-WebRequest http://[::1]:3000/api/healthz
-Invoke-WebRequest http://[::1]:3002/api/healthz
-```
-
-別の local app が `127.0.0.1:3000` を使っている場合は、E2E で明示的に `[::1]` loopback URL を使います。Backend の CORS 既定値には development 用の localhost と `[::1]` origin が含まれています。
-
-## データのライフサイクル
-
-- Compose volumes は PostgreSQL、Redis、MinIO のデータを restart 後も保持します。
-- `docker compose down` は stack を停止しますが、データは削除しません。
-- `docker compose down -v` は local database、Redis、MinIO data を削除します。local reset を意図するときだけ使ってください。
-- Production migrations は deployment guide と production secret manager の値を使い、local compose defaults は使いません。
-
-## ローカル release gate
-
-変更した領域に対応する gate を実行します。Deploy 前には全 gate が green である必要があります。
+## Local release gate
 
 ```powershell
-cd backend
-pnpm install --frozen-lockfile
-pnpm prisma generate
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 ```
+
+Development partial run:
 
 ```powershell
-cd web
-pnpm install --frozen-lockfile
-pnpm --filter foodflow-admin typecheck
-pnpm --filter foodflow-admin lint
-pnpm --filter foodflow-admin test
-pnpm --filter foodflow-admin build
-pnpm --filter foodflow-restaurant typecheck
-pnpm --filter foodflow-restaurant lint
-pnpm --filter foodflow-restaurant test
-pnpm --filter foodflow-restaurant build
-pnpm test:e2e --project=chromium --project=firefox
+powershell -File infra/scripts/local-release-gate.ps1 \
+  -AllowDirty -SkipInstall -SkipBuild -SkipDeployPreflight
 ```
+
+Partial evidence は release approval になりません。
+
+## Screenshots/GIFs
+
+Isolated stack が healthy/seeded のとき:
 
 ```powershell
-cd mobile
-flutter analyze
-flutter test
+$env:FOODFLOW_ADMIN_URL='http://localhost:13000'
+$env:FOODFLOW_RESTAURANT_URL='http://localhost:13002'
+$env:FOODFLOW_API_URL='http://localhost:13001/api'
+node docs/scripts/capture-product-media.mjs
+Remove-Item Env:FOODFLOW_ADMIN_URL,Env:FOODFLOW_RESTAURANT_URL,Env:FOODFLOW_API_URL
 ```
 
-Playwright は Chromium と Firefox、axe serious/critical accessibility smoke、visual contract、tenant isolation を確認する必要があります。
+Real API を使い palette-optimized GIF を作成し intermediate frames を削除します。Exit 0 でも error state を撮影する可能性があるため全画像を目視します。
 
-## Production guardrails
+## Data/self-hosted
 
-- Dev compose の JWT、MinIO、database values は local 専用です。
-- Vercel では `FOODFLOW_ENABLE_DEV_API_REWRITE` を有効にしないでください。
-- GitHub Actions の auth、billing、token が無効な間は deploy しません。復旧後に remote CI を再実行してください。
-- Supabase と Vercel は local gates、secret scans、frozen installs、production secrets を確認してから deploy します。
-- Deploy 後は backend health、web health、realtime orders、maps、chatbot、exports、notifications、tenant isolation、mobile API connectivity を確認します。
+- `docker compose down` は volume 保持、`down -v` は local data を削除。対象 compose project を確認してから実行。
+- Shared workstation で全 container/volume cleanup をしない。
+- Self-hosted は `IMAGE_TAG=v4.0.0` または `sha-<full-commit>` を pin し、real `.env.production` と base + production overlay を使う。
+- Socket.IO/Redis/MinIO profile は Supabase/Vercel misconfiguration の fallback ではありません。
 
 ## Troubleshooting
 
-- Distroless web または backend container が unhealthy の場合は `docker compose logs <service>` を確認し、healthcheck が bundled Node runtime path を使っていることを確認します。
-- Admin が誤った API を呼ぶ場合は、正しい `NEXT_PUBLIC_API_URL` で rebuild します。この値は build-time value です。
-- Local maps が表示されない場合は、web env の browser map key と Google Cloud の referrer restrictions を確認します。
-- Production maps または chatbot が leaked key で失敗した場合は、key を rotate してから進めます。
-- GitHub Actions access が token/billing/auth の問題で使えない場合は、local work を継続し、remote checks を再実行できるまで最新の local gate evidence を記録します。
+- API/CORS: baked `NEXT_PUBLIC_API_URL` と `localhost`/`127.0.0.1` origin を確認。
+- Migration: `migrate` logs を確認し dependency を bypass しない。
+- Sharp/native: Alpine/musl build と Debian/glibc runtime を混在させない。
+- Redis: BullMQ は `maxmemory-policy noeviction`。
+- Maps: restricted key と real telemetry を使い hardcoded coordinate を追加しない。
+- AI: rotated key を secret manager に入れ fake LLM fallback を追加しない。
+- CI unavailable: local evidence は継続できるが、CI 復旧まで deploy/merge/publish しない。

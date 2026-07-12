@@ -2,83 +2,213 @@ name: Docker Publish
 
 on:
   push:
-    branches: [master, main]
-    tags: ['v*']
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Immutable semver tag to publish (for example v4.0.0)
+        required: true
+        default: v4.0.0
+        type: string
+      promote_latest:
+        description: Promote the verified release manifests to latest
+        required: true
+        default: false
+        type: boolean
 
-env:
-  DOCKERHUB_USERNAME: nguyenson1710
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  release-preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      release-tag: ${{ steps.release.outputs.tag }}
+      ghcr_owner: ${{ steps.release.outputs.ghcr_owner }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate release source and tag
+        id: release
+        shell: bash
+        env:
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin master
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            release_tag="$GITHUB_REF_NAME"
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/master || {
+              echo 'Release tags must point to a commit contained in origin/master.'
+              exit 1
+            }
+          else
+            release_tag="$INPUT_RELEASE_TAG"
+            test "$GITHUB_SHA" = "$(git rev-parse origin/master)" || {
+              echo 'Manual Docker releases must run from the current origin/master head.'
+              exit 1
+            }
+          fi
+
+          [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo 'release_tag must use stable semver format vMAJOR.MINOR.PATCH.'
+            exit 1
+          }
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "ghcr_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate registry secrets and public build URLs
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_ADMIN_URL: ${{ vars.NEXT_PUBLIC_ADMIN_URL }}
+          NEXT_PUBLIC_RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_MAP_PROVIDER: ${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
+          NEXT_PUBLIC_MAP_STYLE_URL: ${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
+        run: |
+          set -euo pipefail
+          required=(
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+            NEXT_PUBLIC_API_URL
+            NEXT_PUBLIC_ADMIN_URL
+            NEXT_PUBLIC_RESTAURANT_URL
+            NEXT_PUBLIC_SUPABASE_URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY
+            NEXT_PUBLIC_MAP_PROVIDER
+            NEXT_PUBLIC_MAP_STYLE_URL
+          )
+          for name in "${required[@]}"; do
+            test -n "${!name:-}" || {
+              echo "Missing required release input: $name"
+              exit 1
+            }
+          done
+
+          node <<'NODE'
+          const values = [
+            ['NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'vercel-api'],
+            ['NEXT_PUBLIC_ADMIN_URL', process.env.NEXT_PUBLIC_ADMIN_URL, 'vercel-origin'],
+            ['NEXT_PUBLIC_RESTAURANT_URL', process.env.NEXT_PUBLIC_RESTAURANT_URL, 'vercel-origin'],
+            ['NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL, 'supabase-origin'],
+            ['NEXT_PUBLIC_MAP_STYLE_URL', process.env.NEXT_PUBLIC_MAP_STYLE_URL, 'openfreemap-style'],
+          ];
+
+          for (const [name, raw, kind] of values) {
+            let url;
+            try {
+              url = new URL(raw);
+            } catch {
+              throw new Error(`${name} must be an absolute URL`);
+            }
+            if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
+              throw new Error(`${name} must be a credential-free HTTPS URL without query or fragment`);
+            }
+            const path = url.pathname.replace(/\/+$/, '');
+            if (kind.startsWith('vercel') && !url.hostname.endsWith('.vercel.app')) {
+              throw new Error(`${name} must use a verified Vercel alias`);
+            }
+            if (kind === 'vercel-api' && path !== '/api') {
+              throw new Error('NEXT_PUBLIC_API_URL must end in /api');
+            }
+            if (kind === 'vercel-origin' && path !== '') {
+              throw new Error(`${name} must be an origin URL without a path`);
+            }
+            if (kind === 'supabase-origin' && (!url.hostname.endsWith('.supabase.co') || path !== '')) {
+              throw new Error('NEXT_PUBLIC_SUPABASE_URL must be a Supabase project origin');
+            }
+            if (kind === 'openfreemap-style' && (
+              url.hostname !== 'tiles.openfreemap.org' || !path.startsWith('/styles/')
+            )) {
+              throw new Error('NEXT_PUBLIC_MAP_STYLE_URL must use an OpenFreeMap style URL');
+            }
+          }
+
+          if (process.env.NEXT_PUBLIC_MAP_PROVIDER !== 'openfreemap') {
+            throw new Error('NEXT_PUBLIC_MAP_PROVIDER must be openfreemap');
+          }
+
+          if (!/^[a-z0-9][a-z0-9_-]+$/.test(process.env.DOCKERHUB_USERNAME)) {
+            throw new Error('DOCKERHUB_USERNAME has an invalid format');
+          }
+          NODE
+
   build-and-push:
+    needs: release-preflight
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: true
       matrix:
         include:
-          - image: nguyenson1710/foodflow-backend
+          - name: foodflow-backend
             context: ./backend
             dockerfile: ./backend/Dockerfile
             target: runner
-            platforms: linux/amd64
-            build-args: |
-              BUILD_SHA=${{ github.sha }}
-          - image: nguyenson1710/foodflow-migrate
+            web: false
+          - name: foodflow-migrate
             context: ./backend
             dockerfile: ./backend/Dockerfile
             target: migrator
-            platforms: linux/amd64
-            build-args: |
-              BUILD_SHA=${{ github.sha }}
-          # NOTE: secrets.* cannot be referenced inside strategy.matrix (parse-time).
-          # NEXT_PUBLIC_GOOGLE_MAPS_KEY is injected at the build step below.
-          - image: nguyenson1710/foodflow-admin
+            web: false
+          - name: foodflow-admin
             context: ./web
             dockerfile: ./web/apps/admin/Dockerfile
             target: runner
-            platforms: linux/amd64
-            build-args: |
-              BUILD_SHA=${{ github.sha }}
-              NEXT_PUBLIC_APP_ENV=production
-              NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
-              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
-              NEXT_PUBLIC_ADMIN_URL=https://admin.foodflow.vn
-          - image: nguyenson1710/foodflow-restaurant
+            web: true
+          - name: foodflow-restaurant
             context: ./web
             dockerfile: ./web/apps/restaurant/Dockerfile
             target: runner
-            platforms: linux/amd64
-            build-args: |
-              BUILD_SHA=${{ github.sha }}
-              NEXT_PUBLIC_APP_ENV=production
-              NEXT_PUBLIC_API_URL=https://api.foodflow.vn/api
-              NEXT_PUBLIC_WS_URL=wss://api.foodflow.vn/events
-              NEXT_PUBLIC_RESTAURANT_URL=https://restaurant.foodflow.vn
+            web: true
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v6
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
         with:
-          images: ${{ matrix.image }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix=,format=short
-            type=raw,value=latest
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push ${{ matrix.image }}
-        uses: docker/build-push-action@v7
+      - name: Extract immutable image metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: |
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+            ghcr.io/${{ needs.release-preflight.outputs.ghcr_owner }}/${{ matrix.name }}
+          tags: |
+            type=raw,value=sha-${{ github.sha }}
+
+      - name: Build and push backend image
+        if: ${{ !matrix.web }}
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
@@ -86,29 +216,364 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ matrix.platforms }}
-          # secrets only valid in steps — not in strategy.matrix
+          platforms: linux/amd64,linux/arm64
           build-args: |
-            ${{ matrix.build-args }}
-            NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
-          cache-from: type=registry,ref=${{ matrix.image }}:buildcache
-          cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
+            BUILD_SHA=${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache,mode=max
 
-  scan:
+      - name: Build and push web image
+        if: ${{ matrix.web }}
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
+            NEXT_PUBLIC_APP_ENV=production
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_REALTIME_PROVIDER=supabase
+            NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_ADMIN_URL=${{ vars.NEXT_PUBLIC_ADMIN_URL }}
+            NEXT_PUBLIC_RESTAURANT_URL=${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
+            NEXT_PUBLIC_MAP_PROVIDER=${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
+            NEXT_PUBLIC_MAP_STYLE_URL=${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache,mode=max
+
+      - name: Inspect published multi-architecture manifest
+        shell: bash
+        env:
+          DOCKERHUB_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+          GHCR_IMAGE: ghcr.io/${{ needs.release-preflight.outputs.ghcr_owner }}/${{ matrix.name }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          dockerhub_digest="$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
+          ghcr_digest="$(docker buildx imagetools inspect "$GHCR_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
+          if [[ -z "$dockerhub_digest" || "$dockerhub_digest" != "$ghcr_digest" ]]; then
+            echo 'Docker Hub and GHCR manifest digests differ.'
+            exit 1
+          fi
+          echo "Both registries published $dockerhub_digest"
+
+  runtime-smoke:
     needs: build-and-push
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: true
       matrix:
-        image:
-          - nguyenson1710/foodflow-backend
-          - nguyenson1710/foodflow-admin
-          - nguyenson1710/foodflow-restaurant
+        include:
+          - image: foodflow-backend
+            kind: backend
+          - image: foodflow-migrate
+            kind: migrate
+          - image: foodflow-admin
+            kind: web
+            port: 3000
+          - image: foodflow-restaurant
+            kind: web
+            port: 3002
 
     steps:
-      - name: Trivy vulnerability scan (${{ matrix.image }})
-        uses: aquasecurity/trivy-action@master
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
         with:
-          image-ref: ${{ matrix.image }}:latest
-          format: 'table'
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Smoke native runtime dependencies on AMD64 and ARM64
+        shell: bash
+        env:
+          IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ github.sha }}
+          KIND: ${{ matrix.kind }}
+          WEB_PORT: ${{ matrix.port }}
+        run: |
+          set -euo pipefail
+          current_container=""
+          cleanup_container() {
+            if [[ -n "${current_container:-}" ]]; then
+              docker rm -f "$current_container" >/dev/null 2>&1 || true
+              current_container=""
+            fi
+          }
+          trap cleanup_container EXIT
+
+          for platform in linux/amd64 linux/arm64; do
+            case "$KIND" in
+              backend)
+                docker run --rm --pull always --platform "$platform" \
+                  --entrypoint /nodejs/bin/node "$IMAGE" -e '
+                    const { createRequire } = require("module");
+                    const bcrypt = require("bcrypt");
+                    const hash = bcrypt.hashSync("foodflow-container-smoke", 4);
+                    if (!bcrypt.compareSync("foodflow-container-smoke", hash)) {
+                      throw new Error("bcrypt native round-trip failed");
+                    }
+                    const bullmq = require("bullmq");
+                    const fromBull = createRequire(require.resolve("bullmq"));
+                    const msgpackrMain = fromBull.resolve("msgpackr");
+                    const msgpackr = fromBull("msgpackr");
+                    const extract = createRequire(msgpackrMain)("msgpackr-extract");
+                    const input = { orderId: "container-smoke", ok: true };
+                    const output = msgpackr.unpack(msgpackr.pack(input));
+                    if (!extract || typeof bullmq.Queue !== "function" || JSON.stringify(output) !== JSON.stringify(input)) {
+                      throw new Error("BullMQ or MessagePack native runtime smoke failed");
+                    }
+                    if (process.getuid?.() === 0) throw new Error("backend container runs as root");
+                    console.log(JSON.stringify({ arch: process.arch, uid: process.getuid?.(), native: true }));
+                  '
+                ;;
+              migrate)
+                docker run --rm --pull always --platform "$platform" \
+                  --entrypoint /nodejs/bin/node "$IMAGE" -e '
+                    if (process.getuid?.() === 0) throw new Error("migrate container runs as root");
+                    console.log(JSON.stringify({ arch: process.arch, uid: process.getuid?.(), nonRoot: true }));
+                  '
+                docker run --rm --pull always --platform "$platform" "$IMAGE" \
+                  node_modules/prisma/build/index.js --version
+                ;;
+              web)
+                docker run --rm --pull always --platform "$platform" \
+                  --entrypoint /nodejs/bin/node "$IMAGE" -e '
+                    const fs = require("fs");
+                    const base = "/app/node_modules/.pnpm";
+                    const packageDir = fs.readdirSync(base).find((entry) => entry.startsWith("sharp@"));
+                    if (!packageDir) throw new Error("sharp package is missing from the standalone image");
+                    const sharp = require(`${base}/${packageDir}/node_modules/sharp`);
+                    if (process.getuid?.() === 0) throw new Error("web container runs as root");
+                    sharp({
+                      create: { width: 2, height: 2, channels: 4, background: { r: 14, g: 165, b: 164, alpha: 1 } },
+                    }).png().toBuffer().then((buffer) => {
+                      if (buffer.length === 0) throw new Error("sharp produced an empty image");
+                      console.log(JSON.stringify({ arch: process.arch, uid: process.getuid?.(), sharp: true }));
+                    }).catch((error) => {
+                      console.error(error);
+                      process.exit(1);
+                    });
+                  '
+
+                image_name="${IMAGE##*/}"
+                platform_slug="${platform//\//-}"
+                current_container="${image_name%%:*}-${platform_slug}-smoke"
+                docker run -d --platform "$platform" --name "$current_container" \
+                  -p "127.0.0.1::${WEB_PORT}" "$IMAGE" >/dev/null
+                host_port="$(docker port "$current_container" "${WEB_PORT}/tcp" | awk -F: 'NR == 1 { print $NF }')"
+                test -n "$host_port"
+
+                ready=false
+                for _ in $(seq 1 60); do
+                  health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$current_container")"
+                  if [[ "$health" == "unhealthy" ]]; then
+                    docker logs "$current_container"
+                    exit 1
+                  fi
+                  if [[ "$health" == "healthy" ]] && curl --fail --silent --show-error \
+                    "http://127.0.0.1:${host_port}/api/healthz" >/dev/null; then
+                    ready=true
+                    break
+                  fi
+                  sleep 1
+                done
+                if [[ "$ready" != "true" ]]; then
+                  docker logs "$current_container"
+                  exit 1
+                fi
+
+                if ! login_html="$(curl --fail --silent --show-error "http://127.0.0.1:${host_port}/en/login")"; then
+                  docker logs "$current_container"
+                  exit 1
+                fi
+                if ! grep -Fq '<html lang="en"' <<<"$login_html"; then
+                  docker logs "$current_container"
+                  echo "English login route did not render the expected html lang attribute"
+                  exit 1
+                fi
+                cleanup_container
+                ;;
+              *)
+                echo "Unsupported smoke kind: $KIND"
+                exit 1
+                ;;
+            esac
+          done
+
+  scan:
+    needs: [build-and-push, runtime-smoke]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        image:
+          - foodflow-backend
+          - foodflow-migrate
+          - foodflow-admin
+          - foodflow-restaurant
+        platform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Block Critical and High image vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ github.sha }}
+          scanners: vuln
+          vuln-type: os,library
+          format: table
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: CRITICAL,HIGH
+        env:
+          TRIVY_PLATFORM: ${{ matrix.platform }}
+
+  production-smoke:
+    needs: [release-preflight, runtime-smoke, scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify API, Admin, and Restaurant production health
+        shell: bash
+        env:
+          API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          ADMIN_URL: ${{ vars.NEXT_PUBLIC_ADMIN_URL }}
+          RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
+        run: |
+          set -euo pipefail
+          endpoints=(
+            "${API_URL%/}/healthz"
+            "${ADMIN_URL%/}/api/healthz"
+            "${RESTAURANT_URL%/}/api/healthz"
+          )
+          for endpoint in "${endpoints[@]}"; do
+            curl --silent --show-error --fail --location \
+              --retry 4 --retry-all-errors --retry-delay 3 --max-time 20 \
+              "$endpoint" > /dev/null
+          done
+
+  promote-release:
+    needs: [release-preflight, production-smoke]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote verified SHA manifests to the immutable release tag
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GHCR_OWNER: ${{ needs.release-preflight.outputs.ghcr_owner }}
+          RELEASE_TAG: ${{ needs.release-preflight.outputs.release-tag }}
+          SHA_TAG: sha-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
+          for image in "${images[@]}"; do
+            for registry in "docker.io/$DOCKERHUB_USERNAME" "ghcr.io/$GHCR_OWNER"; do
+              source="$registry/$image:$SHA_TAG"
+              target="$registry/$image:$RELEASE_TAG"
+              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+              test -n "$source_digest" || {
+                echo "Published SHA manifest has no digest for $source"
+                exit 1
+              }
+
+              if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
+                target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
+                test "$source_digest" = "$target_digest" || {
+                  echo "Refusing to overwrite immutable tag $target"
+                  echo "Existing: $target_digest"
+                  echo "Requested: $source_digest"
+                  exit 1
+                }
+                echo "$target already released at $target_digest"
+                continue
+              fi
+
+              docker buildx imagetools create --tag "$target" "$source"
+              promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+              test "$source_digest" = "$promoted_digest" || {
+                echo "Release digest verification failed for $target"
+                exit 1
+              }
+              echo "$target released at $promoted_digest"
+            done
+          done
+
+  promote-latest:
+    needs: [release-preflight, promote-release]
+    if: ${{ inputs.promote_latest }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote verified manifests and compare digests
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GHCR_OWNER: ${{ needs.release-preflight.outputs.ghcr_owner }}
+          RELEASE_TAG: ${{ needs.release-preflight.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+          images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
+          for image in "${images[@]}"; do
+            for registry in "docker.io/$DOCKERHUB_USERNAME" "ghcr.io/$GHCR_OWNER"; do
+              source="$registry/$image:$RELEASE_TAG"
+              target="$registry/$image:latest"
+              docker buildx imagetools create --tag "$target" "$source"
+              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+              target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+              if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
+                echo "Digest verification failed for $target"
+                exit 1
+              fi
+              echo "$target promoted at $source_digest"
+            done
+          done

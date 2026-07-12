@@ -1,2 +1,1 @@
-# Reserved directory for security process docs.
-
+# Reserved directory for security process docs
