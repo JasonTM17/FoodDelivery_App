@@ -91,4 +91,5 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-public-anon-key-for-contract-tests
           NEXT_PUBLIC_ADMIN_URL: https://admin.foodflow.test
           NEXT_PUBLIC_RESTAURANT_URL: https://restaurant.foodflow.test
-          NEXT_PUBLIC_GOOGLE_MAPS_KEY: ci-google-maps-browser-key
+          NEXT_PUBLIC_MAP_PROVIDER: openfreemap
+          NEXT_PUBLIC_MAP_STYLE_URL: https://tiles.openfreemap.org/styles/liberty

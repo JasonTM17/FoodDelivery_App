@@ -42,7 +42,8 @@ services:
         NEXT_PUBLIC_WS_URL: http://localhost:13001/events
         NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_ADMIN_URL: http://localhost:13000
-        NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
+        NEXT_PUBLIC_MAP_PROVIDER: openfreemap
+        NEXT_PUBLIC_MAP_STYLE_URL: https://tiles.openfreemap.org/styles/liberty
     environment:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:13001/api
@@ -61,7 +62,8 @@ services:
         NEXT_PUBLIC_WS_URL: http://localhost:13001/events
         NEXT_PUBLIC_REALTIME_PROVIDER: socketio
         NEXT_PUBLIC_RESTAURANT_URL: http://localhost:13002
-        NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-}
+        NEXT_PUBLIC_MAP_PROVIDER: openfreemap
+        NEXT_PUBLIC_MAP_STYLE_URL: https://tiles.openfreemap.org/styles/liberty
     environment:
       NEXT_PUBLIC_APP_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:13001/api

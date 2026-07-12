@@ -1066,10 +1066,10 @@
     "stale": "古い",
     "mapRegionLabel": "ベトナム境界レイヤー付きライブドライバーマップ",
     "order": "注文",
-    "missingKeyTitle": "NEXT_PUBLIC_GOOGLE_MAPS_KEYを設定してください",
-    "missingKeyDescription": "ライブ地図を表示するには、admin環境に公開Google Mapsキーを追加してください。",
+    "mapLoading": "ライブマップを読み込み中",
+    "markerLabel": "{name}、{status}",
     "renderErrorTitle": "配達員マップを表示できません",
-    "renderErrorDescription": "マップ画面の描画に失敗しました。バックエンド接続を確認して再試行してください。",
+    "renderErrorDescription": "オープンマップタイルを読み込めませんでした。ネットワーク接続を確認して再試行してください。",
     "info": {
       "rating": "評価",
       "status": "状態",

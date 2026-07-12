@@ -1066,10 +1066,10 @@
     "stale": "cũ",
     "mapRegionLabel": "Bản đồ tài xế trực tiếp với lớp biên giới Việt Nam",
     "order": "Đơn",
-    "missingKeyTitle": "Cần cấu hình NEXT_PUBLIC_GOOGLE_MAPS_KEY",
-    "missingKeyDescription": "Thêm public Google Maps key vào môi trường admin để hiển thị bản đồ trực tiếp.",
+    "mapLoading": "Đang tải bản đồ trực tiếp",
+    "markerLabel": "{name}, {status}",
     "renderErrorTitle": "Không tải được bản đồ tài xế",
-    "renderErrorDescription": "Route bản đồ bị lỗi khi render. Kiểm tra kết nối backend rồi thử lại.",
+    "renderErrorDescription": "Không tải được dữ liệu nền bản đồ mở. Kiểm tra kết nối mạng rồi thử lại.",
     "info": {
       "rating": "Đánh giá",
       "status": "Trạng thái",

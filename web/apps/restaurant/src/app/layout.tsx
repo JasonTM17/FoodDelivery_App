@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { resolveRestaurantMetadataBase } from '@/lib/metadata-url'
 
 export const metadata: Metadata = {

@@ -76,7 +76,8 @@ jobs:
           NEXT_PUBLIC_RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+          NEXT_PUBLIC_MAP_PROVIDER: ${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
+          NEXT_PUBLIC_MAP_STYLE_URL: ${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
         run: |
           set -euo pipefail
           required=(
@@ -87,7 +88,8 @@ jobs:
             NEXT_PUBLIC_RESTAURANT_URL
             NEXT_PUBLIC_SUPABASE_URL
             NEXT_PUBLIC_SUPABASE_ANON_KEY
-            NEXT_PUBLIC_GOOGLE_MAPS_KEY
+            NEXT_PUBLIC_MAP_PROVIDER
+            NEXT_PUBLIC_MAP_STYLE_URL
           )
           for name in "${required[@]}"; do
             test -n "${!name:-}" || {
@@ -102,6 +104,7 @@ jobs:
             ['NEXT_PUBLIC_ADMIN_URL', process.env.NEXT_PUBLIC_ADMIN_URL, 'vercel-origin'],
             ['NEXT_PUBLIC_RESTAURANT_URL', process.env.NEXT_PUBLIC_RESTAURANT_URL, 'vercel-origin'],
             ['NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL, 'supabase-origin'],
+            ['NEXT_PUBLIC_MAP_STYLE_URL', process.env.NEXT_PUBLIC_MAP_STYLE_URL, 'openfreemap-style'],
           ];
 
           for (const [name, raw, kind] of values) {
@@ -127,6 +130,15 @@ jobs:
             if (kind === 'supabase-origin' && (!url.hostname.endsWith('.supabase.co') || path !== '')) {
               throw new Error('NEXT_PUBLIC_SUPABASE_URL must be a Supabase project origin');
             }
+            if (kind === 'openfreemap-style' && (
+              url.hostname !== 'tiles.openfreemap.org' || !path.startsWith('/styles/')
+            )) {
+              throw new Error('NEXT_PUBLIC_MAP_STYLE_URL must use an OpenFreeMap style URL');
+            }
+          }
+
+          if (process.env.NEXT_PUBLIC_MAP_PROVIDER !== 'openfreemap') {
+            throw new Error('NEXT_PUBLIC_MAP_PROVIDER must be openfreemap');
           }
 
           if (!/^[a-z0-9][a-z0-9_-]+$/.test(process.env.DOCKERHUB_USERNAME)) {
@@ -232,7 +244,8 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             NEXT_PUBLIC_ADMIN_URL=${{ vars.NEXT_PUBLIC_ADMIN_URL }}
             NEXT_PUBLIC_RESTAURANT_URL=${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
-            NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+            NEXT_PUBLIC_MAP_PROVIDER=${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
+            NEXT_PUBLIC_MAP_STYLE_URL=${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
           provenance: mode=max
           sbom: true
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache

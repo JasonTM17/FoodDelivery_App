@@ -11,7 +11,7 @@ const shouldEnableDevApiRewrite =
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(shouldUseStandaloneOutput ? { output: 'standalone' } : {}),
-  transpilePackages: ['@vis.gl/react-google-maps', '@foodflow/i18n', '@foodflow/ui'],
+  transpilePackages: ['@foodflow/i18n', '@foodflow/ui'],
   ...(shouldEnableDevApiRewrite
     ? {
         async rewrites() {

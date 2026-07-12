@@ -76,3 +76,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+.foodflow-driver-marker {
+  width: 1.35rem;
+  height: 1.35rem;
+  cursor: pointer;
+  border-style: solid;
+  border-radius: 9999px;
+  box-shadow: 0 3px 10px rgb(15 23 42 / 35%);
+  transition: box-shadow 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.foodflow-driver-marker:hover {
+  transform: scale(1.12);
+}
+
+.foodflow-driver-marker:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgb(255 255 255 / 90%);
+}

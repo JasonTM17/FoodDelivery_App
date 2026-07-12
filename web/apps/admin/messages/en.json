@@ -1066,10 +1066,10 @@
     "stale": "stale",
     "mapRegionLabel": "Live driver map with Vietnam boundary overlay",
     "order": "Order",
-    "missingKeyTitle": "Configure NEXT_PUBLIC_GOOGLE_MAPS_KEY",
-    "missingKeyDescription": "Add the public Google Maps key to the admin environment to display the live map.",
+    "mapLoading": "Loading the live map",
+    "markerLabel": "{name}, {status}",
     "renderErrorTitle": "Driver map is unavailable",
-    "renderErrorDescription": "The map route failed to render. Retry after checking the backend connection.",
+    "renderErrorDescription": "Open map tiles could not be loaded. Check the network connection and retry.",
     "info": {
       "rating": "Rating",
       "status": "Status",

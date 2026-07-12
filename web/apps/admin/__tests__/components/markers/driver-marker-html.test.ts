@@ -3,7 +3,7 @@ import { buildDriverInfoWindowHtml } from '@/components/markers/driver-marker-ht
 import type { DriverLocation } from '@/hooks/use-realtime-driver-locations';
 
 describe('buildDriverInfoWindowHtml', () => {
-  it('escapes driver-controlled content before injecting it into a Google Maps InfoWindow', () => {
+  it('escapes driver-controlled content before injecting it into a map popup', () => {
     const html = buildDriverInfoWindowHtml(
       makeDriver({
         name: '<img src=x onerror=alert(1)>',

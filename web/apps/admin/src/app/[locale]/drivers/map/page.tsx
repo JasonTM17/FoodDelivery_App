@@ -1,23 +1,19 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { APIProvider, Map } from '@vis.gl/react-google-maps';
 import { useLocale, useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import DriverMarkers from '@/components/markers/driver-markers';
+import AdminDriverMap from '@/components/maps/admin-driver-map';
 import { useRealtimeDriverLocations, type DriverLocation } from '@/hooks/use-realtime-driver-locations';
-import { resolveGoogleMapsApiKey } from '@/lib/google-maps-key';
-import { Car, MapPin, Navigation, RefreshCw, Star, Wifi, WifiOff } from 'lucide-react';
+import { resolvePublicMapConfig } from '@/lib/map-config';
+import { Car, Navigation, RefreshCw, Star, Wifi, WifiOff } from 'lucide-react';
 import DriverListSidebar from './driver-list-sidebar';
 import { findSelectedDriver } from './driver-map-selection';
 
-const GOOGLE_MAPS_KEY = resolveGoogleMapsApiKey();
-const VIETNAM_BOUNDS = { north: 23.5, south: 3.8, west: 102.0, east: 117.5 };
-const VIETNAM_CENTER = { lat: 14.0, lng: 108.0 };
-const VIETNAM_DEFAULT_ZOOM = 6;
+const MAP_CONFIG = resolvePublicMapConfig();
 
 function DriverInfoWindow({
   driver,
@@ -112,6 +108,10 @@ export default function DriverMapPage() {
     lastSeen: t('info.lastSeen'),
     stale: t('stale'),
   }), [t]);
+  const getMarkerLabel = useCallback((driver: DriverLocation) => t('markerLabel', {
+    name: driver.name,
+    status: statusLabels[driver.status],
+  }), [statusLabels, t]);
 
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(locale, {
     hour: '2-digit',
@@ -167,33 +167,18 @@ export default function DriverMapPage() {
           </Button>
         </div>
 
-        {GOOGLE_MAPS_KEY ? (
-          <APIProvider apiKey={GOOGLE_MAPS_KEY}>
-            <Map
-              mapId="foodflow-driver-map"
-              defaultZoom={VIETNAM_DEFAULT_ZOOM}
-              defaultCenter={VIETNAM_CENTER}
-              style={{ width: '100%', height: '100%' }}
-              restriction={{ latLngBounds: VIETNAM_BOUNDS, strictBounds: false }}
-            >
-              <DriverMarkers
-                drivers={drivers}
-                statusLabels={statusLabels}
-                selectedDriverId={selectedDriver?.id}
-                copy={markerCopy}
-                onSelect={handleSelectDriver}
-              />
-            </Map>
-          </APIProvider>
-        ) : (
-          <div className="flex h-full items-center justify-center bg-muted/30 p-6">
-            <div className="text-center">
-              <MapPin className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
-              <p className="mt-2 text-sm text-muted-foreground">{t('missingKeyTitle')}</p>
-              <p className="text-xs text-muted-foreground">{t('missingKeyDescription')}</p>
-            </div>
-          </div>
-        )}
+        <AdminDriverMap
+          drivers={drivers}
+          statusLabels={statusLabels}
+          selectedDriverId={selectedDriver?.id}
+          copy={markerCopy}
+          styleUrl={MAP_CONFIG.styleUrl}
+          loadingLabel={t('mapLoading')}
+          errorTitle={t('renderErrorTitle')}
+          errorDescription={t('renderErrorDescription')}
+          getMarkerLabel={getMarkerLabel}
+          onSelect={handleSelectDriver}
+        />
       </div>
 
       {selectedDriver ? (
