@@ -5,7 +5,7 @@
 Topology production bắt buộc:
 
 - Supabase: PostgreSQL/PostGIS, Realtime, Storage.
-- Vercel: NestJS API, Admin, Restaurant.
+- Railway: NestJS API, worker, migrator, Redis; Vercel: Admin, Restaurant.
 - Docker Hub: artifact multi-arch immutable sau production smoke.
 
 Không deploy khi secret/CLI auth, current-head test, remote CI hoặc health còn thiếu. Local green không thay thế approval production.
@@ -47,12 +47,11 @@ powershell -File infra/scripts/supabase-env-prompt.ps1 -RunPreflight
 
 Prompt nhận `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, pooled `DATABASE_URL` và direct/session `DIRECT_URL`, chỉ giữ trong process rồi xóa.
 
-Vercel:
+Railway API/worker/migrator/Redis:
 
 ```powershell
 powershell -File infra/scripts/vercel-web-preflight.ps1
-powershell -File infra/scripts/vercel-env-prompt.ps1 \
-  -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+powershell -File infra/scripts/railway-preflight.ps1
 ```
 
 Chỉ thêm đúng tên bị preflight báo thiếu và chạy preflight lại.
@@ -67,18 +66,18 @@ API core:
 - `REALTIME_PROVIDER=supabase`
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
-- `SUPABASE_URL`, server-only `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_STORAGE_BUCKET`
-- private `SUPABASE_KYC_BUCKET=foodflow-kyc`, `DRIVER_KYC_MAX_UPLOAD_MB=4`, `DRIVER_KYC_RETRY_LIMIT=3`
+- `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY`, `SUPABASE_REALTIME_JWT_PRIVATE_KEY`, `SUPABASE_REALTIME_JWT_KEY_ID`, `SUPABASE_STORAGE_BUCKET=foodflow-public`
+- private `SUPABASE_KYC_BUCKET=foodflow-private`, `DRIVER_KYC_MAX_UPLOAD_MB=4`, `DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`, `JWT_SECRET`, `JWT_REFRESH_SECRET`
 - verified `CORS_ORIGINS`, `PASSWORD_RESET_URL_BASE`
 - Maps/routing, DeepSeek, SePay, SMTP, FCM, Twilio và webhook secrets.
 
 Admin:
 
-- `NEXT_PUBLIC_API_URL=https://<api>.vercel.app/api`
+- `NEXT_PUBLIC_API_URL=https://<railway-domain>/api`
 - `NEXT_PUBLIC_ADMIN_URL=https://<admin>.vercel.app`
 - `NEXT_PUBLIC_REALTIME_PROVIDER=supabase`
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_MAP_PROVIDER=openfreemap`
 - `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty`
 
@@ -111,17 +110,17 @@ Xác minh:
 
 Realtime smoke phải chứng minh authorized event nhận được, cross-tenant/expired token bị từ chối.
 
-## 5. Vercel API
+## 5. Railway API, worker, migrator, Redis
 
-Projects: `foodflow-api` root `backend`, `food-delivery-app` root `web/apps/admin`, `foodflow-restaurant` root `web/apps/restaurant`.
+Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần trước API; chỉ deploy Admin/Restaurant trên Vercel.
 
 ```powershell
-vercel --cwd backend
-# test preview
-vercel --prod --cwd backend
+railway login
+railway link
+powershell -File infra/scripts/railway-preflight.ps1
 ```
 
-Xác minh `/api/healthz`, `/api/readyz`, function log không lộ secret và Cron `/api/jobs/drain?limit=50` dùng bearer `CRON_SECRET`. Nếu API chưa xanh thì không deploy web.
+Xác minh Railway `/api/healthz`, `/api/readyz`, Redis/Supabase Storage ready và worker log không lộ secret. Nếu API chưa xanh thì không deploy web.
 
 ## 6. Admin và Restaurant
 

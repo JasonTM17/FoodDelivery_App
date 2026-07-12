@@ -14,9 +14,9 @@ This page is a concise navigation aid. Generate clients and validate integration
 |---|---|
 | Local API | `http://localhost:3001/api` |
 | Isolated E2E API | `http://localhost:13001/api` |
-| Production | `https://<verified-api-alias>.vercel.app/api` |
+| Production | `https://<verified-railway-domain>/api` |
 
-The current public base is `/api`; Batch 4 does not use a `/v1` prefix. Production aliases must be HTTPS, credential-free, and verified by the Vercel preflight.
+The current public base is `/api`; Batch 4 does not use a `/v1` prefix. Production domains must be HTTPS, credential-free, and verified by the Railway preflight.
 
 ## Response conventions
 
@@ -72,13 +72,13 @@ Exact methods, request schemas, error responses, pagination, and role annotation
 
 ## Supabase Realtime
 
-`POST /realtime/token` accepts an authenticated user token and optional `{ orderId?, restaurantId? }`. It verifies ownership, then returns a five-minute Supabase JWT and an explicit `private:` channel allowlist. Admin/Restaurant clients set that token on the Supabase client and subscribe only to `realtime_outbox` rows authorized by RLS.
+`POST /realtime/token` accepts an authenticated user token and optional `{ orderId?, restaurantId? }`. It verifies ownership, then returns a five-minute ES256 Supabase JWT and an explicit `private:` channel allowlist. Admin/Restaurant clients set that token on the Supabase client and subscribe only to authorized private Broadcast channels.
 
-Do not use the service-role key, `SUPABASE_JWT_SECRET`, raw outbox SQL, or broad wildcard channels in browser/mobile code. Admin, Restaurant, Customer, and Driver managed clients use this scoped contract; the mobile Socket.IO transport is local/self-hosted compatibility only.
+Do not use a Supabase secret/service key, `SUPABASE_JWT_SECRET`, raw outbox SQL, or broad wildcard channels in browser/mobile code. Admin, Restaurant, Customer, and Driver managed clients use this scoped contract; the mobile Socket.IO transport is local/self-hosted compatibility only.
 
-## Vercel Cron job drain
+## Railway worker job drain
 
-`GET|POST /jobs/drain?limit=1..100` drains due PostgreSQL outbox jobs. This is server-to-server only and requires an exact `Authorization: Bearer <CRON_SECRET>` value. It is not a user bearer endpoint and must never be called from web or mobile code.
+`GET|POST /jobs/drain?limit=1..100` drains due PostgreSQL outbox jobs. This is server-to-server only and requires an exact `Authorization: Bearer <CRON_SECRET>` value. The Railway worker owns recurring drains; the endpoint remains an explicitly authenticated recovery/one-off path, never a web or mobile call.
 
 ## Tracking/map contract
 

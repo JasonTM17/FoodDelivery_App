@@ -201,6 +201,9 @@ if (-not $SkipDeployPreflight) {
   Invoke-Step 'Supabase production preflight' $repoRoot {
     Invoke-Native powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\supabase-preflight.ps1
   }
+  Invoke-Step 'Railway production preflight' $repoRoot {
+    Invoke-Native powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\railway-preflight.ps1
+  }
   Invoke-Step 'Vercel web preflight' $repoRoot {
     Invoke-Native powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-web-preflight.ps1
   }

@@ -137,7 +137,7 @@ The client uploads to `uploadUrl` using only the exact returned headers. It must
 | Method | Route | Authentication | Contract |
 |---|---|---|---|
 | `POST` | `/realtime/token` | User bearer access token | Optional `{ orderId?, restaurantId? }`. Returns `{ provider: "supabase", token, expiresAt, channels }`; the JWT expires after five minutes and all channels are explicit private scopes. |
-| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Vercel Cron drain for due PostgreSQL outbox jobs. Returns `{ claimed, completed, failed, retried }`. |
+| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Railway worker recovery/one-off drain for due PostgreSQL outbox jobs. Returns `{ claimed, completed, failed, retried }`. |
 | `POST` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Same drain contract for secured worker invocations. |
 
 Token issue verifies order/restaurant ownership before signing. Customer, driver, restaurant, and admin roles receive only their documented user/order/tenant/admin channels. Cross-tenant requests fail with `REALTIME_ORDER_CHANNEL_FORBIDDEN` or `REALTIME_RESTAURANT_CHANNEL_FORBIDDEN`. Missing signing configuration fails with `SUPABASE_REALTIME_NOT_CONFIGURED`.

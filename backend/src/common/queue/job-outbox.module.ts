@@ -5,5 +5,6 @@ import { JobOutboxService } from './job-outbox.service'
 @Module({
   controllers: [JobOutboxController],
   providers: [JobOutboxService],
+  exports: [JobOutboxService],
 })
 export class JobOutboxModule {}

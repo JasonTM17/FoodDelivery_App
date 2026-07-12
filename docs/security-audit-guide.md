@@ -42,7 +42,7 @@ Every credential pasted into chat, screenshots, logs, tickets, shell history, or
 - [ ] `REALTIME_PROVIDER=supabase`, `STORAGE_PROVIDER=supabase`, and `QUEUE_PROVIDER=supabase-postgres` are explicit in the API production environment.
 - [ ] `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS; only `realtime_outbox` is in the explicit Realtime publication.
 - [ ] Realtime tokens have short TTL, only `private:` channels, ownership verification before signing, and cross-tenant/anon denial tests.
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_JWT_SECRET` are server-only and absent from browser bundles/logs.
+- [ ] `SUPABASE_SECRET_KEY` and `SUPABASE_REALTIME_JWT_PRIVATE_KEY` are sealed server-only values and absent from browser bundles/logs.
 - [ ] `SUPABASE_KYC_BUCKET`, upload limit, and retry limit are explicit; storage PUT requests never receive the FoodFlow bearer token.
 - [ ] Browser Maps key is restricted by referrer/API/quotas; the server Maps key is separate.
 - [ ] Production CORS has exact verified Admin/Restaurant origins, no wildcard; all public aliases are HTTPS.

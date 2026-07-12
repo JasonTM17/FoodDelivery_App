@@ -122,7 +122,7 @@ Client PUT vào `uploadUrl` chỉ với đúng header được trả về. Khôn
 | Method | Route | Xác thực | Contract |
 |---|---|---|---|
 | `POST` | `/realtime/token` | Bearer access token của user | Body optional `{ orderId?, restaurantId? }`; trả `{ provider: "supabase", token, expiresAt, channels }`, TTL 5 phút và chỉ gồm private scope explicit. |
-| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Vercel Cron drain job đến hạn trong PostgreSQL outbox; trả `{ claimed, completed, failed, retried }`. |
+| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Railway worker recovery/one-off drain job đến hạn trong PostgreSQL outbox; trả `{ claimed, completed, failed, retried }`. |
 | `POST` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Cùng contract cho secure worker invocation. |
 
 API kiểm tra ownership order/restaurant trước khi ký. Cross-tenant trả `REALTIME_ORDER_CHANNEL_FORBIDDEN` hoặc `REALTIME_RESTAURANT_CHANNEL_FORBIDDEN`; thiếu signing config trả `SUPABASE_REALTIME_NOT_CONFIGURED`. Supabase RLS chỉ cho đọc row `realtime_outbox` khi `channel` nằm trong claim `realtime_channels`; anon và broad public channel không thuộc contract.

@@ -12,7 +12,7 @@ export class JobOutboxController {
   ) {}
 
   @Get('drain')
-  @ApiOperation({ summary: 'Drain due Supabase/Postgres queue jobs for Vercel Cron' })
+  @ApiOperation({ summary: 'Drain due Supabase/Postgres queue jobs for an authenticated recovery invocation' })
   async drainGet(
     @Headers('authorization') authorization?: string,
     @Query('limit') limit?: string,

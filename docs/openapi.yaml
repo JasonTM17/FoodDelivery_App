@@ -5,7 +5,7 @@ info:
   description: |
     FoodFlow -- Food Delivery Platform REST API.
 
-    **Base path:** `/api`. The production origin is the verified Vercel API alias.
+    **Base path:** `/api`. The production origin is the verified Railway API domain.
 
     **Conventions:**
     - All monetary values are in **VND**, represented as integers.
@@ -24,8 +24,8 @@ info:
     email: support@foodflow.vn
 
 servers:
-  - url: https://replace-with-foodflow-api.vercel.app/api
-    description: Production placeholder; replace with the verified Vercel API alias before publishing external client configuration
+  - url: https://replace-with-foodflow-api.up.railway.app/api
+    description: Production placeholder; replace with the verified Railway public domain before publishing external client configuration
   - url: http://localhost:3001/api
     description: Local development
 
@@ -67,7 +67,7 @@ tags:
   - name: realtime
     description: Short-lived Supabase Realtime authorization for authenticated private channels
   - name: jobs
-    description: Secured PostgreSQL outbox drain used by Vercel Cron and approved workers
+    description: Secured PostgreSQL outbox drain used for Railway recovery and approved worker invocations
   - name: health
     description: Public platform liveness and strict dependency readiness probes
 
@@ -2926,7 +2926,7 @@ paths:
     get:
       tags: [jobs]
       operationId: drainPostgresJobsFromCron
-      summary: Drain due PostgreSQL outbox jobs from Vercel Cron
+      summary: Drain due PostgreSQL outbox jobs from an authenticated recovery invocation
       description: Claims and executes due PostgreSQL outbox jobs up to the bounded limit. This server-to-server route requires the exact CRON_SECRET bearer value.
       security:
         - cronBearer: []

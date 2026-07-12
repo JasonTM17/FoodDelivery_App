@@ -11,9 +11,9 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
   <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage, with the API and both web dashboards on Vercel. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
+FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-11:** Batch 4 hardening is still in progress and is **not production-deployed**. Supabase CLI credentials and required Vercel production variables are incomplete, and fresh remote CI is unavailable because GitHub Actions billing/auth is exhausted. Deployment and the `master` fast-forward remain fail-closed until the complete final-head gates and provider preflights pass.
+> **Release status — 2026-07-12:** Batch 4 integration is on `master`, but it is **not production-deployed**. Local unit/type/build gates and fresh migration validation passed; Supabase remote database connectivity is timing out, Railway is not authenticated/configured, and production secrets/public build values are not yet in their provider stores. Deployment remains fail-closed.
 
 ## Product preview
 
@@ -54,12 +54,13 @@ Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The AP
 
 ```text
 Flutter customer/driver ─┐
-Admin + Restaurant web ──┼── HTTPS ──> NestJS API on Vercel
+Admin + Restaurant web ──┼── HTTPS ──> NestJS API on Railway
                          │                  │
                          │                  ├── Supabase PostgreSQL/PostGIS
-                         │                  ├── Supabase Realtime outbox + scoped JWT
+                         │                  ├── Supabase private Broadcast + scoped JWT
                          │                  ├── Supabase Storage
-                         │                  └── Postgres job outbox + secured Vercel Cron
+                         │                  ├── Railway managed Redis
+                         │                  └── Postgres job outbox + worker
                          └── authorized Supabase channel subscriptions
 
 Local/self-hosted compatibility: PostgreSQL + Socket.IO + Redis/BullMQ + MinIO
@@ -74,27 +75,27 @@ Provider selection is explicit:
 | Storage | `STORAGE_PROVIDER=supabase` | `minio` |
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
 
-Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed Supabase outbox events; Socket.IO remains an explicit local/self-hosted compatibility provider.
+Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
 ## Docker packages
 
-The current Batch 4 candidate publishes immutable, repository-linked images to both Docker Hub and GitHub Container Registry. Only the API/worker and migration artifacts are published at the current commit; Admin and Restaurant remain gated until the required public Supabase build variables are present.
+The current candidate has immutable Docker Hub images for the API/worker and migrator. Admin and Restaurant images remain gated until verified public API and Supabase build values exist. `latest` is intentionally untouched.
 
-| Artifact | Docker Hub | GitHub Packages | Immutable manifest digest |
-|---|---|---|---|
-| API + worker | [`nguyenson1710/foodflow-backend`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | [`ghcr.io/jasontm17/foodflow-backend`](https://github.com/users/JasonTM17/packages/container/package/foodflow-backend) | `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | [`ghcr.io/jasontm17/foodflow-migrate`](https://github.com/users/JasonTM17/packages/container/package/foodflow-migrate) | `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
-| Restaurant | gated | gated | requires verified `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Artifact | Docker Hub tag | Remote digest |
+|---|---|---|
+| API + worker | [`nguyenson1710/foodflow-backend:sha-714d908ecab099876f5795a96ab6d0d6bca38514`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:7a2fa7e6482ede185ab15c8381385ccbd457e43535d1cf070218c0f64b5700f2` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-714d908ecab099876f5795a96ab6d0d6bca38514`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:b6eb0e3d379daf2e40294d4e791f8a43d48667e1ff5e1ba4aa1a73f2dad9e026` |
+| Admin | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Restaurant | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 
-Both published manifests use tag `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, contain `linux/amd64` and `linux/arm64`, and carry SBOM/provenance attestations plus the repository OCI source annotation. Docker Hub and GHCR resolve to the same digest for each artifact. The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Existing `latest` tags are **not** the Batch 4 release source of truth and will not be promoted before production smoke.
+The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Docker Hub was queried after push to record the digests above. Multi-architecture scanning and a clean-environment pull/smoke are still required before a semver or `latest` promotion.
 
 Release promotion order:
 
-1. Build and push `sha-<full-commit>` for `linux/amd64` and `linux/arm64`.
-2. Smoke native dependencies on both architectures and block High/Critical Trivy findings.
-3. Pass production health checks.
-4. Create immutable `v4.0.0`; refuse overwrite if its digest differs.
+1. Build and push `sha-<full-commit>`.
+2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings.
+3. Pass Supabase/Railway/Vercel production health and authenticated tracking smoke.
+4. Build and scan every supported architecture, then create immutable `v4.0.0`.
 5. Promote `latest` only through an explicit manual release action.
 
 For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
@@ -118,6 +119,7 @@ Generated output, local agent files, dotenv files, credentials, and private plan
 - Corepack + pnpm 11.11.0
 - Docker Desktop/Engine
 - Flutter SDK matching `mobile/pubspec.yaml`
+- Railway CLI authenticated to the project that owns the API, worker, migrator, and Redis
 - Provider credentials only for the integration being exercised
 
 ## Local development
@@ -171,6 +173,7 @@ Run preflights without printing values:
 
 ```powershell
 powershell -File infra/scripts/supabase-preflight.ps1
+powershell -File infra/scripts/railway-preflight.ps1
 powershell -File infra/scripts/vercel-web-preflight.ps1
 ```
 
@@ -191,9 +194,9 @@ Latest current-line evidence includes 48 focused backend KYC/config/notification
 
 1. Restore GitHub Actions billing/auth and obtain fresh green remote checks.
 2. Rotate exposed credentials; complete Supabase and Vercel preflights.
-3. Deploy Supabase migrations, RLS, explicit Realtime publication/channels, and Storage bucket policies.
-4. Deploy Vercel API, then configure its verified alias and health/Cron paths.
-5. Build/deploy Admin and Restaurant with the verified API and Supabase public values.
+3. Deploy Supabase migrations, RLS, private Broadcast authorization, and Storage bucket policies.
+4. Run the Railway migrator, then deploy the Railway API, worker, and managed Redis; verify health and WebSocket origin.
+5. Build/deploy Admin and Restaurant on Vercel with the verified Railway API and Supabase public values.
 6. Smoke health, auth, tenant isolation, realtime, map/shipper route, chatbot, notifications, exports, and payments.
 7. Fast-forward local integration `HEAD` directly to `origin/master`; keep one remote branch.
 8. Publish immutable Docker manifests, then update `latest` only after production smoke.
@@ -214,7 +217,7 @@ Latest current-line evidence includes 48 focused backend KYC/config/notification
 
 ## Branch policy
 
-The remote currently has one branch: `master`. At the 2026-07-11 audit baseline, local `codex/batch4-integration@924808c` was a clean fast-forward candidate 106 commits ahead of `origin/master@df945dd`. Do not push the local branch by name because that would recreate a second remote branch; after every release gate passes, push its verified `HEAD` directly to `master`. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
+The remote currently has one branch: `master`. `codex/batch4-integration` is already an ancestor of `master`; its controlled merge and the current production-hardening commit are present at `master@714d908`. Do not push historical integration branches by name. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
 
 ## License
 

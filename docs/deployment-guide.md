@@ -5,7 +5,8 @@
 This runbook deploys the managed-production topology:
 
 - Supabase: PostgreSQL/PostGIS, Realtime, Storage.
-- Vercel: NestJS API, Admin Next.js, Restaurant Next.js.
+- Railway: NestJS API, worker, one-off Prisma migrator, managed Redis.
+- Vercel: Admin Next.js and Restaurant Next.js.
 - Docker Hub: immutable multi-architecture release artifacts after production smoke.
 
 It does not authorize deployment while secrets, CLI access, current-head tests, remote CI, or production health are incomplete. Local green checks are necessary but not a substitute for provider and remote release approval.
@@ -28,7 +29,7 @@ flowchart LR
     A["Clean source + full local gates"] --> B["Fresh green GitHub Actions"]
     B --> C["Rotated secrets + preflights"]
     C --> D["Supabase migration/RLS/Realtime/Storage"]
-    D --> E["Vercel API"]
+    D --> E["Railway migrate + API/worker/Redis"]
     E --> F["Vercel Admin + Restaurant"]
     F --> G["Production health + authenticated smoke"]
     G --> H["Fast-forward master"]
@@ -42,20 +43,29 @@ Any failed stage stops later stages.
 - Node.js 22.13+, Corepack, pnpm 11.11.0.
 - Docker with Buildx/QEMU for local image verification.
 - Flutter SDK for the mobile gate.
-- Vercel CLI authenticated to the account that owns all three projects.
+- Railway CLI authenticated to the account that owns the production project.
+- Vercel CLI authenticated to the account that owns both dashboard projects.
 - Supabase CLI access token scoped to the target project.
 - GitHub Actions billing/auth restored.
 - Rotated production credentials for database, JWT, Maps/routing, DeepSeek, SePay, notifications, messaging, and deployments.
+
+Expected Railway services:
+
+| Service | Source/runtime | Required setting |
+|---|---|---|
+| `foodflow-api` | GitHub source, root `backend` | `backend/railway.toml`; health `/api/healthz` |
+| `foodflow-worker` | `nguyenson1710/foodflow-backend:sha-<commit>` | start command `dist/workers/main.js` |
+| `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout |
+| Redis | Railway managed Redis | reference its private `REDIS_URL` from API and worker |
 
 Expected Vercel projects:
 
 | Project | Root directory | Framework/build |
 |---|---|---|
-| `foodflow-api` | `backend` | Other; `pnpm prisma generate && pnpm build` |
 | `food-delivery-app` | `web/apps/admin` | Next.js; workspace-filtered build |
 | `foodflow-restaurant` | `web/apps/restaurant` | Next.js; workspace-filtered build |
 
-Project IDs and generated `.vercel/` files are not documentation contracts. The preflight verifies live settings by project name.
+Project IDs and generated provider CLI folders are not documentation contracts. The Railway preflight checks service topology; the Vercel preflight checks dashboard settings by project name.
 
 ## 1. Source and test gate
 
@@ -97,12 +107,24 @@ Required shell names:
 
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_PROJECT_REF`
-- `DATABASE_URL` — pooled transaction-mode runtime URL
+- `DATABASE_URL` — Supavisor session-pooler runtime URL (`:5432`)
 - `DIRECT_URL` — direct/session migration URL
 
 The script rejects local database URLs and verifies that the authenticated account can see the project.
 
-### Vercel production variables
+### Railway service variables
+
+Authenticate and link the Railway project, then run the topology-only check:
+
+```powershell
+railway login
+railway link
+powershell -NoProfile -ExecutionPolicy Bypass -File infra/scripts/railway-preflight.ps1
+```
+
+Use Railway sealed variables for every secret. Share the API/worker environment contract through Railway shared variables or explicit references; configure the migrator only with `DATABASE_URL` and `DIRECT_URL`. Do not use `railway variable list --json` in a shared terminal because that command includes raw variable values.
+
+### Vercel dashboard variables
 
 First list live gaps without printing values:
 
@@ -115,14 +137,14 @@ Then prompt only for reported missing names. Example command shape:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass \
   -File infra/scripts/vercel-env-prompt.ps1 \
-  -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+  -Project admin -Names NEXT_PUBLIC_API_URL -PromptValues
 ```
 
-Repeat for Admin/Restaurant missing names, then rerun preflight. The helper marks server secrets sensitive and browser-safe values non-sensitive; it does not write dotenv files.
+Repeat for Admin/Restaurant missing names, then rerun preflight. Only browser-safe values belong in Vercel; API/worker/migration secrets belong in Railway or Supabase secret stores.
 
 ## 3. Production environment contract
 
-### API (`foodflow-api`)
+### Railway API and worker (`foodflow-api`, `foodflow-worker`)
 
 Core/provider values:
 
@@ -136,10 +158,11 @@ Core/provider values:
 | `STORAGE_PROVIDER` | `supabase` |
 | `QUEUE_PROVIDER` | `supabase-postgres` |
 | `SUPABASE_URL` | Project HTTPS origin |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only, sensitive |
-| `SUPABASE_JWT_SECRET` | Server-only signing secret for scoped realtime JWTs |
-| `SUPABASE_STORAGE_BUCKET` | Explicit production bucket |
-| `SUPABASE_KYC_BUCKET` | Dedicated private KYC bucket, normally `foodflow-kyc` |
+| `SUPABASE_SECRET_KEY` | Server-only, sealed; never expose as `NEXT_PUBLIC_*` |
+| `SUPABASE_REALTIME_JWT_PRIVATE_KEY` | Server-only ES256 private signing key, sealed |
+| `SUPABASE_REALTIME_JWT_KEY_ID` | Supabase Auth signing-key `kid` |
+| `SUPABASE_STORAGE_BUCKET` | `foodflow-public` |
+| `SUPABASE_KYC_BUCKET` | `foodflow-private` |
 | `DRIVER_KYC_MAX_UPLOAD_MB` | Explicit per-document limit, currently `4` |
 | `DRIVER_KYC_RETRY_LIMIT` | Explicit rejected-submission retry limit, currently `3` |
 | `CRON_SECRET` | Strong bearer secret for `/api/jobs/drain` |
@@ -159,13 +182,13 @@ Application/security values:
 
 ### Admin
 
-- `NEXT_PUBLIC_API_URL=https://<verified-api-alias>.vercel.app/api`
+- `NEXT_PUBLIC_API_URL=https://<verified-railway-domain>/api`
 - `NEXT_PUBLIC_ADMIN_URL=https://<verified-admin-alias>.vercel.app`
 - `NEXT_PUBLIC_MAP_PROVIDER=openfreemap`
 - `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty`
 - `NEXT_PUBLIC_REALTIME_PROVIDER=supabase`
 - `NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY=<public anon key, origin/RLS constrained>`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key, origin/RLS constrained>`
 
 ### Restaurant
 
@@ -212,13 +235,12 @@ where schemaname = 'public'
 
 Expected invariants:
 
-- All 25 repository migrations are applied in order.
+- All tracked repository migrations are applied in order.
 - `realtime_outbox`, `job_outbox`, `ai_usage_events`, and `payment_webhook_receipts` have RLS enabled.
-- `realtime_outbox` is in `supabase_realtime`; unrelated business tables are not broadly added merely for convenience.
-- Authenticated outbox reads are limited by the JWT `realtime_channels` claim.
-- The KYC bucket is private; driver writes are owner-scoped signed grants, Admin reads expire after five minutes, and no raw KYC object key reaches a browser response.
-- Service-role access is separate; anon cannot read the outbox/job/AI telemetry/payment receipt tables.
-- The storage bucket exists with the intended privacy policy; no service-role key is present in browser output.
+- `realtime_outbox` is retained only as a rollback artifact and is not broadly published to `supabase_realtime`.
+- Private Broadcast subscribe access on `realtime.messages` is limited by the JWT `realtime_channels` claim.
+- `foodflow-public` contains only public assets; `foodflow-private` contains KYC/proof-of-delivery. Driver writes are owner-scoped signed grants, Admin reads expire after five minutes, and no raw private object key reaches a browser response.
+- Secret-key access is server-only; publishable clients cannot read job/AI telemetry/payment receipt tables or arbitrary realtime topics.
 
 ### Realtime smoke
 
@@ -226,36 +248,28 @@ Using a short-lived authenticated application token in a secure shell:
 
 1. Request `POST /api/realtime/token` for a known order/restaurant.
 2. Confirm all returned channels start with `private:`.
-3. Confirm an authorized event reaches the subscribed client.
+3. Confirm an authorized private Broadcast event reaches the subscribed client.
 4. Confirm another tenant cannot obtain or read that channel.
 5. Confirm expired/invalid JWTs cannot subscribe.
 
-## 5. Vercel API deployment
+## 5. Railway migration, API, worker, and Redis
 
-Rerun Vercel preflight, then deploy a preview first:
+In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`.
 
-```powershell
-vercel --cwd backend
-```
+Run the migrator once after the Supabase backup and before API rollout. Give it only `DATABASE_URL` and `DIRECT_URL`; it runs `prisma migrate deploy` from the dedicated migrator image. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
-Validate preview health and function logs. Promote only the tested deployment:
+Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 
-```powershell
-vercel --prod --cwd backend
-```
+- `GET https://<railway-domain>/api/healthz` returns JSON with `status: ok`.
+- `GET https://<railway-domain>/api/readyz` reports database, Redis, and Supabase Storage ready.
+- API CORS contains only the two verified Vercel dashboard origins; no tunnel or localhost origin.
+- Worker logs show a successful startup and do not print environment values, bearer tokens, database URLs, or provider payload secrets.
 
-Record the verified API alias. Confirm:
-
-- `GET https://<api>/api/healthz` returns JSON with `status: ok`.
-- `GET https://<api>/api/readyz` reports required dependencies ready.
-- Vercel Cron targets `/api/jobs/drain?limit=50` and authenticates with `CRON_SECRET`.
-- Logs do not print environment values, bearer tokens, database URLs, or provider payload secrets.
-
-If health is degraded/down, stop. Do not deploy web against a failing API.
+If migration, health, or worker startup fails, stop. Do not deploy web against a failing API.
 
 ## 6. Admin and Restaurant deployment
 
-Update both projects to the verified API alias, rerun preflight, then deploy previews:
+Update both projects to the verified Railway API domain, rerun preflight, then deploy previews:
 
 ```powershell
 vercel --cwd web/apps/admin
@@ -313,21 +327,19 @@ Smoke must cover:
 - Cross-tenant denial.
 - SePay webhook verification/replay behavior, notification delivery, and storage upload.
 
-## 8. Fast-forward and Docker publication
+## 8. Docker publication and promotion
 
-After production smoke and fresh remote CI are green:
+`master` already contains the controlled integration merge. After production smoke and fresh remote CI are green, verify the deployed commit is still the current `origin/master` head:
 
 ```powershell
 git fetch --prune origin
 git status --short
-git merge-base --is-ancestor origin/master HEAD
-git push origin HEAD:master
 git fetch --prune origin
-git rev-list --left-right --count origin/master...HEAD
+git rev-parse origin/master
 git ls-remote --heads origin
 ```
 
-Expected final comparison: `0 0`; expected remote heads: `master` only.
+Expected remote heads: `master` only. Do not promote an image for a different commit.
 
 Create/push `v4.0.0` only at the verified master commit. The Docker workflow publishes SHA manifests, smokes/scans both architectures, verifies production health, and then creates the immutable semver manifest. `latest` promotion is a separate manual dispatch.
 
@@ -335,7 +347,7 @@ Do not publish the historical `foodflow-worker` image; the backend image contain
 
 ## Self-hosted Docker compatibility
 
-This is not the Supabase/Vercel production topology. Use only with fully supplied self-hosted secrets:
+This is not the Supabase/Railway/Vercel production topology. Use only with fully supplied self-hosted secrets:
 
 ```powershell
 Copy-Item .env.production.example .env.production
@@ -351,7 +363,7 @@ The overlay explicitly selects Socket.IO, MinIO, and BullMQ. Never use its examp
 ## Rollback
 
 1. Stop traffic-changing actions and preserve logs/health evidence without secrets.
-2. Vercel: roll back each project to its last verified deployment.
+2. Railway: roll back API/worker to the last verified immutable image or deployment; Vercel: roll back each dashboard to its last verified deployment.
 3. Database: prefer a forward corrective migration. Restore backup only under an approved data-loss/recovery procedure.
 4. Realtime/storage: restore the last verified RLS/publication/bucket policy; never disable RLS as a shortcut.
 5. Docker self-hosted: set `IMAGE_TAG` to the previous immutable semver/SHA digest and recreate services.

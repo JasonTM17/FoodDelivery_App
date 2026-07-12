@@ -3,7 +3,7 @@ name: Docker Publish
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -75,7 +75,7 @@ jobs:
           NEXT_PUBLIC_ADMIN_URL: ${{ vars.NEXT_PUBLIC_ADMIN_URL }}
           NEXT_PUBLIC_RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_MAP_PROVIDER: ${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
           NEXT_PUBLIC_MAP_STYLE_URL: ${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
         run: |
@@ -87,7 +87,7 @@ jobs:
             NEXT_PUBLIC_ADMIN_URL
             NEXT_PUBLIC_RESTAURANT_URL
             NEXT_PUBLIC_SUPABASE_URL
-            NEXT_PUBLIC_SUPABASE_ANON_KEY
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
             NEXT_PUBLIC_MAP_PROVIDER
             NEXT_PUBLIC_MAP_STYLE_URL
           )
@@ -100,7 +100,7 @@ jobs:
 
           node <<'NODE'
           const values = [
-            ['NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'vercel-api'],
+            ['NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'railway-api'],
             ['NEXT_PUBLIC_ADMIN_URL', process.env.NEXT_PUBLIC_ADMIN_URL, 'vercel-origin'],
             ['NEXT_PUBLIC_RESTAURANT_URL', process.env.NEXT_PUBLIC_RESTAURANT_URL, 'vercel-origin'],
             ['NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL, 'supabase-origin'],
@@ -118,10 +118,10 @@ jobs:
               throw new Error(`${name} must be a credential-free HTTPS URL without query or fragment`);
             }
             const path = url.pathname.replace(/\/+$/, '');
-            if (kind.startsWith('vercel') && !url.hostname.endsWith('.vercel.app')) {
+            if (kind === 'vercel-origin' && !url.hostname.endsWith('.vercel.app')) {
               throw new Error(`${name} must use a verified Vercel alias`);
             }
-            if (kind === 'vercel-api' && path !== '/api') {
+            if (kind === 'railway-api' && (url.hostname.endsWith('.vercel.app') || path !== '/api')) {
               throw new Error('NEXT_PUBLIC_API_URL must end in /api');
             }
             if (kind === 'vercel-origin' && path !== '') {
@@ -241,7 +241,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_REALTIME_PROVIDER=supabase
             NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_ADMIN_URL=${{ vars.NEXT_PUBLIC_ADMIN_URL }}
             NEXT_PUBLIC_RESTAURANT_URL=${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
             NEXT_PUBLIC_MAP_PROVIDER=${{ vars.NEXT_PUBLIC_MAP_PROVIDER }}
@@ -441,7 +441,7 @@ jobs:
           scanners: vuln
           vuln-type: os,library
           format: table
-          exit-code: '1'
+          exit-code: "1"
           severity: CRITICAL,HIGH
         env:
           TRIVY_PLATFORM: ${{ matrix.platform }}

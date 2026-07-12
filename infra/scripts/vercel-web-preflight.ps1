@@ -1,9 +1,8 @@
-# FoodFlow Vercel production preflight.
-# Verifies API/Admin/Restaurant project and production env readiness without printing
-# environment variable values or deploying.
+# FoodFlow Vercel dashboard preflight.
+# Verifies the Admin and Restaurant projects and production env names without
+# printing environment variable values or deploying. The API runs on Railway.
 $ErrorActionPreference = 'Stop'
 
-$apiProject = if ($env:API_VERCEL_PROJECT) { $env:API_VERCEL_PROJECT } else { 'foodflow-api' }
 $adminProject = if ($env:ADMIN_VERCEL_PROJECT) { $env:ADMIN_VERCEL_PROJECT } else { 'food-delivery-app' }
 $restaurantProject = if ($env:RESTAURANT_VERCEL_PROJECT) {
   $env:RESTAURANT_VERCEL_PROJECT
@@ -12,45 +11,6 @@ $restaurantProject = if ($env:RESTAURANT_VERCEL_PROJECT) {
 } else {
   'foodflow-restaurant'
 }
-
-$apiRequiredEnv = @(
-  'NODE_ENV',
-  'DATABASE_URL',
-  'DIRECT_URL',
-  'REDIS_URL',
-  'REALTIME_PROVIDER',
-  'STORAGE_PROVIDER',
-  'QUEUE_PROVIDER',
-  'SUPABASE_URL',
-  'SUPABASE_SECRET_KEY',
-  'SUPABASE_REALTIME_JWT_PRIVATE_KEY',
-  'SUPABASE_REALTIME_JWT_KEY_ID',
-  'SUPABASE_STORAGE_BUCKET',
-  'SUPABASE_KYC_BUCKET',
-  'DRIVER_KYC_MAX_UPLOAD_MB',
-  'DRIVER_KYC_RETRY_LIMIT',
-  'CRON_SECRET',
-  'JWT_SECRET',
-  'JWT_REFRESH_SECRET',
-  'PASSWORD_RESET_URL_BASE',
-  'CORS_ORIGINS',
-  'DELIVERY_BASE_FEE_VND',
-  'GOOGLE_MAPS_API_KEY',
-  'OSRM_URL',
-  'DEEPSEEK_API_KEY',
-  'SEPAY_ACCOUNT_NUMBER',
-  'SEPAY_BANK_NAME',
-  'SEPAY_WEBHOOK_SECRET',
-  'WEBHOOK_SECRET',
-  'SMTP_HOST',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'SMTP_FROM',
-  'FCM_SERVER_KEY',
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_FROM_NUMBER'
-)
 
 $adminRequiredEnv = @(
   'NEXT_PUBLIC_API_URL',
@@ -149,22 +109,6 @@ function Assert-EnvNames {
 
 Invoke-PreflightCheck 'Vercel CLI availability/auth' {
   Invoke-NativeCapture vercel --version | Out-Null
-}
-
-Invoke-PreflightCheck 'Vercel API project settings' {
-  Write-Host "Checking Vercel API project settings for $apiProject..."
-  $apiInspect = Invoke-NativeCapture vercel project inspect $apiProject --no-color
-  Assert-ContainsLineValue $apiInspect 'Root Directory' 'backend'
-  Assert-ContainsLineValue $apiInspect 'Framework Preset' 'Other'
-  Assert-ContainsLineValue $apiInspect 'Build Command' 'pnpm prisma generate && pnpm build'
-  Assert-ContainsLineValue $apiInspect 'Install Command' 'pnpm install --frozen-lockfile'
-}
-
-Invoke-PreflightCheck 'Vercel API production env names' {
-  Write-Host 'Checking Vercel API production env names...'
-  $apiEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$apiProject/env?target=production" --raw
-  $apiEnv = Extract-JsonObject ($apiEnvRaw -join "`n")
-  Assert-EnvNames $apiEnv $apiRequiredEnv 'API Vercel project'
 }
 
 Invoke-PreflightCheck 'Vercel Admin project settings' {

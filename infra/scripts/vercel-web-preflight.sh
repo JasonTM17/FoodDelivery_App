@@ -1,14 +1,12 @@
 #!/bin/sh
-# FoodFlow Vercel production preflight.
-# Verifies API/Admin/Restaurant project and production env readiness without printing
-# environment variable values or deploying.
+# FoodFlow Vercel dashboard preflight.
+# Verifies Admin/Restaurant project and production env readiness without printing
+# environment variable values or deploying. The API runs on Railway.
 set -eu
 
-API_VERCEL_PROJECT="${API_VERCEL_PROJECT:-foodflow-api}"
 ADMIN_VERCEL_PROJECT="${ADMIN_VERCEL_PROJECT:-food-delivery-app}"
 RESTAURANT_VERCEL_PROJECT="${RESTAURANT_VERCEL_PROJECT:-${RESTAURANT_VERCEL_PROJECT_ID:-foodflow-restaurant}}"
 
-API_REQUIRED_ENV="NODE_ENV DATABASE_URL DIRECT_URL REDIS_URL REALTIME_PROVIDER STORAGE_PROVIDER QUEUE_PROVIDER SUPABASE_URL SUPABASE_SECRET_KEY SUPABASE_REALTIME_JWT_PRIVATE_KEY SUPABASE_REALTIME_JWT_KEY_ID SUPABASE_STORAGE_BUCKET CRON_SECRET JWT_SECRET JWT_REFRESH_SECRET PASSWORD_RESET_URL_BASE CORS_ORIGINS DELIVERY_BASE_FEE_VND GOOGLE_MAPS_API_KEY OSRM_URL DEEPSEEK_API_KEY SEPAY_ACCOUNT_NUMBER SEPAY_BANK_NAME SEPAY_WEBHOOK_SECRET WEBHOOK_SECRET SMTP_HOST SMTP_USER SMTP_PASS SMTP_FROM FCM_SERVER_KEY TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER"
 ADMIN_REQUIRED_ENV="NEXT_PUBLIC_API_URL NEXT_PUBLIC_ADMIN_URL NEXT_PUBLIC_MAP_PROVIDER NEXT_PUBLIC_MAP_STYLE_URL NEXT_PUBLIC_REALTIME_PROVIDER NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
 RESTAURANT_REQUIRED_ENV="NEXT_PUBLIC_API_URL NEXT_PUBLIC_RESTAURANT_URL NEXT_PUBLIC_MAP_PROVIDER NEXT_PUBLIC_MAP_STYLE_URL NEXT_PUBLIC_REALTIME_PROVIDER NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
 
@@ -95,23 +93,6 @@ if (missing.length) {
 $json
 EOF
 }
-
-echo "Checking Vercel API project settings for $API_VERCEL_PROJECT..."
-if ! API_INSPECT="$(invoke_vercel project inspect "$API_VERCEL_PROJECT" --no-color 2>&1)"; then
-  add_issue "Vercel API project settings: $API_INSPECT"
-else
-  assert_contains "Root Directory" "backend" "$API_INSPECT" || add_issue "Vercel API project settings: Root Directory must be backend"
-  assert_contains "Framework Preset" "Other" "$API_INSPECT" || add_issue "Vercel API project settings: Framework Preset must be Other"
-  assert_contains "Build Command" "pnpm prisma generate && pnpm build" "$API_INSPECT" || add_issue "Vercel API project settings: Build Command must be pnpm prisma generate && pnpm build"
-  assert_contains "Install Command" "pnpm install --frozen-lockfile" "$API_INSPECT" || add_issue "Vercel API project settings: Install Command must be pnpm install --frozen-lockfile"
-fi
-
-echo "Checking Vercel API production env names..."
-if ! API_ENV_JSON="$(invoke_vercel api "/v9/projects/$API_VERCEL_PROJECT/env?target=production" --raw 2>&1)"; then
-  add_issue "Vercel API production env names: $API_ENV_JSON"
-elif ! API_ENV_ERR="$(assert_env_names "API Vercel project" "$API_REQUIRED_ENV" "$API_ENV_JSON" 2>&1)"; then
-  add_issue "Vercel API production env names: $API_ENV_ERR"
-fi
 
 echo "Checking Vercel Admin project settings for $ADMIN_VERCEL_PROJECT..."
 if ! ADMIN_INSPECT="$(invoke_vercel project inspect "$ADMIN_VERCEL_PROJECT" --no-color 2>&1)"; then

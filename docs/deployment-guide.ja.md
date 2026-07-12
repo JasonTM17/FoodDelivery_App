@@ -5,7 +5,7 @@
 Managed production topology:
 
 - Supabase: PostgreSQL/PostGIS、Realtime、Storage。
-- Vercel: NestJS API、Admin、Restaurant。
+- Railway: NestJS API、worker、migrator、Redis。Vercel: Admin、Restaurant。
 - Docker Hub: production smoke 後の immutable multi-arch artifact。
 
 Secret/CLI auth、current-head test、remote CI、production health が不足している間は deploy しません。Local green は production approval の代わりではありません。
@@ -47,12 +47,11 @@ powershell -File infra/scripts/supabase-env-prompt.ps1 -RunPreflight
 
 Process-scoped prompt で `SUPABASE_ACCESS_TOKEN`、`SUPABASE_PROJECT_REF`、pooled `DATABASE_URL`、direct/session `DIRECT_URL` を読み、preflight 後に消去します。
 
-Vercel:
+Railway API/worker/migrator/Redis:
 
 ```powershell
 powershell -File infra/scripts/vercel-web-preflight.ps1
-powershell -File infra/scripts/vercel-env-prompt.ps1 \
-  -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+powershell -File infra/scripts/railway-preflight.ps1
 ```
 
 Preflight が報告した name だけ追加し、再実行します。
@@ -67,8 +66,8 @@ API core:
 - `REALTIME_PROVIDER=supabase`
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
-- `SUPABASE_URL`、server-only `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_JWT_SECRET`、`SUPABASE_STORAGE_BUCKET`
-- private `SUPABASE_KYC_BUCKET=foodflow-kyc`、`DRIVER_KYC_MAX_UPLOAD_MB=4`、`DRIVER_KYC_RETRY_LIMIT=3`
+- `SUPABASE_URL`、server-only `SUPABASE_SECRET_KEY`、`SUPABASE_REALTIME_JWT_PRIVATE_KEY`、`SUPABASE_REALTIME_JWT_KEY_ID`、`SUPABASE_STORAGE_BUCKET=foodflow-public`
+- private `SUPABASE_KYC_BUCKET=foodflow-private`、`DRIVER_KYC_MAX_UPLOAD_MB=4`、`DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`、access/refresh JWT secrets
 - verified CORS/reset URL
 - Maps/routing、DeepSeek、SePay、SMTP、FCM、Twilio、webhook secrets。
@@ -90,17 +89,17 @@ Production で `migrate dev`、reset、demo seed は実行しません。
 
 24 migrations、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。KYC bucket は private、driver write は owner-scoped signed grant、Admin read は 5 分で失効し、browser response に raw object key を返しません。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
 
-## 5. Vercel
+## 5. Railway API, worker, migrator, Redis
 
-Projects: API `foodflow-api` (`backend`)、Admin `food-delivery-app` (`web/apps/admin`)、Restaurant `foodflow-restaurant` (`web/apps/restaurant`)。
+Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。migrator は API より前に一度実行し、Vercel は Admin/Restaurant のみを deploy します。
 
 ```powershell
-vercel --cwd backend
-# preview test
-vercel --prod --cwd backend
+railway login
+railway link
+powershell -File infra/scripts/railway-preflight.ps1
 ```
 
-`/api/healthz`、`/api/readyz`、secret-free logs、Cron bearer を確認します。API が green でなければ Web を deploy しません。
+Railway の `/api/healthz`、`/api/readyz`、Redis/Supabase Storage readiness、secret-free worker logs を確認します。API が green でなければ Web を deploy しません。
 
 Verified API alias を Web env に設定して preview/test 後に promote:
 

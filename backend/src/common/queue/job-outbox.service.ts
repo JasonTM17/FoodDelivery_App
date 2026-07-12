@@ -24,6 +24,7 @@ const PROCESSING_LEASE_MS = 5 * 60_000
 export class JobOutboxService implements OnModuleInit {
   private readonly logger = new Logger(JobOutboxService.name)
   private readonly processors = new Map<string, JobProcessor>()
+  private processorsRegistered = false
 
   constructor(
     private readonly prisma: PrismaService,
@@ -31,17 +32,11 @@ export class JobOutboxService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.registerProcessor('dispatch', DispatchProcessor)
-    this.registerProcessor('tracking-eta', EtaRecomputeProcessor)
-    this.registerProcessor('order-timeout', AutoTimeoutProcessor)
-    this.registerProcessor('payment-refund', RefundProcessor)
-    this.registerProcessor('commission-split', CommissionSplitProcessor)
-    this.registerProcessor(QUEUE_FCM, FcmProcessor)
-    this.registerProcessor(QUEUE_SMTP, SmtpProcessor)
-    this.registerProcessor(QUEUE_TWILIO, TwilioProcessor)
+    this.ensureProcessorsRegistered()
   }
 
   async drain(limit = DEFAULT_DRAIN_LIMIT): Promise<JobStats> {
+    this.ensureProcessorsRegistered()
     const take = Math.max(1, Math.min(MAX_DRAIN_LIMIT, Math.trunc(limit)))
     await this.recoverStaleClaims()
     const dueJobs = await this.prisma.jobOutbox.findMany({
@@ -77,6 +72,19 @@ export class JobOutboxService implements OnModuleInit {
     }
 
     return stats
+  }
+
+  private ensureProcessorsRegistered(): void {
+    if (this.processorsRegistered) return
+    this.processorsRegistered = true
+    this.registerProcessor('dispatch', DispatchProcessor)
+    this.registerProcessor('tracking-eta', EtaRecomputeProcessor)
+    this.registerProcessor('order-timeout', AutoTimeoutProcessor)
+    this.registerProcessor('payment-refund', RefundProcessor)
+    this.registerProcessor('commission-split', CommissionSplitProcessor)
+    this.registerProcessor(QUEUE_FCM, FcmProcessor)
+    this.registerProcessor(QUEUE_SMTP, SmtpProcessor)
+    this.registerProcessor(QUEUE_TWILIO, TwilioProcessor)
   }
 
   private registerProcessor(queue: string, token: Type<unknown>): void {

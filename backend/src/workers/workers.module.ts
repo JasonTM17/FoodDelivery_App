@@ -6,6 +6,11 @@ import { DispatchModule } from '../dispatch/dispatch.module'
 import { OrdersModule } from '../orders/orders.module'
 import { validateEnv } from '../config/env.validation'
 import { QueueProviderModule } from '../common/queue/queue-provider.module'
+import { JobOutboxModule } from '../common/queue/job-outbox.module'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { PaymentsModule } from '../payments/payments.module'
+import { TrackingModule } from '../tracking/tracking.module'
+import { PostgresJobOutboxWorkerService } from './postgres-job-outbox-worker.service'
 
 @Module({
   imports: [
@@ -22,6 +27,11 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     RedisModule,
     DispatchModule,
     OrdersModule,
+    NotificationsModule,
+    PaymentsModule,
+    TrackingModule,
+    JobOutboxModule,
   ],
+  providers: [PostgresJobOutboxWorkerService],
 })
 export class WorkersModule {}

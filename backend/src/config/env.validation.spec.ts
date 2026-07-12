@@ -34,7 +34,7 @@ const productionEnv = {
   TWILIO_FROM_NUMBER: '+84900000000',
   SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
   SUPABASE_SECRET_KEY: 'sb_secret_foodflow_production',
-  SUPABASE_REALTIME_JWT_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\ntest-only-es256-private-key-material\\n-----END PRIVATE KEY-----',
+  SUPABASE_REALTIME_JWT_PRIVATE_KEY: 'test-es256-private-key',
   SUPABASE_REALTIME_JWT_KEY_ID: 'foodflow-es256-2026-07',
   SUPABASE_STORAGE_BUCKET: 'foodflow-public',
   SUPABASE_KYC_BUCKET: 'foodflow-private',

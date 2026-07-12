@@ -1,6 +1,6 @@
 # FoodFlow Batch 4 Release Report
 
-Last updated: **2026-07-11**. Status: **local hardening in progress; production release blocked**.
+Last updated: **2026-07-12**. Status: **integration pushed to `master`; production release blocked**.
 
 ## Release identity
 
@@ -8,10 +8,10 @@ Last updated: **2026-07-11**. Status: **local hardening in progress; production 
 |---|---|
 | Remote repository | `JasonTM17/FoodDelivery_App` (private) |
 | Remote branches | `master` only |
-| Remote head | `origin/master@df945dd2c572e690a3c9e7aa31130c517ef83880` |
-| Local release branch | `codex/batch4-integration` in the isolated worktree |
-| Local code head before docs | `924808c47ca7de1aa001693bdfcca3c4ff293a9f` |
-| Ahead/behind before docs | `0 / 106` relative to `origin/master` |
+| Remote head | `origin/master@714d908ecab099876f5795a96ab6d0d6bca38514` |
+| Release branch | `master` |
+| Integration branch | `codex/batch4-integration` is an ancestor of `master` |
+| Ahead/behind | `0 / 0` after the controlled fast-forward |
 | Planned release | `v4.0.0` after all gates |
 | Production deployment | Not completed |
 
@@ -24,7 +24,7 @@ The local branch has not been pushed by name because that would recreate a secon
 - Provider-selectable Supabase Realtime, Storage, and PostgreSQL job outbox with fail-closed production validation.
 - `POST /api/realtime/token` issues five-minute Supabase JWTs only after order/restaurant ownership checks and returns explicit channel names.
 - `realtime_outbox` RLS permits authenticated reads only when the row channel is present in JWT claims; only that table is added to the explicit Supabase Realtime publication.
-- `GET|POST /api/jobs/drain` requires `CRON_SECRET`; Vercel Cron uses the persisted job outbox instead of relying on a long-lived BullMQ worker.
+- `GET|POST /api/jobs/drain` requires `CRON_SECRET`; the Railway worker owns recurring persisted job-outbox drains and the endpoint is the authenticated recovery path.
 - Storage supports Supabase server-side upload/delete and dedicated private driver KYC signed upload/read capabilities; MinIO remains the compatibility provider.
 - DeepSeek `deepseek-v4-flash` adapter, session ownership, explicit fail-closed states, support escalation, and persisted token/cost/latency telemetry.
 - Tracking and dispatch reject stale/future/malformed GPS, preserve route phase, persist provider geometry, and avoid fabricated location/ETA fallbacks.
@@ -97,15 +97,13 @@ The two current SHA manifests are release-candidate evidence, not a production r
 
 ### Supabase
 
-The 2026-07-11 `infra/scripts/supabase-preflight.ps1` run stopped before mutation because `SUPABASE_ACCESS_TOKEN` is absent from the secure CLI environment. It also requires a visible `SUPABASE_PROJECT_REF`, non-local pooled `DATABASE_URL`, and direct `DIRECT_URL`. OAuth/MCP access is not treated as a substitute for CLI migration credentials.
+The project is linked and visible to the authenticated Supabase CLI account, but the remote database connection used by `supabase migration list --linked` timed out. No remote migration, schema dump, RLS advisor, or Storage change was attempted after that failure. Complete a non-local session/direct connection check and backup before rerunning the preflight; OAuth/CLI access is not a substitute for database connectivity.
 
-### Vercel
+### Railway and Vercel
 
-Project settings are visible, but production env preflight reports:
+Railway CLI 5.26.0 is installed but `railway whoami --json` returns `Unauthorized. Please login with railway login`; no Railway project or service was created. The required production topology remains API, worker, migrator, and managed Redis.
 
-- API missing `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, Supabase service/JWT/KYC values, KYC limits, Maps/routing, DeepSeek, SePay, webhook, SMTP, FCM, and Twilio production values.
-- Admin missing `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Restaurant missing `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Vercel remains limited to Admin and Restaurant. Their public build contract now requires `NEXT_PUBLIC_API_URL` for the future Railway domain and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; no production redeploy was attempted.
 
 Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
 
@@ -119,11 +117,11 @@ The user reports billing/token/auth exhaustion. No local result may be represent
 2. Run fresh frozen installs and complete backend/web/mobile suites and signed-build checks at the final source head.
 3. Validate private KYC Storage/RLS/upload/review behavior against the target Supabase project.
 4. Run Chromium + Firefox full E2E, axe serious/critical, visual, tenant isolation, realtime authorization, shipper route/map, export, payment, and AI fail-closed/live smoke.
-5. Rotate exposed keys and complete Supabase/Vercel secure preflights.
+5. Rotate exposed keys and complete Supabase/Railway/Vercel secure preflights.
 6. Restore remote CI and obtain green current-head workflow evidence.
-7. Deploy Supabase, then Vercel API, Admin, and Restaurant; verify production health and behavior.
-8. Fast-forward `HEAD` to `master`, publish immutable Docker manifests, and only then manually promote `latest`.
+7. Deploy Supabase, then Railway migration/API/worker/Redis, then Vercel Admin and Restaurant; verify production health and behavior.
+8. Pull the existing immutable Docker Hub SHA in a clean environment, publish a matching semver only after the smoke, and then manually promote `latest`.
 
 ## Release decision
 
-**NO-GO** at this snapshot. The repository is materially hardened, remote branch cleanup is complete, and mobile realtime parity has landed, but production credentials, final current-head gates, remote CI, provider deployment, signed mobile release evidence, and production smoke are mandatory and unresolved. No secret should be invented, copied from chat, committed, or bypassed to change this decision.
+**NO-GO** at this snapshot. The repository is materially hardened, `master` contains the integration, Docker Hub SHA images are pushed, and mobile realtime parity has landed, but Supabase database connectivity, Railway authentication/service setup, production secrets, remote CI, signed mobile release evidence, and production smoke are mandatory and unresolved. No secret should be invented, copied from chat, committed, or bypassed to change this decision.

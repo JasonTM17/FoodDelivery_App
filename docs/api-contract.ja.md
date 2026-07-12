@@ -135,7 +135,7 @@ Client は返された exact headers だけで `uploadUrl` に PUT します。F
 | Method | Route | Authentication | Contract |
 |---|---|---|---|
 | `POST` | `/realtime/token` | User bearer access token | Optional `{ orderId?, restaurantId? }`。`{ provider: "supabase", token, expiresAt, channels }` を返し、TTL は 5 分、channel は explicit private scope のみです。 |
-| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | PostgreSQL outbox の due jobs を Vercel Cron が drain。`{ claimed, completed, failed, retried }`。 |
+| `GET` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | PostgreSQL outbox の due jobs を Railway worker の recovery/one-off 操作が drain。`{ claimed, completed, failed, retried }`。 |
 | `POST` | `/jobs/drain?limit=1..100` | `Authorization: Bearer ${CRON_SECRET}` | Secure worker invocation 用の同一 contract。 |
 
 API は signing 前に order/restaurant ownership を確認します。Cross-tenant は `REALTIME_ORDER_CHANNEL_FORBIDDEN` または `REALTIME_RESTAURANT_CHANNEL_FORBIDDEN`、signing config 不足は `SUPABASE_REALTIME_NOT_CONFIGURED`。Supabase RLS は JWT `realtime_channels` claim に row channel がある場合だけ `realtime_outbox` を読めます。Anon と broad public channel は contract 外です。

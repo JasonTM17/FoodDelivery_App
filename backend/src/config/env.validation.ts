@@ -110,6 +110,8 @@ export const envSchema = z.object({
   REALTIME_PROVIDER: z.enum(['socketio', 'supabase']).default('socketio'),
   STORAGE_PROVIDER: z.enum(['minio', 'supabase']).default('minio'),
   QUEUE_PROVIDER: z.enum(['bullmq', 'supabase-postgres']).default('bullmq'),
+  JOB_OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(100).max(60_000).default(1_000),
+  JOB_OUTBOX_DRAIN_LIMIT: z.coerce.number().int().min(1).max(100).default(25),
   DATABASE_URL: postgresUrl,
   DIRECT_URL: postgresUrl,
   REDIS_URL: redisUrl,

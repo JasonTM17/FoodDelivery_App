@@ -1,15 +1,15 @@
-# FoodFlow Vercel production env prompt helper.
-# Safe default: prints the per-project env contract and exact Vercel CLI commands
+# FoodFlow Vercel dashboard env prompt helper.
+# Safe default: prints the per-dashboard env contract and exact Vercel CLI commands
 # without calling Vercel, printing secret values, writing .env files, or deploying.
 #
 # To actually add values, first run vercel-web-preflight.ps1, then pass only the
 # missing names it reports:
-#   powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project api -Names DATABASE_URL,DIRECT_URL -PromptValues
+#   powershell -NoProfile -ExecutionPolicy Bypass -File infra\scripts\vercel-env-prompt.ps1 -Project admin -Names NEXT_PUBLIC_API_URL -PromptValues
 $ErrorActionPreference = 'Stop'
 
 $LinkProjects = $false
 $PromptValues = $false
-$Project = @('api', 'admin', 'restaurant')
+$Project = @('admin', 'restaurant')
 $Names = @()
 
 for ($i = 0; $i -lt $args.Count; $i++) {
@@ -24,7 +24,7 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
     '-Project' {
       if ($i + 1 -ge $args.Count) {
-        throw '-Project requires one or more comma-separated values: api, admin, restaurant.'
+        throw '-Project requires one or more comma-separated values: admin, restaurant.'
       }
       $i++
       $Project = @($args[$i].Split(',') | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ })
@@ -47,49 +47,6 @@ for ($i = 0; $i -lt $args.Count; $i++) {
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 
 $projectDefinitions = @{
-  api = @{
-    Label = 'API'
-    Name = if ($env:API_VERCEL_PROJECT) { $env:API_VERCEL_PROJECT } else { 'foodflow-api' }
-    Cwd = Join-Path $repoRoot 'backend'
-    Required = @(
-      'NODE_ENV',
-      'DATABASE_URL',
-      'DIRECT_URL',
-      'REDIS_URL',
-      'REALTIME_PROVIDER',
-      'STORAGE_PROVIDER',
-      'QUEUE_PROVIDER',
-      'SUPABASE_URL',
-      'SUPABASE_SECRET_KEY',
-      'SUPABASE_REALTIME_JWT_PRIVATE_KEY',
-      'SUPABASE_REALTIME_JWT_KEY_ID',
-      'SUPABASE_STORAGE_BUCKET',
-      'SUPABASE_KYC_BUCKET',
-      'DRIVER_KYC_MAX_UPLOAD_MB',
-      'DRIVER_KYC_RETRY_LIMIT',
-      'CRON_SECRET',
-      'JWT_SECRET',
-      'JWT_REFRESH_SECRET',
-      'PASSWORD_RESET_URL_BASE',
-      'CORS_ORIGINS',
-      'DELIVERY_BASE_FEE_VND',
-      'GOOGLE_MAPS_API_KEY',
-      'OSRM_URL',
-      'DEEPSEEK_API_KEY',
-      'SEPAY_ACCOUNT_NUMBER',
-      'SEPAY_BANK_NAME',
-      'SEPAY_WEBHOOK_SECRET',
-      'WEBHOOK_SECRET',
-      'SMTP_HOST',
-      'SMTP_USER',
-      'SMTP_PASS',
-      'SMTP_FROM',
-      'FCM_SERVER_KEY',
-      'TWILIO_ACCOUNT_SID',
-      'TWILIO_AUTH_TOKEN',
-      'TWILIO_FROM_NUMBER'
-    )
-  }
   admin = @{
     Label = 'Admin'
     Name = if ($env:ADMIN_VERCEL_PROJECT) { $env:ADMIN_VERCEL_PROJECT } else { 'food-delivery-app' }
@@ -204,8 +161,8 @@ function Invoke-VercelEnvAdd {
 }
 
 foreach ($projectKey in $Project) {
-  if (@('api', 'admin', 'restaurant') -notcontains $projectKey) {
-    throw "Invalid project '$projectKey'. Expected api, admin, or restaurant."
+  if (@('admin', 'restaurant') -notcontains $projectKey) {
+    throw "Invalid project '$projectKey'. Expected admin or restaurant."
   }
 }
 

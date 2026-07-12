@@ -2,12 +2,13 @@
 
 ## Purpose
 
-Standalone BullMQ worker process for background jobs. Runs in separate container alongside main API. Consumes queues: order-timeout, dispatch, dispatch-retry, payment-refund, commission-split, payout-disbursement, notif-fcm, notif-smtp, notif-twilio, tracking-eta. Each processor idempotent; failures retry with exponential backoff.
+Standalone background worker process. With `QUEUE_PROVIDER=supabase-postgres`, it drains durable `job_outbox` batches immediately, polls every second by default, never overlaps drains, and waits for an in-flight batch on shutdown. With `QUEUE_PROVIDER=bullmq`, it remains the explicit local/self-hosted compatibility worker.
 
 ## API surface
 
 - No HTTP endpoints — worker process only
-- Subscribes to all BullMQ queues defined in respective service modules
+- Resolves dispatch, tracking, order, payment, and notification processors from the application modules
+- Drains durable Postgres jobs only when `QUEUE_PROVIDER=supabase-postgres`
 
 ## Env vars
 
@@ -15,8 +16,8 @@ Same as main backend (DATABASE_URL, REDIS_URL, JWT_SECRET, etc.) — workers sha
 
 | Name | Default | Description |
 |---|---|---|
-| `WORKER_CONCURRENCY` | `5` | Parallel jobs per queue |
-| `WORKER_MAX_RETRIES` | `5` | Default per-job retry cap before DLQ |
+| `JOB_OUTBOX_POLL_INTERVAL_MS` | `1000` | Postgres queue poll interval; valid range 100–60000 ms |
+| `JOB_OUTBOX_DRAIN_LIMIT` | `25` | Maximum claimed jobs per Postgres drain; valid range 1–100 |
 
 ## Run locally
 
@@ -33,7 +34,6 @@ npx jest workers
 
 ## Runbook
 
-- **Stuck queue:** Inspect via `bull-board` UI at `:3001/admin/queues` (admin auth required).
-- **DLQ overflow:** Failed jobs >5 retries land in `<queue-name>:failed`. Run `pnpm scripts:dlq-replay <queue-name>` to retry batch.
-- **Worker crash loop:** Check container logs for fatal exception. Common cause: missing env var. Verify all secrets injected.
-- **Memory leak:** Restart worker container; long-running BullMQ workers can accumulate listener leaks. Schedule weekly rolling restart.
+- **Stuck Postgres queue:** inspect `job_outbox` status/attempts/run time and confirm the Railway worker is running with `QUEUE_PROVIDER=supabase-postgres`.
+- **Worker crash loop:** check logs for a generic startup failure and validate required sealed environment variables without printing them.
+- **Recovery drain:** call `GET|POST /api/jobs/drain?limit=1..100` only from an authenticated server-to-server operation with `CRON_SECRET`; it is not a browser or mobile route.
