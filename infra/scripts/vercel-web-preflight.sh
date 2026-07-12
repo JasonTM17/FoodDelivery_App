@@ -83,10 +83,19 @@ const start = input.indexOf("{");
 const end = input.lastIndexOf("}");
 if (start < 0 || end < start) throw new Error("Expected JSON object in Vercel CLI output");
 const payload = JSON.parse(input.slice(start, end + 1));
-const names = new Set((payload.envs || []).map((env) => env.key));
+const entries = payload.envs || [];
+const names = new Set(entries.map((env) => env.key));
 const missing = requiredEnv.split(/\s+/).filter(Boolean).filter((name) => !names.has(name));
 if (missing.length) {
   console.error(`${projectLabel} is missing production env vars: ${missing.join(", ")}`);
+  process.exit(1);
+}
+const required = new Set(requiredEnv.split(/\s+/).filter(Boolean));
+const nonAuditable = entries
+  .filter((env) => required.has(env.key) && env.type === "sensitive")
+  .map((env) => env.key);
+if (nonAuditable.length) {
+  console.error(`${projectLabel} stores public build vars as non-auditable sensitive values: ${nonAuditable.join(", ")}`);
   process.exit(1);
 }
 ' "$project_label" "$required" <<EOF

@@ -102,9 +102,9 @@ The active Food_Delivery_Crab project is linked and `supabase migration list --l
 
 ### Railway and Vercel
 
-Railway CLI 5.26.0 is installed but `railway whoami --json` returns `Unauthorized. Please login with railway login`; no Railway project or service was created. The required production topology remains API, worker, migrator, and managed Redis.
+Railway OAuth completed on 2026-07-13. Project `foodflow-production` now contains empty `foodflow-api`, `foodflow-worker`, and `foodflow-migrate` services plus a managed Redis service whose deployment and 500 MB volume are healthy; the committed Railway topology preflight passes. API/worker have the verified non-secret Supabase/Redis/CORS contract, a current Supabase secret API key, and generated 64-byte JWT secrets set with deploys skipped. No app image was attached and no app deployment was attempted because the Supabase database URLs, imported ES256 signing key, Maps/OSRM, DeepSeek, SePay, SMTP, FCM, and Twilio production credentials are unavailable.
 
-Vercel remains limited to Admin and Restaurant. Their public build contract now requires `NEXT_PUBLIC_API_URL` for the future Railway domain and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; no production redeploy was attempted.
+Both Vercel projects now use Node 22.x and have `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the production target. Existing public build variables were incorrectly stored as Vercel `sensitive` values, which prevents release-time value auditing. The deployed Restaurant bundles still contain a `trycloudflare.com` API URL and localhost fallback. The PowerShell and shell preflight guards now reject non-auditable `NEXT_PUBLIC_*` values; no production redeploy was attempted.
 
 Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
 

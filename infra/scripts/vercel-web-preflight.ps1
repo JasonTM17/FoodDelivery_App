@@ -97,13 +97,27 @@ function Assert-EnvNames {
     [Parameter(Mandatory = $true)][string[]]$Required,
     [Parameter(Mandatory = $true)][string]$ProjectLabel
   )
-  $names = @()
+  $entries = @()
   if ($Payload.envs) {
-    $names = @($Payload.envs | ForEach-Object { $_.key })
+    $entries = @($Payload.envs)
   }
+  $names = @($entries | ForEach-Object { $_.key })
   $missing = @($Required | Where-Object { $names -notcontains $_ })
   if ($missing.Count -gt 0) {
     throw "$ProjectLabel is missing production env vars: $($missing -join ', ')"
+  }
+
+  # NEXT_PUBLIC_* values are baked into browser bundles and are not secrets.
+  # Vercel sensitive values cannot be read back by the release preflight, which
+  # lets stale localhost/tunnel endpoints pass on name alone. Require an
+  # auditable env type so the saved value can be verified before deployment.
+  $nonAuditable = @(
+    $entries |
+      Where-Object { $_.key -in $Required -and $_.type -eq 'sensitive' } |
+      ForEach-Object { $_.key }
+  )
+  if ($nonAuditable.Count -gt 0) {
+    throw "$ProjectLabel stores public build vars as non-auditable sensitive values: $($nonAuditable -join ', ')"
   }
 }
 

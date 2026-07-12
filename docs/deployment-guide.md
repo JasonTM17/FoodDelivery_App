@@ -21,6 +21,7 @@ It does not authorize deployment while secrets, CLI access, current-head tests, 
 6. Migrate the database before deploying an API that requires the new schema.
 7. Deploy API before web because web builds bake the verified API alias.
 8. Promote immutable Docker tags only after production smoke; `latest` is never an initial release tag.
+9. Store `NEXT_PUBLIC_*` values as auditable Vercel encrypted/plain variables, not non-readable `sensitive` values; verify the built bundles contain no localhost or tunnel origin.
 
 ## Release stages
 
