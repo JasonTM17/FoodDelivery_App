@@ -31,6 +31,9 @@ services:
       CORS_ORIGINS: http://localhost:13000,http://localhost:13002
       MINIO_PUBLIC_URL: http://localhost:19000
 
+  worker:
+    container_name: foodflow-batch4-e2e-worker
+
   admin:
     container_name: foodflow-batch4-e2e-admin
     ports: !override

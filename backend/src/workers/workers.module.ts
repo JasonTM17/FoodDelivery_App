@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { I18nSetupModule } from '../i18n/i18n.module'
 import { PrismaModule } from '../database/prisma.module'
 import { RedisModule } from '../redis/redis.module'
 import { DispatchModule } from '../dispatch/dispatch.module'
@@ -17,6 +18,7 @@ import { RagSyncWorkerService } from './rag-sync-worker.service'
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    I18nSetupModule,
     QueueProviderModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {

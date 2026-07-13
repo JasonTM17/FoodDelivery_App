@@ -120,6 +120,17 @@ services:
       timeout: 10s
       retries: 3
 
+  # Background work must not share the API process: the worker owns queue
+  # drains and dynamic RAG indexing, while the backend remains HTTP-only.
+  worker:
+    extends:
+      service: backend
+    container_name: foodflow-worker
+    command: ["dist/workers/main.js"]
+    ports: !reset []
+    healthcheck:
+      disable: true
+
   admin:
     build:
       context: ./web
