@@ -45,7 +45,7 @@ function isBodyInit(value: unknown): value is BodyInit {
 
 export class FoodFlowApiClient {
   private readonly options: ApiClientOptions;
-  private refreshPromise: Promise<boolean> | null = null;
+  private refreshPromise: { refreshToken: string; promise: Promise<boolean> } | null = null;
 
   constructor(options: ApiClientOptions) {
     this.options = {
@@ -76,14 +76,19 @@ export class FoodFlowApiClient {
   }
 
   private async sendWithRefresh(path: string, options: ApiRequestOptions): Promise<Response> {
-    const response = await this.send(path, options);
+    // Keep the token used by the failed request. A login can replace storage
+    // while an earlier request is waiting for its refresh response.
+    const failedAccessToken = this.options.getAccessToken();
+    const response = await this.send(path, options, failedAccessToken);
     if (response.status !== 401 || options.requireAuth === false || options.skipRefresh) {
       return response;
     }
 
     await response.body?.cancel();
     const refreshed = await this.refreshAccessToken();
-    if (!refreshed) this.expireSession();
+    // A failed refresh only expires the session it started from. If storage now
+    // contains a different token, a new login won the race; retry with it.
+    if (!refreshed && this.options.getAccessToken() === failedAccessToken) this.expireSession();
     return this.send(path, { ...options, skipRefresh: true });
   }
 
@@ -98,7 +103,11 @@ export class FoodFlowApiClient {
     });
   }
 
-  private async send(path: string, options: ApiRequestOptions): Promise<Response> {
+  private async send(
+    path: string,
+    options: ApiRequestOptions,
+    accessToken = this.options.getAccessToken(),
+  ): Promise<Response> {
     const { params, requireAuth = true, skipRefresh: _skipRefresh, body, ...init } = options;
     const headers = new Headers(init.headers);
 
@@ -107,7 +116,6 @@ export class FoodFlowApiClient {
     }
 
     if (requireAuth) {
-      const accessToken = this.options.getAccessToken();
       if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
@@ -193,18 +201,22 @@ export class FoodFlowApiClient {
   }
 
   private refreshAccessToken(): Promise<boolean> {
-    if (this.refreshPromise) return this.refreshPromise;
+    const refreshToken = this.options.getRefreshToken();
+    if (!refreshToken) return Promise.resolve(false);
+    if (this.refreshPromise?.refreshToken === refreshToken) return this.refreshPromise.promise;
 
-    this.refreshPromise = this.performRefresh().finally(() => {
-      this.refreshPromise = null;
+    const pending: { refreshToken: string; promise: Promise<boolean> } = {
+      refreshToken,
+      promise: Promise.resolve(false),
+    };
+    pending.promise = this.performRefresh(refreshToken).finally(() => {
+      if (this.refreshPromise === pending) this.refreshPromise = null;
     });
-    return this.refreshPromise;
+    this.refreshPromise = pending;
+    return pending.promise;
   }
 
-  private async performRefresh(): Promise<boolean> {
-    const refreshToken = this.options.getRefreshToken();
-    if (!refreshToken) return false;
-
+  private async performRefresh(refreshToken: string): Promise<boolean> {
     try {
       const response = await this.send('/auth/refresh', {
         method: 'POST',
@@ -216,6 +228,8 @@ export class FoodFlowApiClient {
 
       const { data: tokens } = await this.parseEnvelope<TokenPair>(response);
       if (!tokens?.accessToken) return false;
+      // Never let an old refresh response overwrite tokens from a newer login.
+      if (this.options.getRefreshToken() !== refreshToken) return false;
       this.options.setTokens(tokens);
       return true;
     } catch {
