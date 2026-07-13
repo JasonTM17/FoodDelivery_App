@@ -122,7 +122,7 @@ export function FoodFlowLogo({
       {showWordmark ? (
         <span className="min-w-0">
           <span className={cn("block truncate text-lg font-bold tracking-tight text-slate-950", wordmarkClassName)}>
-            Food<span className="text-orange-500">Flow</span>
+            Food<span className="text-orange-700">Flow</span>
           </span>
           {descriptor ? (
             <span className={cn("block truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500", descriptorClassName)}>

@@ -77,10 +77,11 @@ test.describe('Critical-page accessibility and runtime integrity', () => {
 
     await page.setViewportSize({ width: 1280, height: 900 })
     const main = page.locator('main#main-content')
+    const contentShell = main.locator('..')
     await expect(main).toHaveAttribute('tabindex', '-1')
 
     await page.getByRole('button', { name: 'Collapse sidebar' }).click()
-    await expect(main).toHaveCSS('margin-left', '64px')
+    await expect(contentShell).toHaveCSS('margin-left', '64px')
 
     await page.setViewportSize({ width: 390, height: 844 })
     const skipLink = page.getByRole('link', { name: 'Skip to main content' })

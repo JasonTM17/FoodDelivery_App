@@ -41,7 +41,10 @@ export function RestaurantSidebar({
   const isActive = (item: RestaurantNavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
-  const renderNavigationItem = (item: RestaurantNavItem, index?: number) => {
+  const initialFocusHref =
+    [...NAV_ITEMS, ...SETTINGS_ITEMS].find(isActive)?.href ?? NAV_ITEMS[0]?.href;
+
+  const renderNavigationItem = (item: RestaurantNavItem) => {
     const itemIsActive = isActive(item);
     const label = t(item.tKey);
     const Icon = item.icon;
@@ -49,7 +52,9 @@ export function RestaurantSidebar({
     return (
       <Link
         key={item.href}
-        ref={index === 0 ? initialFocusRef : undefined}
+        // The active destination is the least surprising first focus target
+        // when reopening the mobile navigation. Keep Overview as the fallback.
+        ref={item.href === initialFocusHref ? initialFocusRef : undefined}
         href={item.href}
         prefetch={false}
         onClick={onNavigate}
@@ -109,7 +114,7 @@ export function RestaurantSidebar({
         aria-label={t('sidebar.navigation')}
         className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-3 scrollbar-thin"
       >
-        {NAV_ITEMS.map((item, index) => renderNavigationItem(item, index))}
+        {NAV_ITEMS.map(renderNavigationItem)}
 
         <div className="mt-1 border-t border-sidebar-hover pt-2">
           {!collapsed && (
