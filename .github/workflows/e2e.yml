@@ -38,12 +38,13 @@ jobs:
 
       - name: Build and start the isolated current-source stack
         run: |
-          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
-            up --build --detach --wait --wait-timeout 180
+          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
+            up --build --detach --wait --wait-timeout 180 \
+            postgres redis minio migrate backend admin restaurant
 
       - name: Verify the migrator and seed disposable E2E data
         run: |
-          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
+          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
             run --rm migrate
           cd backend
           pnpm prisma generate
@@ -54,16 +55,16 @@ jobs:
 
       - name: Require worker startup and post-seed RAG sync
         run: |
-          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml restart worker
+          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml up --detach worker
           for i in $(seq 1 40); do
-            logs="$(docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker)"
+            logs="$(docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker)"
             if printf '%s' "$logs" | grep -q "FoodFlow Worker started" \
               && printf '%s' "$logs" | grep -q "RAG sync complete"; then
               echo "Worker and RAG sync ready"; exit 0
             fi
             echo "Waiting for worker RAG sync ($i/40)..."; sleep 3
           done
-          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker
+          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker
           echo "Worker did not produce a post-seed RAG sync"; exit 1
 
       - name: Install web dependencies
@@ -99,4 +100,4 @@ jobs:
 
       - name: Stop isolated Docker stack
         if: always()
-        run: docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml down --volumes
+        run: docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml down --volumes

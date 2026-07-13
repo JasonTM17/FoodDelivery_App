@@ -31,6 +31,14 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: backend
 
+      - name: Install pgvector in disposable PostGIS service
+        run: |
+          docker exec "${{ job.services.postgres.id }}" sh -lc '
+            apk add --no-cache postgresql-pgvector=0.6.2-r0 &&
+            cp /usr/lib/postgresql16/vector.so /usr/local/lib/postgresql/vector.so &&
+            cp /usr/share/postgresql16/extension/vector* /usr/local/share/postgresql/extension/
+          '
+
       - name: Generate Prisma client
         run: pnpm prisma generate
         working-directory: backend
