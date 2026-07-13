@@ -29,7 +29,7 @@ export function PromotionTypePicker({ value, onChange }: PromotionTypePickerProp
           type="button"
           onClick={() => onChange(type.value)}
           className={cn(
-            'flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-all',
+            'flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-[background-color,border-color,box-shadow] duration-200 motion-reduce:transition-none',
             value === type.value
               ? 'border-brand-500 bg-brand-50 shadow-sm'
               : 'border-gray-200 hover:border-brand-300'

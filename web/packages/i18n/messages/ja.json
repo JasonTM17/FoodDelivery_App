@@ -53,7 +53,8 @@
     "total": "合計",
     "name": "名前",
     "phone": "電話番号",
-    "address": "住所"
+    "address": "住所",
+    "skipToMain": "メインコンテンツへ移動"
   },
   "status": {
     "pending": "保留中",

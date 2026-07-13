@@ -169,7 +169,7 @@ export function NotificationsList() {
               onClick={() => markRead(notification.id)}
               disabled={markingIds.has(notification.id)}
               className={cn(
-                'w-full rounded-xl border p-4 text-left transition-all hover:shadow-sm',
+                'w-full rounded-xl border p-4 text-left transition-[background-color,border-color,box-shadow] duration-200 hover:shadow-sm motion-reduce:transition-none',
                 notification.isRead ? 'border-gray-200 bg-white' : 'border-brand-100 bg-brand-50/40',
               )}
             >

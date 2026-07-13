@@ -25,9 +25,15 @@
     "restaurantOnly": "This dashboard is available to restaurant accounts only."
   },
   "sidebar": {
+    "brand": "FoodFlow Restaurant",
     "defaultName": "Restaurant",
     "manage": "Manage",
-    "collapse": "Collapse",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "navigation": "Restaurant navigation",
+    "openNavigation": "Open restaurant menu",
+    "mobileTitle": "FoodFlow restaurant menu",
+    "mobileDescription": "Choose an area to manage your restaurant",
     "settingsGroup": "Settings",
     "settingsGeneral": "General",
     "settingsProfile": "Profile",

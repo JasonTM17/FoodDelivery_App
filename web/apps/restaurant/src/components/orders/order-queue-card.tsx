@@ -21,7 +21,7 @@ export function OrderQueueCard({ order, isNew }: OrderQueueCardProps) {
   return (
     <div
       className={cn(
-        'card cursor-pointer transition-all hover:shadow-md group',
+        'card cursor-pointer transition-[background-color,box-shadow] duration-200 hover:shadow-md group motion-reduce:transition-none',
         isPending && 'bg-red-50/30 ring-2 ring-red-200',
         isNew && 'ring-2 ring-brand-400',
       )}

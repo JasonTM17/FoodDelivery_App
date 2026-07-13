@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { gotoAdminRoute, gotoRestaurantRoute } from '../fixtures/ui-auth'
+import { gotoAdminRoute, gotoRestaurantRoute, loginRestaurantApp } from '../fixtures/ui-auth'
 
 const ADMIN_LOGIN_HEADING = /login|admin|quản trị|管理者/i
 const RESTAURANT_LOGIN_HEADING = /login|restaurant|quản lý nhà hàng|nhà hàng|レストラン/i
@@ -105,6 +105,23 @@ test.describe('Batch 4 visual contract regression', () => {
 
     await page.screenshot({
       path: testInfo.outputPath('restaurant-login-brand-shell.png'),
+      fullPage: true,
+    })
+  })
+
+  test('restaurant dashboard keeps the mobile navigation reachable @visual', async ({ page, request }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await loginRestaurantApp(page, request)
+    await gotoRestaurantRoute(page, '/orders', 'en')
+    await disableMotion(page)
+
+    await page.getByRole('button', { name: 'Open restaurant menu' }).click()
+    const navigationDialog = page.getByRole('dialog', { name: 'FoodFlow restaurant menu' })
+    await expect(navigationDialog).toBeVisible()
+    await expect(navigationDialog.getByRole('link', { name: 'Orders' })).toBeFocused()
+
+    await page.screenshot({
+      path: testInfo.outputPath('restaurant-mobile-navigation.png'),
       fullPage: true,
     })
   })

@@ -25,9 +25,15 @@
     "restaurantOnly": "Bảng điều khiển này chỉ dành cho tài khoản nhà hàng."
   },
   "sidebar": {
+    "brand": "FoodFlow Nhà hàng",
     "defaultName": "Nhà hàng",
     "manage": "Quản lý",
-    "collapse": "Thu gọn",
+    "collapse": "Thu gọn thanh bên",
+    "expand": "Mở rộng thanh bên",
+    "navigation": "Điều hướng nhà hàng",
+    "openNavigation": "Mở menu nhà hàng",
+    "mobileTitle": "Menu FoodFlow nhà hàng",
+    "mobileDescription": "Chọn khu vực để quản lý nhà hàng của bạn",
     "settingsGroup": "Cài đặt",
     "settingsGeneral": "Chung",
     "settingsProfile": "Hồ sơ",

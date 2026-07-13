@@ -19,6 +19,12 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      <a
+        href="#main-content"
+        className="sr-only z-[60] rounded-lg bg-background px-4 py-2 text-sm font-semibold text-primary shadow-lg focus:fixed focus:left-4 focus:top-4 focus:not-sr-only focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {t('common.skipToMain')}
+      </a>
       <AdminSidebar className="fixed inset-y-0 left-0 z-40 hidden lg:flex" />
 
       <Sheet open={isNavigationOpen} onOpenChange={setIsNavigationOpen}>
@@ -42,7 +48,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-screen min-w-0 flex-col lg:ml-64">
         <AdminTopbar onOpenNavigation={() => setIsNavigationOpen(true)} />
-        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 p-4 sm:p-6">
+          {children}
+        </main>
       </div>
 
       {/* Authenticated shell only — RootLayoutClient skips this on login/public routes */}

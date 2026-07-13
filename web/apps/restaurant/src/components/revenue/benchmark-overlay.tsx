@@ -54,7 +54,7 @@ export function BenchmarkOverlay({
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-brand-500 rounded-full transition-all"
+              className="h-full rounded-full bg-brand-500 transition-[width] duration-200 motion-reduce:transition-none"
               role="progressbar"
               aria-label={t('averageOrderValueProgress')}
               aria-valuemin={0}
@@ -80,7 +80,7 @@ export function BenchmarkOverlay({
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-500 rounded-full transition-all"
+              className="h-full rounded-full bg-orange-500 transition-[width] duration-200 motion-reduce:transition-none"
               role="progressbar"
               aria-label={t('repeatRateProgress')}
               aria-valuemin={0}

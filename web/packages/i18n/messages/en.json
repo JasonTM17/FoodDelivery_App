@@ -53,7 +53,8 @@
     "total": "Total",
     "name": "Name",
     "phone": "Phone",
-    "address": "Address"
+    "address": "Address",
+    "skipToMain": "Skip to main content"
   },
   "status": {
     "pending": "Pending",

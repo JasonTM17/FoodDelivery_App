@@ -55,7 +55,7 @@ export function PaymentMethodBar({ data }: PaymentMethodBarProps) {
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
                   <div
-                    className="h-full rounded-full transition-all"
+                    className="h-full rounded-full transition-[width] duration-200 motion-reduce:transition-none"
                     role="progressbar"
                     aria-label={t('progressAria', { method: label })}
                     aria-valuemin={0}

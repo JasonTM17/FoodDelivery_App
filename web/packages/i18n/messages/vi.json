@@ -53,7 +53,8 @@
     "total": "Tổng",
     "name": "Tên",
     "phone": "Số điện thoại",
-    "address": "Địa chỉ"
+    "address": "Địa chỉ",
+    "skipToMain": "Bỏ qua để đến nội dung chính"
   },
   "status": {
     "pending": "Chờ xử lý",

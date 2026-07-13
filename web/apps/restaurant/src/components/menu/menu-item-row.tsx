@@ -35,7 +35,7 @@ export function MenuItemRow({ item, onToggle }: MenuItemRowProps) {
       style={style}
       className={cn(
         'flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-3',
-        'hover:border-gray-200 hover:shadow-sm transition-all',
+        'transition-[border-color,box-shadow] duration-200 hover:border-gray-200 hover:shadow-sm motion-reduce:transition-none',
         !item.available && 'opacity-60'
       )}
     >

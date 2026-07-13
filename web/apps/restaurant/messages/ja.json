@@ -25,9 +25,15 @@
     "restaurantOnly": "このダッシュボードはレストランアカウントのみ利用できます。"
   },
   "sidebar": {
+    "brand": "FoodFlow レストラン",
     "defaultName": "レストラン",
     "manage": "管理",
-    "collapse": "折りたたむ",
+    "collapse": "サイドバーを折りたたむ",
+    "expand": "サイドバーを展開する",
+    "navigation": "レストランナビゲーション",
+    "openNavigation": "レストランメニューを開く",
+    "mobileTitle": "FoodFlowレストランメニュー",
+    "mobileDescription": "レストランを管理するエリアを選択します",
     "settingsGroup": "設定",
     "settingsGeneral": "一般",
     "settingsProfile": "プロフィール",

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { createElement, type AnchorHTMLAttributes } from 'react';
+import { createElement, forwardRef, type AnchorHTMLAttributes } from 'react';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
@@ -22,10 +22,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/navigation', () => ({
-  Link: ({ children, href, prefetch, ...props }: MockLinkProps) => {
+  Link: forwardRef<HTMLAnchorElement, MockLinkProps>(({ children, href, prefetch, ...props }, ref) => {
     void prefetch;
-    return createElement('a', { href, ...props }, children);
-  },
+    return createElement('a', { ref, href, ...props }, children);
+  }),
   usePathname: () => '/',
   useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
 }));

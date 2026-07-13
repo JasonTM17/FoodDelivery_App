@@ -16,9 +16,10 @@ type LocaleCode = (typeof LOCALE_OPTIONS)[number]['code'];
 
 interface LocaleSwitcherProps {
   collapsed?: boolean;
+  onNavigate?: () => void;
 }
 
-export function LocaleSwitcher({ collapsed = false }: LocaleSwitcherProps) {
+export function LocaleSwitcher({ collapsed = false, onNavigate }: LocaleSwitcherProps) {
   const t = useTranslations('localeSwitcher');
   const menuId = useId();
   const locale = useLocale();
@@ -54,6 +55,7 @@ export function LocaleSwitcher({ collapsed = false }: LocaleSwitcherProps) {
   const switchLocale = (locale: LocaleCode) => {
     document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     setOpen(false);
+    onNavigate?.();
     router.replace(pathname, { locale });
   };
 
@@ -67,12 +69,12 @@ export function LocaleSwitcher({ collapsed = false }: LocaleSwitcherProps) {
         aria-controls={open ? menuId : undefined}
         aria-expanded={open}
         className={cn(
-          'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-muted',
-          'transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground',
+          'flex h-11 w-full touch-manipulation items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-muted',
+          'transition-colors duration-200 hover:bg-sidebar-hover hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar motion-reduce:transition-none',
           collapsed && 'justify-center px-2',
         )}
       >
-        <Globe className="h-4 w-4 shrink-0" />
+        <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
         {!collapsed && <><span aria-hidden="true">{selected.flag}</span><span>{selected.label}</span></>}
       </button>
 
@@ -82,7 +84,7 @@ export function LocaleSwitcher({ collapsed = false }: LocaleSwitcherProps) {
           role="menu"
           aria-label={t('menuAria')}
           className={cn(
-            'absolute z-50 rounded-lg border border-sidebar-hover bg-sidebar py-1 shadow-lg',
+            'absolute z-50 overscroll-contain rounded-lg border border-sidebar-hover bg-sidebar py-1 shadow-lg',
             collapsed ? 'left-full top-0 ml-2 w-36' : 'bottom-full left-0 mb-1 w-full',
           )}
         >
@@ -94,7 +96,7 @@ export function LocaleSwitcher({ collapsed = false }: LocaleSwitcherProps) {
               aria-checked={current === option.code}
               onClick={() => switchLocale(option.code)}
               className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors',
+                'flex min-h-11 w-full touch-manipulation items-center gap-2 px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-foreground motion-reduce:transition-none',
                 current === option.code
                   ? 'bg-sidebar-active text-white'
                   : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground',

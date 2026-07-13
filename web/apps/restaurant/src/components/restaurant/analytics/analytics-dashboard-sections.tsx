@@ -93,7 +93,7 @@ export function AnalyticsCategoryRevenueSection({ categories, locale }: Analytic
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-full rounded-full bg-brand-500 transition-all"
+                  className="h-full rounded-full bg-brand-500 transition-[width] duration-200 motion-reduce:transition-none"
                   style={{ width: `${(category.vnd / maxCategoryRevenue) * 100}%` }}
                 />
               </div>

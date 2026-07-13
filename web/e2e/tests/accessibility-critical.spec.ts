@@ -69,4 +69,36 @@ test.describe('Critical-page accessibility and runtime integrity', () => {
       expectNoRuntimeErrors(errors, `Restaurant ${route}`)
     })
   }
+
+  test('Restaurant shell keeps skip navigation, collapse offset, and mobile navigation accessible', async ({ page, request }) => {
+    const errors = collectRuntimeErrors(page)
+    await loginRestaurantApp(page, request)
+    await gotoRestaurantRoute(page, '/orders', 'en')
+
+    await page.setViewportSize({ width: 1280, height: 900 })
+    const main = page.locator('main#main-content')
+    await expect(main).toHaveAttribute('tabindex', '-1')
+
+    await page.getByRole('button', { name: 'Collapse sidebar' }).click()
+    await expect(main).toHaveCSS('margin-left', '64px')
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    const skipLink = page.getByRole('link', { name: 'Skip to main content' })
+    await skipLink.focus()
+    await expect(skipLink).toBeVisible()
+    await expect(skipLink).toHaveAttribute('href', '#main-content')
+
+    await page.getByRole('button', { name: 'Open restaurant menu' }).click()
+    const navigationDialog = page.getByRole('dialog', { name: 'FoodFlow restaurant menu' })
+    await expect(navigationDialog).toHaveAccessibleDescription(
+      'Choose an area to manage your restaurant',
+    )
+    await expect(navigationDialog.getByRole('link', { name: 'Orders' })).toBeFocused()
+
+    await navigationDialog.getByRole('link', { name: 'Orders' }).click()
+    await expect(navigationDialog).toHaveCount(0)
+
+    await expectNoSeriousOrCriticalAxeViolations(page, 'Restaurant responsive shell')
+    expectNoRuntimeErrors(errors, 'Restaurant responsive shell')
+  })
 })

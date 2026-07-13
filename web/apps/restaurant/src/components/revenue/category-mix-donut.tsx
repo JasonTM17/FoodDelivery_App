@@ -58,7 +58,7 @@ export function CategoryMixDonut({ data }: CategoryMixDonutProps) {
               strokeDasharray={`${seg.length} ${circumference - seg.length}`}
               strokeDashoffset={-seg.offset}
               transform="rotate(-90 100 100)"
-              className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+              className="cursor-pointer transition-opacity duration-200 hover:opacity-80 motion-reduce:transition-none"
             />
           ))}
           <text x="100" y="95" textAnchor="middle" className="text-xl font-bold" fill="#111827">
