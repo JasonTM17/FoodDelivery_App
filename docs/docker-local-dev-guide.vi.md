@@ -43,7 +43,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Migration container phải exit `0` trước khi API healthy. `NEXT_PUBLIC_*` được bake lúc build nên đổi value phải rebuild web image.
+Migration container phải exit `0` trước khi API healthy. Worker chạy `dist/workers/main.js` từ backend image, phụ trách queue/RAG background và không có HTTP port/health endpoint; kiểm tra log worker thay vì HTTP health check. `NEXT_PUBLIC_*` được bake lúc build nên đổi value phải rebuild web image.
 
 Health: API `localhost:3001/api/healthz`, Admin `localhost:3000/api/healthz`, Restaurant `localhost:3002/api/healthz`.
 
@@ -55,7 +55,7 @@ Không đụng root stack:
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
 ```
 
-Port: Admin `13000`, API `13001`, Restaurant `13002`, Postgres `15432`, Redis `16379`, MinIO `19000/19001`.
+Port: Admin `13000`, API `13001`, Restaurant `13002`, Worker không expose host port, Postgres `15432`, Redis `16379`, MinIO `19000/19001`.
 
 Origin CORS được cấu hình cho `localhost`; dùng `127.0.0.1` sẽ cố ý rơi vào error state. Seed test từ host:
 
@@ -70,6 +70,14 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 ```
 
 Seed deterministic chỉ là test fixture và bị chặn trong production; không phải runtime fallback data.
+
+Trước browser test, kiểm tra worker trực tiếp:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
+```
+
+Phải có `FoodFlow Worker started` và `RAG sync complete` thành công. Worker không có HTTP endpoint nên health check HTTP sẽ sai ngữ nghĩa.
 
 ## Hot reload backend
 

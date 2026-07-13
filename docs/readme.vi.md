@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 13/07/2026:** Batch 4 đã được tích hợp vào `master` nhưng **chưa deploy production**. Preflight provider, remote CI mới, browser E2E và FCM controlled-device delivery vẫn chưa xác minh; release tiếp tục fail closed.
+> **Trạng thái 13/07/2026:** Batch 4 đã được tích hợp vào `master` nhưng **chưa deploy production**. Browser E2E Docker current-source đã pass 204/204 local; preflight provider, remote CI mới, production smoke và FCM controlled-device delivery vẫn chưa xác minh, nên release tiếp tục fail closed.
 
 ## Xem trước sản phẩm
 
@@ -117,7 +117,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Hardening ngày 13/07/2026 đã pass Backend 135 suite / 1008 test cùng typecheck/lint/build; Admin 192 và Restaurant 130 unit test cùng production build; Flutter analyze và full run 325 test trước race patch cuối, sau đó 4 test session/race focused đều pass. Browser E2E trên image Docker cũ pass 128/134; 6 check còn lại cần image navigation hiện tại và test seed isolated. FCM send thật vẫn chưa được xác minh.
+Hardening ngày 13/07/2026 đã pass Backend 138 suite / 1016 test cùng Prisma validate/generate, typecheck/lint/build; Admin 195 và Restaurant 134 unit test cùng typecheck/lint/production build. Docker E2E isolated vừa rebuild dùng đúng 33 migration đang được track và pass Chromium 68/68, Firefox 68/68, Pixel 5 68/68 (204 tổng), gồm accessibility, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, visual structure và responsive navigation. Worker riêng đồng bộ 402 RAG document restaurant/menu sống; do chưa có DeepSeek key nên toàn bộ embedding vẫn chờ, không sinh vector giả. Supabase production có cùng 33 migration đã khớp checksum và vẫn cố ý rỗng. Flutter analyze và các GPS test đã ghi là local evidence có giới hạn. FCM gửi thật và production smoke Railway/Supabase đã xác thực vẫn chưa được thực hiện.
 
 ## Thứ tự deploy
 

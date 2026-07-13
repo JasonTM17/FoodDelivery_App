@@ -11,13 +11,23 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 | Area | Result |
 |---|---|
 | Backend | 138 suites / 1016 tests、Prisma validate/generate、typecheck、lint、build が pass。 |
-| Database | Empty PostGIS + pgvector DB と Supabase production の双方で ordered 33 migrations を適用し、最新 2 migrations の checksum が remote と一致。 |
+| Database | Repository と checksum 検証済み Supabase production は、どちらも ordered 33 migrations です。Rebuilt isolated Docker stack で extension、`rag_documents`、dynamic worker を local 確認しましたが、再利用 volume は fresh migration count の証拠ではありません。 |
 | Driver Flutter | Flutter analyze pass。最終 availability-race patch 前に full 325 tests、その後に focused session/race 4 tests が pass。cache clean 後の Windows compiler hang のため final full rerun は必要。 |
 | Web | Admin 195 tests、Restaurant 134 tests、両 app の typecheck/lint と production builds が verified Vercel production env で pass。 |
-| Browser E2E | 古い Docker image で 128/134 checks pass。残り 6 checks は current navigation image と seeded isolated test DB が必要で current-source release proof ではない。 |
+| Browser E2E | Current-source isolated Docker stack は Chromium 68/68、Firefox 68/68、Pixel 5 68/68（204 total）を pass。critical-page accessibility、auth/refresh/RBAC、customer order、realtime、tenant isolation、map、contract、visual structure、responsive navigation を含む。 |
 | FCM live send | 未実行: production project credential と controlled device token が必要。 |
 
-### 2026-07-13 database runtime evidence
+### Current-source Docker E2E / RAG evidence — 2026-07-13
+
+Isolated Docker overlay は tracked 33 migrations を持つ current source から再 build しました。再利用 test volume の `_prisma_migrations` には、削除済み zero-step migration の履歴が残るため applied 34 行と rolled-back 1 行があります。この volume は fresh migration count の証拠として扱いません。別の disposable DB と Supabase production が実際の 33-migration source history を検証しています。専用 worker は backend image から起動し、API process と background work を共有しません。ログで `FoodFlow Worker started`、`300000ms` の RAG schedule、source sync の `indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0` を確認しました。
+
+Current worker は E2E database の live rows から menu 352 件と restaurant 50 件を同期しました。402 件すべてに content hash があり、DeepSeek key 未設定のため embedding はありません。再利用 volume には旧 local run の source ID が null の FAQ 44 件と policy 8 件も残っていますが、current source にその generator はないため current-worker evidence から除外します。いずれも production data または production embedding/provider approval ではありません。
+
+Rebuilt API/Admin/Restaurant images に対する browser test は Chromium 68/68、Firefox 68/68、Pixel 5 68/68（合計 204/204）でした。axe serious/critical、auth/refresh/RBAC、Customer API order、REST で観測した状態収束、tenant isolation、map、contract、visual structure、responsive navigation を含みます。Admin/Restaurant の desktop/mobile、menu close 後の focus、Sign Out の hit target、Restaurant session の reload 後 persistence も直接確認しました。Remote CI は同じ Compose overlay と三つの project matrix を使うようになりましたが、fresh authorized remote run はまだ必要です。
+
+これは強い local verification ですが release approval ではありません。fresh remote CI、provider preflight、production smoke、controlled device による live FCM delivery が引き続き必要です。
+
+### Historical 2026-07-13 database runtime evidence
 
 Disposable PostGIS + pgvector container は 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。
 

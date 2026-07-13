@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-13 status:** Batch 4 は `master` に統合済みですが、**production deploy は未実施**です。Provider preflight、新しい remote CI、browser E2E、FCM controlled-device delivery は未検証であり、release は引き続き fail closed です。
+> **2026-07-13 status:** Batch 4 は `master` に統合済みですが、**production deploy は未実施**です。Current-source Docker browser E2E は local で 204/204 pass しましたが、provider preflight、新しい remote CI、production smoke、FCM controlled-device delivery は未検証であり、release は引き続き fail closed です。
 
 ## Product preview
 
@@ -113,7 +113,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-2026-07-13 の hardening では Backend 135 suites / 1008 tests と typecheck/lint/build、Admin 192 tests、Restaurant 130 tests と production build、Flutter analyze と最終 race patch 前の full 325 tests、その後の session/race focused 4 tests が pass しました。古い Docker image に対する browser E2E は 128/134 pass で、残り 6 checks は current navigation image と isolated test seed が必要です。live FCM send は未検証です。
+2026-07-13 の hardening では Backend 138 suites / 1016 tests と Prisma validate/generate、typecheck/lint/build、Admin 195 tests、Restaurant 134 tests と typecheck/lint/production build が pass しました。Rebuilt isolated Docker E2E は current source の tracked 33 migrations を使用し、Chromium 68/68、Firefox 68/68、Pixel 5 68/68（合計 204）を pass しました。accessibility、auth/refresh/RBAC、Customer API order、REST で観測した状態収束、tenant isolation、map、visual structure、responsive navigation を含みます。専用 worker は live restaurant/menu RAG documents 402 件を同期しましたが、DeepSeek key がないため embedding はすべて pending のままで fake vector は作成していません。Production Supabase は checksum 検証済みの同じ 33 migrations を持ち、意図的に empty のままです。Flutter analyze と記録済み GPS tests は bounded local evidence です。live FCM delivery と authenticated Railway/Supabase production smoke は未実施です。
 
 ## Deploy order
 

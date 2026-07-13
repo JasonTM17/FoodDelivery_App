@@ -81,14 +81,14 @@ flutter run -t lib/main_driver.dart
 
 ## Mode B: full local stack
 
-Build migration, API, Admin, and Restaurant from current source:
+Build migration, API, background worker, Admin, and Restaurant from current source:
 
 ```powershell
 docker compose up -d --build
 docker compose ps
 ```
 
-The migration container must exit `0` before the API becomes healthy. Web public environment values are build-time values; rebuild a web image after changing `NEXT_PUBLIC_*`.
+The migration container must exit `0` before the API becomes healthy. The worker runs `dist/workers/main.js` from the backend image, owns durable queue/RAG background work, and has no HTTP port or health endpoint; inspect its startup and RAG logs instead. Web public environment values are build-time values; rebuild a web image after changing `NEXT_PUBLIC_*`.
 
 Default endpoints:
 
@@ -115,6 +115,7 @@ Isolated ports:
 | Admin | `13000` |
 | API | `13001` |
 | Restaurant | `13002` |
+| Worker | no host port (internal only) |
 | Postgres | `15432` |
 | Redis | `16379` |
 | MinIO API/console | `19000` / `19001` |
@@ -134,6 +135,14 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 ```
 
 Both seed commands contain deterministic test business data and are blocked from production use. They are test fixtures, not runtime fallback data.
+
+Before running browser tests, verify the worker directly:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
+```
+
+Require `FoodFlow Worker started` and a successful `RAG sync complete` entry. The worker has no HTTP endpoint, so an HTTP health check would be misleading.
 
 ## Mode D: backend hot reload container
 
@@ -207,7 +216,7 @@ The script captures real UI/API states, creates palette-optimized GIFs, removes 
 
 ```powershell
 docker compose ps
-docker compose logs --tail 200 migrate backend admin restaurant
+docker compose logs --tail 200 migrate backend worker admin restaurant
 Invoke-WebRequest http://localhost:3001/api/healthz
 Invoke-WebRequest http://localhost:3000/api/healthz
 Invoke-WebRequest http://localhost:3002/api/healthz
@@ -245,6 +254,7 @@ This profile uses Socket.IO/Redis/MinIO by design. Its PostGIS + pgvector `postg
 
 - **Wrong API/CORS:** inspect the web image's baked `NEXT_PUBLIC_API_URL` and use a configured origin (`localhost` versus `127.0.0.1` matters).
 - **Migration blocks API:** inspect `migrate` logs and database URL; do not bypass `depends_on` or mark migration successful manually.
+- **Worker/RAG is stale:** inspect `worker` logs for `RAG sync scheduled`, `RAG sync complete`, or a reported provider/source failure. Do not replace the worker with an API-side background loop.
 - **Sharp/native load failure:** rebuild both requested platforms; do not mix Alpine/musl build output with Debian/glibc distroless runtime.
 - **Redis unhealthy:** BullMQ requires `maxmemory-policy noeviction`.
 - **Maps unavailable:** configure a browser-restricted key and verify real route telemetry; do not add hardcoded coordinates.

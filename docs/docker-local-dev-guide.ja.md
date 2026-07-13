@@ -43,7 +43,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-API healthy 前に migration container が exit `0` である必要があります。`NEXT_PUBLIC_*` は build-time なので変更後は web image を rebuild します。
+API healthy 前に migration container が exit `0` である必要があります。Worker は backend image の `dist/workers/main.js` を実行し、queue/RAG background work を担当します。HTTP port/health endpoint はないため、HTTP health check ではなく worker log を確認します。`NEXT_PUBLIC_*` は build-time なので変更後は web image を rebuild します。
 
 Health: API `localhost:3001/api/healthz`、Admin `localhost:3000/api/healthz`、Restaurant `localhost:3002/api/healthz`。
 
@@ -55,7 +55,7 @@ Root stack を変更しない overlay:
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
 ```
 
-Ports: Admin `13000`、API `13001`、Restaurant `13002`、Postgres `15432`、Redis `16379`、MinIO `19000/19001`。
+Ports: Admin `13000`、API `13001`、Restaurant `13002`、Worker は host port なし、Postgres `15432`、Redis `16379`、MinIO `19000/19001`。
 
 CORS origin は `localhost` です。`127.0.0.1` は意図的 error-state test になります。Host から test seed:
 
@@ -70,6 +70,14 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 ```
 
 Deterministic seed は test fixture であり production では block されます。Runtime fallback data ではありません。
+
+Browser test の前に worker を直接確認します:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
+```
+
+`FoodFlow Worker started` と成功した `RAG sync complete` が必要です。Worker には HTTP endpoint がないため HTTP health check は使用しません。
 
 ## Backend hot reload
 

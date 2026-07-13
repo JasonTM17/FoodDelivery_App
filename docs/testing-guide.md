@@ -11,19 +11,29 @@ Scoped hardening evidence on 2026-07-13:
 | Area | Result |
 |---|---|
 | Backend | 138 suites / 1016 tests, Prisma validation/generation, typecheck, lint, and build passed. |
-| Database | A fresh PostGIS + pgvector database and Supabase production both applied all 33 ordered migrations; the two latest committed checksums match remote. |
+| Database | The repository and checksum-verified Supabase production both contain 33 ordered migrations. The rebuilt isolated Docker stack verified PostgreSQL extensions, RAG documents, and the dynamic worker; its reused volume is not fresh migration-count evidence. |
 | Driver Flutter | Flutter analyze passed. A 325-test full run passed before the final availability-race patch; its four focused session/race tests passed afterward. The compiler later hung before executing tests after a cache clean, so a fresh final full run remains required. |
 | Web | Admin 195 tests and Restaurant 134 tests passed; both apps passed typecheck/lint and production builds with verified Vercel production env. |
-| Browser E2E | 128/134 checks passed against an older healthy Docker stack. Six checks are not current-source evidence: four expect the new Restaurant navigation absent from that image, and two require a non-production seed missing from that test DB. Rebuild and seed a current-SHA isolated stack before release. |
+| Browser E2E | Current-source isolated Docker stack: 68/68 Chromium, 68/68 Firefox, and 68/68 Pixel 5 checks passed (204 total). Coverage includes critical-page accessibility, auth/refresh/RBAC, customer orders, realtime state, tenant isolation, maps, contracts, visual structure, and responsive navigation. |
 | FCM live send | Not run: production project credentials and a controlled device token are required. |
 
-### 2026-07-13 database runtime evidence
+### 2026-07-13 current-source Docker E2E and RAG evidence
+
+The isolated Docker overlay was rebuilt from the current source, which contains 33 tracked migrations. Its reused test volume retained 34 applied `_prisma_migrations` history rows plus one rolled-back row because a removed zero-step migration had previously been recorded; that volume is therefore not presented as fresh migration-count proof. A separate disposable database and Supabase production verify the actual 33-migration source history. The overlay starts a dedicated worker from the backend image rather than sharing background work with the API. The worker logged `FoodFlow Worker started`, scheduled RAG synchronization every `300000ms`, and completed a source synchronization with `indexed: 402`, `unchanged: 0`, `failed: 0`, and `deactivated: 0`.
+
+The current worker synchronized 352 menu and 50 restaurant documents from live rows in the E2E database. All 402 have content hashes and no embedding because no DeepSeek key was configured. The reused volume also contains 44 FAQ and 8 policy rows with null source IDs from an older local run; the current source has no generator for them, so they are excluded from current-worker evidence. None of this represents production data or production embedding/provider approval.
+
+Browser verification used the rebuilt API/Admin/Restaurant images directly: 68/68 Chromium, 68/68 Firefox, and 68/68 Pixel 5 checks passed (204 total). Admin and Restaurant desktop/mobile flows were inspected through the browser, including opening and closing the responsive navigation, keyboard focus restoration, the Admin sign-out hit target, and Restaurant session persistence after reload. The suite found and fixed two accessibility issues: insufficient FoodFlow logo contrast and a non-focusable horizontally scrollable Admin table. Remote CI now follows the same isolated Compose topology and three-project matrix, but it still needs a fresh authorized remote run.
+
+This is strong local verification, not release approval. Fresh remote CI, provider preflights, production smoke, and a controlled live FCM delivery are still mandatory.
+
+### Historical 2026-07-13 database runtime evidence
 
 An isolated local PostGIS + pgvector container applied all 33 migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings.
 
 Supabase production has the same 33 migrations and matching latest checksums. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run there. This is an empty production database, not a claim that production already contains big data.
 
-Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, current remote CI, controlled FCM delivery, and repaired browser E2E remain required.
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The current Docker browser evidence above supersedes the old 128/134 image result; fresh remote CI, provider preflights, production smoke, and controlled FCM delivery remain required before release.
 
 ### 2026-07-12 focused Driver GPS E2E evidence
 
