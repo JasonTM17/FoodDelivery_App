@@ -63,7 +63,7 @@ Quy tắc:
 - Dùng localization generated từ ARB.
 - Trong Batch 4, giữ API tương thích với mobile/customer contract.
 - Không generate/commit mobile API client mới trước khi OpenAPI Batch 4 ổn định.
-- Hòa giải Violet và Indigo trong branch mobile riêng sau khi web/backend ổn định.
+- Hòa giải mobile chỉ từ branch, commit và patch evidence xác minh được; không đặt tên, tạo lại hoặc suy diễn ref thiếu.
 
 ## i18n
 
@@ -102,3 +102,9 @@ Gate tối thiểu trước PR Batch 4:
 - Cập nhật docs khi đổi behavior, setup, architecture, security posture, command hoặc public contract.
 - Docs quan trọng cần có English, Vietnamese và Japanese.
 - Chỉ document behavior đã xác minh. Nếu feature degraded hoặc pending, nói thẳng.
+
+## Độ tin cậy và khả năng truy cập
+
+- Notification durable phải rethrow lỗi FCM/provider chưa có outcome theo từng token để queue retry; chỉ token permanent-invalid mới được mark stale.
+- Với auth/availability, invalidate async cũ và cancel realtime/location subscription khi logout; không hiển thị offline/paused trước khi server command chuẩn thành công.
+- Dashboard navigation giữ locale URL, có skip link, focus rõ, label icon-only, dialog focus management và `prefers-reduced-motion`; không dùng `transition-all` rộng.

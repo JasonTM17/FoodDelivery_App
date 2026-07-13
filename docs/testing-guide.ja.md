@@ -6,18 +6,22 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Current evidence
 
-2026-07-11 integration line の最新 evidence:
+2026-07-13 の scoped hardening evidence:
 
 | Area | Result |
 |---|---|
-| Backend KYC/config/notifications | 5 suites / 48 tests、typecheck、lint pass |
-| Fresh database | Isolated PostGIS に 24 migrations を適用し、KYC RLS と partial unique index を検証 |
-| Flutter | Analyze pass、274 tests pass、実際の `lib/main_driver.dart` entry から Driver debug APK を build |
-| Admin KYC contract | Shared API-client/Admin typecheck pass、5 component/security tests pass |
-| OpenAPI | Private KYC contract 同期後の Spectral error なし |
-| Secret hygiene | `924808c` 前の staged high-confidence scan pass、dotenv/private key の commit なし |
+| Backend | 135 suites / 1008 tests、Prisma validate/generate、typecheck、lint、build が notification idempotency/SMTP escaping fix 後に pass。 |
+| Database | Empty PostGIS + pgvector DB と Supabase production の双方で 32 migrations を確認。 |
+| Driver Flutter | Flutter analyze pass。最終 availability-race patch 前に full 325 tests、その後に focused session/race 4 tests が pass。cache clean 後の Windows compiler hang のため final full rerun は必要。 |
+| Web | Admin 192 tests、Restaurant 130 tests、workspace typecheck/lint と両 production builds が Vercel production env で pass。 |
+| Browser E2E | 古い Docker image で 128/134 checks pass。残り 6 checks は current navigation image と seeded isolated test DB が必要で current-source release proof ではない。 |
+| FCM live send | 未実行: production project credential と controlled device token が必要。 |
 
-より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
+### 2026-07-13 database runtime evidence
+
+Empty PostGIS + pgvector container は 32 migrations、PostGIS/vector extensions、`rag_documents`、cosine HNSW index を確認しました。Supabase production は `20260713070000_add_rag_knowledge_base` を apply し Prisma status は up to date です。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。
+
+より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、repaired browser E2E、controlled FCM delivery、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 
 ## Full local gate
 
@@ -40,7 +44,7 @@ corepack pnpm exec jest --runInBand
 corepack pnpm build
 ```
 
-Empty PostGIS に 24 migrations を `migrate deploy`。Auth/RBAC、restaurant tenant、order/payment/webhook replay、promotion/notification/export/audit、realtime token/RLS claims、Supabase Storage/job outbox、GPS/route/ETA/dispatch、DeepSeek/session/telemetry、production env validation を検証します。
+Empty PostGIS に final source head のすべての migration を `migrate deploy`。Auth/RBAC、restaurant tenant、order/payment/webhook replay、promotion/notification/export/audit、realtime token/RLS claims、Supabase Storage/job outbox、GPS/route/ETA/dispatch、DeepSeek/session/telemetry、production env validation を検証します。
 
 ## OpenAPI/Web
 

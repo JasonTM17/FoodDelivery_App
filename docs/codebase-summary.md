@@ -9,9 +9,9 @@ Current tracked text-code footprint (excluding generated/test-output directories
 ## Repository layout
 
 ```text
-backend/                   NestJS API, Prisma, Vercel handler, worker entry
-  api/[...path].ts         Vercel function adapter
-  prisma/                  Schema, 27 migrations, deterministic seed tooling
+backend/                   NestJS API, Prisma, Railway entry, compatibility adapter, worker entry
+  api/[...path].ts         Retained compatibility HTTP adapter; managed production API runs on Railway
+  prisma/                  Schema, 31 tracked migrations at the 2026-07-13 `master` baseline; one additional untracked RAG migration exists in the dirty workspace
   src/                     Feature modules
 web/                       pnpm workspace
   apps/admin/              Admin Next.js application
@@ -35,7 +35,7 @@ Runtime: NestJS 11, Prisma 6, PostgreSQL/PostGIS. Main entries:
 
 - `src/main.ts`: local/self-hosted HTTP process; disables long-lived sockets for Supabase realtime mode.
 - `src/bootstrap/create-foodflow-app.ts`: reusable application factory.
-- `api/[...path].ts`: Vercel handler.
+- `api/[...path].ts`: retained compatibility handler; not the managed-production API target.
 - `src/workers/main.ts`: BullMQ compatibility worker.
 
 Major module groups:
@@ -54,7 +54,9 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The Prisma schema currently declares 57 models across 27 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The Prisma schema at the 2026-07-13 `master` baseline declares 58 models across 31 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. The dirty workspace additionally contains `20260713070000_add_rag_knowledge_base`, which adds pgvector-backed RAG storage; its 32-migration local-runtime result is not a `master` or release claim until that migration is adopted. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+
+Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale.
 
 ## Web
 
@@ -96,7 +98,7 @@ Managed mobile realtime uses the same scoped `POST /api/realtime/token` + Supaba
 | `docker-compose.prod.yml` | Self-hosted Docker Hub compatibility overlay |
 | `infra/scripts/local-release-gate.ps1` | Unified local quality gate |
 | `infra/scripts/supabase-preflight.ps1` | Auth/project/database migration readiness |
-| `infra/scripts/vercel-web-preflight.ps1` | API/Admin/Restaurant project/env readiness |
+| `infra/scripts/vercel-web-preflight.ps1` | Admin/Restaurant Vercel project/env readiness; the API, worker, migrator, and Redis run on Railway |
 | `.github/workflows/docker-publish.yml` | Multi-arch SHA build, runtime smoke, Trivy, immutable promotion |
 
 Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The worker reuses the backend artifact.

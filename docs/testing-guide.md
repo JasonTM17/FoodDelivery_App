@@ -6,18 +6,22 @@ A release is green only when the final source head passes every required local g
 
 ## Current evidence snapshot
 
-Latest current-line evidence on 2026-07-11:
+Scoped hardening evidence on 2026-07-13:
 
 | Area | Result |
 |---|---|
-| Backend KYC/config/notifications | 5 suites / 48 tests, typecheck and lint passed |
-| Fresh database | All 24 migrations applied to isolated PostGIS; KYC RLS and partial unique index verified |
-| Flutter | Analyze passed; all 274 tests passed; Driver debug APK built from the real `lib/main_driver.dart` entry |
-| Admin KYC contract | Shared API-client and Admin typecheck passed; 5 component/security tests passed |
-| OpenAPI | Spectral reported no errors after private KYC contract alignment |
-| Secret hygiene | Staged high-confidence scan passed before `924808c`; no dotenv/private key was committed |
+| Backend | 135 suites / 1008 tests, Prisma validation/generation, typecheck, lint, and build passed after notification idempotency and SMTP escaping fixes. |
+| Database | A fresh PostGIS + pgvector database applied 32/32 migrations. Supabase production also reports all 32 migrations applied. |
+| Driver Flutter | Flutter analyze passed. A 325-test full run passed before the final availability-race patch; its four focused session/race tests passed afterward. The compiler later hung before executing tests after a cache clean, so a fresh final full run remains required. |
+| Web | Admin 192 tests and Restaurant 130 tests passed; workspace typecheck/lint and both production builds passed with pulled Vercel production env. |
+| Browser E2E | 128/134 checks passed against an older healthy Docker stack. Six checks are not current-source evidence: four expect the new Restaurant navigation absent from that image, and two require a non-production seed missing from that test DB. Rebuild and seed a current-SHA isolated stack before release. |
+| FCM live send | Not run: production project credentials and a controlled device token are required. |
 
-Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, and current remote CI remain required.
+### 2026-07-13 database runtime evidence
+
+An isolated local PostGIS + pgvector container applied all 32 migrations and verified PostGIS, vector, `rag_documents`, and the cosine HNSW index. Supabase production then applied migration `20260713070000_add_rag_knowledge_base` and Prisma reported the remote schema up to date. Production row counts for users, restaurants, orders, driver profiles, and RAG documents are all zero; no demo/big seed was run in production.
+
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, current remote CI, controlled FCM delivery, and repaired browser E2E remain required.
 
 ### 2026-07-12 focused Driver GPS E2E evidence
 
@@ -67,7 +71,7 @@ Fresh-migration test:
 
 1. Start an isolated empty PostGIS database.
 2. Run `prisma migrate deploy`, never `migrate dev`.
-3. Confirm all 24 migrations complete.
+3. Confirm every migration in the checked-out final source head completes.
 4. Start the API and require healthy DB/provider components.
 5. Run integration/E2E against that schema.
 

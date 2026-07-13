@@ -4,7 +4,7 @@ Ngôn ngữ: [English](./security-audit-guide.md) | [Tiếng Việt](./security-
 
 ## Phạm vi production
 
-Managed production dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage và Vercel cho API/Admin/Restaurant. Socket.IO, Redis/BullMQ và MinIO chỉ là compatibility provider local/self-hosted; không được fallback ngầm khi provider managed bị thiếu.
+Managed production dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage; Railway cho API, worker, migrator, Redis; và Vercel cho Admin/Restaurant. Socket.IO, Redis/BullMQ và MinIO chỉ là compatibility provider local/self-hosted; không được fallback ngầm khi provider managed bị thiếu.
 
 Mọi credential từng xuất hiện trong chat/screenshot/log/ticket/shell/Git đều xem là đã lộ và phải revoke/rotate trước live smoke/deploy. `NEXT_PUBLIC_*` không được chứa private credential; Supabase anon key không thay thế RLS hay channel claim ngắn hạn.
 
@@ -28,12 +28,13 @@ Mọi credential từng xuất hiện trong chat/screenshot/log/ticket/shell/Git
 - [ ] Docker containers chạy bằng non-root user.
 - [ ] Git history không chứa secret, đã kiểm bằng gitleaks hoặc secret scan tương đương.
 
-## Supabase, Vercel và release
+## Supabase, Railway, Vercel và release
 
 - [ ] Production đặt explicit `REALTIME_PROVIDER=supabase`, `STORAGE_PROVIDER=supabase`, `QUEUE_PROVIDER=supabase-postgres`.
 - [ ] `realtime_outbox`, `job_outbox`, `ai_usage_events` có RLS; chỉ `realtime_outbox` nằm trong publication realtime.
 - [ ] Token realtime ngắn hạn, chỉ `private:`, verify ownership trước ký; anon/cross-tenant bị từ chối.
 - [ ] Service-role/JWT Supabase, database, DeepSeek, SePay và notification secret chỉ server-side; Maps browser key bị referrer/API restrict.
+- [ ] FCM có `FCM_PROJECT_ID` cùng workload identity/ADC hoặc `FCM_SERVICE_ACCOUNT_JSON` trong secret manager; không dùng legacy server key. Trước release phải gửi thử tới controlled device token và chỉ lưu evidence đã redaction.
 - [ ] `SUPABASE_KYC_BUCKET`, upload limit và retry limit được khai báo explicit; storage PUT không nhận bearer token FoodFlow.
 - [ ] CORS exact verified HTTPS origins; image non-root hai kiến trúc, Trivy block High/Critical, tag SHA/semver immutable, không deploy `latest` đầu tiên.
 

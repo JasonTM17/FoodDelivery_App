@@ -2,7 +2,7 @@
 
 ## Phạm vi
 
-Tài liệu này dành cho local development, isolated E2E, kiểm tra container current source và self-hosted compatibility. Managed production Supabase + Vercel nằm trong [deployment guide](deployment-guide.vi.md).
+Tài liệu này dành cho local development, isolated E2E, kiểm tra container và self-hosted compatibility. Managed production dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage; Railway cho API, worker, migrator, Redis; và Vercel cho Admin/Restaurant. Xem [deployment guide](deployment-guide.vi.md).
 
 Yêu cầu: Docker Compose v2/Buildx, Node.js 22.13+, Corepack pnpm 11.11.0, Flutter SDK; FFmpeg chỉ cần khi tạo GIF.
 
@@ -17,7 +17,7 @@ Copy-Item web/apps/restaurant/.env.example web/apps/restaurant/.env.local
 
 Chỉ tạo file bị ignore. Không commit dotenv thật, auth CLI, dump, certificate, token hoặc signing material. Key từng xuất hiện trong chat/log phải rotate. Default `foodflow_dev`, `minioadmin` và JWT development bị cấm trong production.
 
-Local dùng explicit Socket.IO + Redis/BullMQ + MinIO; managed production dùng explicit Supabase Realtime/Storage/Postgres queue.
+Local dùng explicit Socket.IO + Redis/BullMQ + MinIO; managed production dùng explicit Supabase Realtime/Storage/Postgres queue, Railway API/worker/migrator/Redis và Vercel dashboard.
 
 ## Hạ tầng container, app chạy host
 
@@ -124,7 +124,7 @@ Script dùng API thật, tối ưu palette GIF và xóa frame trung gian. Vẫn 
 - `docker compose down` giữ volume; `down -v` xóa dữ liệu local và chỉ dùng sau khi xác nhận đúng compose project.
 - Không cleanup toàn bộ container/volume trên máy dùng chung.
 - Self-hosted phải pin `IMAGE_TAG=v4.0.0` hoặc `sha-<full-commit>`, điền `.env.production` thật và dùng base + `docker-compose.prod.yml`.
-- Self-hosted Socket.IO/Redis/MinIO không phải fallback cho Supabase/Vercel cấu hình sai.
+- Self-hosted Socket.IO/Redis/MinIO không phải fallback cho Supabase/Railway/Vercel cấu hình sai.
 
 ## Xử lý sự cố
 

@@ -1,8 +1,10 @@
 # Self-hosted production / Docker Hub compatibility overlay (no local build).
-# FoodFlow's managed production target remains Supabase + Vercel.
+# FoodFlow's managed production target is Supabase + Railway + Vercel. This
+# override remains the self-hosted production-style compatibility profile.
 #
 #   $env:IMAGE_TAG = "v4.0.0"   # or sha-<full commit>
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml pull --ignore-buildable
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml build postgres
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
 # Web images bake NEXT_PUBLIC_* at build time (see docker-publish.yml).
@@ -10,6 +12,9 @@
 
 services:
   postgres:
+    # The PostgreSQL image combines PostGIS and pgvector locally; it is not a
+    # registry artifact. The documented build step must run before `up`.
+    pull_policy: never
     restart: always
     # Do not publish data-plane ports on host in production
     ports: !reset []

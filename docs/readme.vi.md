@@ -2,13 +2,13 @@
 
 Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme.ja.md)
 
-FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production được thiết kế cho Supabase (PostgreSQL/PostGIS, Realtime, Storage) và Vercel (API, Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
+FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 11/07/2026:** Batch 4 vẫn đang hardening và **chưa deploy production**. Supabase CLI còn thiếu credential, Vercel còn thiếu env production, và GitHub Actions chưa chạy được vì billing/auth hết hạn. Không deploy hoặc fast-forward `master` cho tới khi full gate tại final head và provider preflight đều xanh.
+> **Trạng thái 13/07/2026:** Batch 4 đã được tích hợp vào `master` nhưng **chưa deploy production**. Preflight provider, remote CI mới, browser E2E và FCM controlled-device delivery vẫn chưa xác minh; release tiếp tục fail closed.
 
 ## Xem trước sản phẩm
 
-Ảnh/GIF dưới đây được chụp từ isolated Docker stack của current source với dữ liệu seed deterministic, không phải ảnh production. Xem [gallery đầy đủ](product-gallery.vi.md).
+Ảnh/GIF dưới đây là media lịch sử, không phải ảnh production. Manifest ghi `capturedAt` 2026-07-10 nhưng không có source SHA/image reference, nên không chứng minh current source head hay release candidate. Xem [gallery đầy đủ](product-gallery.vi.md).
 
 <p align="center">
   <img src="screenshots/admin/02-overview.png" alt="Tổng quan Admin FoodFlow" width="48%" />
@@ -55,15 +55,15 @@ Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, s
 
 ## Docker Hub và GitHub Packages
 
-Backend và migrator current-head đã được publish bằng SHA immutable lên cả Docker Hub và GHCR; package GHCR đã nối với repository. Admin/Restaurant chưa publish vì env public Supabase bắt buộc còn thiếu, không bake key giả/rỗng vào image.
+Backend và migrator từng được publish bằng SHA immutable lên Docker Hub và GHCR; đây là candidate lịch sử, không phải bằng chứng cho `master` hiện tại. Admin/Restaurant chưa publish vì env public Supabase bắt buộc còn thiếu, không bake key giả/rỗng vào image.
 
 | Image | Mục đích |
 |---|---|
 | `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API và worker entry; digest `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
 | `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | Prisma migration non-root; digest `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin / Restaurant | Gated cho tới khi có `NEXT_PUBLIC_SUPABASE_ANON_KEY` đã xác minh |
+| Admin / Restaurant | Production env đã dùng Supabase publishable key; chờ Railway API live và redeploy/smoke |
 
-Tag candidate là `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, hỗ trợ `amd64/arm64`, có SBOM/provenance và cùng digest giữa hai registry. Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. `latest` không được dùng làm source of truth cho Batch 4.
+Tag candidate lịch sử là `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, hỗ trợ `amd64/arm64`, có SBOM/provenance và cùng digest giữa hai registry. Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. `latest` không được dùng làm source of truth cho Batch 4.
 
 Pipeline release: push `sha-<full-commit>` multi-arch → runtime smoke `amd64/arm64` → Trivy chặn High/Critical → production health → tạo tag immutable `v4.0.0` → chỉ promote `latest` bằng thao tác manual sau smoke.
 
@@ -117,22 +117,23 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Evidence mới nhất trên integration line gồm 48 test backend KYC/config/notification, backend typecheck/lint, đủ 274 Flutter test, Flutter analyze, build APK Driver thật từ `lib/main_driver.dart`, Admin KYC typecheck/contract với 5 component test và OpenAPI Spectral sạch. Evidence web/container/browser rộng hơn vẫn được lưu trong release report, nhưng phải chạy fresh full gate tại final head trước release.
+Hardening ngày 13/07/2026 đã pass Backend 135 suite / 1008 test cùng typecheck/lint/build; Admin 192 và Restaurant 130 unit test cùng production build; Flutter analyze và full run 325 test trước race patch cuối, sau đó 4 test session/race focused đều pass. Browser E2E trên image Docker cũ pass 128/134; 6 check còn lại cần image navigation hiện tại và test seed isolated. FCM send thật vẫn chưa được xác minh.
 
 ## Thứ tự deploy
 
 1. Khôi phục GitHub Actions và lấy remote checks xanh.
 2. Rotate key bị lộ; pass Supabase/Vercel preflight.
 3. Deploy Supabase migration, RLS, Realtime publication/channel và Storage policy.
-4. Deploy Vercel API, xác minh alias/health/Cron.
+4. Deploy Railway migrator, rồi API/worker; xác minh health/readiness/Cron.
 5. Deploy Admin/Restaurant với API URL và Supabase public env đã xác minh.
 6. Smoke auth, tenant, realtime, bản đồ/route shipper, chatbot, notification, export, payment.
-7. Push local integration `HEAD` thẳng vào `origin/master`; remote vẫn chỉ một branch.
+7. Không tạo/push lại branch integration lịch sử. Chỉ reconcile local `master` đã verify với `origin/master` khi release gate cho phép.
 8. Publish Docker immutable rồi mới promote `latest`.
 
 ## Tài liệu
 
 - [Kiến trúc](system-architecture.md)
+- [Tổng quan và yêu cầu sản phẩm](project-overview-pdr.vi.md)
 - [API contract](api-contract.vi.md)
 - [Deployment](deployment-guide.vi.md)
 - [Docker/local](docker-local-dev-guide.vi.md)
@@ -145,7 +146,7 @@ Evidence mới nhất trên integration line gồm 48 test backend KYC/config/no
 
 ## Chính sách branch
 
-Remote hiện chỉ có `master`. Tại baseline audit 11/07/2026, local `codex/batch4-integration@924808c` là ứng viên fast-forward sạch, ahead `origin/master@df945dd` 106 commit. Không push branch local theo tên vì sẽ tạo branch remote thứ hai; khi toàn bộ gate xanh, push `HEAD` trực tiếp vào `master`. Không raw-merge hoặc xóa branch khi chưa backup và xác minh patch-equivalent.
+Tại validation snapshot 13/07/2026, remote chỉ có `master` tại `3f195a6374589b8433c45cb370dbc79cff00118f`; local `master` là `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` (3 ahead / 0 behind). Trạng thái local-ahead này chỉ là provisional, không phải release approval. Hai branch local lịch sử đều là ancestor và không có commit riêng; không raw-merge hoặc push chúng theo tên. Worktree/ref integration đang active chỉ cleanup khi có owner approval, backup/patch check và xác minh cuối `master == origin/master`.
 
 ## License
 

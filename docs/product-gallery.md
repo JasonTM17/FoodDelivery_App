@@ -2,9 +2,9 @@
 
 ## Overview
 
-This gallery is generated from the current-source isolated Docker stack and its deterministic test seed. It does **not** claim that the shown pages are production deployments. Public Vercel URLs will be added only after final deploy and production smoke.
+This is a historical non-production gallery. `docs/screenshots/manifest.json` records `capturedAt` 2026-07-10 but no source SHA, Compose reference, or image reference; the media therefore does **not** prove the current source head, a final Docker build, or a production deployment. Public Vercel URLs require final deployment and production smoke.
 
-Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-product-media.mjs`.
+Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-product-media.mjs`. A new release-use capture must record its source commit plus the Compose/image references and whether it was run from a clean final head or a dirty workspace.
 
 ## Motion previews
 
@@ -135,13 +135,13 @@ node docs/scripts/capture-product-media.mjs
 Remove-Item Env:FOODFLOW_ADMIN_URL,Env:FOODFLOW_RESTAURANT_URL,Env:FOODFLOW_API_URL
 ```
 
-The script prints origins and file names, never access/refresh tokens or provider secrets. The manifest records capture time, origins, and seed identities only.
+The script prints origins and file names, never access/refresh tokens or provider secrets. The current manifest records capture time, origins, and seed identities only; attach source and runtime references before treating a new capture as release evidence.
 
-## Visual QA status
+## Historical QA record and recapture boundary
 
-- The initial 2026-07-10 capture through `127.0.0.1` correctly showed CORS failures and was discarded.
-- The accepted capture source uses `localhost` and loads real seeded API data.
-- The Admin overview KPI locale and contrast findings were fixed, verified in vi/en/ja on Chromium and Firefox with axe serious/critical = 0, and recaptured in the accepted media.
+- The 2026-07-10 capture through `127.0.0.1` correctly showed CORS failures and was discarded. The retained historical capture used `localhost` with seeded API data.
+- The recorded Admin overview KPI locale and contrast issue was fixed before the historical vi/en/ja Chromium/Firefox review. That record must not be read as a current browser-E2E or final-head result.
+- Existing media stays historical until it is recaptured from the committed release candidate and its source/runtime references are recorded. A capture from a dirty workspace is runtime evidence only, never release proof.
 - Maps use the keyless MapLibre/OpenFreeMap basemap. A blank/error map or missing backend GPS/route must not be edited into a successful screenshot.
 - Empty order columns are valid only when the API response proves that state; capture must not hide errors as emptiness.
 

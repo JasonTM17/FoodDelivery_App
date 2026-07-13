@@ -2,7 +2,7 @@
 
 ## Scope
 
-This guide covers local development, isolated E2E, current-source container validation, and self-hosted compatibility. Supabase + Vercel managed production is covered in the [deployment guide](deployment-guide.md).
+This guide covers local development, isolated E2E, container validation, and self-hosted compatibility. Managed production is Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for API, worker, migrator, and Redis; and Vercel for Admin and Restaurant. See the [deployment guide](deployment-guide.md).
 
 Local defaults are intentionally convenient and are not production credentials.
 
@@ -41,7 +41,7 @@ Copy-Item web/apps/restaurant/.env.example web/apps/restaurant/.env.local
 - Any credential pasted into chat/logs is exposed and must not be reused for production.
 - Local defaults (`foodflow_dev`, `minioadmin`, development JWTs) are forbidden in production.
 - Local provider mode is explicit: Socket.IO + Redis/BullMQ + MinIO.
-- Managed production mode is explicit: Supabase Realtime/Storage/Postgres queue.
+- Managed production mode is explicit: Supabase Realtime/Storage/Postgres queue, Railway API/worker/migrator/Redis, and Vercel dashboards.
 
 ## Mode A: infrastructure only
 
@@ -235,7 +235,7 @@ docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-This profile uses Socket.IO/Redis/MinIO by design. It is not a fallback for a misconfigured Supabase/Vercel deployment.
+This profile uses Socket.IO/Redis/MinIO by design. It is not a fallback for a misconfigured Supabase/Railway/Vercel deployment.
 
 ## Troubleshooting
 

@@ -53,3 +53,9 @@ Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guideli
 - Driver online: green dot。
 - Driver delivering: orange motorcycle。
 - Customer: blue pin。
+
+## Dark operational surface と responsive navigation
+
+- Driver dark surface は light-theme gray literal ではなく semantic `onSurface` / `onSurfaceVariant` を使います。Offline は neutral、paused は amber、online は green で、必ず localized label を併記します。
+- Restaurant desktop は 1 つの collapsible sidebar、mobile は同じ destination の controlled drawer を使います。focus-visible skip link、dialog title/description、close label、drawer 内 initial focus を提供します。
+- Icon-only control に accessible name、active nav に `aria-current="page"` を使います。Mobile control は 44px 以上、必要な property だけを animate し、`motion-reduce` を用意します。

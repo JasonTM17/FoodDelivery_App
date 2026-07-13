@@ -2,7 +2,7 @@
 
 Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](product-gallery.ja.md)
 
-Ảnh và GIF trong gallery được tạo từ isolated Docker stack của current source cùng deterministic test seed. Chúng không được gắn nhãn là production screenshot cho tới khi Supabase/Vercel deploy và production smoke hoàn tất.
+Ảnh và GIF trong gallery là media lịch sử, không phải production screenshot. `docs/screenshots/manifest.json` ghi `capturedAt` 2026-07-10 nhưng không có source SHA, Compose reference hoặc image reference; vì vậy chúng không chứng minh current source head, Docker build cuối hay production deploy.
 
 ## Luồng chuyển động
 
@@ -41,6 +41,17 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 | Insight | ![Restaurant insights](screenshots/restaurant/09-insights.png) |
 | Cài đặt | ![Restaurant settings](screenshots/restaurant/10-settings.png) |
 
+## Driver GPS (local E2E)
+
+Ảnh Android API 35 dùng route mô phỏng và dữ liệu test deterministic. Chúng chỉ minh họa thao tác Online và notification permission của Driver; không có vị trí thật, tài khoản cá nhân, credential hoặc token.
+
+Local E2E lịch sử đã nhận GPS command xác thực, làm mới Redis liveness, ghi mẫu vào PostGIS và gửi một event Socket.IO cho Admin được cấp quyền. Đây chỉ là bằng chứng compatibility `socketio` local, không phải Supabase, Railway, Vercel hoặc production.
+
+| Màn hình | Ảnh |
+|---|---|
+| Driver Online sau GPS verification | ![Driver Online](screenshots/driver/driver-online-gps-e2e.webp) |
+| Quyền notification foreground tracking | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
+
 ## Tạo lại
 
 ```powershell
@@ -51,8 +62,8 @@ $env:FOODFLOW_API_URL='http://localhost:13001/api'
 node docs/scripts/capture-product-media.mjs
 ```
 
-Dùng `localhost`, không dùng `127.0.0.1`, vì overlay CORS cố ý xem host sau là error-state. Script dùng API thật, tạo GIF tối ưu và xóa frame trung gian nhưng vẫn phải review từng ảnh.
+Dùng `localhost`, không dùng `127.0.0.1`, vì overlay CORS cố ý xem host sau là error-state. Script dùng API thật, tạo GIF tối ưu và xóa frame trung gian nhưng vẫn phải review từng ảnh. Capture dùng cho release phải kèm source commit, Compose/image reference và nêu rõ nó chạy từ clean final head hay dirty workspace; manifest hiện tại chỉ có thời gian, origin và seed identity.
 
-Checklist: locale/title/`html lang`, không có 404/`Failed to fetch`/console error, data thật từ API, không lộ secret/token, không có crop/clipping và không che lỗi thành empty state. Admin overview hiện còn một i18n defect (KPI English trong locale VI); cần sửa và recapture trước final release media.
+Checklist: locale/title/`html lang`, không có 404/`Failed to fetch`/console error, data thật từ API, không lộ secret/token, không có crop/clipping và không che lỗi thành empty state. Media hiện có vẫn là lịch sử cho tới khi recapture từ release candidate đã commit và ghi source/runtime reference; capture từ dirty workspace chỉ là runtime evidence, không phải release proof.
 
 Xem [gallery EN chi tiết](product-gallery.md), [testing](testing-guide.vi.md), [Docker](docker-local-dev-guide.vi.md).

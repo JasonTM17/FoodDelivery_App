@@ -2,14 +2,14 @@
 
 ## Current objective
 
-Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Vercel, verify production behavior, fast-forward the isolated integration head to `master`, then publish immutable Docker artifacts.
+Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-11: **hardening in progress; no-go for production**.
+Status on 2026-07-13: **integration is incorporated in `master`; hardening is in progress; no-go for production**.
 
-## Completed on the local integration line
+## Completed and incorporated work
 
 - Controlled consolidation of available backend, Admin, Restaurant, mobile, AI, realtime, map/tracking, docs, and DevOps work.
-- Remote branch cleanup to one branch (`master`); local integration retained until final fast-forward.
+- Remote branch cleanup to one branch (`master`); the integration branch is an ancestor with no unique work. Remove its clean linked worktree/local ref after the current commits are pushed and equivalence is reverified.
 - Admin/Restaurant runtime API-envelope validation and removal of fake empty/zero business fallbacks across critical screens.
 - Restaurant URL-authoritative vi/en/ja locale isolation and accessibility contrast/focus fixes.
 - Backend Supabase Realtime outbox/RLS token contract, Supabase Storage adapter, and PostgreSQL job outbox/Cron endpoint.
@@ -18,8 +18,8 @@ Status on 2026-07-11: **hardening in progress; no-go for production**.
 - Shipper GPS freshness, route-phase geometry, provider ETA/progress, tracking authorization, and hardcoded map fallback removal.
 - Node 22.13+/pnpm 11.11 alignment and frozen-install paths.
 - Multi-architecture non-root Backend/Migrate/Admin/Restaurant images and fail-closed Docker release promotion.
-- Current-source screenshots/GIF pipeline and rewritten architecture/deployment/testing documentation.
-- Admin URL locale ownership, localized overview KPI labels, accessible color tokens, and fresh accepted media; targeted vi/en/ja Chromium/Firefox locale and axe checks pass.
+- Screenshot/GIF capture tooling and rewritten architecture/deployment/testing documentation. Existing media is historical until recaptured with source/runtime references.
+- Admin URL locale ownership, localized overview KPI labels, and accessible color tokens. The related vi/en/ja browser and axe record is historical and needs a fresh final-head rerun.
 - Mobile managed realtime parity through scoped Supabase token/channel authorization, receive-only outbox subscriptions, authenticated REST GPS/dispatch decisions, and explicit Socket.IO local compatibility.
 - Private driver KYC storage, owner-scoped upload grants, image metadata/signature checks, one-pending enforcement, signed Admin review, typed mobile onboarding, and vi/en/ja UI/tests.
 
@@ -30,17 +30,18 @@ Status on 2026-07-11: **hardening in progress; no-go for production**.
 - Audit every Admin/Restaurant critical page in fresh `vi`, `en`, and `ja` contexts for title, `html lang`, visible text, aria text, number/date/currency formatting, and cookie isolation.
 - Complete responsive/keyboard/axe review for dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map, and order flows.
 - Compare implementation with approved Stitch/design artifacts and establish accepted visual regression evidence.
+- Recapture product media only after the intended source is built and seeded; record source commit, Compose/image references, and whether the run used a clean final head or a dirty workspace.
 
 ### Mobile release validation
 
-- Reconcile current mobile code with any actually available Violet/Indigo history; do not invent missing refs.
+- Reconcile mobile work only from verifiable branches, commits, and patch evidence; do not name, recreate, or infer missing refs.
 - Re-run generated API model/contract alignment, vi/en/ja, customer/driver flows, maps/GPS, offline/reconnect, scoped realtime denial, KYC, and signed release builds.
 - Validate Android production signing and iOS build/signing on an authorized macOS runner; a local debug keystore is compile evidence only.
 
 ### Backend and production topology
 
 - Audit remaining production Redis dependency and document/provision it explicitly or remove it safely; do not leave an accidental Vercel runtime dependency.
-- Validate all 24 migrations against a fresh PostGIS database and the target Supabase project.
+- Validate every migration in the final source head against a fresh PostGIS database and the target Supabase project; do not rely on an old fixed migration count.
 - Verify RLS/publication/storage policies and cross-tenant realtime denial against Supabase, not only unit tests.
 - Run live DeepSeek, Google routing, SePay, notification, export, storage, and secured Cron smoke with rotated secrets.
 - Review mutable third-party Compose image tags and pin release-relevant dependencies.
@@ -57,9 +58,9 @@ Status on 2026-07-11: **hardening in progress; no-go for production**.
 ## External blockers
 
 - GitHub Actions billing/auth/token access is exhausted; fresh current-head remote workflows cannot yet approve release.
-- Supabase secure CLI shell lacks `SUPABASE_ACCESS_TOKEN` and production database URLs.
-- Vercel API is missing required database, Supabase KYC/service credentials, Maps/routing, DeepSeek, SePay, SMTP, FCM, and Twilio production values.
-- Admin and Restaurant are missing `NEXT_PUBLIC_SUPABASE_ANON_KEY` in production.
+- Supabase is linked and has 32 migrations, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Production business/RAG tables are intentionally empty until real onboarding/import.
+- Railway API/worker/migrator have database, Supabase, Redis, and ES256 realtime values but still lack real Maps/routing, DeepSeek, SePay, SMTP, FCM service-account, Twilio, and webhook credentials. Live controlled-token FCM delivery is still required.
+- Admin and Restaurant Vercel production env now use the Railway API URL and current Supabase publishable key; they must be redeployed only after the API is live.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
@@ -70,10 +71,10 @@ These are release blockers, not permission to add fake values or bypass validati
 2. Restore and pass every required GitHub workflow on that head.
 3. Enter rotated secrets through secure prompts/dashboard and pass Supabase/Vercel preflight.
 4. Deploy Supabase migrations, RLS, explicit Realtime publication, and Storage policies.
-5. Deploy Vercel API; verify health/readiness/Cron.
+5. Deploy Railway migrator, then API/worker; verify health/readiness/Cron.
 6. Build/deploy Admin and Restaurant against the verified API alias.
 7. Run production health plus authenticated realtime/map/chatbot/export/payment/notification/tenant smoke.
-8. Fast-forward `HEAD` directly to `origin/master`; verify one remote branch and `0 0` equivalence.
+8. Verify the deployed commit remains the intended `origin/master` head; do not recreate or push historical integration branches.
 9. Publish Docker SHA manifests, immutable `v4.0.0`, then manually promote `latest` after smoke.
 10. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 
@@ -83,7 +84,7 @@ These are release blockers, not permission to add fake values or bypass validati
 - Validate mobile production signing and staged rollout after the web/API production line is healthy.
 - Define retention/cleanup for realtime/job outboxes and AI telemetry.
 - Close/remove superseded Docker Hub worker tags only after backup and consumer audit.
-- Delete local integration branch/worktree only after `HEAD == origin/master` and all reports are archived.
+- Clean up the local integration worktree/branch after push, backup/patch checks, and `master == origin/master` verification.
 
 ## Deferred by design
 

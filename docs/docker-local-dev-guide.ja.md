@@ -2,7 +2,7 @@
 
 ## Scope
 
-Local development、isolated E2E、current-source container validation、self-hosted compatibility のガイドです。Supabase + Vercel managed production は [deployment guide](deployment-guide.ja.md) を参照してください。
+Local development、isolated E2E、container validation、self-hosted compatibility のガイドです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）です。[deployment guide](deployment-guide.ja.md) を参照してください。
 
 必要: Docker Compose v2/Buildx、Node.js 22.13+、Corepack pnpm 11.11.0、Flutter SDK。GIF 再生成時のみ FFmpeg。
 
@@ -17,7 +17,7 @@ Copy-Item web/apps/restaurant/.env.example web/apps/restaurant/.env.local
 
 Ignored file のみ作成します。Real dotenv、CLI auth、dump、certificate、token、signing material を commit しません。Chat/log に出た key は rotate。`foodflow_dev`、`minioadmin`、development JWT は production 禁止です。
 
-Local provider は Socket.IO + Redis/BullMQ + MinIO、managed production は Supabase Realtime/Storage/Postgres queue を明示します。
+Local provider は Socket.IO + Redis/BullMQ + MinIO、managed production は Supabase Realtime/Storage/Postgres queue、Railway API/worker/migrator/Redis、Vercel dashboards を明示します。
 
 ## Infrastructure containers + host apps
 
@@ -124,7 +124,7 @@ Real API を使い palette-optimized GIF を作成し intermediate frames を削
 - `docker compose down` は volume 保持、`down -v` は local data を削除。対象 compose project を確認してから実行。
 - Shared workstation で全 container/volume cleanup をしない。
 - Self-hosted は `IMAGE_TAG=v4.0.0` または `sha-<full-commit>` を pin し、real `.env.production` と base + production overlay を使う。
-- Socket.IO/Redis/MinIO profile は Supabase/Vercel misconfiguration の fallback ではありません。
+- Socket.IO/Redis/MinIO profile は Supabase/Railway/Vercel misconfiguration の fallback ではありません。
 
 ## Troubleshooting
 

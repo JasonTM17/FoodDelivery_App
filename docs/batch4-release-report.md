@@ -1,10 +1,12 @@
 # FoodFlow Batch 4 Release Report
 
-Last updated: **2026-07-12**. Status: **integration pushed to `master`; production release blocked**.
+> **Historical snapshot — 2026-07-12.** The test counts, 27-migration result, image digests, and media QA statements below are evidence recorded for that date. They are not a claim about the current `master` head, the current dirty workspace, or production readiness.
+
+Snapshot date: **2026-07-12**. Status at that snapshot: **integration pushed to `master`; production release blocked**.
 
 ## Release identity
 
-| Item | Current value |
+| Item | Snapshot value |
 |---|---|
 | Remote repository | `JasonTM17/FoodDelivery_App` (private) |
 | Remote branches | `master` only |
@@ -15,7 +17,13 @@ Last updated: **2026-07-12**. Status: **integration pushed to `master`; producti
 | Planned release | `v4.0.0` after all gates |
 | Production deployment | Not completed |
 
-The local branch has not been pushed by name because that would recreate a second remote branch. Final integration is a direct fast-forward `HEAD:master` after release approval.
+The local branch had not been pushed by name because that would recreate a second remote branch. At the snapshot, final integration used a direct fast-forward `HEAD:master` after release approval.
+
+## Later repository disposition — 2026-07-13
+
+This report remains historical. A later 2026-07-13 audit found `master@477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7`, 3 ahead / 0 behind `origin/master@3f195a6374589b8433c45cb370dbc79cff00118f`. Both historical local branches are ancestors of `master` with no unique commits, but the active integration worktree requires owner approval before cleanup. The local-ahead state is provisional and is not a release or push claim.
+
+The same pass applied 32 migrations to an isolated local PostGIS + pgvector database, confirmed pgvector `0.6.2`, API readiness, and 252 RAG documents indexed with zero failures. It included untracked `20260713070000_add_rag_knowledge_base`, so it is dirty-workspace runtime evidence only; it makes no assertion about Supabase production or release readiness. Browser E2E against the older Docker image passed 128/134 checks, while six checks remain non-evidence pending a rebuilt current navigation image and isolated test seed.
 
 ## Landed hardening
 
@@ -37,7 +45,7 @@ The local branch has not been pushed by name because that would recreate a secon
 - Restaurant locale is URL-authoritative under one `NextIntlClientProvider`; fresh `/vi`, `/en`, and `/ja` contexts no longer inherit stale cookie/session locale.
 - Error/validation states meet the tested serious/critical accessibility contrast threshold and expose keyboard focus.
 - Production public env is fail-closed; legacy socket URL is not required when the provider is Supabase.
-- Current product media is generated from the isolated current-source stack, not a stale production alias.
+- Historical product media was generated from an isolated stack, not a stale production alias; it needs a fresh, source-identified capture before it can support current-release documentation.
 
 ### Mobile
 
@@ -54,9 +62,9 @@ The local branch has not been pushed by name because that would recreate a secon
 - CI pushes SHA manifests first, smokes native runtime dependencies on both architectures, scans both architectures, checks production health, then creates an immutable semver tag. A conflicting existing semver digest causes failure.
 - `latest` promotion is manual and occurs only after semver release success.
 
-## Latest local evidence
+## Historical local evidence
 
-Evidence below distinguishes current-line checks from historical broader runs. Historical evidence is never release approval for the final head.
+The values below preserve the 2026-07-12 evidence record. They distinguish then-current-line checks from broader historical runs; neither is release approval for a later final head.
 
 | Gate | Evidence |
 |---|---|
@@ -69,16 +77,16 @@ Evidence below distinguishes current-line checks from historical broader runs. H
 | Docker current-line | Backend and migrate were published from `1f761a6` to Docker Hub and repository-linked GHCR packages; both registries resolve to identical `amd64`/`arm64` manifest digests with SBOM/provenance. Current-head Trivy/runtime smoke is still required. |
 | Workflow/config historical | Actionlint, Compose configs, and the local release mini-gate passed before current head. Rerun required. |
 | Secret hygiene | The staged scan for `924808c` found no live token/private key; real dotenv files remained untracked. A full final-head Gitleaks scan is still required. |
-| Documentation media | 20 current-source Admin/Restaurant screenshots and two optimized GIFs captured through the real seeded API. |
+| Documentation media | 20 Admin/Restaurant screenshots and two optimized GIFs captured through the seeded API. The manifest does not record a source SHA, so this is historical media only. |
 | Driver GPS focused local E2E | Full Flutter analyze and 312 tests passed. Android API 35 Driver debug flavor prompted notification permission on explicit Online, ran a location foreground service, accepted a simulated GPS command, refreshed Redis liveness, persisted to PostGIS within seconds, and delivered one authorized Admin Socket.IO event. This is not Supabase or production evidence. |
 
 A fresh full backend Prisma/typecheck/lint/Jest/build gate, full web/mobile builds, complete cross-page visual/axe suite, production-like tenant/realtime/map/KYC/AI smoke, and all remote workflows are still required before release. Historical counts are not substituted for those final gates.
 
-## Product-media QA finding
+## Historical product-media QA finding
 
-The first capture used `127.0.0.1`, correctly triggered the isolated stack's CORS fail-closed behavior, and was discarded. Recapture through the configured `localhost` origin loaded real seeded API data.
+The first capture used `127.0.0.1`, correctly triggered the isolated stack's CORS fail-closed behavior, and was discarded. The historical recapture through the configured `localhost` origin loaded seeded API data.
 
-Visual review found Vietnamese Admin overview KPI labels rendered in English and two serious contrast failures. Commit 7ab9633 localized KPI labels by stable metric key, made URL locale authoritative for the Admin root, and hardened semantic color tokens. Fresh vi/en/ja Chromium and Firefox checks passed with conflicting cookies and axe serious/critical = 0; the accepted media was then recaptured from that build.
+Visual review found Vietnamese Admin overview KPI labels rendered in English and two serious contrast failures. Commit `7ab9633` localized KPI labels by stable metric key, made URL locale authoritative for the Admin root, and hardened semantic color tokens. The recorded vi/en/ja Chromium and Firefox checks passed with conflicting cookies and axe serious/critical = 0; this is historical QA, not evidence for the current source head or the current product media.
 
 ## Registry audit
 

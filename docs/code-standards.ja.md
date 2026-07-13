@@ -63,7 +63,7 @@ Rules:
 - ARB から生成された localization を使います。
 - Batch 4 では mobile/customer contract との API compatibility を保ちます。
 - Batch 4 OpenAPI contract が安定するまで新しい mobile API client を生成・commit しません。
-- Violet と Indigo の mobile reconciliation は web/backend integration 後の別 branch で行います。
+- Mobile work は検証可能な branch、commit、patch evidence だけから reconcile します。Missing ref を命名、再作成、推測しません。
 
 ## i18n patterns
 
@@ -102,3 +102,9 @@ Batch 4 PR 前の最低 gate:
 - Behavior、setup、architecture、security posture、commands、public contracts が変わる場合は docs を更新します。
 - 重要 docs は English、Vietnamese、Japanese で提供します。
 - 検証済みの behavior だけを記載します。Degraded または pending の feature は明示します。
+
+## Reliability と accessibility
+
+- Durable notification は per-token outcome がない FCM/provider failure を queue retry のため rethrow し、permanent-invalid token だけを stale にします。
+- Auth/availability では stale async work を invalidate し、logout で realtime/location subscription を cancel します。canonical server command 成功前に offline/paused を表示しません。
+- Dashboard navigation は locale URL、skip link、visible focus、icon-only label、dialog focus management、`prefers-reduced-motion` を守り、広い `transition-all` を使いません。

@@ -53,3 +53,9 @@ Ngôn ngữ: [English](./design-guidelines.md) | [Tiếng Việt](./design-guide
 - Tài xế online: chấm xanh.
 - Tài xế đang giao: motorcycle màu cam.
 - Khách hàng: ghim xanh dương.
+
+## Bề mặt vận hành tối và navigation responsive
+
+- Driver dark surface dùng text token semantic `onSurface`/`onSurfaceVariant`, không dùng gray literal của light theme. Offline là neutral, paused là amber, online là green và luôn có nhãn localize.
+- Restaurant desktop dùng một sidebar collapse; mobile dùng một controlled drawer với cùng destination. Có skip link khi focus, dialog title/description, close label và initial focus trong drawer.
+- Icon-only control cần accessible name; nav active dùng `aria-current="page"`. Mobile control tối thiểu 44px, chỉ animate property cần thiết và có `motion-reduce`.

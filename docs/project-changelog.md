@@ -10,14 +10,19 @@ authoritative source for individual commits and implementation detail.
 - Refreshed release, deployment, Docker, security, API, testing, architecture,
   branch, and roadmap documentation for the Node 22, pnpm 11.11, and Next.js 15
   runtime.
-- Defined Supabase as the managed database, Realtime, and Storage provider, and
-  Vercel as the managed API/Admin/Restaurant host.
+- Defined Supabase as the managed database, Realtime, and Storage provider;
+  Railway as the managed API/worker/migrator/Redis host; and Vercel as the
+  Admin/Restaurant host.
+- Added a localized product overview/PDR and synchronized architecture,
+  deployment, testing, accessibility, and release-boundary documentation with
+  the current hardening work.
 - Kept Socket.IO, Redis, MinIO, and BullMQ as local or self-hosted compatibility
   providers rather than presenting them as the managed-production path.
 - Documented immutable Docker release and SHA tags, multi-architecture scans,
   and manual post-smoke promotion of latest.
-- Added current-source product screenshots and optimized Admin/Restaurant GIF
-  flows with capture provenance. They are not production media.
+- Retained historical product screenshots and optimized Admin/Restaurant GIF flows.
+  Their manifest lacks a source SHA/image reference, so recapture with source/runtime
+  provenance is required before they support a current-release claim.
 
 ### Fixed
 
@@ -37,15 +42,27 @@ authoritative source for individual commits and implementation detail.
 - Replaced legacy public-URL driver KYC with private owner-scoped signed
   uploads, object/signature validation, atomic review state, signed Admin
   previews, and typed vi/en/ja mobile onboarding.
+- Replaced legacy FCM server-key transport with Firebase Admin SDK/HTTP v1,
+  retryable provider failures, permanent-token stale marking, and documented
+  secret-managed/ADC credentials.
+- Made Driver availability and session cleanup race-safe, localized login
+  errors, removed duplicate initial dashboard loading, and corrected dark
+  operational text semantics.
+- Rebuilt Restaurant navigation as a responsive accessible sidebar/drawer with
+  skip navigation, visible focus, locale-preserving controls, and reduced
+  motion behavior.
 
 ### Release blockers
 
-- Production secrets, Supabase CLI migration credentials, and Vercel production
-  environment variables still require secure configuration.
+- Supabase migrations and Vercel public production variables are configured;
+  Railway still requires real third-party provider credentials before rollout.
 - Final Android production signing and iOS build/signing evidence still require
   authorized release credentials/runners; local debug APKs are not publishable.
 - Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
   and production smoke gates remain mandatory before deployment.
+- Browser E2E passed 128/134 checks against an older image; the six remaining
+  checks require a current navigation image and isolated test seed. Live FCM delivery
+  remains unverified until production credentials and a controlled device token produce redacted evidence.
 
 ## 0.2.0 - 2026-06-07
 

@@ -17,7 +17,7 @@ FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional 
 
 ## Product preview
 
-These images were captured from the current-source isolated Docker stack with deterministic seeded test data. They are not presented as production screenshots. See the [full product gallery](docs/product-gallery.md).
+These are historical non-production media. The manifest records `capturedAt` 2026-07-10 but no source SHA or image reference, so the images do not prove the current source head or any release candidate. See the [full product gallery](docs/product-gallery.md).
 
 <p align="center">
   <img src="docs/screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
@@ -188,22 +188,23 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-Latest current-line evidence includes 48 focused backend KYC/config/notification tests, backend typecheck/lint, all 274 Flutter tests, Flutter analyze, a real Driver debug APK build from `lib/main_driver.dart`, Admin KYC contract/typecheck with 5 component tests, and clean OpenAPI Spectral validation. Earlier broader web/container/browser evidence is retained in the release report, but a fresh all-suites final-head gate is still required before release.
+The 2026-07-13 hardening pass verified Backend 135 suites / 1008 tests plus typecheck, lint, and build; Admin 192 and Restaurant 130 unit tests plus production builds; Flutter analyze and a 325-test full run before the final availability-race patch, followed by four focused session/race tests. Browser E2E against the older Docker stack passed 128/134 checks; six checks correctly remain non-evidence because that stack lacks the current navigation build and its test database was not seeded. Live Firebase delivery and a current-SHA browser rerun remain required.
 
 ## Deployment order
 
 1. Restore GitHub Actions billing/auth and obtain fresh green remote checks.
-2. Rotate exposed credentials; complete Supabase and Vercel preflights.
+2. Rotate exposed credentials; complete Supabase, Railway, and Vercel preflights.
 3. Deploy Supabase migrations, RLS, private Broadcast authorization, and Storage bucket policies.
 4. Run the Railway migrator, then deploy the Railway API, worker, and managed Redis; verify health and WebSocket origin.
 5. Build/deploy Admin and Restaurant on Vercel with the verified Railway API and Supabase public values.
 6. Smoke health, auth, tenant isolation, realtime, map/shipper route, chatbot, notifications, exports, and payments.
-7. Fast-forward local integration `HEAD` directly to `origin/master`; keep one remote branch.
+7. Do not recreate or push historical integration branches. Reconcile the verified local `master` head with `origin/master` only after the required release gates authorize it.
 8. Publish immutable Docker manifests, then update `latest` only after production smoke.
 
 ## Documentation
 
 - [Product gallery](docs/product-gallery.md)
+- [Project overview and requirements](docs/project-overview-pdr.md)
 - [System architecture](docs/system-architecture.md)
 - [API contract](docs/api-contract.md) and [OpenAPI](docs/openapi.yaml)
 - [Deployment guide](docs/deployment-guide.md)
@@ -217,7 +218,7 @@ Latest current-line evidence includes 48 focused backend KYC/config/notification
 
 ## Branch policy
 
-The remote currently has one branch: `master`. `codex/batch4-integration` is already an ancestor of `master`; its controlled merge and the current production-hardening commit are present at `master@714d908`. Do not push historical integration branches by name. Never raw-merge stale branches or delete refs without patch-equivalence and backup checks.
+At the 2026-07-13 validation snapshot, the remote has one branch, `master`, at `3f195a6374589b8433c45cb370dbc79cff00118f`; local `master` is `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` (3 ahead / 0 behind). That local-ahead state is provisional, not release approval. Both historical local branches are ancestors of `master` and contain no unique work; they must never be raw-merged or pushed by name. The active integration worktree/local refs may be removed only with owner approval, backup/patch checks, and a final `master == origin/master` verification.
 
 ## License
 

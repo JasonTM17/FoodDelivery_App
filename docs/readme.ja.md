@@ -2,13 +2,13 @@
 
 言語: [English](../README.md) · [Tiếng Việt](readme.vi.md) · **日本語**
 
-FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）と Vercel（API、Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
+FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-11 status:** Batch 4 hardening は継続中で、**production deploy は未実施**です。Supabase CLI credential、Vercel production env、GitHub Actions billing/auth が不足しています。Final head の full gate と provider preflight がすべて green になるまで deploy と `master` fast-forward は fail closed です。
+> **2026-07-13 status:** Batch 4 は `master` に統合済みですが、**production deploy は未実施**です。Provider preflight、新しい remote CI、browser E2E、FCM controlled-device delivery は未検証であり、release は引き続き fail closed です。
 
 ## Product preview
 
-次の画像/GIF は current-source isolated Docker stack と deterministic seed data から取得したもので、production screenshot ではありません。[Full gallery](product-gallery.ja.md) を参照してください。
+次の画像/GIF は historical non-production media です。Manifest は `capturedAt` 2026-07-10 を記録していますが source SHA/image reference がないため、current source head や release candidate の証拠にはなりません。[Full gallery](product-gallery.ja.md) を参照してください。
 
 <p align="center">
   <img src="screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
@@ -55,15 +55,15 @@ Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realti
 
 ## Docker Hub and GitHub Packages
 
-Current-head backend/migrator SHA manifests are published to Docker Hub and repository-linked GHCR packages. Admin/Restaurant images remain gated because the required verified Supabase public build variable is absent; no empty or fabricated key is baked into an image.
+Backend/migrator SHA manifests were published to Docker Hub and repository-linked GHCR packages. They are historical candidates, not evidence for the current `master` head. Admin/Restaurant images remain gated because the required verified Supabase public build variable is absent; no empty or fabricated key is baked into an image.
 
 | Image | Purpose |
 |---|---|
 | `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API + worker; `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
 | `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | non-root Prisma migration; `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin / Restaurant | verified `NEXT_PUBLIC_SUPABASE_ANON_KEY` まで gated |
+| Admin / Restaurant | Supabase publishable key は設定済み。Railway API 稼働後の redeploy/smoke 待ち |
 
-Candidate tag is `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; both registries resolve to the same `amd64/arm64` manifest with SBOM/provenance. Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。`latest` は Batch 4 の source of truth ではありません。
+Historical candidate tag is `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; both registries resolved to the same `amd64/arm64` manifest with SBOM/provenance. Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。`latest` は Batch 4 の source of truth ではありません。
 
 Release は `sha-<full-commit>` multi-arch build → `amd64/arm64` runtime smoke → High/Critical Trivy block → production health → immutable `v4.0.0` → manual `latest` promotion の順です。
 
@@ -113,22 +113,23 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-最新 integration evidence は backend KYC/config/notification 48 tests、backend typecheck/lint、Flutter 274 tests、Flutter analyze、`lib/main_driver.dart` からの実 Driver debug APK build、Admin KYC contract/typecheck と 5 component tests、clean OpenAPI Spectral です。より広い web/container/browser evidence は release report に残しますが、release 前に final head の fresh full gate が必要です。
+2026-07-13 の hardening では Backend 135 suites / 1008 tests と typecheck/lint/build、Admin 192 tests、Restaurant 130 tests と production build、Flutter analyze と最終 race patch 前の full 325 tests、その後の session/race focused 4 tests が pass しました。古い Docker image に対する browser E2E は 128/134 pass で、残り 6 checks は current navigation image と isolated test seed が必要です。live FCM send は未検証です。
 
 ## Deploy order
 
 1. GitHub Actions billing/auth を復旧し remote checks を green にする。
 2. Exposed key を rotate し Supabase/Vercel preflight を pass。
 3. Supabase migration、RLS、Realtime publication/channel、Storage policy を deploy。
-4. Vercel API と verified alias/health/Cron を確認。
+4. Railway migrator、API/worker を deploy し、health/readiness/Cron を確認。
 5. Verified API/Supabase public env で Admin/Restaurant を deploy。
 6. Auth、tenant、realtime、shipper route、chatbot、notification、export、payment を smoke。
-7. Local integration `HEAD` を直接 `origin/master` へ push し remote branch を一つに保つ。
+7. Historical integration branch を再作成/push しない。Release gate が許可した場合だけ verified local `master` を `origin/master` と reconcile する。
 8. Immutable Docker manifests を publish し、production smoke 後だけ `latest` を更新。
 
 ## Documentation
 
 - [Architecture](system-architecture.md)
+- [Project overview and requirements](project-overview-pdr.ja.md)
 - [API contract](api-contract.ja.md)
 - [Deployment](deployment-guide.ja.md)
 - [Docker/local](docker-local-dev-guide.ja.md)
@@ -141,7 +142,7 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 
 ## Branch policy
 
-Remote branch は `master` の一つだけです。2026-07-11 audit baseline では local `codex/batch4-integration@924808c` が `origin/master@df945dd` より 106 commits ahead の clean fast-forward candidate です。二つ目の remote branch を作らないため local branch 名では push せず、全 gate が green になった後に verified `HEAD` を直接 `master` へ push します。Backup と patch-equivalence 確認なしで raw merge/delete は行いません。
+2026-07-13 validation snapshot では remote branch は `master` のみで `3f195a6374589b8433c45cb370dbc79cff00118f`、local `master` は `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7`（3 ahead / 0 behind）です。この local-ahead state は provisional で release approval ではありません。二つの historical local branches はどちらも ancestor で unique commit はありません。名前付き push/raw merge は行いません。Active integration worktree/ref は owner approval、backup/patch check、最終 `master == origin/master` 確認後だけ cleanup します。
 
 ## License
 

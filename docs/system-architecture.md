@@ -108,6 +108,16 @@ Admin, Restaurant, Customer, and Driver managed clients support this contract. M
 
 Local BullMQ remains available. The worker is another entry point in the backend image, not a separate package/image contract.
 
+## Notification delivery
+
+Notification fanout persists an in-app record, then enqueues channel-specific work. For push, the worker sends bounded batches through Firebase Admin SDK/FCM HTTP v1. `FCM_PROJECT_ID` identifies the Firebase project; the runtime uses workload credentials/Application Default Credentials when available, or a one-line `FCM_SERVICE_ACCOUNT_JSON` held only in its secret store. The legacy FCM server key is not a supported configuration.
+
+- A rejected provider request is rethrown so the durable queue can retry it; it is not reported as delivery.
+- Per-token outcomes return partial success/failure counts. Only permanently invalid registration tokens are marked stale.
+- Notification templates are locale-specific and the job carries locale explicitly; missing templates use the documented fallback rather than an invented message.
+
+Live delivery still requires a controlled device token and the actual production credentials; unit tests cannot establish that provider-side configuration is valid.
+
 ## Storage
 
 - Managed production: Supabase Storage through the server-side secret-key client.
@@ -169,12 +179,22 @@ Any key previously pasted into chat or logs must be rotated before live smoke or
 
 URL locale is authoritative for web rendering, metadata, `html lang`, labels, and accessibility text. Cookie/session state must not override a fresh locale URL.
 
+## Driver session and availability invariants
+
+The Flutter Driver provider treats login, logout, availability, dispatch, and realtime listeners as one cancellable session. A monotonically changing session epoch prevents awaited work from an invalidated session from writing state after logout or a replacement login. Logout tears down location work, stream subscriptions, order subscriptions, and the realtime connection before it clears local credentials.
+
+Availability has one canonical backend-backed state. A pause presentation is derived only after the offline request succeeds; if that request fails, the Driver remains online and sees an actionable error. Switching availability disables the control during the request, preventing overlapping transitions.
+
+## Dashboard navigation and accessibility
+
+Restaurant navigation is a desktop sidebar and a controlled mobile dialog/drawer rather than two unrelated menus. The shell provides a skip link, labelled icon-only controls, focus management when the drawer opens, `aria-current` for the active route, 44px-or-larger interaction targets, and `motion-reduce` fallbacks. Locale-aware links remain responsible for preserving the URL locale.
+
 ## Operational health and release boundaries
 
 - API: `/api/healthz` and `/api/readyz`.
 - Admin/Restaurant: `/api/healthz`.
 - Railway API health configuration is declared in `backend/railway.toml`; the Railway worker owns recurring job-outbox draining.
 - Docker release images are multi-architecture, non-root, digest-promoted, and scanned before semver/latest promotion.
-- Supabase/Railway/Vercel deploy is blocked until their preflight scripts pass and current-head local plus remote gates are green.
+- Supabase/Railway/Vercel deploy is blocked until their preflight scripts pass and current-head local plus remote gates are green. A live FCM controlled-token send and authenticated browser smoke are separate release evidence, not implied by unit tests.
 
 Related decisions: [ADR index](adr/0001-record-architecture-decisions.md), [deployment guide](deployment-guide.md), and [testing guide](testing-guide.md).

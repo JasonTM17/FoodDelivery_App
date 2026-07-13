@@ -21,6 +21,7 @@ FoodFlow documentation is maintained in three languages:
 ## Current localized docs
 
 - Project overview: [EN](../README.md), [VI](readme.vi.md), [JA](readme.ja.md)
+- Product requirements: [EN](project-overview-pdr.md), [VI](project-overview-pdr.vi.md), [JA](project-overview-pdr.ja.md)
 - API contract: [EN](api-contract.md), [VI](api-contract.vi.md), [JA](api-contract.ja.md)
 - Code standards: [EN](code-standards.md), [VI](code-standards.vi.md), [JA](code-standards.ja.md)
 - Project roadmap: [EN](project-roadmap.md), [VI](project-roadmap.vi.md), [JA](project-roadmap.ja.md)

@@ -1,78 +1,34 @@
 # Branch Disposition — Batch 4
 
-## Audit snapshot
+## Current disposition
 
-Last audited: **2026-07-11** from `D:\Food_Delivery-worktrees\batch4-integration-restored` after `git fetch --prune origin`.
+Audited on **2026-07-13** from `D:\Food_Delivery`.
 
-| Scope | Ref | Commit | Decision |
-|---|---|---|---|
-| Remote | `origin/master` | `df945dd2c572e690a3c9e7aa31130c517ef83880` | Keep as the only long-lived remote branch. |
-| Local integration | `codex/batch4-integration` | `924808c47ca7de1aa001693bdfcca3c4ff293a9f` before this docs update | Keep until its verified `HEAD` is pushed directly to `master`. |
-| Local root | `master` | `df945dd` | Do not touch; the root worktree contains user-owned dirty files. |
-| Backup tag | `backup/batch4-integration-20260704-032a6c0` | preserved tag | Keep until release and cleanup evidence are complete. |
-| Release tag | `v0.1.0` | historical | Keep as historical; it is not Batch 4. |
+| Scope | Verified state | Disposition |
+|---|---|---|
+| Remote | `origin/master@3f195a6374589b8433c45cb370dbc79cff00118f` is the only remote branch. | Keep one remote release branch. |
+| Current local head | `master@477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` is 3 ahead / 0 behind `origin/master`. | Provisional local state only; no release or push approval is implied. |
+| `codex/batch4-integration` | Active linked worktree at `D:\Food_Delivery-worktrees\batch4-integration-restored`; branch is an ancestor of `master` with no unique commits (9 behind / 0 ahead of `origin/master`). | Never remove the worktree or local ref without its owner's approval, plus backup/patch checks. |
+| `codex/foodflow-production-finalization` | Ancestor of `master`; remote tracking ref is gone and it has no unique commits (6 behind / 0 ahead of `origin/master`). | Cleanup candidate only; require owner approval and the same backup/patch checks. |
 
-GitHub connector branch search and `git ls-remote --heads origin` both returned exactly one remote head: `master`. No remote `codex/batch4-integration`, Dependabot, Violet, Indigo, or other feature head exists at this snapshot.
+## Safety boundary
 
-Before the current docs edits:
+- Never raw-merge or push either historical branch by name.
+- Preserve current commits and external database backups before reference cleanup.
+- Re-run `git branch --no-merged master`, `git worktree list --porcelain`, and remote equivalence immediately before removal.
+- Branch cleanup is independent of production approval; it does not prove Railway/Vercel health, current-SHA browser E2E, Firebase delivery, or mobile signing.
+- The working tree contains untracked `backend/prisma/migrations/20260713070000_add_rag_knowledge_base`; runtime results that include it are dirty-workspace evidence, not final-head release proof until it is adopted.
 
-```text
-origin/master...codex/batch4-integration = 0 behind / 106 ahead
-```
+## Verification commands
 
-The integration line is therefore a fast-forward candidate, not a merge-commit candidate.
-
-## Audit commands
-
-```bash
+```powershell
 git fetch --prune origin
 git ls-remote --heads origin
-git branch -vv
-git worktree list --porcelain
-git rev-list --left-right --count origin/master...codex/batch4-integration
-git log --left-right --cherry-pick --oneline origin/master...codex/batch4-integration
-git status --short --branch
+git branch --no-merged master
+git merge-base --is-ancestor codex/batch4-integration master
+git merge-base --is-ancestor codex/foodflow-production-finalization master
+git status --short
+git rev-list --left-right --count origin/master...master
 ```
 
-Run the same commands immediately before push and cleanup. Remote UI screenshots are not sufficient evidence because they may be stale.
-
-## Salvage and merge policy
-
-- Never raw-merge a stale feature branch into Batch 4.
-- First preserve a backup ref, inspect commits/files, and compare patch equivalence.
-- Salvage one bounded cluster at a time with focused tests and a conventional commit.
-- Reject changes that restore mock/fallback/random business data, stale generated API clients, unsafe secrets, or obsolete package-manager/runtime choices.
-- Do not delete a branch merely because it was “merged”; confirm its unique patch set is present or intentionally superseded.
-- Missing remote Violet/Indigo refs cannot be reconstructed or claimed as merged. Mobile reconciliation must proceed from code that actually exists in the current history.
-
-## Why the local branch still exists
-
-Deleting local `codex/batch4-integration` now would discard unpushed release work. Pushing it by name would recreate a second remote branch, violating the requested single-branch repository state. The safe release operation is a direct fast-forward from the verified integration `HEAD` to `origin/master`.
-
-No branch mutation may touch the dirty root `D:\Food_Delivery`. The root is only relevant because it currently holds local `master`; its user-owned dirty files must remain intact.
-
-## Final push procedure
-
-Only after every release gate and production preflight is green:
-
-```bash
-git fetch --prune origin
-git rev-list --left-right --count origin/master...HEAD   # must be 0 <ahead>
-git merge-base --is-ancestor origin/master HEAD
-git status --short                                # must be empty
-git push origin HEAD:master
-git fetch --prune origin
-git rev-list --left-right --count origin/master...HEAD   # must be 0 0
-git ls-remote --heads origin                       # must show only master
-```
-
-Then, without switching or cleaning the dirty root:
-
-1. Detach/remove the clean integration worktree after confirming `HEAD == origin/master`.
-2. Delete local `codex/batch4-integration` only when no worktree uses it.
-3. Retain the backup tag until the release report, Docker digests, and production health evidence are archived.
-4. Remove obsolete Docker Hub artifacts separately; deleting a Git branch does not delete registry tags.
-
-## Current conclusion
-
-Remote branch cleanup is already complete: only `master` remains. Mobile Supabase realtime parity is now present on the integration line, including scoped token/channel tests and REST GPS/dispatch mutations. Final local cleanup and push remain intentionally pending because production secrets/preflights, current-head remote CI, and the final full release gates are not yet complete.
+Only a final `0 0` comparison, owner approval, and the required backup/patch checks permit removal of the integration worktree or either historical local ref.

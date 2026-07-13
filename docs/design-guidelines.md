@@ -15,6 +15,10 @@ Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guideli
 | Sidebar BG | `#14532D` | Admin dark sidebar |
 | Destructive | `#EF4444` | Errors, delete actions, cancelled status |
 
+## Dark operational surfaces
+
+Driver operational screens may use dark surfaces, but text must use semantic dark `onSurface` and `onSurfaceVariant` tokens rather than light-theme gray literals. Offline is muted neutral, paused is amber, online is green, and status color must always be accompanied by a localized text label.
+
 ## Logo System
 
 - Mark: rounded square gradient with delivery route, bowl, leaf, and map pin.
@@ -58,3 +62,10 @@ Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guideli
 - Driver (online): green dot
 - Driver (delivering): orange motorcycle
 - Customer: blue pin
+
+## Responsive dashboard navigation
+
+- Desktop Restaurant navigation uses one collapsible sidebar; mobile uses one controlled drawer with the same destinations.
+- Provide a visible-on-focus skip link to main content, an accessible dialog title/description, an explicit close label, and initial focus in the opened drawer.
+- Icon-only controls require an accessible name. Active navigation uses both visual state and `aria-current="page"`.
+- Use 44px minimum touch targets for mobile controls. Animate only the affected property, provide `motion-reduce` behavior, and never rely on motion to communicate state.

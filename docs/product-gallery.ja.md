@@ -2,7 +2,7 @@
 
 言語: [English](product-gallery.md) · [Tiếng Việt](product-gallery.vi.md) · **日本語**
 
-この gallery の画像/GIF は current-source isolated Docker stack と deterministic test seed から生成されています。Supabase/Vercel deploy と production smoke 完了前は production screenshot として扱いません。
+この gallery の画像/GIF は historical non-production media です。`docs/screenshots/manifest.json` は `capturedAt` 2026-07-10 を記録していますが、source SHA、Compose reference、image reference がありません。そのため current source head、final Docker build、production deploy の証拠にはなりません。
 
 ## Motion flows
 
@@ -41,6 +41,17 @@
 | Insights | ![Restaurant insights](screenshots/restaurant/09-insights.png) |
 | Settings | ![Restaurant settings](screenshots/restaurant/10-settings.png) |
 
+## Driver GPS (local E2E)
+
+Android API 35 の画像は simulated route と deterministic test data のみを使います。Driver の明示的 Online action と notification permission を示しますが、real location、personal account、credential、token は取得していません。
+
+Historical local E2E は authenticated GPS command を受け取り、Redis liveness を更新し、PostGIS に sample を保存し、authorized Admin Socket.IO listener へ一つの event を送信しました。これは local `socketio` compatibility evidence のみであり、Supabase、Railway、Vercel、production の証拠ではありません。
+
+| Screen | Image |
+|---|---|
+| Driver Online after GPS verification | ![Driver Online](screenshots/driver/driver-online-gps-e2e.webp) |
+| Foreground-tracking notification permission | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
+
 ## Recapture
 
 ```powershell
@@ -51,8 +62,8 @@ $env:FOODFLOW_API_URL='http://localhost:13001/api'
 node docs/scripts/capture-product-media.mjs
 ```
 
-Overlay CORS は `localhost` 用です。`127.0.0.1` は意図的 error-state になります。Script は real API、optimized GIF、intermediate cleanup を行いますが、すべての画像を目視 review します。
+Overlay CORS は `localhost` 用です。`127.0.0.1` は意図的 error-state になります。Script は real API、optimized GIF、intermediate cleanup を行いますが、すべての画像を目視 review します。Release-use capture には source commit、Compose/image reference、clean final head または dirty workspace の区別が必要です。現在の manifest は capture time、origin、seed identity のみを記録します。
 
-Locale/title/`html lang`、404/`Failed to fetch`/console error、real API data、secret/token exposure、crop/clipping、empty state masquerade を確認します。Vietnamese Admin overview の KPI English labels は既知 i18n defect であり、final release media 前に修正/recapture が必要です。
+Locale/title/`html lang`、404/`Failed to fetch`/console error、real API data、secret/token exposure、crop/clipping、empty state masquerade を確認します。既存 media は committed release candidate から source/runtime reference 付きで recapture されるまで historical のままです。Dirty workspace の capture は runtime evidence のみで release proof ではありません。
 
 [English gallery](product-gallery.md) · [Testing](testing-guide.ja.md) · [Docker](docker-local-dev-guide.ja.md)

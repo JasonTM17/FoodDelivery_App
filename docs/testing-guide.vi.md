@@ -6,18 +6,22 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Evidence hiện tại
 
-Evidence mới nhất trên integration line ngày 11/07/2026:
+Scoped hardening evidence ngày 13/07/2026:
 
 | Khu vực | Kết quả |
 |---|---|
-| Backend KYC/config/notifications | 5 suite / 48 test, typecheck và lint pass |
-| Fresh database | Apply đủ 24 migration trên PostGIS isolated; đã xác minh KYC RLS và partial unique index |
-| Flutter | Analyze pass; đủ 274 test pass; build Driver debug APK từ entry thật `lib/main_driver.dart` |
-| Contract KYC Admin | Shared API-client và Admin typecheck pass; 5 component/security test pass |
-| OpenAPI | Spectral không báo error sau khi đồng bộ contract KYC private |
-| Secret hygiene | Staged high-confidence scan pass trước `924808c`; không commit dotenv/private key |
+| Backend | 135 suite / 1008 test, Prisma validate/generate, typecheck, lint và build đều pass sau fix notification idempotency và SMTP escaping. |
+| Database | DB PostGIS + pgvector trống apply 32/32 migration; Supabase production cũng báo đủ 32 migration. |
+| Driver Flutter | Flutter analyze pass. Full 325 test pass trước availability-race patch cuối; 4 test session/race focused pass sau patch. Compiler Windows treo trước khi chạy test sau cache clean nên vẫn cần full final rerun. |
+| Web | Admin 192 test, Restaurant 130 test, workspace typecheck/lint và hai production build đều pass với Vercel production env. |
+| Browser E2E | 128/134 check pass trên Docker image cũ. 6 check còn lại cần image navigation hiện tại và DB test isolated có seed; không phải current-source release proof. |
+| FCM live send | Chưa chạy: cần project credential production và controlled device token. |
 
-Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
+### Database runtime evidence 13/07/2026
+
+Container PostGIS + pgvector trống đã apply đủ 32 migration và xác minh PostGIS, vector, bảng `rag_documents` cùng cosine HNSW index. Supabase production đã apply `20260713070000_add_rag_knowledge_base` và Prisma báo schema up to date. Row count production của users, restaurants, orders, driver profiles và RAG documents đều bằng 0; không chạy demo/big seed trên production.
+
+Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, repaired browser E2E, controlled FCM delivery, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
 
 ## Gate tổng
 
@@ -45,7 +49,7 @@ corepack pnpm exec jest --runInBand
 corepack pnpm build
 ```
 
-Phải test fresh PostGIS bằng `migrate deploy` đủ 24 migration. Coverage bắt buộc: auth/RBAC, tenant restaurant, order/payment/webhook replay, promotion/notification/export/audit, realtime token/RLS claims, Supabase Storage/job outbox, GPS/route/ETA/dispatch, DeepSeek/session/telemetry và production env validation.
+Phải test fresh PostGIS bằng `migrate deploy` cho mọi migration trong final source head. Coverage bắt buộc: auth/RBAC, tenant restaurant, order/payment/webhook replay, promotion/notification/export/audit, realtime token/RLS claims, Supabase Storage/job outbox, GPS/route/ETA/dispatch, DeepSeek/session/telemetry và production env validation.
 
 ## OpenAPI và web
 

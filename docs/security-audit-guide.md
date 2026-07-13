@@ -4,13 +4,13 @@ Languages: [English](./security-audit-guide.md) | [Tiếng Việt](./security-au
 
 ## Production scope
 
-Managed production uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage, and Vercel for API/Admin/Restaurant. Local/self-hosted Socket.IO, Redis/BullMQ, and MinIO are compatibility providers only; a missing managed provider must never silently fall back to them.
+Managed production uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for API, worker, migrator, and Redis; and Vercel for Admin/Restaurant. Local/self-hosted Socket.IO, Redis/BullMQ, and MinIO are compatibility providers only; a missing managed provider must never silently fall back to them.
 
 Every credential pasted into chat, screenshots, logs, tickets, shell history, or Git history is treated as exposed. Revoke/rotate it before any live smoke or deployment. Keep values in a provider secret store or an ignored local prompt session; docs and commits contain names, never values.
 
 | Class | Examples | Allowed location |
 |---|---|---|
-| Server secret | Database URLs, Supabase service role/JWT, JWT/Cron, DeepSeek, SePay, SMTP/FCM/Twilio | API/Vercel secret store or secure release shell |
+| Server secret | Database URLs, Supabase service role/JWT, JWT/Cron, DeepSeek, SePay, SMTP/FCM/Twilio | Railway/Supabase secret store or secure release shell |
 | Deployment secret | Docker Hub, GitHub, Supabase, Vercel tokens | Provider/CI secret store or secure local prompt |
 | Browser-visible identifier | Supabase URL/anon key, Maps key, public origins | Build environment with origin/API/RLS restrictions |
 | Local compatibility | Docker/Postgres/Redis/MinIO development values | Ignored local env only |
@@ -37,12 +37,13 @@ Every credential pasted into chat, screenshots, logs, tickets, shell history, or
 - [ ] Docker containers run as non-root user
 - [ ] No secrets in git history (verified with gitleaks)
 
-## Supabase, Vercel, and release checks
+## Supabase, Railway, Vercel, and release checks
 
 - [ ] `REALTIME_PROVIDER=supabase`, `STORAGE_PROVIDER=supabase`, and `QUEUE_PROVIDER=supabase-postgres` are explicit in the API production environment.
 - [ ] `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS; only `realtime_outbox` is in the explicit Realtime publication.
 - [ ] Realtime tokens have short TTL, only `private:` channels, ownership verification before signing, and cross-tenant/anon denial tests.
 - [ ] `SUPABASE_SECRET_KEY` and `SUPABASE_REALTIME_JWT_PRIVATE_KEY` are sealed server-only values and absent from browser bundles/logs.
+- [ ] FCM has `FCM_PROJECT_ID` plus either workload identity/ADC or sealed `FCM_SERVICE_ACCOUNT_JSON`; the legacy server key is absent. Before release, send to a controlled device token and record only redacted success/failure evidence.
 - [ ] `SUPABASE_KYC_BUCKET`, upload limit, and retry limit are explicit; storage PUT requests never receive the FoodFlow bearer token.
 - [ ] Browser Maps key is restricted by referrer/API/quotas; the server Maps key is separate.
 - [ ] Production CORS has exact verified Admin/Restaurant origins, no wildcard; all public aliases are HTTPS.

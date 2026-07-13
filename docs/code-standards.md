@@ -46,6 +46,7 @@ Rules:
 - Return web errors as RFC 7807 Problem Details.
 - Keep customer/mobile compatibility unless the change is explicitly versioned.
 - Do not fabricate payment success; missing provider configuration must return a clear degraded or configuration error.
+- Treat external provider rejection as an error unless the provider returned a documented per-item outcome. Durable notification jobs must rethrow unknown FCM/provider failures so retry policy can run; never mark a token stale without a permanently-invalid response code.
 
 ## Web: Next.js Admin and Restaurant
 
@@ -57,13 +58,15 @@ Rules:
 - Destructive actions need confirmation.
 - Optimistic updates are allowed only when rollback is safe.
 - Shared API access must go through `web/packages/api-client` or an approved wrapper.
+- Navigation changes must keep the locale URL, expose a skip target and visible `:focus-visible` state, label icon-only controls, manage dialog focus, and honor `prefers-reduced-motion`. Do not use broad `transition-all` for interaction UI.
 
 ## Mobile: Flutter
 
 - Use generated localization from ARB files.
 - Keep API changes compatible with the mobile/customer contract during Batch 4.
 - Do not generate or commit a new mobile API client until the Batch 4 OpenAPI contract is stable.
-- Reconcile Violet and Indigo mobile work in separate branches after web/backend integration lands.
+- Reconcile mobile work only from verifiable branches, commits, and patch evidence. Do not name, recreate, or infer missing refs.
+- For authentication or availability changes, invalidate stale async work before clearing state. Cancel realtime/location subscriptions on logout, and do not show offline/paused until the canonical server command succeeds.
 
 ## i18n patterns
 
