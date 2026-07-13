@@ -11,19 +11,19 @@ Scoped hardening evidence on 2026-07-13:
 | Area | Result |
 |---|---|
 | Backend | 138 suites / 1016 tests, Prisma validation/generation, typecheck, lint, and build passed. |
-| Database | The repository and checksum-verified Supabase production both contain 33 ordered migrations. The rebuilt isolated Docker stack verified PostgreSQL extensions, RAG documents, and the dynamic worker; its reused volume is not fresh migration-count evidence. |
+| Database | The repository tracks 33 ordered migrations. Supabase production was last checksum-verified at those 33 migrations. A historical reused Docker test volume retained 34 applied migration-history rows plus one rolled-back row; it is not current-source or fresh migration-count evidence. |
 | Driver Flutter | Flutter analyze passed. A 325-test full run passed before the final availability-race patch; its four focused session/race tests passed afterward. The compiler later hung before executing tests after a cache clean, so a fresh final full run remains required. |
 | Web | Admin 195 tests and Restaurant 134 tests passed; both apps passed typecheck/lint and production builds with verified Vercel production env. |
-| Browser E2E | Current-source isolated Docker stack: 68/68 Chromium, 68/68 Firefox, and 68/68 Pixel 5 checks passed (204 total). Coverage includes critical-page accessibility, auth/refresh/RBAC, customer orders, realtime state, tenant isolation, maps, contracts, visual structure, and responsive navigation. |
+| Browser E2E | The configured isolated matrix has 68 checks per Chromium, Firefox, and Pixel 5 project (204 total). A fresh current-source run is required. Earlier Docker retry evidence is historical only; it is neither clean first-pass evidence nor production evidence. |
 | FCM live send | Not run: production project credentials and a controlled device token are required. |
 
-### 2026-07-13 current-source Docker E2E and RAG evidence
+### Historical 2026-07-13 Docker E2E and RAG record
 
-The isolated Docker overlay was rebuilt from the current source, which contains 33 tracked migrations. Its reused test volume retained 34 applied `_prisma_migrations` history rows plus one rolled-back row because a removed zero-step migration had previously been recorded; that volume is therefore not presented as fresh migration-count proof. A separate disposable database and Supabase production verify the actual 33-migration source history. The overlay starts a dedicated worker from the backend image rather than sharing background work with the API. The worker logged `FoodFlow Worker started`, scheduled RAG synchronization every `300000ms`, and completed a source synchronization with `indexed: 402`, `unchanged: 0`, `failed: 0`, and `deactivated: 0`.
+The repository tracks 33 migrations. A historical reused Docker test volume retained 34 applied `_prisma_migrations` history rows plus one rolled-back row because a removed zero-step migration had previously been recorded; that volume is not current-source or fresh migration-count proof. Supabase production was last checksum-verified at the 33 tracked migrations. A fresh disposable database and authorized Railway migrator rollout are still required for the current release. The overlay design starts a dedicated worker from the backend image rather than sharing background work with the API. Historical worker logs recorded `FoodFlow Worker started`, a `300000ms` RAG schedule, and one synchronization with `indexed: 402`, `unchanged: 0`, `failed: 0`, and `deactivated: 0`; rerun that log gate after the fresh rebuild.
 
-The current worker synchronized 352 menu and 50 restaurant documents from live rows in the E2E database. All 402 have content hashes and no embedding because no DeepSeek key was configured. The reused volume also contains 44 FAQ and 8 policy rows with null source IDs from an older local run; the current source has no generator for them, so they are excluded from current-worker evidence. None of this represents production data or production embedding/provider approval.
+The historical record described 352 menu and 50 restaurant documents from live E2E rows. All 402 had content hashes and no embedding because no DeepSeek key was configured. That reused volume also contained 44 FAQ and 8 policy rows with null source IDs from an older local run; the current source has no generator for them, so they are excluded from any fresh-worker evidence. None of this represents production data or production embedding/provider approval.
 
-Browser verification used the rebuilt API/Admin/Restaurant images directly: 68/68 Chromium, 68/68 Firefox, and 68/68 Pixel 5 checks passed (204 total). Admin and Restaurant desktop/mobile flows were inspected through the browser, including opening and closing the responsive navigation, keyboard focus restoration, the Admin sign-out hit target, and Restaurant session persistence after reload. The suite found and fixed two accessibility issues: insufficient FoodFlow logo contrast and a non-focusable horizontally scrollable Admin table. Remote CI now follows the same isolated Compose topology and three-project matrix, but it still needs a fresh authorized remote run.
+The configured browser matrix contains 68 checks per Chromium, Firefox, and Pixel 5 project (204 total). It must be rerun against a freshly rebuilt current-source API/Admin/Restaurant stack. Earlier Docker browser evidence—including a retry after a Chromium Admin `/export-jobs` `ERR_EMPTY_RESPONSE`—is historical only: it is not a clean 204-check first-pass result, a UI failure/pass verdict, or production evidence. The previous direct Admin/Restaurant desktop/mobile checks and two accessibility repairs remain recorded as historical evidence only until the rebuild is repeated. Local images carry `revision=local`, so any fresh local run will prove checked-out source behavior, not immutable image provenance. The CI workflow is configured for the same isolated Compose topology and three-project matrix, but a fresh authorized remote run is still required.
 
 This is strong local verification, not release approval. Fresh remote CI, provider preflights, production smoke, and a controlled live FCM delivery are still mandatory.
 
@@ -31,7 +31,7 @@ This is strong local verification, not release approval. Fresh remote CI, provid
 
 An isolated local PostGIS + pgvector container applied all 33 migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings.
 
-Supabase production has the same 33 migrations and matching latest checksums. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run there. This is an empty production database, not a claim that production already contains big data.
+Supabase production was last verified with matching checksums for the 33 tracked migrations. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run there. This is an empty production database, not a claim that production already contains big data.
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The current Docker browser evidence above supersedes the old 128/134 image result; fresh remote CI, provider preflights, production smoke, and controlled FCM delivery remain required before release.
 
@@ -155,7 +155,8 @@ $env:RESTAURANT_URL='http://localhost:13002'
 ```powershell
 cd web
 corepack pnpm test:e2e:install
-corepack pnpm test:e2e --project=chromium --project=firefox
+corepack pnpm test:e2e:list
+corepack pnpm test:e2e
 ```
 
 The suite runs one worker to keep seeded state deterministic. Required coverage:

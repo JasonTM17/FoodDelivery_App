@@ -11,19 +11,19 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 | Area | Result |
 |---|---|
 | Backend | 138 suites / 1016 tests、Prisma validate/generate、typecheck、lint、build が pass。 |
-| Database | Repository と checksum 検証済み Supabase production は、どちらも ordered 33 migrations です。Rebuilt isolated Docker stack で extension、`rag_documents`、dynamic worker を local 確認しましたが、再利用 volume は fresh migration count の証拠ではありません。 |
+| Database | Repository は ordered 33 migrations を track しています。Supabase production は最後にその 33 migrations で checksum 検証されました。再利用した historical Docker test volume には applied migration-history 34 行と rolled-back 1 行が残っていますが、current-source または fresh migration count の evidence ではありません。 |
 | Driver Flutter | Flutter analyze pass。最終 availability-race patch 前に full 325 tests、その後に focused session/race 4 tests が pass。cache clean 後の Windows compiler hang のため final full rerun は必要。 |
 | Web | Admin 195 tests、Restaurant 134 tests、両 app の typecheck/lint と production builds が verified Vercel production env で pass。 |
-| Browser E2E | Current-source isolated Docker stack は Chromium 68/68、Firefox 68/68、Pixel 5 68/68（204 total）を pass。critical-page accessibility、auth/refresh/RBAC、customer order、realtime、tenant isolation、map、contract、visual structure、responsive navigation を含む。 |
+| Browser E2E | Isolated Docker matrix は Chromium、Firefox、Pixel 5 ごとに 68 checks（合計 204）を設定しています。fresh current-source stack での再実行が必要で、旧 Docker evidence は historical であり first-pass または production evidence ではありません。 |
 | FCM live send | 未実行: production project credential と controlled device token が必要。 |
 
-### Current-source Docker E2E / RAG evidence — 2026-07-13
+### Historical Docker E2E / RAG record — 2026-07-13
 
-Isolated Docker overlay は tracked 33 migrations を持つ current source から再 build しました。再利用 test volume の `_prisma_migrations` には、削除済み zero-step migration の履歴が残るため applied 34 行と rolled-back 1 行があります。この volume は fresh migration count の証拠として扱いません。別の disposable DB と Supabase production が実際の 33-migration source history を検証しています。専用 worker は backend image から起動し、API process と background work を共有しません。ログで `FoodFlow Worker started`、`300000ms` の RAG schedule、source sync の `indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0` を確認しました。
+Repository は 33 migrations を track しています。再利用した historical Docker test volume の `_prisma_migrations` には、削除済み zero-step migration の履歴により applied 34 行と rolled-back 1 行があります。この volume は current-source または fresh migration count の evidence ではありません。Supabase production は最後に tracked 33 migrations で checksum 検証されました。fresh disposable DB と authorized Railway migrator rollout は current release に引き続き必要です。Overlay design では backend image の専用 worker を起動し、API process と background work を共有しません。historical worker log には `FoodFlow Worker started`、`300000ms` の RAG schedule、`indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0` の一回の sync が記録されています。fresh rebuild 後にこの log gate を再実行してください。
 
-Current worker は E2E database の live rows から menu 352 件と restaurant 50 件を同期しました。402 件すべてに content hash があり、DeepSeek key 未設定のため embedding はありません。再利用 volume には旧 local run の source ID が null の FAQ 44 件と policy 8 件も残っていますが、current source にその generator はないため current-worker evidence から除外します。いずれも production data または production embedding/provider approval ではありません。
+Historical record は E2E live rows から menu 352 件と restaurant 50 件を同期したと記録しています。402 件すべてに content hash があり、DeepSeek key 未設定のため embedding はありません。再利用 volume には旧 local run の source ID が null の FAQ 44 件と policy 8 件も残っていますが、current source に generator がないため fresh-worker evidence から除外します。いずれも production data または production embedding/provider approval ではありません。
 
-Rebuilt API/Admin/Restaurant images に対する browser test は Chromium 68/68、Firefox 68/68、Pixel 5 68/68（合計 204/204）でした。axe serious/critical、auth/refresh/RBAC、Customer API order、REST で観測した状態収束、tenant isolation、map、contract、visual structure、responsive navigation を含みます。Admin/Restaurant の desktop/mobile、menu close 後の focus、Sign Out の hit target、Restaurant session の reload 後 persistence も直接確認しました。Remote CI は同じ Compose overlay と三つの project matrix を使うようになりましたが、fresh authorized remote run はまだ必要です。
+Browser matrix は Chromium、Firefox、Pixel 5 ごとに 68 checks（合計 204）を設定しています。fresh current-source API/Admin/Restaurant stack で再実行が必要です。Admin `/export-jobs` の `ERR_EMPTY_RESPONSE` 後の retry を含む以前の Docker browser evidence は historical であり、204-check first-pass result、UI pass/fail verdict、production evidence ではありません。以前の Admin/Restaurant desktop/mobile 直接確認と accessibility 修正も rebuild の再実行までは historical evidence です。local image は `revision=local` なので、fresh local run は checkout を示すだけで immutable artifact provenance は示しません。Remote CI は同じ Compose overlay と三つの project matrix 用に設定されていますが、fresh authorized remote run が必要です。
 
 これは強い local verification ですが release approval ではありません。fresh remote CI、provider preflight、production smoke、controlled device による live FCM delivery が引き続き必要です。
 
@@ -31,7 +31,7 @@ Rebuilt API/Admin/Restaurant images に対する browser test は Chromium 68/68
 
 Disposable PostGIS + pgvector container は 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。
 
-Supabase production も同じ 33 migrations と最新 checksum を持ちます。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。したがって production に big data が存在するという主張ではありません。
+Supabase production は最後に tracked 33 migrations の matching checksum で検証されました。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。したがって production に big data が存在するという主張ではありません。
 
 より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、repaired browser E2E、controlled FCM delivery、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 

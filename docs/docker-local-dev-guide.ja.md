@@ -45,6 +45,8 @@ docker compose ps
 
 API healthy 前に migration container が exit `0` である必要があります。Worker は backend image の `dist/workers/main.js` を実行し、queue/RAG background work を担当します。HTTP port/health endpoint はないため、HTTP health check ではなく worker log を確認します。`NEXT_PUBLIC_*` は build-time なので変更後は web image を rebuild します。
 
+Checkout からの Compose build には local `revision=local` label が付きます。これは runtime evidence にはなりますが immutable release artifact ではありません。release には frozen `sha-<full-commit>` build、scan、push、clean pull が引き続き必要です。
+
 Health: API `localhost:3001/api/healthz`、Admin `localhost:3000/api/healthz`、Restaurant `localhost:3002/api/healthz`。
 
 ## Isolated Batch 4 stack
@@ -71,9 +73,10 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 
 Deterministic seed は test fixture であり production では block されます。Runtime fallback data ではありません。
 
-Browser test の前に worker を直接確認します:
+起動済み overlay を再 seed した後は、RAG log が post-seed になるよう worker を restart してから直接確認します:
 
 ```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml restart worker
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
 ```
 

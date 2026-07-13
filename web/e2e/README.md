@@ -59,6 +59,8 @@ and runs all three Playwright projects. Do not replace it with root Compose plus
 
 The worker deliberately has no HTTP port or HTTP health endpoint. Before treating a run as current-source evidence, require its logs to contain `FoodFlow Worker started` and a successful `RAG sync complete` entry.
 
+This flow builds checked-out source as local `revision=local` images. It does not prove an immutable registry image, digest, or production deployment; a release still requires a frozen `sha-<full-commit>` build, scan, push, and clean pull.
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -106,14 +108,13 @@ npx playwright show-report web/e2e/playwright-report
 ## CI Integration
 
 The `.github/workflows/e2e.yml` workflow:
-1. Starts PostgreSQL, Redis, and MinIO
-2. Applies Prisma migrations to a clean database and seeds real data
-3. Starts the backend, admin, and restaurant apps
-4. Waits for all services to pass health checks
-5. Runs the Playwright suite on Chromium and Firefox
-6. Uploads `playwright-report/` and trace zips as artifacts on failure
+1. Builds and starts the isolated `docker-compose.e2e.yml` overlay.
+2. Reruns Prisma migration and seeds disposable data through port `15432`.
+3. Restarts the separate worker, then requires `FoodFlow Worker started` and `RAG sync complete` in its logs.
+4. Runs Chromium, Firefox, and Pixel 5 against `13000`/`13001`/`13002`.
+5. Uploads `playwright-report/` and traces on failure, then removes the isolated stack.
 
-Artifacts are retained for 14 days. To investigate a CI failure, download the artifact and run `npx playwright show-report`.
+This describes configured workflow behavior, not a successful remote execution. Artifacts are retained for 14 days. To investigate a CI failure, download the artifact and run `npx playwright show-report`.
 
 ## Seed Credentials
 

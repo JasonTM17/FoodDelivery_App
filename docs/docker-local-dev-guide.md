@@ -90,6 +90,8 @@ docker compose ps
 
 The migration container must exit `0` before the API becomes healthy. The worker runs `dist/workers/main.js` from the backend image, owns durable queue/RAG background work, and has no HTTP port or health endpoint; inspect its startup and RAG logs instead. Web public environment values are build-time values; rebuild a web image after changing `NEXT_PUBLIC_*`.
 
+Compose builds from the checkout use local `revision=local` labels. They are useful runtime evidence but not immutable release artifacts; release promotion still needs a frozen `sha-<full-commit>` build, scan, push, and clean pull.
+
 Default endpoints:
 
 | Service | URL |
@@ -136,9 +138,10 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 
 Both seed commands contain deterministic test business data and are blocked from production use. They are test fixtures, not runtime fallback data.
 
-Before running browser tests, verify the worker directly:
+After reseeding an already running overlay, restart the worker so the RAG entry is post-seed; then verify it directly:
 
 ```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml restart worker
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
 ```
 

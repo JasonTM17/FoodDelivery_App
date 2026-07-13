@@ -45,6 +45,8 @@ docker compose ps
 
 Migration container phải exit `0` trước khi API healthy. Worker chạy `dist/workers/main.js` từ backend image, phụ trách queue/RAG background và không có HTTP port/health endpoint; kiểm tra log worker thay vì HTTP health check. `NEXT_PUBLIC_*` được bake lúc build nên đổi value phải rebuild web image.
 
+Compose build từ checkout mang nhãn local `revision=local`. Đây là bằng chứng runtime hữu ích nhưng không phải artifact release bất biến; release vẫn cần build `sha-<full-commit>` đã đóng băng, scan, push và clean pull.
+
 Health: API `localhost:3001/api/healthz`, Admin `localhost:3000/api/healthz`, Restaurant `localhost:3002/api/healthz`.
 
 ## Isolated Batch 4 stack
@@ -71,9 +73,10 @@ Remove-Item Env:DATABASE_URL,Env:DIRECT_URL
 
 Seed deterministic chỉ là test fixture và bị chặn trong production; không phải runtime fallback data.
 
-Trước browser test, kiểm tra worker trực tiếp:
+Sau khi seed lại một overlay đang chạy, restart worker để log RAG là post-seed, rồi kiểm tra trực tiếp:
 
 ```powershell
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml restart worker
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
 ```
 
