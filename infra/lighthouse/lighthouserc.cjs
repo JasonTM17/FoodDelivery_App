@@ -44,11 +44,14 @@ const maxLcpMs = isDesktop ? 2500 : 4000
 const maxTbtMs = isDesktop ? 200 : 500
 
 /** Pages to audit — admin + restaurant web apps */
+const adminUrl = process.env.ADMIN_URL || 'http://localhost:3000'
+const restaurantUrl = process.env.RESTAURANT_URL || 'http://localhost:3002'
+
+// Audit public entry points directly. Protected pages require an authenticated
+// browser; without one, Lighthouse measures the auth redirect instead.
 const urls = [
-  process.env.ADMIN_URL || 'http://localhost:3000',
-  `${process.env.ADMIN_URL || 'http://localhost:3000'}/orders`,
-  process.env.RESTAURANT_URL || 'http://localhost:3002',
-  `${process.env.RESTAURANT_URL || 'http://localhost:3002'}/orders`,
+  `${adminUrl}/en/login`,
+  `${restaurantUrl}/en/login`,
 ]
 
 module.exports = {

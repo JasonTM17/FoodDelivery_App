@@ -26,7 +26,8 @@ test.describe('Keyless live map basemap', () => {
 
     await expect(page.getByTestId('admin-driver-map-canvas')).toBeVisible({ timeout: 20_000 });
     if (!supportsWebGl2) {
-      await expect(page.getByRole('alert')).toContainText(/map is unavailable/i, {
+      const liveMapRegion = page.getByRole('region', { name: /live driver map with vietnam/i });
+      await expect(liveMapRegion.getByRole('alert')).toContainText(/map is unavailable/i, {
         timeout: 20_000,
       });
       expect(consoleErrors, `Unexpected browser console errors:\n${consoleErrors.join('\n')}`).toEqual([]);
