@@ -47,11 +47,10 @@ jobs:
           docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
             run --rm migrate
           cd backend
+          export DATABASE_URL=postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
+          export DIRECT_URL=postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
           pnpm prisma generate
           pnpm db:big-seed
-        env:
-          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
-          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
 
       - name: Require worker startup and post-seed RAG sync
         run: |
