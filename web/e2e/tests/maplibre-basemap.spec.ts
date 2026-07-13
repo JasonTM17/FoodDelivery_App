@@ -11,14 +11,28 @@ test.describe('Keyless live map basemap', () => {
     });
 
     await loginAdminApp(page, request, 'en');
-    const styleResponse = page.waitForResponse(
-      (response) => response.url().startsWith(OPENFREEMAP_STYLE_URL) && response.status() === 200,
-      { timeout: 20_000 },
-    );
+    const styleResponse = await request.get(OPENFREEMAP_STYLE_URL, { timeout: 20_000 });
+    expect(styleResponse.status()).toBe(200);
+    const style = (await styleResponse.json()) as { version?: number; sources?: unknown; layers?: unknown[] };
+    expect(style.version).toBe(8);
+    expect(style.sources).toBeTruthy();
+    expect(Array.isArray(style.layers)).toBe(true);
+
+    const supportsWebGl2 = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      return Boolean(canvas.getContext('webgl2'));
+    });
     await gotoAdminRoute(page, '/drivers/map', 'en');
 
-    await expect(page.getByTestId('admin-driver-map-canvas')).toBeVisible();
-    await styleResponse;
+    await expect(page.getByTestId('admin-driver-map-canvas')).toBeVisible({ timeout: 20_000 });
+    if (!supportsWebGl2) {
+      await expect(page.getByRole('alert')).toContainText(/map is unavailable/i, {
+        timeout: 20_000,
+      });
+      expect(consoleErrors, `Unexpected browser console errors:\n${consoleErrors.join('\n')}`).toEqual([]);
+      return;
+    }
+
     await expect(page.getByRole('status', { name: /loading the live map/i })).toHaveCount(0, {
       timeout: 20_000,
     });

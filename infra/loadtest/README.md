@@ -6,7 +6,7 @@ k6 load test scripts for FoodFlow — final readiness gate before soft launch.
 
 | File | Purpose |
 |------|---------|
-| `k6-mixed.js` | Main scenario: 100 RPS × 5 min, 60/30/10 traffic mix |
+| `k6-mixed.js` | Main scenario: about 100 HTTP RPS for 5 minutes across customer, restaurant, and driver flows |
 | `k6-helpers.js` | Auth helpers and test fixtures (shared across scenarios) |
 
 ## Quick start
@@ -30,11 +30,13 @@ k6 run --out json=k6-results.json infra/loadtest/k6-mixed.js
 
 ## Scenarios
 
-| Scenario | Rate | Traffic | Flow |
-|----------|------|---------|------|
-| `customer_flow` | 60 RPS | 60% | browse restaurants → get menu → place order |
-| `restaurant_flow` | 30 RPS | 30% | list pending orders → confirm first order |
-| `driver_flow` | 10 RPS | 10% | location ping → check available offers |
+| Scenario | Default arrival rate | Flow |
+|----------|----------------------|------|
+| `customer_flow` | 20 iterations/s | browse restaurants → get menu → place order |
+| `restaurant_flow` | 8 iterations/s | list pending orders |
+| `driver_flow` | 4 iterations/s | timestamped location ping → check active order |
+
+Each iteration performs multiple HTTP requests, so the default mix produces about 100 HTTP RPS rather than 32 RPS. Override the arrival rates with `LOADTEST_CUSTOMER_RATE`, `LOADTEST_RESTAURANT_RATE`, and `LOADTEST_DRIVER_RATE`.
 
 ## Thresholds (CI gates)
 
@@ -43,14 +45,13 @@ k6 run --out json=k6-results.json infra/loadtest/k6-mixed.js
 | `http_req_duration` p95 | < 500 ms |
 | `http_req_failed` | < 1% |
 | `errors` (custom rate) | < 1% |
-| `order_place_duration_ms` p95 | < 800 ms |
-| `location_ping_duration_ms` p95 | < 200 ms |
-
 k6 exits non-zero if any threshold is breached — CI fails accordingly.
 
 ## Fixture overrides
 
-Seeded restaurant/menu IDs are resolved automatically via the restaurant API at `setup()` time. Override manually if needed:
+Seeded restaurant/menu IDs are resolved automatically via the restaurant API at `setup()` time. The customer pool defaults to 100 seeded accounts. The driver flow distributes VUs across the first 10 seeded drivers, which are guaranteed verified by `db:big-seed`, and sends a fresh `sampledAt` value along a stable movement path. Use `LOADTEST_DRIVER_POOL_SIZE=1..10` to reduce that pool.
+
+Override restaurant/menu fixtures manually if needed:
 
 ```bash
 k6 run \

@@ -35,8 +35,13 @@ const CUSTOMER_RATE = Number(__ENV.LOADTEST_CUSTOMER_RATE || 20)
 const RESTAURANT_RATE = Number(__ENV.LOADTEST_RESTAURANT_RATE || 8)
 const DRIVER_RATE = Number(__ENV.LOADTEST_DRIVER_RATE || 4)
 const CUSTOMER_POOL_SIZE = Number(__ENV.LOADTEST_CUSTOMER_POOL_SIZE || 100)
+const DRIVER_POOL_SIZE = Number(__ENV.LOADTEST_DRIVER_POOL_SIZE || 10)
 const NEARBY_RADIUS_KM = Number(__ENV.LOADTEST_NEARBY_RADIUS_KM || 50)
 const CUSTOMER_PASSWORD = __ENV.LOADTEST_CUSTOMER_PASSWORD || CREDENTIALS.customer.password
+
+if (!Number.isInteger(DRIVER_POOL_SIZE) || DRIVER_POOL_SIZE < 1 || DRIVER_POOL_SIZE > 10) {
+  throw new Error('LOADTEST_DRIVER_POOL_SIZE must be an integer from 1 to 10')
+}
 
 // ---------------------------------------------------------------------------
 // Custom metrics
@@ -48,7 +53,7 @@ const locationPingDuration = new Trend('location_ping_duration_ms', true)
 const orderCount = new Counter('orders_placed')
 
 // ---------------------------------------------------------------------------
-// k6 options — three constant-arrival-rate scenarios summing to 100 RPS
+// k6 options — three constant-arrival-rate scenarios producing ~100 HTTP RPS
 // ---------------------------------------------------------------------------
 
 export const options = {
@@ -98,10 +103,10 @@ export const options = {
 
 export function setup() {
   const restaurant = login('restaurant')
-  const driver = login('driver')
 
   const { restaurantId, menuItemId } = resolveFixtures(restaurant.accessToken)
   const customers = []
+  const drivers = []
 
   for (let i = 1; i <= CUSTOMER_POOL_SIZE; i++) {
     const customer = login(`customer${i}`, {
@@ -114,17 +119,28 @@ export function setup() {
     }
   }
 
+  for (let i = 1; i <= DRIVER_POOL_SIZE; i++) {
+    const driver = login(`driver${i}`, {
+      email: `driver${i}@foodflow.vn`,
+      password: CREDENTIALS.driver.password,
+    })
+    if (driver.accessToken) drivers.push(driver)
+  }
+
   if (!restaurantId || !menuItemId) {
     throw new Error('k6 setup: failed to resolve restaurant/menu fixtures')
   }
   if (customers.length === 0) {
     throw new Error('k6 setup: failed to resolve customer tokens and addresses')
   }
+  if (drivers.length !== DRIVER_POOL_SIZE) {
+    throw new Error(`k6 setup: resolved ${drivers.length}/${DRIVER_POOL_SIZE} verified driver tokens`)
+  }
 
   return {
     customers,
+    drivers,
     restaurantToken: restaurant.accessToken,
-    driverToken: driver.accessToken,
     restaurantId,
     menuItemId,
   }
@@ -229,16 +245,20 @@ export function restaurantFlow(data) {
 // ---------------------------------------------------------------------------
 
 export function driverFlow(data) {
-  const { driverToken } = data
-  const hdrs = authHeaders(driverToken)
+  const driverIndex = (__VU - 1) % data.drivers.length
+  const driver = data.drivers[driverIndex]
+  const hdrs = authHeaders(driver.accessToken)
 
-  // Ping current location (jitter to simulate movement)
+  // Move each seeded driver along a stable, walkable-radius path. VUs sharing
+  // a driver calculate the same point instead of teleporting it randomly.
+  const movementPhase = Date.now() / 30_000 + driverIndex * 0.7
   const pingStart = Date.now()
   const pingRes = http.post(
     `${BASE_URL}/driver/online`,
     JSON.stringify({
-      lat: FIXTURES.deliveryLat + (Math.random() * 0.01 - 0.005),
-      lng: FIXTURES.deliveryLng + (Math.random() * 0.01 - 0.005),
+      lat: FIXTURES.deliveryLat + Math.sin(movementPhase) * 0.00025,
+      lng: FIXTURES.deliveryLng + Math.cos(movementPhase) * 0.00025,
+      sampledAt: new Date().toISOString(),
     }),
     hdrs,
   )

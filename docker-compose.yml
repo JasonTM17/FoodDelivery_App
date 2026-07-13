@@ -96,6 +96,7 @@ services:
       THROTTLER_LIMIT: "${THROTTLER_LIMIT:-100}"
       JWT_SECRET: dev-secret-minimum-32-chars-xxxxxxxxxxxxxx
       JWT_REFRESH_SECRET: dev-refresh-secret-minimum-32-chars-xxxxxxxxx
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
       # Keep client credentials aligned with the MinIO root credentials.

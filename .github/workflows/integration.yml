@@ -224,6 +224,13 @@ jobs:
           (cd web/apps/admin && npx next start --port 3000) &
           (cd web/apps/restaurant && npx next start --port 3002) &
           npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
+        env:
+          NEXT_PUBLIC_APP_ENV: development
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
+          NEXT_PUBLIC_WS_URL: http://localhost:3001/events
+          NEXT_PUBLIC_REALTIME_PROVIDER: socketio
+          NEXT_PUBLIC_ADMIN_URL: http://localhost:3000
+          NEXT_PUBLIC_RESTAURANT_URL: http://localhost:3002
 
       - name: Lighthouse — mobile
         run: cd web && pnpm exec lhci autorun --config=../infra/lighthouse/lighthouserc.cjs
@@ -253,7 +260,7 @@ jobs:
   # Gate 5: AI scenarios
   # ──────────────────────────────────────────────────────────────────────────
   ai-scenarios:
-    name: AI Scenario Assertions
+    name: AI Contract / Live Scenario Assertions
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -270,6 +277,8 @@ jobs:
 
       - name: Start Docker Compose stack
         run: docker compose up -d postgres redis minio backend
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
       - name: Wait for backend health
         run: |
@@ -292,8 +301,13 @@ jobs:
       - name: Install tsx
         run: npm install -g tsx
 
-      - name: Run AI scenarios
+      - name: Verify AI contract or live scenarios
         run: |
+          set -o pipefail
+          mkdir -p e2e/reports
+          npx --yes tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+            --fixtures e2e/ai-scenarios/canonical-conversations.json \
+            --validate-only true | tee e2e/reports/ai-scenarios.log
           AI_LOGIN_JSON="$(curl -fsS -X POST http://localhost:3001/api/auth/login \
             -H 'Content-Type: application/json' \
             --data '{"email":"customer1@foodflow.vn","password":"Customer@123"}')"
@@ -301,11 +315,31 @@ jobs:
             AI_LOGIN_JSON="$AI_LOGIN_JSON" node -e 'const payload = JSON.parse(process.env.AI_LOGIN_JSON); const token = payload.accessToken || payload.data?.accessToken; if (!token) { console.error("missing access token"); process.exit(1); } process.stdout.write(token);'
           )"
           export AI_ACCESS_TOKEN
-          npx --yes tsx e2e/ai-scenarios/run-ai-scenarios.ts \
-            --endpoint http://localhost:3001/api/ai/chat \
-            --fixtures e2e/ai-scenarios/canonical-conversations.json
+          if [ -n "$DEEPSEEK_API_KEY" ]; then
+            npx --yes tsx e2e/ai-scenarios/run-ai-scenarios.ts \
+              --endpoint http://localhost:3001/api/ai/chat \
+              --fixtures e2e/ai-scenarios/canonical-conversations.json \
+              | tee -a e2e/reports/ai-scenarios.log
+          else
+            AI_RESPONSE_FILE="$RUNNER_TEMP/ai-provider-not-configured.json"
+            AI_STATUS="$(curl -sS -o "$AI_RESPONSE_FILE" -w '%{http_code}' \
+              -X POST http://localhost:3001/api/ai/chat \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer $AI_ACCESS_TOKEN" \
+              --data '{"message":"Where is my current order?"}')"
+            AI_STATUS="$AI_STATUS" AI_RESPONSE_FILE="$AI_RESPONSE_FILE" node -e '
+              const fs = require("node:fs");
+              const status = Number(process.env.AI_STATUS);
+              const body = JSON.parse(fs.readFileSync(process.env.AI_RESPONSE_FILE, "utf8"));
+              if (status !== 503 || body.code !== "AI_PROVIDER_NOT_CONFIGURED") {
+                console.error(`expected fail-closed 503 AI_PROVIDER_NOT_CONFIGURED, received ${status} ${body.code ?? "NO_CODE"}`);
+                process.exit(1);
+              }
+              console.log("AI provider absent: fail-closed contract verified");
+            ' | tee -a e2e/reports/ai-scenarios.log
+          fi
         env:
-          AI_ALLOW_DEGRADED: 'true'
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
       - uses: actions/upload-artifact@v4
         if: always()

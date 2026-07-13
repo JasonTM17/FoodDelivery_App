@@ -54,16 +54,17 @@ jobs:
 
       - name: Require worker startup and post-seed RAG sync
         run: |
+          worker_restart_started_at="$(date --iso-8601=seconds)"
           docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml up --detach worker
           for i in $(seq 1 40); do
-            logs="$(docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker)"
+            logs="$(docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs --since "$worker_restart_started_at" worker)"
             if printf '%s' "$logs" | grep -q "FoodFlow Worker started" \
               && printf '%s' "$logs" | grep -q "RAG sync complete"; then
               echo "Worker and RAG sync ready"; exit 0
             fi
             echo "Waiting for worker RAG sync ($i/40)..."; sleep 3
           done
-          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker
+          docker compose -p foodflow-batch4-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs --since "$worker_restart_started_at" worker
           echo "Worker did not produce a post-seed RAG sync"; exit 1
 
       - name: Install web dependencies
