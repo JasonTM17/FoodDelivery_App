@@ -23,6 +23,11 @@
   "registerAsDriver": "Đăng ký làm tài xế",
   "driverLoginTitle": "FoodFlow Driver",
   "driverLoginSubtitle": "Đăng nhập để bắt đầu nhận đơn giao hàng",
+  "driverLoginInvalidCredentials": "Email hoặc mật khẩu không đúng.",
+  "driverLoginUnavailable": "Không thể đăng nhập lúc này. Vui lòng thử lại.",
+  "driverProfileUnavailable": "Không thể tải hồ sơ tài xế. Vui lòng thử lại.",
+  "driverKycStatusUnavailable": "Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.",
+  "driverAvailabilityUnavailable": "Không thể cập nhật trạng thái hoạt động. Vui lòng thử lại.",
 
   "registerTitle": "Đăng ký",
   "registerCreateAccount": "Tạo tài khoản mới",

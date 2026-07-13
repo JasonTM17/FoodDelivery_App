@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/app_error_messages.dart';
 import '../../shared/widgets/foodflow_mark.dart';
 import '../providers/driver_provider.dart';
 
@@ -55,7 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text(
                     l10n.driverLoginSubtitle,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppTextStyles.darkOnSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -99,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           _obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color: AppColors.textSecondary,
+                          color: AppTextStyles.darkOnSurfaceVariant,
                         ),
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
@@ -132,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        state.error!,
+                        localizeAppError(l10n, state.error!),
                         style: const TextStyle(
                           color: AppColors.error,
                           fontSize: 13,
@@ -206,7 +207,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: AppColors.textSecondary),
+      prefixIcon: Icon(icon, color: AppTextStyles.darkOnSurfaceVariant),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: const Color(0xFF1E1E1E),
@@ -226,8 +227,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: AppColors.error),
       ),
-      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-      hintStyle: const TextStyle(color: Color(0xFF4B5563)),
+      labelStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
+      hintStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
     );
   }
 }

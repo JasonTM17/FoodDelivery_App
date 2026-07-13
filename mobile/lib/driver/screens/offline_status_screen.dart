@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_status_provider.dart';
+import '../providers/driver_provider.dart';
 import '../widgets/online_toggle_switch.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -18,6 +20,7 @@ class OfflineStatusScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(driverStatusProvider);
+    final driverState = ref.watch(driverProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -40,7 +43,13 @@ class OfflineStatusScreen extends ConsumerWidget {
           children: [
             const OnlineToggleSwitch(),
             const SizedBox(height: 20),
-            _buildPauseSection(context, ref, status, l10n),
+            _buildPauseSection(
+              context,
+              ref,
+              status,
+              l10n,
+              isTransitioning: driverState.isLoading,
+            ),
             const SizedBox(height: 24),
             _buildTodayStats(status, l10n),
             const SizedBox(height: 24),
@@ -55,8 +64,9 @@ class OfflineStatusScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     DriverStatus status,
-    AppLocalizations l10n,
-  ) {
+    AppLocalizations l10n, {
+    required bool isTransitioning,
+  }) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -88,7 +98,10 @@ class OfflineStatusScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             l10n.driverStatusPauseSubtitle,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTextStyles.darkOnSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 14),
           Wrap(
@@ -98,31 +111,49 @@ class OfflineStatusScreen extends ConsumerWidget {
               final isActive =
                   status.status == DriverOnlineStatus.paused &&
                   status.pausedDuration == duration;
-              return GestureDetector(
-                onTap: () =>
-                    ref.read(driverStatusProvider.notifier).pauseFor(duration),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                        : const Color(0xFF1F2937),
+              return Semantics(
+                button: true,
+                selected: isActive,
+                label: _pauseLabel(l10n, duration),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    onTap: isTransitioning
+                        ? null
+                        : () => ref
+                              .read(driverStatusProvider.notifier)
+                              .pauseFor(duration),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isActive
-                          ? const Color(0xFFF59E0B)
-                          : const Color(0xFF374151),
-                    ),
-                  ),
-                  child: Text(
-                    _pauseLabel(l10n, duration),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? const Color(0xFFF59E0B) : Colors.white,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      child: Ink(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                              : const Color(0xFF1F2937),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isActive
+                                ? const Color(0xFFF59E0B)
+                                : const Color(0xFF374151),
+                          ),
+                        ),
+                        child: Text(
+                          _pauseLabel(l10n, duration),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isActive
+                                ? const Color(0xFFF59E0B)
+                                : Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -134,8 +165,9 @@ class OfflineStatusScreen extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () =>
-                    ref.read(driverStatusProvider.notifier).resume(),
+                onPressed: isTransitioning
+                    ? null
+                    : () => ref.read(driverStatusProvider.notifier).resume(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                 ),
@@ -210,7 +242,10 @@ class OfflineStatusScreen extends ConsumerWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppTextStyles.darkOnSurfaceVariant,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -232,7 +267,10 @@ class OfflineStatusScreen extends ConsumerWidget {
           Expanded(
             child: Text(
               l10n.driverStatusInfoText,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTextStyles.darkOnSurfaceVariant,
+              ),
             ),
           ),
         ],

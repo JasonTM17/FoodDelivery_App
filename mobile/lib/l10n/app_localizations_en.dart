@@ -77,6 +77,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverLoginSubtitle => 'Sign in to start accepting deliveries';
 
   @override
+  String get driverLoginInvalidCredentials => 'Email or password is incorrect.';
+
+  @override
+  String get driverLoginUnavailable =>
+      'Unable to sign in right now. Please try again.';
+
+  @override
+  String get driverProfileUnavailable =>
+      'Unable to load the driver profile. Please try again.';
+
+  @override
+  String get driverKycStatusUnavailable =>
+      'Unable to check verification status. Please try again.';
+
+  @override
+  String get driverAvailabilityUnavailable =>
+      'Unable to update availability. Please try again.';
+
+  @override
   String get registerTitle => 'Register';
 
   @override

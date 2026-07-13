@@ -75,6 +75,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverLoginSubtitle => 'ログインして配達依頼の受付を開始';
 
   @override
+  String get driverLoginInvalidCredentials => 'メールアドレスまたはパスワードが正しくありません。';
+
+  @override
+  String get driverLoginUnavailable => '現在ログインできません。もう一度お試しください。';
+
+  @override
+  String get driverProfileUnavailable => 'ドライバープロフィールを読み込めません。もう一度お試しください。';
+
+  @override
+  String get driverKycStatusUnavailable => '認証ステータスを確認できません。もう一度お試しください。';
+
+  @override
+  String get driverAvailabilityUnavailable => '稼働ステータスを更新できません。もう一度お試しください。';
+
+  @override
   String get registerTitle => '登録';
 
   @override

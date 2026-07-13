@@ -3,37 +3,27 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 
 ThemeData driverDarkTheme() {
+  const colorScheme = ColorScheme.dark(
+    primary: AppColors.primary,
+    secondary: AppColors.accent,
+    surface: Color(0xFF1F2937),
+    error: AppColors.error,
+    onPrimary: Colors.white,
+    onSecondary: Colors.white,
+    onSurface: AppTextStyles.darkOnSurface,
+    onSurfaceVariant: AppTextStyles.darkOnSurfaceVariant,
+  );
+
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: const Color(0xFF111827),
-    colorScheme: const ColorScheme.dark(
-      primary: AppColors.primary,
-      secondary: AppColors.accent,
-      surface: Color(0xFF1F2937),
-      error: AppColors.error,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: Colors.white,
-    ),
+    colorScheme: colorScheme,
     fontFamily: 'Inter',
-    textTheme: const TextTheme(
-      displayLarge: AppTextStyles.headline1,
-      displayMedium: AppTextStyles.headline2,
-      displaySmall: AppTextStyles.headline3,
-      headlineLarge: AppTextStyles.headline1,
-      headlineMedium: AppTextStyles.headline2,
-      headlineSmall: AppTextStyles.headline3,
-      titleLarge: AppTextStyles.headline4,
-      titleMedium: AppTextStyles.bodyLarge,
-      titleSmall: AppTextStyles.bodyMedium,
-      bodyLarge: AppTextStyles.bodyLarge,
-      bodyMedium: AppTextStyles.bodyMedium,
-      bodySmall: AppTextStyles.bodySmall,
-      labelLarge: AppTextStyles.buttonLarge,
-      labelMedium: AppTextStyles.buttonMedium,
-      labelSmall: AppTextStyles.buttonSmall,
+    textTheme: AppTextStyles.darkTextTheme(
+      onSurface: colorScheme.onSurface,
+      onSurfaceVariant: colorScheme.onSurfaceVariant,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Color(0xFF1F2937),
@@ -86,10 +76,10 @@ ThemeData driverDarkTheme() {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.error),
       ),
-      hintStyle: const TextStyle(color: Color(0xFF6B7280)),
-      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-      prefixIconColor: const Color(0xFF6B7280),
-      suffixIconColor: const Color(0xFF6B7280),
+      hintStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
+      labelStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
+      prefixIconColor: AppTextStyles.darkOnSurfaceVariant,
+      suffixIconColor: AppTextStyles.darkOnSurfaceVariant,
     ),
     cardTheme: CardThemeData(
       elevation: 2,
@@ -100,7 +90,7 @@ ThemeData driverDarkTheme() {
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: Color(0xFF1F2937),
       selectedItemColor: AppColors.primary,
-      unselectedItemColor: Color(0xFF6B7280),
+      unselectedItemColor: AppTextStyles.darkOnSurfaceVariant,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
     ),

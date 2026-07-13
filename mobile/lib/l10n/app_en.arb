@@ -23,6 +23,11 @@
   "registerAsDriver": "Register as a driver",
   "driverLoginTitle": "FoodFlow Driver",
   "driverLoginSubtitle": "Sign in to start accepting deliveries",
+  "driverLoginInvalidCredentials": "Email or password is incorrect.",
+  "driverLoginUnavailable": "Unable to sign in right now. Please try again.",
+  "driverProfileUnavailable": "Unable to load the driver profile. Please try again.",
+  "driverKycStatusUnavailable": "Unable to check verification status. Please try again.",
+  "driverAvailabilityUnavailable": "Unable to update availability. Please try again.",
 
   "registerTitle": "Register",
   "registerCreateAccount": "Create a new account",

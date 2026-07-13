@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_text_styles.dart';
 import '../providers/driver_status_provider.dart';
+import '../providers/driver_provider.dart';
 
 class OnlineToggleSwitch extends ConsumerWidget {
   const OnlineToggleSwitch({super.key});
@@ -10,6 +12,7 @@ class OnlineToggleSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(driverStatusProvider);
+    final driverState = ref.watch(driverProvider);
     final l10n = AppLocalizations.of(context);
 
     final isOnline = status.status == DriverOnlineStatus.online;
@@ -67,7 +70,7 @@ class OnlineToggleSwitch extends ConsumerWidget {
                       ? AppColors.primary
                       : isPaused
                       ? const Color(0xFFF59E0B)
-                      : const Color(0xFF6B7280),
+                      : AppTextStyles.darkOnSurfaceVariant,
                 ),
               ),
               Text(
@@ -76,7 +79,10 @@ class OnlineToggleSwitch extends ConsumerWidget {
                     : isPaused
                     ? l10n.driverOnlineAutoOffline
                     : l10n.driverOnlineEnable,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTextStyles.darkOnSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -94,16 +100,18 @@ class OnlineToggleSwitch extends ConsumerWidget {
               ),
             ),
           SizedBox(
-            height: 36,
+            height: 48,
             child: Switch(
               value: isOnline,
-              onChanged: (value) {
-                if (value) {
-                  ref.read(driverStatusProvider.notifier).setOnline();
-                } else {
-                  ref.read(driverStatusProvider.notifier).setOffline();
-                }
-              },
+              onChanged: driverState.isLoading
+                  ? null
+                  : (value) {
+                      if (value) {
+                        ref.read(driverStatusProvider.notifier).setOnline();
+                      } else {
+                        ref.read(driverStatusProvider.notifier).setOffline();
+                      }
+                    },
               activeTrackColor: AppColors.primary,
               inactiveThumbColor: const Color(0xFF6B7280),
               inactiveTrackColor: const Color(0xFF374151),

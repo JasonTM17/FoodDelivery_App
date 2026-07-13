@@ -232,6 +232,36 @@ abstract class AppLocalizations {
   /// **'Đăng nhập để bắt đầu nhận đơn giao hàng'**
   String get driverLoginSubtitle;
 
+  /// No description provided for @driverLoginInvalidCredentials.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hoặc mật khẩu không đúng.'**
+  String get driverLoginInvalidCredentials;
+
+  /// No description provided for @driverLoginUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đăng nhập lúc này. Vui lòng thử lại.'**
+  String get driverLoginUnavailable;
+
+  /// No description provided for @driverProfileUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải hồ sơ tài xế. Vui lòng thử lại.'**
+  String get driverProfileUnavailable;
+
+  /// No description provided for @driverKycStatusUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.'**
+  String get driverKycStatusUnavailable;
+
+  /// No description provided for @driverAvailabilityUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật trạng thái hoạt động. Vui lòng thử lại.'**
+  String get driverAvailabilityUnavailable;
+
   /// No description provided for @registerTitle.
   ///
   /// In vi, this message translates to:

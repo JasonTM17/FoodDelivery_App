@@ -3,6 +3,32 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   AppTextStyles._();
 
+  static const Color darkOnSurface = Color(0xFFF9FAFB);
+  static const Color darkOnSurfaceVariant = Color(0xFFD1D5DB);
+
+  static TextTheme darkTextTheme({
+    Color onSurface = darkOnSurface,
+    Color onSurfaceVariant = darkOnSurfaceVariant,
+  }) {
+    return TextTheme(
+      displayLarge: headline1.copyWith(color: onSurface),
+      displayMedium: headline2.copyWith(color: onSurface),
+      displaySmall: headline3.copyWith(color: onSurface),
+      headlineLarge: headline1.copyWith(color: onSurface),
+      headlineMedium: headline2.copyWith(color: onSurface),
+      headlineSmall: headline3.copyWith(color: onSurface),
+      titleLarge: headline4.copyWith(color: onSurface),
+      titleMedium: bodyLarge.copyWith(color: onSurface),
+      titleSmall: bodyMedium.copyWith(color: onSurface),
+      bodyLarge: bodyLarge.copyWith(color: onSurface),
+      bodyMedium: bodyMedium.copyWith(color: onSurface),
+      bodySmall: bodySmall.copyWith(color: onSurfaceVariant),
+      labelLarge: buttonLarge.copyWith(color: onSurface),
+      labelMedium: buttonMedium.copyWith(color: onSurface),
+      labelSmall: buttonSmall.copyWith(color: onSurface),
+    );
+  }
+
   // Headlines
   static const TextStyle headline1 = TextStyle(
     fontSize: 28,

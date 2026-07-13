@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/shared/api/api_client.dart';
+import 'package:foodflow_customer/shared/utils/app_error_messages.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -111,6 +112,22 @@ void main() {
     expect(notifier.state.isAuthenticated, isFalse);
     expect(notifier.state.error, 'DRIVER_KYC_STATUS_UNAVAILABLE');
   });
+
+  test(
+    'maps invalid credential responses to a stable driver error code',
+    () async {
+      apiInterceptor.loginFailure = {
+        'statusCode': 401,
+        'payload': {'code': 'AUTH_INVALID_CREDENTIALS'},
+      };
+      final notifier = DriverNotifier();
+
+      await notifier.login('driver@foodflow.test', 'wrong-password');
+
+      expect(notifier.state.isAuthenticated, isFalse);
+      expect(notifier.state.error, AppErrorCodes.driverAuthInvalidCredentials);
+    },
+  );
 }
 
 Map<String, dynamic> _driverProfile() => {
@@ -135,6 +152,7 @@ class _DriverAuthApiInterceptor extends Interceptor {
   _DriverAuthApiInterceptor({required this.profilePayload});
 
   Map<dynamic, dynamic> profilePayload;
+  Map<String, dynamic>? loginFailure;
   Map<String, dynamic> kycStatusPayload = {
     'status': 'pending',
     'isVerified': false,
@@ -144,6 +162,21 @@ class _DriverAuthApiInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (options.path == '/auth/login') {
+      final failure = loginFailure;
+      if (failure != null) {
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            response: Response<Map<String, dynamic>>(
+              requestOptions: options,
+              statusCode: failure['statusCode'] as int,
+              data: failure['payload'] as Map<String, dynamic>,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        return;
+      }
       handler.resolve(
         Response<dynamic>(
           requestOptions: options,

@@ -77,6 +77,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverLoginSubtitle => 'Đăng nhập để bắt đầu nhận đơn giao hàng';
 
   @override
+  String get driverLoginInvalidCredentials => 'Email hoặc mật khẩu không đúng.';
+
+  @override
+  String get driverLoginUnavailable =>
+      'Không thể đăng nhập lúc này. Vui lòng thử lại.';
+
+  @override
+  String get driverProfileUnavailable =>
+      'Không thể tải hồ sơ tài xế. Vui lòng thử lại.';
+
+  @override
+  String get driverKycStatusUnavailable =>
+      'Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.';
+
+  @override
+  String get driverAvailabilityUnavailable =>
+      'Không thể cập nhật trạng thái hoạt động. Vui lòng thử lại.';
+
+  @override
   String get registerTitle => 'Đăng ký';
 
   @override

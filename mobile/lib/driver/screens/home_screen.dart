@@ -21,16 +21,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(driverProvider.notifier).fetchTodayStats();
-      ref.read(driverProvider.notifier).fetchRecentOrders();
-      ref.read(driverProvider.notifier).fetchActiveOrder();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final state = ref.watch(driverProvider);
 
@@ -186,7 +176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   AppLocalizations.of(context).driverDashboardNoOrders,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF6B7280),
+                    color: AppTextStyles.darkOnSurfaceVariant,
                   ),
                 ),
               ],

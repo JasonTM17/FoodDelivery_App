@@ -206,26 +206,11 @@ class DriverApp extends ConsumerWidget {
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: Colors.white,
+        onSurface: AppTextStyles.darkOnSurface,
+        onSurfaceVariant: AppTextStyles.darkOnSurfaceVariant,
       ),
       fontFamily: 'Inter',
-      textTheme: const TextTheme(
-        displayLarge: AppTextStyles.headline1,
-        displayMedium: AppTextStyles.headline2,
-        displaySmall: AppTextStyles.headline3,
-        headlineLarge: AppTextStyles.headline1,
-        headlineMedium: AppTextStyles.headline2,
-        headlineSmall: AppTextStyles.headline3,
-        titleLarge: AppTextStyles.headline4,
-        titleMedium: AppTextStyles.bodyLarge,
-        titleSmall: AppTextStyles.bodyMedium,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.buttonLarge,
-        labelMedium: AppTextStyles.buttonMedium,
-        labelSmall: AppTextStyles.buttonSmall,
-      ),
+      textTheme: AppTextStyles.darkTextTheme(),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1A1A1A),
         foregroundColor: Colors.white,
@@ -284,10 +269,10 @@ class DriverApp extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: const TextStyle(color: Color(0xFF6B7280)),
-        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-        prefixIconColor: const Color(0xFF6B7280),
-        suffixIconColor: const Color(0xFF6B7280),
+        hintStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
+        labelStyle: const TextStyle(color: AppTextStyles.darkOnSurfaceVariant),
+        prefixIconColor: AppTextStyles.darkOnSurfaceVariant,
+        suffixIconColor: AppTextStyles.darkOnSurfaceVariant,
       ),
       cardTheme: CardThemeData(
         elevation: 2,
@@ -298,7 +283,7 @@ class DriverApp extends ConsumerWidget {
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFF1A1A1A),
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: Color(0xFF6B7280),
+        unselectedItemColor: AppTextStyles.darkOnSurfaceVariant,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
@@ -327,7 +312,7 @@ class DriverShell extends ConsumerStatefulWidget {
 class _DriverShellState extends ConsumerState<DriverShell> {
   int _currentIndex = 0;
 
-  final _screens = const [HomeScreen(), EarningsScreen(), ProfileScreen()];
+  final _screens = <Widget?>[const HomeScreen(), null, null];
 
   @override
   void initState() {
@@ -347,10 +332,26 @@ class _DriverShellState extends ConsumerState<DriverShell> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _screens[0]!,
+          _screens[1] ?? const SizedBox.shrink(),
+          _screens[2] ?? const SizedBox.shrink(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() {
+            _screens[index] ??= switch (index) {
+              1 => const EarningsScreen(),
+              2 => const ProfileScreen(),
+              _ => const HomeScreen(),
+            };
+            _currentIndex = index;
+          });
+        },
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_outlined),

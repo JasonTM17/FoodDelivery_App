@@ -23,6 +23,11 @@
   "registerAsDriver": "ドライバーとして登録",
   "driverLoginTitle": "FoodFlow Driver",
   "driverLoginSubtitle": "ログインして配達依頼の受付を開始",
+  "driverLoginInvalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
+  "driverLoginUnavailable": "現在ログインできません。もう一度お試しください。",
+  "driverProfileUnavailable": "ドライバープロフィールを読み込めません。もう一度お試しください。",
+  "driverKycStatusUnavailable": "認証ステータスを確認できません。もう一度お試しください。",
+  "driverAvailabilityUnavailable": "稼働ステータスを更新できません。もう一度お試しください。",
 
   "registerTitle": "登録",
   "registerCreateAccount": "新しいアカウントを作成",
