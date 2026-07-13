@@ -368,12 +368,14 @@ This is not the Supabase/Railway/Vercel production topology. Use only with fully
 Copy-Item .env.production.example .env.production
 $env:IMAGE_TAG='v4.0.0' # or sha-<full-commit>
 docker compose --env-file .env.production \
-  -f docker-compose.yml -f docker-compose.prod.yml pull
+  -f docker-compose.yml -f docker-compose.prod.yml pull --ignore-buildable
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml build postgres
 docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-The overlay explicitly selects Socket.IO, MinIO, and BullMQ. Never use its example values unchanged.
+The overlay explicitly selects Socket.IO, MinIO, and BullMQ. Its PostGIS + pgvector `postgres` service is build-only, not a published release image, so it must be built after pulling registry services and before `up`. Never use example values unchanged.
 
 ## Rollback
 

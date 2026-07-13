@@ -232,10 +232,14 @@ $env:IMAGE_TAG='v4.0.0' # or sha-<full-commit>
 docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml config --quiet
 docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml pull --ignore-buildable
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml build postgres
+docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-This profile uses Socket.IO/Redis/MinIO by design. It is not a fallback for a misconfigured Supabase/Railway/Vercel deployment.
+This profile uses Socket.IO/Redis/MinIO by design. Its PostGIS + pgvector `postgres` service is build-only local infrastructure, not a published release image: run `pull --ignore-buildable`, then `build postgres`, before `up`. It is not a fallback for a misconfigured Supabase/Railway/Vercel deployment.
 
 ## Troubleshooting
 

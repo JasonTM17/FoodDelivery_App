@@ -172,16 +172,20 @@ Tag `v4.0.0` đúng verified master commit. Workflow build `sha-<full-commit>` c
 
 ## Self-hosted Docker
 
-Đây là profile tương thích, không phải Supabase/Vercel production:
+Đây là profile tương thích, không phải Supabase/Railway/Vercel production:
 
 ```powershell
 Copy-Item .env.production.example .env.production
 $env:IMAGE_TAG='v4.0.0'
 docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml pull --ignore-buildable
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml build postgres
+docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-Phải thay toàn bộ example values và pin semver/SHA, không dùng `latest`.
+Phải thay toàn bộ example values và pin semver/SHA, không dùng `latest`. Service `postgres` PostGIS + pgvector là build-only local, không phải release image đã publish; phải `pull --ignore-buildable`, rồi `build postgres`, trước `up`.
 
 ## Rollback và điều kiện dừng
 

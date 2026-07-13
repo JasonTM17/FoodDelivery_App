@@ -148,16 +148,20 @@ Verified master commit に `v4.0.0` を付けます。Workflow は `sha-<full-co
 
 ## Self-hosted compatibility
 
-Supabase/Vercel production ではありません。
+Supabase/Railway/Vercel production ではありません。
 
 ```powershell
 Copy-Item .env.production.example .env.production
 $env:IMAGE_TAG='v4.0.0'
 docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml pull --ignore-buildable
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml build postgres
+docker compose --env-file .env.production \
   -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-全 example value を置き換え、`latest` ではなく semver/SHA を pin します。
+全 example value を置き換え、`latest` ではなく semver/SHA を pin します。PostGIS + pgvector の `postgres` service は build-only local であり published release image ではありません。`up` 前に `pull --ignore-buildable`、次に `build postgres` を実行します。
 
 ## Rollback/abort
 

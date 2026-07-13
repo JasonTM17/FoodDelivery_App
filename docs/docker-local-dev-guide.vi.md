@@ -123,7 +123,7 @@ Script dùng API thật, tối ưu palette GIF và xóa frame trung gian. Vẫn 
 
 - `docker compose down` giữ volume; `down -v` xóa dữ liệu local và chỉ dùng sau khi xác nhận đúng compose project.
 - Không cleanup toàn bộ container/volume trên máy dùng chung.
-- Self-hosted phải pin `IMAGE_TAG=v4.0.0` hoặc `sha-<full-commit>`, điền `.env.production` thật và dùng base + `docker-compose.prod.yml`.
+- Self-hosted phải pin `IMAGE_TAG=v4.0.0` hoặc `sha-<full-commit>`, điền `.env.production` thật và dùng base + `docker-compose.prod.yml`; trước `up` chạy `pull --ignore-buildable`, rồi `build postgres`. `postgres` PostGIS + pgvector là hạ tầng build-only local, không phải release image đã publish.
 - Self-hosted Socket.IO/Redis/MinIO không phải fallback cho Supabase/Railway/Vercel cấu hình sai.
 
 ## Xử lý sự cố

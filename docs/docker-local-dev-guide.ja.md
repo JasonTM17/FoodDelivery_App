@@ -123,7 +123,7 @@ Real API を使い palette-optimized GIF を作成し intermediate frames を削
 
 - `docker compose down` は volume 保持、`down -v` は local data を削除。対象 compose project を確認してから実行。
 - Shared workstation で全 container/volume cleanup をしない。
-- Self-hosted は `IMAGE_TAG=v4.0.0` または `sha-<full-commit>` を pin し、real `.env.production` と base + production overlay を使う。
+- Self-hosted は `IMAGE_TAG=v4.0.0` または `sha-<full-commit>` を pin し、real `.env.production` と base + production overlay を使います。`up` 前に `pull --ignore-buildable`、次に `build postgres` を実行します。PostGIS + pgvector の `postgres` は build-only local infrastructure であり、published release image ではありません。
 - Socket.IO/Redis/MinIO profile は Supabase/Railway/Vercel misconfiguration の fallback ではありません。
 
 ## Troubleshooting
