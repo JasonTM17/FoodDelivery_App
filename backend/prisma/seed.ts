@@ -90,6 +90,12 @@ async function main() {
     // Get the created restaurant
     const created = await prisma.restaurant.findFirst({ where: { slug: r.slug } })
     if (created) {
+      // Standard local fixtures should exercise the same public routes as a
+      // live, approved restaurant rather than remaining in the schema default.
+      await prisma.restaurant.update({
+        where: { id: created.id },
+        data: { approvalStatus: 'approved' },
+      })
       createdRestaurants.push({ id: created.id, lat: r.lat, lng: r.lng })
 
       await prisma.restaurantProfile.upsert({

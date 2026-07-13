@@ -439,6 +439,14 @@ async function main() {
       t.prep, randInt(0, 3) * 10000,
     )
 
+    // Public restaurant routes and the dynamic RAG index intentionally include
+    // only approved partners. Make the repeatable E2E fixture represent a live
+    // marketplace, including rows inserted before approvalStatus was added.
+    await prisma.restaurant.update({
+      where: { slug },
+      data: { approvalStatus: 'approved' },
+    })
+
     const restaurant = await prisma.restaurant.findUnique({ where: { slug } })
     if (!restaurant) { console.log(`  ⚠️ Restaurant ${slug} not found`); continue }
     restaurantIds.push(restaurant.id)
