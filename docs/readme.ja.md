@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-13 status:** Batch 4 は `master` に統合済みですが、**production deploy は未実施**です。Docker browser E2E matrix は local で 204 checks を設定していますが、fresh current-source stack での再実行が必要です。provider preflight、新しい remote CI、production smoke、FCM controlled-device delivery は未検証であり、release は引き続き fail closed です。
+> **2026-07-13 status:** Batch 4 は `master` に統合済みですが、**production deploy は未実施**です。Clean-volume current-source Docker E2E は local で 204/204 を 6.8 分で pass（retry/failure なし）しましたが、remote CI、provider preflight、production smoke、FCM controlled-device delivery は未検証であり、release は引き続き fail closed です。
 
 ## Product preview
 
@@ -113,7 +113,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-2026-07-13 の hardening では Backend 138 suites / 1016 tests と Prisma validate/generate、typecheck/lint/build、Admin 195 tests、Restaurant 134 tests と typecheck/lint/production build が pass しました。Isolated Docker E2E matrix は Chromium、Firefox、Pixel 5 ごとに 68 checks（合計 204）を設定し、accessibility、auth/refresh/RBAC、Customer API order、REST で観測した状態収束、tenant isolation、map、visual structure、responsive navigation を対象とします。evidence に使う前に fresh current-source rebuild が必要です。Historical Docker worker record は DeepSeek key なしで embedding を作らない restaurant/menu RAG documents 402 件を記録していますが、production または provider approval ではありません。Repository は 33 migrations を track し、Supabase production は最後にその 33 migrations で checksum 検証されました。historical Docker volume の applied 34 行と rolled-back 1 行は current-source migration ではありません。Flutter analyze と記録済み GPS tests は bounded local evidence です。live FCM delivery と authenticated Railway/Supabase production smoke は未実施です。
+2026-07-13 の hardening では Backend 138 suites / 1016 tests と Prisma validate/generate、typecheck/lint/build、Admin 195 tests、Restaurant 134 tests と typecheck/lint/production build が pass しました。Clean-volume current-source isolated Docker E2E は Chromium 68/68、Firefox 68/68、Pixel 5 68/68（204/204、6.8 分、retry/failure なし）を pass し、accessibility、auth/refresh/RBAC、Customer API order、REST で観測した状態収束、tenant isolation、map、visual structure、responsive navigation、Restaurant form-login/reload persistence を含みます。Migrator/DB は 33 migrations completed、pending なしを報告し、seed は restaurants 50、drivers 50、customers 100、historical orders 500 を作成しました。Seed 後に worker を起動し、RAG documents 402 件を index しました。DeepSeek key 未設定のため embedding は pending で、fake vector は使っていません。Repository は 33 migrations を track し、Supabase production は最後にその 33 migrations で checksum 検証されました。historical Docker volume の applied 34 行と rolled-back 1 行は fresh migration ではありません。local `revision=local` image は immutable artifact ではありません。Flutter analyze と記録済み GPS tests は bounded local evidence です。live FCM delivery と authenticated Railway/Supabase production smoke は未実施です。
 
 ## Deploy order
 
