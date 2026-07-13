@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from '@/navigation'
 import { clearAdminSession } from '@/lib/admin-session'
@@ -62,15 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isAuthChecked, setIsAuthChecked] = useState(false)
+  const sessionEpoch = useRef(0)
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {
+    sessionEpoch.current += 1
     localStorage.setItem(TOKEN_KEY, newToken)
     localStorage.setItem(USER_KEY, JSON.stringify(newUser))
     setTokenState(newToken)
     setUser(newUser)
+    setIsAuthChecked(true)
   }, [])
 
   const logout = useCallback(() => {
+    sessionEpoch.current += 1
     // B-WEB-04: tear down realtime + cached queries with session
     disconnectSocket()
     queryClient.clear()
@@ -86,8 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function bootstrap() {
       const storedToken = localStorage.getItem(TOKEN_KEY)
+      const bootstrapEpoch = sessionEpoch.current
+      const isCurrentBootstrap = () =>
+        !cancelled &&
+        sessionEpoch.current === bootstrapEpoch &&
+        localStorage.getItem(TOKEN_KEY) === storedToken
+
       if (!storedToken) {
-        if (!cancelled) {
+        if (isCurrentBootstrap()) {
           setTokenState(null)
           setUser(null)
           setIsAuthChecked(true)
@@ -96,29 +106,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // B-WEB-08: validate stored token via profile endpoint + role (not bare localStorage).
-        // Canonical profile route is GET /users/me (docs sometimes label this /auth/profile).
         const profile = await apiGet<ProfileResponse>('/users/me')
 
         if (profile.role !== REQUIRED_ROLE) {
           throw new Error('invalid role')
         }
 
-        if (cancelled) return
+        if (!isCurrentBootstrap()) return
 
         const authUser = toAuthUser(profile)
         localStorage.setItem(USER_KEY, JSON.stringify(authUser))
         setTokenState(storedToken)
         setUser(authUser)
       } catch {
+        if (!isCurrentBootstrap()) return
         disconnectSocket()
         clearAdminSession()
-        if (!cancelled) {
-          setTokenState(null)
-          setUser(null)
-        }
+        setTokenState(null)
+        setUser(null)
       } finally {
-        if (!cancelled) setIsAuthChecked(true)
+        if (isCurrentBootstrap()) setIsAuthChecked(true)
       }
     }
 

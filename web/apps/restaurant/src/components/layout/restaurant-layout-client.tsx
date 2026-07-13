@@ -18,6 +18,7 @@ export function RestaurantLayoutClient({ children }: { children: React.ReactNode
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const firstNavigationLinkRef = useRef<HTMLAnchorElement>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations();
 
   return (
@@ -42,6 +43,10 @@ export function RestaurantLayoutClient({ children }: { children: React.ReactNode
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             firstNavigationLinkRef.current?.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            mobileMenuButtonRef.current?.focus();
           }}
           className="w-72 max-w-[calc(100vw-2rem)] overscroll-contain border-0 bg-sidebar p-0 text-sidebar-foreground [&>button]:text-white"
         >
@@ -70,6 +75,7 @@ export function RestaurantLayoutClient({ children }: { children: React.ReactNode
           />
           <button
             type="button"
+            ref={mobileMenuButtonRef}
             className="inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-gray-700 transition-colors duration-200 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 motion-reduce:transition-none"
             aria-label={t('sidebar.openNavigation')}
             onClick={() => setIsNavigationOpen(true)}

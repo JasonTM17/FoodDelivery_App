@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import { useRouter, usePathname } from '@/navigation'
 import {
   setToken as storeToken,
@@ -39,7 +39,7 @@ interface AuthState {
   isAuthChecked: boolean
   isAuthenticated: boolean
   permissions: StaffCapability[]
-  login: (token: string, restaurantData?: unknown) => void
+  login: (token: string) => Promise<void>
   logout: () => void
 }
 
@@ -48,7 +48,7 @@ const AuthContext = createContext<AuthState>({
   isAuthChecked: false,
   isAuthenticated: false,
   permissions: ['orders'],
-  login: () => {},
+  login: async () => {},
   logout: () => {},
 })
 
@@ -75,20 +75,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null)
   const [permissions, setPermissions] = useState<StaffCapability[]>(['orders'])
   const [isAuthChecked, setIsAuthChecked] = useState(false)
+  const sessionEpoch = useRef(0)
 
   const login = useCallback(
-    (newToken: string, restaurantData?: unknown) => {
+    async (newToken: string) => {
+      const loginEpoch = ++sessionEpoch.current
       storeToken(newToken)
-      if (restaurantData) {
+      localStorage.removeItem('restaurant_data')
+      setTokenState(newToken)
+      setPermissions(['orders'])
+      setIsAuthChecked(true)
+
+      try {
+        const restaurantData = await api.get<RestaurantProfileResponse>('/restaurant/profile')
+        if (sessionEpoch.current !== loginEpoch || localStorage.getItem(TOKEN_KEY) !== newToken) return
         setStoredRestaurant(restaurantData)
         setPermissions(permissionsFromRestaurant(restaurantData))
+      } catch {
+        if (sessionEpoch.current === loginEpoch && localStorage.getItem(TOKEN_KEY) === newToken) {
+          setPermissions(permissionsFromRestaurant(null))
+        }
       }
-      setTokenState(newToken)
     },
     [],
   )
 
   const logout = useCallback(() => {
+    sessionEpoch.current += 1
     // B-WEB-05: disconnect both realtime sockets on logout
     disconnectSocket()
     disconnectTrackingSocket()
@@ -105,8 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function bootstrap() {
       const storedToken = localStorage.getItem(TOKEN_KEY)
+      const bootstrapEpoch = sessionEpoch.current
+      const isCurrentBootstrap = () =>
+        !cancelled &&
+        sessionEpoch.current === bootstrapEpoch &&
+        localStorage.getItem(TOKEN_KEY) === storedToken
+
       if (!storedToken) {
-        if (!cancelled) {
+        if (isCurrentBootstrap()) {
           setTokenState(null)
           setPermissions(['orders'])
           setIsAuthChecked(true)
@@ -115,38 +134,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // B-WEB-08: validate stored token via profile endpoint + role (not bare localStorage).
-        // Canonical profile route is GET /users/me (docs sometimes label this /auth/profile).
         const profile = await api.get<ProfileResponse>('/users/me')
 
         if (profile.role !== REQUIRED_ROLE) {
           throw new Error('invalid role')
         }
 
-        // Load restaurant profile for staff permission gating (B-WEB-06)
+        if (!isCurrentBootstrap()) return
+
         let restaurantData: RestaurantProfileResponse | null = null
         try {
           restaurantData = await api.get<RestaurantProfileResponse>('/restaurant/profile')
+          if (!isCurrentBootstrap()) return
           setStoredRestaurant(restaurantData)
         } catch {
+          if (!isCurrentBootstrap()) return
           restaurantData = getStoredRestaurant() as RestaurantProfileResponse | null
         }
 
-        if (cancelled) return
+        if (!isCurrentBootstrap()) return
 
         setTokenState(storedToken)
         setPermissions(permissionsFromRestaurant(restaurantData))
       } catch {
+        if (!isCurrentBootstrap()) return
         disconnectSocket()
         disconnectTrackingSocket()
         clearToken()
         localStorage.removeItem(REFRESH_KEY)
-        if (!cancelled) {
-          setTokenState(null)
-          setPermissions(['orders'])
-        }
+        setTokenState(null)
+        setPermissions(['orders'])
       } finally {
-        if (!cancelled) setIsAuthChecked(true)
+        if (isCurrentBootstrap()) setIsAuthChecked(true)
       }
     }
 

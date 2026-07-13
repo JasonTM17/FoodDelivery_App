@@ -4,9 +4,10 @@ import type { Ref } from 'react';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
-import { Link, usePathname, useRouter } from '@/navigation';
+import { Link, usePathname } from '@/navigation';
 import { LocaleSwitcher } from '@/components/locale-switcher';
-import { clearToken, getStoredRestaurant } from '@/lib/api';
+import { useAuth } from '@/lib/auth-provider';
+import { getStoredRestaurant } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
   NAV_ITEMS,
@@ -33,7 +34,7 @@ export function RestaurantSidebar({
 }: RestaurantSidebarProps) {
   const rawPathname = usePathname();
   const pathname = rawPathname.replace(/^\/(vi|en|ja)/, '') || '/';
-  const router = useRouter();
+  const { logout } = useAuth();
   const t = useTranslations();
   const restaurant = getStoredRestaurant();
 
@@ -71,8 +72,7 @@ export function RestaurantSidebar({
 
   const handleLogout = () => {
     onNavigate?.();
-    clearToken();
-    router.push('/login');
+    logout();
   };
 
   return (

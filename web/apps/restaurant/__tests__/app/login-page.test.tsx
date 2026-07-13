@@ -33,8 +33,6 @@ vi.mock('next-intl', () => ({
 
 vi.mock('@/lib/api', () => ({
   api: { post: mockedPost },
-  setStoredRestaurant: vi.fn(),
-  setToken: vi.fn(),
 }));
 
 vi.mock('@/lib/auth-provider', () => ({
@@ -61,12 +59,10 @@ describe('Restaurant LoginPage', () => {
   });
 
   it('updates the in-memory session before navigating to protected orders', async () => {
-    const restaurant = { id: 'restaurant-1', name: 'Phở Thìn' };
     mockedPost.mockResolvedValueOnce({
       accessToken: 'restaurant-access-token',
       refreshToken: 'restaurant-refresh-token',
       user: { name: 'Partner', email: 'restaurant1@foodflow.vn', role: 'restaurant' },
-      restaurant,
     });
 
     render(<LoginPage />);
@@ -85,6 +81,6 @@ describe('Restaurant LoginPage', () => {
         { requireAuth: false },
       );
     });
-    expect(mockedLogin).toHaveBeenCalledWith('restaurant-access-token', restaurant);
+    expect(mockedLogin).toHaveBeenCalledWith('restaurant-access-token');
   });
 });

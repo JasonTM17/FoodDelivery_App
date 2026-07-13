@@ -2,6 +2,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RestaurantLayoutClient } from '@/components/layout/restaurant-layout-client';
 
+const mockedLogout = vi.hoisted(() => vi.fn());
+
 vi.mock('next-intl', () => ({
   useLocale: () => 'en',
   useTranslations: () => (key: string) => key,
@@ -16,9 +18,14 @@ vi.mock('@/lib/api', () => ({
   getStoredRestaurant: () => ({ name: 'FoodFlow Test Restaurant' }),
 }));
 
+vi.mock('@/lib/auth-provider', () => ({
+  useAuth: () => ({ logout: mockedLogout }),
+}));
+
 describe('Restaurant shell', () => {
   beforeEach(() => {
     localStorage.clear();
+    mockedLogout.mockReset();
   });
 
   it('exposes a skip target and keeps the desktop content offset in sync with the sidebar', () => {
@@ -72,5 +79,36 @@ describe('Restaurant shell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'sidebar.mobileTitle' })).not.toBeInTheDocument();
     });
+  });
+
+  it('closes mobile navigation with Escape and restores focus to the trigger', async () => {
+    render(
+      <RestaurantLayoutClient>
+        <h1>Orders</h1>
+      </RestaurantLayoutClient>,
+    );
+
+    const menuButton = screen.getByRole('button', { name: 'sidebar.openNavigation' });
+    fireEvent.click(menuButton);
+    expect(screen.getByRole('dialog', { name: 'sidebar.mobileTitle' })).toBeVisible();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'sidebar.mobileTitle' })).not.toBeInTheDocument();
+    });
+    expect(menuButton).toHaveFocus();
+  });
+
+  it('delegates logout to the auth provider', () => {
+    render(
+      <RestaurantLayoutClient>
+        <h1>Orders</h1>
+      </RestaurantLayoutClient>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.logout' }));
+
+    expect(mockedLogout).toHaveBeenCalledOnce();
   });
 });
