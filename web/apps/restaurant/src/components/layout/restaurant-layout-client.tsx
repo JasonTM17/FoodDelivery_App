@@ -48,7 +48,7 @@ export function RestaurantLayoutClient({ children }: { children: React.ReactNode
             event.preventDefault();
             mobileMenuButtonRef.current?.focus();
           }}
-          className="w-72 max-w-[calc(100vw-2rem)] overscroll-contain border-0 bg-sidebar p-0 text-sidebar-foreground [&>button]:text-white"
+          className="h-dvh max-h-dvh w-72 max-w-[calc(100vw-2rem)] overscroll-contain border-0 bg-sidebar p-0 text-sidebar-foreground [&>button]:text-white"
         >
           <SheetTitle className="sr-only">{t('sidebar.mobileTitle')}</SheetTitle>
           <SheetDescription className="sr-only">{t('sidebar.mobileDescription')}</SheetDescription>

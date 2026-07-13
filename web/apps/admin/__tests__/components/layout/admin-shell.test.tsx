@@ -59,6 +59,23 @@ describe('Admin shell', () => {
     });
   });
 
+  it('keeps the mobile logout control above the scrolling navigation layer', async () => {
+    render(
+      <AdminLayoutClient>
+        <div>page content</div>
+      </AdminLayoutClient>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'topbar.openNavigation' }));
+
+    const navigationDialog = screen.getByRole('dialog', { name: 'sidebar.mobileTitle' });
+    const navigation = within(navigationDialog).getByRole('navigation', { name: 'sidebar.navigation' });
+    const logoutButton = within(navigationDialog).getByRole('button', { name: 'common.logout' });
+
+    expect(navigation).toHaveClass('relative', 'z-0');
+    expect(logoutButton.parentElement).toHaveClass('relative', 'z-10', 'bg-sidebar');
+  });
+
   it('localizes breadcrumb destinations without compatibility redirects', () => {
     render(
       <PageHeader

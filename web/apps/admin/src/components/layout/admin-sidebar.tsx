@@ -67,13 +67,17 @@ export default function AdminSidebar({ className, initialFocusRef, onNavigate }:
           className="min-w-0 flex-1"
           markClassName="h-9 w-9"
           wordmarkClassName="text-white"
+          accentClassName="text-orange-400"
         />
         <span className="ml-2 whitespace-nowrap rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold text-white ring-1 ring-white/25">
           {t('sidebar.adminBadge')}
         </span>
       </div>
 
-      <nav aria-label={t('sidebar.navigation')} className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-4">
+      <nav
+        aria-label={t('sidebar.navigation')}
+        className="relative z-0 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain p-4"
+      >
         {navItems.map((item, index) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -100,7 +104,7 @@ export default function AdminSidebar({ className, initialFocusRef, onNavigate }:
         })}
       </nav>
 
-      <div className="shrink-0 border-t border-white/10 p-4">
+      <div className="relative z-10 shrink-0 border-t border-white/10 bg-sidebar p-4">
         <button
           type="button"
           onClick={handleLogout}

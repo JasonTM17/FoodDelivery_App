@@ -37,6 +37,39 @@ export function gotoRestaurantRoute(page: Page, path: string, locale?: 'vi' | 'e
   return gotoAppRoute(page, restaurantUrl(path, locale))
 }
 
+async function waitForNavigationDrawer(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect.poll(async () => {
+    const box = await dialog.boundingBox()
+    return box ? Math.round(box.x) : null
+  }, { message: 'navigation drawer should finish opening' }).toBe(0)
+}
+
+export async function openAdminNavigation(page: Page): Promise<void> {
+  if ((page.viewportSize()?.width ?? 1280) >= 1024) return
+
+  const mobileMenu = page.getByRole('button', {
+    name: /open admin menu|mở menu quản trị|管理メニューを開く/i,
+  })
+
+  await expect(mobileMenu).toBeVisible()
+  await mobileMenu.click()
+  await waitForNavigationDrawer(page)
+}
+
+export async function openRestaurantNavigation(page: Page): Promise<void> {
+  if ((page.viewportSize()?.width ?? 1280) >= 1024) return
+
+  const mobileMenu = page.getByRole('button', {
+    name: /open restaurant menu|mở menu nhà hàng|レストランメニューを開く/i,
+  })
+
+  await expect(mobileMenu).toBeVisible()
+  await mobileMenu.click()
+  await waitForNavigationDrawer(page)
+}
+
 export async function loginAdminApp(
   page: Page,
   request: APIRequestContext,

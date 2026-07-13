@@ -35,7 +35,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
             event.preventDefault()
             firstNavigationLinkRef.current?.focus()
           }}
-          className="w-64 border-0 bg-sidebar p-0 text-sidebar-foreground sm:max-w-64 [&>button]:text-white"
+          className="h-dvh max-h-dvh w-64 border-0 bg-sidebar p-0 text-sidebar-foreground sm:max-w-64 [&>button]:text-white"
         >
           <SheetTitle className="sr-only">{t('sidebar.mobileTitle')}</SheetTitle>
           <SheetDescription className="sr-only">{t('sidebar.mobileDescription')}</SheetDescription>

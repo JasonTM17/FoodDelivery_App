@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { loginViaApi } from '../fixtures/api-helpers'
-import { gotoAdminRoute, loginAdminApp } from '../fixtures/ui-auth'
+import { gotoAdminRoute, loginAdminApp, openAdminNavigation } from '../fixtures/ui-auth'
 import { API_URL, TEST_USERS } from '../fixtures/test-users'
 
 test.describe('Admin Dashboard', () => {
@@ -9,18 +9,20 @@ test.describe('Admin Dashboard', () => {
 
     await expect(page.getByRole('heading', { name: /overview|tổng quan|概要/i })).toBeVisible()
     await expect(
-      page
-        .getByText(/orders|revenue|restaurants|drivers|đơn hàng|doanh thu|nhà hàng|tài xế/i)
-        .first(),
+      page.getByRole('heading', { level: 3, name: /^(revenue|doanh thu|売上)$/i }),
     ).toBeVisible({ timeout: 10_000 })
   })
 
   test('navigates to driver map/list', async ({ page, request }) => {
     await loginAdminApp(page, request)
 
+    await openAdminNavigation(page)
     await page.getByRole('link', { name: /drivers|tài xế/i }).first().click()
     await expect(page).toHaveURL(/\/drivers/)
-    await expect(page.getByText(/drivers|map|tài xế|bản đồ/i).first()).toBeVisible({
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: /driver management|quản lý tài xế|配達員管理/i,
+    })).toBeVisible({
       timeout: 10_000,
     })
   })
@@ -28,6 +30,7 @@ test.describe('Admin Dashboard', () => {
   test('orders page renders data table or status content', async ({ page, request }) => {
     await loginAdminApp(page, request)
 
+    await openAdminNavigation(page)
     await page.getByRole('link', { name: /orders|đơn hàng/i }).first().click()
     await expect(page).toHaveURL(/\/orders/)
     await expect(page.getByRole('table').or(page.getByRole('status'))).toBeVisible({ timeout: 10_000 })
@@ -54,9 +57,13 @@ test.describe('Admin Dashboard', () => {
 
   test('restaurants page renders a list', async ({ page, request }) => {
     await loginAdminApp(page, request)
+    await openAdminNavigation(page)
     await page.getByRole('link', { name: /restaurants|nhà hàng/i }).first().click()
     await expect(page).toHaveURL(/\/restaurants/)
-    await expect(page.getByText(/phở|bún|cơm|restaurant|nhà hàng/i).first()).toBeVisible({
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: /restaurant management|quản lý nhà hàng|レストラン管理/i,
+    })).toBeVisible({
       timeout: 10_000,
     })
   })

@@ -7,7 +7,7 @@ import {
   placeOrderViaApi,
   updateOrderStatusViaApi,
 } from '../fixtures/api-helpers'
-import { loginRestaurantApp } from '../fixtures/ui-auth'
+import { loginRestaurantApp, openRestaurantNavigation } from '../fixtures/ui-auth'
 
 async function createPendingOrder(
   request: Parameters<typeof loginViaApi>[0],
@@ -82,9 +82,10 @@ test.describe('Restaurant order management', () => {
 
   test('navigates to menu page', async ({ page, request }) => {
     await loginRestaurantApp(page, request)
-    await page.getByRole('link', { name: /menu|thực đơn/i }).click()
+    await openRestaurantNavigation(page)
+    await page.getByRole('link', { name: /menu|thực đơn|メニュー/i }).click()
     await expect(page).toHaveURL(/\/menu/)
-    await expect(page.getByRole('heading', { name: /menu|thực đơn/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /menu|thực đơn|メニュー/i })).toBeVisible()
   })
 
   test('restaurant API rejects invalid status transition', async ({ request }) => {

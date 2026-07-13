@@ -4,6 +4,7 @@ import { loginViaApi } from '../fixtures/api-helpers'
 import {
   gotoAdminRoute,
   gotoRestaurantRoute,
+  openAdminNavigation,
   submitAdminLogin,
   submitRestaurantLogin,
 } from '../fixtures/ui-auth'
@@ -18,10 +19,14 @@ test.describe('Admin auth', () => {
     await expect(page).toHaveURL(/\/overview/, { timeout: 15_000 })
     await expect(page.getByRole('heading', { name: /overview|tổng quan|概要/i })).toBeVisible()
 
-    await page
-      .getByRole('button', { name: /sign out|logout|đăng xuất/i })
-      .or(page.getByText(/sign out|logout|đăng xuất/i).first())
-      .click()
+    await openAdminNavigation(page)
+    const signOutName = /sign out|logout|đăng xuất|ログアウト/i
+    const signOut = (page.viewportSize()?.width ?? 1280) < 1024
+      ? page.getByRole('dialog').getByRole('button', { name: signOutName })
+      : page.getByRole('button', { name: signOutName })
+
+    await expect(signOut).toBeVisible()
+    await signOut.click()
     await expect(page).toHaveURL(/\/login/)
   })
 })
@@ -36,6 +41,20 @@ test.describe('Restaurant auth', () => {
     const loginError = /sign in failed|login failed|invalid|đăng nhập thất bại|không tồn tại/i
     await expect(page.getByRole('alert').filter({ hasText: loginError })).toBeVisible()
     await expect(page).toHaveURL(/\/login/)
+  })
+
+  test('successful login opens the order queue and survives a page reload', async ({ page }) => {
+    await submitRestaurantLogin(page)
+    await expect(page).toHaveURL(/\/orders/, { timeout: 15_000 })
+    await expect(
+      page.getByRole('heading', { name: /order queue|quản lý đơn hàng|注文/i }),
+    ).toBeVisible()
+
+    await page.reload()
+    await expect(page).toHaveURL(/\/orders/, { timeout: 15_000 })
+    await expect(
+      page.getByRole('heading', { name: /order queue|quản lý đơn hàng|注文/i }),
+    ).toBeVisible()
   })
 })
 

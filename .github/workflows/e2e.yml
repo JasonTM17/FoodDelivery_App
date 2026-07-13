@@ -16,7 +16,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v7
@@ -33,68 +33,52 @@ jobs:
             backend/pnpm-lock.yaml
             web/pnpm-lock.yaml
 
-      # ── Backend stack ────────────────────────────────────────────────────
-      - name: Start database and supporting services
-        run: docker compose up -d postgres redis minio
-
       - name: Install backend dependencies
         run: cd backend && pnpm install --frozen-lockfile
 
-      - name: Apply migrations and seed database
+      - name: Build and start the isolated current-source stack
         run: |
+          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
+            up --build --detach --wait --wait-timeout 180
+
+      - name: Verify the migrator and seed disposable E2E data
+        run: |
+          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml \
+            run --rm migrate
           cd backend
           pnpm prisma generate
-          pnpm prisma migrate deploy
           pnpm db:big-seed
         env:
-          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
-          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:5432/foodflow
+          DATABASE_URL: postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
+          DIRECT_URL: postgresql://foodflow:foodflow_dev@localhost:15432/foodflow
 
-      - name: Start backend
-        run: docker compose up -d backend
-
-      - name: Wait for backend health
+      - name: Require worker startup and post-seed RAG sync
         run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:3001/api/healthz; then
-              echo "Backend ready"; exit 0
+          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml restart worker
+          for i in $(seq 1 40); do
+            logs="$(docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker)"
+            if printf '%s' "$logs" | grep -q "FoodFlow Worker started" \
+              && printf '%s' "$logs" | grep -q "RAG sync complete"; then
+              echo "Worker and RAG sync ready"; exit 0
             fi
-            echo "Waiting for backend ($i/30)..."; sleep 5
+            echo "Waiting for worker RAG sync ($i/40)..."; sleep 3
           done
-          docker compose logs backend
-          echo "Backend did not start in time"; exit 1
+          docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml logs worker
+          echo "Worker did not produce a post-seed RAG sync"; exit 1
 
-      # ── Web apps ─────────────────────────────────────────────────────────
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
 
-      - name: Start admin app (background)
-        run: |
-          cd web/apps/admin
-          npx next dev --port 3000 &
-          echo "ADMIN_PID=$!" >> "$GITHUB_ENV"
-
-      - name: Start restaurant app (background)
-        run: |
-          cd web/apps/restaurant
-          npx next dev --port 3002 &
-          echo "RESTAURANT_PID=$!" >> "$GITHUB_ENV"
-
-      - name: Wait for web apps
-        run: |
-          npx wait-on http://localhost:3000 http://localhost:3002 --timeout 60000
-
-      # ── Playwright ───────────────────────────────────────────────────────
       - name: Install Playwright browsers
         run: cd web && pnpm test:e2e:install
 
-      - name: Run E2E tests on Chromium and Firefox
-        run: cd web && pnpm test:e2e --project=chromium --project=firefox
+      - name: Run isolated Docker E2E matrix
+        run: cd web && pnpm test:e2e
         env:
           CI: 'true'
-          ADMIN_URL: http://localhost:3000
-          RESTAURANT_URL: http://localhost:3002
-          API_URL: http://localhost:3001/api
+          ADMIN_URL: http://localhost:13000
+          RESTAURANT_URL: http://localhost:13002
+          API_URL: http://localhost:13001/api
 
       # ── Artifacts ────────────────────────────────────────────────────────
       - name: Upload Playwright report
@@ -110,11 +94,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces-${{ github.run_id }}
-          path: web/e2e/test-results/
+          path: web/test-results/
           retention-days: 14
 
-      - name: Stop background apps
+      - name: Stop isolated Docker stack
         if: always()
-        run: |
-          kill "$ADMIN_PID" "$RESTAURANT_PID" 2>/dev/null || true
-          docker compose down
+        run: docker compose -p foodflow-e2e -f docker-compose.yml -f docker-compose.e2e.yml down --volumes

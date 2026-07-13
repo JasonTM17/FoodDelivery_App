@@ -1,6 +1,6 @@
 # FoodFlow E2E Tests
 
-Playwright test suite covering the four critical user flows: admin dashboard, restaurant order management, customer order placement, and realtime order tracking.
+Playwright test suite covering Admin, Restaurant, customer ordering, realtime tracking, tenant isolation, API contracts, mobile navigation, visual structure, and accessibility on critical runtime pages.
 
 ## Prerequisites
 
@@ -28,15 +28,19 @@ DIRECT_URL=postgresql://foodflow:foodflow_dev@localhost:15432/foodflow \
 pnpm db:big-seed
 cd ..
 
-# 3. Build and start the API plus both dashboards
+# 3. Build and start the API, background worker, and both dashboards
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml build backend admin restaurant
-docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d backend admin restaurant
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d backend worker admin restaurant
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --tail 100 worker
 
 # 4. Install Playwright browser (once)
 cd web && pnpm test:e2e:install
 
 # 5. Run all E2E tests (Chromium, Firefox, and mobile Chromium)
 cd web && ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=http://localhost:13001/api pnpm test:e2e
+
+# Inspect the exact generated matrix without running it
+cd web && pnpm test:e2e:list
 
 # Desktop release gate only
 ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=http://localhost:13001/api pnpm test:e2e --project=chromium --project=firefox
@@ -47,6 +51,13 @@ ADMIN_URL=http://localhost:13000 RESTAURANT_URL=http://localhost:13002 API_URL=h
 
 In PowerShell, set `$env:ADMIN_URL`, `$env:RESTAURANT_URL`, and `$env:API_URL`
 to the same isolated URLs before invoking `pnpm test:e2e`.
+
+The GitHub E2E workflow builds this same overlay, seeds its disposable database through
+`15432`, restarts the worker after seeding, requires a successful RAG synchronization,
+and runs all three Playwright projects. Do not replace it with root Compose plus
+`next dev`: that would exercise different origins, images, and browser coverage.
+
+The worker deliberately has no HTTP port or HTTP health endpoint. Before treating a run as current-source evidence, require its logs to contain `FoodFlow Worker started` and a successful `RAG sync complete` entry.
 
 ## Environment Variables
 
@@ -70,6 +81,9 @@ Override via shell: `ADMIN_URL=http://staging.example.com pnpm test:e2e`
 | `tests/realtime-tracking.spec.ts` | Status propagation, admin reflects live changes |
 | `tests/maplibre-basemap.spec.ts` | Keyless OpenFreeMap style, MapLibre canvas, attribution, and console-error gate |
 | `tests/batch4-contract.spec.ts` | Batch 4 API contracts and axe serious/critical accessibility smoke |
+| `tests/accessibility-critical.spec.ts` | Critical Admin and Restaurant pages, keyboard focus, and axe serious/critical gate |
+| `tests/tenant-isolation.spec.ts` | Restaurant and customer tenant boundaries |
+| `tests/visual-contract.spec.ts` | Responsive visual-structure and mobile-navigation contracts |
 
 The Chromium project opts into SwiftShader only for trusted E2E content so WebGL map tests stay deterministic on GPU-less local and CI runners. These launch flags are test-only and are never used by deployed browsers or containers.
 
