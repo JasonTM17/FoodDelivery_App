@@ -246,7 +246,17 @@ jobs:
           IMAGE_TAG: sha-${{ github.sha }}
         run: |
           set -euo pipefail
-          dockerhub_digest="$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:$IMAGE_TAG" | awk '/^Digest:/ {print $2; exit}')"
+          dockerhub_digest=""
+          for attempt in $(seq 1 10); do
+            if inspect_output="$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:$IMAGE_TAG" 2>/dev/null)"; then
+              dockerhub_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$inspect_output")"
+              if [[ -n "$dockerhub_digest" ]]; then
+                break
+              fi
+            fi
+            echo "Docker Hub manifest is not visible yet (attempt $attempt/10)."
+            sleep 3
+          done
           test -n "$dockerhub_digest" || {
             echo 'Docker Hub manifest has no digest.'
             exit 1
