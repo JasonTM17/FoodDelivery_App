@@ -5,10 +5,12 @@ import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { api, setToken, setStoredRestaurant } from '@/lib/api';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-provider';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const t = useTranslations('login');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
@@ -36,9 +38,8 @@ export default function LoginPage() {
         throw new Error(t('restaurantOnly'));
       }
 
-      setToken(data.accessToken);
       localStorage.setItem('restaurant_refresh_token', data.refreshToken);
-      if (data.restaurant) setStoredRestaurant(data.restaurant);
+      login(data.accessToken, data.restaurant);
       router.push('/orders');
     } catch (err: unknown) {
       const apiError = err as { message?: string };

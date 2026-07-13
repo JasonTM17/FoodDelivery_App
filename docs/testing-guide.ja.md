@@ -19,7 +19,7 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ### 2026-07-13 database runtime evidence
 
-Empty PostGIS + pgvector container は 32 migrations、PostGIS/vector extensions、`rag_documents`、cosine HNSW index を確認しました。Supabase production は `20260713070000_add_rag_knowledge_base` を apply し Prisma status は up to date です。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。
+Empty PostGIS + pgvector container は 32 migrations、PostGIS/vector extensions、`rag_documents`、cosine HNSW index を確認しました。Supabase production は同じ committed RAG migration を apply し、checksum は一致、Prisma status は up to date です。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。
 
 より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、repaired browser E2E、controlled FCM delivery、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 

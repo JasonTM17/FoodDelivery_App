@@ -218,7 +218,7 @@ The 2026-07-13 hardening pass verified Backend 135 suites / 1008 tests plus type
 
 ## Branch policy
 
-At the 2026-07-13 validation snapshot, the remote has one branch, `master`, at `3f195a6374589b8433c45cb370dbc79cff00118f`; local `master` is `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` (3 ahead / 0 behind). That local-ahead state is provisional, not release approval. Both historical local branches are ancestors of `master` and contain no unique work; they must never be raw-merged or pushed by name. The active integration worktree/local refs may be removed only with owner approval, backup/patch checks, and a final `master == origin/master` verification.
+The remote has one branch, `master`. No historical local integration/finalization ref or linked integration worktree remains. Branch equivalence is not release approval; do not recreate, raw-merge, or push historical integration branches by name.
 
 ## License
 

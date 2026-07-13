@@ -9,7 +9,7 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 ## Completed and incorporated work
 
 - 実在する backend/Admin/Restaurant/mobile/AI/realtime/map/docs/DevOps work の controlled consolidation。
-- Remote branch は `master` のみ。integration branch は unique commit のない ancestor です。push と `master == origin/master` 確認後に worktree/ref を cleanup します。
+- Branch/worktree cleanup は完了し、`master` のみが残り linked integration worktree はありません。Historical integration branch を再作成しません。
 - Critical web screens の fake empty/zero fallback 除去と runtime response validation。
 - Restaurant URL-authoritative vi/en/ja locale、accessibility contrast/focus。
 - Supabase realtime outbox/RLS/token、Storage adapter、Postgres job outbox/Cron、explicit web provider。
@@ -73,6 +73,6 @@ Fake value や validation bypass は禁止です。
 
 ## Post-release/deferred
 
-Health/Cron/realtime/AI cost/maps/storage/payments monitor、mobile staged rollout、outbox/telemetry retention、worker tag consumer audit、push/backup/patch/remote-equivalence 確認後の local integration worktree/ref cleanup。
+Health/Cron/realtime/AI cost/maps/storage/payments monitor、mobile staged rollout、outbox/telemetry retention、worker tag consumer audit、one-branch policy の維持と historical integration worktree/ref の非再作成。
 
 Measured scale 前の Kubernetes/microservices、real writer 前の Parquet、public realtime/RLS bypass、missing branch recreation、local-only evidence deploy は deferred/forbidden です。

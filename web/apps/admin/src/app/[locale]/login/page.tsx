@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiPost } from '@/lib/api';
+import { useAuth } from '@/lib/auth-provider';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
 import { Loader2, AlertTriangle, XCircle } from 'lucide-react';
 
@@ -16,6 +17,7 @@ const MAX_FAIL = 5;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const t = useTranslations('login');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
@@ -50,6 +52,11 @@ export default function LoginPage() {
       localStorage.setItem('admin_refresh_token', res.refreshToken);
       localStorage.setItem('admin_user', JSON.stringify(res.user));
       if (rememberMe) localStorage.setItem('admin_remember_email', email);
+      login(res.accessToken, {
+        name: res.user.fullName ?? res.user.name ?? res.user.email,
+        email: res.user.email,
+        role: res.user.role,
+      });
       // The next-intl router preserves the active locale.
       router.replace('/overview');
     } catch (err) {

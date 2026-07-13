@@ -12,8 +12,8 @@ Secret/CLI auth、current-head test、remote CI、production health が不足し
 
 ## Invariants
 
-1. Isolated clean worktree のみを使い、`D:\Food_Delivery` を変更しない。
-2. Remote branch は `master` 一つ。Local integration branch 名では push しない。
+1. Approved clean release worktree のみを使います。
+2. Remote branch は `master` 一つ。Historical integration branch を再作成または名前付き push しません。
 3. Chat/log/screenshot/ticket/git に出た credential は rotate。
 4. Value は secure prompt/dashboard で入力し docs/commit に保存しない。
 5. Managed production provider は Supabase を明示し、Socket.IO/MinIO/BullMQ に fallback しない。
@@ -22,7 +22,7 @@ Secret/CLI auth、current-head test、remote CI、production health が不足し
 
 ## Release sequence
 
-Full local gate → current-head GitHub Actions green → rotated secrets/preflight → Supabase → Railway API/worker → Admin/Restaurant → production smoke → `HEAD:master` → Docker immutable。
+Full local gate → current-head GitHub Actions green → rotated secrets/preflight → Supabase → Railway API/worker → Admin/Restaurant → production smoke → `master` verify → Docker immutable。
 
 一つでも fail すれば停止します。
 

@@ -19,7 +19,7 @@ Scoped hardening evidence ngày 13/07/2026:
 
 ### Database runtime evidence 13/07/2026
 
-Container PostGIS + pgvector trống đã apply đủ 32 migration và xác minh PostGIS, vector, bảng `rag_documents` cùng cosine HNSW index. Supabase production đã apply `20260713070000_add_rag_knowledge_base` và Prisma báo schema up to date. Row count production của users, restaurants, orders, driver profiles và RAG documents đều bằng 0; không chạy demo/big seed trên production.
+Container PostGIS + pgvector trống đã apply đủ 32 migration và xác minh PostGIS, vector, bảng `rag_documents` cùng cosine HNSW index. Supabase production đã apply cùng migration RAG đã commit, checksum khớp và Prisma báo schema up to date. Row count production của users, restaurants, orders, driver profiles và RAG documents đều bằng 0; không chạy demo/big seed trên production.
 
 Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, repaired browser E2E, controlled FCM delivery, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
 

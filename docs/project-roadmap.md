@@ -9,7 +9,7 @@ Status on 2026-07-13: **integration is incorporated in `master`; hardening is in
 ## Completed and incorporated work
 
 - Controlled consolidation of available backend, Admin, Restaurant, mobile, AI, realtime, map/tracking, docs, and DevOps work.
-- Remote branch cleanup to one branch (`master`); the integration branch is an ancestor with no unique work. Remove its clean linked worktree/local ref after the current commits are pushed and equivalence is reverified.
+- Remote and local branch cleanup is complete: only `master` remains, and no linked integration worktree remains. Do not recreate historical integration branches.
 - Admin/Restaurant runtime API-envelope validation and removal of fake empty/zero business fallbacks across critical screens.
 - Restaurant URL-authoritative vi/en/ja locale isolation and accessibility contrast/focus fixes.
 - Backend Supabase Realtime outbox/RLS token contract, Supabase Storage adapter, and PostgreSQL job outbox/Cron endpoint.
@@ -84,7 +84,7 @@ These are release blockers, not permission to add fake values or bypass validati
 - Validate mobile production signing and staged rollout after the web/API production line is healthy.
 - Define retention/cleanup for realtime/job outboxes and AI telemetry.
 - Close/remove superseded Docker Hub worker tags only after backup and consumer audit.
-- Clean up the local integration worktree/branch after push, backup/patch checks, and `master == origin/master` verification.
+- Preserve the one-branch policy and do not recreate historical integration worktrees or refs.
 
 ## Deferred by design
 

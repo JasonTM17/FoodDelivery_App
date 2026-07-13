@@ -6,29 +6,27 @@ Audited on **2026-07-13** from `D:\Food_Delivery`.
 
 | Scope | Verified state | Disposition |
 |---|---|---|
-| Remote | `origin/master@3f195a6374589b8433c45cb370dbc79cff00118f` is the only remote branch. | Keep one remote release branch. |
-| Current local head | `master@477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` is 3 ahead / 0 behind `origin/master`. | Provisional local state only; no release or push approval is implied. |
-| `codex/batch4-integration` | Active linked worktree at `D:\Food_Delivery-worktrees\batch4-integration-restored`; branch is an ancestor of `master` with no unique commits (9 behind / 0 ahead of `origin/master`). | Never remove the worktree or local ref without its owner's approval, plus backup/patch checks. |
-| `codex/foodflow-production-finalization` | Ancestor of `master`; remote tracking ref is gone and it has no unique commits (6 behind / 0 ahead of `origin/master`). | Cleanup candidate only; require owner approval and the same backup/patch checks. |
+| Release branch | `master` is the only local and remote release branch. | Branch equivalence is not production-release approval. |
+| Remote branches | `master` is the only remote branch. | Keep one remote release branch. |
+| Local branches and worktrees | `git branch --no-merged master` returns none; no local `codex/batch4-integration` or `codex/foodflow-production-finalization` ref, and no linked integration worktree remains. | No branch/worktree cleanup action remains. |
 
-## Safety boundary
+## Evidence boundary
 
-- Never raw-merge or push either historical branch by name.
-- Preserve current commits and external database backups before reference cleanup.
-- Re-run `git branch --no-merged master`, `git worktree list --porcelain`, and remote equivalence immediately before removal.
-- Branch cleanup is independent of production approval; it does not prove Railway/Vercel health, current-SHA browser E2E, Firebase delivery, or mobile signing.
-- The working tree contains untracked `backend/prisma/migrations/20260713070000_add_rag_knowledge_base`; runtime results that include it are dirty-workspace evidence, not final-head release proof until it is adopted.
+- Do not recreate, raw-merge, or push historical integration branches by name.
+- Preserve backups and patch evidence before any future reference cleanup.
+- Database evidence covers the committed 32-migration line locally and on Supabase; it does not prove browser E2E, controlled FCM delivery, provider preflight, remote CI, or production readiness.
+- Branch cleanup and branch equivalence are independent of production approval.
 
 ## Verification commands
 
 ```powershell
 git fetch --prune origin
+git rev-parse master
+git rev-parse origin/master
 git ls-remote --heads origin
 git branch --no-merged master
-git merge-base --is-ancestor codex/batch4-integration master
-git merge-base --is-ancestor codex/foodflow-production-finalization master
+git worktree list --porcelain
 git status --short
-git rev-list --left-right --count origin/master...master
 ```
 
-Only a final `0 0` comparison, owner approval, and the required backup/patch checks permit removal of the integration worktree or either historical local ref.
+Run these commands again before acting on any future branch or worktree cleanup.

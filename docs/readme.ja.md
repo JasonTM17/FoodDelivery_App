@@ -142,7 +142,7 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 
 ## Branch policy
 
-2026-07-13 validation snapshot では remote branch は `master` のみで `3f195a6374589b8433c45cb370dbc79cff00118f`、local `master` は `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7`（3 ahead / 0 behind）です。この local-ahead state は provisional で release approval ではありません。二つの historical local branches はどちらも ancestor で unique commit はありません。名前付き push/raw merge は行いません。Active integration worktree/ref は owner approval、backup/patch check、最終 `master == origin/master` 確認後だけ cleanup します。
+Remote branch は `master` のみです。Historical local integration/finalization ref と linked integration worktree は残っていません。Branch equivalence は release approval ではありません。Historical integration branch を再作成、raw merge、名前付き push しません。
 
 ## License
 

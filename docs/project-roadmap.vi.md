@@ -9,7 +9,7 @@ Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardeni
 ## Đã hoàn thành và đã tích hợp
 
 - Consolidate có kiểm soát các phần backend, Admin, Restaurant, mobile, AI, realtime, map/tracking, docs và DevOps có thật.
-- Remote chỉ còn `master`; integration branch là ancestor không có commit riêng. Cleanup worktree/ref sau khi push và xác minh `master == origin/master`.
+- Cleanup branch/worktree đã hoàn tất: chỉ còn `master`, không còn linked integration worktree. Không tạo lại branch integration lịch sử.
 - Loại fake empty/zero fallback và thêm runtime contract validation trên critical Admin/Restaurant screens.
 - Sửa locale Restaurant theo URL vi/en/ja, contrast/focus accessibility.
 - Supabase realtime outbox/RLS/token, Storage adapter, Postgres job outbox/Cron; web hỗ trợ Supabase provider explicit.
@@ -77,7 +77,7 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 
 ## Sau release
 
-Monitor health/Cron/realtime/AI cost-map-storage-payment; rollout mobile sau production signing; đặt retention outbox/telemetry; cleanup worker tags sau consumer audit; cleanup local integration worktree/ref sau push, backup/kiểm patch và xác minh remote tương đương.
+Monitor health/Cron/realtime/AI cost-map-storage-payment; rollout mobile sau production signing; đặt retention outbox/telemetry; cleanup worker tags sau consumer audit; giữ chính sách một branch và không tạo lại historical integration worktree/ref.
 
 ## Deferred có chủ đích
 

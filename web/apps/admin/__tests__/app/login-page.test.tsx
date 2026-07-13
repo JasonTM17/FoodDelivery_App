@@ -3,14 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '@/app/[locale]/login/page';
 import { apiPost } from '@/lib/api';
 
+const mockedLogin = vi.hoisted(() => vi.fn());
 const mockedApiPost = vi.mocked(apiPost);
 const credentialFixture = (name: string) => `${name}-credential`;
 const tokenFixture = (name: string) => `${name}-token`;
+
+vi.mock('@/lib/auth-provider', () => ({
+  useAuth: () => ({ login: mockedLogin }),
+}));
 
 describe('Admin LoginPage', () => {
   beforeEach(() => {
     localStorage.clear();
     mockedApiPost.mockReset();
+    mockedLogin.mockReset();
   });
 
   it('uses the shared auth login endpoint and stores admin tokens', async () => {
@@ -42,6 +48,11 @@ describe('Admin LoginPage', () => {
     });
     expect(localStorage.getItem('admin_token')).toBe(tokenFixture('admin-access'));
     expect(localStorage.getItem('admin_refresh_token')).toBe(tokenFixture('admin-refresh'));
+    expect(mockedLogin).toHaveBeenCalledWith(tokenFixture('admin-access'), {
+      name: 'admin@foodflow.vn',
+      email: 'admin@foodflow.vn',
+      role: 'admin',
+    });
   });
 
   it('links to the locale-aware password recovery route', () => {

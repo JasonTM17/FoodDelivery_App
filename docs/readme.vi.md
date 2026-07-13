@@ -146,7 +146,7 @@ Hardening ngày 13/07/2026 đã pass Backend 135 suite / 1008 test cùng typeche
 
 ## Chính sách branch
 
-Tại validation snapshot 13/07/2026, remote chỉ có `master` tại `3f195a6374589b8433c45cb370dbc79cff00118f`; local `master` là `477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7` (3 ahead / 0 behind). Trạng thái local-ahead này chỉ là provisional, không phải release approval. Hai branch local lịch sử đều là ancestor và không có commit riêng; không raw-merge hoặc push chúng theo tên. Worktree/ref integration đang active chỉ cleanup khi có owner approval, backup/patch check và xác minh cuối `master == origin/master`.
+Remote chỉ có `master`. Không còn local ref integration/finalization lịch sử hoặc linked integration worktree. Branch equivalence không phải release approval; không tạo lại, raw-merge hoặc push branch integration lịch sử theo tên.
 
 ## License
 

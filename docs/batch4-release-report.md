@@ -21,9 +21,9 @@ The local branch had not been pushed by name because that would recreate a secon
 
 ## Later repository disposition — 2026-07-13
 
-This report remains historical. A later 2026-07-13 audit found `master@477cb20c7fc82b0f8ca6ff2d409746ecefaf7ad7`, 3 ahead / 0 behind `origin/master@3f195a6374589b8433c45cb370dbc79cff00118f`. Both historical local branches are ancestors of `master` with no unique commits, but the active integration worktree requires owner approval before cleanup. The local-ahead state is provisional and is not a release or push claim.
+This report remains historical. A later 2026-07-13 audit found the remote has only `master`; no historical local integration/finalization ref or linked integration worktree remains. Branch equivalence is not a production-release claim.
 
-The same pass applied 32 migrations to an isolated local PostGIS + pgvector database, confirmed pgvector `0.6.2`, API readiness, and 252 RAG documents indexed with zero failures. It included untracked `20260713070000_add_rag_knowledge_base`, so it is dirty-workspace runtime evidence only; it makes no assertion about Supabase production or release readiness. Browser E2E against the older Docker image passed 128/134 checks, while six checks remain non-evidence pending a rebuilt current navigation image and isolated test seed.
+The same pass applied all 32 migrations to a fresh PostGIS + pgvector database and to Supabase production. The committed RAG migration checksum exactly matches Supabase, and production business/RAG tables remain empty by design; no demo/big seed was run. Browser E2E against the older Docker image passed 128/134 checks, while six checks require a rebuilt current navigation image and isolated test seed.
 
 ## Landed hardening
 

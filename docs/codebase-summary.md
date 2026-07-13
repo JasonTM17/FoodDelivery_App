@@ -11,7 +11,7 @@ Current tracked text-code footprint (excluding generated/test-output directories
 ```text
 backend/                   NestJS API, Prisma, Railway entry, compatibility adapter, worker entry
   api/[...path].ts         Retained compatibility HTTP adapter; managed production API runs on Railway
-  prisma/                  Schema, 31 tracked migrations at the 2026-07-13 `master` baseline; one additional untracked RAG migration exists in the dirty workspace
+  prisma/                  Schema, 32 tracked migrations at the 2026-07-13 `master` baseline
   src/                     Feature modules
 web/                       pnpm workspace
   apps/admin/              Admin Next.js application
@@ -54,7 +54,7 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The Prisma schema at the 2026-07-13 `master` baseline declares 58 models across 31 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history. The dirty workspace additionally contains `20260713070000_add_rag_knowledge_base`, which adds pgvector-backed RAG storage; its 32-migration local-runtime result is not a `master` or release claim until that migration is adopted. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The Prisma schema at the 2026-07-13 `master` baseline declares 58 models across 32 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migration adds pgvector-backed storage and a cosine HNSW index. Its committed checksum matches the migration applied to Supabase. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale.
 

@@ -13,8 +13,8 @@ It does not authorize deployment while secrets, CLI access, current-head tests, 
 
 ## Release invariants
 
-1. Work only from the isolated clean integration worktree; never modify `D:\Food_Delivery`.
-2. Keep `master` as the only remote branch. Do not push the local integration branch by name.
+1. Work only from a clean, approved release worktree.
+2. Keep `master` as the only remote branch. Do not recreate or push historical integration branches by name.
 3. Rotate any credential previously exposed in chat, logs, screenshots, tickets, or git history.
 4. Enter values through secure local prompts or provider dashboards; never paste values into docs or commits.
 5. Use explicit Supabase providers in managed production; no implicit Socket.IO/MinIO/BullMQ fallback.
@@ -33,7 +33,7 @@ flowchart LR
     D --> E["Railway migrate + API/worker/Redis"]
     E --> F["Vercel Admin + Restaurant"]
     F --> G["Production health + authenticated smoke"]
-    G --> H["Fast-forward master"]
+    G --> H["Verify deployed master"]
     H --> I["Docker SHA → semver → manual latest"]
 ```
 
@@ -81,7 +81,7 @@ Project IDs and generated provider CLI folders are not documentation contracts. 
 
 ## 1. Source and test gate
 
-From the integration worktree:
+From the clean release worktree:
 
 ```powershell
 git fetch --prune origin

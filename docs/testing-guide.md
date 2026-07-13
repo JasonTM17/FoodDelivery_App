@@ -19,7 +19,7 @@ Scoped hardening evidence on 2026-07-13:
 
 ### 2026-07-13 database runtime evidence
 
-An isolated local PostGIS + pgvector container applied all 32 migrations and verified PostGIS, vector, `rag_documents`, and the cosine HNSW index. Supabase production then applied migration `20260713070000_add_rag_knowledge_base` and Prisma reported the remote schema up to date. Production row counts for users, restaurants, orders, driver profiles, and RAG documents are all zero; no demo/big seed was run in production.
+An isolated local PostGIS + pgvector container applied all 32 migrations and verified PostGIS, vector, `rag_documents`, and the cosine HNSW index. Supabase production applied the same committed RAG migration, its checksum matches, and Prisma reports the remote schema up to date. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run in production.
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, current remote CI, controlled FCM delivery, and repaired browser E2E remain required.
 
