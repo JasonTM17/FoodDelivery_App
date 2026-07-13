@@ -161,7 +161,7 @@ export class AdminSettingsService {
       this.config.get<string>('SEPAY_WEBHOOK_SECRET'),
     )
     const notificationProviderConfigured = anyConfigured(
-      this.config.get<string>('FCM_SERVER_KEY'),
+      this.config.get<string>('FCM_PROJECT_ID'),
       allConfigured(
         this.config.get<string>('SMTP_HOST'),
         this.config.get<string>('SMTP_USER'),

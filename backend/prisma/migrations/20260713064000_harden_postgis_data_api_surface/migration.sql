@@ -1,0 +1,11 @@
+-- PostGIS was installed in public by the initial production migration. On
+-- hosted Supabase its objects are owned by supabase_admin, and the project
+-- postgres role cannot safely alter their RLS or privileges. PostGIS is also
+-- non-relocatable without dropping dependent geometry columns.
+--
+-- FoodFlow does not use PostgREST tables or RPCs. The hosted project therefore
+-- disables the Data API schema surface through the Supabase project setting,
+-- while Storage and private Realtime remain enabled on their dedicated APIs.
+-- Keep this migration as an explicit no-op so local and remote Prisma history
+-- remain identical without attempting to take ownership of provider objects.
+SELECT 1;

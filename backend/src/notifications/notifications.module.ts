@@ -7,6 +7,10 @@ import { NotificationsGateway } from './notifications.gateway'
 import { InAppChannel } from './channels/in-app.channel'
 import { FcmChannel } from './channels/fcm.channel'
 import { FcmProcessor } from './channels/fcm.processor'
+import {
+  FCM_MESSAGING_CLIENT,
+  FirebaseAdminMessagingClient,
+} from './channels/firebase-admin-messaging.client'
 import { SmtpChannel } from './channels/smtp.channel'
 import { SmtpProcessor } from './channels/smtp.processor'
 import { TwilioChannel } from './channels/twilio.channel'
@@ -31,6 +35,8 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     TemplateLoader,
     InAppChannel,
     FcmChannel,
+    FirebaseAdminMessagingClient,
+    { provide: FCM_MESSAGING_CLIENT, useExisting: FirebaseAdminMessagingClient },
     FcmProcessor,
     SmtpChannel,
     SmtpProcessor,

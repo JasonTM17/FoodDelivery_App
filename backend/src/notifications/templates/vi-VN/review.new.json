@@ -1,0 +1,6 @@
+{
+  "title": "Bạn có đánh giá mới",
+  "body": "Một khách hàng vừa gửi đánh giá mới.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

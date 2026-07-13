@@ -67,50 +67,75 @@ export class NotificationsService {
       return { sent: false, skipped: true }
     }
 
-    const channels = await this.resolveChannels(userId, eventType)
-    if (channels.length === 0) return { sent: false, skipped: true }
+    let releaseDedupKey = true
+    try {
+      const channels = await this.resolveChannels(userId, eventType)
+      if (channels.length === 0) {
+        releaseDedupKey = false
+        return { sent: false, skipped: true }
+      }
 
-    const lang = payload.locale ?? (await this.resolveUserLocale(userId))
-    const rendered = this.templateLoader.render(eventType, payload.templateVars ?? {}, lang)
-    const isCritical = CRITICAL_EVENTS.has(eventType)
+      const lang = payload.locale ?? (await this.resolveUserLocale(userId))
+      const rendered = this.templateLoader.render(eventType, payload.templateVars ?? {}, lang)
+      const isCritical = CRITICAL_EVENTS.has(eventType)
 
-    const effectiveChannels =
-      !isCritical && this.isQuietHours()
-        ? channels.filter(c => c !== 'push')
-        : channels
-    if (effectiveChannels.length === 0) return { sent: false, skipped: true }
+      const effectiveChannels =
+        !isCritical && this.isQuietHours()
+          ? channels.filter(c => c !== 'push')
+          : channels
+      if (effectiveChannels.length === 0) {
+        releaseDedupKey = false
+        return { sent: false, skipped: true }
+      }
 
-    const channelPayload: ChannelPayload = {
-      title: rendered.title,
-      body: rendered.body,
-      data: { ...(payload.data ?? {}), eventType },
-      critical: isCritical,
+      const channelData = { ...(payload.data ?? {}), eventType, sourceId: payload.sourceId }
+      const channelPayload: ChannelPayload = {
+        title: rendered.title,
+        body: rendered.body,
+        data: channelData,
+        critical: isCritical,
+      }
+
+      const notification = await this.findOrCreateFanoutAuditRecord({
+        userId,
+        title: rendered.title,
+        body: rendered.body,
+        type: eventType,
+        payload: channelData,
+      }, payload.sourceId)
+      channelPayload.notification = this.toRealtimeNotification(notification)
+
+      const results = await Promise.allSettled(
+        effectiveChannels.map(ch => this.dispatchChannel(ch, userId, channelPayload)),
+      )
+
+      const delivered = results.filter(r => r.status === 'fulfilled' && r.value.success).length
+      const failCount = results.length - delivered
+      if (failCount > 0) {
+        this.logger.warn(`${failCount}/${results.length} channels failed for userId=${userId} event=${eventType}`)
+      }
+
+      // Retain deduplication after any durable channel enqueue/delivery to avoid duplicates.
+      releaseDedupKey = delivered === 0
+      return {
+        sent: failCount === 0,
+        attempted: results.length,
+        delivered,
+        failed: failCount,
+      }
+    } finally {
+      if (releaseDedupKey) {
+        await this.releaseFanoutDedupKey(dedupKey)
+      }
     }
+  }
 
-    const notification = await this.insertAuditRecord({
-      userId,
-      title: rendered.title,
-      body: rendered.body,
-      type: eventType,
-      payload: channelPayload.data,
-    })
-    channelPayload.notification = this.toRealtimeNotification(notification)
-
-    const results = await Promise.allSettled(
-      effectiveChannels.map(ch => this.dispatchChannel(ch, userId, channelPayload)),
-    )
-
-    const delivered = results.filter(r => r.status === 'fulfilled' && r.value.success).length
-    const failCount = results.length - delivered
-    if (failCount > 0) {
-      this.logger.warn(`${failCount}/${results.length} channels failed for userId=${userId} event=${eventType}`)
-    }
-
-    return {
-      sent: failCount === 0,
-      attempted: results.length,
-      delivered,
-      failed: failCount,
+  private async releaseFanoutDedupKey(dedupKey: string): Promise<void> {
+    try {
+      await this.redis.del(dedupKey)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      this.logger.error(`Notification fanout dedup cleanup failed for ${dedupKey}: ${message}`)
     }
   }
 
@@ -176,6 +201,27 @@ export class NotificationsService {
         data: (data.payload ?? {}) as Prisma.InputJsonValue,
       },
     })
+  }
+
+  private async findOrCreateFanoutAuditRecord(
+    data: {
+      userId: string
+      title: string
+      body: string
+      type: string
+      payload: Record<string, unknown>
+    },
+    sourceId: string,
+  ) {
+    const existing = await this.prisma.notification.findFirst({
+      where: {
+        userId: data.userId,
+        type: data.type,
+        data: { path: ['sourceId'], equals: sourceId },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    return existing ?? this.insertAuditRecord(data)
   }
 
   async getUserNotifications(userId: string, page = 1, limit = 20) {

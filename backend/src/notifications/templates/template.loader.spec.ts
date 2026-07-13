@@ -12,6 +12,16 @@ describe('TemplateLoader', () => {
     expect(rendered.supportedChannels.length).toBeGreaterThan(0)
   })
 
+  it.each(['vi', 'en', 'ja'] as const)('renders the review notification template for %s', (locale) => {
+    const loader = new TemplateLoader()
+
+    const rendered = loader.render('review.new', {}, locale)
+
+    expect(rendered.title).toBeTruthy()
+    expect(rendered.body).toBeTruthy()
+    expect(rendered.supportedChannels).toEqual(expect.arrayContaining(['in_app', 'push']))
+  })
+
   it('fails closed when the notification template is missing', () => {
     const loader = new TemplateLoader()
 

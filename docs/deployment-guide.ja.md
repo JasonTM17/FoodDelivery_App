@@ -22,7 +22,7 @@ Secret/CLI auth、current-head test、remote CI、production health が不足し
 
 ## Release sequence
 
-Full local gate → current-head GitHub Actions green → rotated secrets/preflight → Supabase → Vercel API → Admin/Restaurant → production smoke → `HEAD:master` → Docker immutable。
+Full local gate → current-head GitHub Actions green → rotated secrets/preflight → Supabase → Railway API/worker → Admin/Restaurant → production smoke → `HEAD:master` → Docker immutable。
 
 一つでも fail すれば停止します。
 
@@ -66,11 +66,13 @@ API core:
 - `REALTIME_PROVIDER=supabase`
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
-- `SUPABASE_URL`、server-only `SUPABASE_SECRET_KEY`、`SUPABASE_REALTIME_JWT_PRIVATE_KEY`、`SUPABASE_REALTIME_JWT_KEY_ID`、`SUPABASE_STORAGE_BUCKET=foodflow-public`
+- `SUPABASE_URL`、server-only `SUPABASE_SECRET_KEY`、Realtime API と短期 ES256 service JWT 用の `SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_REALTIME_JWT_PRIVATE_KEY`、`SUPABASE_REALTIME_JWT_KEY_ID`、`SUPABASE_STORAGE_BUCKET=foodflow-public`
 - private `SUPABASE_KYC_BUCKET=foodflow-private`、`DRIVER_KYC_MAX_UPLOAD_MB=4`、`DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`、access/refresh JWT secrets
 - verified CORS/reset URL
 - Maps/routing、DeepSeek、SePay、SMTP、FCM、Twilio、webhook secrets。
+
+FCM は legacy server key ではなく Firebase Admin SDK/HTTP v1 を使います。Production では `FCM_PROJECT_ID` と ADC/workload identity または secret-managed one-line `FCM_SERVICE_ACCOUNT_JSON` が必要です。Self-hosted Compose は API/worker 両方に JSON secret が必要です。Deploy 後に controlled-token notification を送信します。config/unit test は live Firebase delivery を証明しません。
 
 Admin は verified `NEXT_PUBLIC_API_URL`（末尾 `/api`）、Admin origin、Maps key、Supabase URL/anon key、`NEXT_PUBLIC_REALTIME_PROVIDER=supabase`。Restaurant は Restaurant origin を使用します。Public key でも origin/API/RLS restriction が必要です。
 
@@ -87,7 +89,7 @@ cd ..
 
 Production で `migrate dev`、reset、demo seed は実行しません。
 
-24 migrations、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。KYC bucket は private、driver write は owner-scoped signed grant、Admin read は 5 分で失効し、browser response に raw object key を返しません。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
+Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。KYC bucket は private、driver write は owner-scoped signed grant、Admin read は 5 分で失効し、browser response に raw object key を返しません。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
 
 ## 5. Railway API, worker, migrator, Redis
 

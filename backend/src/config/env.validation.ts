@@ -30,7 +30,7 @@ const productionRequiredKeys = [
   'SMTP_USER',
   'SMTP_PASS',
   'SMTP_FROM',
-  'FCM_SERVER_KEY',
+  'FCM_PROJECT_ID',
   'TWILIO_ACCOUNT_SID',
   'TWILIO_AUTH_TOKEN',
   'TWILIO_FROM_NUMBER',
@@ -75,7 +75,7 @@ const productionForbiddenValues: Partial<Record<ProductionRequiredKey, readonly 
   SMTP_HOST: ['smtp.example.com'],
   SMTP_USER: ['your-smtp-user'],
   SMTP_PASS: ['your-smtp-password'],
-  FCM_SERVER_KEY: ['your-fcm-server-key'],
+  FCM_PROJECT_ID: ['your-firebase-project-id'],
   TWILIO_ACCOUNT_SID: ['your-twilio-account-sid'],
   TWILIO_AUTH_TOKEN: ['your-twilio-auth-token'],
   TWILIO_FROM_NUMBER: ['your-twilio-from-number'],
@@ -85,6 +85,7 @@ const productionForbiddenValues: Partial<Record<ProductionRequiredKey, readonly 
 const supabaseForbiddenValues = {
   SUPABASE_URL: ['https://your-project.supabase.co'],
   SUPABASE_SECRET_KEY: ['your-supabase-secret-key'],
+  SUPABASE_PUBLISHABLE_KEY: ['your-supabase-publishable-key'],
   SUPABASE_SERVICE_ROLE_KEY: ['your-supabase-service-role-key'],
   SUPABASE_REALTIME_JWT_PRIVATE_KEY: ['your-es256-private-key'],
   SUPABASE_REALTIME_JWT_KEY_ID: ['your-supabase-signing-key-id'],
@@ -156,12 +157,19 @@ export const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().email().optional(),
-  FCM_SERVER_KEY: z.string().optional(),
+  FCM_PROJECT_ID: z.string().min(1).optional(),
+  FCM_SERVICE_ACCOUNT_JSON: z
+    .string()
+    .trim()
+    .optional()
+    .refine(value => value === undefined || value.length === 0 || isJsonObject(value), 'Must be a JSON object')
+    .transform(value => value || undefined),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SECRET_KEY: z.string().optional(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_REALTIME_JWT_PRIVATE_KEY: z.string().optional(),
   SUPABASE_REALTIME_JWT_KEY_ID: z.string().optional(),
   SUPABASE_ALLOW_LEGACY_KEYS: z.enum(['true', 'false']).default('false'),
@@ -188,6 +196,15 @@ function withNonProductionDefaults(config: Record<string, unknown>): Record<stri
 
 function isBlank(value: unknown): boolean {
   return typeof value !== 'string' || value.trim().length === 0
+}
+
+function isJsonObject(value: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+  } catch {
+    return false
+  }
 }
 
 function collectProductionIssues(config: Record<string, unknown>): string[] {
@@ -275,7 +292,11 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
   }
 
   if (realtimeProvider === 'supabase') {
-    for (const key of ['SUPABASE_REALTIME_JWT_PRIVATE_KEY', 'SUPABASE_REALTIME_JWT_KEY_ID'] as const) {
+    for (const key of [
+      'SUPABASE_PUBLISHABLE_KEY',
+      'SUPABASE_REALTIME_JWT_PRIVATE_KEY',
+      'SUPABASE_REALTIME_JWT_KEY_ID',
+    ] as const) {
       const value = config[key]
       if (isBlank(value)) {
         issues.push(`${key}: is required when REALTIME_PROVIDER=supabase`)

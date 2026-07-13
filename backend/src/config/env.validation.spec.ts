@@ -28,12 +28,13 @@ const productionEnv = {
   SMTP_USER: 'smtp-foodflow-user',
   SMTP_PASS: 'smtp-foodflow-password',
   SMTP_FROM: 'noreply@foodflow.vn',
-  FCM_SERVER_KEY: 'prod-fcm-server-key',
+  FCM_PROJECT_ID: 'foodflow-production',
   TWILIO_ACCOUNT_SID: 'prod-twilio-account-sid',
   TWILIO_AUTH_TOKEN: 'prod-twilio-auth-token',
   TWILIO_FROM_NUMBER: '+84900000000',
   SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
   SUPABASE_SECRET_KEY: 'sb_secret_foodflow_production',
+  SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_foodflow_production',
   SUPABASE_REALTIME_JWT_PRIVATE_KEY: 'test-es256-private-key',
   SUPABASE_REALTIME_JWT_KEY_ID: 'foodflow-es256-2026-07',
   SUPABASE_STORAGE_BUCKET: 'foodflow-public',
@@ -79,6 +80,36 @@ describe('validateEnv', () => {
     })
   })
 
+  it('requires a Firebase project ID while allowing ADC or a secret-managed service account', () => {
+    expect(() => validateEnv({
+      ...productionEnv,
+      FCM_PROJECT_ID: undefined,
+    })).toThrow(/FCM_PROJECT_ID/)
+
+    expect(validateEnv({
+      ...productionEnv,
+      FCM_SERVICE_ACCOUNT_JSON: JSON.stringify({ project_id: 'foodflow-production' }),
+    })).toMatchObject({
+      FCM_PROJECT_ID: 'foodflow-production',
+    })
+  })
+
+  it('rejects malformed Firebase service account JSON without exposing its value', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      FCM_SERVICE_ACCOUNT_JSON: '{not-json}',
+    })).toThrow(/FCM_SERVICE_ACCOUNT_JSON: Must be a JSON object/)
+  })
+
+  it('treats a blank optional service account value as ADC configuration', () => {
+    expect(validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      FCM_SERVICE_ACCOUNT_JSON: '   ',
+    }).FCM_SERVICE_ACCOUNT_JSON).toBeUndefined()
+  })
+
   it('requires Supabase secrets when production providers use Supabase', () => {
     expect(() => validateEnv({
       ...productionEnv,
@@ -86,11 +117,12 @@ describe('validateEnv', () => {
       STORAGE_PROVIDER: 'supabase',
       SUPABASE_URL: undefined,
       SUPABASE_SECRET_KEY: undefined,
+      SUPABASE_PUBLISHABLE_KEY: undefined,
       SUPABASE_REALTIME_JWT_PRIVATE_KEY: undefined,
       SUPABASE_REALTIME_JWT_KEY_ID: undefined,
       SUPABASE_STORAGE_BUCKET: undefined,
       SUPABASE_KYC_BUCKET: undefined,
-    })).toThrow(/SUPABASE_URL|SUPABASE_SECRET_KEY|SUPABASE_REALTIME_JWT_PRIVATE_KEY|SUPABASE_REALTIME_JWT_KEY_ID|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
+    })).toThrow(/SUPABASE_URL|SUPABASE_SECRET_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_REALTIME_JWT_PRIVATE_KEY|SUPABASE_REALTIME_JWT_KEY_ID|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
 
     expect(validateEnv({
       ...productionEnv,

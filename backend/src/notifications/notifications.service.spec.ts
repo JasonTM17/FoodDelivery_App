@@ -10,6 +10,7 @@ import { TwilioChannel } from './channels/twilio.channel'
 const mockPrisma = {
   notification: {
     findMany: jest.fn().mockResolvedValue([]),
+    findFirst: jest.fn().mockResolvedValue(null),
     count: jest.fn().mockResolvedValue(0),
     updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     create: jest.fn().mockResolvedValue({ id: 'n1', title: 't', body: 'b', type: 'order_accepted', data: {}, isRead: false, createdAt: new Date() }),
@@ -19,6 +20,7 @@ const mockPrisma = {
 
 const mockRedis = {
   set: jest.fn(),
+  del: jest.fn(),
   get: jest.fn(),
 }
 
@@ -94,7 +96,7 @@ describe('NotificationsService', () => {
     it('sends to in_app and push channels by default', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(5)
 
       const result = await service.fanout(userId, eventType, payload)
 
@@ -108,7 +110,7 @@ describe('NotificationsService', () => {
     it('sends canonical persisted notification rows over in-app realtime', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(5)
 
       await service.fanout(userId, eventType, payload)
 
@@ -172,6 +174,26 @@ describe('NotificationsService', () => {
       dateSpy.mockRestore()
     })
 
+    it.each([
+      [14, '21:00 ICT', true],
+      [15, '22:00 ICT', false],
+      [23, '06:00 ICT', false],
+      [0, '07:00 ICT', true],
+    ])('handles the quiet-hours boundary at %s UTC (%s)', async (utcHour, _ictTime, shouldSendPush) => {
+      mockRedis.set.mockResolvedValueOnce('OK')
+      mockPrisma.$queryRaw.mockResolvedValueOnce([])
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(utcHour)
+
+      await service.fanout(userId, eventType, payload)
+
+      if (shouldSendPush) {
+        expect(mockFcm.send).toHaveBeenCalled()
+      } else {
+        expect(mockFcm.send).not.toHaveBeenCalled()
+      }
+      dateSpy.mockRestore()
+    })
+
     it('respects user preferences from notification_settings', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([{ channels: ['in_app'], enabled: true }])
@@ -195,7 +217,7 @@ describe('NotificationsService', () => {
     it('reports partial channel failure instead of marking the fanout as sent', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(5)
       mockFcm.send.mockRejectedValueOnce(new Error('FCM unavailable'))
 
       const result = await service.fanout(userId, eventType, payload)
@@ -208,7 +230,7 @@ describe('NotificationsService', () => {
     it('treats channel success=false results as failed delivery', async () => {
       mockRedis.set.mockResolvedValueOnce('OK')
       mockPrisma.$queryRaw.mockResolvedValueOnce([])
-      const dateSpy = jest.spyOn(Date.prototype, 'getHours').mockReturnValue(12)
+      const dateSpy = jest.spyOn(Date.prototype, 'getUTCHours').mockReturnValue(5)
       mockFcm.send.mockResolvedValueOnce({ success: false, error: 'queue unavailable' })
 
       const result = await service.fanout(userId, eventType, payload)
@@ -227,6 +249,7 @@ describe('NotificationsService', () => {
       expect(mockInApp.send).not.toHaveBeenCalled()
       expect(mockFcm.send).not.toHaveBeenCalled()
       expect(mockPrisma.notification.create).not.toHaveBeenCalled()
+      expect(mockRedis.del).toHaveBeenCalledWith(`dedup:${userId}:${eventType}:${payload.sourceId}`)
     })
 
     it('fails closed when locale lookup fails instead of rendering Vietnamese fallback copy', async () => {
@@ -239,6 +262,7 @@ describe('NotificationsService', () => {
 
       expect(mockTemplateLoader.render).not.toHaveBeenCalled()
       expect(mockPrisma.notification.create).not.toHaveBeenCalled()
+      expect(mockRedis.del).toHaveBeenCalledWith(`dedup:${userId}:${eventType}:${payload.sourceId}`)
     })
   })
 })

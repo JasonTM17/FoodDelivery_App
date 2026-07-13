@@ -1,0 +1,6 @@
+{
+  "title": "新しいレビューが届きました",
+  "body": "お客様から新しいレビューが投稿されました。",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

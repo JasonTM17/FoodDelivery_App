@@ -48,7 +48,7 @@ describe('AdminSettingsService', () => {
       SEPAY_ACCOUNT_NUMBER: '1234567890',
       SEPAY_BANK_NAME: 'Vietcombank',
       SEPAY_WEBHOOK_SECRET: 'live-sepay-webhook-secret',
-      FCM_SERVER_KEY: 'live-fcm-key',
+      FCM_PROJECT_ID: 'foodflow-production',
       WEBHOOK_SECRET: 'live-webhook-secret',
     })[key])
 
@@ -67,7 +67,7 @@ describe('AdminSettingsService', () => {
       SEPAY_ACCOUNT_NUMBER: 'your-sepay-account-number',
       SEPAY_BANK_NAME: 'your-sepay-bank-name',
       SEPAY_WEBHOOK_SECRET: 'your-sepay-webhook-secret',
-      FCM_SERVER_KEY: 'your-fcm-server-key',
+      FCM_PROJECT_ID: 'your-firebase-project-id',
       SMTP_HOST: 'smtp.example.com',
       SMTP_USER: 'your-smtp-user',
       SMTP_PASS: 'your-smtp-password',

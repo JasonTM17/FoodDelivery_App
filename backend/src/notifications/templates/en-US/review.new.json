@@ -1,0 +1,6 @@
+{
+  "title": "New review received",
+  "body": "A customer has submitted a new review.",
+  "channels": ["in_app", "push"],
+  "critical": false
+}

@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { getSupabaseSecretKey } from '../common/supabase/supabase-config'
+import { sign } from 'jsonwebtoken'
+import { normalizePem } from '../common/supabase/supabase-config'
 
 interface PublishResult {
   provider: 'socketio' | 'supabase'
   queued: boolean
 }
+
+const BROADCAST_TOKEN_TTL_SECONDS = 60
 
 @Injectable()
 export class RealtimePublisherService {
@@ -30,12 +33,26 @@ export class RealtimePublisherService {
 
     try {
       const supabaseUrl = this.config.getOrThrow<string>('SUPABASE_URL').replace(/\/+$/, '')
-      const secretKey = getSupabaseSecretKey(this.config)
+      const publishableKey = this.config.getOrThrow<string>('SUPABASE_PUBLISHABLE_KEY').trim()
+      const privateKey = this.config.getOrThrow<string>('SUPABASE_REALTIME_JWT_PRIVATE_KEY')
+      const keyId = this.config.getOrThrow<string>('SUPABASE_REALTIME_JWT_KEY_ID').trim()
+      const nowSeconds = Math.floor(Date.now() / 1000)
+      const serviceToken = sign(
+        {
+          iss: `${supabaseUrl}/auth/v1`,
+          role: 'service_role',
+          iat: nowSeconds,
+          exp: nowSeconds + BROADCAST_TOKEN_TTL_SECONDS,
+        },
+        normalizePem(privateKey),
+        { algorithm: 'ES256', keyid: keyId },
+      )
       const endpoint = `${supabaseUrl}/realtime/v1/api/broadcast/${encodeURIComponent(channel)}/events/${encodeURIComponent(event)}?private=true`
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          apikey: secretKey,
+          apikey: publishableKey,
+          Authorization: `Bearer ${serviceToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),

@@ -70,7 +70,16 @@ export class SmtpProcessor extends WorkerHost {
 
       // For critical messages, fall back to SMS queue
       if (critical) {
-        await this.twilioQueue.add('send-sms', { userId, body, eventType: 'email_fallback' })
+        const sourceJobId = job.id
+        if (!sourceJobId) {
+          throw new Error('SMTP_FALLBACK_SOURCE_JOB_ID_MISSING')
+        }
+
+        await this.twilioQueue.add(
+          'send-sms',
+          { userId, body, eventType: 'email_fallback' },
+          { jobId: `smtp-fallback-${sourceJobId}` },
+        )
         this.logger.warn(`Critical email failed for ${userId}; pushed to SMS fallback`)
       }
 
@@ -86,11 +95,15 @@ export class SmtpProcessor extends WorkerHost {
   }
 
   private renderHtml(name: string, subject: string, content: string): string {
+    const safeName = escapeHtml(name)
+    const safeSubject = escapeHtml(subject)
+    const safeContent = escapeHtml(content).replace(/\r?\n/g, '<br/>')
+
     return `
       <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
-        <h2 style="color:#e65100">${subject}</h2>
-        <p>Xin chào ${name},</p>
-        <p>${content}</p>
+        <h2 style="color:#e65100">${safeSubject}</h2>
+        <p>Xin chào ${safeName},</p>
+        <p>${safeContent}</p>
         <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
         <p style="color:#999;font-size:12px">FoodFlow — Giao đồ ăn nhanh tại Việt Nam</p>
       </div>
@@ -101,4 +114,17 @@ export class SmtpProcessor extends WorkerHost {
   onFailed(job: Job<SmtpJobData>, error: Error): void {
     this.logger.error(`SMTP job ${job.id} failed for user ${job.data.userId}: ${error.message}`)
   }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, character => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }
+    return entities[character]
+  })
 }

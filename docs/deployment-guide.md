@@ -171,6 +171,7 @@ Core/provider values:
 | `QUEUE_PROVIDER` | `supabase-postgres` |
 | `SUPABASE_URL` | Project HTTPS origin |
 | `SUPABASE_SECRET_KEY` | Server-only, sealed; never expose as `NEXT_PUBLIC_*` |
+| `SUPABASE_PUBLISHABLE_KEY` | Server-side Realtime API component key; paired with a short-lived ES256 service JWT, not a secret |
 | `SUPABASE_REALTIME_JWT_PRIVATE_KEY` | Server-only ES256 private signing key, sealed |
 | `SUPABASE_REALTIME_JWT_KEY_ID` | Supabase Auth signing-key `kid` |
 | `SUPABASE_STORAGE_BUCKET` | `foodflow-public` |
@@ -187,10 +188,12 @@ Application/security values:
 - `DEEPSEEK_API_KEY` and optional `DEEPSEEK_MODEL=deepseek-v4-flash`
 - `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, optional `SEPAY_API_KEY`, and `WEBHOOK_SECRET`
 - `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-- `FCM_SERVER_KEY`
+- `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` (one-line Firebase service-account JSON stored as a secret on Railway; never expose it to a browser or commit it)
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
 
 `CORS_ORIGINS` must contain only verified Admin/Restaurant HTTPS origins. `PASSWORD_RESET_URL_BASE` must use the verified Admin origin. Do not add wildcard CORS.
+
+FCM uses Firebase Admin SDK/HTTP v1, not the legacy server key. `FCM_PROJECT_ID` is required in production. Railway may use a secret-managed one-line `FCM_SERVICE_ACCOUNT_JSON`; environments with a configured workload identity may leave it blank and use Application Default Credentials. Self-hosted production Compose has no workload identity by default and therefore requires the JSON secret for both API and worker. Send a controlled-token notification after deployment; configuration/unit tests cannot prove live Firebase delivery.
 
 ### Admin
 

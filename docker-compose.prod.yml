@@ -95,7 +95,10 @@ services:
       SMTP_USER: ${SMTP_USER:?required}
       SMTP_PASS: ${SMTP_PASS:?required}
       SMTP_FROM: ${SMTP_FROM:?required}
-      FCM_SERVER_KEY: ${FCM_SERVER_KEY:?required}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:?required}
+      # Self-hosted Compose has no workload identity by default, so supply a
+      # secret-managed one-line service-account JSON for Firebase Admin SDK.
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:?required}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:?required}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:?required}
       TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:?required}
@@ -145,7 +148,8 @@ services:
       SMTP_USER: ${SMTP_USER:?required}
       SMTP_PASS: ${SMTP_PASS:?required}
       SMTP_FROM: ${SMTP_FROM:?required}
-      FCM_SERVER_KEY: ${FCM_SERVER_KEY:?required}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:?required}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:?required}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:?required}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:?required}
       TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:?required}

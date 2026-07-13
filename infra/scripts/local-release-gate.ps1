@@ -171,7 +171,8 @@ if (-not $SkipDockerConfig) {
     SMTP_USER = 'compose-config-smtp-user'
     SMTP_PASS = 'compose-config-smtp-password'
     SMTP_FROM = 'FoodFlow <noreply@foodflow.test>'
-    FCM_SERVER_KEY = 'compose-config-fcm-key'
+    FCM_PROJECT_ID = 'compose-config-firebase-project'
+    FCM_SERVICE_ACCOUNT_JSON = '{"project_id":"compose-config-firebase-project","client_email":"compose-config@foodflow.test","private_key":"not-a-real-private-key"}'
     TWILIO_ACCOUNT_SID = 'compose-config-twilio-sid'
     TWILIO_AUTH_TOKEN = 'compose-config-twilio-token'
     TWILIO_FROM_NUMBER = '+10000000000'
@@ -180,7 +181,7 @@ if (-not $SkipDockerConfig) {
 
 if ($RunE2E) {
   Invoke-Step 'Playwright Chromium and Firefox' (Join-Path $repoRoot 'web') {
-    Invoke-Native pnpm test:e2e --project=chromium --project=firefox
+    Invoke-Native pnpm test:e2e -- --project=chromium --project=firefox
   }
 } else {
   Write-Host ''

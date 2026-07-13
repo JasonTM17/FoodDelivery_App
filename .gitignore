@@ -109,8 +109,8 @@ node_modules/
 .vercel/
 .railway/
 .netlify/
-supabase/.branches/
-supabase/.temp/
+**/supabase/.branches/
+**/supabase/.temp/
 .supabase/
 
 # Logs (runtime log dirs only - not source-code page routes)

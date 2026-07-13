@@ -1,38 +1,27 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
 import { Logger, Inject } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../../database/prisma.service'
 import { QUEUE_FCM, FCM_BATCH_SIZE } from '../notifications.constants'
 import { FcmJobData } from './fcm.channel'
-import Redis from 'ioredis'
+import type { Message, SendResponse } from 'firebase-admin/messaging'
+import {
+  FCM_MESSAGING_CLIENT,
+  type FirebaseMessagingClient,
+} from './firebase-admin-messaging.client'
 
 interface FcmTokenRow {
   id: string
   token: string
 }
 
-interface FcmBatchResult {
-  message_id?: string
-  error?: string
-}
-
-interface FcmResponse {
-  multicast_id: number
-  success: number
-  failure: number
-  results: FcmBatchResult[]
-}
-
 @Processor(QUEUE_FCM)
 export class FcmProcessor extends WorkerHost {
   private readonly logger = new Logger(FcmProcessor.name)
-  private readonly fcmUrl = 'https://fcm.googleapis.com/fcm/send'
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    @Inject(FCM_MESSAGING_CLIENT) private readonly messaging: FirebaseMessagingClient,
   ) {
     super()
   }
@@ -47,58 +36,54 @@ export class FcmProcessor extends WorkerHost {
 
     if (tokens.length === 0) return { sent: 0, failed: 0 }
 
-    const serverKey = this.config.get<string>('FCM_SERVER_KEY')
-    if (!serverKey) {
-      this.logger.warn('FCM_SERVER_KEY not configured; skipping push')
-      return { sent: 0, failed: 0 }
-    }
-
     let totalSent = 0
     let totalFailed = 0
 
     for (let i = 0; i < tokens.length; i += FCM_BATCH_SIZE) {
       const batch = tokens.slice(i, i + FCM_BATCH_SIZE)
 
+      let result
       try {
-        const response = await fetch(this.fcmUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `key=${serverKey}`,
-          },
-          body: JSON.stringify({
-            registration_ids: batch.map(t => t.token),
-            notification: { title, body },
-            data: data ?? {},
-          }),
-        })
-
-        if (!response.ok) {
-          this.logger.error(`FCM HTTP ${response.status} for user ${userId}`)
-          totalFailed += batch.length
-          continue
-        }
-
-        const result = (await response.json()) as FcmResponse
-        totalSent += result.success
-        totalFailed += result.failure
-
-        if (result.failure > 0) {
-          await this.markStaleTokens(batch, result.results)
-        }
+        result = await this.messaging.sendEach(this.toMessages(batch, title, body, data))
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        this.logger.error(`FCM batch error for user ${userId}: ${msg}`)
-        totalFailed += batch.length
+        this.logger.error(`FCM provider request failed for user ${userId}: ${msg}`)
+        // A rejected request has no reliable delivery result, so the queue must retry it.
+        throw err
+      }
+
+      totalSent += result.successCount
+      totalFailed += result.failureCount
+      if (result.failureCount > 0) {
+        try {
+          await this.markStaleTokens(batch, result.responses)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          this.logger.error(`FCM stale-token cleanup failed for user ${userId}: ${msg}`)
+        }
       }
     }
 
     return { sent: totalSent, failed: totalFailed }
   }
 
-  private async markStaleTokens(batch: FcmTokenRow[], results: FcmBatchResult[]): Promise<void> {
+  private toMessages(
+    batch: FcmTokenRow[],
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ): Message[] {
+    const fcmData = toFcmData(data)
+    return batch.map(({ token }) => ({
+      token,
+      notification: { title, body },
+      ...(fcmData ? { data: fcmData } : {}),
+    }))
+  }
+
+  private async markStaleTokens(batch: FcmTokenRow[], results: SendResponse[]): Promise<void> {
     const staleIds = batch
-      .filter((_, i) => results[i]?.error === 'NotRegistered' || results[i]?.error === 'InvalidRegistration')
+      .filter((_, i) => isPermanentlyInvalidToken(results[i]?.error?.code))
       .map(t => t.id)
 
     if (staleIds.length > 0) {
@@ -113,4 +98,30 @@ export class FcmProcessor extends WorkerHost {
   onFailed(job: Job<FcmJobData>, error: Error): void {
     this.logger.error(`FCM job ${job.id} failed for user ${job.data.userId}: ${error.message}`)
   }
+}
+
+function toFcmData(data?: Record<string, unknown>): Record<string, string> | undefined {
+  if (!data) return undefined
+
+  const entries = Object.entries(data)
+    .map(([key, value]) => [key, serializeFcmDataValue(value)] as const)
+    .filter((entry): entry is readonly [string, string] => entry[1] !== undefined)
+
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined
+}
+
+function serializeFcmDataValue(value: unknown): string | undefined {
+  if (value === undefined) return undefined
+  if (typeof value === 'string') return value
+
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function isPermanentlyInvalidToken(code?: string): boolean {
+  return code === 'messaging/registration-token-not-registered'
+    || code === 'messaging/invalid-registration-token'
 }

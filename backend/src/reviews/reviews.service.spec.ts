@@ -136,6 +136,36 @@ describe('ReviewsService', () => {
       expect(mockAggregation.recalcDriverRating).toHaveBeenCalledWith(DRIVER_ID, mockTx)
     })
 
+    it('fans out review.new to restaurant staff and the assigned driver', async () => {
+      mockPrisma.restaurantProfile.findMany.mockResolvedValue([
+        { userId: 'restaurant-owner-1' },
+        { userId: 'restaurant-owner-2' },
+      ])
+
+      await service.createReview(ORDER_ID, USER_ID, dto)
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mockNotifications.fanout).toHaveBeenCalledTimes(3)
+      expect(mockNotifications.fanout).toHaveBeenNthCalledWith(
+        1,
+        'restaurant-owner-1',
+        'review.new',
+        { sourceId: REVIEW_ID },
+      )
+      expect(mockNotifications.fanout).toHaveBeenNthCalledWith(
+        2,
+        'restaurant-owner-2',
+        'review.new',
+        { sourceId: REVIEW_ID },
+      )
+      expect(mockNotifications.fanout).toHaveBeenNthCalledWith(
+        3,
+        DRIVER_ID,
+        'review.new',
+        { sourceId: REVIEW_ID },
+      )
+    })
+
     it('skips driver recalculation when no deliveryRating provided', async () => {
       await service.createReview(ORDER_ID, USER_ID, { foodRating: 3, photos: [] })
       expect(mockAggregation.recalcDriverRating).not.toHaveBeenCalled()
