@@ -56,6 +56,13 @@ describe('validateEnv', () => {
     expect(env.DELIVERY_BASE_FEE_VND).toBe(15_000)
     expect(env.DEEPSEEK_BASE_URL).toBe('https://api.deepseek.com')
     expect(env.DEEPSEEK_MODEL).toBe('deepseek-v4-flash')
+    expect(env.RAG_ENABLED).toBe('true')
+    expect(env.RAG_SYNC_INTERVAL_MS).toBe(300_000)
+    expect(env.RAG_SYNC_BATCH_SIZE).toBe(100)
+    expect(env.RAG_SYNC_CONCURRENCY).toBe(4)
+    expect(env.RAG_TOP_K).toBe(3)
+    expect(env.RAG_MIN_SIMILARITY).toBe(0.7)
+    expect(env.DEEPSEEK_EMBEDDING_MODEL).toBe('text-embedding-v3')
   })
 
   it('accepts bounded non-production throttle overrides for load-test runs', () => {
@@ -78,6 +85,18 @@ describe('validateEnv', () => {
       REDIS_URL: productionEnv.REDIS_URL,
       PASSWORD_RESET_URL_BASE: productionEnv.PASSWORD_RESET_URL_BASE,
     })
+  })
+
+  it('rejects unsafe RAG sync frequency, batch size, and concurrency values', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      RAG_SYNC_INTERVAL_MS: '1000',
+      RAG_SYNC_BATCH_SIZE: '5000',
+      RAG_SYNC_CONCURRENCY: '50',
+      RAG_TOP_K: '20',
+      RAG_MIN_SIMILARITY: '1.5',
+    })).toThrow(/RAG_SYNC_INTERVAL_MS|RAG_SYNC_BATCH_SIZE|RAG_SYNC_CONCURRENCY/)
   })
 
   it('requires a Firebase project ID while allowing ADC or a secret-managed service account', () => {

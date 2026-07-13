@@ -32,5 +32,5 @@ export interface KnowledgeEntry {
   locale: string
   title: string
   content: string
-  sourceId?: string
+  sourceId: string
 }

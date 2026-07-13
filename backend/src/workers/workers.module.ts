@@ -11,6 +11,8 @@ import { NotificationsModule } from '../notifications/notifications.module'
 import { PaymentsModule } from '../payments/payments.module'
 import { TrackingModule } from '../tracking/tracking.module'
 import { PostgresJobOutboxWorkerService } from './postgres-job-outbox-worker.service'
+import { RagModule } from '../ai/rag/rag.module'
+import { RagSyncWorkerService } from './rag-sync-worker.service'
 
 @Module({
   imports: [
@@ -30,8 +32,9 @@ import { PostgresJobOutboxWorkerService } from './postgres-job-outbox-worker.ser
     NotificationsModule,
     PaymentsModule,
     TrackingModule,
+    RagModule,
     JobOutboxModule,
   ],
-  providers: [PostgresJobOutboxWorkerService],
+  providers: [PostgresJobOutboxWorkerService, RagSyncWorkerService],
 })
 export class WorkersModule {}

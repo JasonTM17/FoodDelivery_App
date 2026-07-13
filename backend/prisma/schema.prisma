@@ -1347,6 +1347,7 @@ model RagDocument {
   title     String   @db.VarChar(300)
   content   String   @db.Text
   sourceId  String?  @map("source_id") @db.VarChar(100)
+  contentHash String? @map("content_hash") @db.Char(64)
   embedding Unsupported("vector(1536)")?
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
