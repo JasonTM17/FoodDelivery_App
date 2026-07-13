@@ -10,16 +10,18 @@ Scoped hardening evidence ngày 13/07/2026:
 
 | Khu vực | Kết quả |
 |---|---|
-| Backend | 135 suite / 1008 test, Prisma validate/generate, typecheck, lint và build đều pass sau fix notification idempotency và SMTP escaping. |
-| Database | DB PostGIS + pgvector trống apply 32/32 migration; Supabase production cũng báo đủ 32 migration. |
+| Backend | 138 suite / 1016 test, Prisma validate/generate, typecheck, lint và build đều pass. |
+| Database | DB PostGIS + pgvector trống và Supabase production đều apply đủ 33 migration có thứ tự; checksum hai migration mới nhất khớp remote. |
 | Driver Flutter | Flutter analyze pass. Full 325 test pass trước availability-race patch cuối; 4 test session/race focused pass sau patch. Compiler Windows treo trước khi chạy test sau cache clean nên vẫn cần full final rerun. |
-| Web | Admin 192 test, Restaurant 130 test, workspace typecheck/lint và hai production build đều pass với Vercel production env. |
+| Web | Admin 195 test, Restaurant 134 test; cả hai app pass typecheck/lint và production build với Vercel production env đã xác minh. |
 | Browser E2E | 128/134 check pass trên Docker image cũ. 6 check còn lại cần image navigation hiện tại và DB test isolated có seed; không phải current-source release proof. |
 | FCM live send | Chưa chạy: cần project credential production và controlled device token. |
 
 ### Database runtime evidence 13/07/2026
 
-Container PostGIS + pgvector trống đã apply đủ 32 migration và xác minh PostGIS, vector, bảng `rag_documents` cùng cosine HNSW index. Supabase production đã apply cùng migration RAG đã commit, checksum khớp và Prisma báo schema up to date. Row count production của users, restaurants, orders, driver profiles và RAG documents đều bằng 0; không chạy demo/big seed trên production.
+Container PostGIS + pgvector dùng một lần đã apply đủ 33 migration, xác minh PostGIS, vector, `rag_documents`, source/content index và cosine HNSW index. Lệnh `db:big-seed` tạo thật trong DB này 50 restaurant đã duyệt, 50 driver, 100 customer, 509 order, 123 review và 10 promotion; đây là bằng chứng generator ghi database, không phải fixture fix cứng lúc runtime. Worker local đồng bộ 32 document restaurant/menu sống; do chưa có DeepSeek key nên cả 32 ở trạng thái chờ embedding, không sinh vector giả.
+
+Supabase production có cùng 33 migration và checksum mới nhất khớp. Users, restaurants, orders, driver profiles và RAG documents production vẫn bằng 0; tuyệt đối không chạy demo/big seed ở đó. Vì vậy production hiện là DB trống, chưa được tuyên bố là đã có big data.
 
 Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, repaired browser E2E, controlled FCM delivery, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
 

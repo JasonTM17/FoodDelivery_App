@@ -10,16 +10,18 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 | Area | Result |
 |---|---|
-| Backend | 135 suites / 1008 tests、Prisma validate/generate、typecheck、lint、build が notification idempotency/SMTP escaping fix 後に pass。 |
-| Database | Empty PostGIS + pgvector DB と Supabase production の双方で 32 migrations を確認。 |
+| Backend | 138 suites / 1016 tests、Prisma validate/generate、typecheck、lint、build が pass。 |
+| Database | Empty PostGIS + pgvector DB と Supabase production の双方で ordered 33 migrations を適用し、最新 2 migrations の checksum が remote と一致。 |
 | Driver Flutter | Flutter analyze pass。最終 availability-race patch 前に full 325 tests、その後に focused session/race 4 tests が pass。cache clean 後の Windows compiler hang のため final full rerun は必要。 |
-| Web | Admin 192 tests、Restaurant 130 tests、workspace typecheck/lint と両 production builds が Vercel production env で pass。 |
+| Web | Admin 195 tests、Restaurant 134 tests、両 app の typecheck/lint と production builds が verified Vercel production env で pass。 |
 | Browser E2E | 古い Docker image で 128/134 checks pass。残り 6 checks は current navigation image と seeded isolated test DB が必要で current-source release proof ではない。 |
 | FCM live send | 未実行: production project credential と controlled device token が必要。 |
 
 ### 2026-07-13 database runtime evidence
 
-Empty PostGIS + pgvector container は 32 migrations、PostGIS/vector extensions、`rag_documents`、cosine HNSW index を確認しました。Supabase production は同じ committed RAG migration を apply し、checksum は一致、Prisma status は up to date です。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。
+Disposable PostGIS + pgvector container は 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。
+
+Supabase production も同じ 33 migrations と最新 checksum を持ちます。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。したがって production に big data が存在するという主張ではありません。
 
 より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、repaired browser E2E、controlled FCM delivery、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 

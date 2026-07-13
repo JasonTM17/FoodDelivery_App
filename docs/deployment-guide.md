@@ -59,16 +59,16 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout |
 | Redis | Railway managed Redis | reference its private `REDIS_URL` from API and worker |
 
-### Current Docker Hub candidate
+### Last verified Docker Hub candidate
 
-Runtime commit `a627b597796965f4b991a5ab236a1fdedafa0b30` is published as immutable Docker Hub tags:
+Runtime commit `a627b597796965f4b991a5ab236a1fdedafa0b30` is published as immutable Docker Hub tags. These are historical pull/runtime-smoke evidence, not current-head release artifacts:
 
 | Artifact | SHA tag and verified digest |
 |---|---|
 | API + worker | `nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
 | Prisma migrate | `nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
 
-`latest` intentionally remains on the prior candidate until these SHA tags pass provider deployment and production smoke. This is not a Railway/Supabase/Vercel production approval; use the SHA tags for deployment and complete the provider stages below.
+`latest` intentionally remains on the prior candidate. Rebuild all four artifacts from the final source SHA, verify their remote digests, and complete the provider stages below before any semver or `latest` promotion.
 
 Expected Vercel projects:
 
@@ -186,6 +186,8 @@ Application/security values:
 - `PASSWORD_RESET_URL_BASE`, `CORS_ORIGINS`, `DELIVERY_BASE_FEE_VND`
 - `GOOGLE_MAPS_API_KEY`, `OSRM_URL`
 - `DEEPSEEK_API_KEY` and optional `DEEPSEEK_MODEL=deepseek-v4-flash`
+- `DEEPSEEK_EMBEDDING_MODEL=text-embedding-v3`
+- `RAG_ENABLED=true`, `RAG_SYNC_INTERVAL_MS`, `RAG_SYNC_BATCH_SIZE`, `RAG_SYNC_CONCURRENCY`, `RAG_TOP_K`, and `RAG_MIN_SIMILARITY`
 - `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, optional `SEPAY_API_KEY`, and `WEBHOOK_SECRET`
 - `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 - `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` (one-line Firebase service-account JSON stored as a secret on Railway; never expose it to a browser or commit it)
@@ -194,6 +196,8 @@ Application/security values:
 `CORS_ORIGINS` must contain only verified Admin/Restaurant HTTPS origins. `PASSWORD_RESET_URL_BASE` must use the verified Admin origin. Do not add wildcard CORS.
 
 FCM uses Firebase Admin SDK/HTTP v1, not the legacy server key. `FCM_PROJECT_ID` is required in production. Railway may use a secret-managed one-line `FCM_SERVICE_ACCOUNT_JSON`; environments with a configured workload identity may leave it blank and use Application Default Credentials. Self-hosted production Compose has no workload identity by default and therefore requires the JSON secret for both API and worker. Send a controlled-token notification after deployment; configuration/unit tests cannot prove live Firebase delivery.
+
+The Railway worker owns both durable job draining and periodic RAG synchronization. Keep the default RAG bounds unless measured load justifies changing them. Production RAG requires the real DeepSeek key; an unconfigured/failed embedding request must remain pending and must not be replaced with a zero, random, or deterministic fake vector.
 
 ### Admin
 
@@ -279,6 +283,7 @@ Deploy the API only after migration success, then start the worker with `dist/wo
 - `GET https://<railway-domain>/api/readyz` reports database, Redis, and Supabase Storage ready.
 - API CORS contains only the two verified Vercel dashboard origins; no tunnel or localhost origin.
 - Worker logs show a successful startup and do not print environment values, bearer tokens, database URLs, or provider payload secrets.
+- Worker logs show bounded RAG synchronization. Confirm changed live restaurant/menu sources receive real embeddings and unchanged sources are skipped; do not seed production to manufacture this evidence.
 
 If migration, health, or worker startup fails, stop. Do not deploy web against a failing API.
 

@@ -56,8 +56,9 @@ Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardeni
 ## Blocker bên ngoài
 
 - GitHub Actions hết billing/auth/token nên chưa có current-head remote green.
-- Supabase đã link, đủ 32 migration, private Broadcast/Storage, Data API boundary và ES256 key; business/RAG production còn 0 row vì không chạy seed giả.
-- Railway đã có DB/Supabase/Redis/ES256 nhưng còn thiếu credential thật cho Maps/routing, DeepSeek, SePay, SMTP, FCM service account, Twilio và webhook. Admin/Restaurant đã có publishable env nhưng chỉ redeploy sau khi API live.
+- Supabase đã link, đủ 33 migration với checksum mới nhất khớp, private Broadcast/Storage, Data API boundary và ES256 key; business/RAG production còn 0 row vì không chạy seed giả.
+- Railway topology pass nhưng public API vẫn trả 404; API/worker còn thiếu đúng 15 cấu hình provider thật thuộc Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM và Twilio. Vì vậy GPS/Broadcast production và FCM live send vẫn bị chặn.
+- Health production Admin/Restaurant đều trả 200. Candidate Restaurant sạch từ `9db6f7e` build và pass protected health smoke nhưng chưa promote trước khi Railway API live; Admin phải chạy cùng quy trình exact-source.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.
@@ -66,8 +67,8 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 
 1. Freeze final source và full local gate.
 2. Khôi phục/pass mọi GitHub workflow.
-3. Nhập secret rotate qua prompt/dashboard và pass preflight.
-4. Deploy Supabase migration/RLS/Realtime/Storage.
+3. Nhập secret rotate qua prompt/dashboard và pass Railway/Supabase/Vercel preflight.
+4. Kiểm lại Supabase đã migrate: RLS/Realtime/Storage với identity hợp lệ và cross-tenant denial.
 5. Deploy Railway migrator rồi API/worker, kiểm health/readiness/Cron.
 6. Deploy Admin/Restaurant với verified API alias.
 7. Smoke realtime/map/chatbot/export/payment/notification/tenant.

@@ -54,7 +54,7 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The Prisma schema at the 2026-07-13 `master` baseline declares 58 models across 32 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migration adds pgvector-backed storage and a cosine HNSW index. Its committed checksum matches the migration applied to Supabase. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The Prisma schema at the 2026-07-13 `master` baseline declares 58 models across 33 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Their committed checksums match the migrations applied to Supabase. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale.
 
@@ -112,6 +112,8 @@ Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The wo
 **Supabase realtime:** API event → `realtime_outbox` row → explicit Supabase publication → RLS filter against short-lived JWT channel claims → Admin/Restaurant/Customer/Driver handler.
 
 **Queue:** service adds abstract job → PostgreSQL `job_outbox` in managed mode or BullMQ locally → secured drain/worker → status/attempt/error persisted.
+
+**RAG indexing:** worker cursor-paginates approved restaurants and active menu items → canonical content + SHA-256 hash → skip unchanged source or request a real DeepSeek embedding → upsert pgvector document → deactivate stale sources only after a complete successful scan. Missing provider configuration leaves the embedding pending; it never inserts a fake vector or a hard-coded FAQ/policy corpus.
 
 **AI:** authenticated message → session/order context validation → DeepSeek adapter → persisted turn and usage event → answer or support escalation; missing configuration/provider failures return explicit errors and never synthesize an assistant reply.
 

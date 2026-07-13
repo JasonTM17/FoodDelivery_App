@@ -10,16 +10,18 @@ Scoped hardening evidence on 2026-07-13:
 
 | Area | Result |
 |---|---|
-| Backend | 135 suites / 1008 tests, Prisma validation/generation, typecheck, lint, and build passed after notification idempotency and SMTP escaping fixes. |
-| Database | A fresh PostGIS + pgvector database applied 32/32 migrations. Supabase production also reports all 32 migrations applied. |
+| Backend | 138 suites / 1016 tests, Prisma validation/generation, typecheck, lint, and build passed. |
+| Database | A fresh PostGIS + pgvector database and Supabase production both applied all 33 ordered migrations; the two latest committed checksums match remote. |
 | Driver Flutter | Flutter analyze passed. A 325-test full run passed before the final availability-race patch; its four focused session/race tests passed afterward. The compiler later hung before executing tests after a cache clean, so a fresh final full run remains required. |
-| Web | Admin 192 tests and Restaurant 130 tests passed; workspace typecheck/lint and both production builds passed with pulled Vercel production env. |
+| Web | Admin 195 tests and Restaurant 134 tests passed; both apps passed typecheck/lint and production builds with verified Vercel production env. |
 | Browser E2E | 128/134 checks passed against an older healthy Docker stack. Six checks are not current-source evidence: four expect the new Restaurant navigation absent from that image, and two require a non-production seed missing from that test DB. Rebuild and seed a current-SHA isolated stack before release. |
 | FCM live send | Not run: production project credentials and a controlled device token are required. |
 
 ### 2026-07-13 database runtime evidence
 
-An isolated local PostGIS + pgvector container applied all 32 migrations and verified PostGIS, vector, `rag_documents`, and the cosine HNSW index. Supabase production applied the same committed RAG migration, its checksum matches, and Prisma reports the remote schema up to date. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run in production.
+An isolated local PostGIS + pgvector container applied all 33 migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings.
+
+Supabase production has the same 33 migrations and matching latest checksums. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run there. This is an empty production database, not a claim that production already contains big data.
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md), but it is historical until rerun at the final source head. Full backend/web builds, cross-page axe/visual/Stitch, production-like tenant/realtime/map/AI smoke, provider preflights, current remote CI, controlled FCM delivery, and repaired browser E2E remain required.
 

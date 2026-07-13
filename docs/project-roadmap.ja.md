@@ -52,8 +52,9 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## External blockers
 
 - GitHub Actions billing/auth/token exhausted。
-- Supabase は linked、32 migrations、private Broadcast/Storage、Data API boundary、ES256 key を確認済み。Fake seed を実行していないため production business/RAG rows は 0 です。
-- Railway は DB/Supabase/Redis/ES256 を設定済みですが、Maps/routing、DeepSeek、SePay、SMTP、FCM service account、Twilio、webhook の real credentials が不足。Admin/Restaurant public env は設定済みで API live 後の redeploy 待ちです。
+- Supabase は linked、33 migrations と最新 checksum、private Broadcast/Storage、Data API boundary、ES256 key を確認済み。Fake seed を実行していないため production business/RAG rows は 0 です。
+- Railway topology は pass していますが public API は 404 で、API/worker は Maps/OSRM、DeepSeek、SePay/webhook、SMTP、FCM、Twilio の real provider settings 15 件が不足しています。Production GPS/Broadcast と live FCM send は blocked です。
+- Admin/Restaurant production health は 200。`9db6f7e` の clean Restaurant candidate は build と protected health smoke を pass しましたが、Railway API live まで未 promote です。Admin も同じ exact-source flow が必要です。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。
@@ -62,8 +63,8 @@ Fake value や validation bypass は禁止です。
 
 1. Final source freeze + full local gate。
 2. 全 GitHub workflows green。
-3. Rotated secrets + provider preflight。
-4. Supabase migrations/RLS/Realtime/Storage。
+3. Rotated secrets + Railway/Supabase/Vercel preflight。
+4. Migrated Supabase の RLS/Realtime/Storage を authorized/cross-tenant identities で再確認。
 5. Railway migrator、次に API/worker を deploy し health/readiness/Cron を確認。
 6. Verified API alias で Admin/Restaurant。
 7. Realtime/map/chatbot/export/payment/notification/tenant smoke。

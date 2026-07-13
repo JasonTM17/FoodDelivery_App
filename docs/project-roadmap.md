@@ -58,9 +58,9 @@ Status on 2026-07-13: **integration is incorporated in `master`; hardening is in
 ## External blockers
 
 - GitHub Actions billing/auth/token access is exhausted; fresh current-head remote workflows cannot yet approve release.
-- Supabase is linked and has 32 migrations, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Production business/RAG tables are intentionally empty until real onboarding/import.
-- Railway API/worker/migrator have database, Supabase, Redis, and ES256 realtime values but still lack real Maps/routing, DeepSeek, SePay, SMTP, FCM service-account, Twilio, and webhook credentials. Live controlled-token FCM delivery is still required.
-- Admin and Restaurant Vercel production env now use the Railway API URL and current Supabase publishable key; they must be redeployed only after the API is live.
+- Supabase is linked and has all 33 migrations with matching latest checksums, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Production business/RAG tables are intentionally empty until real onboarding/import.
+- Railway topology passes, but the public API still returns 404 and API/worker rollout lacks 15 real provider configurations: Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM, and Twilio. Live GPS/Broadcast and controlled-token FCM delivery therefore remain blocked.
+- Admin and Restaurant production health endpoints return 200. A clean Restaurant candidate from `9db6f7e` built and passed protected health smoke but remains unpromoted until the Railway API is live; Admin must follow the same exact-source candidate flow.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
@@ -69,8 +69,8 @@ These are release blockers, not permission to add fake values or bypass validati
 
 1. Freeze the final source head and run the full local gate.
 2. Restore and pass every required GitHub workflow on that head.
-3. Enter rotated secrets through secure prompts/dashboard and pass Supabase/Vercel preflight.
-4. Deploy Supabase migrations, RLS, explicit Realtime publication, and Storage policies.
+3. Enter rotated secrets through secure prompts/dashboard and pass Railway/Supabase/Vercel preflight.
+4. Recheck the migrated Supabase RLS, explicit Realtime publication, and Storage policies against authorized and cross-tenant identities.
 5. Deploy Railway migrator, then API/worker; verify health/readiness/Cron.
 6. Build/deploy Admin and Restaurant against the verified API alias.
 7. Run production health plus authenticated realtime/map/chatbot/export/payment/notification/tenant smoke.

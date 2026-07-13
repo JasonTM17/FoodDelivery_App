@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-12:** Batch 4 integration is on `master`, but it is **not production-deployed**. Local unit/type/build gates and fresh migration validation passed; Supabase remote database connectivity is timing out, Railway is not authenticated/configured, and production secrets/public build values are not yet in their provider stores. Deployment remains fail-closed.
+> **Release status — 2026-07-13:** Batch 4 integration is on `master`, and all 33 ordered migrations are applied and checksum-verified on Supabase production. The release is still **NO-GO**: the Railway API currently returns 404 because API/worker rollout is blocked by 15 real provider configurations, so authenticated Supabase Broadcast/GPS and end-to-end production smoke cannot yet run. Both Vercel dashboard health endpoints return 200; the tested Restaurant candidate remains unpromoted until the API is healthy. No fake credential, seed, ETA, or embedding is used to bypass this boundary.
 
 ## Product preview
 
@@ -79,16 +79,16 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Docker packages
 
-The current candidate has immutable Docker Hub images for the API/worker and migrator. Admin and Restaurant images remain gated until verified public API and Supabase build values exist. `latest` remains on the prior candidate until the SHA artifacts below pass provider deployment and production smoke.
+The table below records the last pulled and runtime-smoked immutable images. It is historical registry evidence for commit `a627b597796965f4b991a5ab236a1fdedafa0b30`, not an image set for the current `master` head. Current-head backend, migrate, Admin, and Restaurant SHA images must be rebuilt and scanned after the source/docs freeze. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
 
 | Artifact | Docker Hub tag | Remote digest |
 |---|---|---|
 | API + worker | [`nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
 | Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
-| Admin | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
-| Restaurant | gated | requires verified `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Admin | current-head image pending | public production values are verified; API production smoke is still blocked |
+| Restaurant | current-head image pending | clean Vercel candidate built successfully; API production smoke is still blocked |
 
-The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. Docker Hub was queried after push and both SHA tags were pulled again for a Linux/amd64 local runtime smoke: API health returned 200 and both runtimes preserved their non-root users. Docker Scout found zero High/Critical CVEs for those Linux/amd64 images. Multi-architecture scanning, provider deployment, and production smoke are still required before semver or `latest` promotion.
+The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. For the historical tags above, Docker Hub was queried after push and both SHA tags were pulled again for a Linux/amd64 local runtime smoke: API health returned 200 and both runtimes preserved their non-root users. Docker Scout found zero High/Critical CVEs for those Linux/amd64 images. These results do not transfer to a newer source SHA.
 
 Release promotion order:
 
@@ -188,15 +188,15 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-13 hardening pass verified Backend 135 suites / 1008 tests plus typecheck, lint, and build; Admin 192 and Restaurant 130 unit tests plus production builds; Flutter analyze and a 325-test full run before the final availability-race patch, followed by four focused session/race tests. Browser E2E against the older Docker stack passed 128/134 checks; six checks correctly remain non-evidence because that stack lacks the current navigation build and its test database was not seeded. Live Firebase delivery and a current-SHA browser rerun remain required.
+The 2026-07-13 hardening pass verified Backend 138 suites / 1016 tests plus Prisma validation/generation, typecheck, lint, and build; Admin 195 and Restaurant 134 unit tests plus typecheck/lint and production builds. A disposable PostGIS + pgvector database applied all 33 migrations and completed the real big-seed path with 50 approved restaurants, 50 drivers, 100 customers, and 509 orders; production Supabase intentionally remains empty. The local worker indexed 32 live restaurant/menu documents, leaving embeddings pending when no DeepSeek key was configured instead of manufacturing vectors. Flutter analyze and the recorded full/focused GPS tests remain bounded local evidence. Live Firebase delivery, current-SHA browser E2E, and authenticated Railway/Supabase GPS smoke remain required.
 
 ## Deployment order
 
 1. Restore GitHub Actions billing/auth and obtain fresh green remote checks.
-2. Rotate exposed credentials; complete Supabase, Railway, and Vercel preflights.
-3. Deploy Supabase migrations, RLS, private Broadcast authorization, and Storage bucket policies.
-4. Run the Railway migrator, then deploy the Railway API, worker, and managed Redis; verify health and WebSocket origin.
-5. Build/deploy Admin and Restaurant on Vercel with the verified Railway API and Supabase public values.
+2. Rotate exposed credentials and supply the 15 missing Railway provider configurations through sealed provider stores.
+3. Recheck the already-migrated Supabase project: RLS, private Broadcast authorization, and Storage bucket policies.
+4. Run the Railway migrator against the current head, then deploy the Railway API/worker and verify health/readiness.
+5. Smoke the existing Vercel candidates against the healthy Railway API, then promote the exact tested Admin and Restaurant deployments.
 6. Smoke health, auth, tenant isolation, realtime, map/shipper route, chatbot, notifications, exports, and payments.
 7. Do not recreate or push historical integration branches. Reconcile the verified local `master` head with `origin/master` only after the required release gates authorize it.
 8. Publish immutable Docker manifests, then update `latest` only after production smoke.

@@ -23,7 +23,9 @@ The local branch had not been pushed by name because that would recreate a secon
 
 This report remains historical. A later 2026-07-13 audit found the remote has only `master`; no historical local integration/finalization ref or linked integration worktree remains. Branch equivalence is not a production-release claim.
 
-The same pass applied all 32 migrations to a fresh PostGIS + pgvector database and to Supabase production. The committed RAG migration checksum exactly matches Supabase, and production business/RAG tables remain empty by design; no demo/big seed was run. Browser E2E against the older Docker image passed 128/134 checks, while six checks require a rebuilt current navigation image and isolated test seed.
+The continued pass applied all 33 migrations to a fresh PostGIS + pgvector database and to Supabase production. The two latest committed migration checksums exactly match Supabase, and production business/RAG tables remain empty by design; no demo/big seed was run there. A disposable local database separately completed the real big-seed path with 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions. Its worker indexed 32 live restaurant/menu documents and, without a DeepSeek key, correctly left all embeddings pending instead of inserting fake vectors. Browser E2E against the older Docker image passed 128/134 checks, while six checks require a rebuilt current navigation image and isolated test seed.
+
+Current scoped quality evidence is Backend 138 suites / 1016 tests, Admin 195 tests, Restaurant 134 tests, Prisma validation/generation, backend/web typecheck and lint, and both dashboard production builds. These counts remain bounded evidence, not production approval.
 
 ## Landed hardening
 
@@ -106,13 +108,13 @@ The two current SHA manifests are local Linux/amd64 release-candidate evidence, 
 
 ### Supabase
 
-The active Food_Delivery_Crab project is linked and `supabase migration list --linked` returned an empty migration history. The only configured Prisma URLs in this worktree target local PostgreSQL; no production session/direct URL or database password is available. No remote migration, schema dump, RLS advisor, or Storage change was attempted. Enter the Supabase Connect-dialog session/direct URL through the secure prompt, back up the empty/new database, then run `prisma migrate deploy` before any API rollout.
+The active Food_Delivery_Crab project was backed up outside the repository, then reconciled after the provider recorded a zero-step failed migration whose HNSW index already existed from the preceding migration. The failed entry was marked rolled back with Prisma's migration-history command; no applied SQL was reversed. `prisma migrate deploy` then applied the remaining forward migration. Prisma now reports 33 migrations and an up-to-date schema. PostGIS/pgvector indexes and the latest committed checksums were verified directly. Production users, restaurants, orders, driver profiles, and RAG documents remain 0 rows. The Supabase CLI token is not persisted in this worktree; a fresh CLI preflight still needs an authenticated shell session.
 
 ### Railway and Vercel
 
-Railway OAuth completed on 2026-07-13. Project `foodflow-production` now contains empty `foodflow-api`, `foodflow-worker`, and `foodflow-migrate` services plus a managed Redis service whose deployment and 500 MB volume are healthy; the committed Railway topology preflight passes. API/worker have the verified non-secret Supabase/Redis/CORS contract, a current Supabase secret API key, and generated 64-byte JWT secrets set with deploys skipped. No app image was attached and no app deployment was attempted because the Supabase database URLs, imported ES256 signing key, Maps/OSRM, DeepSeek, SePay, SMTP, FCM, and Twilio production credentials are unavailable.
+Railway OAuth and topology preflight pass for `foodflow-api`, `foodflow-worker`, `foodflow-migrate`, and managed Redis. The public API endpoint still returns 404 because API/worker rollout remains blocked by exactly 15 missing real provider configurations: `GOOGLE_MAPS_API_KEY`, `OSRM_URL`, `DEEPSEEK_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `FCM_PROJECT_ID`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Production validation remains fail-closed; no value was fabricated.
 
-Both Vercel projects now use Node 22.x and have `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the production target. Existing public build variables were incorrectly stored as Vercel `sensitive` values, which prevents release-time value auditing. The deployed Restaurant bundles still contain a `trycloudflare.com` API URL and localhost fallback. The PowerShell and shell preflight guards now reject non-auditable `NEXT_PUBLIC_*` values; no production redeploy was attempted.
+Both Vercel projects pass the committed settings/environment-name preflight and their canonical health endpoints return 200 JSON. Admin and Restaurant production builds pass with verified public values. A clean Restaurant candidate from exact source `9db6f7e` reached READY and passed its protected `/api/healthz` through the Vercel CLI bypass, but it was intentionally not promoted while Railway health/auth/GPS smoke is impossible. Admin still needs an equivalent final-source candidate after the release source SHA is frozen.
 
 Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
 
@@ -122,15 +124,15 @@ The user reports billing/token/auth exhaustion. No local result may be represent
 
 ## Remaining release gates
 
-1. Complete critical-page visual/i18n/axe review and recapture media only if accepted UI changes require it.
-2. Run fresh frozen installs and complete backend/web/mobile suites and signed-build checks at the final source head.
-3. Validate private KYC Storage/RLS/upload/review behavior against the target Supabase project.
-4. Run Chromium + Firefox full E2E, axe serious/critical, visual, tenant isolation, realtime authorization, shipper route/map, export, payment, and AI fail-closed/live smoke.
-5. Rotate exposed keys and complete Supabase/Railway/Vercel secure preflights.
-6. Restore remote CI and obtain green current-head workflow evidence.
-7. Deploy Supabase, then Railway migration/API/worker/Redis, then Vercel Admin and Restaurant; verify production health and behavior.
-8. Pull the existing immutable Docker Hub SHA in a clean environment, publish a matching semver only after the smoke, and then manually promote `latest`.
+1. Supply/rotate the 15 missing Railway provider configurations only through sealed provider stores; pass strict API/worker environment validation.
+2. Run the current-head migrator, deploy Railway API/worker, and require `/api/healthz` plus `/api/readyz` before any web promotion.
+3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, and GPS snapshot/delta delivery against Supabase production.
+4. Run current-SHA Chromium + Firefox E2E, axe serious/critical, visual, tenant isolation, route/map, export, payment, notification, and AI live smoke.
+5. Complete full final-head Flutter tests/release builds and Android device GPS matrix; use macOS/iPhone for the required iOS background-location evidence.
+6. Restore remote CI and obtain green final-head workflow evidence.
+7. Smoke and promote the exact Admin/Restaurant Vercel candidates only after Railway is healthy.
+8. Build/push all four current-head Docker SHA manifests, pull them in a clean environment, verify remote digests/scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
 
 ## Release decision
 
-**NO-GO** at this snapshot. The repository is materially hardened, `master` contains the integration, Docker Hub SHA images are pushed, and mobile realtime parity has landed, but Supabase database connectivity, Railway authentication/service setup, production secrets, remote CI, signed mobile release evidence, and production smoke are mandatory and unresolved. No secret should be invented, copied from chat, committed, or bypassed to change this decision.
+**NO-GO** remains correct. Supabase schema deployment is complete and the dashboard candidates/builds are healthy, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, final-head remote CI/mobile release evidence is incomplete, and current-head Docker images have not been published. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.

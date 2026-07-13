@@ -108,6 +108,12 @@ Admin, Restaurant, Customer, and Driver managed clients support this contract. M
 
 Local BullMQ remains available. The worker is another entry point in the backend image, not a separate package/image contract.
 
+## Dynamic RAG indexing
+
+The same worker synchronizes approved restaurant and active menu content into `rag_documents`. The indexer reads source rows in cursor-paginated batches, builds canonical text, and compares a SHA-256 `content_hash` before requesting an embedding. Unchanged rows are skipped; changed rows use the configured DeepSeek `text-embedding-v3` provider and are upserted with their real vector. A missing or failed provider leaves the document pending with no vector, never a fabricated embedding.
+
+Source keys and content hashes make reruns idempotent. Stale document deactivation occurs only after the complete scan succeeds, so a partial database/provider failure cannot erase the last usable index. The repository contains no runtime hard-coded FAQ/policy corpus; production knowledge grows from onboarded business data. Local big-seed data is disposable load/coverage evidence and is never copied into Supabase production.
+
 ## Notification delivery
 
 Notification fanout persists an in-app record, then enqueues channel-specific work. For push, the worker sends bounded batches through Firebase Admin SDK/FCM HTTP v1. `FCM_PROJECT_ID` identifies the Firebase project; the runtime uses workload credentials/Application Default Credentials when available, or a one-line `FCM_SERVICE_ACCOUNT_JSON` held only in its secret store. The legacy FCM server key is not a supported configuration.
