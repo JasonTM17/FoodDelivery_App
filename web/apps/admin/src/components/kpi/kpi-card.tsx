@@ -28,7 +28,7 @@ export default function KpiCard({ kpi, className }: KpiCardProps) {
   const deltaPercent = Math.abs(kpi.delta * 100);
 
   return (
-    <Link href={kpi.drillDownHref} data-testid={`kpi-card-${kpi.key}`}>
+    <Link href={kpi.drillDownHref} prefetch={false} data-testid={`kpi-card-${kpi.key}`}>
       <Card className={cn('transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer', className)}>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.label}</CardTitle>
