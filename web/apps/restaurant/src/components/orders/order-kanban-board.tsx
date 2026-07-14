@@ -170,7 +170,7 @@ export function OrderKanbanBoard() {
                 role="region"
                 aria-labelledby={`order-column-${col.id}`}
                 tabIndex={0}
-                className="p-4 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500"
+                className="h-80 space-y-4 overflow-y-auto p-4 scrollbar-thin focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500 md:h-[calc(100vh-280px)]"
               >
                 {isLoading ? (
                   [1, 2].map((i) => (
