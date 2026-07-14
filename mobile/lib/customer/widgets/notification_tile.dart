@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/notification_category.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationTile extends StatelessWidget {
@@ -78,40 +79,43 @@ class NotificationTile extends StatelessWidget {
   }
 
   IconData _icon(String type) {
-    switch (type) {
-      case 'order':
+    switch (notificationCategoryOf(type)) {
+      case NotificationCategory.order:
         return Icons.receipt_long_outlined;
-      case 'promo':
+      case NotificationCategory.promotion:
         return Icons.local_offer_outlined;
-      default:
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         return Icons.notifications_none_outlined;
     }
   }
 
   Color _iconColor(String type) {
-    switch (type) {
-      case 'order':
+    switch (notificationCategoryOf(type)) {
+      case NotificationCategory.order:
         return AppColors.info;
-      case 'promo':
+      case NotificationCategory.promotion:
         return AppColors.accent;
-      default:
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         return AppColors.textSecondary;
     }
   }
 
   Widget _typeLabel(String type) {
-    String label;
-    Color color;
-    switch (type) {
-      case 'order':
+    final String label;
+    final Color color;
+    switch (notificationCategoryOf(type)) {
+      case NotificationCategory.order:
         label = 'Đơn hàng';
         color = AppColors.info;
         break;
-      case 'promo':
+      case NotificationCategory.promotion:
         label = 'Khuyến mãi';
         color = AppColors.accent;
         break;
-      default:
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         label = 'Hệ thống';
         color = AppColors.textSecondary;
     }

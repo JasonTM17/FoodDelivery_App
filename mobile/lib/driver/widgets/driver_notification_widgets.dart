@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/notification_category.dart';
 import '../providers/driver_notifications_provider.dart';
 
 class DriverNotificationCard extends StatelessWidget {
@@ -102,27 +103,25 @@ class DriverNotificationCard extends StatelessWidget {
   }
 
   IconData _icon(String type) {
-    switch (type) {
-      case 'order':
-      case 'order_update':
+    switch (notificationCategoryOf(type)) {
+      case NotificationCategory.order:
         return Icons.shopping_bag_outlined;
-      case 'promotion':
-      case 'promo':
+      case NotificationCategory.promotion:
         return Icons.star_outline;
-      default:
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         return Icons.info_outline;
     }
   }
 
   Color _color(String type) {
-    switch (type) {
-      case 'order':
-      case 'order_update':
+    switch (notificationCategoryOf(type)) {
+      case NotificationCategory.order:
         return AppColors.primary;
-      case 'promotion':
-      case 'promo':
+      case NotificationCategory.promotion:
         return AppColors.warning;
-      default:
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         return AppColors.info;
     }
   }

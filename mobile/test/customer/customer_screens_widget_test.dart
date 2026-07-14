@@ -67,6 +67,9 @@ class _FakeNotifNotifier extends NotificationNotifier {
   Future<void> fetchNotifications() async {
     state = preset;
   }
+
+  @override
+  Future<void> markRead(String id) async {}
 }
 
 // ---------------------------------------------------------------------------
@@ -218,6 +221,72 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.text('Đơn hàng đã xác nhận'), findsOneWidget);
+    });
+
+    testWidgets('groups canonical order events into the orders tab', (
+      tester,
+    ) async {
+      final notification = NotificationModel(
+        id: 'order-1',
+        type: 'order_update',
+        title: 'Canonical order event',
+        body: 'Order status changed',
+        createdAt: DateTime(2026, 1, 1),
+        isRead: false,
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          const NotificationsScreen(),
+          overrides: [
+            notificationProvider.overrideWith(
+              (ref) => _FakeNotifNotifier(
+                NotificationState(notifications: [notification]),
+              ),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(Tab, 'Đơn hàng'));
+      await tester.pumpAndSettle();
+      expect(find.text('Canonical order event'), findsOneWidget);
+      expect(find.text('Đơn hàng'), findsWidgets);
+      expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);
+    });
+
+    testWidgets('groups namespaced promotion events into the promotions tab', (
+      tester,
+    ) async {
+      final notification = NotificationModel(
+        id: 'promotion-1',
+        type: 'promotion.broadcast',
+        title: 'Canonical promotion event',
+        body: 'A restaurant published a promotion',
+        createdAt: DateTime(2026, 1, 1),
+        isRead: false,
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          const NotificationsScreen(),
+          overrides: [
+            notificationProvider.overrideWith(
+              (ref) => _FakeNotifNotifier(
+                NotificationState(notifications: [notification]),
+              ),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(Tab, 'Khuyến mãi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Canonical promotion event'), findsOneWidget);
+      expect(find.text('Khuyến mãi'), findsWidgets);
+      expect(find.byIcon(Icons.local_offer_outlined), findsOneWidget);
     });
   });
 

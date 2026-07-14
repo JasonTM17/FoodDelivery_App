@@ -12,7 +12,7 @@ final notificationProvider =
 
 class NotificationModel {
   final String id;
-  final String type; // order | promo | system
+  final String type;
   final String title;
   final String body;
   final DateTime createdAt;

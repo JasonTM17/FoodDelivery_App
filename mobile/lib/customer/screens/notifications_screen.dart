@@ -6,6 +6,7 @@ import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
+import '../../shared/utils/notification_category.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/notification_tile.dart';
 import '../router/route_names.dart';
@@ -23,7 +24,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  static const _typeMap = ['', 'order', 'promo', 'system'];
+  static const _categoryMap = [
+    NotificationCategory.other,
+    NotificationCategory.order,
+    NotificationCategory.promotion,
+    NotificationCategory.system,
+  ];
 
   @override
   void initState() {
@@ -42,8 +48,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   List<NotificationModel> _filtered(List<NotificationModel> all, int tab) {
     if (tab == 0) return all;
-    final type = _typeMap[tab];
-    return all.where((e) => e.type == type).toList();
+    final category = _categoryMap[tab];
+    return all
+        .where(
+          (notification) =>
+              notificationCategoryOf(notification.type) == category,
+        )
+        .toList();
   }
 
   void _handleTap(NotificationModel item) {
@@ -55,16 +66,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       context.push(item.deepLink!);
       return;
     }
-    // Fallback routing by type
-    switch (item.type) {
-      case 'order':
+    switch (notificationCategoryOf(item.type)) {
+      case NotificationCategory.order:
         context.push(Routes.orders);
         break;
-      case 'promo':
+      case NotificationCategory.promotion:
         context.push(Routes.vouchers);
         break;
-      default:
-        // System notification — no deep link, just mark as read
+      case NotificationCategory.system:
+      case NotificationCategory.other:
         break;
     }
   }

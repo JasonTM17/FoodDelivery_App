@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/utils/notification_category.dart';
 import '../providers/driver_notifications_provider.dart';
 import '../widgets/driver_notification_state_widgets.dart';
 import '../widgets/driver_notification_widgets.dart';
@@ -19,7 +20,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  static const _typeMap = ['', 'order', 'promotion', 'system'];
+  static const _categoryMap = [
+    NotificationCategory.other,
+    NotificationCategory.order,
+    NotificationCategory.promotion,
+    NotificationCategory.system,
+  ];
 
   @override
   void initState() {
@@ -41,17 +47,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     int tabIndex,
   ) {
     if (tabIndex == 0) return all;
-    final type = _typeMap[tabIndex];
-    if (type == 'promotion') {
-      return all
-          .where(
-            (notification) =>
-                notification.type == 'promotion' ||
-                notification.type == 'promo',
-          )
-          .toList();
-    }
-    return all.where((notification) => notification.type == type).toList();
+    final category = _categoryMap[tabIndex];
+    return all
+        .where(
+          (notification) =>
+              notificationCategoryOf(notification.type) == category,
+        )
+        .toList();
   }
 
   @override
