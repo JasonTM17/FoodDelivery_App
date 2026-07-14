@@ -58,7 +58,7 @@ Status on 2026-07-13: **integration is incorporated in `master`; hardening is in
 ## External blockers
 
 - GitHub Actions billing/auth/token access is exhausted; fresh current-head remote workflows cannot yet approve release.
-- Supabase is linked and has all 33 migrations with matching latest checksums, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Production business/RAG tables are intentionally empty until real onboarding/import.
+- Supabase is linked and was last verified at 33 migrations with matching latest checksums, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Repository migration 34 (FCM registration revocations) still needs the authorized rollout. Production business/RAG tables are intentionally empty until real onboarding/import.
 - Railway topology passes, but the public API still returns 404 and API/worker rollout lacks 15 real provider configurations: Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM, and Twilio. Live GPS/Broadcast and controlled-token FCM delivery therefore remain blocked.
 - Admin and Restaurant production health endpoints return 200. A clean Restaurant candidate from `9db6f7e` built and passed protected health smoke but remains unpromoted until the Railway API is live; Admin must follow the same exact-source candidate flow.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.

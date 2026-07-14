@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/driver_notifications_provider.dart';
 import 'package:foodflow_customer/shared/api/api_client.dart';
+import 'package:foodflow_customer/shared/api/realtime_client.dart';
+import 'package:foodflow_customer/shared/config/app_config.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +102,32 @@ void main() {
       expect(notifier.state.notifications, isEmpty);
     });
   });
+
+  test(
+    'adds realtime notifications once while the driver app is open',
+    () async {
+      final transport = _NotificationRealtimeTransport();
+      final notifier = DriverNotificationsNotifier(
+        realtimeClient: RealtimeClient.forTesting(
+          provider: RealtimeProvider.supabase,
+          transport: transport,
+          postCommand: (_, _) async {},
+        ),
+      );
+
+      transport.addNotification(_notificationPayload());
+      await Future<void>.delayed(Duration.zero);
+      transport.addNotification(_notificationPayload());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(notifier.state.notifications, hasLength(1));
+      expect(notifier.state.notifications.single.id, 'notification-1');
+      expect(notifier.state.unreadCount, 1);
+
+      notifier.dispose();
+      transport.dispose();
+    },
+  );
 }
 
 class _NotificationsApiInterceptor extends Interceptor {
@@ -137,3 +167,56 @@ Map<String, dynamic> _notificationPayload() => {
   'isRead': false,
   'data': {'eventType': 'order_update', 'deepLink': '/orders/order-1'},
 };
+
+class _NotificationRealtimeTransport implements RealtimeTransport {
+  final _notifications = StreamController<Map<String, dynamic>>.broadcast();
+
+  void addNotification(Map<String, dynamic> notification) {
+    _notifications.add(notification);
+  }
+
+  @override
+  bool get isConnected => true;
+
+  @override
+  Stream<Map<String, dynamic>> get onDriverLocation => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get onOrderStatus => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get onEtaUpdate => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get onNotification => _notifications.stream;
+
+  @override
+  Stream<Map<String, dynamic>> get onDriverOffer => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get onDriverOrderAssigned =>
+      const Stream.empty();
+
+  @override
+  Stream<void> get onAuthRefreshRequired => const Stream.empty();
+
+  @override
+  Future<void> connect() async {}
+
+  @override
+  Future<void> disconnect() async {}
+
+  @override
+  Future<void> reconnectWithToken(String newToken) async {}
+
+  @override
+  Future<void> subscribeOrder(String orderId) async {}
+
+  @override
+  Future<void> unsubscribeOrder(String orderId) async {}
+
+  @override
+  void dispose() {
+    _notifications.close();
+  }
+}

@@ -76,14 +76,17 @@ android {
     }
 }
 
-tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
-    doFirst {
-        if (!hasReleaseSigning) {
-            throw GradleException(
-                "FoodFlow release signing is not configured. Set FOODFLOW_UPLOAD_STORE_FILE, " +
-                    "FOODFLOW_UPLOAD_STORE_PASSWORD, FOODFLOW_UPLOAD_KEY_ALIAS, and " +
-                    "FOODFLOW_UPLOAD_KEY_PASSWORD via Gradle properties or environment variables."
-            )
+tasks.configureEach {
+    if ((name.startsWith("assemble") || name.startsWith("bundle")) &&
+        name.endsWith("Release")) {
+        doFirst {
+            if (!hasReleaseSigning) {
+                throw GradleException(
+                    "FoodFlow release signing is not configured. Set FOODFLOW_UPLOAD_STORE_FILE, " +
+                        "FOODFLOW_UPLOAD_STORE_PASSWORD, FOODFLOW_UPLOAD_KEY_ALIAS, and " +
+                        "FOODFLOW_UPLOAD_KEY_PASSWORD via Gradle properties or environment variables."
+                )
+            }
         }
     }
 }

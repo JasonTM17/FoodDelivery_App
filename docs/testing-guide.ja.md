@@ -11,15 +11,15 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 | Area | Result |
 |---|---|
 | Backend | 138 suites / 1016 tests、Prisma validate/generate、typecheck、lint、build が pass。 |
-| Database | Repository は ordered 33 migrations を track しています。Supabase production は最後にその 33 migrations で checksum 検証されました。再利用した historical Docker test volume には applied migration-history 34 行と rolled-back 1 行が残っていますが、current-source または fresh migration count の evidence ではありません。 |
-| Driver Flutter | Flutter analyze pass。最終 availability-race patch 前に full 325 tests、その後に focused session/race 4 tests が pass。cache clean 後の Windows compiler hang のため final full rerun は必要。 |
+| Database | Repository は ordered 34 migrations を track しています。fresh isolated PostgreSQL/PostGIS+pgvector database は 34 migrations 全てを apply し、FCM-revocation table/index を確認しました。Supabase production は直前の 33 migrations で最後に checksum 検証され、migration 34 は authorized rollout が必要です。historical Docker test volume の applied migration-history 34 行と rolled-back 1 行は現在の FCM migration より前のもので、current-source または fresh migration count の evidence ではありません。 |
+| Mobile Flutter | FCM foreground/tap、logout cleanup、起動中 Driver inbox の変更後に Flutter analyze と fresh full 341 tests が pass。focused FCM lifecycle/presentation は 14 tests が pass。 |
 | Web | Admin 195 tests、Restaurant 134 tests、両 app の typecheck/lint と production builds が verified Vercel production env で pass。 |
 | Browser E2E | Clean-volume current-source isolated Docker matrix は Chromium、Firefox、Pixel 5 で各 68/68 を pass（204/204、6.8 分、retry/failure なし）。これは local evidence のみで、remote CI または production approval ではありません。 |
-| FCM live send | 未実行: production project credential と controlled device token が必要。 |
+| FCM | Local contract は 4 backend notification suites / 40 tests と Flutter lifecycle/presentation 14 tests が pass。live send は未実行: production credential と controlled device token が必要。 |
 
 ### Current-source Docker E2E / RAG evidence — 2026-07-13
 
-Repository は 33 migrations を track しています。Clean-volume current-source isolated run は 33 migrations completed、pending なしを報告しました。Disposable seed は restaurants 50、drivers 50、customers 100、historical orders 500 を作成しました。再利用した historical Docker test volume の `_prisma_migrations` には、削除済み zero-step migration の履歴により applied 34 行と rolled-back 1 行があります。この volume は fresh migration count の evidence ではありません。Supabase production は最後に tracked 33 migrations で checksum 検証され、authorized Railway migrator rollout は release gate のままです。Overlay は backend image の専用 worker を起動し、API process と background work を共有しません。Seed 後に worker を起動し、`FoodFlow Worker started` と `indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0` の RAG sync 完了を記録しました。
+Repository は 34 migrations を track しています。Clean-volume isolated run は当時 track されていた 33 migrations completed、pending なしを報告しました。その後 fresh isolated PostgreSQL/PostGIS+pgvector database が current 34 migrations を全て apply し、`fcm_token_revocations` と `fcm_token_revocations_expires_at_idx` を確認しました。Disposable seed は restaurants 50、drivers 50、customers 100、historical orders 500 を作成しました。再利用した historical Docker test volume の `_prisma_migrations` には、削除済み zero-step migration の履歴により applied 34 行と rolled-back 1 行があります。この volume は current source の fresh migration count の evidence ではありません。Supabase production は最後に 33 migrations で checksum 検証され、authorized Railway migrator rollout は release gate のままです。Overlay は backend image の専用 worker を起動し、API process と background work を共有しません。Seed 後に worker を起動し、`FoodFlow Worker started` と `indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0` の RAG sync 完了を記録しました。
 
 Current-source worker は fresh seed 後に RAG documents 402 件を index しました。DeepSeek key 未設定のため embedding は pending のままで、fake vector は使っていません。再利用 volume の旧 local run の source ID が null の FAQ 44 件と policy 8 件は historical rows であり、current-worker evidence から除外します。いずれも production data または production embedding/provider approval ではありません。
 
@@ -29,9 +29,9 @@ Rebuilt API/Admin/Restaurant images は全 matrix を pass しました: Chromiu
 
 ### Historical 2026-07-13 database runtime evidence
 
-Disposable PostGIS + pgvector container は 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。
+Disposable PostGIS + pgvector container は当時 track されていた 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。34 番目の FCM-revocation migration はこの historical evidence run に含まれません。
 
-Supabase production は最後に tracked 33 migrations の matching checksum で検証されました。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。したがって production に big data が存在するという主張ではありません。
+Supabase production は最後に 33 migrations の matching checksum で検証されました。34 番目の FCM-revocation migration は authorized rollout を待っています。Production users/restaurants/orders/driver profiles/RAG documents はすべて 0 rows で、demo/big seed は実行していません。したがって production に big data が存在するという主張ではありません。
 
 より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持しますが、final source head で再実行するまでは historical です。Full backend/web builds、全 critical pages の axe/visual/Stitch、repaired browser E2E、controlled FCM delivery、production-like tenant/realtime/map/AI smoke、provider preflight、current remote CI は必須です。
 

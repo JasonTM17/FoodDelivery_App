@@ -56,7 +56,7 @@ Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardeni
 ## Blocker bên ngoài
 
 - GitHub Actions hết billing/auth/token nên chưa có current-head remote green.
-- Supabase đã link, đủ 33 migration với checksum mới nhất khớp, private Broadcast/Storage, Data API boundary và ES256 key; business/RAG production còn 0 row vì không chạy seed giả.
+- Supabase đã link, lần cuối xác minh tại 33 migration với checksum mới nhất khớp, private Broadcast/Storage, Data API boundary và ES256 key; migration 34 về FCM registration revocation vẫn chờ rollout được ủy quyền. Business/RAG production còn 0 row vì không chạy seed giả.
 - Railway topology pass nhưng public API vẫn trả 404; API/worker còn thiếu đúng 15 cấu hình provider thật thuộc Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM và Twilio. Vì vậy GPS/Broadcast production và FCM live send vẫn bị chặn.
 - Health production Admin/Restaurant đều trả 200. Candidate Restaurant sạch từ `9db6f7e` build và pass protected health smoke nhưng chưa promote trước khi Railway API live; Admin phải chạy cùng quy trình exact-source.
 - Key provider từng paste phải rotate.

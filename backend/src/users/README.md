@@ -12,7 +12,8 @@ User profile, address book, preferred locale, FCM tokens, notification preferenc
 - `POST /users/addresses` — Create address
 - `PUT|PATCH /users/addresses/:id` — Update + setDefault
 - `DELETE /users/addresses/:id` — Delete an owned address
-- `POST /users/notifications/fcm-token` — Register device token
+- `POST /notifications/fcm-token` — Register device token (notifications module)
+- `DELETE /notifications/fcm-token` — Remove an owned device registration (notifications module)
 - `GET /admin/users` — Admin list with filters
 - `PATCH /admin/users/:id/status` — Suspend/activate
 

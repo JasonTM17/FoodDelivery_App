@@ -6,9 +6,19 @@ Multi-channel notification fanout (in-app WebSocket + FCM push + SMTP email + Tw
 
 ## API surface
 
-- `POST /users/notifications/fcm-token` — Register FCM token (per-device)
-- `DELETE /users/notifications/fcm-token` — Unregister
+- `POST /notifications/fcm-token` — Register an FCM token (per device) with a client-generated `registrationId`; a temporary legacy body without it is accepted during the mobile upgrade window
+- `DELETE /notifications/fcm-token` — Unregister one token owned by the authenticated user; provide both `token` and `registrationId` in the JSON body
+- `DELETE /notifications/fcm-token/:token` — Temporary deprecated legacy cleanup route; remove only after a minimum mobile version is enforced
 - `GET /notifications` — List user notifications (paginated)
+
+FCM register/unregister requests carry the same client-generated UUID
+`registrationId`. The service serializes operations for a token and applies a
+seven-day effective revocation tombstone, so a late registration cannot
+recreate a binding that logout revoked. Every registration or cleanup request
+also removes expired tombstones using the expiry index; an external retention
+job is still appropriate if the service can remain dormant for long periods.
+The legacy cleanup route also removes only the matching historical `NULL`
+registration binding, never a newer UUID registration for the same token.
 - `PATCH /notifications/:id/read` — Mark single as read
 - `PATCH /notifications/read-all` — Mark all read
 - `GET /admin/notification-settings/:userId` — Per-event channel preferences
@@ -48,7 +58,7 @@ npx jest notifications
 
 - **FCM credentials:** The worker uses Firebase Admin SDK/HTTP v1, not `FCM_SERVER_KEY`. In Railway, set `FCM_PROJECT_ID` and a sealed JSON service account unless workload identity is available. Self-hosted Compose requires the JSON for both API and worker. Verify a deploy with a controlled device token; never paste JSON into logs, docs, or a shell transcript.
 - **FCM provider error:** A rejected provider call is rethrown so the queue retries it. Per-token failures do not retry the whole batch; only `messaging/registration-token-not-registered` and `messaging/invalid-registration-token` mark a token stale.
-- **FCM token stale:** Cleanup job `pnpm scripts:fcm-cleanup` removes tokens với `lastSeenAt < now - 60d`.
+- **FCM token stale:** The worker marks provider-confirmed invalid tokens stale. There is no repository cleanup command; retain or purge stale records through an explicitly reviewed operational job.
 - **SMTP rate limited:** Check `notification_audit` for spike. Spread fanout via BullMQ delay.
 - **SMS cost overrun:** Twilio is fallback only — monitor `twilio_sends_total` metric. Default channel preference excludes SMS.
 - **Locale fallback:** Missing `en-US/<event>.json` → loader falls back to `vi-VN/`. Add new template before claiming locale support.

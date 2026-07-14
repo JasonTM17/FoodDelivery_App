@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../shared/api/api_client.dart';
 import '../../shared/api/realtime_client.dart';
 import '../../shared/models/order.dart';
+import '../../shared/notifications/firebase_fcm_token_session.dart';
 import '../../shared/services/secure_storage_service.dart';
 import '../../shared/utils/app_error_messages.dart';
 import '../services/background_location_service.dart';
@@ -405,6 +406,51 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Auth
   // -----------------------------------------------------------------------
 
+  Future<void> restoreSession() async {
+    final activeOrderId = state.activeOrder?.id;
+    final sessionEpoch = _invalidateSession();
+    await _teardownSessionResources(activeOrderId: activeOrderId);
+    if (!_isCurrentSession(sessionEpoch)) return;
+    state = const DriverState(isLoading: true);
+
+    try {
+      final accessToken = await _storage.getAccessToken();
+      if (!_isCurrentSession(sessionEpoch)) return;
+      if (accessToken == null || accessToken.isEmpty) {
+        state = const DriverState();
+        return;
+      }
+
+      final profileLoaded = await _fetchDriverProfile();
+      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!profileLoaded) {
+        final profileError = state.error;
+        await _clearAuthTokens();
+        if (!_isCurrentSession(sessionEpoch)) return;
+        state = DriverState(error: profileError);
+        return;
+      }
+
+      final kycLoaded = await _fetchKycStatus();
+      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!kycLoaded) {
+        final kycError = state.error;
+        await _clearAuthTokens();
+        if (!_isCurrentSession(sessionEpoch)) return;
+        state = DriverState(error: kycError);
+        return;
+      }
+
+      state = state.copyWith(isLoading: false, isAuthenticated: true);
+      unawaited(FcmTokenSession.activate());
+    } catch (_) {
+      if (!_isCurrentSession(sessionEpoch)) return;
+      await _clearAuthTokens();
+      if (!_isCurrentSession(sessionEpoch)) return;
+      state = const DriverState(error: AppErrorCodes.driverAuthUnavailable);
+    }
+  }
+
   Future<void> login(String email, String password) async {
     final activeOrderId = state.activeOrder?.id;
     final sessionEpoch = _invalidateSession();
@@ -465,6 +511,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
       }
       if (!_isCurrentSession(sessionEpoch)) return;
       state = state.copyWith(isLoading: false, isAuthenticated: true);
+      unawaited(FcmTokenSession.activate());
     } on DioException catch (e) {
       if (!_isCurrentSession(sessionEpoch)) return;
       await _clearAuthTokens();
@@ -590,6 +637,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
     await _teardownSessionResources(activeOrderId: activeOrderId);
     if (!_isCurrentSession(sessionEpoch)) return;
     await _waitForPendingOnlineRequest();
+    if (!_isCurrentSession(sessionEpoch)) return;
+    try {
+      await FcmTokenSession.deactivate().timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // A failed push cleanup must not leave the driver online or authenticated.
+    }
     if (!_isCurrentSession(sessionEpoch)) return;
     try {
       // Always reconcile the server before invalidating auth. This also closes

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
+import '../../shared/api/realtime_client.dart';
 import '../../shared/utils/backend_date_time.dart';
 
 final driverNotificationsProvider =
@@ -91,10 +94,35 @@ class DriverNotificationsState {
 class DriverNotificationsNotifier
     extends StateNotifier<DriverNotificationsState> {
   final ApiClient _api;
+  final RealtimeClient _realtime;
+  StreamSubscription<Map<String, dynamic>>? _notificationSubscription;
 
-  DriverNotificationsNotifier({ApiClient? apiClient})
-    : _api = apiClient ?? ApiClient.instance,
-      super(const DriverNotificationsState());
+  DriverNotificationsNotifier({
+    ApiClient? apiClient,
+    RealtimeClient? realtimeClient,
+  }) : _api = apiClient ?? ApiClient.instance,
+       _realtime = realtimeClient ?? RealtimeClient.instance,
+       super(const DriverNotificationsState()) {
+    _notificationSubscription = _realtime.onNotification.listen(
+      _handleRealtimeNotification,
+    );
+  }
+
+  void _handleRealtimeNotification(Map<String, dynamic> data) {
+    try {
+      final notification = DriverNotification.fromJson(data);
+      final notifications = [
+        notification,
+        ...state.notifications.where((item) => item.id != notification.id),
+      ];
+      state = state.copyWith(
+        notifications: notifications,
+        unreadCount: notifications.where((item) => !item.isRead).length,
+      );
+    } on FormatException {
+      state = state.copyWith(error: 'NOTIFICATIONS_CONTRACT_INVALID_RESPONSE');
+    }
+  }
 
   Future<void> fetchNotifications() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -149,6 +177,12 @@ class DriverNotificationsNotifier
     } catch (_) {
       state = previous;
     }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 }
 

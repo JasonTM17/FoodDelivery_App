@@ -1,13 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/locale_provider.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/notifications/firebase_fcm_token_session.dart';
 import 'customer/router/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  FcmTokenSession.configureNotificationNavigation(_handleCustomerPushTap);
   runApp(const ProviderScope(child: CustomerApp()));
+  unawaited(FcmTokenSession.initializeNotificationHandling());
+}
+
+void _handleCustomerPushTap(String deepLink) {
+  final path = Uri.parse(deepLink).path;
+  final isSupported =
+      path == '/notifications' ||
+      path == '/orders' ||
+      path.startsWith('/orders/');
+  appRouter.go(isSupported ? deepLink : '/notifications');
 }
 
 class CustomerApp extends ConsumerWidget {

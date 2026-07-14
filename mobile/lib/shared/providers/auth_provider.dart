@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import '../api/api_client.dart';
 import '../api/realtime_client.dart';
 import '../models/user.dart';
+import '../notifications/firebase_fcm_token_session.dart';
 import '../utils/auth_validation.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
@@ -64,6 +67,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             isInitialized: true,
           );
           await _connectRealtime();
+          unawaited(FcmTokenSession.activate());
           return;
         } catch (e) {
           await _realtime.disconnect();
@@ -105,6 +109,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = AuthState(isAuthenticated: true, user: user, isInitialized: true);
       await _connectRealtime();
+      unawaited(FcmTokenSession.activate());
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ??
@@ -158,7 +163,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: user,
         isInitialized: true,
       );
-      if (accessToken.isNotEmpty) await _connectRealtime();
+      if (accessToken.isNotEmpty) {
+        await _connectRealtime();
+        unawaited(FcmTokenSession.activate());
+      }
     } on DioException catch (e) {
       final message =
           e.response?.data?['message'] as String? ??
@@ -174,6 +182,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    try {
+      await FcmTokenSession.deactivate().timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // Push cleanup is best effort and must not strand a local session.
+    }
     try {
       await _api.post('/auth/logout');
     } catch (_) {

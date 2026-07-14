@@ -1112,19 +1112,30 @@ model PasswordResetToken {
 }
 
 model UserFcmToken {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  token      String   @unique @db.VarChar(500)
-  platform   String   @db.VarChar(20)
-  deviceId   String?  @map("device_id") @db.VarChar(200)
-  isStale    Boolean  @default(false) @map("is_stale")
-  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz()
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  token          String   @unique @db.VarChar(500)
+  platform       String   @db.VarChar(20)
+  deviceId       String?  @map("device_id") @db.VarChar(200)
+  registrationId String?  @map("registration_id") @db.VarChar(64)
+  isStale        Boolean  @default(false) @map("is_stale")
+  lastSeenAt     DateTime @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isStale])
   @@map("user_fcm_tokens")
+}
+
+model FcmTokenRevocation {
+  registrationId String   @id @map("registration_id") @db.VarChar(64)
+  token          String   @db.VarChar(500)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz()
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([expiresAt])
+  @@map("fcm_token_revocations")
 }
 
 model NotificationSetting {

@@ -45,6 +45,12 @@ authoritative source for individual commits and implementation detail.
 - Replaced legacy FCM server-key transport with Firebase Admin SDK/HTTP v1,
   retryable provider failures, permanent-token stale marking, and documented
   secret-managed/ADC credentials.
+- Added authenticated Flutter FCM token registration, rotation, and bounded
+  logout cleanup for Customer and Driver; token input now has an explicit API
+  schema and the mobile build/setup contract is documented.
+- Hardened FCM cleanup with registration UUIDs, per-token PostgreSQL advisory
+  locks, and seven-day revocation tombstones; foreground/terminated taps now
+  use only validated local deep links, and FCM tokens no longer appear in URLs.
 - Made Driver availability and session cleanup race-safe, localized login
   errors, removed duplicate initial dashboard loading, and corrected dark
   operational text semantics.
@@ -60,9 +66,9 @@ authoritative source for individual commits and implementation detail.
   authorized release credentials/runners; local debug APKs are not publishable.
 - Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
   and production smoke gates remain mandatory before deployment.
-- Browser E2E passed 128/134 checks against an older image; the six remaining
-  checks require a current navigation image and isolated test seed. Live FCM delivery
-  remains unverified until production credentials and a controlled device token produce redacted evidence.
+- Current-source local Docker E2E passed 204/204 checks, but a fresh authorized
+  remote CI run is still required. Live FCM delivery remains unverified until
+  production credentials and a controlled device token produce redacted evidence.
 
 ## 0.2.0 - 2026-06-07
 

@@ -3,7 +3,16 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
 import { NotificationsService } from './notifications.service'
+import {
+  compatibleRegisterFcmTokenSchema,
+  fcmTokenSchema,
+  unregisterFcmTokenSchema,
+  type CompatibleRegisterFcmTokenInput,
+  type RegisterFcmTokenInput,
+  type UnregisterFcmTokenInput,
+} from './notifications.zod'
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -30,13 +39,31 @@ export class NotificationsController {
   @Post('fcm-token')
   registerFcmToken(
     @CurrentUser() user: JwtPayload,
-    @Body() body: { token: string; platform: 'ios' | 'android' | 'web'; deviceId?: string },
+    @Body(new ZodValidationPipe(compatibleRegisterFcmTokenSchema))
+    body: CompatibleRegisterFcmTokenInput,
   ) {
-    return this.notificationsService.registerFcmToken(user.sub, body.token, body.platform, body.deviceId)
+    if ('registrationId' in body) {
+      return this.notificationsService.registerFcmToken(
+        user.sub,
+        body as RegisterFcmTokenInput,
+      )
+    }
+    return this.notificationsService.registerLegacyFcmToken(user.sub, body)
+  }
+
+  @Delete('fcm-token')
+  unregisterFcmToken(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(unregisterFcmTokenSchema)) body: UnregisterFcmTokenInput,
+  ) {
+    return this.notificationsService.unregisterFcmToken(user.sub, body)
   }
 
   @Delete('fcm-token/:token')
-  unregisterFcmToken(@CurrentUser() user: JwtPayload, @Param('token') token: string) {
-    return this.notificationsService.unregisterFcmToken(user.sub, token)
+  unregisterLegacyFcmToken(
+    @CurrentUser() user: JwtPayload,
+    @Param('token', new ZodValidationPipe(fcmTokenSchema)) token: string,
+  ) {
+    return this.notificationsService.unregisterLegacyFcmToken(user.sub, token)
   }
 }

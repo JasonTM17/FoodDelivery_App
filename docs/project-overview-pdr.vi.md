@@ -23,13 +23,13 @@ Production managed dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage; Rai
 - Order, payment, dispatch, notification, export và audit dùng dữ liệu thật đã lưu; provider thiếu/lỗi phải trả trạng thái rõ ràng, không giả thành công.
 - API kiểm tra identity, role và tenant/ownership tại operation được bảo vệ; realtime claim ngắn hạn và private.
 - Trạng thái tài xế dựa trên GPS. UI chỉ chuyển pause/offline sau khi lệnh availability chuẩn thành công; logout phải hủy subscription để session cũ không cập nhật session mới.
-- Notification là durable job. FCM dùng Firebase Admin SDK/HTTP v1 với `FCM_PROJECT_ID` và ADC/workload identity hoặc `FCM_SERVICE_ACCOUNT_JSON` trong secret manager; lỗi request được retry, token invalid vĩnh viễn bị stale.
+- Notification là durable job. FCM dùng Firebase Admin SDK/HTTP v1 với `FCM_PROJECT_ID` và ADC/workload identity hoặc `FCM_SERVICE_ACCOUNT_JSON` trong secret manager; lỗi request được retry, token invalid vĩnh viễn bị stale. Mobile chỉ đăng ký FCM token sau session đã xác thực, API validate contract `POST /notifications/fcm-token`, cập nhật token xoay vòng và lưu ý định cleanup trước khi gỡ có giới hạn lúc logout. UUID client, PostgreSQL advisory lock theo token và tombstone bảy ngày bảo đảm cleanup thắng POST đăng ký đến muộn. Backend có payload notification cho app nền, Android channel và âm thanh APNs; client hiển thị message khi foreground và tap chỉ cho deep link nội bộ, kể cả lúc app khởi động lại từ terminated. Inbox Driver đang mở nhận realtime đã xác thực và khử trùng lặp theo ID thông báo.
 - Admin/Restaurant responsive, điều hướng bằng bàn phím, có skip link, focus rõ, giảm motion và giữ locale.
 - Copy hiển thị cho người dùng có `vi`, `en`, `ja`.
 
 ## Tiêu chí chấp nhận đợt hardening
 
-1. Backend không còn dùng FCM server key cũ; có test cho provider lỗi và token invalid.
+1. Backend không còn dùng FCM server key cũ; validate input đăng ký FCM tại API boundary và có test cho provider lỗi, token invalid.
 2. Login/logout, availability, dispatch và realtime của Driver không để async cũ thay đổi session mới hoặc báo offline sai khi request thất bại.
 3. Sidebar/drawer Restaurant responsive, accessible, giữ locale/focus/motion preference.
 4. Docs mô tả đúng Railway/Supabase/Vercel, FCM, phạm vi test, blocker release và thứ tự deploy; không gọi kiểm tra chưa đủ là production approval.

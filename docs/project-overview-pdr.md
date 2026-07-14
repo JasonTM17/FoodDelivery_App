@@ -23,7 +23,7 @@ Managed production uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; 
 - Orders, payments, dispatch, notifications, exports, and audit data use real persisted state. A missing provider or unavailable data returns a clear error/degraded state; it never becomes fabricated success.
 - API authorization applies identity, role, and tenant/ownership checks at the protected operation. Realtime channel claims are short-lived and private.
 - Driver availability is GPS-backed. The client may show paused/offline only after the canonical availability command has succeeded; logout cancels active subscriptions so a prior session cannot update a later session.
-- Notifications are durable jobs. FCM uses Firebase Admin SDK/HTTP v1 with `FCM_PROJECT_ID` and either workload credentials/ADC or a secret-managed `FCM_SERVICE_ACCOUNT_JSON`; provider-request failure is retried and permanently invalid tokens are marked stale.
+- Notifications are durable jobs. FCM uses Firebase Admin SDK/HTTP v1 with `FCM_PROJECT_ID` and either workload credentials/ADC or a secret-managed `FCM_SERVICE_ACCOUNT_JSON`; provider-request failure is retried and permanently invalid tokens are marked stale. Mobile registers an FCM token only after an authenticated session, validates the `POST /notifications/fcm-token` contract at the API boundary, updates rotated tokens, and persists cleanup intent before bounded logout removal. A client UUID, per-token PostgreSQL advisory lock, and seven-day revocation tombstone make that cleanup win over a late registration POST. The backend includes an operating-system notification payload for background delivery, an Android channel, and APNs sound; foreground messages are presented by the client and taps allow only local deep links, including app launch from a terminated state. The open Driver inbox consumes the authenticated realtime stream and de-duplicates notification IDs.
 - Admin and Restaurant are responsive from mobile through desktop, preserve locale in navigation, provide keyboard-operable navigation, a skip link, visible focus states, and reduced-motion behavior.
 - User-facing copy is localized in Vietnamese, English, and Japanese.
 
@@ -39,7 +39,7 @@ Managed production uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; 
 
 ## Acceptance criteria for the current hardening work
 
-1. Backend notification delivery uses current FCM HTTP v1 credentials/configuration, does not depend on the legacy server key, and covers provider failure plus invalid-token behavior with tests.
+1. Backend notification delivery uses current FCM HTTP v1 credentials/configuration, does not depend on the legacy server key, validates FCM registration input at the API boundary, and covers provider failure plus invalid-token behavior with tests.
 2. Driver login/logout, availability, dispatch response, and realtime listeners cannot let stale async work alter a new session or falsely represent a failed offline transition as success.
 3. Restaurant navigation works as an accessible responsive sidebar/drawer and respects locale, focus, and motion preferences.
 4. Technical docs describe the actual Railway/Supabase/Vercel topology, FCM credentials, testing scope, release blockers, and deployment order without presenting incomplete checks as production approval.

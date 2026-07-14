@@ -43,9 +43,65 @@ realtime provider configuration is missing.
 | `SUPABASE_ANON_KEY` | Provider `supabase` | Public anon/publishable key; never service-role/JWT secrets |
 | `WS_URL` | Provider `socketio`, optional | Socket.IO origin; defaults to `API_BASE_URL` without `/api` |
 | `GOOGLE_MAPS_API_KEY` | Map builds | Native Maps SDK key from environment/Gradle or ignored iOS xcconfig |
+| `FIREBASE_API_KEY` | FCM-enabled build | Public Firebase client API key for the selected app flavor |
+| `FIREBASE_APP_ID` | FCM-enabled build | Firebase application ID for the selected app flavor |
+| `FIREBASE_MESSAGING_SENDER_ID` | FCM-enabled build | Firebase Cloud Messaging sender ID |
+| `FIREBASE_PROJECT_ID` | FCM-enabled build | Firebase project ID; must match the backend FCM project |
 
 Never put service-role keys, Supabase JWT secrets, DeepSeek keys, database URLs,
 or Android upload passwords in Dart defines or source control.
+
+## FCM client setup
+
+Customer and Driver are separate Android applications (`vn.foodflow.customer`
+and `vn.foodflow.driver`). Register each package in the intended Firebase
+project and provide values whose `FIREBASE_APP_ID` matches the selected flavor.
+The tracked `firebase_core 3.15.2` and `firebase_messaging 15.2.10` pair keeps
+the project iOS 13 deployment target. The iOS target also needs a Firebase app
+matching its signed bundle identifier and APNs authentication configured in
+Firebase. The repository enables the Push Notifications entitlement
+(`development` for Debug, `production` for Profile/Release) and the
+`remote-notification` background mode; the Apple Developer App ID and release
+provisioning profile still must authorize Push Notifications.
+
+```bash
+flutter run --flavor customer -t lib/main_customer.dart \
+  --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
+  --dart-define=REALTIME_PROVIDER=supabase \
+  --dart-define=FIREBASE_API_KEY=<public-client-api-key> \
+  --dart-define=FIREBASE_APP_ID=<customer-firebase-app-id> \
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=<sender-id> \
+  --dart-define=FIREBASE_PROJECT_ID=<project-id>
+```
+
+For Driver, replace `--flavor customer -t lib/main_customer.dart` with
+`--flavor driver -t lib/main_driver.dart` and supply the Driver Firebase app
+ID. Never reuse a Customer Firebase application ID for the Driver flavor.
+
+After a valid customer or driver session exists, the app requests notification
+permission, registers the FCM token at `POST /notifications/fcm-token`, and
+updates that registration when Firebase rotates the token. On logout it tries
+to delete the stored token with a JSON request body before clearing the bearer
+token. Each registration has a client-generated ID. The API serializes that
+token's register/unregister operations and applies a seven-day effective
+revocation tombstone, so logout cleanup wins even when a timed-out POST reaches
+the server late. The server removes expired tombstones during normal FCM
+traffic. A transient push failure never blocks logout. Missing public
+Firebase build values disable only FCM registration, so authentication and
+in-app notifications remain usable.
+
+The backend sends an operating-system notification payload for background and
+terminated app delivery. On Android, a foreground message uses the
+`foodflow_notifications` high-importance channel; on iOS, Firebase presents
+the native foreground alert. A notification tap accepts only a local app deep
+link (never an external URL). While the Driver notification inbox is open, it
+also listens to the authenticated realtime notification stream and
+de-duplicates entries by notification ID, so it does not wait for a manual
+refresh or show the same event twice.
+
+Firebase client configuration is public app metadata, not a server credential.
+Never put a Firebase Admin service-account JSON file, APNs private key, or any
+backend FCM credential in this repository, a Dart define, or a mobile build.
 
 ## Local development
 
@@ -56,11 +112,11 @@ Socket.IO stack.
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 
-flutter run -t lib/main_customer.dart \
+flutter run --flavor customer -t lib/main_customer.dart \
   --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
   --dart-define=REALTIME_PROVIDER=socketio
 
-flutter run -t lib/main_driver.dart \
+flutter run --flavor driver -t lib/main_driver.dart \
   --dart-define=API_BASE_URL=http://10.0.2.2:3001/api \
   --dart-define=REALTIME_PROVIDER=socketio
 ```
@@ -74,7 +130,7 @@ Use provider aliases verified during deployment; do not copy retired or example
 domains into a release:
 
 ```bash
-flutter run -t lib/main_customer.dart \
+flutter run --flavor customer -t lib/main_customer.dart \
   --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
   --dart-define=REALTIME_PROVIDER=supabase \
   --dart-define=SUPABASE_URL=https://<project>.supabase.co \
@@ -84,6 +140,10 @@ flutter run -t lib/main_customer.dart \
 The scoped Supabase JWT is obtained at runtime from the API, expires after five
 minutes, and is refreshed before expiry. Mobile never signs its own grant and
 never publishes business events directly to Supabase.
+
+Use the Driver flavor/entrypoint with the same provider inputs but Driver
+Firebase application ID. Both builds need all four `FIREBASE_*` values above
+when FCM delivery is being tested.
 
 ## Test gates
 
@@ -115,8 +175,16 @@ flutter build apk --release --flavor customer -t lib/main_customer.dart \
   --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
   --dart-define=REALTIME_PROVIDER=supabase \
   --dart-define=SUPABASE_URL=https://<project>.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<public-anon-key>
+  --dart-define=SUPABASE_ANON_KEY=<public-anon-key> \
+  --dart-define=FIREBASE_API_KEY=<public-client-api-key> \
+  --dart-define=FIREBASE_APP_ID=<customer-firebase-app-id> \
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=<sender-id> \
+  --dart-define=FIREBASE_PROJECT_ID=<project-id>
 ```
+
+The debug commands above intentionally exercise the no-FCM degraded path. Add
+the same four public Firebase defines to a debug flavor build when validating
+registration; use the Firebase application ID that matches that flavor.
 
 Release signing must come from secure CI/host configuration:
 
@@ -127,8 +195,9 @@ Release signing must come from secure CI/host configuration:
 | `FOODFLOW_UPLOAD_KEY_ALIAS` | Upload key alias |
 | `FOODFLOW_UPLOAD_KEY_PASSWORD` | Upload key password |
 
-The Gradle release task fails when these values are absent. The customer and
-driver flavors install as `vn.foodflow.customer` and `vn.foodflow.driver`.
+Every Android assemble/bundle release variant fails when these values are
+absent. The customer and driver flavors install as `vn.foodflow.customer` and
+`vn.foodflow.driver`.
 
 For local iOS development, create the ignored file below:
 

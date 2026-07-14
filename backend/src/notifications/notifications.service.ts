@@ -1,4 +1,5 @@
 import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, Optional } from '@nestjs/common'
+import { createHash } from 'node:crypto'
 import { PrismaService } from '../database/prisma.service'
 import { Prisma, type Notification } from '@prisma/client'
 import Redis from 'ioredis'
@@ -16,6 +17,13 @@ import {
   QUIET_HOUR_END,
 } from './notifications.constants'
 import type { ChannelPayload, ChannelResult } from './channels/notification-channel.interface'
+import {
+  fcmRegistrationIdSchema,
+  fcmTokenPlatforms,
+  type LegacyRegisterFcmTokenInput,
+  type RegisterFcmTokenInput,
+  type UnregisterFcmTokenInput,
+} from './notifications.zod'
 
 export interface FanoutPayload {
   sourceId: string
@@ -37,6 +45,8 @@ interface FanoutResult {
   delivered?: number
   failed?: number
 }
+
+const FCM_REVOCATION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 @Injectable()
 export class NotificationsService {
@@ -252,19 +262,144 @@ export class NotificationsService {
     })
   }
 
-  async registerFcmToken(userId: string, token: string, platform: 'ios' | 'android' | 'web', deviceId?: string) {
-    if (!token || token.length < 20) throw new BadRequestException('INVALID_FCM_TOKEN')
-    await this.prisma.userFcmToken.upsert({
-      where: { token },
-      create: { userId, token, platform, deviceId, lastSeenAt: new Date() },
-      update: { userId, platform, deviceId, lastSeenAt: new Date(), isStale: false },
+  async registerFcmToken(userId: string, input: RegisterFcmTokenInput) {
+    const { token, platform, deviceId, registrationId } = input
+    if (
+      !token ||
+      token.length < 20 ||
+      token.length > 500 ||
+      (deviceId != null && (deviceId.length === 0 || deviceId.length > 200)) ||
+      !fcmTokenPlatforms.includes(platform) ||
+      !fcmRegistrationIdSchema.safeParse(registrationId).success
+    ) {
+      throw new BadRequestException('INVALID_FCM_TOKEN')
+    }
+    return this.withFcmTokenLock(token, async tx => {
+      const now = new Date()
+      await this.removeExpiredFcmRevocations(tx, now)
+      const revocation = await tx.fcmTokenRevocation.findUnique({
+        where: { registrationId },
+      })
+      if (revocation != null && revocation.expiresAt > now) {
+        return { success: true }
+      }
+      if (revocation != null) {
+        await tx.fcmTokenRevocation.deleteMany({ where: { registrationId } })
+      }
+
+      // A registration token identifies an app installation, not an account.
+      // Rebinding it on account switch prevents delivery to the previous owner.
+      await tx.userFcmToken.upsert({
+        where: { token },
+        create: {
+          userId,
+          token,
+          platform,
+          deviceId,
+          registrationId,
+          lastSeenAt: now,
+        },
+        update: {
+          userId,
+          platform,
+          deviceId,
+          registrationId,
+          lastSeenAt: now,
+          isStale: false,
+        },
+      })
+      return { success: true }
     })
-    return { success: true }
   }
 
-  async unregisterFcmToken(userId: string, token: string) {
-    await this.prisma.userFcmToken.deleteMany({ where: { userId, token } })
-    return { success: true }
+  async unregisterFcmToken(userId: string, input: UnregisterFcmTokenInput) {
+    return this.unregisterFcmTokenWithDeleteWhere(userId, input, {
+      userId,
+      token: input.token,
+      registrationId: input.registrationId,
+    })
+  }
+
+  async registerLegacyFcmToken(userId: string, input: LegacyRegisterFcmTokenInput) {
+    return this.registerFcmToken(userId, {
+      ...input,
+      registrationId: this.legacyFcmRegistrationId(userId, input.token),
+    })
+  }
+
+  async unregisterLegacyFcmToken(userId: string, token: string) {
+    const registrationId = this.legacyFcmRegistrationId(userId, token)
+    return this.unregisterFcmTokenWithDeleteWhere(userId, {
+      token,
+      registrationId,
+    }, {
+      userId,
+      token,
+      OR: [
+        { registrationId },
+        { registrationId: null },
+      ],
+    })
+  }
+
+  private async unregisterFcmTokenWithDeleteWhere(
+    userId: string,
+    input: UnregisterFcmTokenInput,
+    deleteWhere: Prisma.UserFcmTokenWhereInput,
+  ) {
+    const { token, registrationId } = input
+    if (
+      !token ||
+      token.length < 20 ||
+      token.length > 500 ||
+      !fcmRegistrationIdSchema.safeParse(registrationId).success
+    ) {
+      throw new BadRequestException('INVALID_FCM_TOKEN')
+    }
+    return this.withFcmTokenLock(token, async tx => {
+      const now = new Date()
+      await this.removeExpiredFcmRevocations(tx, now)
+      await tx.fcmTokenRevocation.upsert({
+        where: { registrationId },
+        create: {
+          registrationId,
+          token,
+          expiresAt: new Date(now.getTime() + FCM_REVOCATION_TTL_MS),
+        },
+        update: {
+          token,
+          expiresAt: new Date(now.getTime() + FCM_REVOCATION_TTL_MS),
+        },
+      })
+      await tx.userFcmToken.deleteMany({
+        where: deleteWhere,
+      })
+      return { success: true }
+    })
+  }
+
+  private legacyFcmRegistrationId(userId: string, token: string): string {
+    const hash = createHash('sha256').update(`${userId}:${token}`).digest('hex')
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`
+  }
+
+  private async removeExpiredFcmRevocations(
+    tx: Prisma.TransactionClient,
+    now: Date,
+  ): Promise<void> {
+    await tx.fcmTokenRevocation.deleteMany({
+      where: { expiresAt: { lte: now } },
+    })
+  }
+
+  private async withFcmTokenLock<T>(
+    token: string,
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return this.prisma.$transaction(async tx => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${token}, 0))`
+      return operation(tx)
+    })
   }
 
   async create(data: {

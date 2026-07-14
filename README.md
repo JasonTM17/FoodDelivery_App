@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-13:** Batch 4 integration is on `master`. Supabase production was last checksum-verified at the 33 tracked repository migrations; a fresh current-source release still needs its authorized Railway migrator rollout. The release is **NO-GO**: the Railway API currently returns 404 because API/worker rollout is blocked by 15 real provider configurations, so authenticated Supabase Broadcast/GPS and end-to-end production smoke cannot yet run. Both Vercel dashboard health endpoints return 200; the tested Restaurant candidate remains unpromoted until the API is healthy. No fake credential, seed, ETA, or embedding is used to bypass this boundary.
+> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production was last checksum-verified at 33 migrations. Repository migration 34 for FCM registration revocations passed a fresh isolated PostGIS+pgvector migration check, but still needs its authorized Railway migrator rollout and production verification. The release is **NO-GO**: the Railway API currently returns 404 because API/worker rollout is blocked by 15 real provider configurations, so authenticated Supabase Broadcast/GPS and end-to-end production smoke cannot yet run. Both Vercel dashboard health endpoints return 200; the tested Restaurant candidate remains unpromoted until the API is healthy. No fake credential, seed, ETA, or embedding is used to bypass this boundary.
 
 ## Product preview
 
@@ -146,8 +146,8 @@ corepack pnpm dev
 # Customer or Driver
 cd ../mobile
 flutter pub get --enforce-lockfile
-flutter run -t lib/main_customer.dart
-flutter run -t lib/main_driver.dart
+flutter run --flavor customer -t lib/main_customer.dart
+flutter run --flavor driver -t lib/main_driver.dart
 ```
 
 Or build the isolated full stack:
@@ -188,7 +188,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-13 hardening pass verified Backend 138 suites / 1016 tests plus Prisma validation/generation, typecheck, lint, and build; Admin 195 and Restaurant 134 unit tests plus typecheck/lint and production builds. A clean-volume current-source isolated Docker matrix passed 68 checks on each of Chromium, Firefox, and Pixel 5 (204/204 in 6.8 minutes, no retries or failures). The migrator and database reported all 33 tracked migrations completed with none pending; the seed created 50 restaurants, 50 drivers, 100 customers, and 500 historical orders; the worker started post-seed and indexed 402 RAG documents without a DeepSeek key or fake embeddings. Coverage includes accessibility, auth/refresh/RBAC, customer API order contracts, REST-observed status convergence, tenant isolation, maps, visual structure, and responsive navigation. Local `revision=local` images are not immutable release artifacts. Flutter analyze and the recorded full/focused GPS tests remain bounded local evidence. Live Firebase delivery and authenticated Railway/Supabase production smoke remain required.
+The 2026-07-13 hardening pass verified Backend 138 suites / 1016 tests plus Prisma validation/generation, typecheck, lint, and build; Admin 195 and Restaurant 134 unit tests plus typecheck/lint and production builds. A clean-volume isolated Docker matrix then passed 68 checks on each of Chromium, Firefox, and Pixel 5 (204/204 in 6.8 minutes, no retries or failures). That run applied the then-tracked 33 migrations; a subsequent fresh isolated PostGIS+pgvector database applied all 34 current migrations, including the FCM revocation schema and its expiry index. An authorized production rollout is still required. The seed created 50 restaurants, 50 drivers, 100 customers, and 500 historical orders; the worker started post-seed and indexed 402 RAG documents without a DeepSeek key or fake embeddings. Coverage includes accessibility, auth/refresh/RBAC, customer API order contracts, REST-observed status convergence, tenant isolation, maps, visual structure, and responsive navigation. Local `revision=local` images are not immutable release artifacts. Flutter analyze and the recorded full/focused GPS tests remain bounded local evidence. Live Firebase delivery and authenticated Railway/Supabase production smoke remain required.
 
 ## Deployment order
 

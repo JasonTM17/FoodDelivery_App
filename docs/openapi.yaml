@@ -2153,14 +2153,36 @@ components:
     RegisterFcmTokenRequest:
       type: object
       properties:
-        token:    { type: string }
+        token:    { type: string, minLength: 20, maxLength: 500 }
         platform: { type: string, enum: [ios, android, web] }
-        deviceId: { type: string }
-      required: [token, platform]
+        deviceId: { type: string, minLength: 1, maxLength: 200 }
+        registrationId: { type: string, format: uuid }
+      required: [token, platform, registrationId]
       example:
         token: "REPLACE_WITH_FCM_TOKEN"
         platform: "android"
         deviceId: "device-001"
+        registrationId: "9165a90e-1e23-4f7a-8df6-5c7b1a5c4f10"
+
+    LegacyRegisterFcmTokenRequest:
+      type: object
+      deprecated: true
+      description: >-
+        Temporary rolling-upgrade body for released mobile clients. New
+        clients must send registrationId; remove support only after enforcing
+        a minimum mobile version.
+      properties:
+        token:    { type: string, minLength: 20, maxLength: 500 }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceId: { type: string, minLength: 1, maxLength: 200 }
+      required: [token, platform]
+
+    UnregisterFcmTokenRequest:
+      type: object
+      properties:
+        token: { type: string, minLength: 20, maxLength: 500 }
+        registrationId: { type: string, format: uuid }
+      required: [token, registrationId]
 
     # ── Support ──
 
@@ -4785,31 +4807,58 @@ paths:
     post:
       tags: [notifications]
       summary: Register FCM push token
-      description: Registers or updates an FCM push token for the authenticated user's device.
+      description: >-
+        Registers or updates an FCM push token for the authenticated user's
+        device. New clients must send registrationId; the legacy body is a
+        temporary rolling-upgrade adapter.
       operationId: notifications_registerFcmToken
       x-foo-actor: user
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/RegisterFcmTokenRequest" }
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/RegisterFcmTokenRequest"
+                - $ref: "#/components/schemas/LegacyRegisterFcmTokenRequest"
       responses:
         "201": { description: "Token registered" }
+        "400": { description: "Invalid token, platform, or device ID" }
 
-  /notifications/fcm-token/{token}:
     delete:
       tags: [notifications]
       summary: Unregister FCM push token
-      description: Removes one FCM push token from the authenticated user's registered devices.
+      description: Removes one FCM push token from the authenticated user's registered devices without placing the token in the request URL.
       operationId: notifications_unregisterFcmToken
+      x-foo-actor: user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UnregisterFcmTokenRequest" }
+      responses:
+        "200": { description: "Token unregistered" }
+        "400": { description: "Invalid token" }
+
+  /notifications/fcm-token/{token}:
+    delete:
+      deprecated: true
+      tags: [notifications]
+      summary: Legacy FCM token cleanup
+      description: >-
+        Temporary compatibility route for released clients. New clients must
+        use the JSON-body endpoint so FCM tokens do not appear in URLs. Remove
+        this route only after enforcing a minimum mobile version.
+      operationId: notifications_unregisterLegacyFcmToken
       x-foo-actor: user
       parameters:
         - name: token
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, minLength: 20, maxLength: 500 }
       responses:
-        "200": { description: "Token unregistered" }
+        "200": { description: "Legacy token unregistered" }
+        "400": { description: "Invalid token" }
 
   # ═══════════════════════════════════════════════
   # SUPPORT (admin)

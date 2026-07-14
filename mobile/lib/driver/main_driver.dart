@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
 import '../shared/providers/locale_provider.dart';
+import '../shared/notifications/firebase_fcm_token_session.dart';
 import '../shared/theme/app_colors.dart';
 import '../shared/theme/app_text_styles.dart';
 import 'providers/driver_provider.dart';
@@ -32,27 +32,23 @@ import 'screens/settings_screen.dart';
 import 'models/driver_flow_args.dart';
 import 'models/driver_onboarding_draft.dart';
 
-const _driverStorage = FlutterSecureStorage();
-
 const _driverPublicRoutes = {'/login', '/register'};
+const _driverNotificationPaths = {'/notifications', '/earnings', '/profile'};
 
-/// B-MOB-10: require auth token for every non-login driver route.
-Future<String?> _driverAuthRedirect(
-  BuildContext context,
-  GoRouterState state,
-) async {
-  final location = state.matchedLocation;
+String? driverAuthRedirect({
+  required String location,
+  required DriverState authState,
+}) {
   final isPublic = _driverPublicRoutes.contains(location);
-  final token = await _driverStorage.read(key: 'auth_token');
-  final isLoggedIn = token != null && token.isNotEmpty;
-
-  if (!isLoggedIn && !isPublic) {
-    return '/login';
-  }
-  if (isLoggedIn && isPublic) {
-    return '/home';
-  }
+  if (authState.isLoading) return null;
+  if (!authState.isAuthenticated && !isPublic) return '/login';
+  if (authState.isAuthenticated && isPublic) return '/home';
   return null;
+}
+
+String driverNotificationDestination(String deepLink) {
+  final path = Uri.parse(deepLink).path;
+  return _driverNotificationPaths.contains(path) ? deepLink : '/notifications';
 }
 
 Map<String, dynamic> _safeExtraMap(Object? extra) {
@@ -61,9 +57,17 @@ Map<String, dynamic> _safeExtraMap(Object? extra) {
   return const {};
 }
 
+final _routerRefresh = ValueNotifier<int>(0);
+DriverState _driverRouterAuthState = const DriverState(isLoading: true);
+String? _pendingDriverNotificationDeepLink;
+
 final _router = GoRouter(
   initialLocation: '/login',
-  redirect: _driverAuthRedirect,
+  refreshListenable: _routerRefresh,
+  redirect: (_, state) => driverAuthRedirect(
+    location: state.matchedLocation,
+    authState: _driverRouterAuthState,
+  ),
   routes: [
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/home', builder: (_, __) => const DriverShell()),
@@ -161,13 +165,44 @@ final _router = GoRouter(
   ],
 );
 
-class DriverApp extends ConsumerWidget {
+void configureDriverFcmNavigation() {
+  FcmTokenSession.configureNotificationNavigation((deepLink) {
+    final destination = driverNotificationDestination(deepLink);
+    if (_driverRouterAuthState.isAuthenticated) {
+      _router.go(destination);
+    } else if (_driverRouterAuthState.isLoading) {
+      _pendingDriverNotificationDeepLink = destination;
+    }
+  });
+}
+
+class DriverApp extends ConsumerStatefulWidget {
   const DriverApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Navigate on auth state changes
+  ConsumerState<DriverApp> createState() => _DriverAppState();
+}
+
+class _DriverAppState extends ConsumerState<DriverApp> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(ref.read(driverProvider.notifier).restoreSession);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen<DriverState>(driverProvider, (prev, next) {
+      _driverRouterAuthState = next;
+      _routerRefresh.value += 1;
+
+      if (next.isLoading) return;
+      final pendingDeepLink = _pendingDriverNotificationDeepLink;
+      _pendingDriverNotificationDeepLink = null;
+      if (next.isAuthenticated && pendingDeepLink != null) {
+        _router.go(pendingDeepLink);
+        return;
+      }
       if (prev?.isAuthenticated == false && next.isAuthenticated) {
         if (!next.hasAcceptedTerms) {
           _router.go('/onboarding-agreement');
@@ -177,10 +212,8 @@ class DriverApp extends ConsumerWidget {
         } else {
           _router.go('/home');
         }
-      } else if (prev?.isAuthenticated == true && !next.isAuthenticated) {
-        _router.go('/login');
       }
-    });
+    }, fireImmediately: true);
 
     return MaterialApp.router(
       title: 'FoodFlow Driver',

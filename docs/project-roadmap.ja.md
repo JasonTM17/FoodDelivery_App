@@ -52,7 +52,7 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## External blockers
 
 - GitHub Actions billing/auth/token exhausted。
-- Supabase は linked、33 migrations と最新 checksum、private Broadcast/Storage、Data API boundary、ES256 key を確認済み。Fake seed を実行していないため production business/RAG rows は 0 です。
+- Supabase は linked、33 migrations と最新 checksum、private Broadcast/Storage、Data API boundary、ES256 key を最後に確認済みです。FCM registration revocation の migration 34 は authorized rollout を待っています。Fake seed を実行していないため production business/RAG rows は 0 です。
 - Railway topology は pass していますが public API は 404 で、API/worker は Maps/OSRM、DeepSeek、SePay/webhook、SMTP、FCM、Twilio の real provider settings 15 件が不足しています。Production GPS/Broadcast と live FCM send は blocked です。
 - Admin/Restaurant production health は 200。`9db6f7e` の clean Restaurant candidate は build と protected health smoke を pass しましたが、Railway API live まで未 promote です。Admin も同じ exact-source flow が必要です。
 - 以前貼られた provider key は rotate 必須。

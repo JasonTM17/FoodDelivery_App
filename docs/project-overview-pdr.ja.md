@@ -23,13 +23,13 @@ Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、R
 - Order、payment、dispatch、notification、export、audit は永続化された実データを使います。provider 不足/障害を成功として偽装しません。
 - API は保護 operation ごとに identity、role、tenant/ownership を確認します。realtime claim は short-lived private です。
 - Driver availability は GPS ベースです。canonical command 成功前に pause/offline を成功表示せず、logout は subscription を解除して旧 session が新 session を更新しないようにします。
-- Notification は durable job です。FCM は `FCM_PROJECT_ID` と ADC/workload identity または secret-managed `FCM_SERVICE_ACCOUNT_JSON` による Firebase Admin SDK/HTTP v1 を使用します。provider request は retry し、恒久 invalid token は stale にします。
+- Notification は durable job です。FCM は `FCM_PROJECT_ID` と ADC/workload identity または secret-managed `FCM_SERVICE_ACCOUNT_JSON` による Firebase Admin SDK/HTTP v1 を使用します。provider request は retry し、恒久 invalid token は stale にします。Mobile は認証済み session の後だけ FCM token を登録し、API は `POST /notifications/fcm-token` の入力を検証し、token rotation を更新し、logout 時の bounded cleanup 前に cleanup intent を保存します。client UUID、token ごとの PostgreSQL advisory lock、7 日の revocation tombstone により cleanup は late registration POST より優先されます。Backend は background delivery 用 notification payload、Android channel、APNs sound を含め、client は foreground message を表示し terminated state からの起動時も tap では local deep link だけを受け入れます。開いている Driver inbox は認証済み realtime を受けて notification ID を重複排除します。
 - Admin/Restaurant は responsive、keyboard 操作、skip link、visible focus、reduced motion、locale 保持を満たします。
 - User-facing copy は `vi`、`en`、`ja` を用意します。
 
 ## 今回の hardening の受入基準
 
-1. Backend は legacy FCM server key を使わず、provider failure と invalid token を test します。
+1. Backend は legacy FCM server key を使わず、API boundary で FCM 登録 input を検証し、provider failure と invalid token を test します。
 2. Driver の login/logout、availability、dispatch、realtime が stale async による別 session 更新や失敗した offline の成功表示を起こしません。
 3. Restaurant sidebar/drawer は responsive / accessible で、locale、focus、motion preference を守ります。
 4. Docs は Railway/Supabase/Vercel、FCM、test 範囲、release blocker、deploy 順序を事実に基づいて記し、未完了 check を production approval としません。

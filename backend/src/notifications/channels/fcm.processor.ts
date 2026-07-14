@@ -77,6 +77,13 @@ export class FcmProcessor extends WorkerHost {
     return batch.map(({ token }) => ({
       token,
       notification: { title, body },
+      android: {
+        notification: {
+          channelId: 'foodflow_notifications',
+          sound: 'default',
+        },
+      },
+      apns: { payload: { aps: { sound: 'default' } } },
       ...(fcmData ? { data: fcmData } : {}),
     }))
   }
