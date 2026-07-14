@@ -27,7 +27,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: docker-publish-${{ github.ref }}
+  group: docker-publish-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -211,6 +211,70 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Protect immutable SHA tag
+        id: immutable
+        shell: bash
+        env:
+          DOCKERHUB_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
+          GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          GHCR_IMAGE="${GHCR_IMAGE,,}"
+          read_digest() {
+            local image="$1"
+            local label="$2"
+            local inspect_output=""
+            if ! inspect_output="$(docker buildx imagetools inspect "$image:$IMAGE_TAG" 2>/dev/null)"; then
+              return 1
+            fi
+            if ! grep -Fq 'Platform:    linux/amd64' <<< "$inspect_output" ||
+              ! grep -Fq 'Platform:    linux/arm64' <<< "$inspect_output"; then
+              echo "$label $IMAGE_TAG is not a complete amd64/arm64 manifest." >&2
+              return 2
+            fi
+            local digest=""
+            digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$inspect_output")"
+            if [[ -z "$digest" ]]; then
+              echo "$label $IMAGE_TAG has no digest." >&2
+              return 2
+            fi
+            printf '%s' "$digest"
+          }
+
+          set +e
+          dockerhub_digest="$(read_digest "$DOCKERHUB_IMAGE" 'Docker Hub')"
+          dockerhub_status=$?
+          ghcr_digest="$(read_digest "$GHCR_IMAGE" 'GHCR')"
+          ghcr_status=$?
+          set -e
+
+          if [[ "$dockerhub_status" -gt 1 || "$ghcr_status" -gt 1 ]]; then
+            echo "Refusing to overwrite malformed immutable tag $IMAGE_TAG."
+            exit 1
+          fi
+
+          if [[ -z "$dockerhub_digest" && -z "$ghcr_digest" ]]; then
+            echo 'exists=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ -z "$dockerhub_digest" || -z "$ghcr_digest" ]]; then
+            echo "Refusing to overwrite $IMAGE_TAG because it exists in only one registry."
+            exit 1
+          fi
+
+          if [[ "$dockerhub_digest" != "$ghcr_digest" ]]; then
+            echo "Refusing to overwrite $IMAGE_TAG because registry digests differ."
+            echo "Docker Hub: $dockerhub_digest"
+            echo "GHCR: $ghcr_digest"
+            exit 1
+          fi
+
+          echo 'exists=true' >> "$GITHUB_OUTPUT"
+          echo "digest=$dockerhub_digest" >> "$GITHUB_OUTPUT"
+          echo "Reusing verified immutable manifest $dockerhub_digest"
+
       - name: Extract immutable image metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
@@ -222,7 +286,7 @@ jobs:
             type=raw,value=sha-${{ github.sha }}
 
       - name: Build and push backend image
-        if: ${{ !matrix.web }}
+        if: ${{ !matrix.web && steps.immutable.outputs.exists != 'true' }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ matrix.context }}
@@ -240,7 +304,7 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache,mode=max
 
       - name: Build and push web image
-        if: ${{ matrix.web }}
+        if: ${{ matrix.web && steps.immutable.outputs.exists != 'true' }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ matrix.context }}
@@ -274,21 +338,28 @@ jobs:
           IMAGE_TAG: sha-${{ github.sha }}
         run: |
           set -euo pipefail
+          GHCR_IMAGE="${GHCR_IMAGE,,}"
           inspect_digest() {
             local image="$1"
             local label="$2"
             local digest=""
             local inspect_output=""
-            for attempt in $(seq 1 10); do
-              if inspect_output="$(docker buildx imagetools inspect "$image:$IMAGE_TAG" 2>/dev/null)"; then
+            local max_attempts=60
+            local retry_delay_seconds=5
+            for attempt in $(seq 1 "$max_attempts"); do
+              if inspect_output="$(docker buildx imagetools inspect "$image:$IMAGE_TAG" 2>/dev/null)" &&
+                grep -Fq 'Platform:    linux/amd64' <<< "$inspect_output" &&
+                grep -Fq 'Platform:    linux/arm64' <<< "$inspect_output"; then
                 digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$inspect_output")"
                 if [[ -n "$digest" ]]; then
                   printf '%s' "$digest"
                   return 0
                 fi
               fi
-              echo "$label manifest is not visible yet (attempt $attempt/10)." >&2
-              sleep 3
+              echo "$label manifest is not visible yet (attempt $attempt/$max_attempts)." >&2
+              if [[ "$attempt" -lt "$max_attempts" ]]; then
+                sleep "$retry_delay_seconds"
+              fi
             done
             echo "$label manifest has no digest." >&2
             return 1
