@@ -38,7 +38,8 @@ class _OnboardingAgreementScreenState
       );
       if (!mounted) return;
       ref.read(driverProvider.notifier).markTermsAccepted();
-      context.go('/onboarding-vehicle');
+      final driver = ref.read(driverProvider);
+      context.go(driverRouteAfterTerms(driver));
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _errorMessage(error));
@@ -149,6 +150,11 @@ class _OnboardingAgreementScreenState
     );
   }
 }
+
+String driverRouteAfterTerms(DriverState driver) =>
+    driver.isVerified || driver.kycStatus == DriverKycStatus.pending
+    ? '/home'
+    : '/onboarding-vehicle';
 
 class _AgreementNote extends StatelessWidget {
   final String text;

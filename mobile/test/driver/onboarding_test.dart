@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/models/driver_onboarding_draft.dart';
+import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/driver/screens/onboarding_agreement_screen.dart';
 import 'package:foodflow_customer/driver/screens/onboarding_vehicle_screen.dart';
 import 'package:foodflow_customer/l10n/app_localizations.dart';
@@ -140,6 +141,23 @@ void main() {
       button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(button.onPressed, isNotNull);
       expect(find.text('Đồng ý và tiếp tục'), findsOneWidget);
+    });
+
+    test('verified driver skips redundant KYC onboarding', () {
+      expect(
+        driverRouteAfterTerms(const DriverState(isVerified: true)),
+        '/home',
+      );
+      expect(
+        driverRouteAfterTerms(const DriverState(isVerified: false)),
+        '/onboarding-vehicle',
+      );
+      expect(
+        driverRouteAfterTerms(
+          const DriverState(kycStatus: DriverKycStatus.pending),
+        ),
+        '/home',
+      );
     });
   });
 }
