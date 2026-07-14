@@ -168,7 +168,9 @@ git rev-list --left-right --count origin/master...HEAD # 0 0
 git ls-remote --heads origin                         # chỉ master
 ```
 
-Tag `v4.0.0` đúng verified master commit. Workflow build `sha-<full-commit>` cho `amd64/arm64`, runtime smoke, Trivy, health rồi mới tạo semver. `latest` chỉ promote manual. Worker chạy từ backend image, không publish worker artifact mới.
+Để tạo evidence registry trước release, dispatch manual **Docker Publish** với `publish_release=false`, `release_tag` rỗng và `promote_latest=false`. Workflow chỉ publish manifest `sha-<full-commit>` sau runtime smoke/scan cả hai architecture; bỏ qua production health, semver và `latest`.
+
+Chỉ tạo `v4.0.0` tại verified master commit sau production smoke: đặt `publish_release=true` cùng `release_tag` immutable. `promote_latest` vẫn là lựa chọn cuối riêng. Worker chạy từ backend image, không publish worker artifact mới.
 
 ## Self-hosted Docker
 

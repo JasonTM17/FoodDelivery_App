@@ -144,7 +144,9 @@ git rev-list --left-right --count origin/master...HEAD # 0 0
 git ls-remote --heads origin                         # master only
 ```
 
-Verified master commit に `v4.0.0` を付けます。Workflow は `sha-<full-commit>` を `amd64/arm64` で build、runtime smoke、Trivy、health 後に immutable semver を作ります。`latest` は manual promotion のみ。Worker は backend image を使います。
+Pre-release registry evidence では **Docker Publish** を `publish_release=false`、空の `release_tag`、`promote_latest=false` で manual dispatch します。両 architecture の runtime smoke/scan 後に `sha-<full-commit>` manifest のみを publish し、production health、semver、`latest` promotion は skip します。
+
+Production smoke 後に verified master commit でのみ `publish_release=true` と immutable `release_tag` を設定して `v4.0.0` を作成します。`promote_latest` は別の最終選択です。Worker は backend image を使い、別 artifact は publish しません。
 
 ## Self-hosted compatibility
 

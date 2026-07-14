@@ -361,7 +361,9 @@ git ls-remote --heads origin
 
 Expected remote heads: `master` only. Do not promote an image for a different commit.
 
-Create/push `v4.0.0` only at the verified master commit. The Docker workflow publishes SHA manifests, smokes/scans both architectures, verifies production health, and then creates the immutable semver manifest. `latest` promotion is a separate manual dispatch.
+For pre-release registry evidence, manually dispatch **Docker Publish** with `publish_release=false`, an empty `release_tag`, and `promote_latest=false`. This publishes only `sha-<full-commit>` manifests after both-architecture runtime smoke and scans; it skips production health, semver, and `latest` promotion.
+
+Create/push `v4.0.0` only at the verified master commit after production smoke. Set `publish_release=true` with the immutable `release_tag`; `promote_latest` remains an explicit final choice. A release-tag push follows the same production-smoke and immutable-semver path.
 
 Do not publish the historical `foodflow-worker` image; the backend image contains the worker entry point.
 
