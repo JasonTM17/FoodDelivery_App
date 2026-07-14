@@ -32,7 +32,10 @@ void main() {
 
     await notifier.restoreSession();
 
-    expect(apiInterceptor.profileAuthorization, 'Bearer stored-driver-access-token');
+    expect(
+      apiInterceptor.profileAuthorization,
+      'Bearer stored-driver-access-token',
+    );
     expect(notifier.state.isLoading, isFalse);
     expect(notifier.state.isAuthenticated, isTrue);
     expect(notifier.state.driverName, 'Driver One');
@@ -60,6 +63,27 @@ void main() {
     expect(notifier.state.isLoading, isFalse);
     expect(notifier.state.isAuthenticated, isFalse);
     expect(notifier.state.error, AppErrorCodes.driverProfileUnavailable);
+  });
+
+  test('clears a stored session when KYC restoration is invalid', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_token': 'stored-driver-access-token',
+      'refresh_token': 'stored-driver-refresh-token',
+    });
+    apiInterceptor.kycStatusPayload = {
+      'status': 'unknown',
+      'isVerified': false,
+    };
+    final notifier = DriverNotifier(restoringSession: true);
+
+    await notifier.restoreSession();
+
+    const storage = FlutterSecureStorage();
+    expect(await storage.read(key: 'auth_token'), isNull);
+    expect(await storage.read(key: 'refresh_token'), isNull);
+    expect(notifier.state.isLoading, isFalse);
+    expect(notifier.state.isAuthenticated, isFalse);
+    expect(notifier.state.error, AppErrorCodes.driverKycStatusUnavailable);
   });
 
   test('holds a terminated-launch tap until driver auth is validated', () {
