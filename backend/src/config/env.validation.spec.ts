@@ -2,6 +2,7 @@ import { validateEnv } from './env.validation'
 
 const productionEnv = {
   NODE_ENV: 'production',
+  FOODFLOW_PROCESS_ROLE: 'api',
   DATABASE_URL: 'postgresql://foodflow:secret@db.foodflow.vn:5432/foodflow',
   DIRECT_URL: 'postgresql://foodflow:secret@db-direct.foodflow.vn:5432/foodflow',
   REDIS_URL: 'rediss://:secret@redis.foodflow.vn:6380',
@@ -67,6 +68,14 @@ function withoutOptionalProviders(config: Record<string, unknown>): Record<strin
 }
 
 describe('validateEnv', () => {
+  it('rejects an unknown API or worker process role', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'test',
+      DELIVERY_BASE_FEE_VND: '15000',
+      FOODFLOW_PROCESS_ROLE: 'workre',
+    })).toThrow(/FOODFLOW_PROCESS_ROLE/)
+  })
+
   it('keeps local defaults for development and test environments only', () => {
     const env = validateEnv({ NODE_ENV: 'test', DELIVERY_BASE_FEE_VND: '15000' })
 

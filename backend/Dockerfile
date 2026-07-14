@@ -46,6 +46,6 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 USER 65534:65534
 EXPOSE 3001
-# Railway assigns a dynamic PORT and owns the API healthcheck. The same image
-# runs the non-HTTP worker when FOODFLOW_PROCESS_ROLE=worker.
-CMD ["-e", "require(process.env.FOODFLOW_PROCESS_ROLE === 'worker' ? './dist/workers/main.js' : './dist/main.js')"]
+# Railway assigns a dynamic PORT and owns the API healthcheck. The entrypoint
+# fails closed for unknown roles instead of silently starting the wrong process.
+CMD ["dist/process-entrypoint.js"]

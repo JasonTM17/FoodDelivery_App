@@ -11,6 +11,7 @@ const LOCAL_DEFAULTS = {
 } as const
 
 const productionRequiredKeys = [
+  'FOODFLOW_PROCESS_ROLE',
   'DATABASE_URL',
   'DIRECT_URL',
   'REDIS_URL',
@@ -115,6 +116,7 @@ const deepSeekBaseUrl = z
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
+  FOODFLOW_PROCESS_ROLE: z.enum(['api', 'worker']).optional(),
   REALTIME_PROVIDER: z.enum(['socketio', 'supabase']).default('socketio'),
   STORAGE_PROVIDER: z.enum(['minio', 'supabase']).default('minio'),
   QUEUE_PROVIDER: z.enum(['bullmq', 'supabase-postgres']).default('bullmq'),
@@ -186,8 +188,9 @@ export const envSchema = z.object({
   SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_REALTIME_JWT_PRIVATE_KEY: z.string().optional(),
   SUPABASE_REALTIME_JWT_KEY_ID: z.string().optional(),
+  // Allows the legacy JWT to replace a missing opaque secret for the general
+  // Supabase provider contract. Storage still requires its JWT separately.
   SUPABASE_ALLOW_LEGACY_KEYS: z.enum(['true', 'false']).default('false'),
-  // Rollback-only alias; production rejects it unless explicitly enabled.
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),
   SUPABASE_KYC_BUCKET: z.literal('foodflow-private').optional(),
