@@ -8,13 +8,13 @@ FoodFlow は、顧客の注文、Restaurant の注文・メニュー運用、Dri
 
 ## プロダクト面
 
-| 面 | 主な利用者 | 責務 |
-|---|---|---|
-| NestJS API / worker | 全 client・運用 | Auth、RBAC、tenant check、durable job、integration、audit |
-| Admin dashboard | Marketplace 運用者 | KPI、support、review、audit、driver、user、restaurant |
-| Restaurant dashboard | Restaurant staff | Order、menu、staff、promotion、revenue、review、営業時間 |
-| Customer app | 顧客 | Browse、cart、checkout、order tracking、support |
-| Driver app | Driver | KYC、GPS availability、dispatch、配送状態、earnings |
+| 面 | 主な利用者 | 責務 | Runtime / entrypoint |
+|---|---|---|---|
+| NestJS API / worker | 全 client・運用 | Auth、RBAC、tenant check、durable job、integration、audit | NestJS 11; Railway topology は provision 済み、API/worker は未 deploy |
+| Admin dashboard | Marketplace 運用者 | KPI、support、review、audit、driver、user、restaurant | Next.js 15 web |
+| Restaurant dashboard | Restaurant staff | Order、menu、staff、promotion、revenue、review、営業時間 | Next.js 15 web |
+| Customer app | 顧客 | Browse、cart、checkout、order tracking、support | Flutter/Riverpod native; [`main_customer.dart`](../mobile/lib/main_customer.dart) |
+| Driver app | Driver | KYC、GPS availability、dispatch、配送状態、earnings | Flutter/Riverpod native; [`main_driver.dart`](../mobile/lib/main_driver.dart) |
 
 Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 専用の別 topology です。
 
@@ -26,6 +26,16 @@ Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、R
 - Notification は durable job です。FCM は `FCM_PROJECT_ID` と ADC/workload identity または secret-managed `FCM_SERVICE_ACCOUNT_JSON` による Firebase Admin SDK/HTTP v1 を使用します。provider request は retry し、恒久 invalid token は stale にします。Mobile は認証済み session の後だけ FCM token を登録し、API は `POST /notifications/fcm-token` の入力を検証し、token rotation を更新し、logout 時の bounded cleanup 前に cleanup intent を保存します。client UUID、token ごとの PostgreSQL advisory lock、7 日の revocation tombstone により cleanup は late registration POST より優先されます。Backend は background delivery 用 notification payload、Android channel、APNs sound を含め、client は foreground message を表示し terminated state からの起動時も tap では local deep link だけを受け入れます。開いている Driver inbox は認証済み realtime を受けて notification ID を重複排除します。
 - Admin/Restaurant は responsive、keyboard 操作、skip link、visible focus、reduced motion、locale 保持を満たします。
 - User-facing copy は `vi`、`en`、`ja` を用意します。
+
+## 非機能要件
+
+| 領域 | 要件 |
+|---|---|
+| 信頼性 | Session を変える async work は cancellation-safe、notification fanout は idempotent/retryable。 |
+| Security | Secret は server-side、production は example/weak config を拒否し、managed から local への暗黙 fallback はしない。 |
+| Accessibility | 重要 dashboard は labelled control、semantic dialog、実用的な 44px target、keyboard access を持ち、release 前に axe serious/critical を残さない。 |
+| Observability | Health/readiness、durable job state、secret を含まない log、監査可能な Admin action。 |
+| Release quality | Final head は local gate、fresh remote CI、provider preflight、authenticated production smoke を pass する。 |
 
 ## 今回の hardening の受入基準
 

@@ -41,7 +41,11 @@
 | Insights | ![Restaurant insights](screenshots/restaurant/09-insights.png) |
 | Settings | ![Restaurant settings](screenshots/restaurant/10-settings.png) |
 
-## Driver GPS (local E2E)
+## Customer
+
+Customer UI の capture はこの gallery にまだありません。Admin/Restaurant media から Customer screenshot を推測せず、release evidence には source/runtime reference 付きの [`main_customer.dart`](../mobile/lib/main_customer.dart) からの新規 capture だけを使います。
+
+## Driver GPS (test-only local E2E)
 
 Android API 35 の画像は simulated route と deterministic test data のみを使います。Driver の明示的 Online action と notification permission を示しますが、real location、personal account、credential、token は取得していません。
 

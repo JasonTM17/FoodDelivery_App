@@ -2,6 +2,16 @@
 
 > **Historical snapshot — 2026-07-12.** The test counts, 27-migration result, image digests, and media QA statements below are evidence recorded for that date. They are not a claim about the current `master` head, the current dirty workspace, or production readiness.
 
+## Current continuation — 2026-07-14
+
+The verified source head before this documentation sync is `f367d3cd`. All ten required current-head workflows are green: CI, Integration Smoke Gate, E2E, Mobile CI, Build, Lint, Gitleaks, CodeQL, Trivy, and SBOM. Recorded current-head counts are Backend 141 suites / 1043 tests, Mobile 352 tests, and isolated Docker E2E 204/204 in 5.8 minutes.
+
+Supabase production now has all 35 forward migrations applied through the authorized Railway migrator. Direct checks verified business/RAG tables remain empty, RLS remains enabled, private Broadcast authorization exists, the public/private Storage buckets have bounded MIME/size policy, and anonymous public-object listing was removed by migration 35. A historical zero-step failed Prisma row remains correctly recorded as rolled back; no applied migration was rewritten. PostGIS is non-relocatable, while moving pgvector would break the current Prisma/raw-operator search path, so the two remaining extension-advisor warnings are documented instead of hidden with an unsafe schema move.
+
+Admin and Restaurant are GitHub-linked, READY on Vercel, and their canonical health/login routes return 200. A headless browser observed no tunnel/localhost request and no console error; the stale Restaurant tunnel environment values were replaced. Railway managed Redis and the migration service are healthy, but API/worker have no deployment and the public API returns 404 because 15 real provider configurations are absent. Authenticated production GPS/Broadcast, provider integrations, and end-to-end production smoke therefore remain blocked.
+
+Current-head Docker SHA images remain unpublished. The multi-registry workflow correctly fails closed because the existing private `foodflow-admin` and `foodflow-restaurant` GHCR packages are not connected to this repository and deny the workflow token with 403. Repository connection and Actions write access require an explicit package-permission change. No `v4.0.0` or `latest` promotion is authorized.
+
 Snapshot date: **2026-07-12**. Status at that snapshot: **integration pushed to `master`; production release blocked**.
 
 ## Release identity
@@ -108,31 +118,29 @@ The two current SHA manifests are local Linux/amd64 release-candidate evidence, 
 
 ### Supabase
 
-The active Food_Delivery_Crab project was backed up outside the repository, then reconciled after the provider recorded a zero-step failed migration whose HNSW index already existed from the preceding migration. The failed entry was marked rolled back with Prisma's migration-history command; no applied SQL was reversed. `prisma migrate deploy` then applied the remaining forward migration. Prisma now reports 33 migrations and an up-to-date schema. PostGIS/pgvector indexes and the latest committed checksums were verified directly. Production users, restaurants, orders, driver profiles, and RAG documents remain 0 rows. The Supabase CLI token is not persisted in this worktree; a fresh CLI preflight still needs an authenticated shell session.
+The active Food_Delivery_Crab project was backed up outside the repository, then reconciled after the provider recorded a zero-step failed migration whose HNSW index already existed from the preceding migration. The failed entry remains marked rolled back; no applied SQL was reversed. The authorized Railway migrator applied the FCM registration-revocation migration and the public Storage-listing policy removal. Production now has all 35 forward migrations applied. PostGIS/pgvector indexes, RLS, private Broadcast authorization, split Storage policies, and empty production business/RAG tables were verified directly. The Supabase CLI token is not persisted in the worktree.
 
 ### Railway and Vercel
 
-Railway OAuth and topology preflight pass for `foodflow-api`, `foodflow-worker`, `foodflow-migrate`, and managed Redis. The public API endpoint still returns 404 because API/worker rollout remains blocked by exactly 15 missing real provider configurations: `GOOGLE_MAPS_API_KEY`, `OSRM_URL`, `DEEPSEEK_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `FCM_PROJECT_ID`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Production validation remains fail-closed; no value was fabricated.
+Railway OAuth and topology preflight pass for `foodflow-api`, `foodflow-worker`, `foodflow-migrate`, and managed Redis. The current-head migrator completed against Supabase. The public API endpoint still returns 404 because API/worker have no deployment and remain blocked by exactly 15 missing real provider configurations: `GOOGLE_MAPS_API_KEY`, `OSRM_URL`, `DEEPSEEK_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `FCM_PROJECT_ID`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Production validation remains fail-closed; no value was fabricated.
 
-Both Vercel projects pass the committed settings/environment-name preflight and their canonical health endpoints return 200 JSON. Admin and Restaurant production builds pass with verified public values. A clean Restaurant candidate from exact source `9db6f7e` reached READY and passed its protected `/api/healthz` through the Vercel CLI bypass, but it was intentionally not promoted while Railway health/auth/GPS smoke is impossible. Admin still needs an equivalent final-source candidate after the release source SHA is frozen.
+Both Vercel projects are connected to the GitHub repository and their current-source deployments are READY. Canonical `/api/healthz` and localized login routes return 200. Headless browser smoke observed no request to `trycloudflare.com` or localhost and no console error; Restaurant's stale sensitive tunnel values were replaced with the canonical Railway/Admin origins. Full auth/GPS smoke remains blocked until Railway API/worker are live.
 
 Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
 
 ### GitHub Actions
 
-The user reports billing/token/auth exhaustion. No local result may be represented as fresh remote CI. Required workflows include CI, Build, Lint, Mobile, E2E, Integration, OpenAPI, Gitleaks, CodeQL, Trivy, and SBOM.
+All ten required current-head workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, and SBOM. The Docker publish workflow is a separate release gate and remains failed only at private Admin/Restaurant GHCR package authorization; it did not promote semver or `latest`.
 
 ## Remaining release gates
 
 1. Supply/rotate the 15 missing Railway provider configurations only through sealed provider stores; pass strict API/worker environment validation.
-2. Run the current-head migrator, deploy Railway API/worker, and require `/api/healthz` plus `/api/readyz` before any web promotion.
-3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, and GPS snapshot/delta delivery against Supabase production.
-4. Run current-SHA Chromium + Firefox E2E, axe serious/critical, visual, tenant isolation, route/map, export, payment, notification, and AI live smoke.
-5. Complete full final-head Flutter tests/release builds and Android device GPS matrix; use macOS/iPhone for the required iOS background-location evidence.
-6. Restore remote CI and obtain green final-head workflow evidence.
-7. Smoke and promote the exact Admin/Restaurant Vercel candidates only after Railway is healthy.
-8. Build/push all four current-head Docker SHA manifests, pull them in a clean environment, verify remote digests/scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
+2. Deploy Railway API/worker from one immutable SHA and require `/api/healthz` plus `/api/readyz`; current-head migration is already complete.
+3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, GPS snapshot/delta/reconnect, and degraded route behavior against Supabase production.
+4. Run provider-backed route/map, export, payment, notification, AI, and one controlled-device FCM smoke. Complete Android device GPS matrix and use macOS/iPhone for required iOS background-location evidence.
+5. Re-smoke the exact Admin/Restaurant Vercel deployments after Railway is healthy.
+6. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access. Rerun all four current-head Docker SHA manifests, pull in a clean environment, verify cross-registry digests/scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
 
 ## Release decision
 
-**NO-GO** remains correct. Supabase schema deployment is complete and the dashboard candidates/builds are healthy, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, final-head remote CI/mobile release evidence is incomplete, and current-head Docker images have not been published. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.
+**NO-GO** remains correct. Supabase schema deployment, current-head CI, and Vercel dashboard health are green, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, required device release evidence is incomplete, and current-head Docker images have not been published. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.

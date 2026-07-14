@@ -6,34 +6,34 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Evidence hiện tại
 
-Scoped hardening evidence ngày 13/07/2026:
+Evidence current-head ngày 14/07/2026:
 
 | Khu vực | Kết quả |
 |---|---|
-| Backend | 138 suite / 1016 test, Prisma validate/generate, typecheck, lint và build đều pass. |
-| Database | Repository hiện track 34 migration có thứ tự. PostgreSQL/PostGIS+pgvector isolated mới đã apply đủ 34 migration và xác minh table/index FCM-revocation. Supabase production lần cuối khớp checksum ở trạng thái 33 migration trước đó; migration 34 cần rollout được ủy quyền. Docker test volume lịch sử tái sử dụng có 34 dòng migration-history đã apply và một dòng rolled back từ trước migration FCM hiện tại; đây không phải evidence current-source hay số migration fresh. |
-| Mobile Flutter | Flutter analyze và full run mới 341 test đều pass sau các thay đổi FCM foreground/tap, cleanup logout và inbox Driver khi app mở. Focused FCM lifecycle/presentation có 14 test pass. |
-| Web | Admin 195 test, Restaurant 134 test; cả hai app pass typecheck/lint và production build với Vercel production env đã xác minh. |
-| Browser E2E | Ma trận Docker isolated current-source trên volume sạch pass 68/68 ở Chromium, Firefox và Pixel 5 (204/204 trong 6.8 phút, không retry/failure). Đây chỉ là local evidence, không phải remote CI hay production approval. |
+| Backend | CI current-head pass 141 suite / 1043 test cùng Prisma validate/generate, typecheck, lint và build. |
+| Database | Repository và Supabase production có đủ 35 migration forward. Fresh PostGIS+pgvector CI và Railway migrator đều pass; đã kiểm RLS, Broadcast private, split Storage và bỏ anonymous public-object listing. |
+| Mobile Flutter | Mobile CI current-head pass đủ 352 test; vẫn cần evidence thiết bị Android/iOS production. |
+| Web | Typecheck/lint/build current-head và deployment Vercel đều pass; health/login canonical trả 200, không request tunnel/localhost hay console error. |
+| Browser E2E | Docker E2E isolated current-head pass 204/204 trong 5.8 phút. Workflow remote xanh nhưng chưa chứng minh GPS production Railway/Supabase. |
 | FCM | Local contract pass: 4 backend notification suite / 40 test và 14 Flutter lifecycle/presentation test. Chưa gửi live: cần project credential production và controlled device token. |
 
 ### Docker E2E và RAG theo current source — 13/07/2026
 
-Repository hiện track 34 migration. Lượt isolated trên volume sạch đã ghi nhận đủ 33 migration đang được track khi đó, không pending. Sau đó một PostgreSQL/PostGIS+pgvector isolated mới đã apply đủ 34 migration hiện tại và xác minh `fcm_token_revocations` cùng `fcm_token_revocations_expires_at_idx`. Seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order. Một Docker test volume lịch sử tái sử dụng còn 34 dòng `_prisma_migrations` đã apply và một dòng rolled back vì từng ghi một migration zero-step đã bị loại khỏi source; volume này không phải bằng chứng số migration fresh của source hiện tại. Supabase production lần cuối khớp checksum tại 33 migration, và Railway migrator rollout được ủy quyền vẫn là release gate. Overlay chạy worker riêng từ backend image, không dùng API process xử lý nền. Sau seed, worker được khởi động, ghi `FoodFlow Worker started`, và hoàn tất RAG sync `indexed: 402`, `unchanged: 0`, `failed: 0`, `deactivated: 0`.
+Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 migration, seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order; worker riêng index 402 RAG document và để embedding pending khi không có DeepSeek key. Trạng thái migration đã được evidence 14/07 phía trên thay thế: fresh CI và Supabase production hiện có đủ 35 migration forward, gồm FCM registration revocation và bỏ anonymous public-object listing. Dòng migration zero-step rolled back lịch sử vẫn là audit history, không phải thay đổi production chưa apply.
 
 Worker current-source index 402 RAG document sau fresh seed. Không có DeepSeek key nên embedding vẫn pending và không có vector giả. Volume tái sử dụng cũ còn 44 FAQ và 8 policy row có source ID rỗng từ lần local cũ; các dòng lịch sử này không tính vào evidence worker hiện tại. Không dữ liệu nào ở đây là production hoặc phê duyệt embedding/provider production.
 
-Image API/Admin/Restaurant vừa rebuild pass toàn bộ ma trận: Chromium 68/68, Firefox 68/68 và Pixel 5 68/68 (204/204 trong 6.8 phút, không retry/failure). Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, cấu trúc visual, navigation responsive và Restaurant form-login/reload persistence. Image local mang `revision=local`, nên chỉ chứng minh checkout hiện tại chứ không chứng minh artifact immutable. CI remote được cấu hình dùng cùng Compose overlay và ma trận ba project, nhưng vẫn cần một lượt remote được ủy quyền chạy mới.
+Image API/Admin/Restaurant của lượt lịch sử đã pass ma trận ba project; E2E remote current-head sau đó pass 204/204 trong 5.8 phút. Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, visual structure, responsive navigation và Restaurant form-login/reload persistence. Provenance registry immutable current-head vẫn là gate riêng.
 
-Kết quả này là local verification mạnh, chưa phải release approval. Vẫn phải có remote CI mới, provider preflight, production smoke và live FCM delivery bằng controlled device.
+Remote CI hiện đã xanh, nhưng provider-backed Railway/Supabase production smoke và live FCM bằng controlled device vẫn bắt buộc.
 
 ### Database runtime evidence lịch sử 13/07/2026
 
 Container PostGIS + pgvector dùng một lần trước đây đã apply đủ 33 migration đang được track khi đó, xác minh PostGIS, vector, `rag_documents`, source/content index và cosine HNSW index. Lệnh `db:big-seed` tạo thật trong DB này 50 restaurant đã duyệt, 50 driver, 100 customer, 509 order, 123 review và 10 promotion; đây là bằng chứng generator ghi database, không phải fixture fix cứng lúc runtime. Worker local đồng bộ 32 document restaurant/menu sống; do chưa có DeepSeek key nên cả 32 ở trạng thái chờ embedding, không sinh vector giả. Migration FCM-revocation thứ 34 chưa có trong lượt evidence lịch sử này.
 
-Supabase production lần cuối được xác minh checksum khớp tại 33 migration. Migration FCM-revocation thứ 34 vẫn chờ rollout được ủy quyền. Users, restaurants, orders, driver profiles và RAG documents production vẫn bằng 0; tuyệt đối không chạy demo/big seed ở đó. Vì vậy production hiện là DB trống, chưa được tuyên bố là đã có big data.
+Lượt lịch sử này có trước trạng thái migration hiện tại. Supabase production nay có đủ 35 migration forward; users, restaurants, orders, driver profiles và RAG documents vẫn bằng 0 vì không chạy demo/big seed. Production chủ ý đang trống, không có tuyên bố đã có big data.
 
-Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md), nhưng chỉ là lịch sử cho đến khi chạy lại trên final source head. Full backend/web build, axe/visual/Stitch toàn trang, repaired browser E2E, controlled FCM delivery, smoke tenant/realtime/map/AI kiểu production, provider preflight và remote CI hiện tại vẫn bắt buộc.
+Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md). Ma trận remote current-head hiện đã thay kết quả image cũ 128/134. Provider-backed production smoke và controlled FCM delivery vẫn bắt buộc; phải chạy lại remote CI nếu release head thay đổi.
 
 ## Gate tổng
 

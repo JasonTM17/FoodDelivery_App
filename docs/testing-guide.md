@@ -6,34 +6,34 @@ A release is green only when the final source head passes every required local g
 
 ## Current evidence snapshot
 
-Scoped hardening evidence on 2026-07-13:
+Current-head evidence on 2026-07-14:
 
 | Area | Result |
 |---|---|
-| Backend | 138 suites / 1016 tests, Prisma validation/generation, typecheck, lint, and build passed. |
-| Database | The repository tracks 34 ordered migrations. A fresh isolated PostGIS+pgvector database applied all 34 and verified the FCM-revocation table/index. Supabase production was last checksum-verified at the preceding 33-migration state; migration 34 requires the authorized rollout. A historical reused Docker test volume retained 34 applied migration-history rows plus one rolled-back row before the current FCM migration; it is not current-source or fresh migration-count evidence. |
-| Mobile Flutter | Flutter analyze and a fresh full 341-test run passed after the FCM foreground/tap, logout-cleanup, and open-Driver-inbox updates. The focused FCM lifecycle and presentation checks have 14 passing tests. |
-| Web | Admin 195 tests and Restaurant 134 tests passed; both apps passed typecheck/lint and production builds with verified Vercel production env. |
-| Browser E2E | A clean-volume current-source isolated Docker matrix passed 68/68 on Chromium, Firefox, and Pixel 5 (204/204 in 6.8 minutes; no retries or failures). This is local evidence only, not remote CI or production approval. |
+| Backend | 141 suites / 1043 tests passed in current-head CI, together with Prisma validation/generation, typecheck, lint, and build. |
+| Database | The repository and Supabase production have all 35 forward migrations. Fresh PostGIS+pgvector CI and the authorized Railway migrator both passed; RLS, private Broadcast, split Storage, and removal of anonymous public-object listing were verified. |
+| Mobile Flutter | Current-head Mobile CI passed all 352 tests. Device-specific Android/iOS production evidence is still required. |
+| Web | Current-head typecheck/lint/build gates and Vercel deployments passed. Both canonical health/login flows return 200 without tunnel/localhost requests or console errors. |
+| Browser E2E | Current-head isolated Docker E2E passed 204/204 in 5.8 minutes. The remote E2E workflow is green, but this is still not Railway/Supabase production GPS evidence. |
 | FCM | Local contract evidence passed: 4 notification backend suites / 40 tests and 14 focused Flutter lifecycle/presentation tests. Live send was not run: production project credentials and a controlled device token are required. |
 
 ### 2026-07-13 current-source Docker E2E and RAG evidence
 
-The repository tracks 34 migrations. The recorded clean-volume isolated E2E run applied the then-tracked 33 with none pending. A separate fresh PostGIS+pgvector database subsequently applied all 34 current migrations and verified `fcm_token_revocations` plus `fcm_token_revocations_expires_at_idx`. Its E2E disposable seed created 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. A historical reused Docker test volume retained 34 applied `_prisma_migrations` history rows plus one rolled-back row because a removed zero-step migration had previously been recorded; that volume is not fresh migration-count proof for the current source. Supabase production was last checksum-verified at 33 migrations, and its authorized Railway migrator rollout remains a release gate. The overlay starts a dedicated worker from the backend image rather than sharing background work with the API. After the seed it was started, logged `FoodFlow Worker started`, and completed RAG synchronization with `indexed: 402`, `unchanged: 0`, `failed: 0`, and `deactivated: 0`.
+This section preserves the 2026-07-13 local run. It tracked 34 migrations and used disposable seed data: 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. The dedicated worker indexed 402 RAG documents and left embeddings pending without a DeepSeek key. It is superseded for migration status by the 2026-07-14 evidence above: fresh CI and Supabase production now have all 35 forward migrations, including FCM registration revocations and removal of anonymous public-object listing. The historical rolled-back zero-step migration row remains audit history, not an unapplied production change.
 
 The current worker indexed 402 RAG documents after the fresh seed. No DeepSeek key was configured, so embeddings remained pending and no fake vectors were used. The old reused volume also contained 44 FAQ and 8 policy rows with null source IDs from an older local run; those historical rows are excluded from current-worker evidence. None of this represents production data or production embedding/provider approval.
 
-The rebuilt API/Admin/Restaurant images passed the full configured matrix: 68/68 Chromium, 68/68 Firefox, and 68/68 Pixel 5 (204/204 in 6.8 minutes, with no retries or failures). Coverage includes axe serious/critical checks, auth/refresh/RBAC, customer API orders, REST-observed status convergence, tenant isolation, maps, contracts, visual structure, responsive navigation, and Restaurant form-login/reload persistence. Local images carry `revision=local`, so this proves checked-out source behavior, not immutable image provenance. The CI workflow is configured for the same isolated Compose topology and three-project matrix, but a fresh authorized remote run is still required.
+The rebuilt API/Admin/Restaurant images passed that historical three-project matrix. Current-head remote E2E later passed 204/204 in 5.8 minutes. Coverage includes axe serious/critical checks, auth/refresh/RBAC, customer API orders, REST-observed status convergence, tenant isolation, maps, contracts, visual structure, responsive navigation, and Restaurant form-login/reload persistence. Current-head immutable registry provenance remains a separate release gate.
 
-This is strong local verification, not release approval. Fresh remote CI, provider preflights, production smoke, and a controlled live FCM delivery are still mandatory.
+Remote CI is now green, but provider-backed Railway/Supabase production smoke and a controlled live FCM delivery remain mandatory.
 
 ### Historical 2026-07-13 database runtime evidence
 
 An isolated local PostGIS + pgvector container previously applied all 33 then-tracked migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings. The 34th FCM-revocation migration was later applied to a separate fresh database, not this historical evidence run.
 
-Supabase production was last verified with matching checksums for 33 migrations. Migration 34, which records FCM registration revocations, still awaits the authorized rollout. Production users, restaurants, orders, driver profiles, and RAG documents are all 0 rows; no demo/big seed was run there. This is an empty production database, not a claim that production already contains big data.
+This historical run predated the current migration state. Supabase production now has 35 forward migrations, while users, restaurants, orders, driver profiles, and RAG documents remain 0 rows because no demo/big seed was run there. Production is intentionally empty, not a claim that big data already exists.
 
-Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The current Docker browser evidence above supersedes the old 128/134 image result; fresh remote CI, provider preflights, production smoke, and controlled FCM delivery remain required before release.
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The current-head remote matrix now supersedes the old 128/134 image result. Provider-backed production smoke and controlled FCM delivery remain required; rerun remote CI if the release head changes.
 
 ### 2026-07-12 focused Driver GPS E2E evidence
 

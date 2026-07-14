@@ -4,7 +4,7 @@
 
 Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-13: **integration is incorporated in `master`; hardening is in progress; no-go for production**.
+Status on 2026-07-14: **integration and current-head quality gates are green on `master`; managed deployment is incomplete; no-go for production**.
 
 ## Completed and incorporated work
 
@@ -36,6 +36,7 @@ Status on 2026-07-13: **integration is incorporated in `master`; hardening is in
 
 - Reconcile mobile work only from verifiable branches, commits, and patch evidence; do not name, recreate, or infer missing refs.
 - Re-run generated API model/contract alignment, vi/en/ja, customer/driver flows, maps/GPS, offline/reconnect, scoped realtime denial, KYC, and signed release builds.
+- Run separate Customer and Driver smoke from their explicit launchers: authenticate and restore/logout a session, prove allowed private realtime plus cross-role/cross-tenant denial, then exercise the role flow. Live FCM still requires a controlled registered device/token and real production credentials; local lifecycle tests do not prove provider delivery.
 - Validate Android production signing and iOS build/signing on an authorized macOS runner; a local debug keystore is compile evidence only.
 
 ### Backend and production topology
@@ -55,28 +56,27 @@ Status on 2026-07-13: **integration is incorporated in `master`; hardening is in
 - Flutter frozen dependency fetch, analyze, full tests, and customer/driver release builds at the final source head.
 - Full repo/staged secret scan, Gitleaks, CodeQL, dependency audit, Trivy, SBOM, actionlint, ShellCheck.
 
-## External blockers
+## Verified managed state and external blockers
 
-- GitHub Actions billing/auth/token access is exhausted; fresh current-head remote workflows cannot yet approve release.
-- Supabase is linked and was last verified at 33 migrations with matching latest checksums, private Broadcast authorization, split Storage buckets, Data API disabled, and the FoodFlow ES256 signing key active. Repository migration 34 (FCM registration revocations) still needs the authorized rollout. Production business/RAG tables are intentionally empty until real onboarding/import.
-- Railway topology passes, but the public API still returns 404 and API/worker rollout lacks 15 real provider configurations: Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM, and Twilio. Live GPS/Broadcast and controlled-token FCM delivery therefore remain blocked.
-- Admin and Restaurant production health endpoints return 200. A clean Restaurant candidate from `9db6f7e` built and passed protected health smoke but remains unpromoted until the Railway API is live; Admin must follow the same exact-source candidate flow.
+- All ten required current-head GitHub workflows are green. The recorded matrix includes Backend 141 suites / 1043 tests, Mobile 352 tests, and isolated Docker E2E 204/204 in 5.8 minutes.
+- Supabase is linked and all 35 forward migrations are applied. Private Broadcast authorization, split Storage buckets, removal of anonymous public-object listing, RLS, and empty production business/RAG tables were verified directly. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
+- The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
+- Railway topology and managed Redis pass, and the current-head migrator completed. The public API still returns 404 because API/worker have no deployment and lack 15 real provider configurations: Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM, and Twilio. Live GPS/Broadcast and controlled-token FCM delivery therefore remain blocked.
+- Admin and Restaurant are both GitHub-linked and READY on Vercel. Canonical health/login paths return 200 with no tunnel/localhost network requests or console errors; Restaurant tunnel env was replaced. Authenticated API/GPS smoke still depends on Railway.
+- Current-head Docker SHA images remain unpublished. Existing private Admin/Restaurant GHCR packages are not connected to this repository, so the workflow gets 403 until repository access is granted. No semver or `latest` promotion is authorized.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
 
 ## Release sequence after completion
 
-1. Freeze the final source head and run the full local gate.
-2. Restore and pass every required GitHub workflow on that head.
-3. Enter rotated secrets through secure prompts/dashboard and pass Railway/Supabase/Vercel preflight.
-4. Recheck the migrated Supabase RLS, explicit Realtime publication, and Storage policies against authorized and cross-tenant identities.
-5. Deploy Railway migrator, then API/worker; verify health/readiness/Cron.
-6. Build/deploy Admin and Restaurant against the verified API alias.
-7. Run production health plus authenticated realtime/map/chatbot/export/payment/notification/tenant smoke.
-8. Verify the deployed commit remains the intended `origin/master` head; do not recreate or push historical integration branches.
-9. Publish Docker SHA manifests, immutable `v4.0.0`, then manually promote `latest` after smoke.
-10. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
+1. Rotate exposed credentials and enter the 15 real Railway provider configurations through secure stores.
+2. Deploy API/worker from one immutable SHA; verify health/readiness/Cron. The current-head migrator is already complete.
+3. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
+4. Re-smoke the exact Admin and Restaurant Vercel deployments against the healthy Railway API.
+5. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access, then rerun the four-image SHA workflow.
+6. Pull the SHA manifests in a clean environment, verify cross-registry digests/scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
+7. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 
 ## Post-release
 

@@ -75,9 +75,13 @@ Mobile:
 ```powershell
 cd mobile
 flutter pub get --enforce-lockfile
-flutter run -t lib/main_customer.dart
-flutter run -t lib/main_driver.dart
+# Android Customer product flavor
+flutter run --flavor customer -t lib/main_customer.dart
+# Android Driver product flavor
+flutter run --flavor driver -t lib/main_driver.dart
 ```
+
+These are native device/emulator commands, not local web URLs. The Android flavor names come from `mobile/android/app/build.gradle.kts`; use the matching explicit Dart entrypoint for iOS development.
 
 ## Mode B: full local stack
 

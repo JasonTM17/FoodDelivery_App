@@ -19,8 +19,9 @@ web/                       pnpm workspace
   packages/                Shared UI/i18n/client utilities
   e2e/                     Playwright Chromium/Firefox contracts
 mobile/                    Flutter package
-  lib/main_customer.dart   Customer entry
-  lib/main_driver.dart     Driver entry
+  lib/main_customer.dart   Canonical Customer launcher (Android `customer` flavor)
+  lib/main_driver.dart     Canonical Driver launcher (Android `driver` flavor)
+  lib/driver/main_driver.dart  Driver application/router implementation
   packages/api_client/     Shared typed HTTP models/client
   test/                    Widget/provider/contract tests
 infra/                     Compose, preflight, release, monitoring, load tests
@@ -78,7 +79,12 @@ Important contracts:
 
 ## Mobile
 
-The Flutter package has two app entry points but shares domain/provider/UI code under `mobile/lib/`.
+The Flutter package has two canonical native app launchers and shares domain/provider/UI code under `mobile/lib/`. Android defines matching `customer` and `driver` product flavors; iOS keeps a Runner target and uses the matching Dart entrypoint.
+
+| Role | Entrypoint | Runtime startup |
+|---|---|---|
+| Customer | `mobile/lib/main_customer.dart` | Configures Customer FCM deep-link handling, then launches the Riverpod Customer app. |
+| Driver | `mobile/lib/main_driver.dart` | Configures Driver FCM navigation, then launches the Riverpod Driver app; the application/router implementation is `mobile/lib/driver/main_driver.dart`. |
 
 - State: Riverpod.
 - HTTP: Dio through `mobile/packages/api_client` and shared providers.

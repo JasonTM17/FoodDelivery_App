@@ -34,7 +34,16 @@ corepack pnpm start:dev
 
 Web: `cd web; corepack pnpm install --frozen-lockfile; corepack pnpm dev`。
 
-Mobile: `flutter pub get --enforce-lockfile` 後、`lib/main_customer.dart` または `lib/main_driver.dart`。
+Mobile Android:
+
+```powershell
+cd mobile
+flutter pub get --enforce-lockfile
+flutter run --flavor customer -t lib/main_customer.dart
+flutter run --flavor driver -t lib/main_driver.dart
+```
+
+これらは device/emulator 用の native command であり、local web URL ではありません。Android flavor は `mobile/android/app/build.gradle.kts` に定義されています。iOS development では対応する Dart entrypoint を使います。
 
 ## Full local stack
 

@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-13 status: **integration は `master` に統合済み、hardening 中、production は no-go**。
+2026-07-14 status: **integration と current-head quality gates は `master` で green、managed deployment は未完了、production は no-go**。
 
 ## Completed and incorporated work
 
@@ -33,6 +33,7 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 
 ### Mobile release validation
 
+- 明示 launcher から Customer と Driver を個別 smoke します: auth と session restore/logout、許可された private realtime と cross-role/cross-tenant denial の証明、role flow。Live FCM は controlled registered device/token と real production credential が必要で、local lifecycle test は provider delivery の証拠ではありません。
 - Mobile work は検証可能な branch、commit、patch evidence だけから reconcile します。Missing ref を命名、再作成、推測しません。
 - API contract、vi/en/ja、customer/driver、map/GPS、offline/reconnect、realtime denial、KYC、signed release build を再実行。
 - Android production signing と authorized macOS runner 上の iOS signing を確認。Local debug keystore は compile evidence のみです。
@@ -49,28 +50,26 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 
 Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch、tenant、final-head mobile release build、secret/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck。
 
-## External blockers
+## Verified managed state and blockers
 
-- GitHub Actions billing/auth/token exhausted。
-- Supabase は linked、33 migrations と最新 checksum、private Broadcast/Storage、Data API boundary、ES256 key を最後に確認済みです。FCM registration revocation の migration 34 は authorized rollout を待っています。Fake seed を実行していないため production business/RAG rows は 0 です。
-- Railway topology は pass していますが public API は 404 で、API/worker は Maps/OSRM、DeepSeek、SePay/webhook、SMTP、FCM、Twilio の real provider settings 15 件が不足しています。Production GPS/Broadcast と live FCM send は blocked です。
-- Admin/Restaurant production health は 200。`9db6f7e` の clean Restaurant candidate は build と protected health smoke を pass しましたが、Railway API live まで未 promote です。Admin も同じ exact-source flow が必要です。
+- Current-head の必須 10 workflows はすべて green: Backend 141 suites / 1043 tests、Mobile 352 tests、isolated Docker E2E 204/204（5.8 分）。
+- Supabase は 35 forward migrations 適用済みです。Private Broadcast authorization、split Storage、anonymous public-object listing 除去、RLS、production business/RAG 0 rows を直接確認しました。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
+- 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
+- Railway topology、Redis、current-head migrator は pass。API/worker は未 deploy、public API は 404、Maps/OSRM、DeepSeek、SePay/webhook、SMTP、FCM、Twilio の real provider settings 15 件が不足しています。Production GPS/Broadcast と live FCM は blocked です。
+- Admin/Restaurant は GitHub-linked かつ Vercel READY。Canonical health/login は 200、tunnel/localhost request と console error はありません。Auth/API/GPS smoke は Railway に依存します。
+- Current-head の 4 SHA images は未 publish。Private Admin/Restaurant GHCR packages が repository 未接続のため workflow は 403 です。Semver/`latest` promotion は未承認です。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。
 
 ## Release sequence
 
-1. Final source freeze + full local gate。
-2. 全 GitHub workflows green。
-3. Rotated secrets + Railway/Supabase/Vercel preflight。
-4. Migrated Supabase の RLS/Realtime/Storage を authorized/cross-tenant identities で再確認。
-5. Railway migrator、次に API/worker を deploy し health/readiness/Cron を確認。
-6. Verified API alias で Admin/Restaurant。
-7. Realtime/map/chatbot/export/payment/notification/tenant smoke。
-8. Deploy commit が intended `origin/master` head のままであることを確認し、historical integration branch を再作成/push しません。
-9. Docker SHA → immutable `v4.0.0` → manual `latest`。
-10. Report、digests、GitHub About/topics/homepage、landing notes 更新。
+1. Exposed credentials を rotate し、Railway の real settings 15 件を secret store に登録。
+2. 同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。Current-head migrator は完了済み。
+3. Production Customer/Driver auth、private-realtime allow/deny、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
+4. Healthy Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
+5. Private Admin/Restaurant GHCR packages を repository に接続し Actions write を付与。4 SHA images を rerun、clean pull/scan/runtime smoke。
+6. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
 
 ## Post-release/deferred
 

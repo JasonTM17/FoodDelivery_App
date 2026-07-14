@@ -8,13 +8,13 @@ FoodFlow hỗ trợ khách đặt món, nhà hàng vận hành đơn/menu, tài 
 
 ## Bề mặt sản phẩm
 
-| Bề mặt | Người dùng chính | Trách nhiệm |
-|---|---|---|
-| NestJS API và worker | Toàn bộ client; vận hành | Auth, RBAC, tenant check, job bền vững, tích hợp, audit |
-| Admin dashboard | Vận hành marketplace | KPI, support, review, audit, tài xế, user, nhà hàng |
-| Restaurant dashboard | Nhân viên nhà hàng | Đơn, menu, staff, promotion, revenue, review, giờ mở cửa |
-| Customer app | Khách hàng | Duyệt món, giỏ hàng, thanh toán, theo dõi đơn, hỗ trợ |
-| Driver app | Tài xế | Onboarding/KYC, trạng thái GPS, dispatch, giao hàng, thu nhập |
+| Bề mặt | Người dùng chính | Trách nhiệm | Runtime / entrypoint |
+|---|---|---|---|
+| NestJS API và worker | Toàn bộ client; vận hành | Auth, RBAC, tenant check, job bền vững, tích hợp, audit | NestJS 11; Railway đã provision topology nhưng API/worker chưa deploy |
+| Admin dashboard | Vận hành marketplace | KPI, support, review, audit, tài xế, user, nhà hàng | Next.js 15 web |
+| Restaurant dashboard | Nhân viên nhà hàng | Đơn, menu, staff, promotion, revenue, review, giờ mở cửa | Next.js 15 web |
+| Customer app | Khách hàng | Duyệt món, giỏ hàng, thanh toán, theo dõi đơn, hỗ trợ | Flutter/Riverpod native; [`main_customer.dart`](../mobile/lib/main_customer.dart) |
+| Driver app | Tài xế | Onboarding/KYC, trạng thái GPS, dispatch, giao hàng, thu nhập | Flutter/Riverpod native; [`main_driver.dart`](../mobile/lib/main_driver.dart) |
 
 Production managed dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage; Railway cho API, worker, migrator, Redis; Vercel chỉ cho Admin và Restaurant. Docker Compose là topology riêng cho local/self-hosted.
 
@@ -26,6 +26,16 @@ Production managed dùng Supabase cho PostgreSQL/PostGIS, Realtime, Storage; Rai
 - Notification là durable job. FCM dùng Firebase Admin SDK/HTTP v1 với `FCM_PROJECT_ID` và ADC/workload identity hoặc `FCM_SERVICE_ACCOUNT_JSON` trong secret manager; lỗi request được retry, token invalid vĩnh viễn bị stale. Mobile chỉ đăng ký FCM token sau session đã xác thực, API validate contract `POST /notifications/fcm-token`, cập nhật token xoay vòng và lưu ý định cleanup trước khi gỡ có giới hạn lúc logout. UUID client, PostgreSQL advisory lock theo token và tombstone bảy ngày bảo đảm cleanup thắng POST đăng ký đến muộn. Backend có payload notification cho app nền, Android channel và âm thanh APNs; client hiển thị message khi foreground và tap chỉ cho deep link nội bộ, kể cả lúc app khởi động lại từ terminated. Inbox Driver đang mở nhận realtime đã xác thực và khử trùng lặp theo ID thông báo.
 - Admin/Restaurant responsive, điều hướng bằng bàn phím, có skip link, focus rõ, giảm motion và giữ locale.
 - Copy hiển thị cho người dùng có `vi`, `en`, `ja`.
+
+## Yêu cầu phi chức năng
+
+| Mảng | Yêu cầu |
+|---|---|
+| Độ tin cậy | Công việc async đổi session an toàn khi hủy; notification fanout idempotent và retryable. |
+| Bảo mật | Secret chỉ ở server; production từ chối cấu hình yếu/example; không fallback ngầm managed sang local. |
+| Khả năng truy cập | Dashboard quan trọng có control có nhãn, dialog semantic, mục tiêu chạm 44px khi phù hợp, bàn phím và không có axe serious/critical trước release. |
+| Quan sát | Health/readiness, trạng thái durable job, log không lộ secret, thao tác Admin có audit. |
+| Chất lượng release | Final head phải qua local gate, remote CI mới, provider preflight và production smoke đã xác thực. |
 
 ## Tiêu chí chấp nhận đợt hardening
 

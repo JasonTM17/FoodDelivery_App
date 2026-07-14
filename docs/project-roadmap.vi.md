@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardening; chưa đủ điều kiện production**.
+Trạng thái 14/07/2026: **integration và quality gate current-head trên `master` đã xanh; managed deployment chưa hoàn tất; chưa đủ điều kiện production**.
 
 ## Đã hoàn thành và đã tích hợp
 
@@ -33,6 +33,7 @@ Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardeni
 
 ### Mobile release validation
 
+- Chạy smoke riêng Customer và Driver từ entrypoint tường minh: auth rồi restore/logout session, chứng minh private realtime được phép và bị từ chối cross-role/cross-tenant, sau đó chạy role flow. FCM live vẫn cần thiết bị/token đã đăng ký có kiểm soát và credential production thật; test lifecycle local không chứng minh provider delivery.
 - Reconcile mobile chỉ từ branch, commit và patch evidence xác minh được; không đặt tên, tạo lại hoặc suy diễn ref thiếu.
 - Rerun API contract, vi/en/ja, customer/driver, map/GPS, offline/reconnect, realtime denial, KYC và signed release build.
 - Xác minh Android production signing và iOS signing trên runner macOS được cấp quyền; debug keystore local chỉ là bằng chứng compile.
@@ -53,25 +54,26 @@ Trạng thái 13/07/2026: **integration đã nằm trong `master`; đang hardeni
 - Flutter frozen fetch/analyze/full tests và customer/driver release build tại final head.
 - Secret scan/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck.
 
-## Blocker bên ngoài
+## Trạng thái managed đã xác minh và blocker
 
-- GitHub Actions hết billing/auth/token nên chưa có current-head remote green.
-- Supabase đã link, lần cuối xác minh tại 33 migration với checksum mới nhất khớp, private Broadcast/Storage, Data API boundary và ES256 key; migration 34 về FCM registration revocation vẫn chờ rollout được ủy quyền. Business/RAG production còn 0 row vì không chạy seed giả.
-- Railway topology pass nhưng public API vẫn trả 404; API/worker còn thiếu đúng 15 cấu hình provider thật thuộc Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM và Twilio. Vì vậy GPS/Broadcast production và FCM live send vẫn bị chặn.
-- Health production Admin/Restaurant đều trả 200. Candidate Restaurant sạch từ `9db6f7e` build và pass protected health smoke nhưng chưa promote trước khi Railway API live; Admin phải chạy cùng quy trình exact-source.
+- Cả 10 workflow current-head đều xanh: Backend 141 suite / 1043 test, Mobile 352 test, Docker E2E isolated 204/204 trong 5.8 phút.
+- Supabase đã apply đủ 35 migration. Đã kiểm trực tiếp private Broadcast authorization, split Storage, bỏ anonymous public-object listing, RLS và production business/RAG đều 0 row. Một migration lịch sử lỗi zero-step được giữ trạng thái rolled back, không đảo hay sửa SQL đã apply.
+- Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
+- Railway topology, Redis và migrator current-head đều pass. Public API vẫn 404 vì API/worker chưa deploy và thiếu đúng 15 cấu hình provider thật thuộc Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM và Twilio. GPS/Broadcast production và FCM live vẫn bị chặn.
+- Admin/Restaurant đều GitHub-linked và READY trên Vercel; health/login canonical trả 200, không request tunnel/localhost hoặc console error. Smoke auth/API/GPS vẫn phụ thuộc Railway.
+- Bốn image SHA current-head chưa publish. Package GHCR private Admin/Restaurant chưa nối với repository nên workflow bị 403 cho tới khi cấp repository access. Chưa được promote semver/`latest`.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.
 
 ## Chuỗi release
 
-1. Freeze final source và full local gate.
-2. Khôi phục/pass mọi GitHub workflow.
-3. Nhập secret rotate qua prompt/dashboard và pass Railway/Supabase/Vercel preflight.
-4. Kiểm lại Supabase đã migrate: RLS/Realtime/Storage với identity hợp lệ và cross-tenant denial.
-5. Deploy Railway migrator rồi API/worker, kiểm health/readiness/Cron.
-6. Deploy Admin/Restaurant với verified API alias.
-7. Smoke realtime/map/chatbot/export/payment/notification/tenant.
+1. Rotate credential bị lộ và nhập 15 cấu hình Railway thật qua secret store.
+2. Deploy API/worker cùng một immutable SHA, kiểm health/readiness/Cron; migrator current-head đã hoàn tất.
+3. Smoke production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification và tenant; gồm một lần FCM tới controlled device.
+4. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway khỏe.
+5. Nối package GHCR private Admin/Restaurant với repository, cấp Actions write, rerun bốn image SHA rồi pull/scan/smoke ở môi trường sạch.
+6. Chỉ tạo `v4.0.0` và promote `latest` sau khi production smoke xanh; cập nhật report/digest/About.
 8. Xác minh commit deploy vẫn là `origin/master` dự định; không tạo lại hoặc push branch integration lịch sử.
 9. Publish Docker SHA → immutable `v4.0.0` → manual `latest`.
 10. Chốt report, digest, GitHub About/topics/homepage và landing notes.

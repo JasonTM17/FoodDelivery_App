@@ -41,7 +41,11 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 | Insight | ![Restaurant insights](screenshots/restaurant/09-insights.png) |
 | Cài đặt | ![Restaurant settings](screenshots/restaurant/10-settings.png) |
 
-## Driver GPS (local E2E)
+## Customer
+
+Chưa có UI Customer được capture trong gallery. Không được suy diễn ảnh Customer từ media Admin/Restaurant; chỉ dùng capture mới từ entrypoint [`main_customer.dart`](../mobile/lib/main_customer.dart) có source/runtime reference làm bằng chứng release.
+
+## Driver GPS (local E2E, chỉ phục vụ test)
 
 Ảnh Android API 35 dùng route mô phỏng và dữ liệu test deterministic. Chúng chỉ minh họa thao tác Online và notification permission của Driver; không có vị trí thật, tài khoản cá nhân, credential hoặc token.
 

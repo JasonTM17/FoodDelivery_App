@@ -8,13 +8,13 @@ FoodFlow helps customers order food, restaurants operate orders and menus, drive
 
 ## Surfaces and ownership
 
-| Surface | Primary users | Responsibility |
-|---|---|---|
-| NestJS API and worker | All clients; operations | Auth, RBAC, tenant checks, durable jobs, integrations, audit records |
-| Admin dashboard | Marketplace operators | KPIs, support, review, audit, drivers, users, restaurant operations |
-| Restaurant dashboard | Restaurant staff | Orders, menu, staff, promotions, revenue, reviews, opening hours |
-| Customer app | Customers | Browse, cart, checkout, order tracking, support |
-| Driver app | Drivers | Verified onboarding, GPS-backed availability, dispatch, delivery status, earnings |
+| Surface | Primary users | Responsibility | Runtime / entry point |
+|---|---|---|---|
+| NestJS API and worker | All clients; operations | Auth, RBAC, tenant checks, durable jobs, integrations, audit records | NestJS 11; Railway target is provisioned but API/worker are not deployed |
+| Admin dashboard | Marketplace operators | KPIs, support, review, audit, drivers, users, restaurant operations | Next.js 15 web |
+| Restaurant dashboard | Restaurant staff | Orders, menu, staff, promotions, revenue, reviews, opening hours | Next.js 15 web |
+| Customer app | Customers | Browse, cart, checkout, order tracking, support | Flutter/Riverpod native app; [`main_customer.dart`](../mobile/lib/main_customer.dart) |
+| Driver app | Drivers | Verified onboarding, GPS-backed availability, dispatch, delivery status, earnings | Flutter/Riverpod native app; [`main_driver.dart`](../mobile/lib/main_driver.dart) |
 
 Managed production uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, migrator, and Redis; and Vercel for Admin and Restaurant. Docker Compose is a separate local/self-hosted compatibility topology.
 

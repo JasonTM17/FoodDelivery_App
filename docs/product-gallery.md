@@ -99,9 +99,13 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 
 ![Restaurant settings](./screenshots/restaurant/10-settings.png)
 
-## Driver GPS (local E2E)
+## Customer
 
-These Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action and the Android notification-permission flow; no real location, personal account, credential, or token was captured.
+No Customer UI capture is currently stored in this gallery. Do not infer a Customer screenshot from Admin or Restaurant media; recapture it from the explicit [`main_customer.dart`](../mobile/lib/main_customer.dart) entrypoint with source/runtime references before treating it as release evidence.
+
+## Driver GPS (test-only local E2E)
+
+These test-only Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action and the Android notification-permission flow; no real location, personal account, credential, or token was captured.
 
 The associated local E2E check accepted the authenticated GPS command, refreshed Redis liveness, persisted the sample to PostGIS, and delivered one authorized Admin Socket.IO event. This is local Socket.IO compatibility evidence only, **not** Supabase, Railway, Vercel, or production evidence.
 

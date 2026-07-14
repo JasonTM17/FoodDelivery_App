@@ -2,7 +2,7 @@
 
 ## Overview
 
-FoodFlow is a modular-monolith delivery platform with five user-facing surfaces: the NestJS API, Admin web, Restaurant web, Customer Flutter app, and Driver Flutter app. The managed-production target is Supabase + Railway + Vercel; Docker Compose is an explicit local/self-hosted compatibility topology rather than the production source of truth.
+FoodFlow is a modular-monolith delivery platform with four user-facing client surfaces: Admin web, Restaurant web, Customer Flutter, and Driver Flutter. The NestJS API and worker are shared service surfaces, not user-facing applications. The managed-production target is Supabase + Railway + Vercel; Docker Compose is an explicit local/self-hosted compatibility topology rather than the production source of truth.
 
 Current schema includes ordered Prisma migrations for PostGIS delivery geometry, private Broadcast authorization, job/dispatch outboxes, private driver KYC, audit/export records, and AI usage telemetry.
 
@@ -78,6 +78,15 @@ This topology uses `REALTIME_PROVIDER=socketio`, `STORAGE_PROVIDER=minio`, and `
 - Tracking access is order-participant scoped: owner customer, assigned driver, active staff for the order restaurant, or admin.
 
 See [API contract](api-contract.md) and [OpenAPI](openapi.yaml).
+
+## Customer and Driver mobile runtimes
+
+| Role | Canonical entry point | Runtime | Boundary |
+|---|---|---|---|
+| Customer | [`mobile/lib/main_customer.dart`](../mobile/lib/main_customer.dart) | Flutter/Riverpod; Android `customer` product flavor; iOS Runner target | Configures Customer notification navigation, then starts the Customer app. API mutations use authenticated HTTPS; managed realtime is private, scoped Broadcast. |
+| Driver | [`mobile/lib/main_driver.dart`](../mobile/lib/main_driver.dart) | Flutter/Riverpod; Android `driver` product flavor; iOS Runner target | Configures Driver notification navigation, then starts the Driver app from `mobile/lib/driver/main_driver.dart`. GPS and dispatch use authenticated HTTPS; managed realtime is private, scoped Broadcast. |
+
+Neither mobile role has a public web route. The Android launch commands must keep the explicit flavor and entrypoint paired: `flutter run --flavor customer -t lib/main_customer.dart` and `flutter run --flavor driver -t lib/main_driver.dart`.
 
 ## Supabase Realtime contract
 
