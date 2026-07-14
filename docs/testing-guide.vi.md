@@ -11,7 +11,7 @@ Evidence current-head ngày 14/07/2026:
 | Khu vực | Kết quả |
 |---|---|
 | Backend | Release candidate local pass 142 suite / 1049 test cùng Prisma validate/generate, typecheck, lint và build. Vẫn phải chạy fresh remote CI sau khi push. |
-| Database | Current source track 36 migration có thứ tự. Supabase production đã apply và checksum-verify migration 1–35; migration 36 giới hạn FCM revocation theo token cùng registration capability và vẫn cần rollout được ủy quyền. |
+| Database | Current source và Supabase production đã đồng bộ đủ 36 migration có thứ tự, được checksum-verify. Migration 36 giới hạn FCM revocation theo token cùng registration capability; primary key `token,registration_id` đã được kiểm tra trực tiếp. |
 | Mobile Flutter | Release candidate local pass đủ 354 test và `flutter analyze`; vẫn cần fresh Mobile CI cùng evidence thiết bị Android/iOS production. |
 | Web | CLS trace của Restaurant Kanban ở mobile khoảng 0.0037 sau khi sửa. Đây là bằng chứng ổn định hiển thị local, không phải claim production health. |
 | Browser E2E | Ma trận Docker volume sạch current-source pass 204/204 trong 6,6 phút. Đây không phải bằng chứng GPS production Railway/Supabase. |
@@ -19,11 +19,11 @@ Evidence current-head ngày 14/07/2026:
 
 ### Docker current-source volume sạch — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, sau đó seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review. Worker index 402 RAG document, còn toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Đây là evidence local current-source: Supabase production đã checksum-verify migration 1–35 mà không chạy big seed local; migration 36 vẫn cần rollout được ủy quyền. Railway API/worker healthy và FCM live vẫn chưa được xác minh.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, sau đó seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review. Worker index 402 RAG document, còn toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Supabase production riêng biệt đã checksum-verify đủ 36 migration mà không chạy big seed local. Railway API/worker healthy và FCM live vẫn chưa được xác minh.
 
 ### Docker E2E và RAG lịch sử — 13/07/2026
 
-Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 migration hiện hành, seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order; worker riêng index 402 RAG document và để embedding pending khi không có DeepSeek key. Supabase production hiện đã apply migration 1–35; migration 36 là forward migration duy nhất đang chờ rollout. Dòng migration zero-step rolled back lịch sử vẫn là audit history, không phải thay đổi production chưa apply.
+Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 migration hiện hành, seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order; worker riêng index 402 RAG document và để embedding pending khi không có DeepSeek key. Supabase production hiện đã apply đủ 36 migration. Dòng migration zero-step rolled back lịch sử vẫn là audit history, không phải thay đổi production chưa apply.
 
 Worker clean-volume mới cũng index 402 RAG document sau fresh seed. Không có DeepSeek key nên embedding vẫn pending và không có vector giả. Volume tái sử dụng cũ còn 44 FAQ và 8 policy row có source ID rỗng từ lần local cũ; các dòng lịch sử này không tính vào evidence worker hiện tại. Không dữ liệu nào ở đây là production hoặc phê duyệt embedding/provider production.
 
@@ -35,7 +35,7 @@ Railway/Supabase production smoke có provider và FCM live tới thiết bị k
 
 Container PostGIS + pgvector dùng một lần trước đây đã apply đủ 33 migration đang được track khi đó, xác minh PostGIS, vector, `rag_documents`, source/content index và cosine HNSW index. Lệnh `db:big-seed` tạo thật trong DB này 50 restaurant đã duyệt, 50 driver, 100 customer, 509 order, 123 review và 10 promotion; đây là bằng chứng generator ghi database, không phải fixture fix cứng lúc runtime. Worker local đồng bộ 32 document restaurant/menu sống; do chưa có DeepSeek key nên cả 32 ở trạng thái chờ embedding, không sinh vector giả. Migration FCM-revocation thứ 34 chưa có trong lượt evidence lịch sử này.
 
-Lượt lịch sử này có trước trạng thái migration hiện tại. Supabase production đã apply và checksum-verify migration 1–35, còn migration 36 chờ rollout. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
+Lượt lịch sử này có trước trạng thái migration hiện tại. Supabase production đã apply và checksum-verify đủ 36 migration. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
 
 Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md). Ma trận clean-volume current-source mới thay kết quả image cũ 128/134. Provider-backed production smoke và controlled FCM delivery vẫn bắt buộc; phải chạy lại evidence phù hợp nếu release head thay đổi.
 

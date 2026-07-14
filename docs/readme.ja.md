@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-14 status:** Batch 4 は `master` に統合済みです。Supabase production は released migrations 1–35 を applied/checksum-verified 済みで、direct checks は RLS、private Broadcast、split Storage policy、empty production business/RAG data を確認しました。Current source は token と registration capability で FCM revocation を scope する migration 36 を追加し、authorized rollout 待ちです。release は **NO-GO** のままです。Railway API/worker の deploy/verification と controlled-device live FCM は external real-provider configuration/credentials により blocked です。
+> **2026-07-14 status:** Batch 4 は `master` に統合済みです。Supabase production は全 36 migrations を applied/checksum-verified 済みで、migration 36 は sealed Railway migrate environment から rollout され composite capability key も direct verification 済みです。Earlier direct checks は RLS、private Broadcast、split Storage policy、empty production business/RAG data を確認しました。release は **NO-GO** のままです。Railway API/worker の deploy/verification と controlled-device live FCM は external real-provider configuration/credentials により blocked です。
 
 ## Product preview
 
@@ -117,12 +117,12 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-2026-07-14 の clean-volume Docker project `foodflow-batch4-e2e` は current source の全 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed してから RAG documents 402 件を index しました。full Playwright matrix は 204/204 を 6.6 分で pass しました。これは local current-source evidence です。Supabase production は local big seed を実行せず migrations 1–35 を checksum-verified 済みで、migration 36 は authorized rollout 待ちです。Current-head immutable Docker SHA は pending で、Railway deployment verification、authenticated production GPS/Broadcast smoke、controlled-device live FCM は external provider configuration/credentials により blocked です。
+2026-07-14 の clean-volume Docker project `foodflow-batch4-e2e` は current source の全 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed してから RAG documents 402 件を index しました。full Playwright matrix は 204/204 を 6.6 分で pass しました。Supabase production は local big seed を実行せず全 36 migrations を checksum-verified 済みです。Current-head immutable Docker SHA は pending で、Railway deployment verification、authenticated production GPS/Broadcast smoke、controlled-device live FCM は external provider configuration/credentials により blocked です。
 
 ## Deploy order
 
 1. Exposed key を rotate し、Railway の real provider settings 15 件を secret store に登録。
-2. Target Supabase で migration 36 を authorized rollout し、FCM revocation の composite capability key を checksum-verify。
+2. `prisma migrate status` が up to date のままであることを確認。Migration 36 と composite FCM capability key は Supabase production で verification 済み。
 3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
 4. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
 5. Verified Railway に対して exact Admin/Restaurant Vercel deployments、map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。

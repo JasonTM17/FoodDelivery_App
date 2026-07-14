@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production has all 35 previously released forward migrations applied and checksum-verified; direct checks confirmed RLS, private Broadcast authorization, split Storage policy, and an empty production business/RAG dataset. The current source adds migration 36 to scope FCM revocations by token plus registration capability; it still requires an authorized production rollout. The release remains **NO-GO**: Railway API/worker deployment and verification, plus controlled live FCM delivery, are blocked on external real provider configuration and credentials. Do not treat local checks as production health evidence.
+> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production has all 36 forward migrations applied and checksum-verified; migration 36 was rolled out through the sealed Railway migrate environment and its composite FCM capability key was verified directly. Earlier direct checks confirmed RLS, private Broadcast authorization, split Storage policy, and an empty production business/RAG dataset. The release remains **NO-GO**: Railway API/worker deployment and verification, plus controlled live FCM delivery, are blocked on external real provider configuration and credentials. Do not treat local checks as production health evidence.
 
 ## Product preview
 
@@ -192,12 +192,12 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. This is local current-source evidence: Supabase production has migrations 1–35 checksum-verified without the local big seed, while migration 36 still requires an authorized rollout. Current-head Docker SHA manifests remain pending, and local `revision=local` images are not release artifacts. Railway deployment verification, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked by external real-provider configuration and credentials.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Current-head Docker SHA manifests remain pending, and local `revision=local` images are not release artifacts. Railway deployment verification, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked by external real-provider configuration and credentials.
 
 ## Deployment order
 
 1. Rotate exposed credentials and supply the 15 missing Railway provider configurations through sealed provider stores.
-2. Authorize and run migration 36 on the target Supabase project; checksum-verify the composite FCM-revocation capability key afterward.
+2. Confirm `prisma migrate status` remains up to date; migration 36 and its composite FCM-revocation capability key are already verified on Supabase production.
 3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
@@ -221,7 +221,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 
 ## Branch policy
 
-The remote has one branch, `master`. No historical local integration/finalization ref or linked integration worktree remains. Branch equivalence is not release approval; do not recreate, raw-merge, or push historical integration branches by name.
+The remote has one branch, `origin/master`. Code release `43f0306` contains the FCM capability hardening and migration 36 and passed all 11 required workflows; later documentation-only commits do not replace that code evidence. The retained local ref `worktree-agent-a62965db0e804d23d` is a merged, obsolete non-release ref with no linked worktree; do not raw-merge, recreate, push, or delete it without explicit direction. Local branch equivalence is not production approval; current source and Supabase production are aligned at 36 migrations, while Railway runtime deployment remains blocked on real provider configuration. See [branch disposition](docs/branch-disposition.md).
 
 ## License
 

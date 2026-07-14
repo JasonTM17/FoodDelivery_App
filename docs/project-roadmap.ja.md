@@ -54,7 +54,7 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## Current-source evidence and external blockers
 
 - Fresh clean-volume current-source Docker project `foodflow-batch4-e2e` は全 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 6.6 分で pass しました。Restaurant mobile Kanban CLS trace は fix 後およそ 0.0037 です。これは local result のみです。
-- Supabase production は migrations 1–35 を applied/checksum-verified 済みです。Token と registration capability で FCM revocation を scope する migration 36 は authorized rollout が必要です。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
+- Supabase production は全 36 migrations を applied/checksum-verified 済みです。Token と registration capability で FCM revocation を scope する migration 36 の `token,registration_id` primary key も direct verification 済みです。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
 - Railway 依存の rollout と verification は必要な real provider configuration/credentials により外部要因で blocked です。Railway API/worker production health を claim してはいけません。Live GPS/Broadcast と controlled-device FCM は未検証であり、local notification/lifecycle test は provider delivery を証明しません。
 - Admin/Restaurant production verification は authorized Supabase rollout と verified Railway API/worker に依存します。以前の web evidence を end-to-end production approval として扱ってはいけません。
@@ -66,7 +66,7 @@ Fake value や validation bypass は禁止です。
 ## Release sequence
 
 1. Exposed credentials を rotate し、Railway の real settings 15 件を secret store に登録。
-2. Target Supabase で migration 36 を authorized rollout し、FCM revocation の composite capability key を checksum-verify。
+2. `prisma migrate status` が up to date のままであることを確認。Migration 36 と composite FCM capability key は Supabase production で verification 済み。
 3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
 4. Production Customer/Driver auth、private-realtime allow/deny、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
 5. Verified Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。

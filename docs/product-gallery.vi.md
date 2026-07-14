@@ -4,6 +4,15 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 
 Ảnh và GIF trong gallery là media lịch sử, không phải production screenshot. `docs/screenshots/manifest.json` ghi `capturedAt` 2026-07-10 nhưng không có source SHA, Compose reference hoặc image reference; vì vậy chúng không chứng minh current source head, Docker build cuối hay production deploy.
 
+## Phạm vi bề mặt
+
+| Bề mặt | Sản phẩm | Media trực quan đã lưu | Ranh giới bằng chứng |
+|---|---|---|---|
+| Admin | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chỉ là media web non-production. |
+| Restaurant | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chỉ là media web non-production. |
+| Customer | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `customer` | Không có | Chưa lưu ảnh tĩnh Customer; tài liệu source không phải bằng chứng visual hay release. |
+| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Hai asset Android API 35 chỉ phục vụ test | Chỉ là evidence GPS/permission mô phỏng local; không phải bằng chứng mobile release, Supabase, Railway hay production. |
+
 ## Luồng chuyển động
 
 | Luồng | Xem trước |
@@ -43,9 +52,13 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 
 ## Customer
 
+Customer là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_customer.dart`](../mobile/lib/main_customer.dart) với Android flavor `customer`. Phạm vi đã tài liệu hóa gồm discovery, ordering, cart, checkout, tracking và support; xem [hướng dẫn mobile](../mobile/README.md) để biết runtime và build.
+
 Chưa có UI Customer được capture trong gallery. Không được suy diễn ảnh Customer từ media Admin/Restaurant; chỉ dùng capture mới từ entrypoint [`main_customer.dart`](../mobile/lib/main_customer.dart) có source/runtime reference làm bằng chứng release.
 
 ## Driver GPS (local E2E, chỉ phục vụ test)
+
+Driver là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_driver.dart`](../mobile/lib/main_driver.dart) với Android flavor `driver`. Phạm vi đã tài liệu hóa gồm trạng thái Online, dispatch, GPS, route guidance, earnings, KYC và notifications; xem [hướng dẫn mobile](../mobile/README.md) để biết runtime và build.
 
 Ảnh Android API 35 dùng route mô phỏng và dữ liệu test deterministic. Chúng chỉ minh họa thao tác Online và notification permission của Driver; không có vị trí thật, tài khoản cá nhân, credential hoặc token.
 

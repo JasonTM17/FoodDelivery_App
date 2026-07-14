@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 14/07/2026:** Batch 4 đã nằm trên `master`. Supabase production đã apply và checksum-verify đủ 35 migration đã phát hành; kiểm tra trực tiếp xác nhận RLS, private Broadcast, Storage tách public/private và production business/RAG vẫn rỗng. Current source bổ sung migration 36 để giới hạn FCM revocation theo token cùng registration capability và vẫn cần rollout được ủy quyền. Release vẫn **NO-GO**: việc deploy/xác minh Railway API/worker và FCM live trên thiết bị kiểm soát bị chặn bởi cấu hình cùng credential provider thật bên ngoài.
+> **Trạng thái 14/07/2026:** Batch 4 đã nằm trên `master`. Supabase production đã apply và checksum-verify đủ 36 migration; migration 36 được rollout qua Railway migrate environment kín và primary key capability tổng hợp đã được kiểm tra trực tiếp. Các kiểm tra trước đó xác nhận RLS, private Broadcast, Storage tách public/private và production business/RAG vẫn rỗng. Release vẫn **NO-GO**: việc deploy/xác minh Railway API/worker và FCM live trên thiết bị kiểm soát bị chặn bởi cấu hình cùng credential provider thật bên ngoài.
 
 ## Xem trước sản phẩm
 
@@ -121,12 +121,12 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review, rồi index 402 RAG document. Toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Đây là bằng chứng local current-source: Supabase production đã checksum-verify migration 1–35 mà không chạy big seed local, còn migration 36 vẫn cần rollout được ủy quyền. Docker SHA current-head immutable vẫn chờ; xác minh Railway deployment, production GPS/Broadcast và FCM live vẫn bị chặn bởi cấu hình/credential provider thật bên ngoài.
+Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review, rồi index 402 RAG document. Toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Supabase production riêng biệt đã checksum-verify đủ 36 migration mà không chạy big seed local. Docker SHA current-head immutable vẫn chờ; xác minh Railway deployment, production GPS/Broadcast và FCM live vẫn bị chặn bởi cấu hình/credential provider thật bên ngoài.
 
 ## Thứ tự deploy
 
 1. Rotate key bị lộ và nhập 15 cấu hình Railway thật qua secret store.
-2. Ủy quyền và chạy migration 36 trên Supabase target; checksum-verify khóa capability ghép của FCM revocation.
+2. Xác nhận `prisma migrate status` vẫn up to date; migration 36 và khóa capability ghép của FCM revocation đã được kiểm tra trên Supabase production.
 3. Deploy API/worker cùng một SHA immutable, rồi kiểm health/readiness/Cron khi đã có đủ cấu hình provider thật.
 4. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
 5. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh, rồi kiểm map/route, chatbot, notification, export, payment và FCM thiết bị kiểm soát.

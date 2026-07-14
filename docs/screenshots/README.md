@@ -2,6 +2,13 @@
 
 Historical non-production product stills for the root README and [product gallery](../product-gallery.md). The manifest records `capturedAt` 2026-07-10 but no source SHA, Compose reference, or image reference, so these assets do not prove the current source head or a release candidate. Admin and Restaurant images came from an isolated Docker/E2E stack with deterministic test data; Driver GPS images came from an Android API 35 emulator connected to that non-production stack.
 
+| Surface | Stored assets | Inventory status |
+|---|---:|---|
+| Admin | 10 PNG stills | Historical non-production web media. |
+| Restaurant | 10 PNG stills | Historical non-production web media. |
+| Customer | 0 | No Customer still is stored. The Customer app is documented from source, not represented by gallery media. |
+| Driver | 2 WebP stills | Test-only Android API 35 simulated-GPS/permission assets; not mobile-release, Supabase, Railway, or production evidence. |
+
 | File | Surface | Route/content |
 |---|---|---|
 | `admin/01-login.png` | Admin | `/vi/login` |

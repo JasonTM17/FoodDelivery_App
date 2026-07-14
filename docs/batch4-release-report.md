@@ -4,9 +4,9 @@
 
 ## Current continuation — 2026-07-14
 
-The verified source head before this documentation sync is `f367d3cd`. All ten required current-head workflows are green: CI, Integration Smoke Gate, E2E, Mobile CI, Build, Lint, Gitleaks, CodeQL, Trivy, and SBOM. Recorded current-head counts are Backend 141 suites / 1043 tests, Mobile 352 tests, and isolated Docker E2E 204/204 in 5.8 minutes.
+Code release `43f0306` contains the FCM capability hardening and migration 36. All 11 required workflows are green: CI, Integration Smoke Gate, E2E, Mobile CI, Build, Lint, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. Recorded code-release counts are Backend 142 suites / 1049 tests, Mobile 354 tests, and isolated Docker E2E 204/204 in 6.6 minutes.
 
-Supabase production now has all 35 forward migrations applied through the authorized Railway migrator. Direct checks verified business/RAG tables remain empty, RLS remains enabled, private Broadcast authorization exists, the public/private Storage buckets have bounded MIME/size policy, and anonymous public-object listing was removed by migration 35. A historical zero-step failed Prisma row remains correctly recorded as rolled back; no applied migration was rewritten. PostGIS is non-relocatable, while moving pgvector would break the current Prisma/raw-operator search path, so the two remaining extension-advisor warnings are documented instead of hidden with an unsafe schema move.
+Supabase production now has all 36 forward migrations applied through the authorized Railway migrate environment. Migration 36 and its `token,registration_id` primary key were verified directly. Earlier direct checks verified business/RAG tables remain empty, RLS remains enabled, private Broadcast authorization exists, the public/private Storage buckets have bounded MIME/size policy, and anonymous public-object listing was removed by migration 35. A historical zero-step failed Prisma row remains correctly recorded as rolled back; no applied migration was rewritten. PostGIS is non-relocatable, while moving pgvector would break the current Prisma/raw-operator search path, so the two remaining extension-advisor warnings are documented instead of hidden with an unsafe schema move.
 
 Admin and Restaurant are GitHub-linked, READY on Vercel, and their canonical health/login routes return 200. A headless browser observed no tunnel/localhost request and no console error; the stale Restaurant tunnel environment values were replaced. Railway managed Redis and the migration service are healthy, but API/worker have no deployment and the public API returns 404 because 15 real provider configurations are absent. Authenticated production GPS/Broadcast, provider integrations, and end-to-end production smoke therefore remain blocked.
 
@@ -118,7 +118,7 @@ The two current SHA manifests are local Linux/amd64 release-candidate evidence, 
 
 ### Supabase
 
-The active Food_Delivery_Crab project was backed up outside the repository, then reconciled after the provider recorded a zero-step failed migration whose HNSW index already existed from the preceding migration. The failed entry remains marked rolled back; no applied SQL was reversed. The authorized Railway migrator applied the FCM registration-revocation migration and the public Storage-listing policy removal. Production now has all 35 forward migrations applied. PostGIS/pgvector indexes, RLS, private Broadcast authorization, split Storage policies, and empty production business/RAG tables were verified directly. The Supabase CLI token is not persisted in the worktree.
+The active Food_Delivery_Crab project was backed up outside the repository, then reconciled after the provider recorded a zero-step failed migration whose HNSW index already existed from the preceding migration. The failed entry remains marked rolled back; no applied SQL was reversed. The authorized Railway migrate environment applied the FCM registration-revocation migration, public Storage-listing policy removal, and later the composite FCM capability-key migration. Production now has all 36 forward migrations applied. PostGIS/pgvector indexes, RLS, private Broadcast authorization, split Storage policies, empty production business/RAG tables, and the migration 36 primary key were verified directly. The Supabase CLI token is not persisted in the worktree.
 
 ### Railway and Vercel
 
@@ -130,7 +130,7 @@ Secret values are intentionally never printed or stored in this report. Any Deep
 
 ### GitHub Actions
 
-All ten required current-head workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, and SBOM. The Docker publish workflow is a separate release gate and remains failed only at private Admin/Restaurant GHCR package authorization; it did not promote semver or `latest`.
+All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. The Docker publish workflow is a separate release gate and remains blocked at private Admin/Restaurant GHCR package authorization; it has not promoted semver or `latest`.
 
 ## Remaining release gates
 

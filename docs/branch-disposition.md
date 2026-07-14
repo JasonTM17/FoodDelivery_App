@@ -1,32 +1,36 @@
 # Branch Disposition — Batch 4
 
-## Current disposition
+## Audited disposition
 
-Audited on **2026-07-13** from `D:\Food_Delivery`.
+Audit date: **2026-07-14**. The working tree was clean when the audit was taken.
 
 | Scope | Verified state | Disposition |
 |---|---|---|
-| Release branch | `master` is the only local and remote release branch. | Branch equivalence is not production-release approval. |
-| Remote branches | `master` is the only remote branch. | Keep one remote release branch. |
-| Local branches and worktrees | `git branch --no-merged master` returns none; no local `codex/batch4-integration` or `codex/foodflow-production-finalization` ref, and no linked integration worktree remains. | No branch/worktree cleanup action remains. |
+| Release ref | `master` and `origin/master` both resolve to `43f0306064e020a08a57fb053cd5b136602ee987`. | Keep `master` as the release ref. Local equivalence is not production approval. |
+| Remote refs | `origin/master` is the only remote branch. | No remote branch action. |
+| Legacy local ref | `worktree-agent-a62965db0e804d23d` is an obsolete, merged, non-release local ref. Its merge-base with `master` is `51f377d1a517d9adabce72ca5151d223f5e12d33`; `master...legacy` is `18/0`, so `master` is 18 commits ahead and the legacy ref has no unique commits. | Retain it. Do not raw-merge, recreate, push, or delete it without explicit direction. |
+| Worktrees and unmerged refs | No linked worktree exists for the legacy ref, and `git branch --no-merged master` is empty. | No cleanup action is authorized. |
 
 ## Evidence boundary
 
-- Do not recreate, raw-merge, or push historical integration branches by name.
-- Preserve backups and patch evidence before any future reference cleanup.
-- Database evidence covers the committed 32-migration line locally and on Supabase; it does not prove browser E2E, controlled FCM delivery, provider preflight, remote CI, or production readiness.
-- Branch cleanup and branch equivalence are independent of production approval.
+- Current source and Supabase production are aligned at 36 checksum-verified migrations; migration 36's `token,registration_id` primary key was verified directly.
+- This migration boundary does not turn local branch equivalence into production approval.
+- The audit does not prove Railway/API health, provider configuration, controlled live FCM delivery, browser E2E, or release readiness.
 
-## Verification commands
+## Read-only verification commands
 
 ```powershell
-git fetch --prune origin
+$legacy = 'worktree-agent-a62965db0e804d23d'
+
 git rev-parse master
 git rev-parse origin/master
 git ls-remote --heads origin
-git branch --no-merged master
+git merge-base master $legacy
+git rev-list --left-right --count master...$legacy  # expected: 18 0
+git rev-list --count "$legacy..master"             # expected: 18
+git branch --no-merged master                       # expected: no output
 git worktree list --porcelain
 git status --short
 ```
 
-Run these commands again before acting on any future branch or worktree cleanup.
+Re-run these checks before requesting a future branch or worktree action. They do not authorize a merge, push, recreation, deletion, or production release.

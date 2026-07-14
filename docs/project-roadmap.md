@@ -60,7 +60,7 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 ## Current-source evidence and external blockers
 
 - The fresh clean-volume current-source Docker project `foodflow-batch4-e2e` applied all 36 migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, indexed 402 RAG documents, and passed Playwright 204/204 in 6.6 minutes. The Restaurant mobile Kanban CLS trace was approximately 0.0037 after the fix. These are local results only.
-- Supabase production has migrations 1–35 applied and checksum-verified. Migration 36 scopes FCM revocations by token plus registration capability and requires an authorized rollout. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
+- Supabase production has all 36 migrations applied and checksum-verified. Migration 36 scopes FCM revocations by token plus registration capability, and its `token,registration_id` primary key was verified directly. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
 - Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS/Broadcast and controlled-device FCM delivery remain unverified. Local notification and lifecycle tests do not prove provider delivery.
 - Admin and Restaurant production verification still depends on the authorized Supabase rollout and verified Railway API/worker. Do not treat prior web evidence as end-to-end production approval.
@@ -72,7 +72,7 @@ These are release blockers, not permission to add fake values or bypass validati
 ## Release sequence after completion
 
 1. Rotate exposed credentials and enter the 15 real Railway provider configurations through secure stores.
-2. Authorize and run migration 36 on target Supabase; checksum-verify the composite FCM-revocation capability key.
+2. Confirm `prisma migrate status` remains up to date; migration 36 and its composite FCM-revocation capability key are already verified on Supabase production.
 3. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
 4. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.

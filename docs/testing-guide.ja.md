@@ -11,7 +11,7 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 | Area | Result |
 |---|---|
 | Backend | Local release candidate は 142 suites / 1049 tests、Prisma validate/generate、typecheck、lint、build が pass。Push 後の fresh remote CI はまだ必要です。 |
-| Database | Current source は ordered 36 migrations を track しています。Supabase production は migrations 1–35 を applied/checksum-verified 済みで、token と registration capability で FCM revocation を scope する migration 36 は authorized rollout 待ちです。 |
+| Database | Current source と Supabase production は ordered 36 migrations で aligned/checksum-verified 済みです。Migration 36 は token と registration capability で FCM revocation を scope し、`token,registration_id` primary key も direct verification 済みです。 |
 | Mobile Flutter | Local release candidate は 354 tests と `flutter analyze` を pass。Fresh Mobile CI と Android/iOS production device evidence は未完了です。 |
 | Web | Restaurant mobile Kanban の CLS trace は fix 後およそ 0.0037 です。これは local visual-stability evidence であり、production health claim ではありません。 |
 | Browser E2E | fresh current-source clean-volume Docker matrix は 204/204 を 6.6 分で pass しました。Railway/Supabase production GPS の証拠ではありません。 |
@@ -19,11 +19,11 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ### Fresh clean-volume current-source Docker evidence — 2026-07-14
 
-Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は current source の全 36 migrations を適用し、その後 restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed しました。worker は RAG documents 402 件を index し、full Playwright matrix は 204/204 を 6.6 分で pass しました。これは local current-source evidence です。Supabase production は local big seed を実行せず migrations 1–35 を checksum-verified 済みで、migration 36 は authorized rollout 待ちです。Railway API/worker health と live FCM delivery は未検証です。
+Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は current source の全 36 migrations を適用し、その後 restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed しました。worker は RAG documents 402 件を index し、full Playwright matrix は 204/204 を 6.6 分で pass しました。Supabase production は local big seed を実行せず全 36 migrations を checksum-verified 済みです。Railway API/worker health と live FCM delivery は未検証です。
 
 ### Historical Docker E2E / RAG evidence — 2026-07-13
 
-この section は 2026-07-13 local evidence を保持します。当時 repository は then-current 34 migrations、disposable seed は restaurants 50、drivers 50、customers 100、historical orders 500、専用 worker は RAG documents 402 件を index し、DeepSeek key 不在時は embedding を pending にしました。Supabase production は現在 migrations 1–35 を適用済みで、migration 36 のみ rollout 待ちです。Historical zero-step rolled-back row は audit history であり未適用 production change ではありません。
+この section は 2026-07-13 local evidence を保持します。当時 repository は then-current 34 migrations、disposable seed は restaurants 50、drivers 50、customers 100、historical orders 500、専用 worker は RAG documents 402 件を index し、DeepSeek key 不在時は embedding を pending にしました。Supabase production は現在全 36 migrations を適用済みです。Historical zero-step rolled-back row は audit history であり未適用 production change ではありません。
 
 Newer clean-volume worker も fresh seed 後に RAG documents 402 件を index しました。DeepSeek key 未設定のため embedding は pending のままで、fake vector は使っていません。再利用 volume の旧 local run の source ID が null の FAQ 44 件と policy 8 件は historical rows であり、current-worker evidence から除外します。いずれも production data または production embedding/provider approval ではありません。
 
@@ -35,7 +35,7 @@ Provider-backed Railway/Supabase production smoke と controlled-device live FCM
 
 Disposable PostGIS + pgvector container は当時 track されていた 33 migrations、PostGIS/vector、`rag_documents`、source/content indexes、cosine HNSW index を確認しました。`db:big-seed` はこの DB に approved restaurants 50、drivers 50、customers 100、orders 509、reviews 123、promotions 10 を生成し、runtime hard-code ではなく DB-backed generator であることを確認しました。Local worker は live restaurant/menu documents 32 件を同期し、DeepSeek key がない場合は fake vector を作らず全件 pending のままにしました。34 番目の FCM-revocation migration はこの historical evidence run に含まれません。
 
-この historical run は current migration state より前です。Supabase production は migrations 1–35 を applied/checksum-verified 済みで、migration 36 は rollout 待ちです。ここで示す local seed data は production data ではなく、production contents を推測するために使用してはいけません。
+この historical run は current migration state より前です。Supabase production は全 36 migrations を applied/checksum-verified 済みです。ここで示す local seed data は production data ではなく、production contents を推測するために使用してはいけません。
 
 より広い過去の web/browser/container evidence は [release report](batch4-release-report.md) に保持します。Fresh clean-volume current-source matrix は古い 128/134 image result を supersede しました。Provider-backed production smoke と controlled FCM delivery は必須で、release head が変わる場合は関連 evidence を再実行します。
 

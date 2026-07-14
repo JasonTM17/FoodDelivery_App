@@ -4,6 +4,15 @@
 
 この gallery の画像/GIF は historical non-production media です。`docs/screenshots/manifest.json` は `capturedAt` 2026-07-10 を記録していますが、source SHA、Compose reference、image reference がありません。そのため current source head、final Docker build、production deploy の証拠にはなりません。
 
+## Surface coverage
+
+| Surface | Product | Stored visual media | Evidence boundary |
+|---|---|---|---|
+| Admin | Next.js web dashboard | Historical stills and GIF | Non-production web media のみ。 |
+| Restaurant | Next.js web dashboard | Historical stills and GIF | Non-production web media のみ。 |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | None | Customer still は未保存。source documentation は visual/release evidence ではありません。 |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Two test-only Android API 35 assets | Simulated GPS/permission の local evidence のみで、mobile release、Supabase、Railway、production の証拠ではありません。 |
+
 ## Motion flows
 
 | Flow | Preview |
@@ -43,9 +52,13 @@
 
 ## Customer
 
+Customer は first-class Flutter/Riverpod native Android/iOS product です。[`main_customer.dart`](../mobile/lib/main_customer.dart) から Android `customer` flavor で起動します。documented scope は discovery、ordering、cart、checkout、tracking、support です。runtime/build の詳細は [mobile guide](../mobile/README.md) を参照してください。
+
 Customer UI の capture はこの gallery にまだありません。Admin/Restaurant media から Customer screenshot を推測せず、release evidence には source/runtime reference 付きの [`main_customer.dart`](../mobile/lib/main_customer.dart) からの新規 capture だけを使います。
 
 ## Driver GPS (test-only local E2E)
+
+Driver は first-class Flutter/Riverpod native Android/iOS product です。[`main_driver.dart`](../mobile/lib/main_driver.dart) から Android `driver` flavor で起動します。documented scope は Online state、dispatch、GPS、route guidance、earnings、KYC、notifications です。runtime/build の詳細は [mobile guide](../mobile/README.md) を参照してください。
 
 Android API 35 の画像は simulated route と deterministic test data のみを使います。Driver の明示的 Online action と notification permission を示しますが、real location、personal account、credential、token は取得していません。
 

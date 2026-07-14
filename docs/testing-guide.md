@@ -11,7 +11,7 @@ Current-head evidence on 2026-07-14:
 | Area | Result |
 |---|---|
 | Backend | The local release candidate passed 142 suites / 1049 tests, Prisma validation/generation, typecheck, lint, and build. Fresh remote CI is still required after push. |
-| Database | The current source tracks 36 ordered migrations. Supabase production has migrations 1–35 applied and checksum-verified; migration 36 scopes FCM revocations by token plus registration capability and still needs an authorized rollout. |
+| Database | The current source and Supabase production are aligned at 36 ordered, checksum-verified migrations. Migration 36 scopes FCM revocations by token plus registration capability; its `token,registration_id` primary key was verified directly. |
 | Mobile Flutter | The local release candidate passed all 354 tests and `flutter analyze`. Fresh Mobile CI and device-specific Android/iOS production evidence are still required. |
 | Web | The Restaurant mobile Kanban CLS trace is approximately 0.0037 after the fix. This is local visual-stability evidence, not a production health claim. |
 | Browser E2E | The fresh current-source clean-volume Docker matrix passed 204/204 in 6.6 minutes. It is not Railway/Supabase production GPS evidence. |
@@ -19,11 +19,11 @@ Current-head evidence on 2026-07-14:
 
 ### 2026-07-14 fresh clean-volume current-source Docker evidence
 
-The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, then seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews. Its worker indexed 402 RAG documents, and the complete Playwright matrix passed 204/204 in 6.6 minutes. The Restaurant mobile Kanban CLS trace measured approximately 0.0037 after the fix. Supabase production has migrations 1–35 checksum-verified without the local big seed; migration 36 still needs an authorized rollout. Railway API/worker health and live FCM delivery remain unverified.
+The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, then seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews. Its worker indexed 402 RAG documents, and the complete Playwright matrix passed 204/204 in 6.6 minutes. The Restaurant mobile Kanban CLS trace measured approximately 0.0037 after the fix. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Railway API/worker health and live FCM delivery remain unverified.
 
 ### Historical 2026-07-13 Docker E2E and RAG evidence
 
-This section preserves the 2026-07-13 local run. It tracked the then-current 34 migrations and used disposable seed data: 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. The dedicated worker indexed 402 RAG documents and left embeddings pending without a DeepSeek key. Supabase production now has migrations 1–35 applied; migration 36 is the only current forward migration awaiting rollout. The historical rolled-back zero-step migration row remains audit history, not an unapplied production change.
+This section preserves the 2026-07-13 local run. It tracked the then-current 34 migrations and used disposable seed data: 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. The dedicated worker indexed 402 RAG documents and left embeddings pending without a DeepSeek key. Supabase production now has all 36 migrations applied. The historical rolled-back zero-step migration row remains audit history, not an unapplied production change.
 
 The newer clean-volume worker also indexed 402 RAG documents after its fresh seed. No DeepSeek key was configured, so embeddings remained pending and no fake vectors were used. The old reused volume also contained 44 FAQ and 8 policy rows with null source IDs from an older local run; those historical rows are excluded from current-worker evidence. None of this represents production data or production embedding/provider approval.
 
@@ -35,7 +35,7 @@ Provider-backed Railway/Supabase production smoke and a controlled live FCM deli
 
 An isolated local PostGIS + pgvector container previously applied all 33 then-tracked migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings. The 34th FCM-revocation migration was later applied to a separate fresh database, not this historical evidence run.
 
-This historical run predates the current migration state. Supabase production now has migrations 1–35 applied and checksum-verified, while migration 36 awaits rollout. The local seed data described here is not production data and must not be used to infer production contents.
+This historical run predates the current migration state. Supabase production now has all 36 migrations applied and checksum-verified. The local seed data described here is not production data and must not be used to infer production contents.
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The fresh clean-volume current-source matrix supersedes the old 128/134 image result. Provider-backed production smoke and controlled FCM delivery remain required; rerun the relevant evidence if the release head changes.
 

@@ -6,6 +6,15 @@ This is a historical non-production gallery. `docs/screenshots/manifest.json` re
 
 Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-product-media.mjs`. A new release-use capture must record its source commit plus the Compose/image references and whether it was run from a clean final head or a dirty workspace.
 
+## Surface coverage
+
+| Surface | Product | Stored visual media | Evidence boundary |
+|---|---|---|---|
+| Admin | Next.js web dashboard | Historical stills and GIF | Non-production web media only. |
+| Restaurant | Next.js web dashboard | Historical stills and GIF | Non-production web media only. |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | None | No Customer still is stored; source documentation is not visual or release evidence. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Two test-only Android API 35 assets | Simulated GPS/permission local evidence only; not a mobile release, Supabase, Railway, or production proof. |
+
 ## Motion previews
 
 | Flow | Preview |
@@ -101,9 +110,13 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 
 ## Customer
 
-No Customer UI capture is currently stored in this gallery. Do not infer a Customer screenshot from Admin or Restaurant media; recapture it from the explicit [`main_customer.dart`](../mobile/lib/main_customer.dart) entrypoint with source/runtime references before treating it as release evidence.
+Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_customer.dart`](../mobile/lib/main_customer.dart) with the Android `customer` flavor. Its documented scope includes discovery, ordering, cart, checkout, tracking, and support; see the [mobile guide](../mobile/README.md) for runtime and build details.
+
+No Customer UI still is currently stored in this gallery. Do not infer a Customer screenshot from Admin or Restaurant media; only a new capture from the explicit entrypoint with recorded source/runtime references can become visual release evidence.
 
 ## Driver GPS (test-only local E2E)
+
+Driver is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_driver.dart`](../mobile/lib/main_driver.dart) with the Android `driver` flavor. Its documented scope includes Online state, dispatch, GPS, route guidance, earnings, KYC, and notifications; see the [mobile guide](../mobile/README.md) for runtime and build details.
 
 These test-only Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action and the Android notification-permission flow; no real location, personal account, credential, or token was captured.
 
