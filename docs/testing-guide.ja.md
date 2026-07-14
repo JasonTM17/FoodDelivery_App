@@ -8,18 +8,18 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 2026-07-14 current-head evidence:
 
-| Area | Result |
-|---|---|
-| Backend | Current local run は 142 suites / 1050 tests、typecheck、lint、Nest build が pass。Push 後の fresh remote CI はまだ必要です。 |
-| Database | Disposable fresh database は current 38 migrations をすべて適用し、同じ user の 2 件目の default address を拒否しました。日付付き Supabase record は migration 36 までです。 |
-| Mobile Flutter | Current local run は 367 tests と issue なしの `flutter analyze` を pass。Android/iOS production device evidence は未完了です。 |
-| Web | Current typecheck/lint は pass。Vitest は Admin 49 files / 196 tests、Restaurant 43 files / 135 tests が pass。non-secret local public URLs を設定すると Admin は 70 pages、Restaurant は 55 pages を build。`NEXT_PUBLIC_ADMIN_URL` がない bare build は fail-closed です。 |
-| Browser E2E | historical clean-volume matrix は 36-migration source で 204/204 を 353 秒で pass しました。migration 37–38 後の rebuilt stack は explicit local URL で Chrome desktop 全 68 cases を 173 秒で pass。Firefox と Pixel 5 は final head で再実行が必要です。 |
-| FCM | Current local notification suite は backend 11 suites / 67 tests、focused Flutter FCM presentation/lifecycle tests は 17/17 が pass。live send は未実行で、production credential と controlled device token が必要です。 |
+| Area           | Result                                                                                                                                                                                                                                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend        | Current local run は 142 suites / 1050 tests、typecheck、lint、Nest build が pass。Push 後の fresh remote CI はまだ必要です。                                                                                                                                                                                          |
+| Database       | Disposable fresh database は current 38 migrations をすべて適用し、同じ user の 2 件目の default address を拒否しました。current read-only Supabase audit は linked production project が active/healthy、38 migrations すべて適用済み、business/retrieval row は 0 件と確認しました。                                 |
+| Mobile Flutter | Current local run は 367 tests と issue なしの `flutter analyze` を pass。Android/iOS production device evidence は未完了です。                                                                                                                                                                                        |
+| Web            | Current typecheck/lint は pass。Vitest は Admin 49 files / 196 tests、Restaurant 43 files / 135 tests が pass。non-secret local public URLs を設定すると Admin は 70 pages、Restaurant は 55 pages を build。`NEXT_PUBLIC_ADMIN_URL` がない bare build は fail-closed です。                                           |
+| Browser E2E    | historical clean-volume matrix は 36-migration source で 204/204 を 353 秒で pass しました。migration 37–38 後の current stack は explicit local URL で final-head の三 project を完了しました: Chrome desktop 68/68 (173.0 秒)、Firefox 68/68 (172.9 秒)、Pixel 5 mobile Chrome 68/68 (117.3 秒)、合計 204/204 です。 |
+| FCM            | Current local notification suite は backend 11 suites / 67 tests、focused Flutter FCM presentation/lifecycle tests は 17/17 が pass。live send は未実行で、production credential と controlled device token が必要です。                                                                                               |
 
 ### Fresh clean-volume current-source Docker evidence — 2026-07-14
 
-Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は当時 current だった 36 migrations を適用し、その後 users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed しました。worker は RAG documents 402 件を index し、historical Playwright matrix は 204/204 を 353 秒で pass しました。current migrations 37–38 の適用後に API/worker を recreate し、同じ stack で `ADMIN_URL=http://localhost:13000`、`RESTAURANT_URL=http://localhost:13002`、`API_URL=http://localhost:13001/api` を指定した Chrome desktop 全 68 cases が 173 秒で pass しました。final head の Firefox/Pixel 5 matrix はまだ必要です。この local evidence は remote Supabase/Railway、deployed image、live FCM delivery を検証しません。
+Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は 38 migrations をすべて適用し、その後 users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed しました。worker は RAG documents 402 件を index しました。database は同じ user の 2 件目の default address を拒否します。`ADMIN_URL=http://localhost:13000`、`RESTAURANT_URL=http://localhost:13002`、`API_URL=http://localhost:13001/api` を指定した current stack は Chrome desktop 68/68 (173.0 秒)、Firefox 68/68 (172.9 秒)、Pixel 5 mobile Chrome 68/68 (117.3 秒) を pass、合計 204/204、failed/skip なしです。この local evidence は remote Supabase/Railway、deployed image、live FCM delivery を検証しません。
 
 ### Web build environment boundary
 

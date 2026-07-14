@@ -6,20 +6,20 @@ A release is green only when the final source head passes every required local g
 
 ## Local fresh-stack evidence — 2026-07-14
 
-This local run used `master` `eb598c7b7da40f122901a866e35050f3a2e98c1c`. Its supplied record includes the date and elapsed Playwright time, but not a separate execution timestamp. It is not a production or provider-status check.
+The evidence below combines the earlier clean-volume baseline at `eb598c7b7da40f122901a866e35050f3a2e98c1c` with final-head verification at `ed25399298c01975c7943ff967d4178e0ceafdfa`. It is not a Railway deployment or end-to-end production check.
 
-| Area | Result |
-|---|---|
-| Backend | The current local run passed 142 suites / 1050 tests, `tsc --noEmit`, ESLint, and the Nest build. Fresh remote CI is still required. |
-| Database | A disposable fresh database applied all 38 current migrations and rejected a second default address for one user. The dated Supabase record still ends at migration 36. |
-| Mobile Flutter | The current local run passed 367 tests and `flutter analyze` with no issues. Device-specific Android/iOS production evidence is still required. |
-| Web | Current typecheck and lint passed. Vitest passed Admin 49 files / 196 tests and Restaurant 43 files / 135 tests. With explicit non-secret local public URLs, Admin built 70 pages and Restaurant built 55 pages. A bare build fails closed when `NEXT_PUBLIC_ADMIN_URL` is absent. |
-| Browser E2E | The historical clean-volume matrix reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms on the 36-migration source. After migrations 37–38, the rebuilt stack passed all 68 Chrome desktop cases in 173 seconds with its explicit local URLs. Firefox and Pixel 5 still need a final-head rerun. |
-| FCM | Current local notification suite passed 11 backend suites / 67 tests, and focused Flutter FCM presentation/lifecycle tests passed 17/17. Live send was not run: production project credentials and a controlled device token are required. |
+| Area           | Result                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend        | The current local run passed 142 suites / 1050 tests, `tsc --noEmit`, ESLint, and the Nest build. Fresh remote CI is still required.                                                                                                                                                                                                                                                                                  |
+| Database       | A disposable fresh database applied all 38 current migrations and rejected a second default address for one user. The current read-only Supabase audit found the linked production project active and healthy, with all 38 applied migrations and zero business/retrieval rows.                                                                                                                                       |
+| Mobile Flutter | The current local run passed 367 tests and `flutter analyze` with no issues. Device-specific Android/iOS production evidence is still required.                                                                                                                                                                                                                                                                       |
+| Web            | Current typecheck and lint passed. Vitest passed Admin 49 files / 196 tests and Restaurant 43 files / 135 tests. With explicit non-secret local public URLs, Admin built 70 pages and Restaurant built 55 pages. A bare build fails closed when `NEXT_PUBLIC_ADMIN_URL` is absent.                                                                                                                                    |
+| Browser E2E    | The historical clean-volume matrix reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms on the 36-migration source. After migrations 37–38, the current rebuilt stack passed all three final-head projects with explicit local URLs: Chrome desktop 68/68 in 173.0 s, Firefox 68/68 in 172.9 s, and Pixel 5 mobile Chrome 68/68 in 117.3 s (204/204 total). |
+| FCM            | Current local notification suite passed 11 backend suites / 67 tests, and focused Flutter FCM presentation/lifecycle tests passed 17/17. Live send was not run: production project credentials and a controlled device token are required.                                                                                                                                                                            |
 
 ### Fresh clean-volume Docker details
 
-The rebuilt clean-volume Docker project `foodflow-batch4-e2e` completed its migrator after the then-current 36 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. The historical Playwright matrix reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms. After the current migrations 37–38 were applied and the API/worker recreated, the same stack passed all 68 Chrome desktop cases in 173 seconds using `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002`, and `API_URL=http://localhost:13001/api`. The final Firefox/Pixel 5 matrix remains required. Railway API/worker health, live FCM delivery, and all external provider state remain unverified.
+The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied all 38 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. The database rejects a second default address for one user. With `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002`, and `API_URL=http://localhost:13001/api`, the current stack passed Chrome desktop 68/68 in 173.0 s, Firefox 68/68 in 172.9 s, and Pixel 5 mobile Chrome 68/68 in 117.3 s: 204/204 with no failed or skipped cases. Railway API/worker health, live FCM delivery, and all external provider state remain unverified.
 
 ### Web build environment boundary
 
@@ -169,16 +169,16 @@ corepack pnpm test:e2e
 
 The suite runs one worker to keep seeded state deterministic. Required coverage:
 
-| Spec | Contract |
-|---|---|
-| `auth.spec.ts` | login/session/RBAC |
-| `admin-dashboard.spec.ts` | Admin data and actions |
-| `restaurant-order-management.spec.ts` | queue and status transitions |
-| `customer-order-flow.spec.ts` | cart/address/order end-to-end |
-| `realtime-tracking.spec.ts` | active order/tracking availability |
-| `tenant-isolation.spec.ts` | cross-restaurant read/write denial |
-| `batch4-contract.spec.ts` | exports, promotions, accessibility, AI fail-closed |
-| `visual-contract.spec.ts` | responsive brand/form structural contract |
+| Spec                                  | Contract                                           |
+| ------------------------------------- | -------------------------------------------------- |
+| `auth.spec.ts`                        | login/session/RBAC                                 |
+| `admin-dashboard.spec.ts`             | Admin data and actions                             |
+| `restaurant-order-management.spec.ts` | queue and status transitions                       |
+| `customer-order-flow.spec.ts`         | cart/address/order end-to-end                      |
+| `realtime-tracking.spec.ts`           | active order/tracking availability                 |
+| `tenant-isolation.spec.ts`            | cross-restaurant read/write denial                 |
+| `batch4-contract.spec.ts`             | exports, promotions, accessibility, AI fail-closed |
+| `visual-contract.spec.ts`             | responsive brand/form structural contract          |
 
 No test may silently accept a Next.js/Vercel 404 shell, console error, mixed-origin API request, or unavailable business data as a pass.
 

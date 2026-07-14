@@ -41,21 +41,21 @@ Runtime: NestJS 11, Prisma 6, PostgreSQL/PostGIS. Main entries:
 
 Major module groups:
 
-| Module | Responsibility |
-|---|---|
-| `auth`, `users` | Access/refresh JWT, RBAC, profile/preferred locale |
-| `restaurants`, `restaurant-portal`, `menu` | Tenant profile, nearby search, menu, staff, analytics |
-| `cart`, `orders`, `payments`, `promotions` | Checkout, order state, SePay/COD/wallet, voucher rules |
-| `drivers`, `dispatch`, `tracking` | Online GPS, assignment, route/ETA, live telemetry |
-| `notifications`, `webhooks` | Locale-aware fanout and authenticated callbacks |
-| `reviews`, `storage` | Reviews and provider-selected object storage |
-| `ai` | DeepSeek chat, session ownership, support escalation, usage telemetry |
-| `admin` | KPI/resources, audit, support, exports, AI monitor |
-| `realtime` | Private Supabase Broadcast publisher and scoped token endpoint |
-| `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
-| `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
+| Module                                     | Responsibility                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `auth`, `users`                            | Access/refresh JWT, RBAC, profile/preferred locale                    |
+| `restaurants`, `restaurant-portal`, `menu` | Tenant profile, nearby search, menu, staff, analytics                 |
+| `cart`, `orders`, `payments`, `promotions` | Checkout, order state, SePay/COD/wallet, voucher rules                |
+| `drivers`, `dispatch`, `tracking`          | Online GPS, assignment, route/ETA, live telemetry                     |
+| `notifications`, `webhooks`                | Locale-aware fanout and authenticated callbacks                       |
+| `reviews`, `storage`                       | Reviews and provider-selected object storage                          |
+| `ai`                                       | DeepSeek chat, session ownership, support escalation, usage telemetry |
+| `admin`                                    | KPI/resources, audit, support, exports, AI monitor                    |
+| `realtime`                                 | Private Supabase Broadcast publisher and scoped token endpoint        |
+| `common/queue`                             | BullMQ or PostgreSQL job-outbox abstraction                           |
+| `health`, `metrics`                        | Health/readiness and Prometheus-compatible metrics                    |
 
-The current Prisma schema declares 59 models across 38 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migration 34 adds the FCM revocation table, migration 35 removes anonymous public Storage listing where `storage.objects` exists, and migration 36 scopes revocations by token plus registration capability. Migration 37 deduplicates legacy defaults and adds the partial unique index that permits at most one default address per user; migration 38 gives `addresses.id` the database `gen_random_uuid()` default. A fresh local database applied all 38 and enforced the unique invariant. The dated provider record still covers only migrations 1–36, so 37–38 require approved remote deployment and verification. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The current Prisma schema declares 59 models across 38 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migration 34 adds the FCM revocation table, migration 35 removes anonymous public Storage listing where `storage.objects` exists, and migration 36 scopes revocations by token plus registration capability. Migration 37 deduplicates legacy defaults and adds the partial unique index that permits at most one default address per user; migration 38 gives `addresses.id` the database `gen_random_uuid()` default. A fresh local database and the current read-only linked-production audit both confirm all 38 migrations and the address invariant. The remote audit found 60 application tables with row-level security, one readable PostGIS metadata table (`spatial_ref_sys`), scoped private-Broadcast policies, and empty Storage/business/retrieval metadata. Supabase flags PostGIS and pgvector in `public`; do not relocate either extension without a separately approved geometry/search-path migration. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale. The mobile FCM lifecycle is enabled only after a valid Customer/Driver session, calls the authenticated token endpoint with Zod-validated input, tracks Firebase token rotation, and persists cleanup intent before bounded non-blocking logout cleanup. Registration UUIDs plus per-token PostgreSQL advisory locks and seven-day revocation tombstones prevent a late POST from recreating a logged-out binding. The worker targets the Android notification channel and APNs sound; foreground Android/iOS presentation and local-only deep-link taps are handled by the client. The open Driver inbox consumes authenticated realtime notification records and de-duplicates by ID; background delivery uses the FCM notification payload. This describes current-source behavior, not live-delivery evidence: Railway verification and controlled live FCM remain blocked by external real-provider configuration and credentials.
 
@@ -63,10 +63,10 @@ Notifications are persisted and fanned out by channel. Push delivery uses Fireba
 
 Both applications use Next.js 15 App Router, React 18, TypeScript, Tailwind, TanStack Query, and `next-intl`.
 
-| App | Primary users | Major areas |
-|---|---|---|
-| Admin | Platform operators | overview, orders, restaurants, users, drivers/map, promotions, support, analytics, audit, exports, AI monitor |
-| Restaurant | Owners/staff | dashboard, order queue/tracking, menu, promotions, analytics, staff, revenue, reviews, notifications, settings |
+| App        | Primary users      | Major areas                                                                                                    |
+| ---------- | ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Admin      | Platform operators | overview, orders, restaurants, users, drivers/map, promotions, support, analytics, audit, exports, AI monitor  |
+| Restaurant | Owners/staff       | dashboard, order queue/tracking, menu, promotions, analytics, staff, revenue, reviews, notifications, settings |
 
 Important contracts:
 
@@ -81,10 +81,10 @@ Important contracts:
 
 The Flutter package has two canonical native app launchers and shares domain/provider/UI code under `mobile/lib/`. Android defines matching `customer` and `driver` product flavors; iOS keeps a Runner target and uses the matching Dart entrypoint.
 
-| Role | Entrypoint | Runtime startup |
-|---|---|---|
-| Customer | `mobile/lib/main_customer.dart` | Configures Customer FCM deep-link handling, then launches the Riverpod Customer app. |
-| Driver | `mobile/lib/main_driver.dart` | Configures Driver FCM navigation, then launches the Riverpod Driver app; the application/router implementation is `mobile/lib/driver/main_driver.dart`. |
+| Role     | Entrypoint                      | Runtime startup                                                                                                                                         |
+| -------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Customer | `mobile/lib/main_customer.dart` | Configures Customer FCM deep-link handling, then launches the Riverpod Customer app.                                                                    |
+| Driver   | `mobile/lib/main_driver.dart`   | Configures Driver FCM navigation, then launches the Riverpod Driver app; the application/router implementation is `mobile/lib/driver/main_driver.dart`. |
 
 - State: Riverpod.
 - HTTP: Dio through `mobile/packages/api_client` and shared providers.
@@ -96,16 +96,16 @@ Managed mobile realtime uses the same scoped `POST /api/realtime/token` + privat
 
 ## Infrastructure and release tooling
 
-| Path | Purpose |
-|---|---|
-| `docker-compose.yml` | Local full stack |
-| `docker-compose.local.yml` | Hot-reload/local overrides |
-| `docker-compose.e2e.yml` | Isolated test ports and deterministic stack |
-| `docker-compose.prod.yml` | Self-hosted Docker Hub compatibility overlay |
-| `infra/scripts/local-release-gate.ps1` | Unified local quality gate |
-| `infra/scripts/supabase-preflight.ps1` | Auth/project/database migration readiness |
+| Path                                     | Purpose                                                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `docker-compose.yml`                     | Local full stack                                                                                                      |
+| `docker-compose.local.yml`               | Hot-reload/local overrides                                                                                            |
+| `docker-compose.e2e.yml`                 | Isolated test ports and deterministic stack                                                                           |
+| `docker-compose.prod.yml`                | Self-hosted Docker Hub compatibility overlay                                                                          |
+| `infra/scripts/local-release-gate.ps1`   | Unified local quality gate                                                                                            |
+| `infra/scripts/supabase-preflight.ps1`   | Auth/project/database migration readiness                                                                             |
 | `infra/scripts/vercel-web-preflight.ps1` | Admin/Restaurant Vercel project/env readiness; Railway is the target runtime for the API, worker, migrator, and Redis |
-| `.github/workflows/docker-publish.yml` | Multi-arch SHA build, runtime smoke, Trivy, immutable promotion |
+| `.github/workflows/docker-publish.yml`   | Multi-arch SHA build, runtime smoke, Trivy, immutable promotion                                                       |
 
 Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The worker reuses the backend artifact.
 

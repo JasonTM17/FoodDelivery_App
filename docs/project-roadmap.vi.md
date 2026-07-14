@@ -58,11 +58,11 @@ Trạng thái 14/07/2026: **integration và quality gate current-head trên `mas
 ## Bằng chứng current-source và blocker bên ngoài
 
 - Project Docker volume sạch `foodflow-batch4-e2e` đã apply 36 migration hiện hành lúc chạy, seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review, index 402 RAG document, rồi pass Playwright 204/204 trong 6,6 phút. Database tạm mới hơn đã apply riêng đủ 38 migration và kiểm tra invariant địa chỉ mặc định. Phải chạy lại full Docker/Playwright trên clean head cuối; đây chỉ là kết quả local.
-- Record Supabase có ngày xác nhận migration 1–36 và primary key `token,registration_id` của migration 36. Migration 37–38 hiện tại chưa nằm trong record đó và cần deploy/checksum-verify qua môi trường migration được duyệt. Một migration lịch sử lỗi zero-step được giữ trạng thái rolled back, không đảo hay sửa SQL đã apply.
+- Audit Supabase read-only hiện tại xác nhận migration 1–38, gồm index địa chỉ mặc định và UUID default. Record 1–36 trước đó chỉ còn là lịch sử. Một migration lịch sử lỗi zero-step được giữ trạng thái rolled back, không đảo hay sửa SQL đã apply.
 - Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
-- Rollout và xác minh phụ thuộc Railway bị chặn từ bên ngoài bởi cấu hình cùng credential provider thật cần thiết. Không được claim Railway API/worker production health; GPS/Broadcast live và FCM tới thiết bị kiểm soát vẫn chưa xác minh. Test notification/lifecycle local không chứng minh provider delivery.
-- Xác minh production Admin/Restaurant vẫn phụ thuộc rollout Supabase được ủy quyền và Railway API/worker đã xác minh. Không được xem evidence web trước đây là phê duyệt production đầu-cuối.
-- Bốn image SHA current-head chưa publish. Package GHCR private Admin/Restaurant chưa nối với repository nên workflow bị 403 cho tới khi cấp repository access. Chưa được promote semver/`latest`.
+- Rollout và xác minh phụ thuộc Railway bị chặn từ bên ngoài bởi cấu hình cùng credential provider thật cần thiết. Không được claim Railway API/worker production health. Allow/deny private Broadcast trực tiếp trên Supabase đã xác minh; GPS live qua API và FCM tới thiết bị kiểm soát vẫn chưa xác minh.
+- Deployment production Admin/Restaurant của `ed25399` đang READY trên Vercel, health/login trả 200. Phê duyệt production đầu-cuối vẫn phụ thuộc Railway API/worker đã xác minh.
+- Bốn image SHA `ed25399` đã publish trên Docker Hub và GHCR public với digest liên registry khớp nhau. Mọi package đã nối repository và cấp Actions write. Chưa được promote semver/`latest`.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.
@@ -70,12 +70,11 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 ## Chuỗi release
 
 1. Rotate credential bị lộ và nhập 15 cấu hình Railway thật qua secret store.
-2. Apply migration 37–38 qua môi trường migration được duyệt, rồi xác nhận `prisma migrate status` và checksum đủ 38; không suy diễn từ gate database local.
-3. Deploy API/worker cùng một immutable SHA khi đã có đủ cấu hình provider thật, rồi kiểm health/readiness/Cron.
-4. Smoke production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification và tenant; gồm một lần FCM tới controlled device.
-5. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh.
-6. Nối package GHCR private Admin/Restaurant với repository, cấp Actions write, rerun bốn image SHA rồi pull/scan/smoke ở môi trường sạch.
-7. Chỉ tạo `v4.0.0` và promote `latest` sau khi production smoke xanh; cập nhật report/digest/About.
+2. Deploy API/worker cùng một immutable SHA khi đã có đủ cấu hình provider thật, rồi kiểm health/readiness/Cron.
+3. Smoke production Customer/Driver auth, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification và tenant; gồm một lần FCM tới controlled device.
+4. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh.
+5. Pull/scan/runtime-smoke bốn image SHA ở môi trường sạch.
+6. Chỉ tạo `v4.0.0` và promote `latest` sau khi production smoke xanh; cập nhật report/digest/About.
 
 ## Sau release
 

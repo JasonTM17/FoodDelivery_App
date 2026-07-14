@@ -52,31 +52,31 @@ Any failed stage stops later stages.
 
 Expected Railway services:
 
-| Service | Source/runtime | Required setting |
-|---|---|---|
-| `foodflow-api` | GitHub source, root `backend` | `backend/railway.toml`; health `/api/healthz` |
-| `foodflow-worker` | `nguyenson1710/foodflow-backend:sha-<commit>` | start command `dist/workers/main.js` |
-| `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout |
-| Redis | Railway managed Redis | reference its private `REDIS_URL` from API and worker |
+| Service            | Source/runtime                                | Required setting                                      |
+| ------------------ | --------------------------------------------- | ----------------------------------------------------- |
+| `foodflow-api`     | GitHub source, root `backend`                 | `backend/railway.toml`; health `/api/healthz`         |
+| `foodflow-worker`  | `nguyenson1710/foodflow-backend:sha-<commit>` | start command `dist/workers/main.js`                  |
+| `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
+| Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-### Last verified Docker Hub candidate
+### Last verified multi-registry candidate
 
-Evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7` is published as immutable multi-architecture Docker Hub tags. The digests below were read back from Docker Hub after the workflow; a clean pull/runtime smoke is still required:
+Evidence commit `ed25399298c01975c7943ff967d4178e0ceafdfa` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries; a clean pull/runtime smoke is still required:
 
-| Artifact | SHA tag and verified digest |
-|---|---|
-| API + worker | `nguyenson1710/foodflow-backend:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:45eea648ea65928815e34a3e000205a9136cbf82df7fc4862658bb91324abc0d` |
-| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:fb3abb7ddc0b119bf1ba9201e664f823d79711ef7e7a1af8f42268e324c0297e` |
-| Admin | `nguyenson1710/foodflow-admin:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:9b29eb1cd9d9df95cdff1f79ce0ce260e485f2e088f74c7dc5af9fa5f8935165` |
-| Restaurant | `nguyenson1710/foodflow-restaurant:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:d4b52dc7ef61f7978f5ded56aba05c05a597b3f6e5d19ab63d850722ee109716` |
+| Artifact       | SHA tag and verified digest                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| API + worker   | `nguyenson1710/foodflow-backend:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:b1a24c929d7178548c407c019aa75347da78fe5c1dd135177f2b5e4024e4143b`    |
+| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:feb11569b66cb88cdeafbc92c3e64ca9eaed8801859f42f3600237eb55ad3bb4`    |
+| Admin          | `nguyenson1710/foodflow-admin:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:43d8908d5a77efb7142744ce76ce6355631a3b406b5e8d5e6bed884a4ac02b12`      |
+| Restaurant     | `nguyenson1710/foodflow-restaurant:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:7ba5838752a699f7dd3fb46d98110b2b37ef0c6a53f6f21aa2493c9e398da97e` |
 
-`latest` intentionally remains on the prior candidate. Clean-pull and smoke all four artifacts, grant repository Actions access on all four GHCR packages, and complete the provider stages below before any semver or `latest` promotion.
+`latest` intentionally remains on the prior candidate. All four GHCR packages are public, repository-linked, and grant Actions write access. Clean-pull and smoke all four artifacts, then complete the provider stages below before any semver or `latest` promotion.
 
 Expected Vercel projects:
 
-| Project | Root directory | Framework/build |
-|---|---|---|
-| `food-delivery-app` | `web/apps/admin` | Next.js; workspace-filtered build |
+| Project               | Root directory        | Framework/build                   |
+| --------------------- | --------------------- | --------------------------------- |
+| `food-delivery-app`   | `web/apps/admin`      | Next.js; workspace-filtered build |
 | `foodflow-restaurant` | `web/apps/restaurant` | Next.js; workspace-filtered build |
 
 Project IDs and generated provider CLI folders are not documentation contracts. The Railway preflight checks service topology; the Vercel preflight checks dashboard settings by project name.
@@ -162,25 +162,25 @@ Repeat for Admin/Restaurant missing names, then rerun preflight. Only browser-sa
 
 Core/provider values:
 
-| Name | Production rule |
-|---|---|
-| `NODE_ENV` | `production` |
-| `DATABASE_URL` | Supabase pooled runtime URL |
-| `DIRECT_URL` | Supabase direct/session migration URL |
-| `REDIS_URL` | Current API contract still requires a managed production Redis endpoint for remaining cache/history paths; never point at localhost |
-| `REALTIME_PROVIDER` | `supabase` |
-| `STORAGE_PROVIDER` | `supabase` |
-| `QUEUE_PROVIDER` | `supabase-postgres` |
-| `SUPABASE_URL` | Project HTTPS origin |
-| `SUPABASE_SECRET_KEY` | Server-only, sealed; never expose as `NEXT_PUBLIC_*` |
-| `SUPABASE_PUBLISHABLE_KEY` | Server-side Realtime API component key; paired with a short-lived ES256 service JWT, not a secret |
-| `SUPABASE_REALTIME_JWT_PRIVATE_KEY` | Server-only ES256 private signing key, sealed |
-| `SUPABASE_REALTIME_JWT_KEY_ID` | Supabase Auth signing-key `kid` |
-| `SUPABASE_STORAGE_BUCKET` | `foodflow-public` |
-| `SUPABASE_KYC_BUCKET` | `foodflow-private` |
-| `DRIVER_KYC_MAX_UPLOAD_MB` | Explicit per-document limit, currently `4` |
-| `DRIVER_KYC_RETRY_LIMIT` | Explicit rejected-submission retry limit, currently `3` |
-| `CRON_SECRET` | Strong bearer secret for `/api/jobs/drain` |
+| Name                                | Production rule                                                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                          | `production`                                                                                                                        |
+| `DATABASE_URL`                      | Supabase pooled runtime URL                                                                                                         |
+| `DIRECT_URL`                        | Supabase direct/session migration URL                                                                                               |
+| `REDIS_URL`                         | Current API contract still requires a managed production Redis endpoint for remaining cache/history paths; never point at localhost |
+| `REALTIME_PROVIDER`                 | `supabase`                                                                                                                          |
+| `STORAGE_PROVIDER`                  | `supabase`                                                                                                                          |
+| `QUEUE_PROVIDER`                    | `supabase-postgres`                                                                                                                 |
+| `SUPABASE_URL`                      | Project HTTPS origin                                                                                                                |
+| `SUPABASE_SECRET_KEY`               | Server-only, sealed; never expose as `NEXT_PUBLIC_*`                                                                                |
+| `SUPABASE_PUBLISHABLE_KEY`          | Server-side Realtime API component key; paired with a short-lived ES256 service JWT, not a secret                                   |
+| `SUPABASE_REALTIME_JWT_PRIVATE_KEY` | Server-only ES256 private signing key, sealed                                                                                       |
+| `SUPABASE_REALTIME_JWT_KEY_ID`      | Supabase Auth signing-key `kid`                                                                                                     |
+| `SUPABASE_STORAGE_BUCKET`           | `foodflow-public`                                                                                                                   |
+| `SUPABASE_KYC_BUCKET`               | `foodflow-private`                                                                                                                  |
+| `DRIVER_KYC_MAX_UPLOAD_MB`          | Explicit per-document limit, currently `4`                                                                                          |
+| `DRIVER_KYC_RETRY_LIMIT`            | Explicit rejected-submission retry limit, currently `3`                                                                             |
+| `CRON_SECRET`                       | Strong bearer secret for `/api/jobs/drain`                                                                                          |
 
 Application/security values:
 
@@ -237,7 +237,21 @@ Use `DIRECT_URL` for migration safety; do not run `prisma migrate dev`, reset, o
 Run read-only checks through the Supabase SQL editor or approved CLI session:
 
 ```sql
-select count(*) from prisma_migrations;
+select count(*)
+from public._prisma_migrations
+where finished_at is not null;
+
+select indexname
+from pg_indexes
+where schemaname = 'public'
+  and tablename = 'addresses'
+  and indexname = 'addresses_one_default_per_user_key';
+
+select column_default
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'addresses'
+  and column_name = 'id';
 
 select tablename, rowsecurity
 from pg_tables
@@ -257,6 +271,7 @@ where schemaname = 'public'
 Expected invariants:
 
 - All tracked repository migrations are applied in order.
+- The address single-default index and UUID default are present when migrations 37–38 are in the release source.
 - `realtime_outbox`, `job_outbox`, `ai_usage_events`, and `payment_webhook_receipts` have RLS enabled.
 - `realtime_outbox` is retained only as a rollback artifact and is not broadly published to `supabase_realtime`.
 - Private Broadcast subscribe access on `realtime.messages` is limited by the JWT `realtime_channels` claim.

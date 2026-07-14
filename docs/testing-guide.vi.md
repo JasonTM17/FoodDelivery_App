@@ -8,18 +8,18 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 Evidence current-head ngày 14/07/2026:
 
-| Khu vực | Kết quả |
-|---|---|
-| Backend | Lần chạy local hiện tại pass 142 suite / 1050 test cùng typecheck, lint và build Nest. Vẫn phải chạy fresh remote CI sau khi push. |
-| Database | Database tạm volume sạch đã apply đủ 38 migration hiện tại và từ chối địa chỉ mặc định thứ hai của cùng user. Record Supabase có ngày mới chỉ dừng ở migration 36. |
-| Mobile Flutter | Lần chạy local hiện tại pass đủ 367 test và `flutter analyze` không có lỗi. Vẫn cần evidence thiết bị Android/iOS production. |
-| Web | Typecheck/lint hiện tại pass. Vitest pass Admin 49 file / 196 test và Restaurant 43 file / 135 test. Khi cấp public URL local không chứa secret, Admin build 70 trang và Restaurant build 55 trang. Build trần fail-closed nếu thiếu `NEXT_PUBLIC_ADMIN_URL`. |
-| Browser E2E | Ma trận volume sạch lịch sử pass 204/204 trong 353 giây trên source có 36 migration. Sau migration 37–38, stack rebuild pass đủ 68 ca Chrome desktop trong 173 giây với local URL tường minh. Firefox và Pixel 5 vẫn phải chạy lại ở final head. |
-| FCM | Suite notification local hiện tại pass 11 backend suite / 67 test; các test Flutter FCM presentation/lifecycle tập trung pass 17/17. Chưa gửi live: cần project credential production và controlled device token. |
+| Khu vực        | Kết quả                                                                                                                                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Backend        | Lần chạy local hiện tại pass 142 suite / 1050 test cùng typecheck, lint và build Nest. Vẫn phải chạy fresh remote CI sau khi push.                                                                                                                                                                                       |
+| Database       | Database tạm volume sạch đã apply đủ 38 migration hiện tại và từ chối địa chỉ mặc định thứ hai của cùng user. Audit Supabase read-only hiện tại xác nhận project production liên kết đang hoạt động khỏe, apply đủ 38 migration và chưa có row business/retrieval.                                                       |
+| Mobile Flutter | Lần chạy local hiện tại pass đủ 367 test và `flutter analyze` không có lỗi. Vẫn cần evidence thiết bị Android/iOS production.                                                                                                                                                                                            |
+| Web            | Typecheck/lint hiện tại pass. Vitest pass Admin 49 file / 196 test và Restaurant 43 file / 135 test. Khi cấp public URL local không chứa secret, Admin build 70 trang và Restaurant build 55 trang. Build trần fail-closed nếu thiếu `NEXT_PUBLIC_ADMIN_URL`.                                                            |
+| Browser E2E    | Ma trận volume sạch lịch sử pass 204/204 trong 353 giây trên source có 36 migration. Sau migration 37–38, stack hiện tại chạy đủ ba project ở final head với local URL tường minh: Chrome desktop 68/68 trong 173,0 giây, Firefox 68/68 trong 172,9 giây và Chrome mobile Pixel 5 68/68 trong 117,3 giây (tổng 204/204). |
+| FCM            | Suite notification local hiện tại pass 11 backend suite / 67 test; các test Flutter FCM presentation/lifecycle tập trung pass 17/17. Chưa gửi live: cần project credential production và controlled device token.                                                                                                        |
 
 ### Docker current-source volume sạch — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 36 migration hiện hành tại thời điểm đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review. Worker index 402 RAG document, còn ma trận Playwright lịch sử pass 204/204 trong 353 giây. Sau khi apply migration 37–38 hiện tại và recreate API/worker, cùng stack pass đủ 68 ca Chrome desktop trong 173 giây với `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002` và `API_URL=http://localhost:13001/api`. Ma trận Firefox/Pixel 5 ở final head vẫn bắt buộc. Bằng chứng local này không xác minh Supabase/Railway từ xa, Docker image đã deploy hay FCM live.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply đủ 38 migration, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review. Worker index 402 RAG document. Database từ chối default address thứ hai của cùng user. Với `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002` và `API_URL=http://localhost:13001/api`, stack hiện tại pass Chrome desktop 68/68 trong 173,0 giây, Firefox 68/68 trong 172,9 giây và Chrome mobile Pixel 5 68/68 trong 117,3 giây: tổng 204/204, không fail hay skip. Bằng chứng local này không xác minh Supabase/Railway từ xa, Docker image đã deploy hay FCM live.
 
 ### Ranh giới môi trường build web
 

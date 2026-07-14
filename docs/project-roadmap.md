@@ -60,11 +60,11 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 ## Current-source evidence and external blockers
 
 - The fresh clean-volume Docker project `foodflow-batch4-e2e` applied the then-current 36 migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, indexed 402 RAG documents, and passed Playwright 204/204 in 6.6 minutes. A later migration-only fresh database applied all 38 current migrations and enforced the default-address invariant. Full Docker/Playwright must be rerun on the final clean head. These are local results only.
-- The dated Supabase record confirms migrations 1–36 and migration 36's `token,registration_id` primary key. Current migrations 37–38 are not included in that record and require approved remote deployment/checksum verification. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
+- Supabase production was backed up outside the repository and the authorized Railway migrator applied migrations 37–38. All 38 migrations are now recorded as applied, `prisma migrate status` is clean, the address UUID default is present, and the unique partial index rejects multiple default addresses per user. The historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
-- Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS/Broadcast and controlled-device FCM delivery remain unverified. Local notification and lifecycle tests do not prove provider delivery.
-- Admin and Restaurant production verification still depends on the authorized Supabase rollout and verified Railway API/worker. Do not treat prior web evidence as end-to-end production approval.
-- Evidence commit `84e2f36` has all four immutable multi-architecture Docker Hub manifests. GHCR still returns `write_package` for all four because package Actions access has not been granted; Admin/Restaurant are unlinked, and Restaurant remains private. No semver or `latest` promotion is authorized.
+- Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS through the API and controlled-device FCM delivery remain unverified. Direct Supabase private-Broadcast allow/deny is verified, but local notification and lifecycle tests do not prove end-to-end provider delivery.
+- Admin and Restaurant deployments for `ed25399` are READY on Vercel, use the canonical Railway/Supabase production variables, and return 200 for health/login routes. End-to-end production approval still depends on a healthy Railway API/worker.
+- Evidence commit `ed25399` has all four immutable multi-architecture Docker Hub and public GHCR manifests. All GHCR packages are repository-linked and grant `JasonTM17/FoodDelivery_App` Actions write access. No semver or `latest` promotion is authorized.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
@@ -72,13 +72,11 @@ These are release blockers, not permission to add fake values or bypass validati
 ## Release sequence after completion
 
 1. Rotate exposed credentials and enter the 15 real Railway provider configurations through secure stores.
-2. Apply migrations 37–38 through the approved migration environment, then confirm `prisma migrate status` and checksums for all 38; never infer this from the local fresh-database gate.
-3. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
-4. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
-5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.
-6. Grant `JasonTM17/FoodDelivery_App` Actions access on all four GHCR packages, link Admin/Restaurant, then rerun the four-image SHA workflow.
-7. Pull the SHA manifests in a clean environment, verify cross-registry digests/scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
-8. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
+2. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
+3. Run production Customer/Driver auth, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
+4. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.
+5. Pull the SHA manifests in a clean environment, verify scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
+6. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 
 ## Post-release
 

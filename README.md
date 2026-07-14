@@ -13,18 +13,18 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** An earlier clean-volume stack applied the then-current 36 migrations and passed Playwright 204/204. The current worktree adds migrations 37–38 for the single-default-address invariant and database UUID default; all 38 apply on a fresh database and the invariant check passes. This is **not** production certification. The release remains **NO-GO** until these migrations and the exact release candidate are deployed through the approved provider environment, then authenticated production smoke and controlled-device FCM delivery pass.
+> **Release status — 2026-07-14:** The current clean-volume Docker stack applied all 38 migrations, enforced the single-default-address invariant, and passed Playwright 204/204 across Chrome desktop, Firefox, and Pixel 5. This is **not** production certification. The release remains **NO-GO** until the exact release candidate is deployed through the approved provider environment, then authenticated production smoke and controlled-device FCM delivery pass.
 
 ## Product preview
 
 FoodFlow has four distinct product surfaces. The media below is historical non-production evidence: the manifest records `capturedAt` 2026-07-10 but no source SHA or image reference, so it does not prove the current source head or a release candidate. Start with the [Customer guide](docs/customer-guide.md) for the ordering app, then see the [full product gallery](docs/product-gallery.md) and [Customer and Driver mobile overview](docs/customer-driver-guide.md).
 
-| Surface | Product runtime | Current visual evidence | How to review the product |
-|---|---|---|---|
-| Admin | Next.js web dashboard | Historical stills and GIF | Run the Admin web app; see the gallery. |
-| Restaurant | Next.js web dashboard | Historical stills and GIF | Run the Restaurant web app; see the gallery. |
-| Customer | Flutter/Riverpod Android/iOS app | One test-only Android emulator still | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
-| Driver | Flutter/Riverpod Android/iOS app | Four test-only Android emulator captures | Launch `main_driver.dart`; existing GPS/notification captures are not release media. |
+| Surface    | Product runtime                  | Current visual evidence                  | How to review the product                                                                                 |
+| ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Admin      | Next.js web dashboard            | Historical stills and GIF                | Run the Admin web app; see the gallery.                                                                   |
+| Restaurant | Next.js web dashboard            | Historical stills and GIF                | Run the Restaurant web app; see the gallery.                                                              |
+| Customer   | Flutter/Riverpod Android/iOS app | One test-only Android emulator still     | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
+| Driver     | Flutter/Riverpod Android/iOS app | Four test-only Android emulator captures | Launch `main_driver.dart`; existing GPS/notification captures are not release media.                      |
 
 The mobile captures use simulated GPS and the isolated local stack. Their manifest records a dirty workspace, so authentic release media still requires a clean-head device/emulator recapture from the chosen release candidate. The documentation deliberately does not relabel local media as production evidence.
 
@@ -33,19 +33,19 @@ The mobile captures use simulated GPS and the isolated local stack. Their manife
   <img src="docs/screenshots/restaurant/04-menu.png" alt="FoodFlow Restaurant menu" width="48%" />
 </p>
 
-| Admin sign-in to overview | Restaurant orders to menu |
-|---|---|
+| Admin sign-in to overview                                   | Restaurant orders to menu                                               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
 | ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
 
 ## Applications
 
-| Surface | Source | Runtime | Local target | Primary guide |
-|---|---|---|---|---|
-| Backend API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` | — |
-| Admin | `web/apps/admin/` | Next.js 15, React 18, next-intl | `http://localhost:3000` | — |
-| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18, next-intl | `http://localhost:3002` | — |
-| Customer | [`main_customer.dart`](mobile/lib/main_customer.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `customer` flavor | [Customer guide](docs/customer-guide.md) |
-| Driver | [`main_driver.dart`](mobile/lib/main_driver.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor | [Customer and Driver guide](docs/customer-driver-guide.md) |
+| Surface     | Source                                                | Runtime                                          | Local target                                  | Primary guide                                              |
+| ----------- | ----------------------------------------------------- | ------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| Backend API | `backend/`                                            | NestJS 11, Prisma 6                              | `http://localhost:3001/api`                   | —                                                          |
+| Admin       | `web/apps/admin/`                                     | Next.js 15, React 18, next-intl                  | `http://localhost:3000`                       | —                                                          |
+| Restaurant  | `web/apps/restaurant/`                                | Next.js 15, React 18, next-intl                  | `http://localhost:3002`                       | —                                                          |
+| Customer    | [`main_customer.dart`](mobile/lib/main_customer.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `customer` flavor | [Customer guide](docs/customer-guide.md)                   |
+| Driver      | [`main_driver.dart`](mobile/lib/main_driver.dart)     | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor   | [Customer and Driver guide](docs/customer-driver-guide.md) |
 
 Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The API uses a shared success envelope (`{ success: true, data, meta? }`) and RFC 7807 Problem Details for errors.
 
@@ -79,27 +79,27 @@ Local/self-hosted compatibility: PostgreSQL + Socket.IO + Redis/BullMQ + MinIO
 
 Provider selection is explicit:
 
-| Concern | Managed production | Local/self-hosted compatibility |
-|---|---|---|
-| Database | Supabase PostgreSQL/PostGIS | PostGIS container |
-| Realtime | `REALTIME_PROVIDER=supabase` | `socketio` |
-| Storage | `STORAGE_PROVIDER=supabase` | `minio` |
-| Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
+| Concern  | Managed production                 | Local/self-hosted compatibility |
+| -------- | ---------------------------------- | ------------------------------- |
+| Database | Supabase PostgreSQL/PostGIS        | PostGIS container               |
+| Realtime | `REALTIME_PROVIDER=supabase`       | `socketio`                      |
+| Storage  | `STORAGE_PROVIDER=supabase`        | `minio`                         |
+| Queue    | `QUEUE_PROVIDER=supabase-postgres` | `bullmq`                        |
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
 ## Docker packages
 
-The table below records the multi-architecture Docker Hub manifests produced by the SHA-only workflow for evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7`. Docker Hub was queried after the workflow completed. These immutable manifests still require a clean pull/runtime smoke; they are not proof of Railway health. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
+The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for evidence commit `ed25399298c01975c7943ff967d4178e0ceafdfa`. Both registries were queried after publication. These SHA manifests still require a clean pull/runtime smoke; they are not proof of Railway health. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
 
-| Artifact | Docker Hub tag | Remote digest |
-|---|---|---|
-| API + worker | [`nguyenson1710/foodflow-backend:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:45eea648ea65928815e34a3e000205a9136cbf82df7fc4862658bb91324abc0d` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:fb3abb7ddc0b119bf1ba9201e664f823d79711ef7e7a1af8f42268e324c0297e` |
-| Admin | [`nguyenson1710/foodflow-admin:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-admin) | `sha256:9b29eb1cd9d9df95cdff1f79ce0ce260e485f2e088f74c7dc5af9fa5f8935165` |
-| Restaurant | [`nguyenson1710/foodflow-restaurant:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:d4b52dc7ef61f7978f5ded56aba05c05a597b3f6e5d19ab63d850722ee109716` |
+| Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| API + worker   | [`nguyenson1710/foodflow-backend:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-backend)       | `sha256:b1a24c929d7178548c407c019aa75347da78fe5c1dd135177f2b5e4024e4143b` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate)       | `sha256:feb11569b66cb88cdeafbc92c3e64ca9eaed8801859f42f3600237eb55ad3bb4` |
+| Admin          | [`nguyenson1710/foodflow-admin:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-admin)           | `sha256:43d8908d5a77efb7142744ce76ce6355631a3b406b5e8d5e6bed884a4ac02b12` |
+| Restaurant     | [`nguyenson1710/foodflow-restaurant:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:7ba5838752a699f7dd3fb46d98110b2b37ef0c6a53f6f21aa2493c9e398da97e` |
 
-The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. The same workflow attempted GHCR publication, but all four GHCR writes were denied with `write_package`: public visibility only grants pull access. Each package must grant `JasonTM17/FoodDelivery_App` Actions access before rerunning the workflow. No semver or `latest` tag was promoted.
+The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. All four GHCR packages are public, linked to `JasonTM17/FoodDelivery_App`, and grant the repository Actions write access. Docker Hub and GHCR digests match for every SHA tag. No semver or `latest` tag was promoted.
 
 Release promotion order:
 
@@ -113,14 +113,14 @@ For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base
 
 ## Repository layout
 
-| Path | Purpose |
-|---|---|
-| `backend/` | API, Prisma schema/migrations, Vercel handler, worker entry |
-| `web/` | pnpm workspace: Admin, Restaurant, shared packages, Playwright |
-| `mobile/` | Flutter customer and driver entry points plus shared API client |
-| `infra/` | Compose overlays, preflight, security, and release tooling |
-| `docs/` | Architecture, API/OpenAPI, deployment, testing, security, product media |
-| `e2e/` | Cross-surface and AI smoke scenarios |
+| Path       | Purpose                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `backend/` | API, Prisma schema/migrations, Vercel handler, worker entry             |
+| `web/`     | pnpm workspace: Admin, Restaurant, shared packages, Playwright          |
+| `mobile/`  | Flutter customer and driver entry points plus shared API client         |
+| `infra/`   | Compose overlays, preflight, security, and release tooling              |
+| `docs/`    | Architecture, API/OpenAPI, deployment, testing, security, product media |
+| `e2e/`     | Cross-surface and AI smoke scenarios                                    |
 
 Generated output, local agent files, dotenv files, credentials, and private plans are ignored and must not be committed.
 
@@ -199,17 +199,16 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied the then-current 36 migrations, seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews, then indexed 402 RAG documents. Its Playwright matrix passed 204/204 across Chromium, Firefox, and mobile Chromium in 353 seconds. After migrations 37–38 and the mobile fixes were added, a separate fresh database applied all 38 migrations and rejected a second default address; the rebuilt stack then passed all 68 Chrome desktop E2E cases in 173 seconds with its explicit E2E URLs, while `flutter analyze` remained clean and the full Customer/Driver suite passed 367 tests. The final Firefox/mobile-Chrome Docker matrix still must be rerun on the final clean head. None of this local evidence validates remote provider state, a deployed image, or live Firebase delivery.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 migrations, seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews, then indexed 402 RAG documents. A transaction check rejected a second default address for the same user. With explicit E2E URLs, the current rebuilt stack passed all 68 cases in Chrome desktop (173.0 s), Firefox (172.9 s), and Pixel 5 mobile Chrome (117.3 s): 204/204 total. `flutter analyze` remained clean and the full Customer/Driver suite passed 367 tests. Direct Chrome review also found the public Admin and Restaurant sign-in forms usable at desktop and Pixel 5 widths, with no console errors or horizontal overflow. None of this local evidence validates remote provider state, a deployed image, or live Firebase delivery.
 
 ## Deployment order
 
 1. Rotate exposed credentials and configure the required Railway/provider values through sealed provider stores.
-2. Apply and verify all migrations through the approved production migration environment; do not infer that provider state from local Docker.
+2. Recheck all 38 production migrations and checksums before rollout; never infer provider state from local Docker.
 3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
-6. Grant this repository Actions access on all four GHCR packages (visibility alone is insufficient), make Restaurant public only if public pulls are intended, then rerun the multi-registry SHA publish.
-7. Pull all four immutable Docker manifests in a clean environment, verify remote digests and scans, then update `latest` only after production smoke.
+6. Pull and smoke the four matching Docker Hub/GHCR SHA manifests from a clean environment, verify scans, and promote semver/`latest` only after provider production smoke passes.
 
 ## Documentation
 

@@ -54,11 +54,11 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## Current-source evidence and external blockers
 
 - Fresh clean-volume Docker project `foodflow-batch4-e2e` は当時 current の 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 6.6 分で pass しました。後の migration-only fresh database は current 38 migrations と default-address invariant を検証しました。Final clean head の full Docker/Playwright 再実行が必要で、これは local result のみです。
-- 日付付き Supabase record は migrations 1–36 と migration 36 の `token,registration_id` primary key を確認しています。Current migrations 37–38 はその record に含まれず、approved migration environment で remote deploy/checksum verification が必要です。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
+- current read-only Supabase audit は migrations 1–38、default-address index、UUID default を確認しました。以前の 1–36 record は historical evidence のみです。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
-- Railway 依存の rollout と verification は必要な real provider configuration/credentials により外部要因で blocked です。Railway API/worker production health を claim してはいけません。Live GPS/Broadcast と controlled-device FCM は未検証であり、local notification/lifecycle test は provider delivery を証明しません。
-- Admin/Restaurant production verification は authorized Supabase rollout と verified Railway API/worker に依存します。以前の web evidence を end-to-end production approval として扱ってはいけません。
-- Current-head の 4 SHA images は未 publish。Private Admin/Restaurant GHCR packages が repository 未接続のため workflow は 403 です。Semver/`latest` promotion は未承認です。
+- Railway 依存の rollout と verification は必要な real provider configuration/credentials により外部要因で blocked です。Railway API/worker production health を claim してはいけません。Direct Supabase private-Broadcast allow/deny は検証済みですが、API 経由の live GPS と controlled-device FCM は未検証です。
+- `ed25399` の Admin/Restaurant production deployments は Vercel で READY、health/login は 200 です。End-to-end production approval は verified Railway API/worker に依存します。
+- `ed25399` の 4 SHA images は Docker Hub と public GHCR に publish 済みで、各 cross-registry digest は一致します。Packages は repository-linked、Actions write 済みです。Semver/`latest` promotion は未承認です。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。
@@ -66,12 +66,11 @@ Fake value や validation bypass は禁止です。
 ## Release sequence
 
 1. Exposed credentials を rotate し、Railway の real settings 15 件を secret store に登録。
-2. Approved migration environment で migrations 37–38 を適用し、全 38 の `prisma migrate status` と checksum を確認。Local fresh-database gate から推測しない。
-3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
-4. Production Customer/Driver auth、private-realtime allow/deny、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
-5. Verified Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
-6. Private Admin/Restaurant GHCR packages を repository に接続し Actions write を付与。4 SHA images を rerun、clean pull/scan/runtime smoke。
-7. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
+2. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
+3. Production Customer/Driver auth、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
+4. Verified Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
+5. 4 SHA images を clean pull/scan/runtime smoke。
+6. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
 
 ## Post-release/deferred
 
