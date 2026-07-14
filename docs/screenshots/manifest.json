@@ -20,5 +20,24 @@
       "driver/driver-online-gps-e2e.webp",
       "gps/driver-notification-permission.webp"
     ]
+  },
+  "mobileDeviceCapture": {
+    "capturedAt": "2026-07-14T10:45:03Z",
+    "sourceHead": "eb598c7b7da40f122901a866e35050f3a2e98c1c",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 emulator connected to the isolated non-production E2E stack",
+    "realtimeProvider": "socketio",
+    "privacyReview": "Approved: simulated location only; no coordinates, credentials, tokens, email addresses, or personal notifications are visible",
+    "evidence": [
+      "Customer authenticated and loaded nearby restaurants from a simulated location",
+      "Driver entered Online and the authenticated location command was accepted",
+      "PostGIS retained the last location snapshot and the Android location foreground service was active only while Online",
+      "Driver returned Offline, the foreground service stopped, and the database online flag changed to false"
+    ],
+    "files": [
+      "customer/customer-nearby-restaurants.webp",
+      "driver/driver-online-realtime-gps.webp",
+      "gps/driver-foreground-location-notification.webp"
+    ]
   }
 }

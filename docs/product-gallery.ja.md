@@ -6,12 +6,20 @@
 
 ## Surface coverage
 
-| Surface | Product | Stored visual media | Evidence boundary |
-|---|---|---|---|
-| Admin | Next.js web dashboard | Historical stills and GIF | Non-production web media のみ。 |
-| Restaurant | Next.js web dashboard | Historical stills and GIF | Non-production web media のみ。 |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | None | Customer still は未保存。source documentation は visual/release evidence ではありません。 |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Two test-only Android API 35 assets | Simulated GPS/permission の local evidence のみで、mobile release、Supabase、Railway、production の証拠ではありません。 |
+| Surface | Product | Stored visual media | Primary guide | Evidence boundary |
+|---|---|---|---|---|
+| Admin | Next.js web dashboard | Historical stills and GIF | — | Non-production web media のみ。 |
+| Restaurant | Next.js web dashboard | Historical stills and GIF | — | Non-production web media のみ。 |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One test-only Android API 35 still | [Customer（注文者）ガイド](./customer-guide.ja.md) | Simulated GPS discovery の local evidence のみで、release/production の証拠ではありません。 |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Four test-only Android API 35 assets | [Customer / Driver ガイド](./customer-driver-guide.ja.md) | Simulated GPS/notification の local evidence のみで、mobile release、Supabase、Railway、production の証拠ではありません。 |
+
+## Customer を始める
+
+Native Customer app に browser URL はありません。source と照合した
+[Customer（注文者）ガイド](./customer-guide.ja.md) でサインイン、料理検索、cart、
+地図での住所選択、checkout、追跡、通知、Help を確認してから、device/emulator で
+[`main_customer.dart`](../mobile/lib/main_customer.dart) を起動してください。
+下には simulated GPS で review 済みの Customer still があります。Admin/Restaurant の画像では代用せず、Customer GIF はまだありません。
 
 ## Motion flows
 
@@ -19,6 +27,8 @@
 |---|---|
 | Admin login → overview | ![Admin](media/gifs/admin-login-flow.gif) |
 | Restaurant orders → menu | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
+
+GIF は Admin と Restaurant の web flow のみを示します。Customer は下の test-only still があり、motion capture はまだありません。
 
 ## Admin
 
@@ -52,24 +62,28 @@
 
 ## Customer
 
-Customer は first-class Flutter/Riverpod native Android/iOS product です。[`main_customer.dart`](../mobile/lib/main_customer.dart) から Android `customer` flavor で起動します。documented scope は discovery、ordering、cart、checkout、tracking、support です。runtime/build の詳細は [mobile guide](../mobile/README.md) を参照してください。
+Customer は first-class Flutter/Riverpod native Android/iOS product です。[`main_customer.dart`](../mobile/lib/main_customer.dart) から Android `customer` flavor で起動します。documented scope は discovery、ordering、cart、checkout、tracking、support です。利用手順は [Customer（注文者）ガイド](./customer-guide.ja.md)、runtime/build は [mobile guide](../mobile/README.md) を参照してください。
 
-source と照合した Customer/Driver workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
+Customer/Driver 共通 workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
 
-Customer UI の capture はこの gallery にまだありません。Admin/Restaurant media から Customer screenshot を推測せず、release evidence には source/runtime reference 付きの [`main_customer.dart`](../mobile/lib/main_customer.dart) からの新規 capture だけを使います。
+次の privacy-reviewed Android API 35 emulator still は、simulated location から Customer が nearby seed restaurants を読み込んだ状態です。manifest は dirty workspace からの capture と記録しているため regression evidence のみで、release evidence には clean-head recapture が必要です。
+
+![Simulated GPS から nearby restaurants を読み込んだ Customer](./screenshots/customer/customer-nearby-restaurants.webp)
 
 ## Driver GPS (test-only local E2E)
 
 Driver は first-class Flutter/Riverpod native Android/iOS product です。[`main_driver.dart`](../mobile/lib/main_driver.dart) から Android `driver` flavor で起動します。documented scope は Online state、dispatch、GPS、route guidance、earnings、KYC、notifications です。runtime/build の詳細は [mobile guide](../mobile/README.md) を参照してください。
 
-Android API 35 の画像は simulated route と deterministic test data のみを使います。Driver の明示的 Online action と notification permission を示しますが、real location、personal account、credential、token は取得していません。
+Android API 35 の画像は simulated route と deterministic test data のみを使います。Driver の明示的 Online action、notification permission、foreground location notification を示しますが、real location、personal account、credential、token、無関係な personal notification は表示していません。
 
 Historical local E2E は authenticated GPS command を受け取り、Redis liveness を更新し、PostGIS に sample を保存し、authorized Admin Socket.IO listener へ一つの event を送信しました。これは local `socketio` compatibility evidence のみであり、Supabase、Railway、Vercel、production の証拠ではありません。
 
 | Screen | Image |
 |---|---|
 | Driver Online after GPS verification | ![Driver Online](screenshots/driver/driver-online-gps-e2e.webp) |
+| Current Driver Online device smoke | ![Driver Online realtime GPS](screenshots/driver/driver-online-realtime-gps.webp) |
 | Foreground-tracking notification permission | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
+| Foreground location notification | ![Driver foreground location notification](screenshots/gps/driver-foreground-location-notification.webp) |
 
 ## Recapture
 

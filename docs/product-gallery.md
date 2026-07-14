@@ -8,12 +8,21 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 
 ## Surface coverage
 
-| Surface | Product | Stored visual media | Evidence boundary |
-|---|---|---|---|
-| Admin | Next.js web dashboard | Historical stills and GIF | Non-production web media only. |
-| Restaurant | Next.js web dashboard | Historical stills and GIF | Non-production web media only. |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | None | No Customer still is stored; source documentation is not visual or release evidence. |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Two test-only Android API 35 assets | Simulated GPS/permission local evidence only; not a mobile release, Supabase, Railway, or production proof. |
+| Surface | Product | Stored visual media | Primary guide | Evidence boundary |
+|---|---|---|---|---|
+| Admin | Next.js web dashboard | Historical stills and GIF | — | Non-production web media only. |
+| Restaurant | Next.js web dashboard | Historical stills and GIF | — | Non-production web media only. |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One test-only Android API 35 still; no Customer GIF | [Customer guide](./customer-guide.md) | Simulated-GPS discovery evidence only; it is not release or production proof. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Two test-only Android API 35 assets | [Customer and Driver guide](./customer-driver-guide.md) | Simulated GPS/permission local evidence only; not a mobile release, Supabase, Railway, or production proof. |
+
+## Start as a Customer
+
+The native Customer app has no browser URL. Read the source-verified
+[Customer guide](./customer-guide.md) for sign-in, discovery, cart, map-based
+address selection, checkout, tracking, notifications, and Help, then launch
+[`main_customer.dart`](../mobile/lib/main_customer.dart) on a device or
+emulator. The reviewed Customer discovery still is included below; it is not
+substituted with Admin or Restaurant media, and there is no Customer GIF yet.
 
 ## Motion previews
 
@@ -23,6 +32,8 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 | Restaurant order queue → menu | ![Restaurant orders to menu](./media/gifs/restaurant-orders-to-menu.gif) |
 
 GIFs are 640 × 400, silent, palette-optimized, and generated from the same screenshots/API session. Intermediate frames and concat manifests are removed automatically.
+They document Admin and Restaurant web flows only. Customer currently has the
+test-only still below, not an animated capture.
 
 ## Admin
 
@@ -110,17 +121,21 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 
 ## Customer
 
-Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_customer.dart`](../mobile/lib/main_customer.dart) with the Android `customer` flavor. Its documented scope includes discovery, ordering, cart, checkout, tracking, and support; see the [mobile guide](../mobile/README.md) for runtime and build details.
+Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_customer.dart`](../mobile/lib/main_customer.dart) with the Android `customer` flavor. Its documented scope includes discovery, ordering, cart, checkout, tracking, and support; see the [Customer guide](./customer-guide.md) for the user journey and the [mobile guide](../mobile/README.md) for runtime and build details.
 
-For the complete verified Customer and Driver workflows, permissions, notification behavior, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
+For the cross-role Customer/Driver workflow, permission behaviour, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
 
-No Customer UI still is currently stored in this gallery. Do not infer a Customer screenshot from Admin or Restaurant media; only a new capture from the explicit entrypoint with recorded source/runtime references can become visual release evidence.
+The following privacy-reviewed Android API 35 emulator still shows Customer discovery loading nearby seed restaurants from a simulated location. The manifest records that it came from a dirty workspace, so it is regression evidence only and cannot become visual release evidence without a clean-head recapture.
+
+### Customer nearby restaurants from simulated GPS
+
+![Customer nearby restaurants loaded from simulated GPS](./screenshots/customer/customer-nearby-restaurants.webp)
 
 ## Driver GPS (test-only local E2E)
 
 Driver is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_driver.dart`](../mobile/lib/main_driver.dart) with the Android `driver` flavor. Its documented scope includes Online state, dispatch, GPS, route guidance, earnings, KYC, and notifications; see the [mobile guide](../mobile/README.md) for runtime and build details.
 
-These test-only Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action and the Android notification-permission flow; no real location, personal account, credential, or token was captured.
+These test-only Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action, Android notification-permission flow, and the location foreground notification. No real location, personal account, credential, token, or unrelated personal notification is visible.
 
 The associated local E2E check accepted the authenticated GPS command, refreshed Redis liveness, persisted the sample to PostGIS, and delivered one authorized Admin Socket.IO event. This is local Socket.IO compatibility evidence only, **not** Supabase, Railway, Vercel, or production evidence.
 
@@ -128,9 +143,17 @@ The associated local E2E check accepted the authenticated GPS command, refreshed
 
 ![Driver Online after verified GPS update](./screenshots/driver/driver-online-gps-e2e.webp)
 
+### Current Driver Online device smoke
+
+![Driver Online while foreground GPS tracking is active](./screenshots/driver/driver-online-realtime-gps.webp)
+
 ### Android foreground-tracking notification permission
 
 ![Android notification permission prompt for Driver tracking](./screenshots/gps/driver-notification-permission.webp)
+
+### Android foreground location notification
+
+![Privacy-reviewed Driver foreground location notification](./screenshots/gps/driver-foreground-location-notification.webp)
 
 ## Capture procedure
 

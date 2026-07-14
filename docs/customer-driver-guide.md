@@ -19,6 +19,13 @@ allow-listed events through scoped Supabase Realtime credentials; Socket.IO is
 only the explicit local/self-hosted option. There is no Customer or Driver web
 URL to browse.
 
+## Customer guide
+
+For the Customer's step-by-step ordering journey, permission behaviour, address
+limitation, checkout, tracking, and help, use the standalone
+[Customer guide](./customer-guide.md). This document remains the cross-role
+mobile/runtime overview for Customer and Driver.
+
 ## Customer journey
 
 1. **Start and sign in.** The app begins at the splash screen, then uses the

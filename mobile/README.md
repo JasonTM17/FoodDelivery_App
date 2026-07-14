@@ -17,8 +17,8 @@ explicit local/self-hosted compatibility transport.
 
 - HTTP: `lib/shared/api/api_client.dart` and the checked-in OpenAPI client.
 - Realtime facade: `lib/shared/api/realtime_client.dart`.
-- Managed realtime: short-lived `POST /realtime/token` grants and filtered
-  `realtime_outbox` subscriptions.
+- Managed realtime: short-lived `POST /realtime/token` grants and allow-listed
+  private Supabase Broadcast channel subscriptions.
 - Local compatibility: `lib/shared/api/socket_client.dart`.
 - GPS and maps: `geolocator`, `google_maps_flutter`, backend route geometry,
   ETA, and route phase. The client does not fabricate straight-line routes.
@@ -40,7 +40,7 @@ realtime provider configuration is missing.
 | `API_BASE_URL` | Release | Verified backend base ending in `/api` |
 | `REALTIME_PROVIDER` | Release | `supabase` in managed production; `socketio` only for local/self-hosted use |
 | `SUPABASE_URL` | Provider `supabase` | Supabase project HTTPS origin |
-| `SUPABASE_ANON_KEY` | Provider `supabase` | Public anon/publishable key; never service-role/JWT secrets |
+| `SUPABASE_PUBLISHABLE_KEY` | Provider `supabase` | Public publishable key; never service-role/JWT secrets. `SUPABASE_ANON_KEY` is rollback-only legacy fallback. |
 | `WS_URL` | Provider `socketio`, optional | Socket.IO origin; defaults to `API_BASE_URL` without `/api` |
 | `GOOGLE_MAPS_API_KEY` | Map builds | Native Maps SDK key from environment/Gradle or ignored iOS xcconfig |
 | `FIREBASE_API_KEY` | FCM-enabled build | Public Firebase client API key for the selected app flavor |
@@ -136,7 +136,7 @@ flutter run --flavor customer -t lib/main_customer.dart \
   --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
   --dart-define=REALTIME_PROVIDER=supabase \
   --dart-define=SUPABASE_URL=https://<project>.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<public-anon-key>
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=<public-publishable-key>
 ```
 
 The scoped Supabase JWT is obtained at runtime from the API, expires after five
@@ -177,7 +177,7 @@ flutter build apk --release --flavor customer -t lib/main_customer.dart \
   --dart-define=API_BASE_URL=https://<verified-api-alias>/api \
   --dart-define=REALTIME_PROVIDER=supabase \
   --dart-define=SUPABASE_URL=https://<project>.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<public-anon-key> \
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=<public-publishable-key> \
   --dart-define=FIREBASE_API_KEY=<public-client-api-key> \
   --dart-define=FIREBASE_APP_ID=<customer-firebase-app-id> \
   --dart-define=FIREBASE_MESSAGING_SENDER_ID=<sender-id> \
@@ -217,9 +217,10 @@ iOS release compilation requires macOS, Xcode, and valid signing profiles.
 2. Request `POST /realtime/token` with an authenticated user and verify only
    required `private:` channels are returned.
 3. Verify the requested order channel is present and another tenant is denied.
-4. Confirm `realtime_outbox` RLS and the explicit Supabase publication.
-5. Confirm GPS and dispatch responses appear as REST requests, while outbox
-   inserts arrive through Supabase Realtime.
+4. Confirm the JWT can join only its allow-listed private Supabase Broadcast
+   channels and cannot join another tenant's channel.
+5. Confirm GPS and dispatch responses appear as REST requests, while authorised
+   Broadcast events arrive through Supabase Realtime.
 6. For local Socket.IO only, verify `WS_URL` and WebSocket CORS.
 
 ## Driver KYC troubleshooting

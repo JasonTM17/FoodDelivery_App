@@ -19,6 +19,19 @@ Languages: [English](./design-guidelines.md) | [Tiếng Việt](./design-guideli
 
 Driver operational screens may use dark surfaces, but text must use semantic dark `onSurface` and `onSurfaceVariant` tokens rather than light-theme gray literals. Offline is muted neutral, paused is amber, online is green, and status color must always be accompanied by a localized text label.
 
+## Product-surface rules
+
+The design system serves four products, not only the two web dashboards. Keep each surface focused on its operator and decision cadence:
+
+| Surface | Primary job | UX requirements |
+|---|---|---|
+| Admin | Operate the marketplace and resolve exceptions | Dense but scannable tables, filters, audit context, responsive navigation, and non-color status labels. |
+| Restaurant | Fulfil orders and manage the menu | Order-state priority, clear preparation timers, safe bulk actions, and fast mobile drawer access. |
+| Customer | Discover, order, pay, and track | Large touch targets, readable price/fee breakdowns, explicit loading/error/retry states, and no surprise permission prompt before the feature that needs it. |
+| Driver | Go online, accept work, navigate, and prove delivery | A single clear operational state, GPS/notification permission rationale before the system prompt, map controls reachable one-handed, and an always-visible safe offline/paused path. |
+
+Never use an Admin/Restaurant screenshot as a substitute for native Customer or Driver validation. Capture each native flow on a device or emulator when visual parity or release evidence is required.
+
 ## Logo System
 
 - Mark: rounded square gradient with delivery route, bowl, leaf, and map pin.
@@ -30,7 +43,7 @@ Driver operational screens may use dark surfaces, but text must use semantic dar
 
 ## Typography
 
-- Font: Inter (Latin + Vietnamese diacritics)
+- Font: Inter (Latin + Vietnamese diacritics); provide a system Japanese fallback such as `Noto Sans JP` when rendering Japanese content.
 - Headings: 20-28px, bold (700)
 - Body: 14-16px, regular (400)
 - Captions: 12px, medium (500)

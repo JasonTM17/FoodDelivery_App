@@ -4,30 +4,34 @@
 
 A release is green only when the final source head passes every required local gate, fresh remote CI, provider preflight, and production smoke. A focused test proves only its bounded change. Historical counts and partially skipped scripts must never be presented as current full-release approval.
 
-## Current evidence snapshot
+## Local fresh-stack evidence — 2026-07-14
 
-Current-head evidence on 2026-07-14:
+This local run used `master` `eb598c7b7da40f122901a866e35050f3a2e98c1c`. Its supplied record includes the date and elapsed Playwright time, but not a separate execution timestamp. It is not a production or provider-status check.
 
 | Area | Result |
 |---|---|
-| Backend | The local release candidate passed 142 suites / 1049 tests, Prisma validation/generation, typecheck, lint, and build. Fresh remote CI is still required after push. |
-| Database | The current source and Supabase production are aligned at 36 ordered, checksum-verified migrations. Migration 36 scopes FCM revocations by token plus registration capability; its `token,registration_id` primary key was verified directly. |
-| Mobile Flutter | The current release candidate passed all 361 tests and `flutter analyze`. Mobile CI for `e4a9155` also passed and produced Customer/Driver debug APKs. Device-specific Android/iOS production evidence is still required. |
-| Web | The Restaurant mobile Kanban CLS trace is approximately 0.0037 after the fix. This is local visual-stability evidence, not a production health claim. |
-| Browser E2E | The fresh current-source clean-volume Docker matrix passed 204/204 in 6.6 minutes. It is not Railway/Supabase production GPS evidence. |
-| FCM | Local contract evidence passed: 6 FCM/controller backend suites / 47 tests and 34 focused Flutter notification tests. Live send was not run: production project credentials and a controlled device token are required. |
+| Backend | The current local run passed 142 suites / 1050 tests, `tsc --noEmit`, ESLint, and the Nest build. Fresh remote CI is still required. |
+| Database | A disposable fresh database applied all 38 current migrations and rejected a second default address for one user. The dated Supabase record still ends at migration 36. |
+| Mobile Flutter | The current local run passed 367 tests and `flutter analyze` with no issues. Device-specific Android/iOS production evidence is still required. |
+| Web | Current typecheck and lint passed. Vitest passed Admin 49 files / 196 tests and Restaurant 43 files / 135 tests. With explicit non-secret local public URLs, Admin built 70 pages and Restaurant built 55 pages. A bare build fails closed when `NEXT_PUBLIC_ADMIN_URL` is absent. |
+| Browser E2E | The historical clean-volume matrix reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms on the 36-migration source. After migrations 37–38, the rebuilt stack passed all 68 Chrome desktop cases in 173 seconds with its explicit local URLs. Firefox and Pixel 5 still need a final-head rerun. |
+| FCM | Current local notification suite passed 11 backend suites / 67 tests, and focused Flutter FCM presentation/lifecycle tests passed 17/17. Live send was not run: production project credentials and a controlled device token are required. |
 
-### 2026-07-14 fresh clean-volume current-source Docker evidence
+### Fresh clean-volume Docker details
 
-The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, then seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews. Its worker indexed 402 RAG documents, and the complete Playwright matrix passed 204/204 in 6.6 minutes. The Restaurant mobile Kanban CLS trace measured approximately 0.0037 after the fix. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Railway API/worker health and live FCM delivery remain unverified.
+The rebuilt clean-volume Docker project `foodflow-batch4-e2e` completed its migrator after the then-current 36 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. The historical Playwright matrix reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms. After the current migrations 37–38 were applied and the API/worker recreated, the same stack passed all 68 Chrome desktop cases in 173 seconds using `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002`, and `API_URL=http://localhost:13001/api`. The final Firefox/Pixel 5 matrix remains required. Railway API/worker health, live FCM delivery, and all external provider state remain unverified.
+
+### Web build environment boundary
+
+The root web build deliberately requires the public runtime URLs used for metadata and API clients. It must not silently fall back to a guessed host: a bare build fails when `NEXT_PUBLIC_ADMIN_URL` or the corresponding Restaurant value is absent. For local builds, start from [`apps/admin/.env.example`](../web/apps/admin/.env.example) and [`apps/restaurant/.env.example`](../web/apps/restaurant/.env.example), use only local non-secret values, and keep production public values in the deployment provider. Docker Compose supplies the values through its build arguments.
 
 ### Historical 2026-07-13 Docker E2E and RAG evidence
 
-This section preserves the 2026-07-13 local run. It tracked the then-current 34 migrations and used disposable seed data: 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. The dedicated worker indexed 402 RAG documents and left embeddings pending without a DeepSeek key. Supabase production now has all 36 migrations applied. The historical rolled-back zero-step migration row remains audit history, not an unapplied production change.
+This section preserves the 2026-07-13 local run. It tracked the then-current 34 migrations and used disposable seed data: 50 restaurants, 50 drivers, 100 customers, and 500 historical orders. The dedicated worker indexed 402 RAG documents and left embeddings pending without a DeepSeek key. A later dated external record reported 36 Supabase migrations; it is not current provider proof. The historical rolled-back zero-step migration row remains audit history, not an unapplied production change.
 
 The newer clean-volume worker also indexed 402 RAG documents after its fresh seed. No DeepSeek key was configured, so embeddings remained pending and no fake vectors were used. The old reused volume also contained 44 FAQ and 8 policy rows with null source IDs from an older local run; those historical rows are excluded from current-worker evidence. None of this represents production data or production embedding/provider approval.
 
-The rebuilt API/Admin/Restaurant images passed that historical three-project matrix. The latest fresh clean-volume current-source E2E passed 204/204 in 6.6 minutes. Coverage includes axe serious/critical checks, auth/refresh/RBAC, customer API orders, REST-observed status convergence, tenant isolation, maps, contracts, visual structure, responsive navigation, and Restaurant form-login/reload persistence. Current-head immutable registry provenance remains a separate release gate.
+The rebuilt API/Admin/Restaurant images passed that historical three-project matrix. The later fresh clean-volume E2E reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped in 353316 ms. Coverage includes axe serious/critical checks, auth/refresh/RBAC, customer API orders, REST-observed status convergence, tenant isolation, maps, contracts, visual structure, responsive navigation, and Restaurant form-login/reload persistence. Immutable registry provenance remains a separate release gate.
 
 Provider-backed Railway/Supabase production smoke and a controlled live FCM delivery remain mandatory; they are blocked until the required external real-provider configuration and credentials are available.
 
@@ -35,7 +39,7 @@ Provider-backed Railway/Supabase production smoke and a controlled live FCM deli
 
 An isolated local PostGIS + pgvector container previously applied all 33 then-tracked migrations and verified PostGIS, vector, `rag_documents`, source/content indexes, and the cosine HNSW index. Its disposable `db:big-seed` run produced 50 approved restaurants, 50 drivers, 100 customers, 509 orders, 123 reviews, and 10 promotions, proving the generator is database-backed rather than a runtime hard-coded fixture. The local worker then synchronized 32 live restaurant/menu documents; with no DeepSeek key, all 32 correctly remained pending without fake embeddings. The 34th FCM-revocation migration was later applied to a separate fresh database, not this historical evidence run.
 
-This historical run predates the current migration state. Supabase production now has all 36 migrations applied and checksum-verified. The local seed data described here is not production data and must not be used to infer production contents.
+This historical run predates the local 36-migration evidence. A dated external record reports 36 checksum-verified Supabase migrations, but the local seed data described here is not production data and must not be used to infer production contents.
 
 Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The fresh clean-volume current-source matrix supersedes the old 128/134 image result. Provider-backed production smoke and controlled FCM delivery remain required; rerun the relevant evidence if the release head changes.
 
@@ -233,8 +237,8 @@ Required cases:
 - Driver receives only self/assigned-order channels.
 - Admin receives only documented admin channels plus explicitly requested order.
 - Cross-tenant requests return forbidden before token issue.
-- Expired/invalid JWT cannot subscribe; anon cannot read outbox.
-- Authorized insert is delivered exactly once to the intended handler.
+- Expired/invalid JWT cannot subscribe; anon cannot subscribe to arbitrary private channels.
+- An authorized server-side private Broadcast event reaches only its intended subscribed handler; cross-scope events are rejected or not delivered.
 - Local Socket.IO provider remains covered separately and is never an implicit production fallback.
 
 ## AI chatbot

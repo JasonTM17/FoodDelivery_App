@@ -2,15 +2,19 @@
 
 > **Historical snapshot — 2026-07-12.** The test counts, 27-migration result, image digests, and media QA statements below are evidence recorded for that date. They are not a claim about the current `master` head, the current dirty workspace, or production readiness.
 
-## Current continuation — 2026-07-14
+## Local fresh-stack evidence — 2026-07-14
 
-Code release `43f0306` contains the FCM capability hardening and migration 36. All 11 required workflows are green. Evidence commit `84e2f36` additionally has green CI/Build/Lint/security/SBOM/mobile workflows and preserved independent Docker matrix builds. Current mobile commit `e4a9155` classifies canonical backend notification events for both mobile inboxes; all nine triggered workflows are green, including Integration Smoke and Mobile CI. Recorded counts are Backend 142 suites / 1049 tests, Mobile 361 tests, and isolated Docker E2E 204/204 in 6.6 minutes. Mobile CI artifact `8303796622` contains Customer/Driver debug APKs and has digest `sha256:53faf5d87fa71a744fa7b9ba496187a8b105843c1b7a69cdc8fcad545d847d4`.
+At local `master` `eb598c7b7da40f122901a866e35050f3a2e98c1c`, the rebuilt clean-volume Docker project `foodflow-batch4-e2e` exited its migrator successfully after all 36 migrations. It seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews; the worker indexed 402 RAG documents. Playwright reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped across Chromium, Firefox, and Pixel 5 in 353316 ms. On the same source, `flutter analyze` completed with no issues and the full Customer/Driver suite passed 361 tests. This is isolated local fresh-stack evidence, not production migration, deployment, provider, registry, or FCM-delivery proof.
 
-Supabase production now has all 36 forward migrations applied through the authorized Railway migrate environment. Migration 36 and its `token,registration_id` primary key were verified directly. Earlier direct checks verified business/RAG tables remain empty, RLS remains enabled, private Broadcast authorization exists, the public/private Storage buckets have bounded MIME/size policy, and anonymous public-object listing was removed by migration 35. A historical zero-step failed Prisma row remains correctly recorded as rolled back; no applied migration was rewritten. PostGIS is non-relocatable, while moving pgvector would break the current Prisma/raw-operator search path, so the two remaining extension-advisor warnings are documented instead of hidden with an unsafe schema move.
+A later Android API 35 device smoke on the same head plus uncommitted mobile fixes authenticated Customer and Driver against the isolated local stack. Customer loaded nearby seed restaurants from simulated GPS. Driver entered Online, started the Android location foreground service and notification, submitted an accepted authenticated location update, persisted the final PostGIS snapshot, then returned Offline with the service stopped and database online flag false. Privacy-reviewed stills are indexed in `docs/screenshots/manifest.json`; the manifest marks this as dirty-workspace regression evidence. It does **not** prove Supabase Broadcast, Railway, or production GPS.
 
-Admin and Restaurant are GitHub-linked, READY on Vercel, and their canonical health/login routes return 200. A headless browser observed no tunnel/localhost request and no console error; the stale Restaurant tunnel environment values were replaced. Railway managed Redis is healthy and an authorized one-off migration/status command completed through the migrate environment; API/worker have no deployment and the public API returns 404 because 15 real provider configurations are absent. Authenticated production GPS/Broadcast, provider integrations, and end-to-end production smoke therefore remain blocked.
+The current worktree then added migrations 37–38. A disposable fresh database applied all 38 ordered SQL migrations; an invariant probe confirmed that `addresses_one_default_per_user_key` rejects a second default address for the same user, and the database UUID default is present. The temporary database was removed after the check. The earlier full Docker/Playwright run still covers only the then-current 36 migrations, and the dated Supabase record also ends at migration 36; no remote application of 37–38 is claimed.
 
-All four immutable multi-architecture Docker Hub manifests were published for `84e2f36`, and their remote index digests were read back. GHCR publication still fails closed with `write_package` on all four packages: package visibility permits pull but does not grant this repository Actions write access. Backend/migrate are public and linked; Admin is public but unlinked; Restaurant remains private and unlinked. No `v4.0.0` or `latest` promotion is authorized.
+The provider, workflow, Vercel, Railway, and registry statements that follow are dated external observations recorded on or before 2026-07-14. They preserve release provenance but were not rechecked by the local run above and must not be read as current production status.
+
+The recorded external provider evidence reported 36 forward migrations through the authorized Railway migrate environment, migration 36's directly verified `token,registration_id` primary key, private Broadcast authorization, bounded Storage policy, and empty business/RAG tables. It also reported READY Vercel dashboards and a Railway API/worker block caused by 15 missing real-provider configurations. Those observations do not change the local evidence boundary.
+
+The recorded registry evidence covers four immutable multi-architecture Docker Hub manifests for `84e2f36`; GHCR publication failed with `write_package` on all four packages. No `v4.0.0` or `latest` promotion is authorized by that record.
 
 Snapshot date: **2026-07-12**. Status at that snapshot: **integration pushed to `master`; production release blocked**.
 
@@ -43,7 +47,7 @@ Current scoped quality evidence is Backend 138 suites / 1016 tests, Admin 195 te
 
 - Provider-selectable Supabase Realtime, Storage, and PostgreSQL job outbox with fail-closed production validation.
 - `POST /api/realtime/token` issues five-minute Supabase JWTs only after order/restaurant ownership checks and returns explicit channel names.
-- `realtime_outbox` RLS permits authenticated reads only when the row channel is present in JWT claims; only that table is added to the explicit Supabase Realtime publication.
+- The initial `realtime_outbox` publication was removed by migration `20260712161000_authorize_private_broadcast_and_split_storage`; the retained table is rollback history and is not published. Managed realtime uses server-side private Broadcast, with `realtime.messages` subscriptions limited by JWT `realtime_channels` claims.
 - `GET|POST /api/jobs/drain` requires `CRON_SECRET`; the Railway worker owns recurring persisted job-outbox drains and the endpoint is the authenticated recovery path.
 - Storage supports Supabase server-side upload/delete and dedicated private driver KYC signed upload/read capabilities; MinIO remains the compatibility provider.
 - DeepSeek `deepseek-v4-flash` adapter, session ownership, explicit fail-closed states, support escalation, and persisted token/cost/latency telemetry.
@@ -62,7 +66,7 @@ Current scoped quality evidence is Backend 138 suites / 1016 tests, Admin 195 te
 ### Mobile
 
 - Existing hardening covers fresh GPS timestamps, route phase/geometry validation, non-fabricated map cameras/ETA, nearby contract alignment, and vi/en/ja generated localization.
-- Managed Customer/Driver realtime now uses scoped Supabase token/channel grants and allow-listed receive-only outbox events; GPS and dispatch decisions remain authenticated REST mutations. `socket_io_client` is retained only for explicit local/self-hosted mode.
+- Managed Customer/Driver realtime uses scoped Supabase token/channel grants and allow-listed receive-only private Broadcast events; GPS and dispatch decisions remain authenticated REST mutations. `socket_io_client` is retained only for explicit local/self-hosted mode.
 - Driver login checks the authenticated KYC status, onboarding preserves normalized license/vehicle data, uploads never forward bearer credentials or derive public URLs, and the actual release entry point delegates to the complete Driver router.
 
 ### DevOps and supply chain
@@ -102,7 +106,7 @@ Visual review found Vietnamese Admin overview KPI labels rendered in English and
 
 ## Registry audit
 
-Docker Hub was queried on 2026-07-14 after the SHA-only workflow published evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7`:
+Docker Hub was queried on 2026-07-14 after the SHA-only workflow published evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7`; this external registry observation has not been refreshed by the local fresh-stack run:
 
 | Artifact | Candidate tag | Verified digest | Status |
 |---|---|---|---|
@@ -114,7 +118,9 @@ Docker Hub was queried on 2026-07-14 after the SHA-only workflow published evide
 
 These four remote SHA manifests are immutable registry evidence, not a production release. No `v4.0.0` tag was created and `latest` was not promoted. Clean-pull/runtime smoke, GHCR publication, provider deployment, and production smoke remain required.
 
-## External preflight status
+## Historical external preflight status — recorded through 2026-07-14
+
+The following provider observations are release-record evidence, not a current provider query from this checkout.
 
 ### Supabase
 
@@ -135,7 +141,7 @@ All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2
 ## Remaining release gates
 
 1. Supply/rotate the 15 missing Railway provider configurations only through sealed provider stores; pass strict API/worker environment validation.
-2. Deploy Railway API/worker from one immutable SHA and require `/api/healthz` plus `/api/readyz`; current-head migration is already complete.
+2. Deploy Railway API/worker from one immutable SHA and require `/api/healthz` plus `/api/readyz`; rerun migration status as part of the current production preflight.
 3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, GPS snapshot/delta/reconnect, and degraded route behavior against Supabase production.
 4. Run provider-backed route/map, export, payment, notification, AI, and one controlled-device FCM smoke. Complete Android device GPS matrix and use macOS/iPhone for required iOS background-location evidence.
 5. Re-smoke the exact Admin/Restaurant Vercel deployments after Railway is healthy.
@@ -143,4 +149,4 @@ All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2
 
 ## Release decision
 
-**NO-GO** remains correct. Supabase schema deployment, CI, Vercel dashboard health, Mobile CI APK generation, and Docker Hub SHA publication are green, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, required device release evidence is incomplete, GHCR write access is absent, and clean image pulls have not run. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.
+The 2026-07-14 external snapshot concluded **NO-GO**. A new release decision requires fresh provider preflight, API/worker health, controlled FCM delivery, device evidence, image pulls, and production smoke; no secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change that decision.

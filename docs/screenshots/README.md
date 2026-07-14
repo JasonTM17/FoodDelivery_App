@@ -6,8 +6,8 @@ Historical non-production product stills for the root README and [product galler
 |---|---:|---|
 | Admin | 10 PNG stills | Historical non-production web media. |
 | Restaurant | 10 PNG stills | Historical non-production web media. |
-| Customer | 0 | No Customer still is stored. The Customer app is documented from source, not represented by gallery media. |
-| Driver | 2 WebP stills | Test-only Android API 35 simulated-GPS/permission assets; not mobile-release, Supabase, Railway, or production evidence. |
+| Customer | 1 WebP still | Test-only Android API 35 discovery result from simulated location; not production evidence. |
+| Driver | 4 WebP stills | Test-only Android API 35 simulated-GPS, Online, foreground-notification, and permission assets; not mobile-release, Supabase, Railway, or production evidence. |
 
 | File | Surface | Route/content |
 |---|---|---|
@@ -31,9 +31,12 @@ Historical non-production product stills for the root README and [product galler
 | `restaurant/08-staff.png` | Restaurant | Staff |
 | `restaurant/09-insights.png` | Restaurant | Insights |
 | `restaurant/10-settings.png` | Restaurant | Settings |
+| `customer/customer-nearby-restaurants.webp` | Customer | Nearby restaurants loaded from a simulated emulator location |
 | `driver/driver-online-gps-e2e.webp` | Driver | Online state after a verified emulator GPS update |
+| `driver/driver-online-realtime-gps.webp` | Driver | Current device-smoke Online state while foreground tracking is active |
 | `gps/driver-notification-permission.webp` | Android | Runtime notification permission prompted when the driver enables tracking |
+| `gps/driver-foreground-location-notification.webp` | Android | Privacy-reviewed foreground location notification while Driver is Online |
 
-`manifest.json` stores capture UTC, local base URLs, non-secret seed identities, and bounded local GPS evidence. A release-use recapture must additionally record the source commit, Compose/image references, and whether it used a clean final head or dirty workspace. It must never contain real coordinates, passwords, access/refresh tokens, API keys, or provider secrets.
+`manifest.json` stores capture UTC, local base URLs, non-secret seed identities, source state, and bounded local GPS evidence. The 2026-07-14 mobile capture explicitly records a dirty workspace, so it is regression evidence rather than release evidence. A release-use recapture must additionally record Compose/image references and use a clean final head. The manifest and media must never contain real coordinates, passwords, access/refresh tokens, API keys, or provider secrets.
 
 Regenerate with `node docs/scripts/capture-product-media.mjs` using the environment shown in the product gallery. Inspect every image after capture; successful automation can still record a CORS, API, or localization defect.

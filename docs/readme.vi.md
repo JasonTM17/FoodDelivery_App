@@ -4,13 +4,20 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 14/07/2026:** Batch 4 đã nằm trên `master`. Supabase production đã apply và checksum-verify đủ 36 migration; migration 36 được rollout qua Railway migrate environment kín và primary key capability tổng hợp đã được kiểm tra trực tiếp. Các kiểm tra trước đó xác nhận RLS, private Broadcast, Storage tách public/private và production business/RAG vẫn rỗng. Release vẫn **NO-GO**: việc deploy/xác minh Railway API/worker và FCM live trên thiết bị kiểm soát bị chặn bởi cấu hình cùng credential provider thật bên ngoài.
+> **Trạng thái 14/07/2026:** Stack volume sạch trước đó áp dụng 36 migration hiện hành lúc chạy và pass Playwright 204/204. Worktree hiện tại thêm migration 37–38; database tạm volume sạch đã apply đủ 38 và invariant địa chỉ mặc định pass. Đây **không** phải chứng nhận production. Release vẫn **NO-GO** cho tới khi provider apply đúng migration/release candidate, chạy smoke production có xác thực và gửi FCM đến thiết bị kiểm soát.
 
 ## Xem trước sản phẩm
 
-Ảnh/GIF dưới đây là media lịch sử, không phải ảnh production. Manifest ghi `capturedAt` 2026-07-10 nhưng không có source SHA/image reference, nên không chứng minh current source head hay release candidate. Xem [gallery đầy đủ](product-gallery.vi.md).
+FoodFlow có bốn bề mặt sản phẩm. Ảnh/GIF dưới đây là media lịch sử, không phải ảnh production: manifest ghi `capturedAt` 2026-07-10 nhưng không có source SHA/image reference, nên không chứng minh current source head hay release candidate. Bắt đầu với [hướng dẫn Khách hàng](customer-guide.vi.md) cho ứng dụng đặt món, sau đó xem [gallery đầy đủ](product-gallery.vi.md) và [tổng quan Customer/Driver](customer-driver-guide.vi.md).
 
-Preview hiện chỉ có Admin và Restaurant. Chưa có UI Customer được capture; ảnh GPS Driver trong gallery chỉ là bằng chứng local E2E phục vụ test, không phải preview mobile release hay production.
+| Bề mặt | Runtime | Bằng chứng trực quan hiện có | Cách xem sản phẩm |
+|---|---|---|---|
+| Admin | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chạy ứng dụng Admin web; xem gallery. |
+| Restaurant | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chạy ứng dụng Restaurant web; xem gallery. |
+| Customer | Ứng dụng Flutter/Riverpod Android/iOS | Một ảnh Android emulator chỉ phục vụ test | Đọc [hướng dẫn Khách hàng](customer-guide.vi.md), rồi chạy `main_customer.dart` trên thiết bị/emulator. |
+| Driver | Ứng dụng Flutter/Riverpod Android/iOS | Bốn ảnh Android emulator chỉ phục vụ test | Chạy `main_driver.dart`; ảnh GPS/notification hiện có không phải media release. |
+
+Ảnh mobile dùng GPS mô phỏng và local stack; manifest ghi rõ worktree còn dirty. Muốn có bằng chứng release phải capture lại từ clean head trên thiết bị/emulator của release candidate. Tài liệu không gắn bằng chứng local thành production.
 
 <p align="center">
   <img src="screenshots/admin/02-overview.png" alt="Tổng quan Admin FoodFlow" width="48%" />
@@ -23,13 +30,13 @@ Preview hiện chỉ có Admin và Restaurant. Chưa có UI Customer được ca
 
 ## Các ứng dụng
 
-| Bề mặt | Mã nguồn | Runtime | URL local |
-|---|---|---|---|
-| API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` |
-| Admin | `web/apps/admin/` | Next.js 15, React 18 | `http://localhost:3000` |
-| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18 | `http://localhost:3002` |
-| Customer | [`main_customer.dart`](../mobile/lib/main_customer.dart) | Ứng dụng mobile Flutter/Riverpod native (Android/iOS) | thiết bị/emulator; Android flavor `customer` |
-| Driver | [`main_driver.dart`](../mobile/lib/main_driver.dart) | Ứng dụng mobile Flutter/Riverpod native (Android/iOS) | thiết bị/emulator; Android flavor `driver` |
+| Bề mặt | Mã nguồn | Runtime | URL local | Hướng dẫn chính |
+|---|---|---|---|---|
+| API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` | — |
+| Admin | `web/apps/admin/` | Next.js 15, React 18 | `http://localhost:3000` | — |
+| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18 | `http://localhost:3002` | — |
+| Customer | [`main_customer.dart`](../mobile/lib/main_customer.dart) | Ứng dụng mobile Flutter/Riverpod native (Android/iOS) | thiết bị/emulator; Android flavor `customer` | [Hướng dẫn Khách hàng](customer-guide.vi.md) |
+| Driver | [`main_driver.dart`](../mobile/lib/main_driver.dart) | Ứng dụng mobile Flutter/Riverpod native (Android/iOS) | thiết bị/emulator; Android flavor `driver` | [Hướng dẫn Customer/Driver](customer-driver-guide.vi.md) |
 
 Customer và Driver không có URL web local. Dùng entrypoint Flutter tường minh; lệnh `--flavor` bên dưới chọn Android product flavor.
 
@@ -55,7 +62,7 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 | Queue | `QUEUE_PROVIDER=supabase-postgres` | `bullmq` |
 | Basemap web | MapLibre + OpenFreeMap | Cùng provider hoặc style tự host |
 
-Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và chỉ nhận event Supabase outbox nằm trong allowlist; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
+Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và nhận private Supabase Broadcast do server gửi tới các kênh mà JWT cho phép; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
 ## Docker Hub và GitHub Packages
 
@@ -121,12 +128,12 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review, rồi index 402 RAG document. Toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Supabase production riêng biệt đã checksum-verify đủ 36 migration mà không chạy big seed local. Docker SHA current-head immutable vẫn chờ; xác minh Railway deployment, production GPS/Broadcast và FCM live vẫn bị chặn bởi cấu hình/credential provider thật bên ngoài.
+Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply 36 migration hiện hành lúc chạy, seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review, rồi index 402 RAG document. Ma trận Playwright pass 204/204 trong 353 giây. Sau khi thêm migration 37–38 và các fix mobile, database tạm mới apply đủ 38 migration và từ chối default address thứ hai; `flutter analyze` vẫn sạch và toàn bộ suite Customer/Driver pass 367 test. Vẫn phải chạy lại full Docker/Playwright trên clean head cuối. Bằng chứng local không xác minh provider từ xa, image đã deploy hay Firebase live.
 
 ## Thứ tự deploy
 
-1. Rotate key bị lộ và nhập 15 cấu hình Railway thật qua secret store.
-2. Xác nhận `prisma migrate status` vẫn up to date; migration 36 và khóa capability ghép của FCM revocation đã được kiểm tra trên Supabase production.
+1. Rotate key bị lộ và cấu hình các giá trị Railway/provider cần thiết qua secret store.
+2. Apply và xác minh tất cả migration qua môi trường migration production đã được duyệt; không suy luận trạng thái provider từ Docker local.
 3. Deploy API/worker cùng một SHA immutable, rồi kiểm health/readiness/Cron khi đã có đủ cấu hình provider thật.
 4. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
 5. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh, rồi kiểm map/route, chatbot, notification, export, payment và FCM thiết bị kiểm soát.
@@ -135,7 +142,8 @@ Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch
 
 ## Tài liệu
 
-- [Kiến trúc](system-architecture.md)
+- [Hướng dẫn Khách hàng](customer-guide.vi.md) — đặt món, quyền, chọn địa chỉ trên bản đồ, checkout, tracking và hỗ trợ
+- [Kiến trúc (EN)](system-architecture.md)
 - [Tổng quan và yêu cầu sản phẩm](project-overview-pdr.vi.md)
 - [API contract](api-contract.vi.md)
 - [Deployment](deployment-guide.vi.md)
@@ -144,8 +152,8 @@ Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch
 - [AI chatbot](ai-chatbot-guide.vi.md)
 - [Security](security-audit-guide.vi.md)
 - [Roadmap](project-roadmap.vi.md)
-- [Branch disposition](branch-disposition.md)
-- [Batch 4 report](batch4-release-report.md)
+- [Branch disposition (EN)](branch-disposition.md)
+- [Batch 4 report (EN)](batch4-release-report.md)
 
 ## Chính sách branch
 

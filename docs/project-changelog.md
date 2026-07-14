@@ -7,6 +7,10 @@ authoritative source for individual commits and implementation detail.
 
 ### Changed
 
+- Added a standalone Customer guide in English, Vietnamese, and Japanese, with
+  prominent README/gallery navigation, a quick-start checklist, map-based
+  delivery-address selection, checkout and tracking guidance, troubleshooting,
+  and explicit visual/release boundaries.
 - Refreshed release, deployment, Docker, security, API, testing, architecture,
   branch, and roadmap documentation for the Node 22, pnpm 11.11, and Next.js 15
   runtime.
@@ -23,9 +27,18 @@ authoritative source for individual commits and implementation detail.
 - Retained historical product screenshots and optimized Admin/Restaurant GIF flows.
   Their manifest lacks a source SHA/image reference, so recapture with source/runtime
   provenance is required before they support a current-release claim.
+- Made Customer and Driver product coverage explicit in the product gallery and
+  documented the boundary between web captures and device/emulator evidence.
 
 ### Fixed
 
+- Serialized default-address replacement on the user row, enforced at most one
+  default address per user with a partial unique index, and aligned the database
+  UUID default with Prisma. A fresh database applied all 38 migrations and the
+  duplicate-default probe was rejected as expected.
+- Required a valid map selection when Customer creates a delivery address,
+  prevented duplicate submissions while saving, fixed the compact promotion
+  carousel overflow, and skipped redundant KYC onboarding for verified drivers.
 - Hardened GPS/ETA processing so stale buffered locations and planned geometry
   do not masquerade as live delivery movement.
 - Removed runtime hard-coded i18n fallbacks and added locale routing/error-state
@@ -34,9 +47,9 @@ authoritative source for individual commits and implementation detail.
   in affected incentives, referral, and AI flows.
 - Registered the AI module and documented fail-closed provider behavior and
   real telemetry requirements.
-- Added tenant-scoped Supabase realtime token, outbox, RLS, and job-drain
-  contracts to the public API documentation.
-- Migrated managed mobile realtime to scoped Supabase subscriptions while
+- Added tenant-scoped Supabase realtime token/private-Broadcast authorization
+  and durable PostgreSQL job-outbox drain contracts to the public API documentation.
+- Migrated managed mobile realtime to scoped Supabase private-Broadcast subscriptions while
   keeping GPS and dispatch decisions on authenticated REST; Socket.IO remains
   an explicit local/self-hosted provider.
 - Replaced legacy public-URL driver KYC with private owner-scoped signed
@@ -60,15 +73,21 @@ authoritative source for individual commits and implementation detail.
 
 ### Release blockers
 
-- Supabase migrations and Vercel public production variables are configured;
-  Railway still requires real third-party provider credentials before rollout.
+- The dated 2026-07-14 external preflight record reports Supabase migrations and
+  Vercel public production variables configured; Railway still needs real
+  third-party provider credentials before a fresh rollout check.
 - Final Android production signing and iOS build/signing evidence still require
   authorized release credentials/runners; local debug APKs are not publishable.
 - Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
   and production smoke gates remain mandatory before deployment.
-- Current-source local Docker E2E passed 204/204 checks, but a fresh authorized
-  remote CI run is still required. Live FCM delivery remains unverified until
-  production credentials and a controlled device token produce redacted evidence.
+- At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
+  Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
+  352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and
+  reported Playwright 204 expected / 0 unexpected / 0 flaky / 0 skipped across
+  Chromium, Firefox, and Pixel 5 in 353316 ms. This is local evidence only; a
+  fresh authorized remote CI run and provider checks are still required. Live
+  FCM delivery remains unverified until operator credentials and a controlled
+  device token produce redacted evidence.
 
 ## 0.2.0 - 2026-06-07
 

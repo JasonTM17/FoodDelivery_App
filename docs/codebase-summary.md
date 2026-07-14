@@ -51,11 +51,11 @@ Major module groups:
 | `reviews`, `storage` | Reviews and provider-selected object storage |
 | `ai` | DeepSeek chat, session ownership, support escalation, usage telemetry |
 | `admin` | KPI/resources, audit, support, exports, AI monitor |
-| `realtime` | Supabase outbox publisher and scoped token endpoint |
+| `realtime` | Private Supabase Broadcast publisher and scoped token endpoint |
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The current Prisma schema declares 59 models across 36 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migration 34 adds the FCM revocation table, migration 35 removes anonymous public Storage listing where `storage.objects` exists, and migration 36 scopes revocations by token plus registration capability. Supabase production has all 36 migrations applied and checksum-verified; the migration 36 primary key is `token,registration_id`. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The current Prisma schema declares 59 models across 38 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migration 34 adds the FCM revocation table, migration 35 removes anonymous public Storage listing where `storage.objects` exists, and migration 36 scopes revocations by token plus registration capability. Migration 37 deduplicates legacy defaults and adds the partial unique index that permits at most one default address per user; migration 38 gives `addresses.id` the database `gen_random_uuid()` default. A fresh local database applied all 38 and enforced the unique invariant. The dated provider record still covers only migrations 1–36, so 37–38 require approved remote deployment and verification. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
 Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale. The mobile FCM lifecycle is enabled only after a valid Customer/Driver session, calls the authenticated token endpoint with Zod-validated input, tracks Firebase token rotation, and persists cleanup intent before bounded non-blocking logout cleanup. Registration UUIDs plus per-token PostgreSQL advisory locks and seven-day revocation tombstones prevent a late POST from recreating a logged-out binding. The worker targets the Android notification channel and APNs sound; foreground Android/iOS presentation and local-only deep-link taps are handled by the client. The open Driver inbox consumes authenticated realtime notification records and de-duplicates by ID; background delivery uses the FCM notification payload. This describes current-source behavior, not live-delivery evidence: Railway verification and controlled live FCM remain blocked by external real-provider configuration and credentials.
 
@@ -92,7 +92,7 @@ The Flutter package has two canonical native app launchers and shares domain/pro
 - Localization: generated ARB resources for `vi`, `en`, `ja`.
 - Secrets: Maps key and release signing are injected through ignored platform config/`--dart-define` inputs.
 
-Managed mobile realtime uses the same scoped `POST /api/realtime/token` + Supabase channel contract as web. `RealtimeClient` selects `SupabaseRealtimeClient` in managed release builds; GPS samples and dispatch decisions use authenticated REST while allow-listed outbox records are receive-only. `socket_io_client` remains installed solely for the explicit local/self-hosted provider. Driver KYC uses private signed uploads, opaque object keys, authenticated status checks, and a typed terms → vehicle → documents flow.
+Managed mobile realtime uses the same scoped `POST /api/realtime/token` + private Supabase Broadcast channel contract as web. `RealtimeClient` selects `SupabaseRealtimeClient` in managed release builds; GPS samples and dispatch decisions use authenticated REST, while server-side Broadcast targets only the JWT-authorized channels. `socket_io_client` remains installed solely for the explicit local/self-hosted provider. Driver KYC uses private signed uploads, opaque object keys, authenticated status checks, and a typed terms → vehicle → documents flow.
 
 ## Infrastructure and release tooling
 
@@ -115,7 +115,7 @@ Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The wo
 
 **Tracking:** driver GPS with `sampledAt` → authorization/freshness/bounds validation → route provider/cache → PostGIS/delivery task → authorized snapshot and realtime channel.
 
-**Supabase realtime:** API event → `realtime_outbox` row → explicit Supabase publication → RLS filter against short-lived JWT channel claims → Admin/Restaurant/Customer/Driver handler.
+**Supabase realtime:** API event → server-side private Broadcast → JWT `realtime_channels` authorization → Admin/Restaurant/Customer/Driver handler. `realtime_outbox` remains only as a rollback artifact and is not broadly published.
 
 **Queue:** service adds abstract job → PostgreSQL `job_outbox` in managed mode or BullMQ locally → secured drain/worker → status/attempt/error persisted.
 

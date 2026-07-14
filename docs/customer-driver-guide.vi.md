@@ -19,6 +19,12 @@ allow-list qua credential Supabase Realtime có scope; Socket.IO chỉ là lựa
 local/self-hosted được chỉ định rõ. Customer và Driver không có URL web để mở
 bằng trình duyệt.
 
+## Hướng dẫn Khách hàng
+
+Xem [hướng dẫn Khách hàng](./customer-guide.vi.md) độc lập để thao tác đặt món
+từng bước, quyền, giới hạn địa chỉ, checkout, theo dõi và trợ giúp. Tài liệu
+này vẫn là phần tổng quan mobile/runtime dùng chung cho Customer và Driver.
+
 ## Hành trình Khách hàng
 
 1. **Mở app và đăng nhập.** App bắt đầu ở splash, sau đó dùng các route Customer

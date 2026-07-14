@@ -10,24 +10,28 @@ Evidence current-head ngày 14/07/2026:
 
 | Khu vực | Kết quả |
 |---|---|
-| Backend | Release candidate local pass 142 suite / 1049 test cùng Prisma validate/generate, typecheck, lint và build. Vẫn phải chạy fresh remote CI sau khi push. |
-| Database | Current source và Supabase production đã đồng bộ đủ 36 migration có thứ tự, được checksum-verify. Migration 36 giới hạn FCM revocation theo token cùng registration capability; primary key `token,registration_id` đã được kiểm tra trực tiếp. |
-| Mobile Flutter | Release candidate hiện tại pass đủ 361 test và `flutter analyze`; Mobile CI cho `e4a9155` cũng pass và tạo APK debug Customer/Driver. Vẫn cần evidence thiết bị Android/iOS production. |
-| Web | CLS trace của Restaurant Kanban ở mobile khoảng 0.0037 sau khi sửa. Đây là bằng chứng ổn định hiển thị local, không phải claim production health. |
-| Browser E2E | Ma trận Docker volume sạch current-source pass 204/204 trong 6,6 phút. Đây không phải bằng chứng GPS production Railway/Supabase. |
-| FCM | Local contract pass: 6 backend FCM/controller suite / 47 test và 34 Flutter notification test tập trung. Chưa gửi live: cần project credential production và controlled device token. |
+| Backend | Lần chạy local hiện tại pass 142 suite / 1050 test cùng typecheck, lint và build Nest. Vẫn phải chạy fresh remote CI sau khi push. |
+| Database | Database tạm volume sạch đã apply đủ 38 migration hiện tại và từ chối địa chỉ mặc định thứ hai của cùng user. Record Supabase có ngày mới chỉ dừng ở migration 36. |
+| Mobile Flutter | Lần chạy local hiện tại pass đủ 367 test và `flutter analyze` không có lỗi. Vẫn cần evidence thiết bị Android/iOS production. |
+| Web | Typecheck/lint hiện tại pass. Vitest pass Admin 49 file / 196 test và Restaurant 43 file / 135 test. Khi cấp public URL local không chứa secret, Admin build 70 trang và Restaurant build 55 trang. Build trần fail-closed nếu thiếu `NEXT_PUBLIC_ADMIN_URL`. |
+| Browser E2E | Ma trận volume sạch lịch sử pass 204/204 trong 353 giây trên source có 36 migration. Sau migration 37–38, stack rebuild pass đủ 68 ca Chrome desktop trong 173 giây với local URL tường minh. Firefox và Pixel 5 vẫn phải chạy lại ở final head. |
+| FCM | Suite notification local hiện tại pass 11 backend suite / 67 test; các test Flutter FCM presentation/lifecycle tập trung pass 17/17. Chưa gửi live: cần project credential production và controlled device token. |
 
 ### Docker current-source volume sạch — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, sau đó seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review. Worker index 402 RAG document, còn toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Supabase production riêng biệt đã checksum-verify đủ 36 migration mà không chạy big seed local. Railway API/worker healthy và FCM live vẫn chưa được xác minh.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 36 migration hiện hành tại thời điểm đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review. Worker index 402 RAG document, còn ma trận Playwright lịch sử pass 204/204 trong 353 giây. Sau khi apply migration 37–38 hiện tại và recreate API/worker, cùng stack pass đủ 68 ca Chrome desktop trong 173 giây với `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002` và `API_URL=http://localhost:13001/api`. Ma trận Firefox/Pixel 5 ở final head vẫn bắt buộc. Bằng chứng local này không xác minh Supabase/Railway từ xa, Docker image đã deploy hay FCM live.
+
+### Ranh giới môi trường build web
+
+Build web root cố ý yêu cầu public runtime URL dùng cho metadata và API client, không được tự đoán host. Build trần sẽ fail khi thiếu `NEXT_PUBLIC_ADMIN_URL` hoặc giá trị Restaurant tương ứng. Khi build local, bắt đầu từ [`apps/admin/.env.example`](../web/apps/admin/.env.example) và [`apps/restaurant/.env.example`](../web/apps/restaurant/.env.example), chỉ dùng giá trị local không chứa secret; public value production nằm trong deployment provider. Docker Compose truyền các giá trị đó qua build argument.
 
 ### Docker E2E và RAG lịch sử — 13/07/2026
 
-Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 migration hiện hành, seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order; worker riêng index 402 RAG document và để embedding pending khi không có DeepSeek key. Supabase production hiện đã apply đủ 36 migration. Dòng migration zero-step rolled back lịch sử vẫn là audit history, không phải thay đổi production chưa apply.
+Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 migration hiện hành, seed disposable tạo 50 restaurant, 50 driver, 100 customer và 500 historical order; worker riêng index 402 RAG document và để embedding pending khi không có DeepSeek key. Một record provider bên ngoài có ngày ghi 36 migration, nhưng không phải chứng minh provider hiện tại. Dòng migration zero-step rolled back lịch sử vẫn là audit history, không phải thay đổi production chưa apply.
 
 Worker clean-volume mới cũng index 402 RAG document sau fresh seed. Không có DeepSeek key nên embedding vẫn pending và không có vector giả. Volume tái sử dụng cũ còn 44 FAQ và 8 policy row có source ID rỗng từ lần local cũ; các dòng lịch sử này không tính vào evidence worker hiện tại. Không dữ liệu nào ở đây là production hoặc phê duyệt embedding/provider production.
 
-Image API/Admin/Restaurant của lượt lịch sử đã pass ma trận ba project; E2E clean-volume current-source mới nhất pass 204/204 trong 6,6 phút. Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, visual structure, responsive navigation và Restaurant form-login/reload persistence. Provenance registry immutable current-head vẫn là gate riêng.
+Image API/Admin/Restaurant của lượt lịch sử đã pass ma trận ba project; E2E clean-volume current-source mới nhất pass 204/204 trong 353 giây. Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, visual structure, responsive navigation và Restaurant form-login/reload persistence. Provenance registry immutable current-head vẫn là gate riêng.
 
 Railway/Supabase production smoke có provider và FCM live tới thiết bị kiểm soát vẫn bắt buộc; chúng bị chặn cho tới khi có cấu hình cùng credential provider thật bên ngoài.
 

@@ -19,6 +19,12 @@ Supabase Realtime credential 経由の allow-list event を受信します。Soc
 明示的な local/self-hosted 用だけです。Customer/Driver にブラウザで開く Web URL
 はありません。
 
+## Customer ガイド
+
+注文手順、permission、住所制限、checkout、追跡、Help は独立した
+[Customer（注文者）ガイド](./customer-guide.ja.md) を参照してください。本書は
+Customer/Driver 共通の mobile/runtime overview として残します。
+
 ## Customer の流れ
 
 1. **起動とログイン。** splash の後、認証済み Customer route を使います。新規

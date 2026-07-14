@@ -13,13 +13,20 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production has all 36 forward migrations applied and checksum-verified; migration 36 was rolled out through the sealed Railway migrate environment and its composite FCM capability key was verified directly. Earlier direct checks confirmed RLS, private Broadcast authorization, split Storage policy, and an empty production business/RAG dataset. The release remains **NO-GO**: Railway API/worker deployment and verification, plus controlled live FCM delivery, are blocked on external real provider configuration and credentials. Do not treat local checks as production health evidence.
+> **Release status — 2026-07-14:** An earlier clean-volume stack applied the then-current 36 migrations and passed Playwright 204/204. The current worktree adds migrations 37–38 for the single-default-address invariant and database UUID default; all 38 apply on a fresh database and the invariant check passes. This is **not** production certification. The release remains **NO-GO** until these migrations and the exact release candidate are deployed through the approved provider environment, then authenticated production smoke and controlled-device FCM delivery pass.
 
 ## Product preview
 
-These are historical non-production media. The manifest records `capturedAt` 2026-07-10 but no source SHA or image reference, so the images do not prove the current source head or any release candidate. See the [full product gallery](docs/product-gallery.md).
+FoodFlow has four distinct product surfaces. The media below is historical non-production evidence: the manifest records `capturedAt` 2026-07-10 but no source SHA or image reference, so it does not prove the current source head or a release candidate. Start with the [Customer guide](docs/customer-guide.md) for the ordering app, then see the [full product gallery](docs/product-gallery.md) and [Customer and Driver mobile overview](docs/customer-driver-guide.md).
 
-The published preview currently covers Admin and Restaurant only. Customer has no captured UI yet; the Driver GPS images in the gallery are test-only local E2E evidence, not a mobile release or production preview.
+| Surface | Product runtime | Current visual evidence | How to review the product |
+|---|---|---|---|
+| Admin | Next.js web dashboard | Historical stills and GIF | Run the Admin web app; see the gallery. |
+| Restaurant | Next.js web dashboard | Historical stills and GIF | Run the Restaurant web app; see the gallery. |
+| Customer | Flutter/Riverpod Android/iOS app | One test-only Android emulator still | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
+| Driver | Flutter/Riverpod Android/iOS app | Four test-only Android emulator captures | Launch `main_driver.dart`; existing GPS/notification captures are not release media. |
+
+The mobile captures use simulated GPS and the isolated local stack. Their manifest records a dirty workspace, so authentic release media still requires a clean-head device/emulator recapture from the chosen release candidate. The documentation deliberately does not relabel local media as production evidence.
 
 <p align="center">
   <img src="docs/screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
@@ -32,13 +39,13 @@ The published preview currently covers Admin and Restaurant only. Customer has n
 
 ## Applications
 
-| Surface | Source | Runtime | Local target |
-|---|---|---|---|
-| Backend API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` |
-| Admin | `web/apps/admin/` | Next.js 15, React 18, next-intl | `http://localhost:3000` |
-| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18, next-intl | `http://localhost:3002` |
-| Customer | [`main_customer.dart`](mobile/lib/main_customer.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `customer` flavor |
-| Driver | [`main_driver.dart`](mobile/lib/main_driver.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor |
+| Surface | Source | Runtime | Local target | Primary guide |
+|---|---|---|---|---|
+| Backend API | `backend/` | NestJS 11, Prisma 6 | `http://localhost:3001/api` | — |
+| Admin | `web/apps/admin/` | Next.js 15, React 18, next-intl | `http://localhost:3000` | — |
+| Restaurant | `web/apps/restaurant/` | Next.js 15, React 18, next-intl | `http://localhost:3002` | — |
+| Customer | [`main_customer.dart`](mobile/lib/main_customer.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `customer` flavor | [Customer guide](docs/customer-guide.md) |
+| Driver | [`main_driver.dart`](mobile/lib/main_driver.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor | [Customer and Driver guide](docs/customer-driver-guide.md) |
 
 Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The API uses a shared success envelope (`{ success: true, data, meta? }`) and RFC 7807 Problem Details for errors.
 
@@ -192,12 +199,12 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Evidence commit `84e2f36` has all four immutable Docker Hub manifests. Current mobile commit `e4a9155` passed all 361 Flutter tests plus analyze and produced Customer/Driver debug APKs in Mobile CI; clean image pulls, device release evidence, Railway deployment, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied the then-current 36 migrations, seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews, then indexed 402 RAG documents. Its Playwright matrix passed 204/204 across Chromium, Firefox, and mobile Chromium in 353 seconds. After migrations 37–38 and the mobile fixes were added, a separate fresh database applied all 38 migrations and rejected a second default address; the rebuilt stack then passed all 68 Chrome desktop E2E cases in 173 seconds with its explicit E2E URLs, while `flutter analyze` remained clean and the full Customer/Driver suite passed 367 tests. The final Firefox/mobile-Chrome Docker matrix still must be rerun on the final clean head. None of this local evidence validates remote provider state, a deployed image, or live Firebase delivery.
 
 ## Deployment order
 
-1. Rotate exposed credentials and supply the 15 missing Railway provider configurations through sealed provider stores.
-2. Confirm `prisma migrate status` remains up to date; migration 36 and its composite FCM-revocation capability key are already verified on Supabase production.
+1. Rotate exposed credentials and configure the required Railway/provider values through sealed provider stores.
+2. Apply and verify all migrations through the approved production migration environment; do not infer that provider state from local Docker.
 3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
@@ -206,6 +213,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 
 ## Documentation
 
+- [Customer guide](docs/customer-guide.md) — ordering, permissions, map-based address selection, checkout, tracking, and support
 - [Product gallery](docs/product-gallery.md)
 - [Customer and Driver mobile guide](docs/customer-driver-guide.md)
 - [Project overview and requirements](docs/project-overview-pdr.md)
@@ -222,7 +230,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 
 ## Branch policy
 
-The remote has one branch, `origin/master`. Code release `43f0306` contains the FCM capability hardening and migration 36; current mobile commit `e4a9155` passed every triggered workflow, including Integration Smoke and Mobile CI. The retained local ref `worktree-agent-a62965db0e804d23d` is a merged, obsolete non-release ref with no linked worktree; do not raw-merge, recreate, push, or delete it without explicit direction. Local branch equivalence is not production approval; current source and Supabase production are aligned at 36 migrations, while Railway runtime deployment remains blocked on real provider configuration. See [branch disposition](docs/branch-disposition.md).
+At the 2026-07-14 check, the remote advertised only `origin/master`; the retained linked worktree ref is already an ancestor of `master`, not pending work. Do not merge, recreate, push, or delete local worktree refs without explicit direction. Local branch ancestry and local tests are not production approval; see the evidence-backed [branch disposition](docs/branch-disposition.md).
 
 ## License
 

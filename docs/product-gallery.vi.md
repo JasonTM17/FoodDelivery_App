@@ -6,12 +6,21 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 
 ## Phạm vi bề mặt
 
-| Bề mặt | Sản phẩm | Media trực quan đã lưu | Ranh giới bằng chứng |
-|---|---|---|---|
-| Admin | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chỉ là media web non-production. |
-| Restaurant | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | Chỉ là media web non-production. |
-| Customer | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `customer` | Không có | Chưa lưu ảnh tĩnh Customer; tài liệu source không phải bằng chứng visual hay release. |
-| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Hai asset Android API 35 chỉ phục vụ test | Chỉ là evidence GPS/permission mô phỏng local; không phải bằng chứng mobile release, Supabase, Railway hay production. |
+| Bề mặt | Sản phẩm | Media trực quan đã lưu | Hướng dẫn chính | Ranh giới bằng chứng |
+|---|---|---|---|---|
+| Admin | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | — | Chỉ là media web non-production. |
+| Restaurant | Dashboard web Next.js | Ảnh tĩnh và GIF lịch sử | — | Chỉ là media web non-production. |
+| Customer | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `customer` | Một ảnh Android API 35 chỉ phục vụ test | [Hướng dẫn Khách hàng](./customer-guide.vi.md) | Ảnh discovery từ GPS mô phỏng local; không phải bằng chứng release hay production. |
+| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Bốn asset Android API 35 chỉ phục vụ test | [Hướng dẫn Customer/Driver](./customer-driver-guide.vi.md) | Chỉ là evidence GPS/notification mô phỏng local; không phải bằng chứng mobile release, Supabase, Railway hay production. |
+
+## Bắt đầu với Khách hàng
+
+Ứng dụng Customer native không có URL trình duyệt. Đọc [hướng dẫn Khách
+hàng](./customer-guide.vi.md) đã đối chiếu source để xem đăng nhập, tìm món,
+giỏ, chọn địa chỉ trên bản đồ, checkout, theo dõi, thông báo và Trợ giúp; sau đó chạy
+[`main_customer.dart`](../mobile/lib/main_customer.dart) trên thiết bị hoặc
+emulator. Bên dưới có một ảnh Customer đã review từ GPS mô phỏng; không thay
+thế bằng ảnh Admin/Restaurant. Hiện chưa có GIF Customer.
 
 ## Luồng chuyển động
 
@@ -19,6 +28,9 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 |---|---|
 | Đăng nhập Admin → tổng quan | ![Admin](media/gifs/admin-login-flow.gif) |
 | Đơn hàng Restaurant → thực đơn | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
+
+GIF chỉ mô tả luồng web Admin và Restaurant. Customer hiện có ảnh test-only ở
+bên dưới, chưa có capture chuyển động.
 
 ## Admin
 
@@ -52,24 +64,28 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 
 ## Customer
 
-Customer là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_customer.dart`](../mobile/lib/main_customer.dart) với Android flavor `customer`. Phạm vi đã tài liệu hóa gồm discovery, ordering, cart, checkout, tracking và support; xem [hướng dẫn mobile](../mobile/README.md) để biết runtime và build.
+Customer là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_customer.dart`](../mobile/lib/main_customer.dart) với Android flavor `customer`. Phạm vi đã tài liệu hóa gồm discovery, ordering, cart, checkout, tracking và support; xem [hướng dẫn Khách hàng](./customer-guide.vi.md) cho hành trình sử dụng và [hướng dẫn mobile](../mobile/README.md) để biết runtime/build.
 
-Xem đầy đủ workflow Customer và Driver đã đối chiếu source, permission, hành vi thông báo và lệnh chạy ở [hướng dẫn Customer và Driver](./customer-driver-guide.vi.md).
+Xem workflow Customer/Driver dùng chung, permission, hành vi thông báo và lệnh chạy ở [hướng dẫn Customer và Driver](./customer-driver-guide.vi.md).
 
-Chưa có UI Customer được capture trong gallery. Không được suy diễn ảnh Customer từ media Admin/Restaurant; chỉ dùng capture mới từ entrypoint [`main_customer.dart`](../mobile/lib/main_customer.dart) có source/runtime reference làm bằng chứng release.
+Ảnh đã kiểm duyệt riêng tư dưới đây cho thấy Customer tải nhà hàng gần đó từ GPS mô phỏng trên Android API 35. Manifest ghi rõ capture được tạo khi worktree còn dirty, vì vậy đây chỉ là bằng chứng regression; phải capture lại từ clean head mới được dùng làm bằng chứng release.
+
+![Customer tải nhà hàng gần đó từ GPS mô phỏng](./screenshots/customer/customer-nearby-restaurants.webp)
 
 ## Driver GPS (local E2E, chỉ phục vụ test)
 
 Driver là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_driver.dart`](../mobile/lib/main_driver.dart) với Android flavor `driver`. Phạm vi đã tài liệu hóa gồm trạng thái Online, dispatch, GPS, route guidance, earnings, KYC và notifications; xem [hướng dẫn mobile](../mobile/README.md) để biết runtime và build.
 
-Ảnh Android API 35 dùng route mô phỏng và dữ liệu test deterministic. Chúng chỉ minh họa thao tác Online và notification permission của Driver; không có vị trí thật, tài khoản cá nhân, credential hoặc token.
+Ảnh Android API 35 dùng route mô phỏng và dữ liệu test deterministic. Chúng minh họa thao tác Online, notification permission và foreground location notification của Driver; không hiển thị vị trí thật, tài khoản cá nhân, credential, token hoặc thông báo cá nhân không liên quan.
 
 Local E2E lịch sử đã nhận GPS command xác thực, làm mới Redis liveness, ghi mẫu vào PostGIS và gửi một event Socket.IO cho Admin được cấp quyền. Đây chỉ là bằng chứng compatibility `socketio` local, không phải Supabase, Railway, Vercel hoặc production.
 
 | Màn hình | Ảnh |
 |---|---|
 | Driver Online sau GPS verification | ![Driver Online](screenshots/driver/driver-online-gps-e2e.webp) |
+| Driver Online trong device smoke hiện tại | ![Driver Online realtime GPS](screenshots/driver/driver-online-realtime-gps.webp) |
 | Quyền notification foreground tracking | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
+| Foreground location notification | ![Driver foreground location notification](screenshots/gps/driver-foreground-location-notification.webp) |
 
 ## Tạo lại
 
