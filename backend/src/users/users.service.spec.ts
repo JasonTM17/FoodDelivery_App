@@ -69,8 +69,33 @@ describe('UsersService', () => {
   })
 
   describe('createAddress', () => {
+    it('locks one user before replacing their default address', async () => {
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: 'user-1' }])
+        .mockResolvedValueOnce([addressRow])
+
+      await service.createAddress('user-1', {
+        label: 'Home',
+        addressLine: '2 Le Loi',
+        latitude: 10.7769,
+        longitude: 106.7009,
+        isDefault: true,
+      })
+
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2)
+      expect(mockPrisma.$queryRaw.mock.calls[0][0].strings.join('')).toContain(
+        'FOR UPDATE',
+      )
+      expect(mockPrisma.address.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+        data: { isDefault: false },
+      })
+    })
+
     it('creates a PostGIS address and clears other defaults when requested', async () => {
-      mockPrisma.$queryRaw.mockResolvedValueOnce([addressRow])
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: 'user-1' }])
+        .mockResolvedValueOnce([addressRow])
 
       const result = await service.createAddress('user-1', {
         label: 'Home',
@@ -84,7 +109,10 @@ describe('UsersService', () => {
         where: { userId: 'user-1' },
         data: { isDefault: false },
       })
-      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2)
+      expect(mockPrisma.$queryRaw.mock.calls[1][0].strings.join('')).toContain(
+        'gen_random_uuid()',
+      )
       expect(result).toMatchObject({
         id: 'addr-1',
         latitude: 10.7769,

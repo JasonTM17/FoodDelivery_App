@@ -4,6 +4,7 @@ import '../../shared/models/user.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../providers/address_provider.dart';
+import '../widgets/address_location_picker.dart';
 import '../../l10n/app_localizations.dart';
 
 class AddressManagementScreen extends ConsumerStatefulWidget {
@@ -36,70 +37,68 @@ class _AddressManagementScreenState
   }
 
   void _showAddAddressDialog() {
-    final l10n = AppLocalizations.of(context);
+    final screenContext = context;
+    final l10n = AppLocalizations.of(screenContext);
     showDialog(
-      context: context,
-      builder: (context) => _AddressFormDialog(
+      context: screenContext,
+      barrierDismissible: false,
+      builder: (context) => AddressFormDialog(
         title: l10n.addressAddDialogTitle,
-        onSave: (label, address) async {
+        saveFailureMessage: l10n.addressAddFailed,
+        requiresLocation: true,
+        onSave: (label, address, location) async {
+          if (location == null) return l10n.addressLocationRequired;
           final notifier = ref.read(addressProvider.notifier);
           final success = await notifier.addAddress(
             label: label,
             address: address,
+            latitude: location.latitude,
+            longitude: location.longitude,
             isDefault: ref.read(addressProvider).addresses.isEmpty,
           );
-          if (context.mounted) {
-            if (success) {
+          if (success) {
+            if (screenContext.mounted) {
               ScaffoldMessenger.of(
-                context,
+                screenContext,
               ).showSnackBar(SnackBar(content: Text(l10n.addressAddSuccess)));
-            } else {
-              final error = ref.read(addressProvider).error;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _addressErrorMessage(error, l10n, l10n.addressAddFailed),
-                  ),
-                ),
-              );
             }
+            return null;
           }
+          final error = ref.read(addressProvider).error;
+          return _addressErrorMessage(error, l10n, l10n.addressAddFailed);
         },
       ),
     );
   }
 
   void _showEditAddressDialog(AddressModel address) {
-    final l10n = AppLocalizations.of(context);
+    final screenContext = context;
+    final l10n = AppLocalizations.of(screenContext);
     showDialog(
-      context: context,
-      builder: (context) => _AddressFormDialog(
+      context: screenContext,
+      barrierDismissible: false,
+      builder: (context) => AddressFormDialog(
         title: l10n.addressEditDialogTitle,
+        saveFailureMessage: l10n.addressUpdateFailed,
         initialLabel: address.label,
         initialAddress: address.address,
-        onSave: (label, newAddress) async {
+        onSave: (label, newAddress, _) async {
           final notifier = ref.read(addressProvider.notifier);
           final success = await notifier.updateAddress(
             id: address.id,
             label: label,
             address: newAddress,
           );
-          if (context.mounted) {
-            if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(
+          if (success) {
+            if (screenContext.mounted) {
+              ScaffoldMessenger.of(screenContext).showSnackBar(
                 SnackBar(content: Text(l10n.addressUpdateSuccess)),
               );
-            } else {
-              final error = ref.read(addressProvider).error;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _addressErrorMessage(error, l10n, l10n.addressUpdateFailed),
-                  ),
-                ),
-              );
             }
+            return null;
           }
+          final error = ref.read(addressProvider).error;
+          return _addressErrorMessage(error, l10n, l10n.addressUpdateFailed);
         },
       ),
     );
@@ -414,28 +413,41 @@ class _AddressManagementScreenState
   }
 }
 
-class _AddressFormDialog extends StatefulWidget {
+class AddressFormDialog extends StatefulWidget {
   final String title;
+  final String saveFailureMessage;
   final String? initialLabel;
   final String? initialAddress;
-  final Function(String label, String address) onSave;
+  final bool requiresLocation;
+  final Future<String?> Function(
+    String label,
+    String address,
+    AddressLocationSelection? location,
+  )
+  onSave;
 
-  const _AddressFormDialog({
+  const AddressFormDialog({
     required this.title,
+    required this.saveFailureMessage,
     this.initialLabel,
     this.initialAddress,
+    this.requiresLocation = false,
     required this.onSave,
   });
 
   @override
-  State<_AddressFormDialog> createState() => _AddressFormDialogState();
+  State<AddressFormDialog> createState() => _AddressFormDialogState();
 }
 
-class _AddressFormDialogState extends State<_AddressFormDialog> {
+class _AddressFormDialogState extends State<AddressFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _labelController;
   late TextEditingController _addressController;
   String? _selectedLabel;
+  AddressLocationSelection? _selectedLocation;
+  String? _locationError;
+  String? _saveError;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -465,59 +477,142 @@ class _AddressFormDialogState extends State<_AddressFormDialog> {
         ? labelOptions
         : [selectedLabel, ...labelOptions];
 
-    return AlertDialog(
-      title: Text(widget.title),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: selectedLabel,
-              decoration: InputDecoration(labelText: l10n.addressLabelField),
-              items: dropdownOptions.map((label) {
-                return DropdownMenuItem(value: label, child: Text(label));
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedLabel = value);
-                  _labelController.text = value;
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _addressController,
-              decoration: InputDecoration(
-                labelText: l10n.addressFieldLabel,
-                hintText: l10n.addressFieldHint,
+    return PopScope(
+      canPop: !_isSaving,
+      child: AlertDialog(
+        title: Text(widget.title),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: selectedLabel,
+                decoration: InputDecoration(labelText: l10n.addressLabelField),
+                items: dropdownOptions.map((label) {
+                  return DropdownMenuItem(value: label, child: Text(label));
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedLabel = value);
+                    _labelController.text = value;
+                  }
+                },
               ),
-              maxLines: 3,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.addressRequired;
-                }
-                return null;
-              },
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: l10n.addressFieldLabel,
+                  hintText: l10n.addressFieldHint,
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.addressRequired;
+                  }
+                  return null;
+                },
+              ),
+              if (widget.requiresLocation) ...[
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.addressLocationRequired,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                AddressLocationPicker(
+                  selectedLocation: _selectedLocation,
+                  onLocationSelected: (location) {
+                    setState(() {
+                      _selectedLocation = location;
+                      _locationError = null;
+                    });
+                  },
+                  onInvalidLocation: () {
+                    setState(
+                      () => _locationError = l10n.addressLocationInvalid,
+                    );
+                  },
+                ),
+                if (_locationError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _locationError!,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ],
+              ],
+              if (_saveError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _saveError!,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    if (!_formKey.currentState!.validate()) return;
+                    if (widget.requiresLocation && _selectedLocation == null) {
+                      setState(
+                        () => _locationError = l10n.addressLocationRequired,
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      _isSaving = true;
+                      _saveError = null;
+                    });
+                    String? saveError;
+                    try {
+                      saveError = await widget.onSave(
+                        selectedLabel,
+                        _addressController.text.trim(),
+                        _selectedLocation,
+                      );
+                    } catch (_) {
+                      saveError = widget.saveFailureMessage;
+                    }
+                    if (!mounted) return;
+                    if (saveError == null) {
+                      Navigator.of(context).pop();
+                      return;
+                    }
+                    setState(() {
+                      _isSaving = false;
+                      _saveError = saveError;
+                    });
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.addressSave),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              widget.onSave(selectedLabel, _addressController.text.trim());
-              Navigator.of(context).pop();
-            }
-          },
-          child: Text(l10n.addressSave),
-        ),
-      ],
     );
   }
 }

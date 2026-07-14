@@ -53,6 +53,7 @@ export class UsersService {
     const { latitude, longitude } = requireAddressCoordinates(dto)
     return this.prisma.$transaction(async (tx) => {
       if (dto.isDefault === true) {
+        await lockAddressDefaults(tx, userId)
         await tx.address.updateMany({
           where: { userId },
           data: { isDefault: false },
@@ -60,8 +61,9 @@ export class UsersService {
       }
 
       const rows = await tx.$queryRaw<AddressRow[]>(Prisma.sql`
-        INSERT INTO addresses (user_id, label, address_line, location, is_default)
+        INSERT INTO addresses (id, user_id, label, address_line, location, is_default)
         VALUES (
+          gen_random_uuid(),
           CAST(${userId} AS uuid),
           ${dto.label.trim()},
           ${dto.addressLine.trim()},
@@ -88,6 +90,7 @@ export class UsersService {
     const coordinates = optionalAddressCoordinates(dto)
     return this.prisma.$transaction(async (tx) => {
       if (dto.isDefault === true) {
+        await lockAddressDefaults(tx, userId)
         await tx.address.updateMany({
           where: { userId, id: { not: addressId } },
           data: { isDefault: false },
@@ -174,6 +177,19 @@ function requireAddressCoordinates(dto: CreateAddressDto): { latitude: number; l
   const coordinates = optionalAddressCoordinates(dto)
   if (!coordinates) throw new BadRequestException('ADDRESS_LOCATION_REQUIRED')
   return coordinates
+}
+
+async function lockAddressDefaults(
+  tx: Prisma.TransactionClient,
+  userId: string,
+): Promise<void> {
+  const rows = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+    SELECT id::text AS "id"
+    FROM users
+    WHERE id = CAST(${userId} AS uuid)
+    FOR UPDATE
+  `)
+  if (!rows[0]) throw new NotFoundException('User not found')
 }
 
 function optionalAddressCoordinates(
