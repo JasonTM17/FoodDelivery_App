@@ -4,7 +4,7 @@ import { Client } from 'minio'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { resolveMinioRuntimeConfig } from '../common/storage/minio-config'
-import { getSupabaseSecretKey } from '../common/supabase/supabase-config'
+import { getSupabaseStorageAdminKey } from '../common/supabase/supabase-config'
 
 const ALLOWED_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
 const MAX_PHOTOS_PER_REVIEW = 4
@@ -24,7 +24,7 @@ export class ReviewsPhotoService {
       this.bucket = requireStringConfig(config, 'SUPABASE_STORAGE_BUCKET')
       this.supabase = createClient(
         requireStringConfig(config, 'SUPABASE_URL'),
-        getSupabaseSecretKey(config),
+        getSupabaseStorageAdminKey(config),
         { auth: { persistSession: false, autoRefreshToken: false } },
       )
     } else {

@@ -34,6 +34,7 @@ const productionEnv = {
   TWILIO_FROM_NUMBER: '+84900000000',
   SUPABASE_URL: 'https://lvanszgszzfopusboich.supabase.co',
   SUPABASE_SECRET_KEY: 'sb_secret_foodflow_production',
+  SUPABASE_SERVICE_ROLE_KEY: `eyJ${'x'.repeat(64)}`,
   SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_foodflow_production',
   SUPABASE_REALTIME_JWT_PRIVATE_KEY: 'test-es256-private-key',
   SUPABASE_REALTIME_JWT_KEY_ID: 'foodflow-es256-2026-07',
@@ -198,12 +199,13 @@ describe('validateEnv', () => {
       STORAGE_PROVIDER: 'supabase',
       SUPABASE_URL: undefined,
       SUPABASE_SECRET_KEY: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
       SUPABASE_PUBLISHABLE_KEY: undefined,
       SUPABASE_REALTIME_JWT_PRIVATE_KEY: undefined,
       SUPABASE_REALTIME_JWT_KEY_ID: undefined,
       SUPABASE_STORAGE_BUCKET: undefined,
       SUPABASE_KYC_BUCKET: undefined,
-    })).toThrow(/SUPABASE_URL|SUPABASE_SECRET_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_REALTIME_JWT_PRIVATE_KEY|SUPABASE_REALTIME_JWT_KEY_ID|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
+    })).toThrow(/SUPABASE_URL|SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_REALTIME_JWT_PRIVATE_KEY|SUPABASE_REALTIME_JWT_KEY_ID|SUPABASE_STORAGE_BUCKET|SUPABASE_KYC_BUCKET/)
 
     expect(validateEnv({
       ...productionEnv,
@@ -231,6 +233,14 @@ describe('validateEnv', () => {
       STORAGE_PROVIDER: 'supabase',
       SUPABASE_STORAGE_BUCKET: productionEnv.SUPABASE_STORAGE_BUCKET,
     })
+  })
+
+  it('requires a legacy JWT service-role key for Supabase Storage', () => {
+    expect(() => validateEnv({
+      ...productionEnv,
+      STORAGE_PROVIDER: 'supabase',
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+    })).toThrow(/SUPABASE_SERVICE_ROLE_KEY.*Storage authorization requires a JWT/)
   })
 
   it('keeps the KYC upload limit and managed private bucket aligned with migrations', () => {

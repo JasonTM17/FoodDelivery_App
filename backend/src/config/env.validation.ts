@@ -346,6 +346,22 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
   if (storageProvider === 'supabase' && isBlank(config.SUPABASE_KYC_BUCKET)) {
     issues.push('SUPABASE_KYC_BUCKET: is required when STORAGE_PROVIDER=supabase')
   }
+  if (storageProvider === 'supabase') {
+    const serviceRoleKey = config.SUPABASE_SERVICE_ROLE_KEY
+    if (isBlank(serviceRoleKey)) {
+      issues.push(
+        'SUPABASE_SERVICE_ROLE_KEY: is required when STORAGE_PROVIDER=supabase because Storage authorization requires a JWT',
+      )
+    } else if (
+      supabaseForbiddenValues.SUPABASE_SERVICE_ROLE_KEY.includes(
+        String(serviceRoleKey).trim(),
+      )
+    ) {
+      issues.push(
+        'SUPABASE_SERVICE_ROLE_KEY: must not use the example Supabase value in production',
+      )
+    }
+  }
 
   if (queueProvider === 'supabase-postgres') {
     const cronSecret = config.CRON_SECRET

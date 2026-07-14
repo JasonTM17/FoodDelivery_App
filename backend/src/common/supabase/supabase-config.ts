@@ -1,10 +1,14 @@
 import { ConfigService } from '@nestjs/config'
 
-export function getSupabaseSecretKey(config: ConfigService): string {
-  const value =
-    config.get<string>('SUPABASE_SECRET_KEY')?.trim() ||
-    config.get<string>('SUPABASE_SERVICE_ROLE_KEY')?.trim()
-  if (!value) throw new Error('SUPABASE_SECRET_KEY is required')
+export function getSupabaseStorageAdminKey(config: ConfigService): string {
+  // Hosted Storage still validates Authorization as a JWT. Keep the legacy
+  // service-role key scoped to Storage until that service accepts opaque keys.
+  const value = config.get<string>('SUPABASE_SERVICE_ROLE_KEY')?.trim()
+  if (!value) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY is required for Supabase Storage authorization',
+    )
+  }
   return value
 }
 

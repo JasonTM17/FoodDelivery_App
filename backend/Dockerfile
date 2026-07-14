@@ -46,8 +46,6 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 USER 65534:65534
 EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
-  CMD ["/nodejs/bin/node", "-e", "require('http').get('http://localhost:3001/api/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
-# API entrypoint. Worker reuses this image with:
-#   command: ["dist/workers/main.js"]
-CMD ["dist/main.js"]
+# Railway assigns a dynamic PORT and owns the API healthcheck. The same image
+# runs the non-HTTP worker when FOODFLOW_PROCESS_ROLE=worker.
+CMD ["-e", "require(process.env.FOODFLOW_PROCESS_ROLE === 'worker' ? './dist/workers/main.js' : './dist/main.js')"]
