@@ -4,7 +4,7 @@
 
 Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-14: **integration and current-head quality gates are green on `master`; managed deployment is incomplete; no-go for production**.
+Status on 2026-07-14: **deployed runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` has green backend, CI, registry, Railway, Vercel health, and API-level GPS evidence; full production certification remains no-go**.
 
 ## Completed and incorporated work
 
@@ -42,7 +42,7 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 
 ### Backend and production topology
 
-- Audit remaining production Redis dependency and document/provision it explicitly or remove it safely; do not leave an accidental Vercel runtime dependency.
+- Keep the verified Railway managed Redis dependency healthy and monitor readiness; do not introduce a Vercel runtime dependency.
 - Validate every migration in the final source head against a fresh PostGIS database and the target Supabase project; do not rely on an old fixed migration count.
 - Verify RLS/publication/storage policies and cross-tenant realtime denial against Supabase, not only unit tests.
 - Run live DeepSeek, Google routing, SePay, notification, export, storage, and secured Cron smoke with rotated secrets.
@@ -62,20 +62,21 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 - The fresh clean-volume Docker project `foodflow-batch4-e2e` applied the then-current 36 migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, indexed 402 RAG documents, and passed Playwright 204/204 in 6.6 minutes. A later migration-only fresh database applied all 38 current migrations and enforced the default-address invariant. Full Docker/Playwright must be rerun on the final clean head. These are local results only.
 - Supabase production was backed up outside the repository and the authorized Railway migrator applied migrations 37–38. All 38 migrations are now recorded as applied, `prisma migrate status` is clean, the address UUID default is present, and the unique partial index rejects multiple default addresses per user. The historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
-- Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS through the API and controlled-device FCM delivery remain unverified. Direct Supabase private-Broadcast allow/deny is verified, but local notification and lifecycle tests do not prove end-to-end provider delivery.
-- Admin and Restaurant deployments for `ed25399` are READY on Vercel, use the canonical Railway/Supabase production variables, and return 200 for health/login routes. End-to-end production approval still depends on a healthy Railway API/worker.
-- Evidence commit `ed25399` has all four immutable multi-architecture Docker Hub and public GHCR manifests. All GHCR packages are repository-linked and grant `JasonTM17/FoodDelivery_App` Actions write access. No semver or `latest` promotion is authorized.
+- Runtime candidate `52f4336` passes 144 suites / 1065 tests, typecheck, lint, build, all triggered GitHub workflows, multi-architecture runtime smoke, and High/Critical image scans. Railway migrate `a9002614-ed2a-438c-9a4e-7170954052fc`, API `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`, and worker `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` run immutable SHA images successfully. API health/readiness report database, Redis, and Supabase Storage up; worker polling runs and RAG is intentionally disabled without DeepSeek.
+- Google Maps is optional. With neither Google Directions nor an owned OSRM service, routing returns `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` while the processes remain healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing remain unconfigured or unsmoked.
+- Current Admin and Restaurant Vercel deployments are Ready and return 200 for health/login routes. API-level authenticated GPS reached private Supabase Broadcast and PostGIS in 1437 ms; authenticated browser role journeys remain pending.
+- Runtime candidate `52f4336` has four matching immutable multi-architecture Docker Hub and public GHCR manifests. Clean hosted runners passed runtime smoke and eight High/Critical scans. All GHCR packages are repository-linked and grant `JasonTM17/FoodDelivery_App` Actions write access. No semver or `latest` promotion is authorized.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
 
 ## Release sequence after completion
 
-1. Rotate exposed credentials and enter the 15 real Railway provider configurations through secure stores.
-2. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
-3. Run production Customer/Driver auth, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
-4. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.
-5. Pull the SHA manifests in a clean environment, verify scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
+1. Preserve the verified API/worker/Redis baseline; deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
+2. Configure only integrations being certified through sealed stores; do not fabricate Google Maps or other provider values.
+3. Run production Customer/Driver auth, token refresh, GPS snapshot/delta/reconnect, Storage, configured map/routing, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
+4. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API.
+5. After remaining production smoke, create immutable `v4.0.0` and manually promote `latest`; do not rebuild or retag an unverified artifact.
 6. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 
 ## Post-release

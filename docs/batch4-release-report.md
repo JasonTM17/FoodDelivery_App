@@ -4,9 +4,20 @@
 
 ## Current local and provider-status update — 2026-07-14
 
-Local `master` and `origin/master` resolve to `ed25399298c01975c7943ff967d4178e0ceafdfa`. The current clean-volume `foodflow-batch4-e2e` stack applied all 38 migrations; a transaction check proved that the database rejects a second default address for the same user. With explicit local public URLs, the rebuilt stack passed Playwright Chrome desktop 68/68 (173.0 s), Firefox 68/68 (172.9 s), and Pixel 5 mobile Chrome 68/68 (117.3 s): 204/204, no failures or skips. Direct Google Chrome checks found the public Admin and Restaurant sign-in pages usable at desktop width, and the Restaurant page had no horizontal overflow at Pixel 5 width. This is current local evidence only; it does not validate a provider deployment.
+Runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` passed 144 Jest suites / 1065 tests, typecheck, lint, the Nest build, and every GitHub workflow triggered for the SHA. Docker Publish run `29336146675` passed multi-architecture runtime smoke and all eight High/Critical Trivy scans. The earlier clean-volume `foodflow-batch4-e2e` stack applied all 38 migrations and passed Playwright 204/204; that remains bounded local evidence.
 
-The current read-only Railway status query found `foodflow-api`, `foodflow-worker`, and `foodflow-migrate` offline. The public API health URL returned HTTP 404. The isolated local API and worker intentionally have no FCM project or Firebase credential configured; therefore no real FCM send was attempted. Deploy the exact release candidate with sealed Firebase credentials (or workload identity) and a controlled-device token before recording a live FCM result. The release decision remains **NO-GO**.
+Railway migrate deployment `a9002614-ed2a-438c-9a4e-7170954052fc` completed successfully and reported 38 migrations with none pending. API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c` and worker deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are `SUCCESS` from immutable SHA images. `https://foodflow-api-production.up.railway.app/api/healthz` returns HTTP 200 with `status: ok`, and `/api/readyz` returns HTTP 200 with `ready: true`; database, Redis, and Supabase Storage are up. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG synchronization, and `FoodFlow Worker started`. Both services use explicit fail-closed `FOODFLOW_PROCESS_ROLE` values.
+
+Supabase Storage readiness uses the project `service_role` JWT supplied by Supabase. The opaque `sb_secret...` credential is not used as the Storage Bearer token; no credential value is printed or committed. A controlled production smoke created temporary driver/admin identities, obtained a five-minute scoped ES256 realtime token, submitted simulated HCMC GPS through the authenticated Railway API, received the private `admin:drivers` Broadcast, and verified the PostGIS history row in 1437 ms. Temporary database rows and the Redis active-driver entry were removed; final checks reported zero production users and zero location-history rows. The diff from that GPS smoke candidate to `52f4336` changes only process startup/config validation and PowerShell probes, not tracking or realtime code.
+
+Current Vercel deployments `dpl_5Yf8yfg8HPvQ8zHxww8AET9Cx5i9` (Admin) and `dpl_2AsBkXimCVh7BE6BLrHfDc4E1Bxa` (Restaurant) are Ready for the runtime-candidate push; their canonical health and localized login routes return 200. `RAG_ENABLED=false` is intentional because no DeepSeek credential is configured. Without Google Directions or an owned OSRM service, route requests return `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` while API/worker stay healthy. The release decision remains **NO-GO** because controlled-device FCM, authenticated browser role journeys, the background-location device matrix, and configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-routing smoke remain incomplete.
+
+| Artifact | SHA manifest digest (Docker Hub = GHCR) |
+| --- | --- |
+| `foodflow-backend` | `sha256:6d56cbefe7e9644703d957ae7a1abe96966d831b2567172edafc3063fc2e1f10` |
+| `foodflow-migrate` | `sha256:f5131517198105f466ebb3daf2d52d5d56541f6b97dc0ec2cb99936e85e73f43` |
+| `foodflow-admin` | `sha256:481bf07929b66cd8a23ab9d4ed95f37f585e78c868af3bacd49b6186b26bcfe6` |
+| `foodflow-restaurant` | `sha256:38c35c1470152cb42debdf284444572e2d2127e42d71939384b804cbe1e1fa1f` |
 
 ## Local fresh-stack evidence — 2026-07-14
 
@@ -18,7 +29,7 @@ The final clean-volume stack and Supabase production now both contain all 38 ord
 
 The provider, workflow, Vercel, Railway, and registry statements that follow were rechecked on 2026-07-14. They are bounded external evidence and must not be read as end-to-end production approval.
 
-The external provider evidence confirms 38 forward migrations, the `token,registration_id` primary key, scoped private Broadcast authorization, split public/private Storage buckets, and empty production business/RAG tables. An ES256 five-minute token subscribed to its allow-listed private channel, a cross-user channel was denied, and a REST Broadcast was received. Both Vercel dashboards are READY for `ed25399`; Railway API/worker remain blocked by 15 missing real-provider configurations.
+The external provider evidence confirms 38 forward migrations, the `token,registration_id` primary key, scoped private Broadcast authorization, split public/private Storage buckets, and empty production business/RAG tables. Direct authorization smoke denied a cross-user channel; the authenticated Railway GPS smoke received the allowed private Broadcast and persisted PostGIS history. Current Vercel deployments are Ready and their health/login routes pass, while authenticated browser role journeys remain pending.
 
 The registry evidence covers four immutable multi-architecture manifests for `ed25399` on Docker Hub and public GHCR. Repository Actions write access and source links are configured on every package. No `v4.0.0` or `latest` promotion is authorized by that record.
 
@@ -134,25 +145,24 @@ The active Food_Delivery_Crab project was backed up outside the repository, then
 
 ### Railway and Vercel
 
-Railway OAuth and topology preflight pass for `foodflow-api`, `foodflow-worker`, `foodflow-migrate`, and managed Redis. The migrate service has no persistent deployment, but the authorized current-head one-off migrator/status command completed against Supabase. The public API endpoint still returns 404 because API/worker have no deployment and remain blocked by exactly 15 missing real provider configurations: `GOOGLE_MAPS_API_KEY`, `OSRM_URL`, `DEEPSEEK_API_KEY`, `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `FCM_PROJECT_ID`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Production validation remains fail-closed; no value was fabricated.
+Railway OAuth and topology preflight pass for `foodflow-api`, `foodflow-worker`, `foodflow-migrate`, and managed Redis. Migrate deployment `a9002614-ed2a-438c-9a4e-7170954052fc`, API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`, and worker deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from the `52f4336` SHA images. Health/readiness and worker polling pass. Optional integrations do not block process startup, but each integration fails closed when invoked without valid configuration.
 
-Both Vercel projects are connected to the GitHub repository and their `ed25399` production deployments are READY. Canonical `/api/healthz` and localized login routes return 200. Production variables use the canonical Railway URL, Supabase provider/project, publishable key, OpenFreeMap style, and no `trycloudflare.com` value. Full auth/GPS smoke remains blocked until Railway API/worker are live.
+Both Vercel projects are connected to the GitHub repository. Current production deployments `dpl_5Yf8yfg8HPvQ8zHxww8AET9Cx5i9` and `dpl_2AsBkXimCVh7BE6BLrHfDc4E1Bxa` are Ready; canonical `/api/healthz` and localized login routes return 200. Production variables use the canonical Railway URL, Supabase provider/project, publishable key, OpenFreeMap style, and no `trycloudflare.com` value. Authenticated browser role journeys remain pending; the API-level authenticated GPS/Broadcast/PostGIS path is verified.
 
 Secret values are intentionally never printed or stored in this report. Any DeepSeek key previously pasted in chat is exposed and must be rotated, even if the same value was later added to a dashboard.
 
 ### GitHub Actions
 
-All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. Docker Hub and public GHCR expose all four matching `ed25399` SHA manifests. The SHA-only workflow has not promoted semver or `latest`.
+Every workflow triggered for `52f4336` completed successfully: CI, Build, Lint, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, SBOM, and Docker Publish. Docker Publish built matching Docker Hub/public-GHCR multi-architecture manifests, ran backend/migrator/web runtime smoke on clean hosted runners, and completed eight architecture-specific High/Critical scans. The SHA-only run intentionally did not promote semver or `latest`.
 
 ## Remaining release gates
 
-1. Supply/rotate the 15 missing Railway provider configurations only through sealed provider stores; pass strict API/worker environment validation.
-2. Deploy Railway API/worker from one immutable SHA and require `/api/healthz` plus `/api/readyz`; rerun migration status as part of the current production preflight.
-3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, GPS snapshot/delta/reconnect, and degraded route behavior against Supabase production.
-4. Run provider-backed route/map, export, payment, notification, AI, and one controlled-device FCM smoke. Complete Android device GPS matrix and use macOS/iPhone for required iOS background-location evidence.
-5. Re-smoke the exact Admin/Restaurant Vercel deployments after Railway is healthy.
-6. Pull all four SHA manifests in a clean environment and verify scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
+1. Validate realtime token expiry/refresh, KYC private Storage upload/read, order GPS snapshot/delta/reconnect, and degraded route behavior against Supabase production.
+2. Configure only integrations being certified, through sealed stores; smoke owned routing, export, SePay, SMTP/Twilio, DeepSeek, and one controlled-device FCM delivery. Do not fabricate Google Maps or any other provider value.
+3. Run authenticated Customer/Driver/Restaurant/Admin browser or device journeys against the exact current deployments.
+4. Complete the Android background-location matrix and authorized macOS/iPhone evidence.
+5. Create semver and manually promote `latest` only after the remaining production smoke passes.
 
 ## Release decision
 
-The 2026-07-14 external snapshot concluded **NO-GO**. A new release decision requires fresh provider preflight, API/worker health, controlled FCM delivery, device evidence, image pulls, and production smoke; no secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change that decision.
+The 2026-07-14 decision remains **NO-GO for full certification**. Immutable images, Railway health, Supabase migration/Storage, Vercel health/login, and the authenticated API-level GPS/Broadcast/PostGIS path are verified. Full approval still requires authenticated browser role journeys, controlled FCM delivery, Android/iOS background-location device evidence, KYC private-object smoke, and any optional integration included in the certified feature set. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change that decision.

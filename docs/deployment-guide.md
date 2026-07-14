@@ -59,6 +59,8 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
+Current production evidence (2026-07-14): migrate deployment `a9002614-ed2a-438c-9a4e-7170954052fc`, API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`, and worker deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from immutable `52f4336` SHA images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `ready: true`, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+
 ### Last verified multi-registry candidate
 
 Evidence commit `ed25399298c01975c7943ff967d4178e0ceafdfa` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries; a clean pull/runtime smoke is still required:
@@ -165,6 +167,7 @@ Core/provider values:
 | Name                                | Production rule                                                                                                                     |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `NODE_ENV`                          | `production`                                                                                                                        |
+| `FOODFLOW_PROCESS_ROLE`             | Required and fail-closed: `api` on `foodflow-api`, `worker` on `foodflow-worker`                                                     |
 | `DATABASE_URL`                      | Supabase pooled runtime URL                                                                                                         |
 | `DIRECT_URL`                        | Supabase direct/session migration URL                                                                                               |
 | `REDIS_URL`                         | Current API contract still requires a managed production Redis endpoint for remaining cache/history paths; never point at localhost |
@@ -172,7 +175,8 @@ Core/provider values:
 | `STORAGE_PROVIDER`                  | `supabase`                                                                                                                          |
 | `QUEUE_PROVIDER`                    | `supabase-postgres`                                                                                                                 |
 | `SUPABASE_URL`                      | Project HTTPS origin                                                                                                                |
-| `SUPABASE_SECRET_KEY`               | Server-only, sealed; never expose as `NEXT_PUBLIC_*`                                                                                |
+| `SUPABASE_SECRET_KEY`               | Opaque `sb_secret_...` backend key for Supabase APIs that support the current key format; server-only and sealed                     |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Legacy `service_role` JWT required only for the current server-side Storage Bearer contract; sealed and never exposed as `NEXT_PUBLIC_*` |
 | `SUPABASE_PUBLISHABLE_KEY`          | Server-side Realtime API component key; paired with a short-lived ES256 service JWT, not a secret                                   |
 | `SUPABASE_REALTIME_JWT_PRIVATE_KEY` | Server-only ES256 private signing key, sealed                                                                                       |
 | `SUPABASE_REALTIME_JWT_KEY_ID`      | Supabase Auth signing-key `kid`                                                                                                     |
@@ -186,10 +190,10 @@ Application/security values:
 
 - `JWT_SECRET`, `JWT_REFRESH_SECRET`
 - `PASSWORD_RESET_URL_BASE`, `CORS_ORIGINS`, `DELIVERY_BASE_FEE_VND`
-- `GOOGLE_MAPS_API_KEY`, `OSRM_URL`
+- Optional routing: `GOOGLE_MAPS_API_KEY` and/or an owned `OSRM_URL`
 - `DEEPSEEK_API_KEY` and optional `DEEPSEEK_MODEL=deepseek-v4-flash`
 - `DEEPSEEK_EMBEDDING_MODEL=text-embedding-v3`
-- `RAG_ENABLED=true`, `RAG_SYNC_INTERVAL_MS`, `RAG_SYNC_BATCH_SIZE`, `RAG_SYNC_CONCURRENCY`, `RAG_TOP_K`, and `RAG_MIN_SIMILARITY`
+- `RAG_ENABLED=false` when no DeepSeek credential is present. Enable it only with a working provider, then set `RAG_SYNC_INTERVAL_MS`, `RAG_SYNC_BATCH_SIZE`, `RAG_SYNC_CONCURRENCY`, `RAG_TOP_K`, and `RAG_MIN_SIMILARITY` as required.
 - `SEPAY_ACCOUNT_NUMBER`, `SEPAY_BANK_NAME`, `SEPAY_WEBHOOK_SECRET`, optional `SEPAY_API_KEY`, and `WEBHOOK_SECRET`
 - `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 - `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` (one-line Firebase service-account JSON stored as a secret on Railway; never expose it to a browser or commit it)
@@ -197,9 +201,11 @@ Application/security values:
 
 `CORS_ORIGINS` must contain only verified Admin/Restaurant HTTPS origins. `PASSWORD_RESET_URL_BASE` must use the verified Admin origin. Do not add wildcard CORS.
 
+The core database, Redis, JWT, Supabase, CORS, reset-URL, and delivery-fee contract remains required. Google/OSRM, DeepSeek, SePay, SMTP, FCM, Twilio, and generic webhook settings are integration-specific: absence does not prevent API/worker startup, but the affected feature must fail closed. Partial SePay, SMTP, or Twilio groups are invalid. Google Maps is not required; if neither Google Directions nor an owned OSRM service is configured, route calls return `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`. Never point production at the public OSRM demo service.
+
 FCM uses Firebase Admin SDK/HTTP v1, not the legacy server key. `FCM_PROJECT_ID` is required in production. Railway may use a secret-managed one-line `FCM_SERVICE_ACCOUNT_JSON`; environments with a configured workload identity may leave it blank and use Application Default Credentials. Self-hosted production Compose has no workload identity by default and therefore requires the JSON secret for both API and worker. Send a controlled-token notification after deployment; configuration/unit tests cannot prove live Firebase delivery.
 
-The Railway worker owns both durable job draining and periodic RAG synchronization. Keep the default RAG bounds unless measured load justifies changing them. Production RAG requires the real DeepSeek key; an unconfigured/failed embedding request must remain pending and must not be replaced with a zero, random, or deterministic fake vector.
+The Railway worker owns both durable job draining and optional periodic RAG synchronization. Current production intentionally uses `RAG_ENABLED=false` because no DeepSeek credential is configured. When enabled, keep the default RAG bounds unless measured load justifies changing them; an unconfigured/failed embedding request must remain pending and must not be replaced with a zero, random, or deterministic fake vector.
 
 ### Admin
 
@@ -290,7 +296,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 ## 5. Railway migration, API, worker, and Redis
 
-In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`.
+In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
 Run the migrator once after the Supabase backup and before API rollout. Give it only `DATABASE_URL` and `DIRECT_URL`; it runs `prisma migrate deploy` from the dedicated migrator image. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
@@ -303,6 +309,14 @@ Deploy the API only after migration success, then start the worker with `dist/wo
 - Worker logs show bounded RAG synchronization. Confirm changed live restaurant/menu sources receive real embeddings and unchanged sources are skipped; do not seed production to manufacture this evidence.
 
 If migration, health, or worker startup fails, stop. Do not deploy web against a failing API.
+
+Verified 2026-07-14 result:
+
+- Migrate `a9002614-ed2a-438c-9a4e-7170954052fc`: `SUCCESS`, stopped after confirming 38 migrations and no pending migration.
+- API `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`: `SUCCESS`; health 200 `status: ok`; readiness 200 `ready: true` with database, Redis, and Supabase Storage up.
+- Worker `4f818c68-ce66-4aab-ae6e-f8ed708b4f91`: `SUCCESS`, `stopped=false`; expected PostgreSQL polling and `FoodFlow Worker started` logs present; RAG sync disabled.
+- Storage readiness was repaired with the Supabase-issued `service_role` JWT. No key value was printed or committed; opaque `sb_secret...` credentials are not valid Bearer replacements for this adapter.
+- Current Vercel health/login routes are verified separately. These checks do not cover authenticated browser role journeys, controlled-device FCM, the full device background-location matrix, or optional provider feature behavior.
 
 ## 6. Admin and Restaurant deployment
 

@@ -66,7 +66,8 @@ API core:
 - `REALTIME_PROVIDER=supabase`
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
-- `SUPABASE_URL`、server-only `SUPABASE_SECRET_KEY`、Realtime API と短期 ES256 service JWT 用の `SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_REALTIME_JWT_PRIVATE_KEY`、`SUPABASE_REALTIME_JWT_KEY_ID`、`SUPABASE_STORAGE_BUCKET=foodflow-public`
+- API は `FOODFLOW_PROCESS_ROLE=api`、worker は `FOODFLOW_PROCESS_ROLE=worker`。Production で role が未設定または不正なら startup は fail closed
+- `SUPABASE_URL`、opaque server-only `SUPABASE_SECRET_KEY`、Storage 専用 legacy JWT `SUPABASE_SERVICE_ROLE_KEY`、Realtime API と短期 ES256 service JWT 用の `SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_REALTIME_JWT_PRIVATE_KEY`、`SUPABASE_REALTIME_JWT_KEY_ID`、`SUPABASE_STORAGE_BUCKET=foodflow-public`
 - private `SUPABASE_KYC_BUCKET=foodflow-private`、`DRIVER_KYC_MAX_UPLOAD_MB=4`、`DRIVER_KYC_RETRY_LIMIT=3`
 - strong `CRON_SECRET`、access/refresh JWT secrets
 - verified CORS/reset URL

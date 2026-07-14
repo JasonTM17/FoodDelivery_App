@@ -7,10 +7,11 @@
  *
  * Does not print secrets. Uses seed accounts only.
  */
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
+import { spawnSync } from 'node:child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
@@ -29,6 +30,8 @@ try {
 const ADMIN_URL = process.env.FOODFLOW_ADMIN_URL || 'http://localhost:3000'
 const REST_URL = process.env.FOODFLOW_RESTAURANT_URL || 'http://localhost:3002'
 const API_URL = process.env.FOODFLOW_API_URL || 'http://localhost:3001/api'
+const BROWSER_CHANNEL = process.env.FOODFLOW_BROWSER_CHANNEL || 'chrome'
+const LOCALE = 'vi-VN'
 
 const SEED = {
   admin: { email: 'admin@foodflow.vn', password: 'Admin@123' },
@@ -39,6 +42,33 @@ async function ensureDirs() {
   await mkdir(path.join(SHOTS, 'admin'), { recursive: true })
   await mkdir(path.join(SHOTS, 'restaurant'), { recursive: true })
   await mkdir(GIFS, { recursive: true })
+}
+
+function gitText(args) {
+  const result = spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' })
+  return result.status === 0 ? result.stdout.trim() : 'unknown'
+}
+
+async function readExistingManifest() {
+  try {
+    return JSON.parse(await readFile(path.join(SHOTS, 'manifest.json'), 'utf8'))
+  } catch (error) {
+    if (error?.code === 'ENOENT') return {}
+    throw error
+  }
+}
+
+async function waitForCaptureReady(page, label) {
+  await page.waitForLoadState('domcontentloaded')
+  await page.evaluate(async () => {
+    if (document.fonts?.ready) await document.fonts.ready
+  })
+  await page.waitForTimeout(800)
+
+  const bodyText = await page.locator('body').innerText()
+  const errorMarkers = ['Application error', 'Failed to fetch', 'ERR_CONNECTION', 'Internal Server Error']
+  const marker = errorMarkers.find((candidate) => bodyText.includes(candidate))
+  if (marker) throw new Error(`${label} is not capture-ready: visible ${marker}`)
 }
 
 async function loginViaApi(email, password) {
@@ -83,7 +113,7 @@ async function injectAuth(page, baseUrl, tokens, role) {
 
 async function shot(page, relPath, fullPage = false) {
   const file = path.join(SHOTS, relPath)
-  await page.waitForTimeout(800)
+  await waitForCaptureReady(page, relPath)
   await page.screenshot({ path: file, fullPage, type: 'png' })
   console.log('shot', relPath)
 }
@@ -91,14 +121,14 @@ async function shot(page, relPath, fullPage = false) {
 async function captureAdmin(browser, tokens) {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    locale: 'vi-VN',
+    locale: LOCALE,
     deviceScaleFactor: 1,
   })
   const page = await context.newPage()
   await injectAuth(page, ADMIN_URL, tokens, 'admin')
 
   // Login page (public) — use fresh context without auth for marketing shot
-  const publicCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'vi-VN' })
+  const publicCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: LOCALE })
   const loginPage = await publicCtx.newPage()
   await loginPage.goto(`${ADMIN_URL}/vi/login`, { waitUntil: 'networkidle', timeout: 60_000 })
   await shot(loginPage, 'admin/01-login.png')
@@ -124,7 +154,7 @@ async function captureAdmin(browser, tokens) {
   }
 
   // GIF: login form interaction on public page
-  const gifCtx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'vi-VN' })
+  const gifCtx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: LOCALE })
   const g = await gifCtx.newPage()
   await g.goto(`${ADMIN_URL}/vi/login`, { waitUntil: 'networkidle', timeout: 60_000 })
   await g.screenshot({ path: path.join(GIFS, 'admin-login-frame-1.png') })
@@ -147,13 +177,13 @@ async function captureAdmin(browser, tokens) {
 }
 
 async function captureRestaurant(browser, tokens) {
-  const publicCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'vi-VN' })
+  const publicCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: LOCALE })
   const loginPage = await publicCtx.newPage()
   await loginPage.goto(`${REST_URL}/vi/login`, { waitUntil: 'networkidle', timeout: 60_000 })
   await shot(loginPage, 'restaurant/01-login.png')
   await publicCtx.close()
 
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'vi-VN' })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: LOCALE })
   const page = await context.newPage()
   await injectAuth(page, REST_URL, tokens, 'restaurant')
 
@@ -187,7 +217,6 @@ async function captureRestaurant(browser, tokens) {
 }
 
 async function buildGifsWithFfmpeg() {
-  const { spawnSync } = await import('node:child_process')
   const hasFfmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' })
   if (hasFfmpeg.status !== 0) {
     console.warn('ffmpeg not found — leaving PNG frames; install ffmpeg for animated GIFs')
@@ -254,6 +283,11 @@ async function buildGifsWithFfmpeg() {
 }
 
 async function main() {
+  // Capture provenance before screenshots or GIFs mutate the worktree. This
+  // distinguishes pre-existing source changes from the expected output files.
+  const sourceHead = gitText(['rev-parse', 'HEAD'])
+  const dirtyWorkspaceAtStart = gitText(['status', '--porcelain']).length > 0
+
   console.log('API', API_URL)
   console.log('Admin', ADMIN_URL)
   console.log('Restaurant', REST_URL)
@@ -266,11 +300,13 @@ async function main() {
   // Prefer playwright from web workspace
   let browser
   try {
-    browser = await chromium.launch({ headless: true })
+    browser = await chromium.launch({ channel: BROWSER_CHANNEL, headless: true })
   } catch (e) {
-    console.error('Launch chromium failed. From web/: pnpm exec playwright install chromium')
+    console.error(`Launch ${BROWSER_CHANNEL} failed. Install Google Chrome or set FOODFLOW_BROWSER_CHANNEL.`)
     throw e
   }
+
+  const browserVersion = browser.version()
 
   try {
     await captureAdmin(browser, adminTokens)
@@ -281,14 +317,63 @@ async function main() {
 
   await buildGifsWithFfmpeg()
 
-  // Manifest for docs
+  // Merge web evidence into the existing manifest so mobile provenance is
+  // never discarded by a web-only recapture.
+  const capturedAt = new Date().toISOString()
+  const existingManifest = await readExistingManifest()
   const manifest = {
-    capturedAt: new Date().toISOString(),
+    ...existingManifest,
+    capturedAt,
     adminUrl: ADMIN_URL,
     restaurantUrl: REST_URL,
     seed: {
       admin: SEED.admin.email,
       restaurant: SEED.restaurant.email,
+    },
+    webCapture: {
+      capturedAt,
+      sourceHead,
+      dirtyWorkspace: dirtyWorkspaceAtStart,
+      environment: 'Isolated foodflow-batch4-e2e Docker stack with deterministic seed data',
+      composeFiles: ['docker-compose.yml', 'docker-compose.e2e.yml'],
+      runtimeImages: {
+        backend: 'foodflow-batch4-e2e-backend:latest (revision=local)',
+        admin: 'foodflow-batch4-e2e-admin:latest (revision=local)',
+        restaurant: 'foodflow-batch4-e2e-restaurant:latest (revision=local)',
+      },
+      browser: `Google Chrome ${browserVersion}`,
+      browserChannel: BROWSER_CHANNEL,
+      locale: LOCALE,
+      viewport: '1440x900 stills; 1280x800 GIF source frames',
+      privacyReview:
+        'Deterministic local seed data only; no production credentials, tokens, provider keys, or personal browser content are visible',
+      files: {
+        admin: [
+          'admin/01-login.png',
+          'admin/02-overview.png',
+          'admin/03-orders.png',
+          'admin/04-restaurants.png',
+          'admin/05-users.png',
+          'admin/06-drivers.png',
+          'admin/07-promotions.png',
+          'admin/08-support.png',
+          'admin/09-analytics.png',
+          'admin/10-settings.png',
+        ],
+        restaurant: [
+          'restaurant/01-login.png',
+          'restaurant/02-dashboard.png',
+          'restaurant/03-orders.png',
+          'restaurant/04-menu.png',
+          'restaurant/05-promotions.png',
+          'restaurant/06-revenue.png',
+          'restaurant/07-reviews.png',
+          'restaurant/08-staff.png',
+          'restaurant/09-insights.png',
+          'restaurant/10-settings.png',
+        ],
+        gifs: ['../media/gifs/admin-login-flow.gif', '../media/gifs/restaurant-orders-to-menu.gif'],
+      },
     },
   }
   await writeFile(path.join(SHOTS, 'manifest.json'), JSON.stringify(manifest, null, 2))

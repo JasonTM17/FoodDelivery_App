@@ -105,11 +105,12 @@ và xử lý sự cố nằm trong [mobile README](../mobile/README.md).
 
 ## Ranh giới visual và release
 
-Gallery hiện chưa có ảnh Customer. Hai ảnh Driver chỉ là evidence GPS/quyền
-thông báo local test. Chúng cố ý không được trình bày là bằng chứng mobile
-release hay production. Muốn có visual publishable phải capture mới từ
-emulator/thiết bị, ghi source SHA và runtime reference, sau đó review bằng mắt;
-xem [quy trình capture](./product-gallery.vi.md#tạo-lại).
+Gallery có một ảnh Customer discovery đã review riêng tư và bốn ảnh Driver
+GPS/quyền thông báo từ Android emulator local test. Chúng cố ý không được trình
+bày là bằng chứng mobile release hay production vì record capture chưa gắn với
+source SHA sạch và runtime immutable. Muốn có visual publishable phải capture
+mới từ emulator/thiết bị, ghi source SHA và runtime reference, sau đó review
+bằng mắt; xem [quy trình capture](./product-gallery.vi.md#tạo-lại).
 
 Liên quan: [yêu cầu sản phẩm](./project-overview-pdr.vi.md),
 [hướng dẫn test](./testing-guide.vi.md), [product gallery](./product-gallery.vi.md).

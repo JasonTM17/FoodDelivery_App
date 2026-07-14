@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-14 status: **integration と current-head quality gates は `master` で green、managed deployment は未完了、production は no-go**。
+2026-07-14 status: **deployed runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` は backend、CI、registry、Railway、Vercel health、API-level GPS evidence が green。Full production certification は no-go**。
 
 ## Completed and incorporated work
 
@@ -41,7 +41,7 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 
 ### Backend/production
 
-- Railway の Redis dependency を audit し、明示 provision または安全に削除。
+- Verified Railway managed Redis を healthy に保ち readiness を monitor。
 - Final source head のすべての migration を fresh PostGIS/Supabase で validate。古い固定 count を使わない。
 - Supabase RLS/publication/storage/cross-tenant を live test。
 - Rotated secrets で DeepSeek、route、SePay、notification、export、storage、Cron smoke。
@@ -56,8 +56,9 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 - Fresh clean-volume Docker project `foodflow-batch4-e2e` は当時 current の 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 6.6 分で pass しました。後の migration-only fresh database は current 38 migrations と default-address invariant を検証しました。Final clean head の full Docker/Playwright 再実行が必要で、これは local result のみです。
 - current read-only Supabase audit は migrations 1–38、default-address index、UUID default を確認しました。以前の 1–36 record は historical evidence のみです。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
-- Railway 依存の rollout と verification は必要な real provider configuration/credentials により外部要因で blocked です。Railway API/worker production health を claim してはいけません。Direct Supabase private-Broadcast allow/deny は検証済みですが、API 経由の live GPS と controlled-device FCM は未検証です。
-- `ed25399` の Admin/Restaurant production deployments は Vercel で READY、health/login は 200 です。End-to-end production approval は verified Railway API/worker に依存します。
+- Runtime candidate `52f4336` は 144 suites / 1065 tests、typecheck、lint、build、trigger された GitHub workflows、multi-architecture runtime smoke、High/Critical image scans を pass。Railway migrate `a9002614-ed2a-438c-9a4e-7170954052fc`、API `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`、worker `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` は immutable SHA images で成功。API health/readiness は database、Redis、Supabase Storage up、worker poll 稼働、DeepSeek 不在のため RAG は disabled です。
+- Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。
+- Earlier `ed25399` artifact record の Admin/Restaurant deployments は Vercel で READY、health/login は 200 です。Current Railway API に対する exact authenticated re-smoke は未完了です。
 - `ed25399` の 4 SHA images は Docker Hub と public GHCR に publish 済みで、各 cross-registry digest は一致します。Packages は repository-linked、Actions write 済みです。Semver/`latest` promotion は未承認です。
 - 以前貼られた provider key は rotate 必須。
 
@@ -65,10 +66,10 @@ Fake value や validation bypass は禁止です。
 
 ## Release sequence
 
-1. Exposed credentials を rotate し、Railway の real settings 15 件を secret store に登録。
-2. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
-3. Production Customer/Driver auth、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
-4. Verified Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
+1. Verified API/worker/Redis baseline を維持し、次回 release は一つの immutable SHA から deploy、health/readiness/worker polling を再確認。
+2. Certify 対象 integration のみ sealed store で設定し、Google Maps や provider values を捏造しない。
+3. Production Customer/Driver auth、token refresh、GPS snapshot/delta/reconnect、Storage、configured map/routing、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
+4. Current Railway API に対して exact Admin/Restaurant Vercel deployments を再 smoke。
 5. 4 SHA images を clean pull/scan/runtime smoke。
 6. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
 

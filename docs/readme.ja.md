@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-14 status:** Earlier clean-volume stack は当時 current の 36 migrations と Playwright 204/204 を pass。Current worktree は migrations 37–38 を追加し、disposable fresh database は全 38 と default-address invariant を pass しました。これは production certification ではありません。Provider が exact migrations/release candidate を deploy し、authenticated production smoke と controlled-device FCM が完了するまで release は **NO-GO** です。
+> **2026-07-14 status:** runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` は 144 suites / 1065 tests、typecheck、lint、build、trigger された GitHub workflows、multi-architecture runtime smoke、High/Critical image scans を pass。Railway migrate/API/worker は immutable SHA images で稼働し、38 migrations と database/Redis/Supabase Storage readiness を確認。Current Vercel Admin/Restaurant は Ready、health/login は 200。Controlled production GPS は private Supabase Broadcast と PostGIS に 1437 ms で到達し、一時データは削除済みです。Full production certification には controlled-device FCM、Android/iOS background-location matrix、authenticated browser journeys、certification scope の payment/messaging/AI/owned-routing integrations が必要です。
 
 ## Product preview
 
@@ -51,6 +51,8 @@ Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API 
 - Restaurant staff、realtime channel、tracking、export、admin resource の tenant isolation。
 - Basemap は key/billing 不要の MapLibre/OpenFreeMap を使用し、GPS・route・ETA は実 backend telemetry のみを使って不足時は fail closed。
 - DeepSeek は backend adapter 経由です。Key 不足または provider error は fail closed とし、実 telemetry を保存し、client/repo に key を埋め込みません。
+
+Google Maps は起動要件ではありません。Google Directions と owned OSRM の両方が未設定の場合、route calculation は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` を返しますが、API/worker は healthy のままです。DeepSeek credential がないため、Railway は現在 `RAG_ENABLED=false` です。
 
 ## Provider architecture
 
@@ -129,11 +131,11 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 
 ## Deploy order
 
-1. Exposed key を rotate し、必要な Railway/provider values を sealed secret store に設定。
+1. Exposed key を rotate し、設定済み Railway/provider values は sealed secret store のみに保持。
 2. 承認された production migration environment で全 migration を apply/verify する。local Docker から provider state を推測しない。
-3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
+3. Verified Railway API/worker deployments を保持し、次回 release は同一 immutable SHA から deploy して health/readiness/worker polling を再確認。
 4. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
-5. Verified Railway に対して exact Admin/Restaurant Vercel deployments、map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。
+5. Current Railway API に対して exact Admin/Restaurant Vercel deployments、configured map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。
 6. Private Admin/Restaurant GHCR packages を repository に接続して workflow write を付与し、4 immutable SHA images を publish/pull/scan。
 7. Production smoke green 後のみ `latest` を promote。
 

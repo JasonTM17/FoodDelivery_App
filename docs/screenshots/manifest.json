@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-10T12:45:24.788Z",
+  "capturedAt": "2026-07-14T13:39:27.864Z",
   "adminUrl": "http://localhost:13000",
   "restaurantUrl": "http://localhost:13002",
   "seed": {
@@ -39,5 +39,55 @@
       "driver/driver-online-realtime-gps.webp",
       "gps/driver-foreground-location-notification.webp"
     ]
+  },
+  "webCapture": {
+    "capturedAt": "2026-07-14T13:39:27.864Z",
+    "sourceHead": "52f433641d5093f6d064cfba6c1cd99c8cb035e9",
+    "dirtyWorkspace": true,
+    "environment": "Isolated foodflow-batch4-e2e Docker stack with deterministic seed data",
+    "composeFiles": [
+      "docker-compose.yml",
+      "docker-compose.e2e.yml"
+    ],
+    "runtimeImages": {
+      "backend": "foodflow-batch4-e2e-backend:latest (revision=local)",
+      "admin": "foodflow-batch4-e2e-admin:latest (revision=local)",
+      "restaurant": "foodflow-batch4-e2e-restaurant:latest (revision=local)"
+    },
+    "browser": "Google Chrome 150.0.7871.114",
+    "browserChannel": "chrome",
+    "locale": "vi-VN",
+    "viewport": "1440x900 stills; 1280x800 GIF source frames",
+    "privacyReview": "Deterministic local seed data only; no production credentials, tokens, provider keys, or personal browser content are visible",
+    "files": {
+      "admin": [
+        "admin/01-login.png",
+        "admin/02-overview.png",
+        "admin/03-orders.png",
+        "admin/04-restaurants.png",
+        "admin/05-users.png",
+        "admin/06-drivers.png",
+        "admin/07-promotions.png",
+        "admin/08-support.png",
+        "admin/09-analytics.png",
+        "admin/10-settings.png"
+      ],
+      "restaurant": [
+        "restaurant/01-login.png",
+        "restaurant/02-dashboard.png",
+        "restaurant/03-orders.png",
+        "restaurant/04-menu.png",
+        "restaurant/05-promotions.png",
+        "restaurant/06-revenue.png",
+        "restaurant/07-reviews.png",
+        "restaurant/08-staff.png",
+        "restaurant/09-insights.png",
+        "restaurant/10-settings.png"
+      ],
+      "gifs": [
+        "../media/gifs/admin-login-flow.gif",
+        "../media/gifs/restaurant-orders-to-menu.gif"
+      ]
+    }
   }
 }

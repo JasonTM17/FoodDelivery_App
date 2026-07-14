@@ -116,11 +116,13 @@ a Dart define. Full setup, Android builds, and troubleshooting are in the
 
 ## Visual and release boundary
 
-The gallery currently has no captured Customer UI. The two Driver images are
-test-only local GPS/permission evidence. They are deliberately not presented
-as mobile-release or production proof. A publishable visual record requires a
-new emulator/device capture from a recorded source SHA and runtime reference,
-followed by visual inspection; use the [gallery capture procedure](./product-gallery.md#capture-procedure).
+The gallery contains one privacy-reviewed Customer discovery still and four
+Driver GPS/permission captures from local Android emulator testing. They are
+deliberately not presented as mobile-release or production proof because their
+capture record does not bind them to a clean source SHA and immutable runtime.
+A publishable visual record requires a new emulator/device capture from a
+recorded source SHA and runtime reference, followed by visual inspection; use
+the [gallery capture procedure](./product-gallery.md#capture-procedure).
 
 Related: [product requirements](./project-overview-pdr.md),
 [testing guide](./testing-guide.md), and [product gallery](./product-gallery.md).

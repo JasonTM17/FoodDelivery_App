@@ -97,11 +97,12 @@ Dart define に入れてはいけません。詳しい setup、Android build、t
 
 ## Visual と release の境界
 
-gallery に Customer UI capture はまだありません。Driver の二枚の画像は local test の
-GPS/permission evidence だけです。mobile release や production の証拠として見せません。
-公開用 visual には、source SHA と runtime reference を記録した emulator/device capture と
-visual review が必要です。[capture procedure](./product-gallery.ja.md#recapture) を
-参照してください。
+Gallery には privacy review 済みの Customer discovery still 一枚と、local Android
+emulator test の Driver GPS/permission capture 四枚があります。Capture record が clean
+source SHA と immutable runtime に紐付いていないため、mobile release や production の
+証拠として見せません。公開用 visual には、source SHA と runtime reference を記録した
+emulator/device capture と visual review が必要です。
+[capture procedure](./product-gallery.ja.md#recapture) を参照してください。
 
 関連: [product requirements](./project-overview-pdr.ja.md)、
 [testing guide](./testing-guide.ja.md)、[product gallery](./product-gallery.ja.md)。

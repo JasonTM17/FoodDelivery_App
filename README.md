@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** The current clean-volume Docker stack applied all 38 migrations, enforced the single-default-address invariant, and passed Playwright 204/204 across Chrome desktop, Firefox, and Pixel 5. This is **not** production certification. The release remains **NO-GO** until the exact release candidate is deployed through the approved provider environment, then authenticated production smoke and controlled-device FCM delivery pass.
+> **Release status — 2026-07-14:** runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` passed 144 Jest suites / 1065 tests, typecheck, lint, build, all triggered GitHub workflows, multi-architecture runtime smoke, and High/Critical image scans. Railway migrate/API/worker run the immutable SHA images; all 38 migrations are applied and public health/readiness report database, Redis, and Supabase Storage up. Current Admin and Restaurant Vercel deployments are Ready and their production health/login routes return 200. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated browser role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
 
 ## Product preview
 
@@ -60,6 +60,8 @@ Customer and Driver have no local web URLs. Use their explicit Flutter entrypoin
 - Tenant-scoped authorization for restaurant staff, realtime channels, tracking, exports, and administrative resources.
 - Keyless MapLibre/OpenFreeMap basemaps plus backend Google Directions/owned OSRM routing when configured; route snapshots and telemetry fail closed instead of inventing coordinates, polylines, or ETA.
 - DeepSeek-backed support through the backend adapter, with fail-closed configuration/provider errors, persisted usage telemetry, and no embedded provider key.
+
+Google Maps is not required to boot FoodFlow. When neither Google Directions nor an owned OSRM service is configured, route calculation returns `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`; the API and worker remain healthy. Railway currently runs with `RAG_ENABLED=false` because no DeepSeek credential is configured.
 
 ## Production and local architecture
 
@@ -203,11 +205,11 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 
 ## Deployment order
 
-1. Rotate exposed credentials and configure the required Railway/provider values through sealed provider stores.
+1. Rotate exposed credentials and keep all configured Railway/provider values in sealed provider stores.
 2. Recheck all 38 production migrations and checksums before rollout; never infer provider state from local Docker.
-3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
+3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
-5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
+5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
 6. Pull and smoke the four matching Docker Hub/GHCR SHA manifests from a clean environment, verify scans, and promote semver/`latest` only after provider production smoke passes.
 
 ## Documentation

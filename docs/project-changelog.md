@@ -29,6 +29,9 @@ authoritative source for individual commits and implementation detail.
   provenance is required before they support a current-release claim.
 - Made Customer and Driver product coverage explicit in the product gallery and
   documented the boundary between web captures and device/emulator evidence.
+- Recorded the successful Railway API/worker deployments, the corrected public
+  domain port, Supabase Storage readiness, and the remaining production-smoke
+  boundary without relabeling infrastructure health as release approval.
 
 ### Fixed
 
@@ -70,16 +73,23 @@ authoritative source for individual commits and implementation detail.
 - Rebuilt Restaurant navigation as a responsive accessible sidebar/drawer with
   skip navigation, visible focus, locale-preserving controls, and reduced
   motion behavior.
+- Kept optional third-party providers from blocking API/worker startup while
+  preserving fail-closed feature behavior. Missing Google/owned OSRM now gives
+  `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`; production RAG stays disabled
+  without a DeepSeek credential.
 
 ### Release blockers
 
-- The dated 2026-07-14 external preflight record reports Supabase migrations and
-  Vercel public production variables configured; Railway still needs real
-  third-party provider credentials before a fresh rollout check.
+- Railway API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c` and worker
+  deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from immutable SHA images; health and
+  readiness return 200, and worker outbox polling is active. This closes the
+  former offline/404 startup blocker only.
 - Final Android production signing and iOS build/signing evidence still require
   authorized release credentials/runners; local debug APKs are not publishable.
-- Full current-head local, remote CI, accessibility, visual, tenant, map, AI,
-  and production smoke gates remain mandatory before deployment.
+- Authenticated browser role flows, controlled-device FCM,
+  controlled-device FCM, configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-route
+  checks, accessibility, visual, tenant, device, and image-pull gates remain
+  mandatory before release certification.
 - At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
   Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
   352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and

@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 14/07/2026:** Stack volume sạch trước đó áp dụng 36 migration hiện hành lúc chạy và pass Playwright 204/204. Worktree hiện tại thêm migration 37–38; database tạm volume sạch đã apply đủ 38 và invariant địa chỉ mặc định pass. Đây **không** phải chứng nhận production. Release vẫn **NO-GO** cho tới khi provider apply đúng migration/release candidate, chạy smoke production có xác thực và gửi FCM đến thiết bị kiểm soát.
+> **Trạng thái 14/07/2026:** runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` pass 144 suite / 1065 test, typecheck, lint, build, toàn bộ workflow GitHub được trigger, runtime smoke đa kiến trúc và scan image High/Critical. Railway migrate/API/worker chạy image SHA immutable; đủ 38 migration và health/readiness báo database, Redis, Supabase Storage up. Vercel Admin/Restaurant hiện tại Ready, health/login trả 200. GPS production kiểm soát đã tới private Supabase Broadcast và PostGIS trong 1437 ms, sau đó xóa sạch dữ liệu tạm. Đây **chưa** là chứng nhận production đầy đủ: còn thiếu FCM thiết bị kiểm soát, ma trận background location Android/iOS, browser journey có xác thực và các integration payment/messaging/AI/owned routing thuộc phạm vi chứng nhận.
 
 ## Xem trước sản phẩm
 
@@ -51,6 +51,8 @@ Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{
 - Tenant isolation trên staff nhà hàng, realtime channel, tracking, export và tài nguyên quản trị.
 - MapLibre/OpenFreeMap hiển thị nền bản đồ không cần key/billing; GPS, route và ETA vẫn chỉ lấy từ backend thật và fail closed khi thiếu.
 - DeepSeek qua backend adapter; thiếu key hoặc provider lỗi thì fail closed, có telemetry thật và không nhúng key vào client/repo.
+
+Google Maps không bắt buộc để hệ thống khởi động. Nếu không cấu hình Google Directions hoặc OSRM do dự án sở hữu, tính route trả `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` nhưng API/worker vẫn healthy. Railway hiện đặt `RAG_ENABLED=false` vì chưa có credential DeepSeek.
 
 ## Kiến trúc provider
 
@@ -133,11 +135,11 @@ Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch
 
 ## Thứ tự deploy
 
-1. Rotate key bị lộ và cấu hình các giá trị Railway/provider cần thiết qua secret store.
+1. Rotate key bị lộ và giữ mọi giá trị Railway/provider đã cấu hình trong secret store.
 2. Apply và xác minh tất cả migration qua môi trường migration production đã được duyệt; không suy luận trạng thái provider từ Docker local.
-3. Deploy API/worker cùng một SHA immutable, rồi kiểm health/readiness/Cron khi đã có đủ cấu hình provider thật.
+3. Giữ hai deployment Railway đã verify; lần release sau deploy API/worker từ cùng một SHA immutable rồi kiểm lại health/readiness/worker polling.
 4. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
-5. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh, rồi kiểm map/route, chatbot, notification, export, payment và FCM thiết bị kiểm soát.
+5. Smoke lại đúng deployment Vercel Admin/Restaurant với API Railway hiện tại, rồi kiểm map/route đã cấu hình, chatbot, notification, export, payment và FCM thiết bị kiểm soát.
 6. Nối hai package GHCR Admin/Restaurant với repository, cấp workflow write, rồi publish/pull/scan bốn image SHA immutable.
 7. Chỉ promote `latest` sau khi production smoke xanh.
 
