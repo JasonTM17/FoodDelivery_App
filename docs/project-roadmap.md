@@ -64,7 +64,7 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
 - Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS/Broadcast and controlled-device FCM delivery remain unverified. Local notification and lifecycle tests do not prove provider delivery.
 - Admin and Restaurant production verification still depends on the authorized Supabase rollout and verified Railway API/worker. Do not treat prior web evidence as end-to-end production approval.
-- Current-head Docker SHA images remain unpublished. Existing private Admin/Restaurant GHCR packages are not connected to this repository, so the workflow gets 403 until repository access is granted. No semver or `latest` promotion is authorized.
+- Evidence commit `84e2f36` has all four immutable multi-architecture Docker Hub manifests. GHCR still returns `write_package` for all four because package Actions access has not been granted; Admin/Restaurant are unlinked, and Restaurant remains private. No semver or `latest` promotion is authorized.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
@@ -76,7 +76,7 @@ These are release blockers, not permission to add fake values or bypass validati
 3. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
 4. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.
-6. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access, then rerun the four-image SHA workflow.
+6. Grant `JasonTM17/FoodDelivery_App` Actions access on all four GHCR packages, link Admin/Restaurant, then rerun the four-image SHA workflow.
 7. Pull the SHA manifests in a clean environment, verify cross-registry digests/scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
 8. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 

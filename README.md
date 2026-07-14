@@ -83,16 +83,16 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Docker packages
 
-The table below records the last pulled and runtime-smoked immutable images. It is historical registry evidence for commit `a627b597796965f4b991a5ab236a1fdedafa0b30`, not an image set for the current `master` head. The current source has been rebuilt and browser-tested only as local images labelled `revision=local`; current-head backend, migrate, Admin, and Restaurant SHA images still need a frozen-source build, scan, push, and clean pull. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
+The table below records the multi-architecture Docker Hub manifests produced by the SHA-only workflow for evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7`. Docker Hub was queried after the workflow completed. These immutable manifests still require a clean pull/runtime smoke; they are not proof of Railway health. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
 
 | Artifact | Docker Hub tag | Remote digest |
 |---|---|---|
-| API + worker | [`nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
-| Admin | immutable Docker SHA pending | Railway-dependent production smoke remains blocked; no production health claim is recorded here |
-| Restaurant | immutable Docker SHA pending | Railway-dependent production smoke remains blocked; no production health claim is recorded here |
+| API + worker | [`nguyenson1710/foodflow-backend:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:45eea648ea65928815e34a3e000205a9136cbf82df7fc4862658bb91324abc0d` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:fb3abb7ddc0b119bf1ba9201e664f823d79711ef7e7a1af8f42268e324c0297e` |
+| Admin | [`nguyenson1710/foodflow-admin:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-admin) | `sha256:9b29eb1cd9d9df95cdff1f79ce0ce260e485f2e088f74c7dc5af9fa5f8935165` |
+| Restaurant | [`nguyenson1710/foodflow-restaurant:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:d4b52dc7ef61f7978f5ded56aba05c05a597b3f6e5d19ab63d850722ee109716` |
 
-The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. For the historical tags above, Docker Hub was queried after push and both SHA tags were pulled again for a Linux/amd64 local runtime smoke: API health returned 200 and both runtimes preserved their non-root users. Docker Scout found zero High/Critical CVEs for those Linux/amd64 images. These results do not transfer to a newer source SHA.
+The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. The same workflow attempted GHCR publication, but all four GHCR writes were denied with `write_package`: public visibility only grants pull access. Each package must grant `JasonTM17/FoodDelivery_App` Actions access before rerunning the workflow. No semver or `latest` tag was promoted.
 
 Release promotion order:
 
@@ -192,7 +192,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Current-head Docker SHA manifests remain pending, and local `revision=local` images are not release artifacts. Railway deployment verification, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked by external real-provider configuration and credentials.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Evidence commit `84e2f36` has all four immutable Docker Hub manifests and a green Mobile CI artifact containing Customer/Driver debug APKs; clean image pulls, device release evidence, Railway deployment, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked.
 
 ## Deployment order
 
@@ -201,7 +201,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
-6. Connect the private Admin/Restaurant GHCR packages to this repository and grant workflow write access, then rerun the multi-registry SHA publish.
+6. Grant this repository Actions access on all four GHCR packages (visibility alone is insufficient), make Restaurant public only if public pulls are intended, then rerun the multi-registry SHA publish.
 7. Pull all four immutable Docker manifests in a clean environment, verify remote digests and scans, then update `latest` only after production smoke.
 
 ## Documentation

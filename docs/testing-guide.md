@@ -12,7 +12,7 @@ Current-head evidence on 2026-07-14:
 |---|---|
 | Backend | The local release candidate passed 142 suites / 1049 tests, Prisma validation/generation, typecheck, lint, and build. Fresh remote CI is still required after push. |
 | Database | The current source and Supabase production are aligned at 36 ordered, checksum-verified migrations. Migration 36 scopes FCM revocations by token plus registration capability; its `token,registration_id` primary key was verified directly. |
-| Mobile Flutter | The local release candidate passed all 354 tests and `flutter analyze`. Fresh Mobile CI and device-specific Android/iOS production evidence are still required. |
+| Mobile Flutter | The local release candidate passed all 354 tests and `flutter analyze`. Mobile CI for `84e2f36` also passed and produced Customer/Driver debug APKs. Device-specific Android/iOS production evidence is still required. |
 | Web | The Restaurant mobile Kanban CLS trace is approximately 0.0037 after the fix. This is local visual-stability evidence, not a production health claim. |
 | Browser E2E | The fresh current-source clean-volume Docker matrix passed 204/204 in 6.6 minutes. It is not Railway/Supabase production GPS evidence. |
 | FCM | Local contract evidence passed: 6 FCM/controller backend suites / 47 tests and 34 focused Flutter notification tests. Live send was not run: production project credentials and a controlled device token are required. |

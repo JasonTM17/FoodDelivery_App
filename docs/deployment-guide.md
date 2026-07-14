@@ -61,14 +61,16 @@ Expected Railway services:
 
 ### Last verified Docker Hub candidate
 
-Runtime commit `a627b597796965f4b991a5ab236a1fdedafa0b30` is published as immutable Docker Hub tags. These are historical pull/runtime-smoke evidence, not current-head release artifacts:
+Evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7` is published as immutable multi-architecture Docker Hub tags. The digests below were read back from Docker Hub after the workflow; a clean pull/runtime smoke is still required:
 
 | Artifact | SHA tag and verified digest |
 |---|---|
-| API + worker | `nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
-| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30` — `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
+| API + worker | `nguyenson1710/foodflow-backend:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:45eea648ea65928815e34a3e000205a9136cbf82df7fc4862658bb91324abc0d` |
+| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:fb3abb7ddc0b119bf1ba9201e664f823d79711ef7e7a1af8f42268e324c0297e` |
+| Admin | `nguyenson1710/foodflow-admin:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:9b29eb1cd9d9df95cdff1f79ce0ce260e485f2e088f74c7dc5af9fa5f8935165` |
+| Restaurant | `nguyenson1710/foodflow-restaurant:sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` — `sha256:d4b52dc7ef61f7978f5ded56aba05c05a597b3f6e5d19ab63d850722ee109716` |
 
-`latest` intentionally remains on the prior candidate. Rebuild all four artifacts from the final source SHA, verify their remote digests, and complete the provider stages below before any semver or `latest` promotion.
+`latest` intentionally remains on the prior candidate. Clean-pull and smoke all four artifacts, grant repository Actions access on all four GHCR packages, and complete the provider stages below before any semver or `latest` promotion.
 
 Expected Vercel projects:
 

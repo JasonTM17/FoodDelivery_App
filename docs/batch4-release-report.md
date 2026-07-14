@@ -4,13 +4,13 @@
 
 ## Current continuation — 2026-07-14
 
-Code release `43f0306` contains the FCM capability hardening and migration 36. All 11 required workflows are green: CI, Integration Smoke Gate, E2E, Mobile CI, Build, Lint, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. Recorded code-release counts are Backend 142 suites / 1049 tests, Mobile 354 tests, and isolated Docker E2E 204/204 in 6.6 minutes.
+Code release `43f0306` contains the FCM capability hardening and migration 36. All 11 required workflows are green. Evidence commit `84e2f36` additionally has green CI/Build/Lint/security/SBOM/mobile workflows, preserved independent Docker matrix builds, and a Mobile CI artifact containing Customer/Driver debug APKs. Recorded code-release counts are Backend 142 suites / 1049 tests, Mobile 354 tests, and isolated Docker E2E 204/204 in 6.6 minutes.
 
 Supabase production now has all 36 forward migrations applied through the authorized Railway migrate environment. Migration 36 and its `token,registration_id` primary key were verified directly. Earlier direct checks verified business/RAG tables remain empty, RLS remains enabled, private Broadcast authorization exists, the public/private Storage buckets have bounded MIME/size policy, and anonymous public-object listing was removed by migration 35. A historical zero-step failed Prisma row remains correctly recorded as rolled back; no applied migration was rewritten. PostGIS is non-relocatable, while moving pgvector would break the current Prisma/raw-operator search path, so the two remaining extension-advisor warnings are documented instead of hidden with an unsafe schema move.
 
 Admin and Restaurant are GitHub-linked, READY on Vercel, and their canonical health/login routes return 200. A headless browser observed no tunnel/localhost request and no console error; the stale Restaurant tunnel environment values were replaced. Railway managed Redis and the migration service are healthy, but API/worker have no deployment and the public API returns 404 because 15 real provider configurations are absent. Authenticated production GPS/Broadcast, provider integrations, and end-to-end production smoke therefore remain blocked.
 
-Current-head Docker SHA images remain unpublished. The multi-registry workflow correctly fails closed because the existing private `foodflow-admin` and `foodflow-restaurant` GHCR packages are not connected to this repository and deny the workflow token with 403. Repository connection and Actions write access require an explicit package-permission change. No `v4.0.0` or `latest` promotion is authorized.
+All four immutable multi-architecture Docker Hub manifests were published for `84e2f36`, and their remote index digests were read back. GHCR publication still fails closed with `write_package` on all four packages: package visibility permits pull but does not grant this repository Actions write access. Backend/migrate are linked; Admin/Restaurant remain unlinked, and Restaurant remains private. No `v4.0.0` or `latest` promotion is authorized.
 
 Snapshot date: **2026-07-12**. Status at that snapshot: **integration pushed to `master`; production release blocked**.
 
@@ -102,17 +102,17 @@ Visual review found Vietnamese Admin overview KPI labels rendered in English and
 
 ## Registry audit
 
-Docker Hub was verified on 2026-07-12 from the immutable SHA tags after a local build, pull, and runtime health smoke:
+Docker Hub was queried on 2026-07-14 after the SHA-only workflow published evidence commit `84e2f362dbac81cc4626e9ab76a109d4a7703de7`:
 
 | Artifact | Candidate tag | Verified digest | Status |
 |---|---|---|---|
-| `foodflow-backend` | `sha-a627b597796965f4b991a5ab236a1fdedafa0b30` | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` | Docker Hub SHA pulled and runtime returned health 200 as uid 65534; Docker Scout Linux/amd64 High/Critical = 0; `latest` intentionally retained on the prior candidate |
-| `foodflow-migrate` | `sha-a627b597796965f4b991a5ab236a1fdedafa0b30` | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` | Docker Hub SHA pulled and runtime preserved uid 65532; Docker Scout Linux/amd64 High/Critical = 0; `latest` intentionally retained on the prior candidate |
-| `foodflow-admin` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
-| `foodflow-restaurant` | not published at current head | — | blocked: verified Supabase anon public build variable missing |
+| `foodflow-backend` | `sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` | `sha256:45eea648ea65928815e34a3e000205a9136cbf82df7fc4862658bb91324abc0d` | Docker Hub multi-architecture index verified; clean pull/runtime smoke pending |
+| `foodflow-migrate` | `sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` | `sha256:fb3abb7ddc0b119bf1ba9201e664f823d79711ef7e7a1af8f42268e324c0297e` | Docker Hub multi-architecture index verified; clean pull/runtime smoke pending |
+| `foodflow-admin` | `sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` | `sha256:9b29eb1cd9d9df95cdff1f79ce0ce260e485f2e088f74c7dc5af9fa5f8935165` | Docker Hub multi-architecture index verified; clean pull/runtime smoke pending |
+| `foodflow-restaurant` | `sha-84e2f362dbac81cc4626e9ab76a109d4a7703de7` | `sha256:d4b52dc7ef61f7978f5ded56aba05c05a597b3f6e5d19ab63d850722ee109716` | Docker Hub multi-architecture index verified; clean pull/runtime smoke pending |
 | `foodflow-worker` | no separate artifact | backend digest | worker runs from backend image |
 
-The two current SHA manifests are local Linux/amd64 release-candidate evidence, not a production release. No `v4.0.0` tag was created and `latest` was not promoted. Semver/latest promotion remains gated on multi-architecture image scanning, all application gates, provider preflight, deployment, and production smoke.
+These four remote SHA manifests are immutable registry evidence, not a production release. No `v4.0.0` tag was created and `latest` was not promoted. Clean-pull/runtime smoke, GHCR publication, provider deployment, and production smoke remain required.
 
 ## External preflight status
 
@@ -130,7 +130,7 @@ Secret values are intentionally never printed or stored in this report. Any Deep
 
 ### GitHub Actions
 
-All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. The Docker publish workflow is a separate release gate and remains blocked at private Admin/Restaurant GHCR package authorization; it has not promoted semver or `latest`.
+All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2E, Integration Smoke Gate, Gitleaks, CodeQL, Trivy, OpenAPI Validate, and SBOM. Docker Hub has all four `84e2f36` SHA manifests. The multi-registry Docker workflow remains red only at GHCR package authorization and has not promoted semver or `latest`.
 
 ## Remaining release gates
 
@@ -139,8 +139,8 @@ All 11 required code-release workflows are green: CI, Build, Lint, Mobile CI, E2
 3. Validate private Broadcast token expiry/refresh, RLS cross-tenant denial, KYC Storage upload/read, GPS snapshot/delta/reconnect, and degraded route behavior against Supabase production.
 4. Run provider-backed route/map, export, payment, notification, AI, and one controlled-device FCM smoke. Complete Android device GPS matrix and use macOS/iPhone for required iOS background-location evidence.
 5. Re-smoke the exact Admin/Restaurant Vercel deployments after Railway is healthy.
-6. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access. Rerun all four current-head Docker SHA manifests, pull in a clean environment, verify cross-registry digests/scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
+6. Grant this repository Actions access on all four GHCR packages and link Admin/Restaurant. Rerun GHCR publication, pull all four SHA manifests in a clean environment, verify cross-registry digests/scans/runtime smoke, then create semver and manually promote `latest` only after production smoke.
 
 ## Release decision
 
-**NO-GO** remains correct. Supabase schema deployment, current-head CI, and Vercel dashboard health are green, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, required device release evidence is incomplete, and current-head Docker images have not been published. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.
+**NO-GO** remains correct. Supabase schema deployment, CI, Vercel dashboard health, Mobile CI APK generation, and Docker Hub SHA publication are green, but Railway API/worker are not live, 15 provider configurations are missing, production GPS/Broadcast/FCM/auth smoke has not run, required device release evidence is incomplete, GHCR write access is absent, and clean image pulls have not run. No secret, seed, ETA, provider answer, or embedding may be invented or bypassed to change this decision.
