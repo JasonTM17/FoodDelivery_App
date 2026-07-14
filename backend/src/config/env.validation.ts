@@ -19,6 +19,9 @@ const productionRequiredKeys = [
   'PASSWORD_RESET_URL_BASE',
   'CORS_ORIGINS',
   'DELIVERY_BASE_FEE_VND',
+] as const
+
+const optionalProviderKeys = [
   'GOOGLE_MAPS_API_KEY',
   'OSRM_URL',
   'DEEPSEEK_API_KEY',
@@ -44,10 +47,14 @@ const minioProductionRequiredKeys = [
   'MINIO_KYC_BUCKET',
 ] as const
 
-type ProductionRequiredKey =
-  | (typeof productionRequiredKeys)[number]
-  | (typeof minioProductionRequiredKeys)[number]
-  | 'CRON_SECRET'
+const productionGuardedKeys = [
+  ...productionRequiredKeys,
+  ...minioProductionRequiredKeys,
+  ...optionalProviderKeys,
+  'CRON_SECRET',
+] as const
+
+type ProductionRequiredKey = (typeof productionGuardedKeys)[number]
 
 const productionForbiddenValues: Partial<Record<ProductionRequiredKey, readonly string[]>> = {
   DATABASE_URL: [LOCAL_DEFAULTS.DATABASE_URL],
@@ -222,13 +229,33 @@ function collectProductionIssues(config: Record<string, unknown>): string[] {
     const value = config[key]
     if (isBlank(value)) {
       issues.push(`${key}: is required in production`)
-      continue
     }
+  }
 
-    const normalizedValue = String(value).trim()
-    if (productionForbiddenValues[key]?.includes(normalizedValue)) {
+  // Optional providers do not block process startup. When configured, their
+  // values must still pass the same production placeholder/default guards.
+  for (const key of productionGuardedKeys) {
+    const forbiddenValues = productionForbiddenValues[key]
+    const value = config[key]
+    if (!isBlank(value) && forbiddenValues?.includes(String(value).trim())) {
       issues.push(`${key}: must not use the local development default in production`)
     }
+  }
+
+  for (const group of [
+    ['SEPAY_ACCOUNT_NUMBER', 'SEPAY_BANK_NAME', 'SEPAY_WEBHOOK_SECRET'],
+    ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'],
+    ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER'],
+  ] as const) {
+    const configuredKeys = group.filter(key => !isBlank(config[key]))
+    if (configuredKeys.length > 0 && configuredKeys.length < group.length) {
+      const missingKeys = group.filter(key => isBlank(config[key]))
+      issues.push(`Incomplete provider configuration; missing ${missingKeys.join(', ')}`)
+    }
+  }
+
+  if (isBlank(config.FCM_PROJECT_ID) && !isBlank(config.FCM_SERVICE_ACCOUNT_JSON)) {
+    issues.push('Incomplete provider configuration; missing FCM_PROJECT_ID')
   }
 
   const jwtSecret = String(config.JWT_SECRET ?? '')

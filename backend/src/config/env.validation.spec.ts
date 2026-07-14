@@ -41,6 +41,30 @@ const productionEnv = {
   SUPABASE_KYC_BUCKET: 'foodflow-private',
 }
 
+const optionalProviderKeys = [
+  'GOOGLE_MAPS_API_KEY',
+  'OSRM_URL',
+  'DEEPSEEK_API_KEY',
+  'SEPAY_ACCOUNT_NUMBER',
+  'SEPAY_BANK_NAME',
+  'SEPAY_WEBHOOK_SECRET',
+  'WEBHOOK_SECRET',
+  'SMTP_HOST',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_FROM',
+  'FCM_PROJECT_ID',
+  'TWILIO_ACCOUNT_SID',
+  'TWILIO_AUTH_TOKEN',
+  'TWILIO_FROM_NUMBER',
+] as const
+
+function withoutOptionalProviders(config: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...config }
+  for (const key of optionalProviderKeys) delete result[key]
+  return result
+}
+
 describe('validateEnv', () => {
   it('keeps local defaults for development and test environments only', () => {
     const env = validateEnv({ NODE_ENV: 'test', DELIVERY_BASE_FEE_VND: '15000' })
@@ -99,11 +123,8 @@ describe('validateEnv', () => {
     })).toThrow(/RAG_SYNC_INTERVAL_MS|RAG_SYNC_BATCH_SIZE|RAG_SYNC_CONCURRENCY/)
   })
 
-  it('requires a Firebase project ID while allowing ADC or a secret-managed service account', () => {
-    expect(() => validateEnv({
-      ...productionEnv,
-      FCM_PROJECT_ID: undefined,
-    })).toThrow(/FCM_PROJECT_ID/)
+  it('allows FCM to remain disabled while validating configured Firebase settings', () => {
+    expect(validateEnv(withoutOptionalProviders(productionEnv)).FCM_PROJECT_ID).toBeUndefined()
 
     expect(validateEnv({
       ...productionEnv,
@@ -111,6 +132,47 @@ describe('validateEnv', () => {
     })).toMatchObject({
       FCM_PROJECT_ID: 'foodflow-production',
     })
+  })
+
+  it('boots managed production without credentials for disabled optional providers', () => {
+    const managedEnv = withoutOptionalProviders({
+      ...productionEnv,
+      REALTIME_PROVIDER: 'supabase',
+      STORAGE_PROVIDER: 'supabase',
+      QUEUE_PROVIDER: 'supabase-postgres',
+      CRON_SECRET: 'e'.repeat(64),
+    })
+
+    expect(validateEnv(managedEnv)).toMatchObject({
+      NODE_ENV: 'production',
+      REALTIME_PROVIDER: 'supabase',
+      STORAGE_PROVIDER: 'supabase',
+      QUEUE_PROVIDER: 'supabase-postgres',
+    })
+  })
+
+  it('rejects partially configured optional provider credential groups', () => {
+    const providersDisabledEnv = withoutOptionalProviders(productionEnv)
+
+    expect(() => validateEnv({
+      ...providersDisabledEnv,
+      SEPAY_ACCOUNT_NUMBER: '1234567890',
+    })).toThrow(/missing SEPAY_BANK_NAME/)
+
+    expect(() => validateEnv({
+      ...providersDisabledEnv,
+      SMTP_HOST: 'smtp.foodflow.vn',
+    })).toThrow(/missing SMTP_USER, SMTP_PASS/)
+
+    expect(() => validateEnv({
+      ...providersDisabledEnv,
+      TWILIO_ACCOUNT_SID: 'prod-twilio-account-sid',
+    })).toThrow(/missing TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER/)
+
+    expect(() => validateEnv({
+      ...providersDisabledEnv,
+      FCM_SERVICE_ACCOUNT_JSON: JSON.stringify({ project_id: 'foodflow-prod' }),
+    })).toThrow(/missing FCM_PROJECT_ID/)
   })
 
   it('rejects malformed Firebase service account JSON without exposing its value', () => {

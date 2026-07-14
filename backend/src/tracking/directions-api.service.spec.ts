@@ -110,12 +110,16 @@ describe('DirectionsApiService (no API key)', () => {
 // ─── Suite 2: Google API key configured ───────────────────────────────────────
 
 describe('DirectionsApiService production configuration', () => {
-  it('fails closed instead of using the public OSRM demo server in production', async () => {
+  it('boots without routing credentials and fails only when routing is requested', async () => {
     process.env.NODE_ENV = 'production'
     delete process.env.GOOGLE_MAPS_API_KEY
     delete process.env.OSRM_URL
+    global.fetch = jest.fn()
 
-    await expect(buildService(makeRedis())).rejects.toThrow('OSRM_URL is required in production')
+    const service = await buildService(makeRedis())
+
+    await expect(service.fetchRoute(origin, dest)).rejects.toThrow('DIRECTIONS_PROVIDER_NOT_CONFIGURED')
+    expect(global.fetch).not.toHaveBeenCalled()
   })
 })
 

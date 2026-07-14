@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common'
 import Redis from 'ioredis'
 import { GeoPoint, RouteResult } from '../common/types/location.types'
 
@@ -132,7 +132,7 @@ class OsrmRouteProvider implements IRouteProvider {
 export class DirectionsApiService {
   private readonly logger = new Logger(DirectionsApiService.name)
   private readonly googleProvider: IRouteProvider | null
-  private readonly osrmProvider: IRouteProvider
+  private readonly osrmProvider: IRouteProvider | null
 
   /** Daily limit before switching to OSRM. Default 10 000 (Google free tier). */
   private readonly dailyLimit: number
@@ -141,8 +141,12 @@ export class DirectionsApiService {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY
     this.googleProvider = apiKey ? new GoogleDirectionsProvider(apiKey) : null
     const osrmUrl = resolveOsrmUrl(process.env)
-    this.osrmProvider = new OsrmRouteProvider(osrmUrl)
+    this.osrmProvider = osrmUrl ? new OsrmRouteProvider(osrmUrl) : null
     this.dailyLimit = parseInt(process.env.DIRECTIONS_DAILY_LIMIT ?? '10000', 10)
+
+    if (!this.googleProvider && !this.osrmProvider) {
+      this.logger.warn('No directions provider configured; route calculation is unavailable')
+    }
   }
 
   async fetchRoute(origin: GeoPoint, destination: GeoPoint): Promise<RouteResult> {
@@ -158,6 +162,10 @@ export class DirectionsApiService {
       }
     } else if (this.googleProvider) {
       this.logger.warn('Google Directions quota at 80 % — using OSRM fallback')
+    }
+
+    if (!this.osrmProvider) {
+      throw new ServiceUnavailableException('DIRECTIONS_PROVIDER_NOT_CONFIGURED')
     }
 
     return this.osrmProvider.fetchRoute(origin, destination)
@@ -182,12 +190,12 @@ export class DirectionsApiService {
   }
 }
 
-function resolveOsrmUrl(env: NodeJS.ProcessEnv): string {
+function resolveOsrmUrl(env: NodeJS.ProcessEnv): string | undefined {
   const configuredUrl = env.OSRM_URL?.trim()
   if (configuredUrl) return configuredUrl
 
   if (env.NODE_ENV === 'production') {
-    throw new Error('OSRM_URL is required in production')
+    return undefined
   }
 
   return 'https://router.project-osrm.org'
