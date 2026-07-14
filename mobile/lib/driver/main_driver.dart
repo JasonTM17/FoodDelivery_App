@@ -51,6 +51,24 @@ String driverNotificationDestination(String deepLink) {
   return _driverNotificationPaths.contains(path) ? deepLink : '/notifications';
 }
 
+class DriverNotificationNavigationGate {
+  String? _pendingDestination;
+
+  String? handleTap(String deepLink, DriverState authState) {
+    final destination = driverNotificationDestination(deepLink);
+    if (authState.isAuthenticated) return destination;
+    if (authState.isLoading) _pendingDestination = destination;
+    return null;
+  }
+
+  String? handleAuthState(DriverState authState) {
+    if (authState.isLoading) return null;
+    final destination = _pendingDestination;
+    _pendingDestination = null;
+    return authState.isAuthenticated ? destination : null;
+  }
+}
+
 Map<String, dynamic> _safeExtraMap(Object? extra) {
   if (extra is Map<String, dynamic>) return extra;
   if (extra is Map) return Map<String, dynamic>.from(extra);
@@ -58,8 +76,8 @@ Map<String, dynamic> _safeExtraMap(Object? extra) {
 }
 
 final _routerRefresh = ValueNotifier<int>(0);
+final _driverNotificationGate = DriverNotificationNavigationGate();
 DriverState _driverRouterAuthState = const DriverState(isLoading: true);
-String? _pendingDriverNotificationDeepLink;
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -167,12 +185,11 @@ final _router = GoRouter(
 
 void configureDriverFcmNavigation() {
   FcmTokenSession.configureNotificationNavigation((deepLink) {
-    final destination = driverNotificationDestination(deepLink);
-    if (_driverRouterAuthState.isAuthenticated) {
-      _router.go(destination);
-    } else if (_driverRouterAuthState.isLoading) {
-      _pendingDriverNotificationDeepLink = destination;
-    }
+    final destination = _driverNotificationGate.handleTap(
+      deepLink,
+      _driverRouterAuthState,
+    );
+    if (destination != null) _router.go(destination);
   });
 }
 
@@ -187,34 +204,38 @@ class _DriverAppState extends ConsumerState<DriverApp> {
   @override
   void initState() {
     super.initState();
+    ref.listenManual<DriverState>(
+      driverProvider,
+      _handleDriverStateChange,
+      fireImmediately: true,
+    );
     Future.microtask(ref.read(driverProvider.notifier).restoreSession);
+  }
+
+  void _handleDriverStateChange(DriverState? previous, DriverState next) {
+    _driverRouterAuthState = next;
+    _routerRefresh.value += 1;
+
+    final pendingDeepLink = _driverNotificationGate.handleAuthState(next);
+    if (next.isLoading) return;
+    if (pendingDeepLink != null) {
+      _router.go(pendingDeepLink);
+      return;
+    }
+    if (previous?.isAuthenticated == false && next.isAuthenticated) {
+      if (!next.hasAcceptedTerms) {
+        _router.go('/onboarding-agreement');
+      } else if (!next.isVerified &&
+          next.kycStatus != DriverKycStatus.pending) {
+        _router.go('/onboarding-vehicle');
+      } else {
+        _router.go('/home');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<DriverState>(driverProvider, (prev, next) {
-      _driverRouterAuthState = next;
-      _routerRefresh.value += 1;
-
-      if (next.isLoading) return;
-      final pendingDeepLink = _pendingDriverNotificationDeepLink;
-      _pendingDriverNotificationDeepLink = null;
-      if (next.isAuthenticated && pendingDeepLink != null) {
-        _router.go(pendingDeepLink);
-        return;
-      }
-      if (prev?.isAuthenticated == false && next.isAuthenticated) {
-        if (!next.hasAcceptedTerms) {
-          _router.go('/onboarding-agreement');
-        } else if (!next.isVerified &&
-            next.kycStatus != DriverKycStatus.pending) {
-          _router.go('/onboarding-vehicle');
-        } else {
-          _router.go('/home');
-        }
-      }
-    }, fireImmediately: true);
-
     return MaterialApp.router(
       title: 'FoodFlow Driver',
       debugShowCheckedModeBanner: false,

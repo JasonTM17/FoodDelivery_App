@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:foodflow_customer/driver/main_driver.dart';
 import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/shared/api/api_client.dart';
 import 'package:foodflow_customer/shared/utils/app_error_messages.dart';
@@ -20,6 +21,73 @@ void main() {
 
   tearDown(() {
     ApiClient.instance.dio.interceptors.remove(apiInterceptor);
+  });
+
+  test('restores only a server-validated driver session', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_token': 'stored-driver-access-token',
+      'refresh_token': 'stored-driver-refresh-token',
+    });
+    final notifier = DriverNotifier(restoringSession: true);
+
+    await notifier.restoreSession();
+
+    expect(apiInterceptor.profileAuthorization, 'Bearer stored-driver-access-token');
+    expect(notifier.state.isLoading, isFalse);
+    expect(notifier.state.isAuthenticated, isTrue);
+    expect(notifier.state.driverName, 'Driver One');
+    expect(notifier.state.kycStatus, DriverKycStatus.pending);
+  });
+
+  test('clears a stored session that does not validate as a driver', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_token': 'stored-customer-access-token',
+      'refresh_token': 'stored-customer-refresh-token',
+    });
+    apiInterceptor.profilePayload = {
+      'id': 'customer-1',
+      'role': 'customer',
+      'fullName': 'Customer One',
+      'driverProfile': null,
+    };
+    final notifier = DriverNotifier(restoringSession: true);
+
+    await notifier.restoreSession();
+
+    const storage = FlutterSecureStorage();
+    expect(await storage.read(key: 'auth_token'), isNull);
+    expect(await storage.read(key: 'refresh_token'), isNull);
+    expect(notifier.state.isLoading, isFalse);
+    expect(notifier.state.isAuthenticated, isFalse);
+    expect(notifier.state.error, AppErrorCodes.driverProfileUnavailable);
+  });
+
+  test('holds a terminated-launch tap until driver auth is validated', () {
+    final gate = DriverNotificationNavigationGate();
+
+    expect(
+      gate.handleTap(
+        '/earnings?source=push',
+        const DriverState(isLoading: true),
+      ),
+      isNull,
+    );
+    expect(
+      gate.handleAuthState(const DriverState(isAuthenticated: true)),
+      '/earnings?source=push',
+    );
+  });
+
+  test('drops a terminated-launch tap when session restoration fails', () {
+    final gate = DriverNotificationNavigationGate();
+
+    gate.handleTap('/profile', const DriverState(isLoading: true));
+
+    expect(gate.handleAuthState(const DriverState()), isNull);
+    expect(
+      gate.handleAuthState(const DriverState(isAuthenticated: true)),
+      isNull,
+    );
   });
 
   test(

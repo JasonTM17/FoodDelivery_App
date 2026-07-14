@@ -364,7 +364,7 @@ class DriverState {
 final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((
   ref,
 ) {
-  return DriverNotifier();
+  return DriverNotifier(restoringSession: true);
 });
 
 class DriverNotifier extends StateNotifier<DriverState> {
@@ -372,10 +372,11 @@ class DriverNotifier extends StateNotifier<DriverState> {
     ApiClient? api,
     RealtimeClient? realtime,
     SecureStorageService? storage,
+    bool restoringSession = false,
   }) : _api = api ?? ApiClient.instance,
        _realtime = realtime ?? RealtimeClient.instance,
        _storage = storage ?? SecureStorageService.instance,
-       super(const DriverState());
+       super(DriverState(isLoading: restoringSession));
 
   final ApiClient _api;
   final RealtimeClient _realtime;
@@ -409,9 +410,9 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<void> restoreSession() async {
     final activeOrderId = state.activeOrder?.id;
     final sessionEpoch = _invalidateSession();
+    state = const DriverState(isLoading: true);
     await _teardownSessionResources(activeOrderId: activeOrderId);
     if (!_isCurrentSession(sessionEpoch)) return;
-    state = const DriverState(isLoading: true);
 
     try {
       final accessToken = await _storage.getAccessToken();
