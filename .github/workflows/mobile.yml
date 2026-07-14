@@ -1,6 +1,7 @@
 name: Mobile CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, main, codex/batch4-integration]
     paths:
@@ -13,9 +14,9 @@ on:
 
 jobs:
   flutter:
-    name: Flutter Analyze + Test
+    name: Flutter Analyze + Test + APK
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v7
@@ -40,3 +41,27 @@ jobs:
       - name: Run tests
         run: flutter test
         working-directory: mobile
+
+      - name: Build Customer debug APK
+        run: >-
+          flutter build apk --debug --flavor customer
+          --target lib/main_customer.dart
+          --dart-define=REALTIME_PROVIDER=socketio
+        working-directory: mobile
+
+      - name: Build Driver debug APK
+        run: >-
+          flutter build apk --debug --flavor driver
+          --target lib/main_driver.dart
+          --dart-define=REALTIME_PROVIDER=socketio
+        working-directory: mobile
+
+      - name: Upload Android debug APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: foodflow-android-debug-${{ github.sha }}
+          path: |
+            mobile/build/app/outputs/flutter-apk/app-customer-debug.apk
+            mobile/build/app/outputs/flutter-apk/app-driver-debug.apk
+          if-no-files-found: error
+          retention-days: 7

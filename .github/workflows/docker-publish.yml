@@ -163,7 +163,9 @@ jobs:
     needs: release-preflight
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      # A permission or registry error for one surface must not hide the
+      # publication result of the other independently deployable images.
+      fail-fast: false
       matrix:
         include:
           - name: foodflow-backend
