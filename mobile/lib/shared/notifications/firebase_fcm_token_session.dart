@@ -116,10 +116,12 @@ class ApiFcmTokenTransport implements FcmTokenTransport {
 
 class SecureFcmTokenStore implements FcmTokenStore {
   static const _key = 'registered_fcm_registration';
+  static const _pendingCleanupKey = 'pending_fcm_registration_cleanups';
 
   SecureFcmTokenStore(this._storage);
 
   final SecureStorageService _storage;
+  static Future<void> _pendingCleanupMutation = Future<void>.value();
 
   @override
   Future<void> clearRegistration() => _storage.delete(_key);
@@ -146,13 +148,92 @@ class SecureFcmTokenStore implements FcmTokenStore {
 
   @override
   Future<void> writeRegistration(FcmTokenRegistration registration) =>
-      _storage.set(
-        _key,
-        jsonEncode({
-          'token': registration.token,
-          'registrationId': registration.registrationId,
-        }),
-      );
+      _storage.set(_key, jsonEncode(_encodeRegistration(registration)));
+
+  @override
+  Future<List<FcmTokenRegistration>> readPendingCleanups() async {
+    await _pendingCleanupMutation;
+    return _readPendingCleanupsUnsafe();
+  }
+
+  Future<List<FcmTokenRegistration>> _readPendingCleanupsUnsafe() async {
+    final value = await _storage.get(_pendingCleanupKey);
+    if (value == null) return const [];
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! List) return const [];
+      return decoded
+          .map(_decodeRegistration)
+          .whereType<FcmTokenRegistration>()
+          .toList(growable: false);
+    } on FormatException {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> writePendingCleanup(FcmTokenRegistration registration) =>
+      _enqueuePendingCleanupMutation(() async {
+        final pending = await _readPendingCleanupsUnsafe();
+        String keyOf(FcmTokenRegistration item) =>
+            '${item.token}:${item.registrationId}';
+        final byCapability = {
+          for (final item in pending) keyOf(item): item,
+          keyOf(registration): registration,
+        };
+        await _storage.set(
+          _pendingCleanupKey,
+          jsonEncode(byCapability.values.map(_encodeRegistration).toList()),
+        );
+      });
+
+  @override
+  Future<void> clearPendingCleanup(FcmTokenRegistration registration) =>
+      _enqueuePendingCleanupMutation(() async {
+        final pending = await _readPendingCleanupsUnsafe();
+        final retained = pending
+            .where(
+              (item) =>
+                  item.token != registration.token ||
+                  item.registrationId != registration.registrationId,
+            )
+            .toList(growable: false);
+        if (retained.isEmpty) {
+          await _storage.delete(_pendingCleanupKey);
+          return;
+        }
+        await _storage.set(
+          _pendingCleanupKey,
+          jsonEncode(retained.map(_encodeRegistration).toList()),
+        );
+      });
+
+  Future<void> _enqueuePendingCleanupMutation(
+    Future<void> Function() mutation,
+  ) {
+    final next = _pendingCleanupMutation.then((_) => mutation());
+    _pendingCleanupMutation = next.catchError((Object _, StackTrace __) {});
+    return next;
+  }
+
+  static Map<String, String> _encodeRegistration(
+    FcmTokenRegistration registration,
+  ) => {
+    'token': registration.token,
+    'registrationId': registration.registrationId,
+  };
+
+  static FcmTokenRegistration? _decodeRegistration(Object? value) {
+    if (value is! Map ||
+        value['token'] is! String ||
+        value['registrationId'] is! String) {
+      return null;
+    }
+    final token = value['token'] as String;
+    final registrationId = value['registrationId'] as String;
+    if (token.isEmpty || registrationId.isEmpty) return null;
+    return FcmTokenRegistration(token: token, registrationId: registrationId);
+  }
 }
 
 /// Missing public Firebase build configuration disables push registration; it
@@ -178,13 +259,21 @@ class FcmTokenSession {
     _notificationPresenter?.setDeepLinkHandler(onDeepLink);
   }
 
-  /// Starts tap handling before auth restoration so a terminated app launched
-  /// from a notification can consume [FirebaseMessaging.getInitialMessage].
+  /// Starts tap handling and retries durable device cleanup before auth restore.
   static Future<void> initializeNotificationHandling() async {
+    _ensureForcedLogoutSubscription();
+    await retryPendingFcmCleanups(
+      transport: ApiFcmTokenTransport(ApiClient.instance),
+      store: SecureFcmTokenStore(SecureStorageService.instance),
+      reportFailure: (error, _) {
+        debugPrint('FCM cleanup unavailable: ${error.runtimeType}');
+      },
+    );
     await _prepareNotifications();
   }
 
   static Future<void> activate() async {
+    _ensureForcedLogoutSubscription();
     try {
       await _coordinator.activate();
     } catch (error) {
@@ -192,9 +281,41 @@ class FcmTokenSession {
     }
   }
 
-  static Future<void> deactivate() => _coordinator.deactivate();
+  static Future<void> deactivate() async {
+    await _coordinator.deactivate();
+    if (_lifecycle == null) await _stageStoredRegistrationForCleanup();
+  }
 
-  static Future<void> invalidate() => _coordinator.invalidate();
+  static Future<void> invalidate() async {
+    await _coordinator.invalidate();
+    if (_lifecycle == null) await _stageStoredRegistrationForCleanup();
+  }
+
+  static void _ensureForcedLogoutSubscription() {
+    _forcedLogoutSubscription ??= ApiClient.onLogout.listen((_) {
+      unawaited(
+        invalidate().catchError((Object error) {
+          debugPrint('FCM forced cleanup unavailable: ${error.runtimeType}');
+        }),
+      );
+    });
+  }
+
+  static Future<void> _stageStoredRegistrationForCleanup() async {
+    final store = SecureFcmTokenStore(SecureStorageService.instance);
+    final registration = await store.readRegistration();
+    if (registration != null) {
+      await store.writePendingCleanup(registration);
+      await store.clearRegistration();
+    }
+    await retryPendingFcmCleanups(
+      transport: ApiFcmTokenTransport(ApiClient.instance),
+      store: store,
+      reportFailure: (error, _) {
+        debugPrint('FCM cleanup unavailable: ${error.runtimeType}');
+      },
+    );
+  }
 
   static Future<FcmTokenLifecycle?> _resolveLifecycle() async {
     final existing = _lifecycle;
@@ -205,9 +326,6 @@ class FcmTokenSession {
       final created = await initializing;
       if (created == null) return null;
       _lifecycle ??= created;
-      _forcedLogoutSubscription ??= ApiClient.onLogout.listen((_) {
-        unawaited(invalidate());
-      });
       return _lifecycle;
     } finally {
       if (identical(_initializing, initializing)) {

@@ -80,13 +80,15 @@ ID. Never reuse a Customer Firebase application ID for the Driver flavor.
 
 After a valid customer or driver session exists, the app requests notification
 permission, registers the FCM token at `POST /notifications/fcm-token`, and
-updates that registration when Firebase rotates the token. On logout it tries
-to delete the stored token with a JSON request body before clearing the bearer
-token. Each registration has a client-generated ID. The API serializes that
-token's register/unregister operations and applies a seven-day effective
-revocation tombstone, so logout cleanup wins even when a timed-out POST reaches
-the server late. The server removes expired tombstones during normal FCM
-traffic. A transient push failure never blocks logout. Missing public
+updates that registration when Firebase rotates the token. On logout it moves
+the registration into encrypted pending-cleanup storage, clears the active
+binding locally, and sends the token plus client-generated registration ID in a
+JSON body. Failed cleanup survives logout and app restart, then retries without
+a bearer token through the per-registration capability endpoint. The API
+serializes that token's register/unregister operations and applies a seven-day
+effective revocation tombstone, so logout cleanup wins even when a timed-out
+POST reaches the server late. The server removes expired tombstones during
+normal FCM traffic. A transient push failure never blocks logout. Missing public
 Firebase build values disable only FCM registration, so authentication and
 in-app notifications remain usable.
 

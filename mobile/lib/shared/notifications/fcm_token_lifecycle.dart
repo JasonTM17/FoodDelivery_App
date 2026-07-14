@@ -24,6 +24,32 @@ abstract interface class FcmTokenStore {
   Future<FcmTokenRegistration?> readRegistration();
   Future<void> writeRegistration(FcmTokenRegistration registration);
   Future<void> clearRegistration();
+  Future<List<FcmTokenRegistration>> readPendingCleanups();
+  Future<void> writePendingCleanup(FcmTokenRegistration registration);
+  Future<void> clearPendingCleanup(FcmTokenRegistration registration);
+}
+
+Future<void> retryPendingFcmCleanups({
+  required FcmTokenTransport transport,
+  required FcmTokenStore store,
+  void Function(Object error, StackTrace stackTrace)? reportFailure,
+}) async {
+  late final List<FcmTokenRegistration> pendingCleanups;
+  try {
+    pendingCleanups = await store.readPendingCleanups();
+  } catch (error, stackTrace) {
+    reportFailure?.call(error, stackTrace);
+    return;
+  }
+
+  for (final registration in pendingCleanups) {
+    try {
+      await transport.unregister(registration);
+      await store.clearPendingCleanup(registration);
+    } catch (error, stackTrace) {
+      reportFailure?.call(error, stackTrace);
+    }
+  }
 }
 
 abstract interface class FcmSessionLifecycle {
@@ -106,6 +132,12 @@ class FcmTokenLifecycle implements FcmSessionLifecycle {
     _active = true;
     _permissionGranted = false;
     _tokenEpoch = 0;
+    await retryPendingFcmCleanups(
+      transport: _transport,
+      store: _store,
+      reportFailure: reportRefreshFailure,
+    );
+    if (!_isCurrentSession(epoch)) return;
 
     if (!await _messaging.requestPermission() || !_isCurrentSession(epoch)) {
       return;
@@ -131,17 +163,28 @@ class FcmTokenLifecycle implements FcmSessionLifecycle {
       return;
     }
 
-    await _transport.unregister(registration);
-    if (epoch != _sessionEpoch) return;
+    await _store.writePendingCleanup(registration);
     await _store.clearRegistration();
+    await retryPendingFcmCleanups(
+      transport: _transport,
+      store: _store,
+      reportFailure: reportRefreshFailure,
+    );
   }
 
-  /// Stops token activity when the bearer token has already been invalidated.
-  /// There is deliberately no network delete because it cannot be authorized.
   Future<void> invalidate() async {
     _active = false;
     _permissionGranted = false;
     _sessionEpoch += 1;
+    final registration = await _store.readRegistration();
+    if (registration == null) return;
+    await _store.writePendingCleanup(registration);
+    await _store.clearRegistration();
+    await retryPendingFcmCleanups(
+      transport: _transport,
+      store: _store,
+      reportFailure: reportRefreshFailure,
+    );
   }
 
   Future<void> dispose() async {
@@ -196,11 +239,12 @@ class FcmTokenLifecycle implements FcmSessionLifecycle {
         platform: _platform,
       );
     } catch (_) {
-      try {
-        await _transport.unregister(registration);
-      } catch (_) {
-        // The registration error remains authoritative and is reported below.
-      }
+      await _store.writePendingCleanup(registration);
+      await retryPendingFcmCleanups(
+        transport: _transport,
+        store: _store,
+        reportFailure: reportRefreshFailure,
+      );
       if (_isCurrentToken(sessionEpoch, tokenEpoch)) {
         if (previousRegistration == null) {
           await _store.clearRegistration();
@@ -211,21 +255,23 @@ class FcmTokenLifecycle implements FcmSessionLifecycle {
       rethrow;
     }
     if (!_isCurrentToken(sessionEpoch, tokenEpoch)) {
-      try {
-        await _transport.unregister(registration);
-      } catch (_) {
-        // Logout has already progressed; never let cleanup fail as an async
-        // error from a Firebase stream callback.
-      }
+      await _store.writePendingCleanup(registration);
+      await retryPendingFcmCleanups(
+        transport: _transport,
+        store: _store,
+        reportFailure: reportRefreshFailure,
+      );
       return;
     }
 
     if (previousRegistration == null) return;
 
-    // New registration wins before cleanup so a transient old-token failure
-    // cannot remove all delivery routes for the authenticated session.
-    if (!_isCurrentToken(sessionEpoch, tokenEpoch)) return;
-    await _transport.unregister(previousRegistration);
+    await _store.writePendingCleanup(previousRegistration);
+    await retryPendingFcmCleanups(
+      transport: _transport,
+      store: _store,
+      reportFailure: reportRefreshFailure,
+    );
   }
 
   bool _isCurrentSession(int epoch) => _active && epoch == _sessionEpoch;

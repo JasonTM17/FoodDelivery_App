@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 14/07/2026:** Batch 4 đã nằm trên `master`; 10 workflow current-head đều xanh, Supabase production đã apply đủ 35 migration và Vercel Admin/Restaurant đều READY với health/login 200. Release vẫn **NO-GO** vì Railway API/worker chưa deploy, public API trả 404 và còn thiếu 15 cấu hình provider thật. Do đó GPS/Broadcast production đã xác thực và production smoke đầu-cuối vẫn chưa thể chạy; không dùng giá trị giả để vượt gate.
+> **Trạng thái 14/07/2026:** Batch 4 đã nằm trên `master`. Supabase production đã apply và checksum-verify đủ 35 migration đã phát hành; kiểm tra trực tiếp xác nhận RLS, private Broadcast, Storage tách public/private và production business/RAG vẫn rỗng. Current source bổ sung migration 36 để giới hạn FCM revocation theo token cùng registration capability và vẫn cần rollout được ủy quyền. Release vẫn **NO-GO**: việc deploy/xác minh Railway API/worker và FCM live trên thiết bị kiểm soát bị chặn bởi cấu hình cùng credential provider thật bên ngoài.
 
 ## Xem trước sản phẩm
 
@@ -65,7 +65,7 @@ Backend và migrator từng được publish bằng SHA immutable lên Docker Hu
 |---|---|
 | `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API và worker entry; digest `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
 | `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | Prisma migration non-root; digest `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin / Restaurant | Vercel current-source READY, health/login 200; immutable Docker SHA và API production smoke vẫn chờ |
+| Admin / Restaurant | Immutable Docker SHA và Railway-dependent production smoke vẫn chờ; không ghi nhận claim production health ở đây |
 
 Tag candidate lịch sử là `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`, hỗ trợ `amd64/arm64`, có SBOM/provenance và cùng digest giữa hai registry. Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. `latest` không được dùng làm source of truth cho Batch 4.
 
@@ -121,16 +121,17 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Matrix current-head ngày 14/07/2026 đã xanh: Backend 141 suite / 1043 test, Mobile 352 test, Docker E2E isolated 204/204 trong 5.8 phút, cùng CI, Integration Smoke, Build, Lint, Gitleaks, CodeQL, Trivy và SBOM. Fresh PostGIS+pgvector và Railway migrator đều apply đủ 35 migration; production Supabase không có demo/big seed. Seed lịch sử 50 restaurant, 50 driver, 100 customer và 500 order chỉ là test data; không có DeepSeek key nên embedding để pending, không sinh vector giả. Image current-head immutable, FCM gửi thật và production GPS/Broadcast qua Railway vẫn còn chờ.
+Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply đủ 36 migration hiện hành, seed 50 restaurant, 50 driver, 100 customer, 500 historical order, 9 canonical order và 123 review, rồi index 402 RAG document. Toàn bộ ma trận Playwright pass 204/204 trong 6,6 phút. Đây là bằng chứng local current-source: Supabase production đã checksum-verify migration 1–35 mà không chạy big seed local, còn migration 36 vẫn cần rollout được ủy quyền. Docker SHA current-head immutable vẫn chờ; xác minh Railway deployment, production GPS/Broadcast và FCM live vẫn bị chặn bởi cấu hình/credential provider thật bên ngoài.
 
 ## Thứ tự deploy
 
 1. Rotate key bị lộ và nhập 15 cấu hình Railway thật qua secret store.
-2. Deploy API/worker cùng một SHA, kiểm health/readiness/Cron; migrator current-head đã hoàn tất.
-3. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
-4. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway khỏe, rồi kiểm map/route, chatbot, notification, export, payment và FCM thiết bị kiểm soát.
-5. Nối hai package GHCR Admin/Restaurant với repository, cấp workflow write, rồi publish/pull/scan bốn image SHA immutable.
-6. Chỉ promote `latest` sau khi production smoke xanh.
+2. Ủy quyền và chạy migration 36 trên Supabase target; checksum-verify khóa capability ghép của FCM revocation.
+3. Deploy API/worker cùng một SHA immutable, rồi kiểm health/readiness/Cron khi đã có đủ cấu hình provider thật.
+4. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
+5. Smoke lại đúng deployment Vercel Admin/Restaurant với Railway đã xác minh, rồi kiểm map/route, chatbot, notification, export, payment và FCM thiết bị kiểm soát.
+6. Nối hai package GHCR Admin/Restaurant với repository, cấp workflow write, rồi publish/pull/scan bốn image SHA immutable.
+7. Chỉ promote `latest` sau khi production smoke xanh.
 
 ## Tài liệu
 

@@ -1,6 +1,9 @@
 import { Body, Controller, Delete, Get, Patch, Post, Param, Query, UseGuards } from '@nestjs/common'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { publicAuthThrottle } from '../auth/auth-throttle'
+import { Public } from '../auth/public.decorator'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { JwtPayload } from '../auth/jwt-payload.interface'
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe'
@@ -10,7 +13,6 @@ import {
   fcmTokenSchema,
   unregisterFcmTokenSchema,
   type CompatibleRegisterFcmTokenInput,
-  type RegisterFcmTokenInput,
   type UnregisterFcmTokenInput,
 } from './notifications.zod'
 
@@ -42,21 +44,20 @@ export class NotificationsController {
     @Body(new ZodValidationPipe(compatibleRegisterFcmTokenSchema))
     body: CompatibleRegisterFcmTokenInput,
   ) {
-    if ('registrationId' in body) {
-      return this.notificationsService.registerFcmToken(
-        user.sub,
-        body as RegisterFcmTokenInput,
-      )
+    if (!('registrationId' in body)) {
+      return this.notificationsService.registerLegacyFcmToken(user.sub, body)
     }
-    return this.notificationsService.registerLegacyFcmToken(user.sub, body)
+    return this.notificationsService.registerFcmToken(user.sub, body)
   }
 
+  @Public()
+  @ApiOperation({ security: [] })
+  @Throttle(publicAuthThrottle(10))
   @Delete('fcm-token')
   unregisterFcmToken(
-    @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(unregisterFcmTokenSchema)) body: UnregisterFcmTokenInput,
   ) {
-    return this.notificationsService.unregisterFcmToken(user.sub, body)
+    return this.notificationsService.unregisterFcmToken(body)
   }
 
   @Delete('fcm-token/:token')

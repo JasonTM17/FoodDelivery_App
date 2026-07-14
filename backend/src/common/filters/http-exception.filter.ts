@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common'
 import { Request, Response } from 'express'
+import { redactSensitiveRequestPath } from '../middleware/request-logger.middleware'
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -48,7 +49,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       detail: message,
       code,
       status,
-      instance: request.url,
+      instance: redactSensitiveRequestPath(request.url),
       ...(errors === undefined ? {} : { errors }),
     }
 

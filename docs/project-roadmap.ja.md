@@ -29,6 +29,7 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 - Fresh `vi/en/ja` context で title、`html lang`、visible/aria text、number/date/currency、cookie isolation を audit。
 - Dashboard、approval、promotion、audit/export、staff、benchmark、AI monitor、map/order の responsive/keyboard/axe。
 - Stitch/design artifact comparison と visual regression acceptance。
+- Current-source local visual evidence: Restaurant mobile Kanban 修正後の CLS は約 0.0037 でした。これは計測済み regression check であり、完全な pixel baseline や production approval ではありません。
 - Intended source を build/seed した後だけ media を recapture し、source commit、Compose/image reference、clean final head または dirty workspace を記録します。
 
 ### Mobile release validation
@@ -50,13 +51,13 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 
 Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch、tenant、final-head mobile release build、secret/Gitleaks/CodeQL/audit/Trivy/SBOM/actionlint/ShellCheck。
 
-## Verified managed state and blockers
+## Current-source evidence and external blockers
 
-- Current-head の必須 10 workflows はすべて green: Backend 141 suites / 1043 tests、Mobile 352 tests、isolated Docker E2E 204/204（5.8 分）。
-- Supabase は 35 forward migrations 適用済みです。Private Broadcast authorization、split Storage、anonymous public-object listing 除去、RLS、production business/RAG 0 rows を直接確認しました。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
+- Fresh clean-volume current-source Docker project `foodflow-batch4-e2e` は全 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 6.6 分で pass しました。Restaurant mobile Kanban CLS trace は fix 後およそ 0.0037 です。これは local result のみです。
+- Supabase production は migrations 1–35 を applied/checksum-verified 済みです。Token と registration capability で FCM revocation を scope する migration 36 は authorized rollout が必要です。Historical zero-step migration failure は rolled back record として保持し、applied SQL は変更していません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
-- Railway topology、Redis、current-head migrator は pass。API/worker は未 deploy、public API は 404、Maps/OSRM、DeepSeek、SePay/webhook、SMTP、FCM、Twilio の real provider settings 15 件が不足しています。Production GPS/Broadcast と live FCM は blocked です。
-- Admin/Restaurant は GitHub-linked かつ Vercel READY。Canonical health/login は 200、tunnel/localhost request と console error はありません。Auth/API/GPS smoke は Railway に依存します。
+- Railway 依存の rollout と verification は必要な real provider configuration/credentials により外部要因で blocked です。Railway API/worker production health を claim してはいけません。Live GPS/Broadcast と controlled-device FCM は未検証であり、local notification/lifecycle test は provider delivery を証明しません。
+- Admin/Restaurant production verification は authorized Supabase rollout と verified Railway API/worker に依存します。以前の web evidence を end-to-end production approval として扱ってはいけません。
 - Current-head の 4 SHA images は未 publish。Private Admin/Restaurant GHCR packages が repository 未接続のため workflow は 403 です。Semver/`latest` promotion は未承認です。
 - 以前貼られた provider key は rotate 必須。
 
@@ -65,11 +66,12 @@ Fake value や validation bypass は禁止です。
 ## Release sequence
 
 1. Exposed credentials を rotate し、Railway の real settings 15 件を secret store に登録。
-2. 同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。Current-head migrator は完了済み。
-3. Production Customer/Driver auth、private-realtime allow/deny、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
-4. Healthy Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
-5. Private Admin/Restaurant GHCR packages を repository に接続し Actions write を付与。4 SHA images を rerun、clean pull/scan/runtime smoke。
-6. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
+2. Target Supabase で migration 36 を authorized rollout し、FCM revocation の composite capability key を checksum-verify。
+3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
+4. Production Customer/Driver auth、private-realtime allow/deny、token refresh、GPS snapshot/delta/reconnect、Storage、map、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
+5. Verified Railway に対して exact Admin/Restaurant Vercel deployments を再 smoke。
+6. Private Admin/Restaurant GHCR packages を repository に接続し Actions write を付与。4 SHA images を rerun、clean pull/scan/runtime smoke。
+7. Production smoke green 後のみ `v4.0.0` と `latest` を promote し、report/digests/About を更新。
 
 ## Post-release/deferred
 

@@ -6,19 +6,21 @@ Multi-channel notification fanout (in-app WebSocket + FCM push + SMTP email + Tw
 
 ## API surface
 
-- `POST /notifications/fcm-token` — Register an FCM token (per device) with a client-generated `registrationId`; a temporary legacy body without it is accepted during the mobile upgrade window
-- `DELETE /notifications/fcm-token` — Unregister one token owned by the authenticated user; provide both `token` and `registrationId` in the JSON body
-- `DELETE /notifications/fcm-token/:token` — Temporary deprecated legacy cleanup route; remove only after a minimum mobile version is enforced
+- `POST /notifications/fcm-token` — Register an FCM token per authenticated device with a client-generated `registrationId`; a temporary legacy body remains accepted during the mobile upgrade window
+- `DELETE /notifications/fcm-token` — Idempotently revoke one exact registration capability; provide both `token` and `registrationId` in the JSON body, with no bearer requirement so cleanup can retry after logout
+- `DELETE /notifications/fcm-token/:token` — Deprecated authenticated cleanup route for installed legacy clients; remove only after enforcing a minimum mobile version
 - `GET /notifications` — List user notifications (paginated)
 
 FCM register/unregister requests carry the same client-generated UUID
-`registrationId`. The service serializes operations for a token and applies a
+`registrationId`. The token plus ID form an opaque per-registration revocation
+capability. The service serializes operations for a token and applies a
 seven-day effective revocation tombstone, so a late registration cannot
 recreate a binding that logout revoked. Every registration or cleanup request
 also removes expired tombstones using the expiry index; an external retention
 job is still appropriate if the service can remain dormant for long periods.
-The legacy cleanup route also removes only the matching historical `NULL`
-registration binding, never a newer UUID registration for the same token.
+The legacy cleanup route removes only the matching historical `NULL` or
+deterministic legacy registration binding, never a newer UUID registration for
+the same token.
 - `PATCH /notifications/:id/read` — Mark single as read
 - `PATCH /notifications/read-all` — Mark all read
 - `GET /admin/notification-settings/:userId` — Per-event channel preferences

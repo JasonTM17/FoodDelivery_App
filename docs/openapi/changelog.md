@@ -1,5 +1,6 @@
 # OpenAPI Changelog
 
+- 2026-07-14: Added body-based public `DELETE /notifications/fcm-token` cleanup using the exact `token` plus client-generated `registrationId` capability, durable mobile retry after logout, and a seven-day revocation tombstone. The deprecated authenticated path-token route and legacy registration body remain only for the rolling mobile upgrade window.
 - 2026-07-11: Added the implemented public `GET /healthz` liveness contract and strict `GET /readyz` dependency-readiness contract. Readiness now returns 503 when database, Redis, or the explicit Storage provider is unavailable.
 - 2026-07-10: Replaced the legacy public-URL driver KYC contract with driver-scoped `POST /driver/kyc/uploads` signed grants, four private object keys, image metadata/signature validation, atomic one-pending submission enforcement, typed status responses, and five-minute admin signed reads. Mobile no longer derives public URLs or drops vehicle/license onboarding data; review responses omit raw private object keys.
 - 2026-07-10: Replaced RAM-bound dispatch offer callbacks with server-only PostgreSQL `dispatch_offers`, one-time hashed tokens, delayed timeout jobs, atomic driver/order claims, and driver-only `POST /driver/dispatch/offers/{orderId}/respond`. Fixed delivery-task raw SQL to use the migrated PostGIS column names and an explicit UUID.

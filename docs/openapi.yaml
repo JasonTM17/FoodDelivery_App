@@ -2168,7 +2168,7 @@ components:
       type: object
       deprecated: true
       description: >-
-        Temporary rolling-upgrade body for released mobile clients. New
+        Temporary rolling-upgrade body for installed mobile clients. New
         clients must send registrationId; remove support only after enforcing
         a minimum mobile version.
       properties:
@@ -4828,9 +4828,14 @@ paths:
     delete:
       tags: [notifications]
       summary: Unregister FCM push token
-      description: Removes one FCM push token from the authenticated user's registered devices without placing the token in the request URL.
+      description: >-
+        Idempotently revokes one device registration by its opaque token and
+        registrationId capability. Authentication is not required so a device
+        can retry cleanup after local logout or session expiry; the capability
+        can revoke only that exact registration.
       operationId: notifications_unregisterFcmToken
-      x-foo-actor: user
+      x-foo-actor: public
+      security: []
       requestBody:
         required: true
         content:
@@ -4839,16 +4844,16 @@ paths:
       responses:
         "200": { description: "Token unregistered" }
         "400": { description: "Invalid token" }
+        "429": { description: "Cleanup rate limit exceeded" }
 
   /notifications/fcm-token/{token}:
     delete:
       deprecated: true
       tags: [notifications]
-      summary: Legacy FCM token cleanup
+      summary: Unregister an FCM token (legacy authenticated client)
       description: >-
-        Temporary compatibility route for released clients. New clients must
-        use the JSON-body endpoint so FCM tokens do not appear in URLs. Remove
-        this route only after enforcing a minimum mobile version.
+        Temporary rolling-upgrade route for installed clients that do not yet
+        persist a registrationId. New clients use DELETE /notifications/fcm-token.
       operationId: notifications_unregisterLegacyFcmToken
       x-foo-actor: user
       parameters:
@@ -4857,7 +4862,7 @@ paths:
           required: true
           schema: { type: string, minLength: 20, maxLength: 500 }
       responses:
-        "200": { description: "Legacy token unregistered" }
+        "200": { description: "Token unregistered" }
         "400": { description: "Invalid token" }
 
   # ═══════════════════════════════════════════════

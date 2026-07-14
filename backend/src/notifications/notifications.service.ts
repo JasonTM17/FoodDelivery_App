@@ -278,14 +278,9 @@ export class NotificationsService {
       const now = new Date()
       await this.removeExpiredFcmRevocations(tx, now)
       const revocation = await tx.fcmTokenRevocation.findUnique({
-        where: { registrationId },
+        where: { token_registrationId: { token, registrationId } },
       })
-      if (revocation != null && revocation.expiresAt > now) {
-        return { success: true }
-      }
-      if (revocation != null) {
-        await tx.fcmTokenRevocation.deleteMany({ where: { registrationId } })
-      }
+      if (revocation != null) return { success: true }
 
       // A registration token identifies an app installation, not an account.
       // Rebinding it on account switch prevents delivery to the previous owner.
@@ -312,9 +307,8 @@ export class NotificationsService {
     })
   }
 
-  async unregisterFcmToken(userId: string, input: UnregisterFcmTokenInput) {
-    return this.unregisterFcmTokenWithDeleteWhere(userId, input, {
-      userId,
+  async unregisterFcmToken(input: UnregisterFcmTokenInput) {
+    return this.unregisterFcmTokenWithDeleteWhere(input, {
       token: input.token,
       registrationId: input.registrationId,
     })
@@ -329,10 +323,7 @@ export class NotificationsService {
 
   async unregisterLegacyFcmToken(userId: string, token: string) {
     const registrationId = this.legacyFcmRegistrationId(userId, token)
-    return this.unregisterFcmTokenWithDeleteWhere(userId, {
-      token,
-      registrationId,
-    }, {
+    return this.unregisterFcmTokenWithDeleteWhere({ token, registrationId }, {
       userId,
       token,
       OR: [
@@ -343,7 +334,6 @@ export class NotificationsService {
   }
 
   private async unregisterFcmTokenWithDeleteWhere(
-    userId: string,
     input: UnregisterFcmTokenInput,
     deleteWhere: Prisma.UserFcmTokenWhereInput,
   ) {
@@ -360,14 +350,13 @@ export class NotificationsService {
       const now = new Date()
       await this.removeExpiredFcmRevocations(tx, now)
       await tx.fcmTokenRevocation.upsert({
-        where: { registrationId },
+        where: { token_registrationId: { token, registrationId } },
         create: {
           registrationId,
           token,
           expiresAt: new Date(now.getTime() + FCM_REVOCATION_TTL_MS),
         },
         update: {
-          token,
           expiresAt: new Date(now.getTime() + FCM_REVOCATION_TTL_MS),
         },
       })
@@ -378,11 +367,6 @@ export class NotificationsService {
     })
   }
 
-  private legacyFcmRegistrationId(userId: string, token: string): string {
-    const hash = createHash('sha256').update(`${userId}:${token}`).digest('hex')
-    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`
-  }
-
   private async removeExpiredFcmRevocations(
     tx: Prisma.TransactionClient,
     now: Date,
@@ -390,6 +374,11 @@ export class NotificationsService {
     await tx.fcmTokenRevocation.deleteMany({
       where: { expiresAt: { lte: now } },
     })
+  }
+
+  private legacyFcmRegistrationId(userId: string, token: string): string {
+    const hash = createHash('sha256').update(`${userId}:${token}`).digest('hex')
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`
   }
 
   private async withFcmTokenLock<T>(

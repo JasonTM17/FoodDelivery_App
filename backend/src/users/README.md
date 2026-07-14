@@ -13,7 +13,7 @@ User profile, address book, preferred locale, FCM tokens, notification preferenc
 - `PUT|PATCH /users/addresses/:id` — Update + setDefault
 - `DELETE /users/addresses/:id` — Delete an owned address
 - `POST /notifications/fcm-token` — Register device token (notifications module)
-- `DELETE /notifications/fcm-token` — Remove an owned device registration (notifications module)
+- `DELETE /notifications/fcm-token` — Idempotently revoke one exact device registration capability, including post-logout retries (notifications module)
 - `GET /admin/users` — Admin list with filters
 - `PATCH /admin/users/:id/status` — Suspend/activate
 

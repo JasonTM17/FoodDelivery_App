@@ -95,6 +95,31 @@ void main() {
     expect(await store.readRegistration(), isNull);
   });
 
+  test(
+    'retries a failed logout cleanup when the next session activates',
+    () async {
+      messaging.token = 'logout-fcm-token';
+      await lifecycle.activate();
+
+      final failedUnregister = Completer<void>();
+      transport.nextUnregister = failedUnregister;
+      final logout = lifecycle.deactivate();
+      await _drainMicrotasks();
+      failedUnregister.completeError(StateError('network unavailable'));
+      await logout;
+
+      expect((await store.readPendingCleanups()).map((item) => item.token), [
+        'logout-fcm-token',
+      ]);
+
+      messaging.token = 'next-session-token';
+      await lifecycle.activate();
+
+      expect(transport.unregistered, ['logout-fcm-token', 'logout-fcm-token']);
+      expect(await store.readPendingCleanups(), isEmpty);
+    },
+  );
+
   test('records an in-flight registration for logout cleanup', () async {
     messaging.token = 'in-flight-fcm-token';
     final registration = Completer<void>();
@@ -127,15 +152,12 @@ void main() {
       await activation;
 
       expect(transport.registered, [
-        (
-          token: 'unknown-outcome-fcm-token',
-          platform: FcmPlatform.android,
-        ),
+        (token: 'unknown-outcome-fcm-token', platform: FcmPlatform.android),
       ]);
-      expect(
-        transport.unregistered,
-        ['unknown-outcome-fcm-token', 'unknown-outcome-fcm-token'],
-      );
+      expect(transport.unregistered, [
+        'unknown-outcome-fcm-token',
+        'unknown-outcome-fcm-token',
+      ]);
       expect(await store.readRegistration(), isNull);
     },
   );
@@ -196,21 +218,38 @@ void main() {
     },
   );
 
-  test(
-    'stops token activity after an unauthorised session invalidation',
-    () async {
-      messaging.token = 'first-fcm-token';
-      await lifecycle.activate();
+  test('forced logout stages cleanup and stops later token activity', () async {
+    messaging.token = 'first-fcm-token';
+    await lifecycle.activate();
+    final failedUnregister = Completer<void>();
+    transport.nextUnregister = failedUnregister;
 
-      await lifecycle.invalidate();
-      messaging.emitRefresh('second-fcm-token');
-      await _drainMicrotasks();
+    final invalidation = lifecycle.invalidate();
+    await _drainMicrotasks();
+    failedUnregister.completeError(StateError('network unavailable'));
+    await invalidation;
+    messaging.emitRefresh('second-fcm-token');
+    await _drainMicrotasks();
 
-      expect(transport.registered, [
-        (token: 'first-fcm-token', platform: FcmPlatform.android),
-      ]);
-    },
-  );
+    expect(transport.registered, [
+      (token: 'first-fcm-token', platform: FcmPlatform.android),
+    ]);
+    expect(await store.readRegistration(), isNull);
+    expect((await store.readPendingCleanups()).single.token, 'first-fcm-token');
+  });
+
+  test('retries persisted cleanup without activating a session', () async {
+    const registration = FcmTokenRegistration(
+      token: 'persisted-cleanup-fcm-token',
+      registrationId: '9165a90e-1e23-4f7a-8df6-5c7b1a5c4f10',
+    );
+    await store.writePendingCleanup(registration);
+
+    await retryPendingFcmCleanups(transport: transport, store: store);
+
+    expect(transport.unregistered, ['persisted-cleanup-fcm-token']);
+    expect(await store.readPendingCleanups(), isEmpty);
+  });
 
   test(
     'logout during initialization prevents the stale session activating',
@@ -325,9 +364,22 @@ class _FakeTransport implements FcmTokenTransport {
 
 class _MemoryStore implements FcmTokenStore {
   FcmTokenRegistration? _registration;
+  final _pendingCleanups = <String, FcmTokenRegistration>{};
+
+  String _cleanupKey(FcmTokenRegistration registration) =>
+      '${registration.token}:${registration.registrationId}';
 
   @override
   Future<void> clearRegistration() async => _registration = null;
+
+  @override
+  Future<void> clearPendingCleanup(FcmTokenRegistration registration) async {
+    _pendingCleanups.remove(_cleanupKey(registration));
+  }
+
+  @override
+  Future<List<FcmTokenRegistration>> readPendingCleanups() async =>
+      _pendingCleanups.values.toList(growable: false);
 
   @override
   Future<FcmTokenRegistration?> readRegistration() async => _registration;
@@ -335,6 +387,11 @@ class _MemoryStore implements FcmTokenStore {
   @override
   Future<void> writeRegistration(FcmTokenRegistration registration) async {
     _registration = registration;
+  }
+
+  @override
+  Future<void> writePendingCleanup(FcmTokenRegistration registration) async {
+    _pendingCleanups[_cleanupKey(registration)] = registration;
   }
 }
 

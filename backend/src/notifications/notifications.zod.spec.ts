@@ -44,18 +44,17 @@ describe('registerFcmTokenSchema', () => {
     })).toThrow()
   })
 
-  it('accepts the temporary legacy registration body during a rolling upgrade', () => {
+  it('requires a registration capability for every registration', () => {
+    expect(() => registerFcmTokenSchema.parse({
+      token,
+      platform: 'android',
+    })).toThrow()
+  })
+
+  it('accepts legacy registrations only through the compatibility schema', () => {
     expect(compatibleRegisterFcmTokenSchema.parse({
       token,
       platform: 'android',
     })).toEqual({ token, platform: 'android' })
-  })
-
-  it('does not treat an invalid registration ID as a legacy request', () => {
-    expect(() => compatibleRegisterFcmTokenSchema.parse({
-      token,
-      platform: 'android',
-      registrationId: 'invalid',
-    })).toThrow()
   })
 })

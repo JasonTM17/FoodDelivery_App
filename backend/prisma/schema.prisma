@@ -1129,11 +1129,12 @@ model UserFcmToken {
 }
 
 model FcmTokenRevocation {
-  registrationId String   @id @map("registration_id") @db.VarChar(64)
+  registrationId String   @map("registration_id") @db.VarChar(64)
   token          String   @db.VarChar(500)
   expiresAt      DateTime @map("expires_at") @db.Timestamptz()
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
+  @@id([token, registrationId])
   @@index([expiresAt])
   @@map("fcm_token_revocations")
 }

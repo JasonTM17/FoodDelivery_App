@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production has all 35 forward migrations applied; RLS, private Broadcast authorization, split Storage buckets, and removal of anonymous public-object listing were verified directly. All ten required current-head GitHub workflows are green. Admin and Restaurant are linked to GitHub, deployed on Vercel, and return 200 for health/login without tunnel or localhost requests. The release remains **NO-GO**: Railway API/worker have no deployment and the public API returns 404 because 15 real provider configurations are still missing. Authenticated production GPS/Broadcast and end-to-end smoke therefore cannot run. No fake credential, seed, ETA, or embedding is used to bypass this boundary.
+> **Release status — 2026-07-14:** Batch 4 integration is on `master`. Supabase production has all 35 previously released forward migrations applied and checksum-verified; direct checks confirmed RLS, private Broadcast authorization, split Storage policy, and an empty production business/RAG dataset. The current source adds migration 36 to scope FCM revocations by token plus registration capability; it still requires an authorized production rollout. The release remains **NO-GO**: Railway API/worker deployment and verification, plus controlled live FCM delivery, are blocked on external real provider configuration and credentials. Do not treat local checks as production health evidence.
 
 ## Product preview
 
@@ -89,8 +89,8 @@ The table below records the last pulled and runtime-smoked immutable images. It 
 |---|---|---|
 | API + worker | [`nguyenson1710/foodflow-backend:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-backend) | `sha256:1e16888fa61ca5816d44011237858b71e9a49898af373ce74d05a68b9e71aa41` |
 | Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-a627b597796965f4b991a5ab236a1fdedafa0b30`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate) | `sha256:f6088d0455fa55aff01eb5067225eb1b9f14044b5aae2bf6e2ee424aaf024fec` |
-| Admin | immutable Docker SHA pending | current-source Vercel deployment is READY and public health/login return 200; API production smoke is blocked |
-| Restaurant | immutable Docker SHA pending | current-source Vercel deployment is READY and public health/login return 200; tunnel env was removed; API production smoke is blocked |
+| Admin | immutable Docker SHA pending | Railway-dependent production smoke remains blocked; no production health claim is recorded here |
+| Restaurant | immutable Docker SHA pending | Railway-dependent production smoke remains blocked; no production health claim is recorded here |
 
 The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. For the historical tags above, Docker Hub was queried after push and both SHA tags were pulled again for a Linux/amd64 local runtime smoke: API health returned 200 and both runtimes preserved their non-root users. Docker Scout found zero High/Critical CVEs for those Linux/amd64 images. These results do not transfer to a newer source SHA.
 
@@ -192,15 +192,15 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 current-head remote matrix is green: Backend 141 suites / 1043 tests, Mobile 352 tests, and isolated Docker E2E 204/204 in 5.8 minutes, plus CI, Integration Smoke, Build, Lint, Gitleaks, CodeQL, Trivy, and SBOM workflows. Disposable PostGIS+pgvector migration validation and the authorized Railway migrator both completed all 35 migrations. Supabase production intentionally contains no demo/big seed. Earlier isolated test data (50 restaurants, 50 drivers, 100 customers, and 500 historical orders) remains test-only evidence; the worker left embeddings pending without a DeepSeek key instead of fabricating vectors. Current-head Docker SHA manifests are still pending, and local `revision=local` images are not release artifacts. Live Firebase delivery and authenticated Railway/Supabase production GPS smoke remain required.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. This is local current-source evidence: Supabase production has migrations 1–35 checksum-verified without the local big seed, while migration 36 still requires an authorized rollout. Current-head Docker SHA manifests remain pending, and local `revision=local` images are not release artifacts. Railway deployment verification, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked by external real-provider configuration and credentials.
 
 ## Deployment order
 
 1. Rotate exposed credentials and supply the 15 missing Railway provider configurations through sealed provider stores.
-2. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron; the current-head migrator is already complete.
-3. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
-4. Re-smoke the exact Admin and Restaurant Vercel deployments against the healthy Railway API.
-5. Smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
+2. Authorize and run migration 36 on the target Supabase project; checksum-verify the composite FCM-revocation capability key afterward.
+3. Deploy the Railway API/worker from one immutable SHA and verify health/readiness/Cron once the required real provider configuration is available.
+4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
+5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API, then smoke maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
 6. Connect the private Admin/Restaurant GHCR packages to this repository and grant workflow write access, then rerun the multi-registry SHA publish.
 7. Pull all four immutable Docker manifests in a clean environment, verify remote digests and scans, then update `latest` only after production smoke.
 

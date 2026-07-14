@@ -10,8 +10,8 @@ Current tracked text-code footprint (excluding generated/test-output directories
 
 ```text
 backend/                   NestJS API, Prisma, Railway entry, compatibility adapter, worker entry
-  api/[...path].ts         Retained compatibility HTTP adapter; managed production API runs on Railway
-  prisma/                  Schema, 32 tracked migrations at the 2026-07-13 `master` baseline
+  api/[...path].ts         Retained compatibility HTTP adapter; Railway is the target managed-production API runtime
+  prisma/                  Schema and 36 ordered migrations in the current source
   src/                     Feature modules
 web/                       pnpm workspace
   apps/admin/              Admin Next.js application
@@ -55,9 +55,9 @@ Major module groups:
 | `common/queue` | BullMQ or PostgreSQL job-outbox abstraction |
 | `health`, `metrics` | Health/readiness and Prometheus-compatible metrics |
 
-The current Prisma schema declares 59 models across 34 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. A fresh isolated PostGIS+pgvector database applied all 34 migrations, including the FCM-revocation table and expiry index. Supabase production remains last checksum-verified at the preceding 33-migration state and needs the authorized rollout. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
+The current Prisma schema declares 59 models across 36 tracked ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migration 34 adds the FCM revocation table, migration 35 removes anonymous public Storage listing where `storage.objects` exists, and migration 36 scopes revocations by token plus registration capability. Supabase production has migrations 1–35 applied and checksum-verified; migration 36 requires an authorized rollout. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
-Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale. The mobile FCM lifecycle is enabled only after a valid Customer/Driver session, calls the authenticated token endpoint with Zod-validated input, tracks Firebase token rotation, and persists cleanup intent before bounded non-blocking logout cleanup. Registration UUIDs plus per-token PostgreSQL advisory locks and seven-day revocation tombstones prevent a late POST from recreating a logged-out binding. The worker targets the Android notification channel and APNs sound; foreground Android/iOS presentation and local-only deep-link taps are handled by the client. The open Driver inbox consumes authenticated realtime notification records and de-duplicates by ID; background delivery uses the FCM notification payload.
+Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale. The mobile FCM lifecycle is enabled only after a valid Customer/Driver session, calls the authenticated token endpoint with Zod-validated input, tracks Firebase token rotation, and persists cleanup intent before bounded non-blocking logout cleanup. Registration UUIDs plus per-token PostgreSQL advisory locks and seven-day revocation tombstones prevent a late POST from recreating a logged-out binding. The worker targets the Android notification channel and APNs sound; foreground Android/iOS presentation and local-only deep-link taps are handled by the client. The open Driver inbox consumes authenticated realtime notification records and de-duplicates by ID; background delivery uses the FCM notification payload. This describes current-source behavior, not live-delivery evidence: Railway verification and controlled live FCM remain blocked by external real-provider configuration and credentials.
 
 ## Web
 
@@ -104,7 +104,7 @@ Managed mobile realtime uses the same scoped `POST /api/realtime/token` + Supaba
 | `docker-compose.prod.yml` | Self-hosted Docker Hub compatibility overlay |
 | `infra/scripts/local-release-gate.ps1` | Unified local quality gate |
 | `infra/scripts/supabase-preflight.ps1` | Auth/project/database migration readiness |
-| `infra/scripts/vercel-web-preflight.ps1` | Admin/Restaurant Vercel project/env readiness; the API, worker, migrator, and Redis run on Railway |
+| `infra/scripts/vercel-web-preflight.ps1` | Admin/Restaurant Vercel project/env readiness; Railway is the target runtime for the API, worker, migrator, and Redis |
 | `.github/workflows/docker-publish.yml` | Multi-arch SHA build, runtime smoke, Trivy, immutable promotion |
 
 Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The worker reuses the backend artifact.
@@ -120,6 +120,8 @@ Docker publishes four artifacts: backend, migrate, Admin, and Restaurant. The wo
 **Queue:** service adds abstract job → PostgreSQL `job_outbox` in managed mode or BullMQ locally → secured drain/worker → status/attempt/error persisted.
 
 **RAG indexing:** worker cursor-paginates approved restaurants and active menu items → canonical content + SHA-256 hash → skip unchanged source or request a real DeepSeek embedding → upsert pgvector document → deactivate stale sources only after a complete successful scan. Missing provider configuration leaves the embedding pending; it never inserts a fake vector or a hard-coded FAQ/policy corpus.
+
+The clean-volume run indexed 402 RAG documents as isolated local evidence; it does not prove live DeepSeek/RAG provider success.
 
 **AI:** authenticated message → session/order context validation → DeepSeek adapter → persisted turn and usage event → answer or support escalation; missing configuration/provider failures return explicit errors and never synthesize an assistant reply.
 

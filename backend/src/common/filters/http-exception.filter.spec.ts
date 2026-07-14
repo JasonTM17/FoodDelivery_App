@@ -1,5 +1,5 @@
 import { HttpExceptionFilter } from './http-exception.filter'
-import { HttpException, HttpStatus } from '@nestjs/common'
+import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter
@@ -18,7 +18,7 @@ describe('HttpExceptionFilter', () => {
       }),
     }
 
-    filter.catch(exception, host as any)
+    filter.catch(exception, host as unknown as ArgumentsHost)
     expect(mockStatus).toHaveBeenCalledWith(400)
     expect(mockType).toHaveBeenCalledWith('application/problem+json')
     expect(mockJson).toHaveBeenCalledWith({
@@ -29,6 +29,29 @@ describe('HttpExceptionFilter', () => {
       status: 400,
       instance: '/api/test',
     })
+  })
+
+  it('redacts legacy FCM tokens from problem instances', () => {
+    const token = 'sensitive-fcm-token-with-at-least-twenty-characters'
+    const exception = new HttpException('Not found', HttpStatus.NOT_FOUND)
+    const mockJson = jest.fn()
+    const mockType = jest.fn().mockReturnValue({ json: mockJson })
+    const mockStatus = jest.fn().mockReturnValue({ type: mockType })
+    const host = {
+      switchToHttp: () => ({
+        getResponse: () => ({ status: mockStatus }),
+        getRequest: () => ({
+          url: `/api/notifications/fcm-token/${token}`,
+        }),
+      }),
+    }
+
+    filter.catch(exception, host as unknown as ArgumentsHost)
+
+    expect(mockJson).toHaveBeenCalledWith(expect.objectContaining({
+      instance: '/api/notifications/fcm-token/[REDACTED]',
+    }))
+    expect(JSON.stringify(mockJson.mock.calls)).not.toContain(token)
   })
 
   it('exposes validation issues without nesting a legacy error object', () => {
@@ -46,7 +69,7 @@ describe('HttpExceptionFilter', () => {
       }),
     }
 
-    filter.catch(exception, host as any)
+    filter.catch(exception, host as unknown as ArgumentsHost)
 
     expect(mockJson).toHaveBeenCalledWith(expect.objectContaining({
       detail: 'Validation failed',

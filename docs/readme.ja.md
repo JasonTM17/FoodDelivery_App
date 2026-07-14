@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-14 status:** Batch 4 は `master` に統合済みで、current-head の 10 workflows は green、Supabase production は 35 migrations 適用済み、Vercel Admin/Restaurant は READY で health/login 200 です。Railway API/worker は未 deploy、public API は 404、real provider settings 15 件が不足しているため release は **NO-GO** です。Authenticated production GPS/Broadcast と end-to-end smoke はまだ実行できず、fake value で gate を回避しません。
+> **2026-07-14 status:** Batch 4 は `master` に統合済みです。Supabase production は released migrations 1–35 を applied/checksum-verified 済みで、direct checks は RLS、private Broadcast、split Storage policy、empty production business/RAG data を確認しました。Current source は token と registration capability で FCM revocation を scope する migration 36 を追加し、authorized rollout 待ちです。release は **NO-GO** のままです。Railway API/worker の deploy/verification と controlled-device live FCM は external real-provider configuration/credentials により blocked です。
 
 ## Product preview
 
@@ -65,7 +65,7 @@ Backend/migrator SHA manifests were published to Docker Hub and repository-linke
 |---|---|
 | `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend` | API + worker; `sha256:399cc6a03ab5b582c4b771ac3b93711d5a823f9dc83c146e932b8ffdf6cd8ed0` |
 | `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate` | non-root Prisma migration; `sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756` |
-| Admin / Restaurant | Current-source Vercel deployments are READY with health/login 200; immutable Docker SHA and API production smoke remain pending |
+| Admin / Restaurant | Immutable Docker SHA と Railway-dependent production smoke は pending。ここでは production health claim を記録しません |
 
 Historical candidate tag is `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; both registries resolved to the same `amd64/arm64` manifest with SBOM/provenance. Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。`latest` は Batch 4 の source of truth ではありません。
 
@@ -117,16 +117,17 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-2026-07-14 の current-head matrix は green です: Backend 141 suites / 1043 tests、Mobile 352 tests、isolated Docker E2E 204/204（5.8 分）、CI、Integration Smoke、Build、Lint、Gitleaks、CodeQL、Trivy、SBOM。Fresh PostGIS+pgvector と authorized Railway migrator は 35 migrations をすべて適用しました。Supabase production に demo/big seed はありません。Historical seed（50 restaurants、50 drivers、100 customers、500 orders）は test-only で、DeepSeek key 不在時は fake vector を作らず embedding を pending にしました。Current-head immutable images、live FCM、Railway 経由の production GPS/Broadcast smoke は未完了です。
+2026-07-14 の clean-volume Docker project `foodflow-batch4-e2e` は current source の全 36 migrations を適用し、restaurants 50、drivers 50、customers 100、historical orders 500、canonical orders 9、reviews 123 を seed してから RAG documents 402 件を index しました。full Playwright matrix は 204/204 を 6.6 分で pass しました。これは local current-source evidence です。Supabase production は local big seed を実行せず migrations 1–35 を checksum-verified 済みで、migration 36 は authorized rollout 待ちです。Current-head immutable Docker SHA は pending で、Railway deployment verification、authenticated production GPS/Broadcast smoke、controlled-device live FCM は external provider configuration/credentials により blocked です。
 
 ## Deploy order
 
 1. Exposed key を rotate し、Railway の real provider settings 15 件を secret store に登録。
-2. 同一 SHA の API/worker を deploy し health/readiness/Cron を確認。Current-head migrator は完了済み。
-3. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
-4. Healthy Railway に対して exact Admin/Restaurant Vercel deployments と map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。
-5. Private Admin/Restaurant GHCR packages を repository に接続して workflow write を付与し、4 immutable SHA images を publish/pull/scan。
-6. Production smoke green 後のみ `latest` を promote。
+2. Target Supabase で migration 36 を authorized rollout し、FCM revocation の composite capability key を checksum-verify。
+3. 必要な real provider configuration が利用可能になった後、同一 immutable SHA の API/worker を deploy して health/readiness/Cron を確認。
+4. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
+5. Verified Railway に対して exact Admin/Restaurant Vercel deployments、map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。
+6. Private Admin/Restaurant GHCR packages を repository に接続して workflow write を付与し、4 immutable SHA images を publish/pull/scan。
+7. Production smoke green 後のみ `latest` を promote。
 
 ## Documentation
 

@@ -1,3 +1,4 @@
+import { IS_PUBLIC_KEY } from '../auth/public.decorator'
 import { NotificationsController } from './notifications.controller'
 import type { NotificationsService } from './notifications.service'
 
@@ -5,7 +6,7 @@ const user = { sub: 'user-1', role: 'customer' }
 const token = 'fcm-token-with-at-least-twenty-characters'
 const registrationId = '9165a90e-1e23-4f7a-8df6-5c7b1a5c4f10'
 
-describe('NotificationsController FCM compatibility', () => {
+describe('NotificationsController FCM lifecycle', () => {
   const notificationsService = {
     registerFcmToken: jest.fn().mockResolvedValue({ success: true }),
     registerLegacyFcmToken: jest.fn().mockResolvedValue({ success: true }),
@@ -31,7 +32,7 @@ describe('NotificationsController FCM compatibility', () => {
     )
   })
 
-  it('routes a legacy registration body through the compatibility adapter', async () => {
+  it('keeps legacy registration compatible during the rolling upgrade', async () => {
     await controller.registerFcmToken(user, { token, platform: 'android' })
 
     expect(notificationsService.registerLegacyFcmToken).toHaveBeenCalledWith(
@@ -40,14 +41,24 @@ describe('NotificationsController FCM compatibility', () => {
     )
   })
 
-  it('keeps current and legacy cleanup routes distinct', async () => {
-    await controller.unregisterFcmToken(user, { token, registrationId })
+  it('revokes one exact registration capability', async () => {
+    await controller.unregisterFcmToken({ token, registrationId })
+
+    expect(notificationsService.unregisterFcmToken).toHaveBeenCalledWith({
+      token,
+      registrationId,
+    })
+    expect(
+      Reflect.getMetadata(
+        IS_PUBLIC_KEY,
+        NotificationsController.prototype.unregisterFcmToken,
+      ),
+    ).toBe(true)
+  })
+
+  it('keeps authenticated legacy cleanup compatible', async () => {
     await controller.unregisterLegacyFcmToken(user, token)
 
-    expect(notificationsService.unregisterFcmToken).toHaveBeenCalledWith(
-      user.sub,
-      { token, registrationId },
-    )
     expect(notificationsService.unregisterLegacyFcmToken).toHaveBeenCalledWith(
       user.sub,
       token,

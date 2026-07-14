@@ -168,11 +168,6 @@ describe('NotificationsService', () => {
     })
 
     it('purges expired tombstones during normal FCM traffic', async () => {
-      mockPrisma.fcmTokenRevocation.findUnique.mockResolvedValue({
-        token,
-        expiresAt: new Date(Date.now() - 60_000),
-      })
-
       await service.registerFcmToken('u1', {
         token,
         platform: 'android',
@@ -182,48 +177,58 @@ describe('NotificationsService', () => {
       expect(mockPrisma.fcmTokenRevocation.deleteMany).toHaveBeenCalledWith({
         where: { expiresAt: { lte: expect.any(Date) } },
       })
-      expect(mockPrisma.fcmTokenRevocation.deleteMany).toHaveBeenLastCalledWith({
-        where: { registrationId },
-      })
       expect(mockPrisma.userFcmToken.upsert).toHaveBeenCalled()
     })
 
-    it('maps a legacy client to a deterministic registration ID', async () => {
+    it('scopes revocation lookup to the token and registration capability', async () => {
+      await service.registerFcmToken('u1', {
+        token,
+        platform: 'android',
+        registrationId,
+      })
+
+      expect(mockPrisma.fcmTokenRevocation.findUnique).toHaveBeenCalledWith({
+        where: { token_registrationId: { token, registrationId } },
+      })
+    })
+
+    it('records revocation and deletes only the matching token registration', async () => {
+      await service.unregisterFcmToken({ token, registrationId })
+
+      expect(mockPrisma.fcmTokenRevocation.upsert).toHaveBeenCalledWith({
+        where: { token_registrationId: { token, registrationId } },
+        create: expect.objectContaining({ registrationId, token }),
+        update: expect.objectContaining({ expiresAt: expect.any(Date) }),
+      })
+      expect(mockPrisma.userFcmToken.deleteMany).toHaveBeenCalledWith({
+        where: { token, registrationId },
+      })
+    })
+
+    it('keeps legacy registration compatible with a deterministic capability', async () => {
       await service.registerLegacyFcmToken('u1', {
         token,
         platform: 'android',
       })
 
-      const registrationId = mockPrisma.userFcmToken.upsert.mock.calls[0][0]
-        .create.registrationId as string
-      expect(registrationId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/,
+      expect(mockPrisma.userFcmToken.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            userId: 'u1',
+            token,
+            registrationId: expect.stringMatching(
+              /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/,
+            ),
+          }),
+        }),
       )
     })
 
-    it('removes a pre-migration null legacy binding without touching a UUID binding', async () => {
+    it('scopes legacy cleanup to the authenticated user and token', async () => {
       await service.unregisterLegacyFcmToken('u1', token)
 
-      const where = mockPrisma.userFcmToken.deleteMany.mock.calls.at(-1)[0]
-        .where as { OR: Array<{ registrationId: string | null }> }
-      expect(where).toMatchObject({ userId: 'u1', token })
-      expect(where.OR).toHaveLength(2)
-      expect(where.OR[0].registrationId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/,
-      )
-      expect(where.OR[1]).toEqual({ registrationId: null })
-    })
-
-    it('records revocation and deletes only the matching registration', async () => {
-      await service.unregisterFcmToken('u1', { token, registrationId })
-
-      expect(mockPrisma.fcmTokenRevocation.upsert).toHaveBeenCalledWith({
-        where: { registrationId },
-        create: expect.objectContaining({ registrationId, token }),
-        update: expect.objectContaining({ token }),
-      })
       expect(mockPrisma.userFcmToken.deleteMany).toHaveBeenCalledWith({
-        where: { userId: 'u1', token, registrationId },
+        where: expect.objectContaining({ userId: 'u1', token }),
       })
     })
   })

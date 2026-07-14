@@ -16,8 +16,8 @@ describe('NotificationsController HTTP', () => {
   let app: INestApplication
   const notificationsService = {
     registerFcmToken: jest.fn(),
-    unregisterFcmToken: jest.fn(),
     registerLegacyFcmToken: jest.fn(),
+    unregisterFcmToken: jest.fn(),
     unregisterLegacyFcmToken: jest.fn(),
     getUserNotifications: jest.fn(),
     markAsRead: jest.fn(),
@@ -50,8 +50,8 @@ describe('NotificationsController HTTP', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     notificationsService.registerFcmToken.mockResolvedValue({ registered: true })
-    notificationsService.unregisterFcmToken.mockResolvedValue({ unregistered: true })
     notificationsService.registerLegacyFcmToken.mockResolvedValue({ registered: true })
+    notificationsService.unregisterFcmToken.mockResolvedValue({ unregistered: true })
     notificationsService.unregisterLegacyFcmToken.mockResolvedValue({ unregistered: true })
   })
 
@@ -78,18 +78,17 @@ describe('NotificationsController HTTP', () => {
     })
   })
 
-  it('forwards a rolling-compatible legacy registration body', async () => {
+  it('accepts legacy registration during the rolling upgrade', async () => {
     await request(app.getHttpServer())
       .post('/api/notifications/fcm-token')
-      .send({ token: TOKEN, platform: 'android', deviceId: 'legacy-device' })
+      .send({ token: TOKEN, platform: 'android' })
       .expect(201)
 
-    expect(notificationsService.registerLegacyFcmToken).toHaveBeenCalledWith(USER.sub, {
-      token: TOKEN,
-      platform: 'android',
-      deviceId: 'legacy-device',
-    })
     expect(notificationsService.registerFcmToken).not.toHaveBeenCalled()
+    expect(notificationsService.registerLegacyFcmToken).toHaveBeenCalledWith(
+      USER.sub,
+      { token: TOKEN, platform: 'android' },
+    )
   })
 
   it.each([
@@ -111,13 +110,13 @@ describe('NotificationsController HTTP', () => {
       .send({ token: TOKEN, registrationId: REGISTRATION_ID })
       .expect(200)
 
-    expect(notificationsService.unregisterFcmToken).toHaveBeenCalledWith(USER.sub, {
+    expect(notificationsService.unregisterFcmToken).toHaveBeenCalledWith({
       token: TOKEN,
       registrationId: REGISTRATION_ID,
     })
   })
 
-  it('forwards the rolling-compatible legacy unregister route', async () => {
+  it('keeps the authenticated path-token cleanup route during the rolling upgrade', async () => {
     await request(app.getHttpServer())
       .delete(`/api/notifications/fcm-token/${TOKEN}`)
       .expect(200)
@@ -126,6 +125,5 @@ describe('NotificationsController HTTP', () => {
       USER.sub,
       TOKEN,
     )
-    expect(notificationsService.unregisterFcmToken).not.toHaveBeenCalled()
   })
 })

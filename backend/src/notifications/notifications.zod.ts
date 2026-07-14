@@ -15,10 +15,10 @@ export const registerFcmTokenSchema = z.object({
   platform: z.enum(fcmTokenPlatforms),
   deviceId: z.string().trim().min(1, 'Device ID cannot be empty').max(200).optional(),
   registrationId: fcmRegistrationIdSchema,
-})
+}).strict()
 
-// Temporary rolling-upgrade adapter. New clients must send registrationId;
-// the service maps old clients to a deterministic legacy registration ID.
+// Rolling-upgrade adapter for installed clients. New clients must send a
+// random registrationId and use the body-based cleanup capability.
 export const legacyRegisterFcmTokenSchema = registerFcmTokenSchema.omit({
   registrationId: true,
 }).strict()
@@ -31,7 +31,7 @@ export const compatibleRegisterFcmTokenSchema = z.union([
 export const unregisterFcmTokenSchema = z.object({
   token: fcmTokenSchema,
   registrationId: fcmRegistrationIdSchema,
-})
+}).strict()
 
 export type RegisterFcmTokenInput = z.infer<typeof registerFcmTokenSchema>
 export type LegacyRegisterFcmTokenInput = z.infer<typeof legacyRegisterFcmTokenSchema>

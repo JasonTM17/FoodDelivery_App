@@ -30,6 +30,7 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 - Audit every Admin/Restaurant critical page in fresh `vi`, `en`, and `ja` contexts for title, `html lang`, visible text, aria text, number/date/currency formatting, and cookie isolation.
 - Complete responsive/keyboard/axe review for dashboard, approval, promotion, audit/export, staff, benchmark, AI monitor, map, and order flows.
 - Compare implementation with approved Stitch/design artifacts and establish accepted visual regression evidence.
+- Current-source local visual evidence: after the Restaurant mobile Kanban fix, CLS was approximately 0.0037. This is a measured regression check, not a complete pixel baseline or production approval.
 - Recapture product media only after the intended source is built and seeded; record source commit, Compose/image references, and whether the run used a clean final head or a dirty workspace.
 
 ### Mobile release validation
@@ -56,13 +57,13 @@ Status on 2026-07-14: **integration and current-head quality gates are green on 
 - Flutter frozen dependency fetch, analyze, full tests, and customer/driver release builds at the final source head.
 - Full repo/staged secret scan, Gitleaks, CodeQL, dependency audit, Trivy, SBOM, actionlint, ShellCheck.
 
-## Verified managed state and external blockers
+## Current-source evidence and external blockers
 
-- All ten required current-head GitHub workflows are green. The recorded matrix includes Backend 141 suites / 1043 tests, Mobile 352 tests, and isolated Docker E2E 204/204 in 5.8 minutes.
-- Supabase is linked and all 35 forward migrations are applied. Private Broadcast authorization, split Storage buckets, removal of anonymous public-object listing, RLS, and empty production business/RAG tables were verified directly. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
+- The fresh clean-volume current-source Docker project `foodflow-batch4-e2e` applied all 36 migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, indexed 402 RAG documents, and passed Playwright 204/204 in 6.6 minutes. The Restaurant mobile Kanban CLS trace was approximately 0.0037 after the fix. These are local results only.
+- Supabase production has migrations 1–35 applied and checksum-verified. Migration 36 scopes FCM revocations by token plus registration capability and requires an authorized rollout. One historical zero-step Prisma failure remains recorded as rolled back; applied SQL was not reversed or rewritten.
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
-- Railway topology and managed Redis pass, and the current-head migrator completed. The public API still returns 404 because API/worker have no deployment and lack 15 real provider configurations: Maps/OSRM, DeepSeek, SePay/webhook, SMTP, FCM, and Twilio. Live GPS/Broadcast and controlled-token FCM delivery therefore remain blocked.
-- Admin and Restaurant are both GitHub-linked and READY on Vercel. Canonical health/login paths return 200 with no tunnel/localhost network requests or console errors; Restaurant tunnel env was replaced. Authenticated API/GPS smoke still depends on Railway.
+- Railway-dependent rollout and verification are externally blocked by required real provider configuration and credentials. Do not claim Railway API/worker production health; live GPS/Broadcast and controlled-device FCM delivery remain unverified. Local notification and lifecycle tests do not prove provider delivery.
+- Admin and Restaurant production verification still depends on the authorized Supabase rollout and verified Railway API/worker. Do not treat prior web evidence as end-to-end production approval.
 - Current-head Docker SHA images remain unpublished. Existing private Admin/Restaurant GHCR packages are not connected to this repository, so the workflow gets 403 until repository access is granted. No semver or `latest` promotion is authorized.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
@@ -71,12 +72,13 @@ These are release blockers, not permission to add fake values or bypass validati
 ## Release sequence after completion
 
 1. Rotate exposed credentials and enter the 15 real Railway provider configurations through secure stores.
-2. Deploy API/worker from one immutable SHA; verify health/readiness/Cron. The current-head migrator is already complete.
-3. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
-4. Re-smoke the exact Admin and Restaurant Vercel deployments against the healthy Railway API.
-5. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access, then rerun the four-image SHA workflow.
-6. Pull the SHA manifests in a clean environment, verify cross-registry digests/scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
-7. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
+2. Authorize and run migration 36 on target Supabase; checksum-verify the composite FCM-revocation capability key.
+3. Deploy API/worker from one immutable SHA once the required real provider configuration is available; verify health/readiness/Cron.
+4. Run production Customer/Driver auth, private-realtime allow/deny, token refresh, GPS snapshot/delta/reconnect, Storage, map, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
+5. Re-smoke the exact Admin and Restaurant Vercel deployments against the verified Railway API.
+6. Connect the private Admin/Restaurant GHCR packages to this repository and grant Actions write access, then rerun the four-image SHA workflow.
+7. Pull the SHA manifests in a clean environment, verify cross-registry digests/scans/runtime, then create immutable `v4.0.0` and manually promote `latest` only after production smoke.
+8. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 
 ## Post-release
 
