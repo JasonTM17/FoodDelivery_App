@@ -55,7 +55,7 @@ function Invoke-HealthProbe {
   $lastError = $null
   for ($attempt = 1; $attempt -le $Retries; $attempt++) {
     try {
-      $response = Invoke-WebRequest -Uri $Url -Method GET -TimeoutSec $TimeoutSeconds -Headers @{ 'Cache-Control' = 'no-cache' }
+      $response = Invoke-WebRequest -Uri $Url -Method GET -TimeoutSec $TimeoutSeconds -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }
       $statusCode = [int]$response.StatusCode
       if ($statusCode -lt 200 -or $statusCode -ge 300) {
         throw "$Name health returned HTTP $statusCode"

@@ -136,6 +136,7 @@ function Invoke-JsonRequest {
     Method = $Method
     TimeoutSec = $TimeoutSeconds
     Headers = $Headers
+    UseBasicParsing = $true
   }
 
   if ($null -ne $Body) {
@@ -166,7 +167,7 @@ function Invoke-PageRequest {
     [Parameter(Mandatory = $true)][string]$Url
   )
 
-  $response = Invoke-WebRequest -Uri $Url -Method GET -TimeoutSec $TimeoutSeconds -Headers @{ 'Cache-Control' = 'no-cache' }
+  $response = Invoke-WebRequest -Uri $Url -Method GET -TimeoutSec $TimeoutSeconds -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }
   $statusCode = [int]$response.StatusCode
   if ($statusCode -lt 200 -or $statusCode -ge 300) {
     throw "$Name returned HTTP $statusCode."
