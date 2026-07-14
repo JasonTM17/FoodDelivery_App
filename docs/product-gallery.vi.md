@@ -54,6 +54,8 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 
 Customer là sản phẩm Flutter/Riverpod native Android/iOS hạng nhất. Khởi chạy từ [`main_customer.dart`](../mobile/lib/main_customer.dart) với Android flavor `customer`. Phạm vi đã tài liệu hóa gồm discovery, ordering, cart, checkout, tracking và support; xem [hướng dẫn mobile](../mobile/README.md) để biết runtime và build.
 
+Xem đầy đủ workflow Customer và Driver đã đối chiếu source, permission, hành vi thông báo và lệnh chạy ở [hướng dẫn Customer và Driver](./customer-driver-guide.vi.md).
+
 Chưa có UI Customer được capture trong gallery. Không được suy diễn ảnh Customer từ media Admin/Restaurant; chỉ dùng capture mới từ entrypoint [`main_customer.dart`](../mobile/lib/main_customer.dart) có source/runtime reference làm bằng chứng release.
 
 ## Driver GPS (local E2E, chỉ phục vụ test)

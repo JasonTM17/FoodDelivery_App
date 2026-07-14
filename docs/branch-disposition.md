@@ -2,13 +2,13 @@
 
 ## Audited disposition
 
-Audit date: **2026-07-14**. Branch facts below were read at `e505fe06e72b933745aca656f014966134c2c4e0`; pending working-tree changes are outside this topology audit.
+Audit date: **2026-07-14**. Branch facts below were read at `e4a9155c97b9247ce6933fe59dbe0355a52f6f5c`; pending working-tree changes are outside this topology audit.
 
 | Scope | Verified state | Disposition |
 |---|---|---|
-| Release ref | `master` and `origin/master` both resolve to `e505fe06e72b933745aca656f014966134c2c4e0`. | Keep `master` as the release ref. Local equivalence is not production approval. |
+| Release ref | `master` and `origin/master` both resolve to `e4a9155c97b9247ce6933fe59dbe0355a52f6f5c`. | Keep `master` as the release ref. Local equivalence is not production approval. |
 | Remote refs | `origin/master` is the only remote branch. | No remote branch action. |
-| Legacy local ref | `worktree-agent-a62965db0e804d23d` is an obsolete, merged, non-release local ref. Its merge-base with `master` is `51f377d1a517d9adabce72ca5151d223f5e12d33`; `master...legacy` is `19/0`, so `master` is 19 commits ahead and the legacy ref has no unique commits. | Retain it. Do not raw-merge, recreate, push, or delete it without explicit direction. |
+| Legacy local ref | `worktree-agent-a62965db0e804d23d` is an obsolete, merged, non-release local ref. Its merge-base with `master` is `51f377d1a517d9adabce72ca5151d223f5e12d33`; `master...legacy` is `23/0`, so `master` is 23 commits ahead and the legacy ref has no unique commits. | Retain it. Do not raw-merge, recreate, push, or delete it without explicit direction. |
 | Worktrees and unmerged refs | No linked worktree exists for the legacy ref, and `git branch --no-merged master` is empty. | No cleanup action is authorized. |
 
 ## Evidence boundary
@@ -26,8 +26,8 @@ git rev-parse master
 git rev-parse origin/master
 git ls-remote --heads origin
 git merge-base master $legacy
-git rev-list --left-right --count master...$legacy  # expected: 19 0
-git rev-list --count "$legacy..master"             # expected: 19
+git rev-list --left-right --count master...$legacy  # expected: 23 0
+git rev-list --count "$legacy..master"             # expected: 23
 git branch --no-merged master                       # expected: no output
 git worktree list --porcelain
 git status --short

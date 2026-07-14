@@ -192,7 +192,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Evidence commit `84e2f36` has all four immutable Docker Hub manifests and a green Mobile CI artifact containing Customer/Driver debug APKs; clean image pulls, device release evidence, Railway deployment, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 current migrations, seeded 50 restaurants, 50 drivers, 100 customers, 500 historical orders, 9 canonical orders, and 123 reviews, then indexed 402 RAG documents. Its full Playwright matrix passed 204/204 in 6.6 minutes. Supabase production separately has all 36 migrations checksum-verified without the local big seed. Evidence commit `84e2f36` has all four immutable Docker Hub manifests. Current mobile commit `e4a9155` passed all 361 Flutter tests plus analyze and produced Customer/Driver debug APKs in Mobile CI; clean image pulls, device release evidence, Railway deployment, authenticated production GPS/Broadcast smoke, and controlled live Firebase delivery remain blocked.
 
 ## Deployment order
 
@@ -207,6 +207,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 ## Documentation
 
 - [Product gallery](docs/product-gallery.md)
+- [Customer and Driver mobile guide](docs/customer-driver-guide.md)
 - [Project overview and requirements](docs/project-overview-pdr.md)
 - [System architecture](docs/system-architecture.md)
 - [API contract](docs/api-contract.md) and [OpenAPI](docs/openapi.yaml)
@@ -221,7 +222,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 36 
 
 ## Branch policy
 
-The remote has one branch, `origin/master`. Code release `43f0306` contains the FCM capability hardening and migration 36 and passed all 11 required workflows; later documentation-only commits do not replace that code evidence. The retained local ref `worktree-agent-a62965db0e804d23d` is a merged, obsolete non-release ref with no linked worktree; do not raw-merge, recreate, push, or delete it without explicit direction. Local branch equivalence is not production approval; current source and Supabase production are aligned at 36 migrations, while Railway runtime deployment remains blocked on real provider configuration. See [branch disposition](docs/branch-disposition.md).
+The remote has one branch, `origin/master`. Code release `43f0306` contains the FCM capability hardening and migration 36; current mobile commit `e4a9155` passed every triggered workflow, including Integration Smoke and Mobile CI. The retained local ref `worktree-agent-a62965db0e804d23d` is a merged, obsolete non-release ref with no linked worktree; do not raw-merge, recreate, push, or delete it without explicit direction. Local branch equivalence is not production approval; current source and Supabase production are aligned at 36 migrations, while Railway runtime deployment remains blocked on real provider configuration. See [branch disposition](docs/branch-disposition.md).
 
 ## License
 

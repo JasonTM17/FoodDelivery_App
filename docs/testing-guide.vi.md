@@ -12,7 +12,7 @@ Evidence current-head ngày 14/07/2026:
 |---|---|
 | Backend | Release candidate local pass 142 suite / 1049 test cùng Prisma validate/generate, typecheck, lint và build. Vẫn phải chạy fresh remote CI sau khi push. |
 | Database | Current source và Supabase production đã đồng bộ đủ 36 migration có thứ tự, được checksum-verify. Migration 36 giới hạn FCM revocation theo token cùng registration capability; primary key `token,registration_id` đã được kiểm tra trực tiếp. |
-| Mobile Flutter | Release candidate local pass đủ 354 test và `flutter analyze`; vẫn cần fresh Mobile CI cùng evidence thiết bị Android/iOS production. |
+| Mobile Flutter | Release candidate hiện tại pass đủ 361 test và `flutter analyze`; Mobile CI cho `e4a9155` cũng pass và tạo APK debug Customer/Driver. Vẫn cần evidence thiết bị Android/iOS production. |
 | Web | CLS trace của Restaurant Kanban ở mobile khoảng 0.0037 sau khi sửa. Đây là bằng chứng ổn định hiển thị local, không phải claim production health. |
 | Browser E2E | Ma trận Docker volume sạch current-source pass 204/204 trong 6,6 phút. Đây không phải bằng chứng GPS production Railway/Supabase. |
 | FCM | Local contract pass: 6 backend FCM/controller suite / 47 test và 34 Flutter notification test tập trung. Chưa gửi live: cần project credential production và controlled device token. |

@@ -54,6 +54,8 @@
 
 Customer は first-class Flutter/Riverpod native Android/iOS product です。[`main_customer.dart`](../mobile/lib/main_customer.dart) から Android `customer` flavor で起動します。documented scope は discovery、ordering、cart、checkout、tracking、support です。runtime/build の詳細は [mobile guide](../mobile/README.md) を参照してください。
 
+source と照合した Customer/Driver workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
+
 Customer UI の capture はこの gallery にまだありません。Admin/Restaurant media から Customer screenshot を推測せず、release evidence には source/runtime reference 付きの [`main_customer.dart`](../mobile/lib/main_customer.dart) からの新規 capture だけを使います。
 
 ## Driver GPS (test-only local E2E)

@@ -112,6 +112,8 @@ GIFs are 640 × 400, silent, palette-optimized, and generated from the same scre
 
 Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_customer.dart`](../mobile/lib/main_customer.dart) with the Android `customer` flavor. Its documented scope includes discovery, ordering, cart, checkout, tracking, and support; see the [mobile guide](../mobile/README.md) for runtime and build details.
 
+For the complete verified Customer and Driver workflows, permissions, notification behavior, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
+
 No Customer UI still is currently stored in this gallery. Do not infer a Customer screenshot from Admin or Restaurant media; only a new capture from the explicit entrypoint with recorded source/runtime references can become visual release evidence.
 
 ## Driver GPS (test-only local E2E)

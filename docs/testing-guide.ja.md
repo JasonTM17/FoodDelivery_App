@@ -12,7 +12,7 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 |---|---|
 | Backend | Local release candidate は 142 suites / 1049 tests、Prisma validate/generate、typecheck、lint、build が pass。Push 後の fresh remote CI はまだ必要です。 |
 | Database | Current source と Supabase production は ordered 36 migrations で aligned/checksum-verified 済みです。Migration 36 は token と registration capability で FCM revocation を scope し、`token,registration_id` primary key も direct verification 済みです。 |
-| Mobile Flutter | Local release candidate は 354 tests と `flutter analyze` を pass。Fresh Mobile CI と Android/iOS production device evidence は未完了です。 |
+| Mobile Flutter | Current release candidate は 361 tests と `flutter analyze` を pass。`e4a9155` の Mobile CI も pass し、Customer/Driver debug APK を生成しました。Android/iOS production device evidence は未完了です。 |
 | Web | Restaurant mobile Kanban の CLS trace は fix 後およそ 0.0037 です。これは local visual-stability evidence であり、production health claim ではありません。 |
 | Browser E2E | fresh current-source clean-volume Docker matrix は 204/204 を 6.6 分で pass しました。Railway/Supabase production GPS の証拠ではありません。 |
 | FCM | Local contract は FCM/controller backend 6 suites / 47 tests と focused Flutter notification tests 34 件が pass。live send は未実行で、production credential と controlled device token が必要です。 |
