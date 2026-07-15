@@ -4,7 +4,7 @@
 
 Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-14: **deployed runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` has green backend, CI, registry, Railway, Vercel health, and API-level GPS evidence; full production certification remains no-go**.
+Status on 2026-07-15: **deployed runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` has green backend, CI, registry, 41-migration Supabase state, exact-revision Railway/Vercel health, and API-level GPS evidence; full production certification remains no-go**.
 
 ## Completed and incorporated work
 

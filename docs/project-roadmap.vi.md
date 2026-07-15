@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 14/07/2026: **runtime candidate đã deploy `52f433641d5093f6d064cfba6c1cd99c8cb035e9` có backend, CI, registry, Railway, Vercel health và GPS cấp API đã xanh; vẫn chưa đủ điều kiện production đầy đủ**.
+Trạng thái 15/07/2026: **runtime candidate đã deploy `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` có backend, CI, registry, Supabase 41 migration, Railway/Vercel đúng revision và GPS cấp API đã xanh; vẫn chưa đủ điều kiện production đầy đủ**.
 
 ## Đã hoàn thành và đã tích hợp
 

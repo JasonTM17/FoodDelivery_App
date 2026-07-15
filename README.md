@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-14:** runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` passed 144 Jest suites / 1065 tests, typecheck, lint, build, all triggered GitHub workflows, multi-architecture runtime smoke, and High/Critical image scans. Railway migrate/API/worker run the immutable SHA images; all 38 migrations are applied and public health/readiness report database, Redis, and Supabase Storage up. Current Admin and Restaurant Vercel deployments are Ready and their production health/login routes return 200. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated browser role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
+> **Release status — 2026-07-15:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` passed 145 Jest suites / 1071 tests, typecheck, lint, build, all 10 triggered GitHub workflows, multi-architecture runtime smoke, and eight High/Critical image scans. Railway migrate/API/worker and both Vercel apps run that exact revision; all 41 effective migrations are applied, only the split public/private Storage buckets remain, and public health/readiness/login smoke passes. Three older applied migration files still have unresolved checksum provenance and the pending guard intentionally blocks a later rollout until they are reconciled. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
 
 ## Product preview
 
@@ -95,21 +95,21 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Docker packages
 
-The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9`. Both registries were queried after publication. Docker Publish run `29336146675` pulled and smoke-tested both supported architectures and passed all eight High/Critical scans. Railway API/worker run the exact backend digest and the one-off migrator ran the exact migrate digest. `latest` remains unchanged until the remaining production certification gates pass.
+The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`. Both registries were queried after publication. Docker Publish run `29387565225` pulled and smoke-tested both supported architectures and passed all eight High/Critical scans. Railway API/worker run the exact backend digest and the one-off migrator ran the exact migrate digest. `latest` remains unchanged until the remaining production certification gates pass.
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| API + worker   | [`nguyenson1710/foodflow-backend:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-backend)       | `sha256:6d56cbefe7e9644703d957ae7a1abe96966d831b2567172edafc3063fc2e1f10` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate)       | `sha256:f5131517198105f466ebb3daf2d52d5d56541f6b97dc0ec2cb99936e85e73f43` |
-| Admin          | [`nguyenson1710/foodflow-admin:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-admin)           | `sha256:481bf07929b66cd8a23ab9d4ed95f37f585e78c868af3bacd49b6186b26bcfe6` |
-| Restaurant     | [`nguyenson1710/foodflow-restaurant:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:38c35c1470152cb42debdf284444572e2d2127e42d71939384b804cbe1e1fa1f` |
+| API + worker   | [`nguyenson1710/foodflow-backend:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`](https://hub.docker.com/r/nguyenson1710/foodflow-backend)       | `sha256:4c00f02f6d5ed64cfac4507eb18d50c39166159941a772ead725740448d6bebd` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate)       | `sha256:8e97a9adca15fe418288f83f43056310ab36c8b72ed7636a53a15c2950dda12a` |
+| Admin          | [`nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`](https://hub.docker.com/r/nguyenson1710/foodflow-admin)           | `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744` |
+| Restaurant     | [`nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
 The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. All four GHCR packages are public, linked to `JasonTM17/FoodDelivery_App`, and grant the repository Actions write access. Docker Hub and GHCR digests match for every SHA tag. No semver or `latest` tag was promoted.
 
 Release promotion order:
 
 1. Build and push `sha-<full-commit>`.
-2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings. Completed for `52f4336` by run `29336146675`.
+2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings. Completed for `f2c02ed` by run `29387565225`.
 3. Pass Supabase/Railway/Vercel production health and authenticated tracking smoke. Provider health and controlled GPS Broadcast/PostGIS smoke passed; the wider device/browser matrix remains open.
 4. Build and scan every supported architecture, then create immutable `v4.0.0`.
 5. Promote `latest` only through an explicit manual release action.
@@ -209,11 +209,11 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 ## Deployment order
 
 1. Rotate exposed credentials and keep all configured Railway/provider values in sealed provider stores.
-2. Recheck all 38 production migrations and checksums before rollout; never infer provider state from local Docker.
+2. Recheck all 41 effective production migrations and reconcile the three historical checksum mismatches before rollout; never bypass a failing guard or infer provider state from local Docker.
 3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
-6. Preserve the verified `52f4336` Docker Hub/GHCR manifests and scans; promote semver/`latest` only after the remaining device/browser/provider production gates pass.
+6. Preserve the verified `f2c02ed` Docker Hub/GHCR manifests and scans; promote semver/`latest` only after the remaining device/browser/provider production gates pass.
 
 ## Documentation
 

@@ -90,10 +90,11 @@ authoritative source for individual commits and implementation detail.
 
 ### Release blockers
 
-- Railway API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c` and worker
-  deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from immutable SHA images; health and
-  readiness return 200, and worker outbox polling is active. This closes the
-  former offline/404 startup blocker only.
+- Railway migrator `5e52c611-60d4-4c4a-a109-83d44eec21f0`, API
+  `8b8c3450-a5a7-4138-b030-c4c2b072702b`, worker
+  `ff50c82f-5471-4be9-b4fc-899e559a3efc`, and both Vercel apps run the exact
+  immutable `f2c02ed` revision. Health/readiness return 200 and worker outbox
+  polling is active. This closes the revision-split blocker only.
 - Final Android production signing and iOS build/signing evidence still require
   authorized release credentials/runners; local debug APKs are not publishable.
 - Authenticated browser role flows, controlled-device FCM,
@@ -101,9 +102,9 @@ authoritative source for individual commits and implementation detail.
   checks, accessibility, visual, tenant, device, and image-pull gates remain
   mandatory before release certification.
 - Three already-applied Supabase migration files have checksums that do not
-  match production history. Provenance must be recovered or explicitly
-  reconciled under an approved database procedure before any new production
-  migration is applied.
+  match production history. The schema/index/RLS end-state has been verified,
+  the applied records were not rewritten, and the provenance exception remains
+  explicitly documented for future database audits.
 - At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
   Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
   352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and

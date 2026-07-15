@@ -59,18 +59,18 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-14): migrate deployment `a9002614-ed2a-438c-9a4e-7170954052fc`, API deployment `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`, and worker deployment `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from immutable `52f4336` SHA images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `ready: true`, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-15): migrate deployment `5e52c611-60d4-4c4a-a109-83d44eec21f0`, API deployment `8b8c3450-a5a7-4138-b030-c4c2b072702b`, and worker deployment `ff50c82f-5471-4be9-b4fc-899e559a3efc` are successful from immutable `f2c02ed` SHA images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
 
 ### Last verified multi-registry candidate
 
-Runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries. Docker Publish run `29336146675` pulled and smoke-tested both architectures and passed all eight High/Critical scans; Railway runs the exact backend/migrate digests:
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries. Docker Publish run `29387565225` pulled and smoke-tested both architectures and passed all eight High/Critical scans; Railway runs the exact backend/migrate digests:
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| API + worker   | `nguyenson1710/foodflow-backend:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:6d56cbefe7e9644703d957ae7a1abe96966d831b2567172edafc3063fc2e1f10`    |
-| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:f5131517198105f466ebb3daf2d52d5d56541f6b97dc0ec2cb99936e85e73f43`    |
-| Admin          | `nguyenson1710/foodflow-admin:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:481bf07929b66cd8a23ab9d4ed95f37f585e78c868af3bacd49b6186b26bcfe6`      |
-| Restaurant     | `nguyenson1710/foodflow-restaurant:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:38c35c1470152cb42debdf284444572e2d2127e42d71939384b804cbe1e1fa1f` |
+| API + worker   | `nguyenson1710/foodflow-backend:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:4c00f02f6d5ed64cfac4507eb18d50c39166159941a772ead725740448d6bebd`    |
+| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:8e97a9adca15fe418288f83f43056310ab36c8b72ed7636a53a15c2950dda12a`    |
+| Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
+| Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
 `latest` intentionally remains on the prior candidate. All four GHCR packages are public, repository-linked, and grant Actions write access. Complete the remaining provider/device/browser stages below before any semver or `latest` promotion.
 
@@ -138,7 +138,7 @@ railway link
 powershell -NoProfile -ExecutionPolicy Bypass -File infra/scripts/railway-preflight.ps1
 ```
 
-Use Railway sealed variables for every secret. Share the API/worker environment contract through Railway shared variables or explicit references; configure the migrator with `DATABASE_URL` and `DIRECT_URL`, plus `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and the JWT `SUPABASE_SERVICE_ROLE_KEY` when `STORAGE_PROVIDER=supabase`. Do not use `railway variable list --json` in a shared terminal because that command includes raw variable values.
+Use Railway sealed variables for every secret. Share the API/worker environment contract through Railway shared variables or explicit references; configure the migrator with `DATABASE_URL` and `DIRECT_URL`, plus `SUPABASE_URL` and the JWT `SUPABASE_SERVICE_ROLE_KEY` when `STORAGE_PROVIDER=supabase`. `SUPABASE_SECRET_KEY` is not a substitute for the JWT Storage credential. Do not use `railway variable list --json` in a shared terminal because that command includes raw variable values.
 
 ### Vercel dashboard variables
 
@@ -298,7 +298,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves the single previously failed empty-bucket migration record as applied after cleanup, and finally runs `prisma migrate deploy`. The historical checksum provenance exception is recorded in the release report; applied migrations are not rewritten. A bucket inventory/delete error fails closed. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal the three historical checksum mismatches. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 

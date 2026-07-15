@@ -115,7 +115,7 @@ Realtime smoke phải chứng minh authorized event nhận được, cross-tenan
 
 ## 5. Railway API, worker, migrator, Redis
 
-Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), resolve bản ghi migration bucket rỗng đã fail trước đó sau khi cleanup, rồi chạy `prisma migrate deploy`. Ngoại lệ provenance checksum lịch sử được ghi trong release report; không sửa migration đã áp dụng. Lỗi inventory/delete bucket sẽ fail-closed.
+Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: trước hết kiểm tra checksum mọi migration đã áp dụng; sau đó dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), chỉ resolve bản ghi migration bucket rỗng đã fail sau khi cleanup thành công, rồi chạy `prisma migrate deploy`. Checksum lệch hoặc lỗi inventory/delete bucket sẽ fail-closed trước rollout schema. Không dùng `prisma migrate resolve` để che ba checksum lịch sử đang lệch.
 
 ```powershell
 railway login

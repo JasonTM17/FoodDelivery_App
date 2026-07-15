@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-14 status: **deployed runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` は backend、CI、registry、Railway、Vercel health、API-level GPS evidence が green。Full production certification は no-go**。
+2026-07-15 status: **deployed runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` は backend、CI、registry、Supabase 41 migrations、exact-revision Railway/Vercel health、API-level GPS evidence が green。Full production certification は no-go**。
 
 ## Completed and incorporated work
 
