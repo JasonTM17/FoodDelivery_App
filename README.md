@@ -11,15 +11,14 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
   <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
+FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Admin and Restaurant dashboards, and Flutter customer/driver applications. Its deployment design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-15:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. Push gates and Docker SHA-only smoke are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence, signed private uploads and token/reconnect checks passed with temporary data removed. Docker Hub SHA, `v0.1.1`, and `latest` aliases match all four verified image digests. Real Android/iOS background-location, FCM and optional provider credentials remain outside this environment and are not claimed as certified.
+> **Live Admin:** [food-delivery-app-one-liard.vercel.app](https://food-delivery-app-one-liard.vercel.app)<br />
+> This is the deployed sign-in surface. Public demo credentials are not documented; review the screenshots or run the seeded local stack for authenticated workflows.
 
 ## Current release evidence — 2026-07-15
 
 Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM and build gates are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence and token/reconnect checks passed with temporary data removed. Docker Hub SHA, `v0.1.1`, and `latest` resolve to matching digests for all four images. Real Android/iOS background-location, FCM and optional provider credentials remain outside this environment, so those are not claimed as certified.
-
-The release paragraph above is a concise status summary; this section is the current source of truth.
 
 ## Product preview
 
@@ -110,7 +109,10 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because the repository token returned `401 Unauthorized` for package-manifest writes.
 
-## Historical Docker candidate — superseded
+<details>
+<summary><strong>Historical Docker candidate — superseded</strong></summary>
+
+<br />
 
 The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The current Docker Hub digests and aliases are recorded in [Current Docker release — SHA 17584153](#current-docker-release--sha-17584153).
 
@@ -132,6 +134,8 @@ Release promotion order:
 5. Promote `latest` only through an explicit manual release action.
 
 For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
+
+</details>
 
 ## Repository layout
 
