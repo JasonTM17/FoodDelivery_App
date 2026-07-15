@@ -1,6 +1,6 @@
 import type { PromotionFormValues } from '@/lib/schemas/promotion-schema';
 
-export type AdminPromotionType = 'percentage' | 'fixed' | 'free_delivery' | 'bogo' | 'combo';
+export type AdminPromotionType = 'percentage' | 'fixed' | 'free_delivery';
 
 export interface AdminPromotion {
   id: string;
@@ -43,9 +43,7 @@ export function toAdminPromotionPayload(values: PromotionFormValues): AdminPromo
   const typeMap: Record<PromotionFormValues['discountType'], AdminPromotionType> = {
     percent: 'percentage',
     fixed: 'fixed',
-    bogo: 'bogo',
     shipping: 'free_delivery',
-    combo: 'combo',
   };
 
   return {
@@ -72,9 +70,7 @@ export function toPromotionFormValues(promotion: AdminPromotion): Partial<Promot
   const typeMap: Record<AdminPromotionType, PromotionFormValues['discountType']> = {
     percentage: 'percent',
     fixed: 'fixed',
-    bogo: 'bogo',
     free_delivery: 'shipping',
-    combo: 'combo',
   };
 
   return {

@@ -40,7 +40,8 @@ export class CreateRestaurantPromotionDto {
   @IsString()
   description?: string
 
-  @IsIn(['percent', 'fixed', 'bogof', 'combo', 'free_delivery'])
+  // bogof/combo are not redeemable until a complete calculator ships; reject at the API boundary.
+  @IsIn(['percent', 'fixed', 'free_delivery'])
   type: string
 
   @IsNumber()

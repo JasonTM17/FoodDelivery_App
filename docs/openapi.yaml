@@ -315,32 +315,6 @@ components:
         token: "REPLACE_WITH_RESET_TOKEN"
         password: "REPLACE_WITH_NEW_STRONG_PASSWORD"
 
-    VerifyEmailRequest:
-      type: object
-      properties:
-        token: { type: string }
-      required: [token]
-      example:
-        token: "eyJhbGciOiJFZERTQSJ9.xxx"
-
-    OtpRequest:
-      type: object
-      properties:
-        email: { type: string, format: email }
-      required: [email]
-      example:
-        email: "nguyenvana@example.com"
-
-    OtpVerifyRequest:
-      type: object
-      properties:
-        email: { type: string, format: email }
-        code:  { type: string, minLength: 6, maxLength: 6 }
-      required: [email, code]
-      example:
-        email: "nguyenvana@example.com"
-        code: "123456"
-
     AuthResult:
       type: object
       properties:
@@ -3096,56 +3070,6 @@ paths:
       responses:
         "200": { description: "Password reset successful", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
         "400": { description: "Invalid or expired token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
-
-  /auth/verify-email:
-    post:
-      tags: [auth]
-      summary: Verify email address
-      description: Confirms an email verification token and marks the matching user email as verified.
-      operationId: auth_verifyEmail
-      x-foo-actor: public
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/VerifyEmailRequest" }
-      responses:
-        "200": { description: "Email verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
-        "400": { description: "Invalid token", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
-
-  /auth/otp:
-    post:
-      tags: [auth]
-      summary: Request OTP code
-      description: Sends a one-time passcode for supported account or phone verification flows.
-      operationId: auth_requestOtp
-      x-foo-actor: public
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/OtpRequest" }
-      responses:
-        "200": { description: "OTP sent", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
-
-  /auth/otp/verify:
-    post:
-      tags: [auth]
-      summary: Verify OTP code
-      description: Validates a one-time passcode for the target identifier and verification purpose.
-      operationId: auth_verifyOtp
-      x-foo-actor: public
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/OtpVerifyRequest" }
-      responses:
-        "200": { description: "OTP verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
-        "400": { description: "Invalid OTP", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
   /.well-known/jwks.json:
     get:

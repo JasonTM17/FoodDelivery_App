@@ -21,13 +21,11 @@ interface PromotionFormSectionProps {
 
 const discountTypeTranslationKeys: Record<
   PromotionFormValues['discountType'],
-  'percentage' | 'fixed' | 'bogo' | 'free_delivery' | 'combo'
+  'percentage' | 'fixed' | 'free_delivery'
 > = {
   percent: 'percentage',
   fixed: 'fixed',
-  bogo: 'bogo',
   shipping: 'free_delivery',
-  combo: 'combo',
 };
 
 export function PromotionFormDetails({ form }: PromotionFormSectionProps) {

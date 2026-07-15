@@ -77,7 +77,14 @@ describe('CartService', () => {
       mockPrisma.cart.findUnique.mockResolvedValue({
         id: 'cart-1',
         restaurantId: 'restaurant-1',
-        items: [{ unitPrice: 50000, quantity: 2, menuItemId: 'mi-1' }],
+        items: [
+          {
+            unitPrice: 50000,
+            quantity: 2,
+            menuItemId: 'mi-1',
+            menuItem: { categoryId: 'cat-1' },
+          },
+        ],
       })
       mockPromotionsService.preview.mockResolvedValue({ discountAmount: 10000 })
       mockPrisma.cart.update.mockResolvedValue({})
@@ -86,11 +93,13 @@ describe('CartService', () => {
 
       expect(mockPromotionsService.preview).toHaveBeenCalledWith(
         'SAVE10',
-        expect.objectContaining({
+        {
           subtotal: 100000,
           restaurantId: 'restaurant-1',
           deliveryFee: expect.any(Number),
-        }),
+          menuItemIds: ['mi-1'],
+          categoryIds: ['cat-1'],
+        },
         'user-1',
       )
       expect(mockPrisma.cart.update).toHaveBeenCalledWith({

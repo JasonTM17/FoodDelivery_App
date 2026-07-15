@@ -32,14 +32,14 @@ describe('validatePromotion', () => {
     expect(validatePromotion({ ...validPromotion, ...override }).valid).toBe(false);
   });
 
-  it('requires combo configuration for BOGOF', () => {
+  it('rejects legacy BOGOF promotions at the write boundary', () => {
     const result = validatePromotion({
       ...validPromotion,
       type: 'bogof',
       comboConfig: undefined,
     });
 
-    expect(result.valid).toBe(false);
+    expect(result).toMatchObject({ valid: false, errors: expect.arrayContaining(['invalidType']) });
   });
 
   it('requires a real category for category-scoped promotions', () => {

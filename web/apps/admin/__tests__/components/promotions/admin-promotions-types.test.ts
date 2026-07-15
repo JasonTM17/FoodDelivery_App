@@ -68,9 +68,7 @@ describe('admin promotion contract mapping', () => {
   it.each([
     ['percent', 'percentage'],
     ['fixed', 'fixed'],
-    ['bogo', 'bogo'],
     ['shipping', 'free_delivery'],
-    ['combo', 'combo'],
   ] as const)('maps %s to %s', (discountType, type) => {
     expect(toAdminPromotionPayload({ ...formValues, discountType }).type).toBe(type);
   });

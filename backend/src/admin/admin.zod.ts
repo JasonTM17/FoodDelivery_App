@@ -4,7 +4,8 @@ export const createPromotionSchema = z.object({
   code: z.string().min(1).max(50),
   name: z.string().min(1).max(150).optional(),
   description: z.string().max(2000).optional(),
-  type: z.enum(['percentage', 'fixed', 'free_delivery', 'bogo', 'combo']),
+  // bogo/combo remain in Prisma enum for historical rows but are not creatable until a calculator exists.
+  type: z.enum(['percentage', 'fixed', 'free_delivery']),
   value: z.number().int().min(0),
   minOrderAmount: z.number().int().min(0).optional(),
   maxDiscount: z.number().int().min(0).optional(),
@@ -22,7 +23,7 @@ export const updatePromotionSchema = z.object({
   code: z.string().min(1).max(50).optional(),
   name: z.string().min(1).max(150).optional(),
   description: z.string().max(2000).optional(),
-  type: z.enum(['percentage', 'fixed', 'free_delivery', 'bogo', 'combo']).optional(),
+  type: z.enum(['percentage', 'fixed', 'free_delivery']).optional(),
   value: z.number().int().min(0).optional(),
   minOrderAmount: z.number().int().min(0).optional(),
   maxDiscount: z.number().int().min(0).optional(),

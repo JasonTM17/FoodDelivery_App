@@ -8,10 +8,9 @@ import { PromotionTypePicker } from './promotion-type-picker';
 import { PromotionTargetSelector } from './promotion-target-selector';
 import { PromotionScheduleEditor } from './promotion-schedule-editor';
 import { PromotionChannelSelector } from './promotion-channel-selector';
-import { PromotionComboBuilder } from './promotion-combo-builder';
 import { PromotionApplyScopeSection, PromotionLimitsSection } from './promotion-form-sections';
 import { AudiencePreview } from '../shared/audience-preview';
-import type { Promotion, PromotionType, PromotionChannel, PromotionSchedule, PromotionAudience, ComboConfig } from '@/lib/types';
+import type { Promotion, PromotionType, PromotionChannel, PromotionSchedule, PromotionAudience } from '@/lib/types';
 import { validatePromotion } from '@/lib/promotion-engine';
 
 interface PromotionFormProps {
@@ -28,7 +27,9 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsS
   const [code, setCode] = useState(initialData?.code || '');
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [type, setType] = useState<PromotionType>(initialData?.type || 'percent');
+  const [type, setType] = useState<Extract<PromotionType, 'percent' | 'fixed'>>(
+    initialData?.type === 'fixed' ? 'fixed' : 'percent',
+  );
   const [discountValue, setDiscountValue] = useState(initialData?.discountValue?.toString() || '');
   const [minOrderVnd, setMinOrderVnd] = useState(initialData?.minOrderVnd?.toString() || '');
   const [maxDiscountVnd, setMaxDiscountVnd] = useState(initialData?.maxDiscountVnd?.toString() || '');
@@ -47,7 +48,6 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsS
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     }
   );
-  const [comboConfig, setComboConfig] = useState<ComboConfig | undefined>(initialData?.comboConfig);
   const [errors, setErrors] = useState<string[]>([]);
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
   const isSubmitting = externalIsSubmitting || internalIsSubmitting;
@@ -80,7 +80,6 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsS
         minOrderCount: minOrderCount ? parseInt(minOrderCount, 10) : undefined,
       },
       schedule,
-      comboConfig: (type === 'bogof' || type === 'combo') ? comboConfig : undefined,
     };
 
     const validation = validatePromotion(data);
@@ -152,15 +151,6 @@ export function PromotionForm({ initialData, onSubmit, isSubmitting: externalIsS
           </div>
         )}
 
-        {(type === 'bogof' || type === 'combo') && (
-          <div className="mt-4">
-            <PromotionComboBuilder
-              type={type}
-              value={comboConfig}
-              onChange={setComboConfig}
-            />
-          </div>
-        )}
       </section>
 
       <PromotionApplyScopeSection

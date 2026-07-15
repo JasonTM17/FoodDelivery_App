@@ -178,5 +178,83 @@ describe('EligibilityService', () => {
       const promo = makePromo({ type: 'free_delivery' as PromotionType, value: 10_000 as unknown as Promotion['value'] })
       expect(service.calculateDiscount(promo, 100_000, 15_000)).toBe(10_000)
     })
+
+    it('bogo and combo return zero discount (no calculator)', () => {
+      const bogo = makePromo({ type: 'bogo' as PromotionType, value: 50_000 as unknown as Promotion['value'] })
+      const combo = makePromo({ type: 'combo' as PromotionType, value: 50_000 as unknown as Promotion['value'] })
+      expect(service.calculateDiscount(bogo, 100_000, 15_000)).toBe(0)
+      expect(service.calculateDiscount(combo, 100_000, 15_000)).toBe(0)
+    })
+  })
+
+  describe('unsupported promotion types', () => {
+    it('rejects bogo at validate so usage is never claimed', async () => {
+      const res = await service.validate(
+        makePromo({ type: 'bogo' as PromotionType }),
+        cart,
+        userId,
+      )
+      expect(res.valid).toBe(false)
+      expect(res.error).toBe('Mã khuyến mãi không hợp lệ')
+      expect(res.discountAmount).toBeUndefined()
+    })
+
+    it('rejects combo at validate so usage is never claimed', async () => {
+      const res = await service.validate(
+        makePromo({ type: 'combo' as PromotionType }),
+        cart,
+        userId,
+      )
+      expect(res.valid).toBe(false)
+      expect(res.error).toBe('Mã khuyến mãi không hợp lệ')
+    })
+  })
+
+  describe('scoped item/category matching', () => {
+    it('accepts when cart menu item matches promotion item scope', async () => {
+      ;(prisma.promotionItem.findMany as jest.Mock).mockResolvedValueOnce([
+        { menuItemId: 'mi-1', categoryId: null },
+      ])
+      const res = await service.validate(
+        makePromo(),
+        { ...cart, menuItemIds: ['mi-1', 'mi-2'], categoryIds: ['cat-x'] },
+        userId,
+      )
+      expect(res.valid).toBe(true)
+    })
+
+    it('accepts when cart category matches promotion category scope', async () => {
+      ;(prisma.promotionItem.findMany as jest.Mock).mockResolvedValueOnce([
+        { menuItemId: null, categoryId: 'cat-a' },
+      ])
+      const res = await service.validate(
+        makePromo(),
+        { ...cart, menuItemIds: ['mi-9'], categoryIds: ['cat-a'] },
+        userId,
+      )
+      expect(res.valid).toBe(true)
+    })
+
+    it('rejects when cart has neither matching menu item nor category', async () => {
+      ;(prisma.promotionItem.findMany as jest.Mock).mockResolvedValueOnce([
+        { menuItemId: 'mi-other', categoryId: null },
+        { menuItemId: null, categoryId: 'cat-other' },
+      ])
+      const res = await service.validate(
+        makePromo(),
+        { ...cart, menuItemIds: ['mi-1'], categoryIds: ['cat-a'] },
+        userId,
+      )
+      expect(res.valid).toBe(false)
+      expect(res.error).toBe('Mã khuyến mãi không hợp lệ')
+    })
+
+    it('rejects scoped promotion when checkout omits menu/category context', async () => {
+      ;(prisma.promotionItem.findMany as jest.Mock).mockResolvedValueOnce([
+        { menuItemId: 'mi-1', categoryId: null },
+      ])
+      const res = await service.validate(makePromo(), cart, userId)
+      expect(res.valid).toBe(false)
+    })
   })
 })

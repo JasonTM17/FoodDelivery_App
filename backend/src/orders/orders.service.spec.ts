@@ -346,7 +346,7 @@ describe('OrdersService', () => {
           quantity: 1,
           selectedOptions: [],
           notes: null,
-          menuItem: { name: 'Pho bo' },
+          menuItem: { name: 'Pho bo', categoryId: 'cat-1' },
         }],
       })
       mockPrisma.restaurant.findUniqueOrThrow.mockResolvedValue({
@@ -403,7 +403,13 @@ describe('OrdersService', () => {
       expect(mockPromotionsService.claimInTransaction).toHaveBeenCalledWith(
         mockTx,
         'SAVE10',
-        { subtotal: 100000, restaurantId: 'restaurant-1' },
+        {
+          subtotal: 100000,
+          restaurantId: 'restaurant-1',
+          deliveryFee: 15_000,
+          menuItemIds: ['menu-1'],
+          categoryIds: ['cat-1'],
+        },
         userId,
         'order-new',
       )

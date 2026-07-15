@@ -29,7 +29,7 @@ export function createPromotionSchema(message: PromotionValidationMessage) {
       .string()
       .min(5, message('nameMin'))
       .max(100, message('nameMax')),
-    discountType: z.enum(['percent', 'fixed', 'bogo', 'shipping', 'combo'], {
+    discountType: z.enum(['percent', 'fixed', 'shipping'], {
       errorMap: () => ({ message: message('discountType') }),
     }),
     discountValue: z.coerce.number().positive(message('positiveValue')),

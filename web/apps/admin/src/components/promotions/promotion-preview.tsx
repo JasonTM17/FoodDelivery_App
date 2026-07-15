@@ -5,7 +5,7 @@ import type { PromotionFormValues } from '@/lib/schemas/promotion-schema';
 import { formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Percent, DollarSign, Gift, Truck } from 'lucide-react';
+import { Percent, DollarSign, Truck } from 'lucide-react';
 
 interface PromotionPreviewProps {
   values: PromotionFormValues;
@@ -15,10 +15,8 @@ const typeIcons: Record<
   PromotionFormValues['discountType'],
   React.ComponentType<{ className?: string }>
 > = {
-  combo: Gift,
   percent: Percent,
   fixed: DollarSign,
-  bogo: Gift,
   shipping: Truck,
 };
 
@@ -29,8 +27,6 @@ export default function PromotionPreview({ values }: PromotionPreviewProps) {
   const offerLabel = {
     percent: t('preview.percentOffer', { value: values.discountValue || 0 }),
     fixed: t('preview.fixedOffer', { value: formatCurrency(values.discountValue || 0) }),
-    bogo: t('preview.bogoOffer'),
-    combo: t('preview.comboOffer'),
     shipping: t('preview.shippingOffer'),
   }[values.discountType];
 

@@ -20,6 +20,7 @@ import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { normalizeOrderPaymentMethod } from './payment-methods'
 import { PromotionsService } from '../promotions/promotions.service'
+import { buildPromotionCartContext } from '../promotions/build-promotion-cart-context'
 import { routePhaseForStatus } from '../tracking/tracking.service'
 import { PaymentRefundJobData } from '../payments/refund.processor'
 import { DeliveryPricingService } from './delivery-pricing.service'
@@ -230,7 +231,13 @@ export class OrdersService {
   async placeOrder(userId: string, dto: PlaceOrderDto) {
     const cart = await this.prisma.cart.findUnique({
       where: { userId },
-      include: { items: { include: { menuItem: true } } },
+      include: {
+        items: {
+          include: {
+            menuItem: { select: { name: true, categoryId: true } },
+          },
+        },
+      },
     })
     if (!cart || cart.items.length === 0) throw new BadRequestException('CART_EMPTY')
     if (!cart.restaurantId) throw new BadRequestException('CART_NO_RESTAURANT')
@@ -249,6 +256,12 @@ export class OrdersService {
 
     const subtotal = cart.items.reduce((sum, i) => sum + Number(i.unitPrice) * i.quantity, 0)
     const deliveryFee = this.deliveryPricing.getBaseDeliveryFeeVnd()
+    const promotionCart = buildPromotionCartContext({
+      subtotal,
+      restaurantId: cart.restaurantId,
+      deliveryFee,
+      items: cart.items,
+    })
 
     if (Number(subtotal) < Number(restaurant.minOrderAmount)) {
       throw new UnprocessableEntityException('MIN_ORDER_NOT_MET')
@@ -298,7 +311,7 @@ export class OrdersService {
             const { discountAmount } = await this.promotionsService.claimInTransaction(
               tx,
               code,
-              { subtotal, restaurantId: cart.restaurantId! },
+              promotionCart,
               userId,
               createdOrder.id,
             )

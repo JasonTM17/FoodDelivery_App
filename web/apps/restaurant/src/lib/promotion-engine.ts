@@ -14,7 +14,7 @@ export function validatePromotion(p: Partial<Promotion>): ValidationResult {
   if (!p.name || p.name.trim().length < 2) {
     errors.push('nameTooShort');
   }
-  if (!p.type || !['percent', 'fixed', 'bogof', 'combo'].includes(p.type)) {
+  if (!p.type || !['percent', 'fixed'].includes(p.type)) {
     errors.push('invalidType');
   }
   if (!p.discountValue || p.discountValue <= 0) {
@@ -23,17 +23,11 @@ export function validatePromotion(p: Partial<Promotion>): ValidationResult {
   if (p.type === 'percent' && p.discountValue && p.discountValue > 100) {
     errors.push('percentMax');
   }
-  if ((p.type === 'bogof' || p.type === 'combo') && !p.comboConfig) {
-    errors.push('comboRequired');
-  }
   if (p.appliesTo === 'category' && !p.categoryId?.trim()) {
     errors.push('categoryRequired');
   }
   if (p.appliesTo === 'items' && (!p.itemIds || p.itemIds.length === 0)) {
     errors.push('itemsRequired');
-  }
-  if (p.type === 'bogof' && p.comboConfig && p.comboConfig.buy < 1) {
-    errors.push('buyQuantityPositive');
   }
   if (p.schedule) {
     const from = new Date(p.schedule.validFrom);
@@ -66,10 +60,6 @@ export function computeDiscountAmount(
       break;
     case 'fixed':
       amount = Math.min(discountValue, orderTotal);
-      break;
-    case 'bogof':
-    case 'combo':
-      amount = discountValue; // combo price is the fixed price
       break;
   }
   return Math.max(0, Math.round(amount));

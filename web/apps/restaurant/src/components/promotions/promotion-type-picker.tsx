@@ -1,21 +1,19 @@
 'use client';
 
-import { Percent, DollarSign, Gift, Package } from 'lucide-react';
+import { Percent, DollarSign } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import type { PromotionType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface PromotionTypePickerProps {
-  value: PromotionType;
-  onChange: (type: PromotionType) => void;
+  value: Extract<PromotionType, 'percent' | 'fixed'>;
+  onChange: (type: Extract<PromotionType, 'percent' | 'fixed'>) => void;
 }
 
-const TYPES: { value: PromotionType; icon: ReactNode }[] = [
+const TYPES: { value: Extract<PromotionType, 'percent' | 'fixed'>; icon: ReactNode }[] = [
   { value: 'percent', icon: <Percent className="h-5 w-5" /> },
   { value: 'fixed', icon: <DollarSign className="h-5 w-5" /> },
-  { value: 'bogof', icon: <Gift className="h-5 w-5" /> },
-  { value: 'combo', icon: <Package className="h-5 w-5" /> },
 ];
 
 export function PromotionTypePicker({ value, onChange }: PromotionTypePickerProps) {

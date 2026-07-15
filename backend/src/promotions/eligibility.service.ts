@@ -106,6 +106,12 @@ export class EligibilityService {
       }
     }
 
+    // bogo/combo are accepted by older DTOs/schema but have no calculator.
+    // Fail closed so usage rows are never consumed with a free_delivery-shaped zero discount.
+    if (promotion.type === 'bogo' || promotion.type === 'combo') {
+      return { valid: false, error: this.t('errors.promotion_invalid') }
+    }
+
     return {
       valid: true,
       discountAmount: this.calculateDiscount(promotion, cart.subtotal, cart.deliveryFee ?? 0),
@@ -127,7 +133,12 @@ export class EligibilityService {
       return Math.min(value, subtotal)
     }
 
-    // free_delivery: never waive more than the actual delivery fee
-    return Math.min(value, Math.max(0, deliveryFee))
+    if (promotion.type === 'free_delivery') {
+      // Never waive more than the actual delivery fee or the configured value.
+      return Math.min(value, Math.max(0, deliveryFee))
+    }
+
+    // Unsupported types (bogo/combo/unknown) must not silently discount.
+    return 0
   }
 }

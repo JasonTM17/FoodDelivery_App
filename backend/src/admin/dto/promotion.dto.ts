@@ -6,6 +6,7 @@ import {
   IsObject,
   IsDateString,
   IsEnum,
+  IsIn,
   Min,
   Max,
   MaxLength,
@@ -27,8 +28,12 @@ export class CreatePromotionDto {
   @IsOptional()
   description?: string
 
-  @IsEnum(PromotionType)
-  type: PromotionType
+  // Prisma enum still contains historical bogo/combo; create path only allows redeemable types.
+  @IsEnum(PromotionType, {
+    message: 'type must be one of: percentage, fixed, free_delivery',
+  })
+  @IsIn(['percentage', 'fixed', 'free_delivery'] as const)
+  type: Extract<PromotionType, 'percentage' | 'fixed' | 'free_delivery'>
 
   @IsNumber({ maxDecimalPlaces: 0 })
   @Min(0)
@@ -83,9 +88,12 @@ export class UpdatePromotionDto {
   @IsOptional()
   description?: string
 
-  @IsEnum(PromotionType)
+  @IsEnum(PromotionType, {
+    message: 'type must be one of: percentage, fixed, free_delivery',
+  })
+  @IsIn(['percentage', 'fixed', 'free_delivery'] as const)
   @IsOptional()
-  type?: PromotionType
+  type?: Extract<PromotionType, 'percentage' | 'fixed' | 'free_delivery'>
 
   @IsNumber({ maxDecimalPlaces: 0 })
   @Min(0)
