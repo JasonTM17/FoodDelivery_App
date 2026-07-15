@@ -1,7 +1,9 @@
 import {
   deleteEmptyLegacyBuckets,
+  main,
   needsMigrationResolution,
 } from './production-migrate';
+import * as migrationChecksumGuard from './migration-checksum-guard';
 
 describe('production migrate Storage cleanup', () => {
   it('deletes only legacy buckets that exist', async () => {
@@ -71,5 +73,54 @@ describe('production migrate Storage cleanup', () => {
         },
       ]),
     ).toBe(true);
+  });
+
+  it('blocks provider mutation when an applied checksum differs locally', async () => {
+    const appliedAt = new Date('2026-07-15T00:00:00Z');
+    const mismatches = migrationChecksumGuard.findAppliedMigrationChecksumMismatches(
+      [
+        {
+          migration_name: '20260709143000_add_realtime_outbox',
+          checksum: 'production-checksum',
+          finished_at: appliedAt,
+          rolled_back_at: null,
+        },
+        {
+          migration_name: 'rolled_back_migration',
+          checksum: 'different-checksum',
+          finished_at: appliedAt,
+          rolled_back_at: appliedAt,
+        },
+      ],
+      new Map([
+        ['20260709143000_add_realtime_outbox', 'local-checksum'],
+        ['rolled_back_migration', 'local-checksum'],
+      ]),
+    );
+
+    expect(mismatches).toEqual(['20260709143000_add_realtime_outbox']);
+
+    const originalStorageProvider = process.env.STORAGE_PROVIDER;
+    process.env.STORAGE_PROVIDER = 'supabase';
+    const guard = jest
+      .spyOn(migrationChecksumGuard, 'assertAppliedMigrationChecksums')
+      .mockRejectedValue(
+        new Error(
+          'Applied migration checksum mismatch: 20260709143000_add_realtime_outbox',
+        ),
+      );
+
+    try {
+      await expect(main()).rejects.toThrow(
+        'Applied migration checksum mismatch: 20260709143000_add_realtime_outbox',
+      );
+    } finally {
+      guard.mockRestore();
+      if (originalStorageProvider === undefined) {
+        delete process.env.STORAGE_PROVIDER;
+      } else {
+        process.env.STORAGE_PROVIDER = originalStorageProvider;
+      }
+    }
   });
 });
