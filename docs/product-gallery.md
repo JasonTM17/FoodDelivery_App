@@ -12,7 +12,7 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | 10 local PNG stills and one GIF | [Admin guide](./admin-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
 | Restaurant | Next.js web dashboard | 10 local PNG stills and one GIF | [Restaurant guide](./restaurant-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One privacy-reviewed local WebP still | [Customer guide](./customer-guide.md) | Android AVD launch evidence only; authenticated stills with exact coordinates were excluded. |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One privacy-reviewed local WebP still and one public-auth GIF | [Customer guide](./customer-guide.md) | Android AVD app-launch/public-auth evidence only; authenticated stills with exact coordinates were excluded. |
 | Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Android AVD role/GPS evidence only; not mobile release, provider, payout, or production proof. |
 
 ## Choose a role guide
@@ -30,9 +30,10 @@ Customer and Driver have no browser URL. Launch their explicit Flutter entrypoin
 |---|---|
 | Admin sign-in → overview | ![Admin sign-in to overview](./media/gifs/admin-login-flow.gif) |
 | Restaurant order queue → menu | ![Restaurant orders to menu](./media/gifs/restaurant-orders-to-menu.gif) |
+| Customer sign-in → registration → sign-in | ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) |
 | Driver sign-in → Home → earnings → profile | ![Driver role flow](./media/gifs/driver-role-flow.gif) |
 
-GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames; Driver uses only four privacy-reviewed Android AVD role stills. Customer remains a single reviewed launch still because no safe authenticated multi-frame journey is currently available.
+GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames. Customer records only public sign-in → registration → sign-in navigation without entered credentials. Driver uses four privacy-reviewed Android AVD role stills. None of these previews certifies a production or mobile release journey.
 
 ## Admin
 
@@ -128,9 +129,9 @@ Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it 
 
 For the cross-role Customer/Driver workflow, permission behaviour, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
 
-The following privacy-reviewed emulator stills show app launch, authenticated Home, and discovery loading nearby seed restaurants from a simulated location. The manifest records dirty-workspace provenance, so they are regression evidence only and cannot become visual release evidence without a clean-head recapture.
+The following privacy-reviewed Android AVD media contains one app-launch still and one public-auth GIF showing sign-in → registration → sign-in without entered credentials. Authenticated Home/discovery stills that exposed exact simulated coordinates are intentionally not retained. The manifest records dirty-workspace provenance, so this media is regression evidence only and cannot become visual release evidence without a clean-head recapture.
 
-### Customer app launch
+### Customer public authentication and app launch
 
 ![Customer sign-in, registration, and return flow](./media/gifs/customer-auth-flow.gif)
 

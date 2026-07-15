@@ -72,7 +72,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-`latest` intentionally remains on the prior candidate. All four GHCR packages are public, repository-linked, and grant Actions write access. Complete the remaining provider/device/browser stages below before any semver or `latest` promotion.
+At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-15](#current-deployment-evidence--2026-07-15); do not infer current tag state from this superseded table.
 
 Expected Vercel projects:
 
@@ -82,6 +82,20 @@ Expected Vercel projects:
 | `foodflow-restaurant` | `web/apps/restaurant` | Next.js; workspace-filtered build |
 
 Project IDs and generated provider CLI folders are not documentation contracts. The Railway preflight checks service topology; the Vercel preflight checks dashboard settings by project name.
+
+### Git-triggered Vercel build selection
+
+Both app roots define `ignoreCommand` in `vercel.json` and call the shared `web/scripts/vercel-ignore-build-step.mjs` guard. The guard compares `VERCEL_GIT_PREVIOUS_SHA` with the current Git SHA across the selected app, shared workspace packages, lockfiles, toolchain configuration, and the guard itself. Exit code `0` skips a documentation-only deployment; exit code `1` builds. A missing or invalid SHA, unavailable Git history, fetch timeout, or unexpected Git result always builds instead of risking a false skip. Shallow clones fetch the exact previous deployed commit before diffing.
+
+Run the focused contract locally from `web/`:
+
+```powershell
+corepack pnpm test:vercel-ignore
+```
+
+The first merge that introduces either app's `vercel.json` is itself an app-input change, so both Vercel projects build once. Treat that as a bootstrap deployment: until Railway and both web health endpoints are returned to one approved SHA—by an all-surface release or an exact redeploy of the verified web artifacts—revision equality is temporarily false and must not be certified.
+
+An environment-only rebuild or manual redeploy can reuse the same Git SHA, which has no source diff. In Vercel's redeploy dialog, clear **Use project's Ignore Build Step** for that operation; otherwise the guard may correctly classify the same-SHA source as unchanged and skip the rebuild that is required to bake new public variables into Next.js assets.
 
 ## 1. Source and test gate
 
@@ -225,7 +239,7 @@ Public variables are baked into Next.js assets. Changing them requires a rebuild
 
 ## Current deployment evidence — 2026-07-15
 
-Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed. Railway deployment IDs are migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287`; health/readiness and Vercel health revisions match this SHA. Docker Hub SHA, `v0.1.1`, and `latest` aliases match these digests:
+Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed. Railway deployment IDs are migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287`. Vercel exact-redeploy IDs are Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public Admin/Restaurant login smoke passes for `vi`, `en`, and `ja`. Authenticated role journeys, controlled-device FCM, Android/iOS background location, and optional providers are not certified by this public smoke. Docker Hub SHA, `v0.1.1`, and `latest` aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
@@ -235,6 +249,10 @@ Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed. Railway depl
 | `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
+
+### Documentation-only Vercel drift recovery
+
+Vercel had automatically built later documentation-only `master` commits, while Railway remained on runtime SHA `17584153`. The web runtime inputs were unchanged, but the health revision no longer matched the API. Recovery redeployed the previously verified SHA `17584153` Admin and Restaurant builds exactly, producing the deployment IDs above. After recovery, `production-health-check.ps1` passed API/Admin/Restaurant and `post-deploy-smoke.ps1 -AllowUnauthenticatedOnly` passed all public `vi/en/ja` login routes. The unauthenticated opt-out is explicit: this result does not replace the required authenticated smoke.
 
 ## 4. Supabase deployment
 

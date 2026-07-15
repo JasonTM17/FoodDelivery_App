@@ -1,10 +1,14 @@
 # FoodFlow Batch 4 Release Report
 
-## Final production certification update — 2026-07-15
+## Current production evidence — 2026-07-15
 
 Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is the current deployed application revision. GitHub push gates and Docker Publish SHA-only run `29394704210` are green. Railway migrate/API/worker deployments `6438d9ff-caa3-433c-afc1-81c4885797a8`, `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and `6c2201d1-ccce-444f-b592-4ac4fb20c287` report success; API/ready health and both Vercel health endpoints return this exact revision. Supabase has 41 effective migrations with none pending, healthy PostgreSQL/Redis/Storage, private Broadcast authorization, signed private Storage access, and empty temporary-test state after cleanup.
 
 Docker Hub SHA, `v0.1.1`, and `latest` tags are digest-equal for backend, migrator, Admin, and Restaurant. GHCR SHA manifests are public and digest-equal; GHCR semver promotion is not claimed because the repository token returned `401 Unauthorized` for package-manifest writes. Full device certification remains open for real Android/iOS background-location, FCM delivery, and optional provider credentials.
+
+### Vercel revision drift and recovery — 2026-07-15
+
+Documentation-only commits after SHA `17584153ff256b74a3413ae9844f4f27bff038cc` triggered newer Vercel production builds even though the Admin/Restaurant runtime inputs were unchanged. Railway stayed on SHA `17584153`, so the canonical web health revision temporarily differed from the API revision. The last verified SHA `17584153` builds were redeployed exactly: Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ`. Both canonical health endpoints now return the same full SHA as Railway. Public production smoke passed Admin and Restaurant login routes for `vi`, `en`, and `ja`; authenticated role journeys were intentionally skipped and are not certified by this recovery check.
 
 ## Historical candidate snapshot — superseded
 
@@ -27,11 +31,11 @@ Docker Publish run `29387565225` passed build, runtime smoke, and eight architec
 | `foodflow-admin` | `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744` |
 | `foodflow-restaurant` | `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-The exact-revision public post-deploy smoke passed API/Admin/Restaurant health and both localized login pages. Authenticated role smoke was intentionally not fabricated because production contains zero approved application users/orders. The current decision remains **NO-GO for full certification** pending authenticated Admin/Restaurant/Customer/Driver journeys, private Storage, token refresh/deny, controlled FCM, Android/iOS background-location evidence, and optional provider smoke. No semver, `latest`, or GitHub Release promotion was performed.
+The exact-revision public post-deploy smoke passed API/Admin/Restaurant health and Admin/Restaurant login pages for `vi`, `en`, and `ja`. Authenticated role smoke was intentionally not fabricated because production contains zero approved application users/orders. The current decision remains **NO-GO for full certification** pending authenticated Admin/Restaurant/Customer/Driver journeys, controlled FCM, Android/iOS background-location evidence, and optional provider smoke. No semver, `latest`, or GitHub Release promotion was performed for this historical candidate.
 
 > **Historical snapshot — 2026-07-12.** The test counts, 27-migration result, image digests, and media QA statements below are evidence recorded for that date. They are not a claim about the current `master` head, the current dirty workspace, or production readiness.
 
-## Current local and provider-status update — 2026-07-14
+## Historical local and provider-status update — 2026-07-14
 
 Runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` passed 144 Jest suites / 1065 tests, typecheck, lint, the Nest build, and every GitHub workflow triggered for the SHA. Docker Publish run `29336146675` passed multi-architecture runtime smoke and all eight High/Critical Trivy scans. The earlier clean-volume `foodflow-batch4-e2e` stack applied all 38 migrations and passed Playwright 204/204; that remains bounded local evidence.
 

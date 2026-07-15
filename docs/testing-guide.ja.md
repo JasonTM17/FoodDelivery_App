@@ -4,23 +4,23 @@
 
 Final source head が full local gates、fresh remote CI、provider preflight、production smoke をすべて pass した場合のみ green です。Focused test や historical count、skip 付き script は release approval ではありません。
 
-## Current evidence
+## Evidence boundary — production 2026-07-15 / historical local 2026-07-14
 
-2026-07-14 current-head evidence:
+Current production evidence is tied to runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Counts below are explicitly historical local evidence from older heads; they were not rerun at SHA `17584153` and are not end-to-end production approval.
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` で 145 suites / 1071 tests、typecheck、lint、Nest build、trigger された 10 GitHub workflows が pass。 |
-| Database       | Historical disposable baseline は当時の 38 migrations を適用し、同じ user の 2 件目の default address を拒否しました。現在の production read-only audit は migration record 45 件（effective finished 41、rolled back 4）、business/retrieval row 0 件、意図した public/private Storage bucket のみを確認しました。適用済み migration 3 件の checksum provenance は未解決です。 |
-| Mobile Flutter | Current local run は 369 tests と issue なしの `flutter analyze` を pass。Android/iOS production device evidence は未完了です。                                                                                                                                                                                        |
-| Web            | Current typecheck/lint は pass。Vitest は Admin 49 files / 196 tests、Restaurant 43 files / 135 tests が pass。non-secret local public URLs を設定すると Admin は 70 pages、Restaurant は 55 pages を build。`NEXT_PUBLIC_ADMIN_URL` がない bare build は fail-closed です。                                           |
-| Browser E2E    | historical clean-volume matrix は 36-migration source で 204/204 を 353 秒で pass しました。migration 37–38 後の current stack は explicit local URL で final-head の三 project を完了しました: Chrome desktop 68/68 (173.0 秒)、Firefox 68/68 (172.9 秒)、Pixel 5 mobile Chrome 68/68 (117.3 秒)、合計 204/204 です。 |
-| FCM            | Current local notification suite は backend 11 suites / 67 tests、focused Flutter FCM presentation/lifecycle tests は 17/17 が pass。live send は未実行で、production credential と controlled device token が必要です。                                                                                               |
-| Production     | Immutable `f2c02ed` migrate/API/worker deployments は成功。Supabase は 41 effective migrations と public/private buckets のみ。Railway/Vercel health/login は exact revision、worker poll 稼働。Controlled GPS は private Supabase Broadcast と PostGIS に 1437 ms で到達し、一時データは削除済み。 |
+| Backend        | Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` で triggered CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green です。145 suites / 1071 tests は older `f2c02ed` local evidence であり、SHA `17584153` rerun として claim しません。 |
+| Database       | Live `prisma migrate status` は repository の 41 migrations がすべて applied、pending なしと報告します。Database、Redis、Supabase Storage readiness は pass。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
+| Mobile Flutter | Historical local evidence は 369 tests と `flutter analyze` を pass。Real Android/iOS background location と production-device evidence は未認証です。 |
+| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current deployed Admin/Restaurant health revision は SHA `17584153` で別途 verified です。 |
+| Browser E2E    | Historical clean-volume Playwright evidence は Chrome desktop、Firefox、Pixel 5 mobile Chrome で 204/204 を pass。Production deployment に対して再実行した count ではありません。 |
+| FCM            | Historical local notification/Flutter lifecycle tests は pass。Controlled production device への live delivery は未認証です。 |
+| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`、API `340fd29c-8198-41f0-8dc4-a097ecbe3438`、worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` は SHA `17584153` で成功。Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` と Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` も同じ revision です。Public `vi/en/ja` login smoke は pass、authenticated role journeys は skip され未認証です。 |
 
-### Fresh clean-volume current-source Docker evidence — 2026-07-14
+### Historical fresh clean-volume Docker evidence — 2026-07-14
 
-Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は 38 migrations をすべて適用し、その後 users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed しました。worker は RAG documents 402 件を index しました。database は同じ user の 2 件目の default address を拒否します。`ADMIN_URL=http://localhost:13000`、`RESTAURANT_URL=http://localhost:13002`、`API_URL=http://localhost:13001/api` を指定した current stack は Chrome desktop 68/68 (173.0 秒)、Firefox 68/68 (172.9 秒)、Pixel 5 mobile Chrome 68/68 (117.3 秒) を pass、合計 204/204、failed/skip なしです。Railway infrastructure health は別途 verified、live FCM と authenticated provider flows は未検証です。
+Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は当時の 38 migrations を適用し、users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed、worker は RAG documents 402 件を index しました。Explicit local URLs で historical stack は Chrome desktop 68/68、Firefox 68/68、Pixel 5 mobile Chrome 68/68、合計 204/204、failed/skip なしでした。これは 2026-07-14 local result であり、SHA `17584153` production test ではありません。Live FCM と authenticated production journeys は未検証です。
 
 ### Web build environment boundary
 
