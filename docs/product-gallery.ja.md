@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | Local PNG 10 枚と GIF 1 件 | [Admin ガイド](./admin-guide.ja.md) | Isolated E2E stack の Google Chrome evidence。Non-production のみ。 |
 | Restaurant | Next.js web dashboard | Local PNG 10 枚と GIF 1 件 | [Restaurant ガイド](./restaurant-guide.ja.md) | Isolated E2E stack の Google Chrome evidence。Non-production のみ。 |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed local WebP 1 枚 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD launch evidence のみ。Exact coordinates を含む still は除外しました。 |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed app-launch WebP 1 枚と public-auth GIF 1 件 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD app-launch/public-auth evidence のみ。Exact coordinates を含む authenticated still は除外しました。 |
 | Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Role/GPS WebP 6 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Android AVD role/GPS evidence のみ。Release、provider、payout、production を認証しません。 |
 
 ## Role guide を選ぶ
@@ -28,9 +28,10 @@ Customer/Driver に browser URL はありません。正しい Flutter entrypoin
 |---|---|
 | Admin login → overview | ![Admin](media/gifs/admin-login-flow.gif) |
 | Restaurant orders → menu | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
+| Customer sign-in → registration → sign-in | ![Customer public authentication flow](media/gifs/customer-auth-flow.gif) |
 | Driver sign-in → Home → Earnings → Profile | ![Driver flow](media/gifs/driver-role-flow.gif) |
 
-GIF は silent optimized preview です。Admin/Restaurant は review 済み Google Chrome frame、Driver は privacy-reviewed Android AVD role still 4 枚だけを使用します。Customer は安全な authenticated multi-frame journey がないため、review 済み launch still 1 枚のままです。
+GIF は silent optimized preview です。Admin/Restaurant は review 済み Google Chrome frame を使います。Customer は credential を入力しない public sign-in → registration → sign-in navigation のみを記録します。Driver は privacy-reviewed Android AVD role still 4 枚を使います。いずれも production または mobile release journey の認証ではありません。
 
 ## Admin
 
@@ -72,7 +73,7 @@ Customer は first-class Flutter/Riverpod native Android/iOS product です。[`
 
 Customer/Driver 共通 workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
 
-次の privacy-reviewed Android API 35 emulator still は app launch、authenticated Home、simulated location から nearby seed restaurants を読み込んだ状態です。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
+次の privacy-reviewed Android AVD media は app-launch still 1 枚と、credential を入力しない public sign-in → registration → sign-in GIF 1 件です。Exact simulated coordinates を表示した authenticated Home/discovery still は保持しません。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
 
 ![Customer sign-in、registration、return flow](./media/gifs/customer-auth-flow.gif)
 
