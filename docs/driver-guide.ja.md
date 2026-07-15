@@ -4,6 +4,10 @@
 
 FoodFlow Driver は Android/iOS 向け Flutter/Riverpod native 配達アプリです。本書は現在の authenticated routes と Driver shell に基づき、mobile release、live dispatch provider、production background-location matrix の認証を意味しません。
 
+![Driver sign-in、Home、Earnings、Profile preview](./media/gifs/driver-role-flow.gif)
+
+この 4-frame GIF は privacy-reviewed deterministic local Android AVD still だけから生成しました。Product/regression docs であり、authenticated production journey の証拠ではありません。
+
 ## 前提
 
 - [main_driver.dart](../mobile/lib/main_driver.dart) から Driver flavor を install/run します。

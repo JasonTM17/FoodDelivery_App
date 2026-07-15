@@ -1,5 +1,17 @@
 # FoodFlow Batch 4 Release Report
 
+## Current production certification update — 2026-07-15
+
+Current `origin/master` is `429e23742da237df975442c1705d6be7d6ba4f9f`. All 11 push workflows for that exact SHA completed successfully: Build Check, OpenAPI Validate, Lint, Trivy, Gitleaks, SBOM, CodeQL, CI, Mobile CI, Integration Smoke Gate, and E2E. Fresh local backend checks passed lint, typecheck, build, and 145 Jest suites / 1071 tests; docs links, manifest JSON, and migration fresh-database checks also passed.
+
+Vercel automatically deployed Admin and Restaurant from `429e237`; both canonical `/api/healthz` endpoints return that full revision. The capture manifest records public Chrome checks at 1536×826 and 390×844 with correct Vietnamese document metadata, accessible form names, no horizontal overflow, no missing image alt attributes, and no Restaurant login-page console warning/error. These are public login and responsive-layout checks only, not authenticated role certification.
+
+Railway API/worker remain on the earlier immutable backend image from `52f433641d5093f6d064cfba6c1cd99c8cb035e9`. API health/readiness are 200 and database, Redis, and Storage are up, but the deployed image predates the revision field and returns `revision: null`. The frontend/backend split therefore blocks release promotion.
+
+Supabase is healthy on PostgreSQL 17.6 with 38 effective finished migrations and three rolled-back records. Three already-applied migration files have checksums that do not match production history: `20260709143000_add_realtime_outbox`, `20260709150000_add_job_outbox`, and `20260712143000_add_production_storage_bucket`. No matching source was found in Git history or the eight local stashes. Do not use `prisma migrate resolve` to conceal this provenance gap. The first production attempt of the new cleanup migration failed closed because the Railway role cannot lock Supabase-owned `storage.vector_indexes`; no bucket or application data was changed. Recovery commit `c19fbfe` now deletes legacy buckets only through the Supabase Storage API (which rejects non-empty buckets), resolves only that failed migration, then verifies the end-state before applying the two PostGIS GiST indexes.
+
+Production contains no Auth/application users, so authenticated Admin, Restaurant, Customer, Driver, private Storage, Realtime refresh/deny, controlled FCM, and device background-location journeys cannot be certified without approved controlled accounts/devices. The current decision remains **NO-GO**. No Railway deployment, database migration, semver image promotion, `latest` promotion, or GitHub Release was performed during this audit.
+
 > **Historical snapshot — 2026-07-12.** The test counts, 27-migration result, image digests, and media QA statements below are evidence recorded for that date. They are not a claim about the current `master` head, the current dirty workspace, or production readiness.
 
 ## Current local and provider-status update — 2026-07-14

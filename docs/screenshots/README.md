@@ -27,8 +27,8 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 |---|---:|---|
 | Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
 | Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
-| Customer | 3 WebP stills + 1 GIF | App launch, authenticated Home, simulated-location nearby restaurants; launch/sign-in-to-Home flow. |
-| Driver | 6 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, two Online/GPS states; sign-in-to-Home flow. |
+| Customer | 1 WebP still | Privacy-reviewed app launch. Authenticated frames/GIF remain blocked until a controlled journey can be captured without exposing coordinates or credentials. |
+| Driver | 6 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, two Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
 
 ### Admin
@@ -51,6 +51,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 - `driver/04-profile.webp` — profile, vehicle summary, language, and sign-out.
 - `driver/driver-online-gps-e2e.webp` — Online after the verified local GPS chain.
 - `driver/driver-online-realtime-gps.webp` — Online while foreground tracking is active.
+- `../media/gifs/driver-role-flow.gif` — four-frame sign-in, Home, earnings, and profile preview generated only from the privacy-reviewed Driver stills.
 - `gps/driver-notification-permission.webp` — Android notification permission for tracking.
 - `gps/driver-foreground-location-notification.webp` — foreground location notification.
 

@@ -169,9 +169,14 @@ git rev-list --left-right --count origin/master...HEAD # 0 0
 git ls-remote --heads origin                         # chỉ master
 ```
 
-Để tạo evidence registry trước release, dispatch manual **Docker Publish** với `publish_release=false`, `release_tag` rỗng và `promote_latest=false`. Workflow chỉ publish manifest `sha-<full-commit>` sau runtime smoke/scan cả hai architecture; bỏ qua production health, semver và `latest`.
+Phải chạy release theo đúng thứ tự sau; không gộp hai lượt Docker Publish:
 
-Chỉ tạo `v4.0.0` tại verified master commit sau production smoke: đặt `publish_release=true` cùng `release_tag` immutable. `promote_latest` vẫn là lựa chọn cuối riêng. Worker chạy từ backend image, không publish worker artifact mới.
+1. Dispatch thủ công **Docker Publish** với `publish_release=false`, `release_tag` rỗng và `promote_latest=false`. Lượt này chỉ publish manifest `sha-<full-commit>` sau runtime smoke/scan cả hai architecture.
+2. Sau khi checksum migration và backup đạt, triển khai đúng SHA đó: chạy migrator một lần, pin Railway API/worker vào cùng backend digest và deploy cả hai dự án Vercel từ cùng commit. Xác minh health, readiness, log, revision bằng nhau và smoke role/provider có xác thực.
+3. Dispatch lại **Docker Publish** từ đúng `origin/master` không đổi với `publish_release=true` và một `release_tag` ổn định chưa dùng. Gate production yêu cầu API, Admin và Restaurant trả đúng workflow SHA trước khi promote semver. `promote_latest` vẫn là lựa chọn riêng có chủ đích.
+4. Tạo/push Git semver tag tại SHA đã xác minh, rồi dispatch thủ công **Release** với tag đó và `source_sha` đầy đủ. Workflow kiểm tra Git tag cùng digest SHA/semver trên Docker Hub và GHCR trước khi tạo GitHub Release và đính kèm SBOM.
+
+Push tag không tự kích hoạt publish hay GitHub Release. GitHub Environment `production` phải có reviewer/protection bắt buộc trước khi cho phép bước 3–4. Worker dùng backend image, không có worker artifact riêng.
 
 ## Self-hosted Docker
 

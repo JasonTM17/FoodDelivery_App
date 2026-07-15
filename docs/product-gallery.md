@@ -13,7 +13,7 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 | Admin | Next.js web dashboard | 10 local PNG stills and one GIF | [Admin guide](./admin-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
 | Restaurant | Next.js web dashboard | 10 local PNG stills and one GIF | [Restaurant guide](./restaurant-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
 | Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One privacy-reviewed local WebP still | [Customer guide](./customer-guide.md) | Android AVD launch evidence only; authenticated stills with exact coordinates were excluded. |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills and two tracking/permission assets | [Driver guide](./driver-guide.md) | Android AVD role/GPS evidence only; not mobile release, provider, payout, or production proof. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Android AVD role/GPS evidence only; not mobile release, provider, payout, or production proof. |
 
 ## Choose a role guide
 
@@ -30,8 +30,9 @@ Customer and Driver have no browser URL. Launch their explicit Flutter entrypoin
 |---|---|
 | Admin sign-in → overview | ![Admin sign-in to overview](./media/gifs/admin-login-flow.gif) |
 | Restaurant order queue → menu | ![Restaurant orders to menu](./media/gifs/restaurant-orders-to-menu.gif) |
+| Driver sign-in → Home → earnings → profile | ![Driver role flow](./media/gifs/driver-role-flow.gif) |
 
-GIFs are silent, optimized previews generated from reviewed Google Chrome frames. Customer and Driver evidence is provided as privacy-reviewed Android AVD stills below.
+GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames; Driver uses only four privacy-reviewed Android AVD role stills. Customer remains a single reviewed launch still because no safe authenticated multi-frame journey is currently available.
 
 ## Admin
 
@@ -138,6 +139,8 @@ Authenticated Customer stills that showed exact simulated coordinates were exclu
 ## Driver
 
 Driver is a first-class Flutter/Riverpod native Android/iOS product. Start it from [`main_driver.dart`](../mobile/lib/main_driver.dart) with the Android `driver` flavor. Read the [Driver guide](./driver-guide.md) for sign-in, onboarding, truthful Online state, dispatch, earnings, and profile; see the [mobile guide](../mobile/README.md) for runtime and build details.
+
+![Driver sign-in, Home, earnings, and profile flow](./media/gifs/driver-role-flow.gif)
 
 ### Driver sign-in
 

@@ -11,7 +11,7 @@
 | Admin | Next.js web dashboard | Local PNG 10 枚と GIF 1 件 | [Admin ガイド](./admin-guide.ja.md) | Isolated E2E stack の Google Chrome evidence。Non-production のみ。 |
 | Restaurant | Next.js web dashboard | Local PNG 10 枚と GIF 1 件 | [Restaurant ガイド](./restaurant-guide.ja.md) | Isolated E2E stack の Google Chrome evidence。Non-production のみ。 |
 | Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed local WebP 1 枚 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD launch evidence のみ。Exact coordinates を含む still は除外しました。 |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Role/GPS WebP 6 枚、tracking/permission asset 2 件 | [Driver ガイド](./driver-guide.ja.md) | Android AVD role/GPS evidence のみ。Release、provider、payout、production を認証しません。 |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Role/GPS WebP 6 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Android AVD role/GPS evidence のみ。Release、provider、payout、production を認証しません。 |
 
 ## Role guide を選ぶ
 
@@ -28,8 +28,9 @@ Customer/Driver に browser URL はありません。正しい Flutter entrypoin
 |---|---|
 | Admin login → overview | ![Admin](media/gifs/admin-login-flow.gif) |
 | Restaurant orders → menu | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
+| Driver sign-in → Home → Earnings → Profile | ![Driver flow](media/gifs/driver-role-flow.gif) |
 
-GIF は review 済み Google Chrome frame から作った silent optimized preview です。Customer/Driver evidence は privacy-reviewed Android AVD stills を下に掲載します。
+GIF は silent optimized preview です。Admin/Restaurant は review 済み Google Chrome frame、Driver は privacy-reviewed Android AVD role still 4 枚だけを使用します。Customer は安全な authenticated multi-frame journey がないため、review 済み launch still 1 枚のままです。
 
 ## Admin
 
@@ -80,6 +81,8 @@ Exact simulated coordinates を表示した authenticated Customer stills は ga
 ## Driver
 
 Driver は first-class Flutter/Riverpod native Android/iOS product です。[`main_driver.dart`](../mobile/lib/main_driver.dart) から Android `driver` flavor で起動します。[Driver ガイド](./driver-guide.ja.md)で sign-in、onboarding、truthful Online、dispatch、earnings、profile を確認し、runtime/build は [mobile guide](../mobile/README.md) を参照してください。
+
+![Driver sign-in、Home、Earnings、Profile flow](./media/gifs/driver-role-flow.gif)
 
 | Sign-in | Home |
 |---|---|

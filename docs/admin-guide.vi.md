@@ -52,7 +52,7 @@ Xem đủ mười ảnh Admin trong [gallery sản phẩm](./product-gallery.vi.
 | Dấu hiệu | Cách xử lý |
 |---|---|
 | Bị trả về đăng nhập | Kiểm tra API local healthy và account có role Admin; đăng nhập lại, không inject session. |
-| Sai ngôn ngữ/route | Mở URL `/{vi|en|ja}/...` phù hợp và dùng điều hướng giữ locale. |
+| Sai ngôn ngữ/route | Mở URL `/vi/...`, `/en/...` hoặc `/ja/...` phù hợp và dùng điều hướng giữ locale. |
 | Danh sách trống sau lỗi | Retry và đọc lỗi hiển thị; không ghi nhận request lỗi thành empty state hợp lệ. |
 | Bản đồ không dùng được | Kiểm tra OpenFreeMap style và telemetry backend; không bịa tọa độ, route hay ETA. |
 | Export/AI unavailable | Xem trạng thái job/provider rõ ràng; không thêm secret giả hay tuyên bố thành công. |

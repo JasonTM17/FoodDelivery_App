@@ -52,7 +52,7 @@ All ten Admin stills are in the [product gallery](./product-gallery.md#admin).
 | Symptom | Action |
 |---|---|
 | Returned to sign-in | Confirm the local API is healthy and the account has the Admin role; sign in again rather than injecting a session. |
-| Wrong language or route | Open the matching `/{vi|en|ja}/...` URL and use locale-preserving navigation. |
+| Wrong language or route | Open the matching `/vi/...`, `/en/...`, or `/ja/...` URL and use locale-preserving navigation. |
 | Empty list after an error | Retry and inspect the visible error. Do not record a failed request as a valid empty state. |
 | Map unavailable | Verify the OpenFreeMap style configuration and backend telemetry. Never invent coordinates, routes, or ETA. |
 | Export/AI integration unavailable | Review the explicit job/provider state; do not add placeholder secrets or claim success. |

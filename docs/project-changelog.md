@@ -23,12 +23,16 @@ authoritative source for individual commits and implementation detail.
 - Kept Socket.IO, Redis, MinIO, and BullMQ as local or self-hosted compatibility
   providers rather than presenting them as the managed-production path.
 - Documented immutable Docker release and SHA tags, multi-architecture scans,
-  and manual post-smoke promotion of latest.
+  exact deployed-revision checks, the required two-pass SHA/semver promotion
+  sequence, and manual post-smoke promotion of latest.
 - Retained historical product screenshots and optimized Admin/Restaurant GIF flows.
   Their manifest lacks a source SHA/image reference, so recapture with source/runtime
   provenance is required before they support a current-release claim.
 - Made Customer and Driver product coverage explicit in the product gallery and
   documented the boundary between web captures and device/emulator evidence.
+- Added a privacy-reviewed four-frame Driver role GIF from the existing Android
+  stills and corrected the screenshot inventory: Customer currently has one
+  safe launch still, not a fabricated authenticated GIF.
 - Recorded the successful Railway API/worker deployments, the corrected public
   domain port, Supabase Storage readiness, and the remaining production-smoke
   boundary without relabeling infrastructure health as release approval.
@@ -77,6 +81,12 @@ authoritative source for individual commits and implementation detail.
   preserving fail-closed feature behavior. Missing Google/owned OSRM now gives
   `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`; production RAG stays disabled
   without a DeepSeek credential.
+- Added immutable build revisions to API/Admin/Restaurant health responses,
+  made authenticated production smoke fail closed by default, and removed
+  tag-triggered release publication in favor of protected manual promotion.
+- Added GiST indexes for restaurant-nearby and driver-location PostGIS query
+  paths, kept separately recoverable from the fail-closed empty legacy Storage
+  bucket cleanup.
 
 ### Release blockers
 
@@ -87,9 +97,13 @@ authoritative source for individual commits and implementation detail.
 - Final Android production signing and iOS build/signing evidence still require
   authorized release credentials/runners; local debug APKs are not publishable.
 - Authenticated browser role flows, controlled-device FCM,
-  controlled-device FCM, configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-route
+  configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-route
   checks, accessibility, visual, tenant, device, and image-pull gates remain
   mandatory before release certification.
+- Three already-applied Supabase migration files have checksums that do not
+  match production history. Provenance must be recovered or explicitly
+  reconciled under an approved database procedure before any new production
+  migration is applied.
 - At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
   Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
   352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and

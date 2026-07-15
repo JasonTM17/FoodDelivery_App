@@ -77,7 +77,22 @@
         "driver/03-earnings.webp",
         "driver/04-profile.webp"
       ]
-    }
+    },
+    "gifs": [
+      {
+        "path": "../media/gifs/driver-role-flow.gif",
+        "generatedAt": "2026-07-15T03:03:07Z",
+        "sourceFrames": [
+          "driver/01-login.webp",
+          "driver/02-home.webp",
+          "driver/03-earnings.webp",
+          "driver/04-profile.webp"
+        ],
+        "frameCount": 4,
+        "dimensions": "360x800",
+        "privacyReview": "Uses only the four privacy-reviewed deterministic local Driver frames; metadata stripped"
+      }
+    ]
   },
   "webCapture": {
     "capturedAt": "2026-07-14T13:39:27.864Z",

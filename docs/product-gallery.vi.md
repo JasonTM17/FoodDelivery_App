@@ -11,7 +11,7 @@ Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](
 | Admin | Dashboard web Next.js | 10 PNG local và một GIF | [Hướng dẫn Admin](./admin-guide.vi.md) | Bằng chứng Google Chrome từ E2E stack cô lập; chỉ non-production. |
 | Restaurant | Dashboard web Next.js | 10 PNG local và một GIF | [Hướng dẫn Restaurant](./restaurant-guide.vi.md) | Bằng chứng Google Chrome từ E2E stack cô lập; chỉ non-production. |
 | Customer | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `customer` | Một WebP local đã kiểm duyệt riêng tư | [Hướng dẫn Khách hàng](./customer-guide.vi.md) | Bằng chứng mở app trên Android AVD; ảnh có tọa độ chính xác đã bị loại. |
-| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Sáu WebP role/GPS và hai asset tracking/quyền | [Hướng dẫn Tài xế](./driver-guide.vi.md) | Bằng chứng role/GPS trên Android AVD; không chứng nhận release, provider, payout hay production. |
+| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Sáu WebP role/GPS, hai asset tracking/quyền và một GIF | [Hướng dẫn Tài xế](./driver-guide.vi.md) | Bằng chứng role/GPS trên Android AVD; không chứng nhận release, provider, payout hay production. |
 
 ## Chọn hướng dẫn theo vai trò
 
@@ -28,8 +28,9 @@ Customer/Driver không có URL trình duyệt. Chạy đúng Flutter entrypoint 
 |---|---|
 | Đăng nhập Admin → tổng quan | ![Admin](media/gifs/admin-login-flow.gif) |
 | Đơn hàng Restaurant → thực đơn | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
+| Driver đăng nhập → Trang chủ → Thu nhập → Hồ sơ | ![Luồng Driver](media/gifs/driver-role-flow.gif) |
 
-GIF là preview im lặng, tối ưu từ frame Google Chrome đã review. Evidence Customer/Driver dùng ảnh tĩnh Android AVD đã kiểm duyệt riêng tư ở bên dưới.
+GIF là preview im lặng đã tối ưu. Admin/Restaurant dùng frame Google Chrome đã review; Driver chỉ dùng bốn ảnh role Android AVD đã kiểm duyệt riêng tư. Customer vẫn chỉ có một ảnh mở app vì chưa có hành trình xác thực nhiều frame đủ an toàn.
 
 ## Admin
 
@@ -80,6 +81,8 @@ Các ảnh Customer đã xác thực hiển thị tọa độ mô phỏng chính
 ## Driver
 
 Driver là sản phẩm Flutter/Riverpod native Android/iOS. Khởi chạy từ [`main_driver.dart`](../mobile/lib/main_driver.dart) với Android flavor `driver`. Xem [hướng dẫn Tài xế](./driver-guide.vi.md) cho đăng nhập, onboarding, Online thật, dispatch, thu nhập và hồ sơ; xem [hướng dẫn mobile](../mobile/README.md) cho runtime/build.
+
+![Luồng đăng nhập, Trang chủ, Thu nhập và Hồ sơ Driver](./media/gifs/driver-role-flow.gif)
 
 | Đăng nhập | Trang chủ |
 |---|---|

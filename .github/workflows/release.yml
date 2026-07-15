@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing stable semver tag already promoted by Docker Publish
+        description: Existing Git semver tag already promoted by Docker Publish
         required: true
         type: string
       source_sha:
-        description: Full immutable source SHA deployed and promoted
+        description: Full source SHA deployed to Railway/Vercel and promoted
         required: true
         type: string
 

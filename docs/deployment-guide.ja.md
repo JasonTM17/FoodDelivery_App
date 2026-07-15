@@ -145,9 +145,14 @@ git rev-list --left-right --count origin/master...HEAD # 0 0
 git ls-remote --heads origin                         # master only
 ```
 
-Pre-release registry evidence では **Docker Publish** を `publish_release=false`、空の `release_tag`、`promote_latest=false` で manual dispatch します。両 architecture の runtime smoke/scan 後に `sha-<full-commit>` manifest のみを publish し、production health、semver、`latest` promotion は skip します。
+Release は次の順序で実行し、2 回の Docker Publish をまとめてはいけません。
 
-Production smoke 後に verified master commit でのみ `publish_release=true` と immutable `release_tag` を設定して `v4.0.0` を作成します。`promote_latest` は別の最終選択です。Worker は backend image を使い、別 artifact は publish しません。
+1. **Docker Publish** を `publish_release=false`、空の `release_tag`、`promote_latest=false` で手動 dispatch します。両 architecture の runtime smoke/scan 後に `sha-<full-commit>` manifest のみを publish します。
+2. Migration checksum と backup gate が通った後、その SHA を正確に deploy します。one-off migrator を実行し、Railway API/worker を同じ backend digest に pin し、両 Vercel project を同じ commit から deploy します。health、readiness、log、revision 一致、authenticated role/provider smoke を確認します。
+3. 変更されていない `origin/master` から **Docker Publish** を再度 dispatch し、`publish_release=true` と未使用の stable `release_tag` を指定します。Semver promotion 前に API、Admin、Restaurant が workflow SHA を返す必要があります。`promote_latest` は別の明示的な選択です。
+4. 検証済み SHA に Git semver tag を作成して push し、その tag と完全な `source_sha` で **Release** を手動 dispatch します。GitHub Release と SBOM 添付の作成前に、Git tag と Docker Hub/GHCR の SHA/semver digest が検証されます。
+
+Tag push だけでは publish も GitHub Release も開始しません。Step 3–4 を許可する前に GitHub `production` Environment の必須 reviewer/protection を設定します。Worker は backend image を使用し、別 artifact は publish しません。
 
 ## Self-hosted compatibility
 

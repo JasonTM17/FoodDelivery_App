@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Immutable semver tag; required only when publishing a release
+        description: Immutable semver tag; use only after this SHA is deployed to production
         required: false
         default: ""
         type: string
       publish_release:
-        description: Run production smoke and promote the SHA manifests to release_tag
+        description: Verify exact deployed revisions, then promote SHA manifests to release_tag
         required: true
         default: false
         type: boolean

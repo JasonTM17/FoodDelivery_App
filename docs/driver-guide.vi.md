@@ -4,6 +4,10 @@ Ngôn ngữ: [English](./driver-guide.md) | **Tiếng Việt** | [日本語](./d
 
 FoodFlow Driver là ứng dụng giao hàng Flutter/Riverpod native cho Android/iOS. Hướng dẫn này bám các route xác thực và Driver shell hiện tại; không tuyên bố mobile release, dispatch provider live hay ma trận background location production đã được chứng nhận.
 
+![Luồng đăng nhập, Trang chủ, Thu nhập và Hồ sơ Driver](./media/gifs/driver-role-flow.gif)
+
+GIF bốn frame chỉ được tạo từ ảnh Android AVD local deterministic đã kiểm duyệt riêng tư. Đây là tài liệu product/regression, không phải hành trình production đã xác thực.
+
 ## Điều kiện
 
 - Cài/chạy flavor Driver từ [main_driver.dart](../mobile/lib/main_driver.dart).

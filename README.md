@@ -24,7 +24,7 @@ FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide
 | Admin      | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                                  |
 | Restaurant | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.                  |
 | Customer   | Flutter/Riverpod Android/iOS app | One privacy-reviewed local WebP          | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
-| Driver     | Flutter/Riverpod Android/iOS app | Six role/GPS WebPs and two tracking assets | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.                  |
+| Driver     | Flutter/Riverpod Android/iOS app | Six role/GPS WebPs, two tracking assets, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.                  |
 
 The mobile captures use simulated GPS and the isolated local stack. Their manifest records a dirty workspace, so authentic release media still requires a clean-head device/emulator recapture from the chosen release candidate. The documentation deliberately does not relabel local media as production evidence.
 
@@ -38,7 +38,7 @@ The mobile captures use simulated GPS and the isolated local stack. Their manife
 | Admin sign-in to overview | ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) |
 | Restaurant orders to menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
 | Customer app launch | ![Customer app launch](docs/screenshots/customer/01-login.webp) |
-| Driver active-delivery Home | ![Driver Home](docs/screenshots/driver/02-home.webp) |
+| Driver sign-in → Home → earnings → profile | ![Driver role flow](docs/media/gifs/driver-role-flow.gif) |
 
 ## Applications
 

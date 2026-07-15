@@ -15,7 +15,7 @@ FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-
 | Admin      | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Admin](admin-guide.vi.md), rồi chạy Admin web.                                           |
 | Restaurant | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Restaurant](restaurant-guide.vi.md), rồi chạy Restaurant web.                            |
 | Customer   | Ứng dụng Flutter/Riverpod Android/iOS | Một WebP local đã kiểm duyệt riêng tư     | Đọc [hướng dẫn Khách hàng](customer-guide.vi.md), rồi chạy `main_customer.dart` trên thiết bị/emulator. |
-| Driver     | Ứng dụng Flutter/Riverpod Android/iOS | Sáu WebP role/GPS và hai asset tracking   | Đọc [hướng dẫn Tài xế](driver-guide.vi.md), rồi chạy `main_driver.dart`.                              |
+| Driver     | Ứng dụng Flutter/Riverpod Android/iOS | Sáu WebP role/GPS, hai asset tracking và một GIF | Đọc [hướng dẫn Tài xế](driver-guide.vi.md), rồi chạy `main_driver.dart`.                              |
 
 Ảnh mobile dùng GPS mô phỏng và local stack; manifest ghi rõ worktree còn dirty. Muốn có bằng chứng release phải capture lại từ clean head trên thiết bị/emulator của release candidate. Tài liệu không gắn bằng chứng local thành production.
 
@@ -29,7 +29,7 @@ FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-
 | Đăng nhập Admin → tổng quan | ![Luồng Admin](media/gifs/admin-login-flow.gif) |
 | Đơn hàng Restaurant → thực đơn | ![Luồng Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
 | Mở ứng dụng Customer | ![Mở ứng dụng Customer](screenshots/customer/01-login.webp) |
-| Trang chủ Driver khi đang giao | ![Trang chủ Driver](screenshots/driver/02-home.webp) |
+| Driver đăng nhập → Trang chủ → Thu nhập → Hồ sơ | ![Luồng Driver](media/gifs/driver-role-flow.gif) |
 
 ## Các ứng dụng
 

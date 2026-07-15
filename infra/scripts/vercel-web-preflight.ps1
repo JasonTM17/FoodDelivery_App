@@ -101,7 +101,14 @@ function Assert-ContainsLineValue {
     [Parameter(Mandatory = $true)][string]$Label,
     [Parameter(Mandatory = $true)][string]$Expected
   )
-  if ($Text -notmatch [regex]::Escape($Label) -or $Text -notmatch [regex]::Escape($Expected)) {
+  $matchingLines = @(
+    $Text -split "`r?`n" |
+      Where-Object {
+        $_ -match [regex]::Escape($Label) -and
+        $_ -match [regex]::Escape($Expected)
+      }
+  )
+  if ($matchingLines.Count -eq 0) {
     throw "Vercel project setting mismatch: expected $Label = $Expected"
   }
 }
