@@ -20,6 +20,11 @@ import '../widgets/category_chip.dart';
 import '../widgets/promo_banner.dart';
 import '../router/route_names.dart';
 
+String customerHomeLocationLabel(
+  AppLocalizations localizations, {
+  required bool hasLocation,
+}) => hasLocation ? localizations.currentLocationLabel : localizations.locating;
+
 class _CuisineFilter {
   final String id;
   final String? cuisineValue;
@@ -306,9 +311,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        _currentLocation != null
-                            ? '${_currentLocation!.latitude.toStringAsFixed(4)}, ${_currentLocation!.longitude.toStringAsFixed(4)}'
-                            : AppLocalizations.of(context).locating,
+                        customerHomeLocationLabel(
+                          AppLocalizations.of(context),
+                          hasLocation: _currentLocation != null,
+                        ),
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,

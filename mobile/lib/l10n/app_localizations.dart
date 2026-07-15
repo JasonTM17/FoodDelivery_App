@@ -412,6 +412,12 @@ abstract class AppLocalizations {
   /// **'Đang xác định vị trí...'**
   String get locating;
 
+  /// No description provided for @currentLocationLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí hiện tại'**
+  String get currentLocationLabel;
+
   /// No description provided for @searchHint.
   ///
   /// In vi, this message translates to:
@@ -1786,6 +1792,12 @@ abstract class AppLocalizations {
   /// **'Đang ngoại tuyến'**
   String get driverOnlineStatusOffline;
 
+  /// No description provided for @driverOnlineStatusDelivering.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang giao hàng'**
+  String get driverOnlineStatusDelivering;
+
   /// No description provided for @driverOnlineReady.
   ///
   /// In vi, this message translates to:
@@ -1797,6 +1809,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bật để nhận đơn hàng'**
   String get driverOnlineEnable;
+
+  /// No description provided for @driverDeliveryGpsActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'GPS đang được chia sẻ'**
+  String get driverDeliveryGpsActive;
+
+  /// No description provided for @driverDeliveryGpsResume.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật trực tuyến để tiếp tục chia sẻ GPS'**
+  String get driverDeliveryGpsResume;
 
   /// No description provided for @driverOnlineAutoOffline.
   ///

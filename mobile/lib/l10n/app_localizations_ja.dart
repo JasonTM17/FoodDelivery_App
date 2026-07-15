@@ -167,6 +167,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get locating => '位置情報を取得中...';
 
   @override
+  String get currentLocationLabel => '現在地';
+
+  @override
   String get searchHint => '料理、レストランを検索...';
 
   @override
@@ -872,10 +875,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get driverOnlineStatusOffline => 'オフライン';
 
   @override
+  String get driverOnlineStatusDelivering => '配達中';
+
+  @override
   String get driverOnlineReady => '注文を受け付けられます';
 
   @override
   String get driverOnlineEnable => 'オンにして注文を受け付ける';
+
+  @override
+  String get driverDeliveryGpsActive => 'GPS共有中です';
+
+  @override
+  String get driverDeliveryGpsResume => 'オンラインにしてGPS共有を再開してください';
 
   @override
   String get driverOnlineAutoOffline => '一時停止終了後に自動でオフラインへ戻ります';

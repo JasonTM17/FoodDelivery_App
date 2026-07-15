@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/driver/screens/home_screen.dart';
 import 'package:foodflow_customer/l10n/app_localizations.dart';
+import 'package:foodflow_customer/shared/models/order.dart';
 import 'package:go_router/go_router.dart';
 
 // ---------------------------------------------------------------------------
@@ -75,6 +76,24 @@ Widget _buildHome(DriverState state) {
   );
 }
 
+OrderModel _activeOrder() {
+  final timestamp = DateTime.utc(2026, 7, 15);
+  return OrderModel(
+    id: 'order-1',
+    userId: 'customer-1',
+    restaurantId: 'restaurant-1',
+    restaurantName: 'Nhà hàng kiểm thử',
+    status: 'delivering',
+    deliveryAddress: OrderAddress(
+      address: 'Địa chỉ kiểm thử',
+      latitude: 10.7757,
+      longitude: 106.7004,
+    ),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -131,6 +150,44 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Đang ngoại tuyến'), findsOneWidget);
+    });
+
+    testWidgets('shows GPS resume guidance for an offline active delivery', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          DriverState(
+            isAuthenticated: true,
+            isOnline: false,
+            activeOrder: _activeOrder(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Đang giao hàng'), findsOneWidget);
+      expect(
+        find.text('Bật trực tuyến để tiếp tục chia sẻ GPS'),
+        findsOneWidget,
+      );
+      expect(find.text('Đang ngoại tuyến'), findsNothing);
+    });
+
+    testWidgets('shows active GPS guidance for an online active delivery', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          DriverState(
+            isAuthenticated: true,
+            isOnline: true,
+            activeOrder: _activeOrder(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Đang giao hàng'), findsOneWidget);
+      expect(find.text('GPS đang được chia sẻ'), findsOneWidget);
     });
   });
 

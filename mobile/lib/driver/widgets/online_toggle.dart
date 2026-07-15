@@ -16,6 +16,7 @@ class OnlineToggle extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final isOnline = status.status == DriverOnlineStatus.online;
     final isPaused = status.status == DriverOnlineStatus.paused;
+    final hasActiveDelivery = driverState.activeOrder != null;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -34,7 +35,12 @@ class OnlineToggle extends ConsumerWidget {
         children: [
           _StatusDot(isOnline: isOnline, isPaused: isPaused),
           const SizedBox(width: 12),
-          _StatusLabel(isOnline: isOnline, isPaused: isPaused, l10n: l10n),
+          _StatusLabel(
+            isOnline: isOnline,
+            isPaused: isPaused,
+            hasActiveDelivery: hasActiveDelivery,
+            l10n: l10n,
+          ),
           const Spacer(),
           SizedBox(
             height: 48,
@@ -93,10 +99,12 @@ class _StatusDot extends StatelessWidget {
 class _StatusLabel extends StatelessWidget {
   final bool isOnline;
   final bool isPaused;
+  final bool hasActiveDelivery;
   final AppLocalizations l10n;
   const _StatusLabel({
     required this.isOnline,
     required this.isPaused,
+    required this.hasActiveDelivery,
     required this.l10n,
   });
 
@@ -106,7 +114,9 @@ class _StatusLabel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isOnline
+          hasActiveDelivery
+              ? l10n.driverOnlineStatusDelivering
+              : isOnline
               ? l10n.driverOnlineStatusOnline
               : isPaused
               ? l10n.driverOnlineStatusPaused
@@ -122,7 +132,11 @@ class _StatusLabel extends StatelessWidget {
           ),
         ),
         Text(
-          isOnline
+          hasActiveDelivery
+              ? isOnline
+                    ? l10n.driverDeliveryGpsActive
+                    : l10n.driverDeliveryGpsResume
+              : isOnline
               ? l10n.driverOnlineReady
               : isPaused
               ? l10n.driverOnlineAutoOffline

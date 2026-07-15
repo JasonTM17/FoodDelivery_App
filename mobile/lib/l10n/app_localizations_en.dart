@@ -174,6 +174,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locating => 'Locating...';
 
   @override
+  String get currentLocationLabel => 'Current location';
+
+  @override
   String get searchHint => 'Search for food, restaurants...';
 
   @override
@@ -892,10 +895,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverOnlineStatusOffline => 'Offline';
 
   @override
+  String get driverOnlineStatusDelivering => 'Delivering';
+
+  @override
   String get driverOnlineReady => 'Ready to receive orders';
 
   @override
   String get driverOnlineEnable => 'Turn on to receive orders';
+
+  @override
+  String get driverDeliveryGpsActive => 'GPS sharing is active';
+
+  @override
+  String get driverDeliveryGpsResume => 'Go online to resume GPS sharing';
 
   @override
   String get driverOnlineAutoOffline =>

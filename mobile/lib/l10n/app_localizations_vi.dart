@@ -173,6 +173,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get locating => 'Đang xác định vị trí...';
 
   @override
+  String get currentLocationLabel => 'Vị trí hiện tại';
+
+  @override
   String get searchHint => 'Tìm kiếm món ăn, nhà hàng...';
 
   @override
@@ -891,10 +894,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get driverOnlineStatusOffline => 'Đang ngoại tuyến';
 
   @override
+  String get driverOnlineStatusDelivering => 'Đang giao hàng';
+
+  @override
   String get driverOnlineReady => 'Sẵn sàng nhận đơn';
 
   @override
   String get driverOnlineEnable => 'Bật để nhận đơn hàng';
+
+  @override
+  String get driverDeliveryGpsActive => 'GPS đang được chia sẻ';
+
+  @override
+  String get driverDeliveryGpsResume =>
+      'Bật trực tuyến để tiếp tục chia sẻ GPS';
 
   @override
   String get driverOnlineAutoOffline =>
