@@ -23,10 +23,11 @@ LABEL org.opencontainers.image.revision=$BUILD_SHA
 LABEL org.opencontainers.image.title="foodflow-migrate"
 
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 USER 65532:65532
-CMD ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+CMD ["dist/migrations/production-migrate.js"]
 
 FROM builder AS prod-deps
 RUN pnpm prune --prod
