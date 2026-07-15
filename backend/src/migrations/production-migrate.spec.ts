@@ -1,6 +1,5 @@
 import {
   deleteEmptyLegacyBuckets,
-  main,
   needsMigrationResolution,
 } from './production-migrate';
 
@@ -73,5 +72,4 @@ describe('production migrate Storage cleanup', () => {
       ]),
     ).toBe(true);
   });
-
 });
