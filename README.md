@@ -19,7 +19,7 @@ FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional 
 
 Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM and build gates are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence and token/reconnect checks passed with temporary data removed. Docker Hub SHA, `v0.1.1`, and `latest` resolve to matching digests for all four images. Real Android/iOS background-location, FCM and optional provider credentials remain outside this environment, so those are not claimed as certified.
 
-The release paragraph above the product preview is a historical candidate snapshot; this section is the current source of truth.
+The release paragraph above is a concise status summary; this section is the current source of truth.
 
 ## Product preview
 
