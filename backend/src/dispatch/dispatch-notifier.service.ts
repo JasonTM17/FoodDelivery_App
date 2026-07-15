@@ -17,7 +17,7 @@ export class DispatchNotifierService {
 
   sendNewOrderOffer(driverId: string, data: Record<string, unknown>): void {
     this.server?.to(`driver:${driverId}`).emit('driver:new_order', data)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.driver(driverId),
       'driver:new_order',
       data,
@@ -26,7 +26,7 @@ export class DispatchNotifierService {
 
   sendAssignedOrder(driverId: string, data: { orderId: string }): void {
     this.server?.to(`driver:${driverId}`).emit('driver:order_assigned', data)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.driver(driverId),
       'driver:order_assigned',
       data,
@@ -35,6 +35,6 @@ export class DispatchNotifierService {
 
   emitToAdmins(event: string, data: Record<string, unknown>): void {
     this.server?.emit(event, data)
-    void this.realtimePublisher?.publish(realtimeChannels.adminOrders, event, data)
+    void this.realtimePublisher?.publishBestEffort(realtimeChannels.adminOrders, event, data)
   }
 }

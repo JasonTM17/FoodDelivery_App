@@ -149,7 +149,7 @@ Socket.IO は local/self-hosted の explicit provider であり、managed produc
 - `/events` の Admin room は database で確認した `admin` role が必要です。
 - Restaurant room は要求された tenant に属する active restaurant profile が必要です。
 - Order room は admin または注文参加者（customer、担当 driver、active restaurant staff）のみ join できます。
-- `/tracking` の位置更新は認証済み `driver` account からのみ受け付けます。
+- `/tracking` の位置更新は認証済み `driver` account からのみ受け付けます。拒否時は `driver:location_rejected` と `invalid_coordinates`、`out_of_bbox`、`invalid_bearing`、`invalid_speed`、`speed_exceeded`、`poor_accuracy`、`invalid_timestamp`、`stale_timestamp`、`future_timestamp`、`driver_offline`、`teleportation` のいずれかを返します。
 - `driver:location.timestamp` は ISO UTC の実 GPS サンプル取得時刻です。Mobile は reconnect 後に offline-buffered ping を flush するとき、この timestamp を保持し、flush 時刻で置き換えてはいけません。
 - `/notifications` は検証済み token から user room を決定し、client が別 user の room を選ぶことはできません。
 - `/dispatch` は `driver` account のみ受け付け、`driver:<authenticated-user-id>` のみに join し、認証 user と異なる driver ID の offer response を拒否します。
@@ -157,7 +157,7 @@ Socket.IO は local/self-hosted の explicit provider であり、managed produc
 
 ## Order tracking REST snapshot
 
-- `POST /driver/location` は driver 専用で、端末が取得した実 GPS timestamp を必須とします。共通 tracking pipeline は stale、future、service area 外、speed 超過、teleport sample を `422 DRIVER_LOCATION_REJECTED` で拒否し、有効な sample だけが presence と tenant-scoped order/admin event を更新します。
+- `POST /driver/location` は driver 専用で、端末が取得した実 GPS timestamp を必須とします。WebSocket と同じ semantic pipeline が不正 coordinate、`[0, 360)` 外の bearing、負数または 150 km/h 超の speed、`0..50` m 外の accuracy、不正/stale/future timestamp、Offline session、service area 外、teleport sample を reason 付き `422 DRIVER_LOCATION_REJECTED` で拒否します。有効な sample だけが presence と tenant-scoped order/admin event を更新します。
 - `POST /driver/dispatch/offers/{orderId}/respond` は driver 専用で、`{ offerToken, decision: "accept"|"reject" }` を bearer identity に bind し、短命 token を一度だけ consume します。Offer state は PostgreSQL に保存し、token は SHA-256 hash のみを保持します。Invalid、expired、race は `409` です。
 - `GET /orders/{id}/tracking` は order participant scoped です。customer-owned order、assigned driver order、注文の restaurant tenant に属する active restaurant staff、または admin のみが利用できます。認証済み actor がアクセスできる注文について provider cache/database の real telemetry だけを返します。
 - `driverLocation`、`etaMinutes`、`routePolyline` は nullable です。Client は null を unavailable data として扱い、straight-line ETA や route geometry を捏造してはいけません。

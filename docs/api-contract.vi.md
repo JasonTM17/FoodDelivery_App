@@ -136,7 +136,7 @@ Socket.IO là provider explicit cho local/self-hosted, không phải fallback im
 - Phòng Admin trên `/events` yêu cầu role `admin` được đọc lại từ database.
 - Phòng nhà hàng yêu cầu restaurant profile đang active và thuộc đúng tenant được yêu cầu.
 - Phòng đơn hàng chỉ cho admin hoặc người tham gia đơn: khách hàng, tài xế được gán, hoặc nhân viên nhà hàng đang active.
-- `/tracking` chỉ nhận cập nhật vị trí từ tài khoản `driver` đã xác thực.
+- `/tracking` chỉ nhận cập nhật vị trí từ tài khoản `driver` đã xác thực. Sample bị từ chối phát `driver:location_rejected` với một trong các reason `invalid_coordinates`, `out_of_bbox`, `invalid_bearing`, `invalid_speed`, `speed_exceeded`, `poor_accuracy`, `invalid_timestamp`, `stale_timestamp`, `future_timestamp`, `driver_offline` hoặc `teleportation`.
 - `driver:location.timestamp` là thời điểm GPS thật được thiết bị ghi nhận theo ISO UTC. Mobile phải giữ nguyên timestamp này khi flush các ping đã buffer offline sau khi reconnect, không thay bằng thời điểm flush.
 - `/notifications` suy ra phòng user từ token đã verify; client không được tự chọn phòng của user khác.
 - `/dispatch` chỉ nhận tài khoản `driver`, chỉ join `driver:<authenticated-user-id>` và từ chối phản hồi offer có driver ID khác user đã xác thực.
@@ -144,7 +144,7 @@ Socket.IO là provider explicit cho local/self-hosted, không phải fallback im
 
 ## Snapshot REST tracking đơn hàng
 
-- `POST /driver/location` chỉ dành cho driver và bắt buộc timestamp GPS thật từ thiết bị. Pipeline tracking dùng chung trả `422 DRIVER_LOCATION_REJECTED` cho sample stale, tương lai, ngoài vùng phục vụ, vượt tốc hoặc teleport; sample hợp lệ cập nhật presence và phát event order/admin đúng tenant.
+- `POST /driver/location` chỉ dành cho driver và bắt buộc timestamp GPS thật từ thiết bị. Cùng pipeline semantic với WebSocket trả `422 DRIVER_LOCATION_REJECTED` kèm reason cho tọa độ sai, bearing ngoài `[0, 360)`, speed âm hoặc trên 150 km/h, accuracy ngoài `0..50` mét, timestamp sai/stale/tương lai, phiên Offline, ngoài vùng phục vụ hoặc teleport; sample hợp lệ cập nhật presence và phát event order/admin đúng tenant.
 - `POST /driver/dispatch/offers/{orderId}/respond` chỉ dành cho driver, nhận `{ offerToken, decision: "accept"|"reject" }`, bind với bearer identity và chỉ consume token ngắn hạn một lần. Offer state nằm trong PostgreSQL, chỉ lưu SHA-256 token hash; offer sai/hết hạn/race trả `409`.
 - `GET /orders/{id}/tracking` scope theo order participant: customer sở hữu đơn, driver được gán, staff nhà hàng active đúng tenant của đơn, hoặc admin. Endpoint chỉ trả telemetry thật từ provider cache/database cho đơn mà actor đã xác thực được phép truy cập.
 - `driverLocation`, `etaMinutes` và `routePolyline` có thể null; client phải xem null là dữ liệu chưa khả dụng, không tự bịa ETA đường thẳng hoặc route geometry.

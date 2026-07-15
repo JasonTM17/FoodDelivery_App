@@ -85,6 +85,8 @@ void main() {
       expect(normalizeGpsBearingDegrees(90), 90);
       expect(normalizeGpsAccuracyMeters(-1), isNull);
       expect(normalizeGpsAccuracyMeters(8.5), 8.5);
+      expect(normalizeGpsAccuracyMeters(50), 50);
+      expect(normalizeGpsAccuracyMeters(50.1), isNull);
     });
   });
 
@@ -175,6 +177,43 @@ void main() {
         expect(socket.sentPayloads, isEmpty);
       },
     );
+
+    test('drops poor-accuracy pings before sending or buffering', () async {
+      final socket = _RecordingLocationPingEmitter()..shouldThrow = true;
+      final service = BackgroundLocationService.forTesting(socket: socket);
+      addTearDown(service.dispose);
+
+      await service.bufferLocationPingForTesting(
+        10.7769,
+        106.7009,
+        timestamp: DateTime.now().toUtc(),
+        accuracy: 50.1,
+      );
+
+      socket.shouldThrow = false;
+      await service.flushBufferForTesting();
+
+      expect(socket.sentPayloads, isEmpty);
+    });
+
+    test('stop discards buffered samples from the previous Online session', () async {
+      final socket = _RecordingLocationPingEmitter()..shouldThrow = true;
+      final service = BackgroundLocationService.forTesting(socket: socket);
+      addTearDown(service.dispose);
+
+      await service.bufferLocationPingForTesting(
+        10.7769,
+        106.7009,
+        timestamp: DateTime.now().toUtc(),
+        accuracy: 5,
+      );
+      service.stop();
+
+      socket.shouldThrow = false;
+      await service.flushBufferForTesting();
+
+      expect(socket.sentPayloads, isEmpty);
+    });
   });
 }
 

@@ -23,6 +23,9 @@ const _kMaxBufferedPingAge = Duration(seconds: 45);
 /// future locations as live driver state.
 const _kMaxLocationClockSkew = Duration(seconds: 15);
 
+/// Samples above this horizontal error radius are too noisy for a live map.
+const _kMaxLiveGpsAccuracyMeters = 50.0;
+
 double? normalizeGpsBearingDegrees(double? headingDegrees) {
   if (headingDegrees == null || !headingDegrees.isFinite) return null;
   if (headingDegrees < 0 || headingDegrees >= 360) return null;
@@ -37,7 +40,9 @@ double? normalizeGpsSpeedKmh(double? metersPerSecond) {
 
 double? normalizeGpsAccuracyMeters(double? accuracyMeters) {
   if (accuracyMeters == null || !accuracyMeters.isFinite) return null;
-  if (accuracyMeters < 0) return null;
+  if (accuracyMeters < 0 || accuracyMeters > _kMaxLiveGpsAccuracyMeters) {
+    return null;
+  }
   return accuracyMeters;
 }
 
@@ -64,8 +69,9 @@ class _LocationPing {
 /// - [_kActiveInterval] (4s) when [setActiveOrderMode] is called with `true`
 /// - [_kIdleInterval] (30s) when idle online
 ///
-/// Offline buffer: up to [_kMaxBuffer] pings are queued and flushed on
-/// reconnect so no location data is silently dropped.
+/// Offline buffer: up to [_kMaxBuffer] fresh pings are queued and flushed on
+/// reconnect. Stale/oldest samples and the entire buffer are intentionally
+/// discarded when their live session expires or the driver goes Offline.
 class BackgroundLocationService {
   BackgroundLocationService._({LocationPingEmitter? socket})
     : _socket = socket ?? RealtimeClient.instance;
@@ -84,6 +90,7 @@ class BackgroundLocationService {
   bool _running = false;
   bool _hasActiveOrder = false;
   bool _isFlushing = false;
+  int _lifecycleEpoch = 0;
   DateTime? _lastEmit;
   Position? _lastPosition;
   final LocationPingEmitter _socket;
@@ -130,8 +137,9 @@ class BackgroundLocationService {
       return;
     }
 
+    final startEpoch = ++_lifecycleEpoch;
     final permitted = await requestPermissions();
-    if (!permitted) return;
+    if (!permitted || startEpoch != _lifecycleEpoch) return;
 
     _running = true;
     _hasActiveOrder = hasActiveOrder;
@@ -152,12 +160,13 @@ class BackgroundLocationService {
     // Flush any offline-buffered pings every 15s when back online.
     _bufferFlushTimer = Timer.periodic(
       const Duration(seconds: 15),
-      (_) => unawaited(_flushBuffer()),
+      (_) => unawaited(_flushBuffer(lifecycleEpoch: startEpoch)),
     );
   }
 
   /// Stop all location streaming and timers. Call when driver goes offline.
   void stop() {
+    _lifecycleEpoch += 1;
     _positionSub?.cancel();
     _positionSub = null;
     _idleFlushTimer?.cancel();
@@ -165,7 +174,10 @@ class BackgroundLocationService {
     _bufferFlushTimer?.cancel();
     _bufferFlushTimer = null;
     _running = false;
+    _hasActiveOrder = false;
     _lastEmit = null;
+    _lastPosition = null;
+    _offlineBuffer.clear();
   }
 
   /// Switch between active-order (4 s) and idle (30 s) throttle modes.
@@ -198,7 +210,14 @@ class BackgroundLocationService {
   }
 
   void _onPosition(Position pos) {
+    if (!_running) return;
+    final lifecycleEpoch = _lifecycleEpoch;
     if (kDebugMode) debugPrint('[GPS] native position update received');
+    final accuracy = normalizeGpsAccuracyMeters(pos.accuracy);
+    if (accuracy == null) {
+      if (kDebugMode) debugPrint('[GPS] discarded poor-accuracy sample');
+      return;
+    }
     _lastPosition = pos;
     if (!_positionController.isClosed) {
       _positionController.add(pos);
@@ -215,13 +234,14 @@ class BackgroundLocationService {
         pos.timestamp,
         bearing: normalizeGpsBearingDegrees(pos.heading),
         speed: normalizeGpsSpeedKmh(pos.speed),
-        accuracy: normalizeGpsAccuracyMeters(pos.accuracy),
+        accuracy: accuracy,
+        lifecycleEpoch: lifecycleEpoch,
       ),
     );
   }
 
   Future<void> _emitLastKnown() async {
-    if (_lastPosition == null) return;
+    if (!_running || _lastPosition == null) return;
     await _emitPosition(
       _lastPosition!.latitude,
       _lastPosition!.longitude,
@@ -229,6 +249,7 @@ class BackgroundLocationService {
       bearing: normalizeGpsBearingDegrees(_lastPosition!.heading),
       speed: normalizeGpsSpeedKmh(_lastPosition!.speed),
       accuracy: normalizeGpsAccuracyMeters(_lastPosition!.accuracy),
+      lifecycleEpoch: _lifecycleEpoch,
     );
   }
 
@@ -239,8 +260,15 @@ class BackgroundLocationService {
     double? bearing,
     double? speed,
     double? accuracy,
+    int? lifecycleEpoch,
   }) async {
+    if (!_isActiveLifecycle(lifecycleEpoch)) return;
     final now = DateTime.now();
+    final normalizedAccuracy = normalizeGpsAccuracyMeters(accuracy);
+    if (accuracy != null && normalizedAccuracy == null) {
+      if (kDebugMode) debugPrint('[GPS] discarded poor-accuracy sample');
+      return;
+    }
     if (!_isLiveReplaySafe(ts, now)) {
       if (kDebugMode) debugPrint('[GPS] discarded unsafe timestamp');
       return;
@@ -248,16 +276,18 @@ class BackgroundLocationService {
 
     try {
       if (kDebugMode) debugPrint('[GPS] sending location command');
-      await _flushBuffer();
+      await _flushBuffer(lifecycleEpoch: lifecycleEpoch);
+      if (!_isActiveLifecycle(lifecycleEpoch)) return;
       await _socket.emitLocationPing(
         lat,
         lng,
         bearing: bearing,
         speed: speed,
-        accuracy: accuracy,
+        accuracy: normalizedAccuracy,
         timestamp: ts,
       );
     } catch (_) {
+      if (!_isActiveLifecycle(lifecycleEpoch)) return;
       if (kDebugMode)
         debugPrint('[GPS] buffering location until command transport recovers');
       _bufferPing(
@@ -267,14 +297,15 @@ class BackgroundLocationService {
           ts,
           bearing: bearing,
           speed: speed,
-          accuracy: accuracy,
+          accuracy: normalizedAccuracy,
         ),
         now,
       );
     }
   }
 
-  Future<void> _flushBuffer() async {
+  Future<void> _flushBuffer({int? lifecycleEpoch}) async {
+    if (!_isActiveLifecycle(lifecycleEpoch)) return;
     if (_offlineBuffer.isEmpty) return;
     if (_isFlushing) return;
     _isFlushing = true;
@@ -282,6 +313,7 @@ class BackgroundLocationService {
     try {
       _dropStaleBufferedPings(now);
       while (_offlineBuffer.isNotEmpty) {
+        if (!_isActiveLifecycle(lifecycleEpoch)) return;
         final ping = _offlineBuffer.removeFirst();
         if (!_isLiveReplaySafe(ping.timestamp, now)) continue;
         try {
@@ -295,6 +327,7 @@ class BackgroundLocationService {
             bypassThrottle: true,
           );
         } catch (_) {
+          if (!_isActiveLifecycle(lifecycleEpoch)) return;
           _offlineBuffer.addFirst(ping);
           break;
         }
@@ -324,6 +357,11 @@ class BackgroundLocationService {
     if (age > _kMaxBufferedPingAge) return false;
     if (age < -_kMaxLocationClockSkew) return false;
     return true;
+  }
+
+  bool _isActiveLifecycle(int? lifecycleEpoch) {
+    return lifecycleEpoch == null ||
+        (_running && lifecycleEpoch == _lifecycleEpoch);
   }
 
   @visibleForTesting

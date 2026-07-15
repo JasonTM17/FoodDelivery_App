@@ -153,7 +153,7 @@ Socket.IO is the explicit local/self-hosted realtime provider. It is not an impl
 - `/events` admin rooms require the database-backed `admin` role.
 - Restaurant rooms require an active restaurant profile for the requested tenant.
 - Order rooms require an admin or an order participant: the customer, assigned driver, or active restaurant staff member.
-- `/tracking` accepts driver location updates only from an authenticated `driver` account.
+- `/tracking` accepts driver location updates only from an authenticated `driver` account. Rejected samples emit `driver:location_rejected` with one of `invalid_coordinates`, `out_of_bbox`, `invalid_bearing`, `invalid_speed`, `speed_exceeded`, `poor_accuracy`, `invalid_timestamp`, `stale_timestamp`, `future_timestamp`, `driver_offline`, or `teleportation`.
 - `driver:location.timestamp` is the original GPS sample capture time in ISO UTC. Offline-buffered mobile pings must preserve that timestamp when flushed after reconnect instead of replacing it with flush time.
 - `/notifications` derives the user room from the verified token; clients cannot select another user's room.
 - `/dispatch` accepts only `driver` accounts, joins only `driver:<authenticated-user-id>`, and rejects offer responses whose driver ID differs from the authenticated user.
@@ -161,7 +161,7 @@ Socket.IO is the explicit local/self-hosted realtime provider. It is not an impl
 
 ## Order tracking REST snapshot
 
-- `POST /driver/location` is driver-only and accepts a real device GPS sample with required capture `timestamp`. The shared tracking pipeline rejects stale, future, out-of-bounds, over-speed, and teleporting samples with `422 DRIVER_LOCATION_REJECTED`; accepted samples update live presence and publish tenant-scoped order/admin events.
+- `POST /driver/location` is driver-only and accepts a real device GPS sample with required capture `timestamp`. The same semantic pipeline used by WebSocket rejects malformed coordinates, bearing outside `[0, 360)`, negative or over-150 km/h speed, accuracy outside `0..50` metres, stale/future timestamps, Offline sessions, out-of-bounds movement, and teleporting samples with `422 DRIVER_LOCATION_REJECTED` plus the reason above. Accepted samples update live presence and publish tenant-scoped order/admin events.
 - `POST /driver/dispatch/offers/{orderId}/respond` is driver-only. It accepts `{ offerToken, decision: "accept"|"reject" }`, binds the response to the bearer identity, consumes a short-lived token once, and returns `409` for invalid/expired/raced offers. Offer state lives in PostgreSQL; only a SHA-256 token hash is persisted.
 - `GET /orders/{id}/tracking` is order-participant scoped: customer-owned orders, assigned driver orders, active restaurant staff for the order's restaurant tenant, or admin. It returns only real provider-cache/database telemetry for an order the authenticated actor can access.
 - `driverLocation`, `etaMinutes`, and `routePolyline` are nullable; clients must treat nulls as unavailable data, not fabricate straight-line ETA or route geometry.

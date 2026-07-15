@@ -9,6 +9,28 @@ import Redis from 'ioredis'
 
 const MAX_LIVE_DRIVER_LOCATION_AGE_MS = 45_000
 const MAX_DRIVER_LOCATION_CLOCK_SKEW_FUTURE_MS = 15_000
+const BRING_DRIVER_ONLINE_SCRIPT = `
+redis.call('GEOADD', KEYS[1], ARGV[1], ARGV[2], ARGV[3])
+redis.call('SET', KEYS[2], ARGV[4])
+redis.call('SETEX', KEYS[3], ARGV[5], '1')
+redis.call('SETEX', KEYS[4], ARGV[5], ARGV[6])
+redis.call('SET', KEYS[5], ARGV[7])
+redis.call('SET', KEYS[6], ARGV[8])
+if ARGV[10] ~= '' then
+  redis.call('DEL', KEYS[7])
+else
+  redis.call('SET', KEYS[7], ARGV[9])
+end
+redis.call('SET', KEYS[8], ARGV[10])
+return 1
+`
+const TAKE_DRIVER_OFFLINE_SCRIPT = `
+redis.call('ZREM', KEYS[1], ARGV[1])
+for index = 2, #KEYS do
+  redis.call('DEL', KEYS[index])
+end
+return 1
+`
 
 export interface DriverHeatmapQuery {
   lat: number
@@ -178,42 +200,90 @@ export class DriversService {
     lat: number,
     lng: number,
     sampledAt: string,
+    accuracy?: number,
   ): Promise<{ isOnline: true; lat: number; lng: number }> {
     if (!isWithinVietnamDeliveryBounds(lat, lng)) {
       throw new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA')
+    }
+    if (
+      accuracy !== undefined &&
+      (!Number.isFinite(accuracy) || accuracy < 0 || accuracy > 50)
+    ) {
+      throw new BadRequestException('POOR_DRIVER_LOCATION_ACCURACY')
     }
     const sampledAtDate = parseFreshOnlineSampleTimestamp(sampledAt)
 
     const profile = await this.prisma.driverProfile.findUniqueOrThrow({ where: { userId: driverId } })
     if (!profile.isVerified) throw new BadRequestException('DRIVER_NOT_VERIFIED')
+    const activeOrder = await this.prisma.order.findFirst({
+      where: {
+        driverId,
+        status: {
+          in: [
+            'driver_assigned',
+            'driver_arriving_restaurant',
+            'picked_up',
+            'delivering',
+          ],
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    })
     const recordedAt = sampledAtDate.toISOString()
-
-    await this.redis.geoadd('drivers:active', lng, lat, `driver:${driverId}`)
-    await this.redis.set(`driver:${driverId}:status`, 'online')
-    await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
-    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt)
-    await this.redis.set(`driver:${driverId}:rating`, profile.rating.toString())
-    await this.redis.set(`driver:${driverId}:total_deliveries`, profile.totalDeliveries.toString())
-    await this.redis.set(`driver:${driverId}:idle_since`, Date.now().toString())
-    await this.redis.set(`driver:${driverId}:current_order`, '')
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },
       data: { isOnline: true, currentLat: lat, currentLng: lng },
     })
 
+    try {
+      await this.redis.eval(
+        BRING_DRIVER_ONLINE_SCRIPT,
+        8,
+        'drivers:active',
+        `driver:${driverId}:status`,
+        `driver:${driverId}:alive`,
+        `driver:${driverId}:last_seen_at`,
+        `driver:${driverId}:rating`,
+        `driver:${driverId}:total_deliveries`,
+        `driver:${driverId}:idle_since`,
+        `driver:${driverId}:current_order`,
+        String(lng),
+        String(lat),
+        `driver:${driverId}`,
+        activeOrder ? 'busy' : 'online',
+        '35',
+        recordedAt,
+        profile.rating.toString(),
+        profile.totalDeliveries.toString(),
+        Date.now().toString(),
+        activeOrder?.id ?? '',
+      )
+    } catch (error) {
+      try {
+        await this.clearDriverRedisAvailability(driverId)
+      } catch {
+        // Best-effort compensation; dispatch still verifies the expiring alive marker.
+      }
+      try {
+        await this.prisma.driverProfile.update({
+          where: { userId: driverId },
+          data: { isOnline: false },
+        })
+      } catch {
+        // Preserve the original Redis failure for the caller.
+      }
+      throw error
+    }
+
     return { isOnline: true, lat, lng }
   }
 
   async goOffline(driverId: string): Promise<{ isOnline: false }> {
-    // ZREM is correct for geo keys — GEOADD stores members in a sorted set internally.
-    // Redis does not have a separate GEO-removal command.
-    await this.redis.zrem('drivers:active', `driver:${driverId}`)
-    await this.redis.del(`driver:${driverId}:status`)
-    await this.redis.del(`driver:${driverId}:alive`)
-    await this.redis.del(`driver:${driverId}:last_seen_at`)
-    await this.redis.del(`driver:${driverId}:idle_since`)
-    await this.redis.del(`driver:${driverId}:current_order`)
+    // Keep status removal and GEO cleanup atomic so an in-flight GPS command
+    // cannot re-add a driver after the explicit Offline action wins the race.
+    await this.clearDriverRedisAvailability(driverId)
 
     await this.prisma.driverProfile.update({
       where: { userId: driverId },
@@ -221,6 +291,20 @@ export class DriversService {
     })
 
     return { isOnline: false }
+  }
+
+  private clearDriverRedisAvailability(driverId: string): Promise<unknown> {
+    return this.redis.eval(
+      TAKE_DRIVER_OFFLINE_SCRIPT,
+      6,
+      'drivers:active',
+      `driver:${driverId}:status`,
+      `driver:${driverId}:alive`,
+      `driver:${driverId}:last_seen_at`,
+      `driver:${driverId}:idle_since`,
+      `driver:${driverId}:current_order`,
+      `driver:${driverId}`,
+    )
   }
 
   async getActiveOrder(driverId: string): Promise<DriverOrderResponse | null> {

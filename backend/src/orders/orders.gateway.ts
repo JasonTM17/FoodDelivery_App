@@ -48,7 +48,7 @@ export class OrdersGateway implements OnGatewayConnection {
 
   notifyRestaurant(restaurantId: string, data: Record<string, unknown>) {
     this.server?.to(`restaurant:${restaurantId}`).emit('restaurant:new_order', data)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.restaurant(restaurantId),
       'restaurant:new_order',
       data,
@@ -57,7 +57,7 @@ export class OrdersGateway implements OnGatewayConnection {
 
   broadcastToOrder(orderId: string, event: string, data: Record<string, unknown>) {
     this.server?.to(`order:${orderId}`).emit(event, data)
-    void this.realtimePublisher?.publish(realtimeChannels.order(orderId), event, data)
+    void this.realtimePublisher?.publishBestEffort(realtimeChannels.order(orderId), event, data)
   }
 
   broadcastToRestaurantDriverChat(
@@ -66,7 +66,7 @@ export class OrdersGateway implements OnGatewayConnection {
     data: Record<string, unknown>,
   ) {
     this.server?.to(this.restaurantDriverChatRoom(orderId)).emit(event, data)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.restaurantDriverChat(orderId),
       event,
       data,
@@ -75,12 +75,12 @@ export class OrdersGateway implements OnGatewayConnection {
 
   notifyAdmins(event: string, data: Record<string, unknown>) {
     this.server?.to('admin:orders').emit(event, data)
-    void this.realtimePublisher?.publish(realtimeChannels.adminOrders, event, data)
+    void this.realtimePublisher?.publishBestEffort(realtimeChannels.adminOrders, event, data)
   }
 
   notifyAdminDriverLocation(data: AdminDriverLocationChangedEvent) {
     this.server?.to('admin:drivers:all').emit('admin:driver_location_changed', data)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.adminDrivers,
       'admin:driver_location_changed',
       data,

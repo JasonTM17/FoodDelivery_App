@@ -27,7 +27,7 @@ export class TrackingController {
   @Roles(UserRole.driver)
   @ApiOperation({ summary: 'Submit an authenticated live GPS sample for the driver' })
   @ApiResponse({ status: 201, description: 'Location accepted and realtime tracking updated' })
-  @ApiResponse({ status: 422, description: 'Location rejected as stale, invalid, or implausible' })
+  @ApiResponse({ status: 422, description: 'Location rejected as stale, inaccurate, invalid, or implausible' })
   async updateDriverLocation(
     @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(driverLocationUpdateSchema)) body: DriverLocationUpdateBody,

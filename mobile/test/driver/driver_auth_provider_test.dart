@@ -42,6 +42,25 @@ void main() {
     expect(notifier.state.kycStatus, DriverKycStatus.pending);
   });
 
+  test('restarts GPS availability when a validated session was online', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_token': 'stored-driver-access-token',
+      'refresh_token': 'stored-driver-refresh-token',
+    });
+    final profile = _driverProfile();
+    profile['driverProfile'] = {
+      ...profile['driverProfile'] as Map<String, dynamic>,
+      'isOnline': true,
+    };
+    apiInterceptor.profilePayload = profile;
+    final notifier = _ResumeAwareDriverNotifier();
+
+    await notifier.restoreSession();
+
+    expect(notifier.resumeOnlineCalls, 1);
+    expect(notifier.state.isAuthenticated, isTrue);
+  });
+
   test('clears a stored session that does not validate as a driver', () async {
     FlutterSecureStorage.setMockInitialValues({
       'auth_token': 'stored-customer-access-token',
@@ -220,6 +239,17 @@ void main() {
       expect(notifier.state.error, AppErrorCodes.driverAuthInvalidCredentials);
     },
   );
+}
+
+class _ResumeAwareDriverNotifier extends DriverNotifier {
+  _ResumeAwareDriverNotifier() : super(restoringSession: true);
+
+  int resumeOnlineCalls = 0;
+
+  @override
+  Future<void> goOnlineWithGps() async {
+    resumeOnlineCalls += 1;
+  }
 }
 
 Map<String, dynamic> _driverProfile() => {
