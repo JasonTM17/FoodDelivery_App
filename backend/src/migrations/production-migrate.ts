@@ -109,14 +109,17 @@ async function runPrisma(arguments_: string[]): Promise<void> {
 
 async function prepareSupabaseStorage(prisma: PrismaClient): Promise<void> {
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!supabaseUrl || !supabaseSecretKey) {
+  // Storage administration still requires a JWT service-role key. The new
+  // sb_secret key is kept for API identity, but supabase-js currently sends it
+  // as a bearer token and Supabase Storage rejects it as an invalid JWT.
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
     throw new Error(
-      'SUPABASE_URL and SUPABASE_SECRET_KEY are required for Supabase migrations',
+      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for Supabase migrations',
     );
   }
 
-  const supabase = createClient(supabaseUrl, supabaseSecretKey, {
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const deletedBuckets = await deleteEmptyLegacyBuckets(supabase.storage);

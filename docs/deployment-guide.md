@@ -138,7 +138,7 @@ railway link
 powershell -NoProfile -ExecutionPolicy Bypass -File infra/scripts/railway-preflight.ps1
 ```
 
-Use Railway sealed variables for every secret. Share the API/worker environment contract through Railway shared variables or explicit references; configure the migrator only with `DATABASE_URL` and `DIRECT_URL`. Do not use `railway variable list --json` in a shared terminal because that command includes raw variable values.
+Use Railway sealed variables for every secret. Share the API/worker environment contract through Railway shared variables or explicit references; configure the migrator with `DATABASE_URL` and `DIRECT_URL`, plus `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and the JWT `SUPABASE_SERVICE_ROLE_KEY` when `STORAGE_PROVIDER=supabase`. Do not use `railway variable list --json` in a shared terminal because that command includes raw variable values.
 
 ### Vercel dashboard variables
 
@@ -298,7 +298,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it only `DATABASE_URL` and `DIRECT_URL`; it runs `prisma migrate deploy` from the dedicated migrator image. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves the single previously failed empty-bucket migration record as applied after cleanup, and finally runs `prisma migrate deploy`. The historical checksum provenance exception is recorded in the release report; applied migrations are not rewritten. A bucket inventory/delete error fails closed. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 

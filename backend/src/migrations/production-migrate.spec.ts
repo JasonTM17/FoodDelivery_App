@@ -72,5 +72,4 @@ describe('production migrate Storage cleanup', () => {
       ]),
     ).toBe(true);
   });
-
 });

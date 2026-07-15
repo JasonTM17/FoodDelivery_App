@@ -2,9 +2,11 @@
 
 ## Current production certification update — 2026-07-15
 
-Current `origin/master` is `429e23742da237df975442c1705d6be7d6ba4f9f`. All 11 push workflows for that exact SHA completed successfully: Build Check, OpenAPI Validate, Lint, Trivy, Gitleaks, SBOM, CodeQL, CI, Mobile CI, Integration Smoke Gate, and E2E. Fresh local backend checks passed lint, typecheck, build, and 145 Jest suites / 1071 tests; docs links, manifest JSON, and migration fresh-database checks also passed.
+Current `origin/master` is `545d1beb30aa90b6890d952f1195f9b538912177`. Ten successful workflows are recorded for this exact SHA: Docker Publish, Gitleaks, Lint, Build Check, Trivy, SBOM, CodeQL, CI, Integration Smoke Gate, and E2E. No Mobile CI or OpenAPI Validate run is recorded for this SHA. Fresh local backend checks on the current working tree passed lint, typecheck, build, and 145 Jest suites / 1071 tests; docs links, 144 confirmed config keys, manifest JSON, and migration fresh-database checks also passed.
 
-Vercel automatically deployed Admin and Restaurant from `429e237`; both canonical `/api/healthz` endpoints return that full revision. The capture manifest records public Chrome checks at 1536×826 and 390×844 with correct Vietnamese document metadata, accessible form names, no horizontal overflow, no missing image alt attributes, and no Restaurant login-page console warning/error. These are public login and responsive-layout checks only, not authenticated role certification.
+Vercel automatically deployed Admin and Restaurant from `429e237`; Railway API/worker remain on `52f4336`. The current remote head, Vercel, and Railway therefore represent three different revisions. The working tree still contains the migration checksum guard and deployment-guide corrections; these changes require a clean commit, fresh CI, and exact-revision deployment smoke before they may be treated as production artifacts.
+
+Both canonical Vercel `/api/healthz` endpoints return the `429e237` revision. The capture manifest records public Chrome checks at 1536×826 and 390×844 with correct Vietnamese document metadata, accessible form names, no horizontal overflow, no missing image alt attributes, and no Restaurant login-page console warning/error. These are public login and responsive-layout checks only, not authenticated role certification.
 
 Railway API/worker remain on the earlier immutable backend image from `52f433641d5093f6d064cfba6c1cd99c8cb035e9`. API health/readiness are 200 and database, Redis, and Storage are up, but the deployed image predates the revision field and returns `revision: null`. The frontend/backend split therefore blocks release promotion.
 
