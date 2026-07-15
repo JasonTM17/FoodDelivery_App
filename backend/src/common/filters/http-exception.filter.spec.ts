@@ -78,4 +78,28 @@ describe('HttpExceptionFilter', () => {
       errors: ['email is invalid'],
     }))
   })
+
+  it('preserves a bounded domain rejection reason in problem details', () => {
+    const exception = new HttpException(
+      { code: 'DRIVER_LOCATION_REJECTED', reason: 'poor_accuracy' },
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    )
+    const mockJson = jest.fn()
+    const mockType = jest.fn().mockReturnValue({ json: mockJson })
+    const mockStatus = jest.fn().mockReturnValue({ type: mockType })
+    const host = {
+      switchToHttp: () => ({
+        getResponse: () => ({ status: mockStatus }),
+        getRequest: () => ({ url: '/api/driver/location' }),
+      }),
+    }
+
+    filter.catch(exception, host as unknown as ArgumentsHost)
+
+    expect(mockJson).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'DRIVER_LOCATION_REJECTED',
+      status: 422,
+      reason: 'poor_accuracy',
+    }))
+  })
 })
