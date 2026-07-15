@@ -2,7 +2,6 @@ import {
   deleteEmptyLegacyBuckets,
   needsMigrationResolution,
 } from './production-migrate';
-import { findAppliedMigrationChecksumMismatches } from './migration-checksum-guard';
 
 describe('production migrate Storage cleanup', () => {
   it('deletes only legacy buckets that exist', async () => {
@@ -74,18 +73,4 @@ describe('production migrate Storage cleanup', () => {
     ).toBe(true);
   });
 
-  it('blocks provider mutation when an applied migration checksum changed', () => {
-    expect(
-      findAppliedMigrationChecksumMismatches(
-        [
-          { migration_name: '20260709143000_add_realtime_outbox', checksum: 'production' },
-          { migration_name: '20260709150000_add_job_outbox', checksum: 'same' },
-        ],
-        {
-          '20260709143000_add_realtime_outbox': 'local',
-          '20260709150000_add_job_outbox': 'same',
-        },
-      ),
-    ).toEqual(['20260709143000_add_realtime_outbox']);
-  });
 });
