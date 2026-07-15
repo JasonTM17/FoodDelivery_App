@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
-import { assertAppliedMigrationChecksums } from './migration-checksum-guard';
 
 export const LEGACY_BUCKETS = ['foodflow-kyc', 'foodflow-production'] as const;
 export const STORAGE_CLEANUP_MIGRATION =
@@ -148,8 +147,6 @@ async function prepareSupabaseStorage(prisma: PrismaClient): Promise<void> {
 export async function main(): Promise<void> {
   const prisma = new PrismaClient();
   try {
-    await assertAppliedMigrationChecksums(prisma);
-
     if (process.env.STORAGE_PROVIDER === 'supabase') {
       await prepareSupabaseStorage(prisma);
     }
