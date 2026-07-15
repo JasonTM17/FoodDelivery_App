@@ -1,5 +1,5 @@
 -- FoodFlow production job outbox for Supabase/Postgres-backed queues.
--- Railway worker/secure recovery endpoints drain this table; local development keeps BullMQ.
+-- Vercel Cron/secure worker endpoints drain this table; local development keeps BullMQ.
 
 CREATE TABLE "job_outbox" (
   "id" UUID NOT NULL DEFAULT gen_random_uuid(),
