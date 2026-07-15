@@ -11,6 +11,8 @@ This runbook deploys the managed-production topology:
 
 It does not authorize deployment while secrets, CLI access, current-head tests, remote CI, or production health are incomplete. Local green checks are necessary but not a substitute for provider and remote release approval.
 
+**Current remote status (2026-07-15):** Railway runs revision `7a0150567c3e408b8ba045faaf781044257ba05c`; `/api/healthz` and `/api/readyz` return 200 and DB, Redis, and Supabase Storage are up. This image predates the checksum guard on source branch `ea89102d6059d2d9102b73acae892629018b791f`. The older `f2c02ed` deployment values below are historical evidence; do not use them to claim the guard is live.
+
 ## Release invariants
 
 1. Work only from a clean, approved release worktree.
