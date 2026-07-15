@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-15 status:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` は 145 suites / 1071 tests、typecheck、lint、build、trigger された 10 GitHub workflows、multi-architecture runtime smoke、8 High/Critical image scans を pass。Railway migrate/API/worker と Vercel Admin/Restaurant は同じ revision で稼働し、41 effective migrations、public/private Storage、public health/readiness/login を確認。適用済みの過去 migration 3 件には checksum provenance の不一致が残り、pending guard は承認済み reconciliation まで次の rollout を block します。Controlled production GPS は private Supabase Broadcast と PostGIS に 1437 ms で到達し、一時データは削除済みです。Full production certification には controlled-device FCM、Android/iOS background-location matrix、authenticated role journeys、certification scope の payment/messaging/AI/owned-routing integrations が必要です。
+> **2026-07-15 status:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green、Prisma は 41 migrations すべて適用済みで pending はありません。API health/readiness と Admin/Restaurant health は同じ SHA を返し、database、Redis、Supabase Storage は ready です。Admin/Restaurant の `vi/en/ja` public login smoke も pass しました。Full production certification には authenticated role journeys、controlled-device FCM、Android/iOS background location、certification scope に含む optional providers の検証が必要です。
 
 ## Product preview
 
@@ -69,20 +69,18 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Docker Hub and GitHub Packages
+## Current Docker release — SHA 17584153
 
-Evidence commit `ed25399` の 4 images は Docker Hub と public GHCR に publish 済みです。各 package は `JasonTM17/FoodDelivery_App` に link、Actions write 済みで、multi-architecture digest は両 registry で一致します。これは artifact evidence であり Railway production health の証明ではありません。`latest` は未 promote です。
+Docker Hub の SHA、`v0.1.1`、`latest` aliases は 4 images すべてで digest が一致します。GHCR SHA manifests は public かつ同一 digest です。GHCR semver/`latest` promotion は claim しません。
 
-| Image                                                                         | Purpose                                                                                              |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `nguyenson1710/foodflow-backend` / `ghcr.io/jasontm17/foodflow-backend`       | API + worker; `sha256:b1a24c929d7178548c407c019aa75347da78fe5c1dd135177f2b5e4024e4143b`              |
-| `nguyenson1710/foodflow-migrate` / `ghcr.io/jasontm17/foodflow-migrate`       | non-root Prisma migration; `sha256:feb11569b66cb88cdeafbc92c3e64ca9eaed8801859f42f3600237eb55ad3bb4` |
-| `nguyenson1710/foodflow-admin` / `ghcr.io/jasontm17/foodflow-admin`           | Admin; `sha256:43d8908d5a77efb7142744ce76ce6355631a3b406b5e8d5e6bed884a4ac02b12`                     |
-| `nguyenson1710/foodflow-restaurant` / `ghcr.io/jasontm17/foodflow-restaurant` | Restaurant; `sha256:7ba5838752a699f7dd3fb46d98110b2b37ef0c6a53f6f21aa2493c9e398da97e`                |
+| Artifact | Docker Hub digest |
+| --- | --- |
+| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` |
+| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` |
+| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` |
+| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
 
-Historical candidate tag is `sha-1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; both registries resolved to the same `amd64/arm64` manifest with SBOM/provenance. Worker は backend image の `dist/workers/main.js` を使い、別 release artifact ではありません。`latest` は Batch 4 の source of truth ではありません。
-
-Release は `sha-<full-commit>` multi-arch build → `amd64/arm64` runtime smoke → High/Critical Trivy block → production health → immutable `v4.0.0` → manual `latest` promotion の順です。
+Worker は backend image の `dist/workers/main.js` を使用し、別 release artifact ではありません。Old candidate evidence は [release report](batch4-release-report.md) に保持し、新しい rollout の source には使用しません。
 
 ## Local development
 

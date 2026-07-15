@@ -4,23 +4,23 @@
 
 Chỉ được coi là xanh khi final source head pass toàn bộ local gate, remote CI mới, provider preflight và production smoke. Focused test chỉ chứng minh đúng cụm đó; số lịch sử hoặc script có skip không được dùng làm release approval.
 
-## Evidence hiện tại
+## Ranh giới evidence — production 15/07/2026 và local lịch sử 14/07/2026
 
-Evidence current-head ngày 14/07/2026:
+Evidence production hiện tại gắn với runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Các test count bên dưới được ghi rõ là evidence local lịch sử từ head cũ; chúng chưa được chạy lại tại SHA `17584153` và không phải phê duyệt production end-to-end.
 
 | Khu vực        | Kết quả                                                                                                                                                                                                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Backend        | Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` pass 145 suite / 1071 test, typecheck, lint và build Nest. Cả 10 workflow GitHub được trigger cho SHA này đều thành công. |
-| Database       | Baseline database tạm lịch sử đã apply 38 migration hiện có tại thời điểm đó và từ chối địa chỉ mặc định thứ hai của cùng user. Audit production read-only hiện tại ghi nhận 45 record migration: 41 đã hoàn tất có hiệu lực, 4 đã rollback, không có row business/retrieval và chỉ còn hai bucket Storage public/private đúng thiết kế. Ba checksum migration đã áp dụng vẫn chưa đối soát xong provenance.                       |
-| Mobile Flutter | Lần chạy local hiện tại pass đủ 369 test và `flutter analyze` không có lỗi. Vẫn cần evidence thiết bị Android/iOS production.                                                                                                                                                                                            |
-| Web            | Typecheck/lint hiện tại pass. Vitest pass Admin 49 file / 196 test và Restaurant 43 file / 135 test. Khi cấp public URL local không chứa secret, Admin build 70 trang và Restaurant build 55 trang. Build trần fail-closed nếu thiếu `NEXT_PUBLIC_ADMIN_URL`.                                                            |
-| Browser E2E    | Ma trận volume sạch lịch sử pass 204/204 trong 353 giây trên source có 36 migration. Sau migration 37–38, stack hiện tại chạy đủ ba project ở final head với local URL tường minh: Chrome desktop 68/68 trong 173,0 giây, Firefox 68/68 trong 172,9 giây và Chrome mobile Pixel 5 68/68 trong 117,3 giây (tổng 204/204). |
-| FCM            | Suite notification local hiện tại pass 11 backend suite / 67 test; các test Flutter FCM presentation/lifecycle tập trung pass 17/17. Chưa gửi live: cần project credential production và controlled device token.                                                                                                        |
-| Production     | Migrate/API/worker chạy image immutable `f2c02ed` thành công; Supabase có 41 migration effective và chỉ còn bucket public/private chuẩn. Health/login Railway/Vercel trả đúng revision; worker poll bình thường. GPS kiểm soát tới private Supabase Broadcast và PostGIS trong 1437 ms; dữ liệu tạm đã được xóa. |
+| Backend        | Tại runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`, các gate CI, E2E, Integration Smoke, OpenAPI, security, SBOM và build được trigger đều xanh. Con số 145 suite / 1071 test thuộc evidence local cũ của `f2c02ed`, không được tuyên bố là lần chạy lại tại SHA `17584153`. |
+| Database       | `prisma migrate status` live báo đủ 41 migration trong repository đã apply, không còn migration chờ. Readiness của database, Redis và Supabase Storage đều pass. Các record rolled-back/checksum provenance lịch sử được ghi riêng như audit history. |
+| Mobile Flutter | Evidence local lịch sử pass 369 test và `flutter analyze`. Background location Android/iOS thật và evidence thiết bị production vẫn chưa được chứng nhận. |
+| Web            | Typecheck/lint, Vitest và production-build count local lịch sử chỉ là evidence có phạm vi. Revision health của Admin/Restaurant đang deploy được verify riêng tại SHA `17584153`. |
+| Browser E2E    | Evidence Playwright volume sạch lịch sử pass 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5. Các count này chưa được chạy lại trên deployment production. |
+| FCM            | Notification backend và lifecycle Flutter local lịch sử đã pass. Live delivery tới controlled production device vẫn chưa được chứng nhận. |
+| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438` và worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` thành công tại SHA `17584153`. Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` và Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` trả cùng revision. Public login smoke `vi/en/ja` pass; role journey có xác thực đã skip và chưa được chứng nhận. |
 
-### Docker current-source volume sạch — 14/07/2026
+### Docker volume sạch lịch sử — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply đủ 38 migration, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review. Worker index 402 RAG document. Database từ chối default address thứ hai của cùng user. Với `ADMIN_URL=http://localhost:13000`, `RESTAURANT_URL=http://localhost:13002` và `API_URL=http://localhost:13001/api`, stack hiện tại pass Chrome desktop 68/68 trong 173,0 giây, Firefox 68/68 trong 172,9 giây và Chrome mobile Pixel 5 68/68 trong 117,3 giây: tổng 204/204, không fail hay skip. Hạ tầng Railway đã được verify riêng; FCM live và flow provider có xác thực vẫn chưa verify.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 38 migration hiện hành lúc đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review; worker index 402 RAG document. Với local URL tường minh, stack lịch sử pass Chrome desktop 68/68, Firefox 68/68 và Chrome mobile Pixel 5 68/68: tổng 204/204, không fail hay skip. Đây là kết quả local ngày 14/07/2026, không phải test production của SHA `17584153`. FCM live và role journey production có xác thực vẫn chưa verify.
 
 ### Ranh giới môi trường build web
 
