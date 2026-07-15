@@ -132,6 +132,8 @@ The following privacy-reviewed emulator stills show app launch, authenticated Ho
 
 ### Customer app launch
 
+![Customer sign-in, registration, and return flow](./media/gifs/customer-auth-flow.gif)
+
 ![Customer app launch on Android emulator](./screenshots/customer/01-login.webp)
 
 Authenticated Customer stills that showed exact simulated coordinates were excluded from this gallery. The coordinate-redaction behavior is covered by mobile regression tests instead of altered screenshots.

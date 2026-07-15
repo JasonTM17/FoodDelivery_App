@@ -112,8 +112,10 @@ cảnh thay vì phải đoán đơn cần xử lý.
 
 ## Ranh giới visual và release
 
+![Luồng Customer từ đăng nhập sang đăng ký](./media/gifs/customer-auth-flow.gif)
+
 ![Mở ứng dụng Customer](./screenshots/customer/01-login.webp)
 
-Capture hiện tại dùng Flutter debug APK trên Android API 35 x86_64 AVD nối với E2E stack local cô lập. Các ảnh Customer đã xác thực có hiển thị tọa độ mô phỏng chính xác đã bị loại khỏi tài liệu. Media từ working tree dirty được giữ lại đã review riêng tư và chỉ là evidence regression/product, không chứng nhận mobile release, payment, map/routing, Firebase, Supabase/Railway hoặc production.
+Các capture hiện tại dùng Flutter debug APK trên Android API 35 x86_64 AVD. GIF chỉ ghi điều hướng công khai từ đăng nhập sang đăng ký và quay lại, không nhập credential. Các ảnh Customer đã xác thực có hiển thị tọa độ mô phỏng chính xác đã bị loại khỏi tài liệu. Media từ working tree dirty được giữ lại đã review riêng tư và chỉ là evidence regression/product, không chứng nhận mobile release, payment, map/routing, Firebase, Supabase/Railway hoặc production.
 
 Xem [hướng dẫn mobile Customer/Driver](./customer-driver-guide.vi.md) và [mobile README](../mobile/README.md) để biết runtime, cấu hình và lệnh build.

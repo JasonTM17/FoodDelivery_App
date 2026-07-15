@@ -120,7 +120,7 @@ a Dart define. Full setup, Android builds, and troubleshooting are in the
 
 | Customer app launch | Driver active-delivery Home |
 |---|---|
-| ![Customer app launch](./screenshots/customer/01-login.webp) | ![Driver Home](./screenshots/driver/02-home.webp) |
+| ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
 The gallery contains current Customer/Driver role stills plus earlier local
 GPS/permission captures. They came from Android AVD testing against the isolated

@@ -74,6 +74,8 @@ Customer/Driver 共通 workflow、permission、通知動作、実行コマンド
 
 次の privacy-reviewed Android API 35 emulator still は app launch、authenticated Home、simulated location から nearby seed restaurants を読み込んだ状態です。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
 
+![Customer sign-in、registration、return flow](./media/gifs/customer-auth-flow.gif)
+
 ![Customer app launch](./screenshots/customer/01-login.webp)
 
 Exact simulated coordinates を表示した authenticated Customer stills は gallery から除外しました。Coordinate-redaction behavior は altered screenshot ではなく mobile regression test で確認します。

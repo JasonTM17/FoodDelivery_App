@@ -74,6 +74,8 @@ Xem workflow Customer/Driver dùng chung, permission, hành vi thông báo và l
 
 Ảnh đã review riêng tư dưới đây cho thấy app launch, Trang chủ đã xác thực và danh sách nhà hàng gần từ GPS mô phỏng trên Android API 35. Manifest ghi working tree dirty, nên đây chỉ là evidence regression/product; cần capture clean head mới cho release.
 
+![Luồng Customer đăng nhập, đăng ký và quay lại](./media/gifs/customer-auth-flow.gif)
+
 ![Mở ứng dụng Customer](./screenshots/customer/01-login.webp)
 
 Các ảnh Customer đã xác thực hiển thị tọa độ mô phỏng chính xác đã bị loại khỏi gallery. Hành vi ẩn tọa độ được chứng minh bằng regression test mobile thay vì sửa ảnh.

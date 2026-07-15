@@ -110,7 +110,7 @@ và xử lý sự cố nằm trong [mobile README](../mobile/README.md).
 
 | Mở ứng dụng Customer | Trang chủ Driver khi đang giao |
 |---|---|
-| ![Mở ứng dụng Customer](./screenshots/customer/01-login.webp) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
+| ![Luồng xác thực công khai Customer](./media/gifs/customer-auth-flow.gif) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
 
 Gallery có ảnh role Customer/Driver hiện tại và các capture GPS/quyền local
 trước đó. Chúng được tạo trên Android AVD với E2E stack cô lập, seed identity

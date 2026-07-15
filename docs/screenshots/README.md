@@ -27,7 +27,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 |---|---:|---|
 | Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
 | Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
-| Customer | 1 WebP still | Privacy-reviewed app launch. Authenticated frames/GIF remain blocked until a controlled journey can be captured without exposing coordinates or credentials. |
+| Customer | 1 WebP still + 1 GIF | Privacy-reviewed app launch and public sign-in/registration navigation without entered credentials. |
 | Driver | 6 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, two Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
 
@@ -42,6 +42,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 ### Customer
 
 - `customer/01-login.webp` — privacy-reviewed Customer app launch from the verified Android build.
+- `../media/gifs/customer-auth-flow.gif` — real Customer sign-in → registration → sign-in navigation recorded without entering credentials.
 
 ### Driver
 

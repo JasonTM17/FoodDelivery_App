@@ -116,8 +116,10 @@ message. This gives support context without relying on a guessed order.
 
 ## Visual and release boundary
 
+![Customer sign-in to registration flow](./media/gifs/customer-auth-flow.gif)
+
 ![Customer app launch](./screenshots/customer/01-login.webp)
 
-The current visual capture was made from a Flutter debug APK on an Android API 35 x86_64 AVD connected to the isolated local E2E stack. Authenticated Customer stills that exposed exact simulated coordinates were deliberately excluded. The retained dirty-working-tree media is privacy-reviewed regression/product evidence, not mobile release, payment, map/routing, Firebase, Supabase/Railway, or production proof.
+The current visual captures were made from a Flutter debug APK on an Android API 35 x86_64 AVD. The GIF records only public sign-in and registration navigation, without entered credentials. Authenticated Customer stills that exposed exact simulated coordinates were deliberately excluded. The retained dirty-working-tree media is privacy-reviewed regression/product evidence, not mobile release, payment, map/routing, Firebase, Supabase/Railway, or production proof.
 
 For mobile runtime, configuration, and build commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md) and [mobile README](../mobile/README.md).

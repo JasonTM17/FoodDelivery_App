@@ -14,7 +14,7 @@ FoodFlow には 4 つの product surface があります。[Admin](admin-guide.j
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Admin      | Next.js web dashboard            | Local PNG 10 枚と GIF 1 件                | [Admin ガイド](admin-guide.ja.md)を読み、Admin web を起動。                                               |
 | Restaurant | Next.js web dashboard            | Local PNG 10 枚と GIF 1 件                | [Restaurant ガイド](restaurant-guide.ja.md)を読み、Restaurant web を起動。                                |
-| Customer   | Flutter/Riverpod Android/iOS app | Privacy-reviewed local WebP 1 枚          | [Customer ガイド](customer-guide.ja.md)を読み、device/emulator で `main_customer.dart` を起動。            |
+| Customer   | Flutter/Riverpod Android/iOS app | Privacy-reviewed local WebP 1 枚と GIF 1 件 | [Customer ガイド](customer-guide.ja.md)を読み、device/emulator で `main_customer.dart` を起動。            |
 | Driver     | Flutter/Riverpod Android/iOS app | Role/GPS WebP 6 枚、tracking asset 2 件、GIF 1 件 | [Driver ガイド](driver-guide.ja.md)を読み、`main_driver.dart` を起動。                                  |
 
 Mobile captures は simulated GPS と local stack を使用し、manifest は dirty workspace と明記します。Release evidence には final clean head の device/emulator recapture が必要です。Local evidence を production として扱いません。
@@ -28,7 +28,7 @@ Mobile captures は simulated GPS と local stack を使用し、manifest は di
 |---|---|
 | Admin login → overview | ![Admin flow](media/gifs/admin-login-flow.gif) |
 | Restaurant orders → menu | ![Restaurant flow](media/gifs/restaurant-orders-to-menu.gif) |
-| Customer app launch | ![Customer app launch](screenshots/customer/01-login.webp) |
+| Customer sign-in → registration → sign-in | ![Customer authentication flow](media/gifs/customer-auth-flow.gif) |
 | Driver sign-in → Home → Earnings → Profile | ![Driver flow](media/gifs/driver-role-flow.gif) |
 
 ## Applications
@@ -130,7 +130,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typecheck/ESLint/Vitest/build、OpenAPI Spectral、Compose、Playwright Chromium/Firefox、Flutter analyze/test、secret scan を含みます。Release にはさらに axe serious/critical = 0、visual、tenant isolation、realtime auth、shipper map/route、AI smoke、multi-arch image scan が必要です。
 
-2026-07-14 の clean-volume Docker project `foodflow-batch4-e2e` は当時 current の 36 migrations を適用し、users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 353 秒で pass しました。Migrations 37–38 と mobile fixes の後、disposable fresh database は全 38 と default-address invariant を passし、`flutter analyze` は clean、Customer/Driver full suite は 367 tests を passしました。Final clean head の full Docker/Playwright 再実行が必要で、remote provider、deployed image、Firebase live delivery は未検証です。
+2026-07-14 の clean-volume Docker project `foodflow-batch4-e2e` は当時 current の 36 migrations を適用し、users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed、RAG documents 402 件を index し、Playwright 204/204 を 353 秒で pass しました。Migrations 37–38 と mobile fixes の後、disposable fresh database は全 38 と default-address invariant を passし、`flutter analyze` は clean、Customer/Driver full suite は 369 tests を passしました。Final clean head の full Docker/Playwright 再実行が必要で、remote provider、deployed image、Firebase live delivery は未検証です。
 
 ## Deploy order
 

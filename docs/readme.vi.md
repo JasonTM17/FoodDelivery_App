@@ -14,7 +14,7 @@ FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-
 | ---------- | ------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Admin      | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Admin](admin-guide.vi.md), rồi chạy Admin web.                                           |
 | Restaurant | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Restaurant](restaurant-guide.vi.md), rồi chạy Restaurant web.                            |
-| Customer   | Ứng dụng Flutter/Riverpod Android/iOS | Một WebP local đã kiểm duyệt riêng tư     | Đọc [hướng dẫn Khách hàng](customer-guide.vi.md), rồi chạy `main_customer.dart` trên thiết bị/emulator. |
+| Customer   | Ứng dụng Flutter/Riverpod Android/iOS | Một WebP và một GIF local đã kiểm duyệt riêng tư | Đọc [hướng dẫn Khách hàng](customer-guide.vi.md), rồi chạy `main_customer.dart` trên thiết bị/emulator. |
 | Driver     | Ứng dụng Flutter/Riverpod Android/iOS | Sáu WebP role/GPS, hai asset tracking và một GIF | Đọc [hướng dẫn Tài xế](driver-guide.vi.md), rồi chạy `main_driver.dart`.                              |
 
 Ảnh mobile dùng GPS mô phỏng và local stack; manifest ghi rõ worktree còn dirty. Muốn có bằng chứng release phải capture lại từ clean head trên thiết bị/emulator của release candidate. Tài liệu không gắn bằng chứng local thành production.
@@ -28,7 +28,7 @@ FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-
 |---|---|
 | Đăng nhập Admin → tổng quan | ![Luồng Admin](media/gifs/admin-login-flow.gif) |
 | Đơn hàng Restaurant → thực đơn | ![Luồng Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
-| Mở ứng dụng Customer | ![Mở ứng dụng Customer](screenshots/customer/01-login.webp) |
+| Customer đăng nhập → đăng ký → đăng nhập | ![Luồng xác thực Customer](media/gifs/customer-auth-flow.gif) |
 | Driver đăng nhập → Trang chủ → Thu nhập → Hồ sơ | ![Luồng Driver](media/gifs/driver-role-flow.gif) |
 
 ## Các ứng dụng
@@ -134,7 +134,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 Gate bao gồm frozen install, Prisma, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Playwright Chromium/Firefox, Flutter analyze/test và secret scan. Release còn yêu cầu axe serious/critical = 0, visual regression, tenant isolation, realtime authorization, bản đồ/route shipper, AI smoke và image scan multi-arch.
 
-Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply 36 migration hiện hành lúc chạy, seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review, rồi index 402 RAG document. Ma trận Playwright pass 204/204 trong 353 giây. Sau khi thêm migration 37–38 và các fix mobile, database tạm mới apply đủ 38 migration và từ chối default address thứ hai; `flutter analyze` vẫn sạch và toàn bộ suite Customer/Driver pass 367 test. Vẫn phải chạy lại full Docker/Playwright trên clean head cuối. Bằng chứng local không xác minh provider từ xa, image đã deploy hay Firebase live.
+Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch4-e2e` đã apply 36 migration hiện hành lúc chạy, seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review, rồi index 402 RAG document. Ma trận Playwright pass 204/204 trong 353 giây. Sau khi thêm migration 37–38 và các fix mobile, database tạm mới apply đủ 38 migration và từ chối default address thứ hai; `flutter analyze` vẫn sạch và toàn bộ suite Customer/Driver pass 369 test. Vẫn phải chạy lại full Docker/Playwright trên clean head cuối. Bằng chứng local không xác minh provider từ xa, image đã deploy hay Firebase live.
 
 ## Thứ tự deploy
 

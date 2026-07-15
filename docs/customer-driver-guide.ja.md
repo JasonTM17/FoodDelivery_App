@@ -103,7 +103,7 @@ Dart define に入れてはいけません。詳しい setup、Android build、t
 
 | Customer app launch | Active-delivery Driver Home |
 |---|---|
-| ![Customer app launch](./screenshots/customer/01-login.webp) | ![Driver Home](./screenshots/driver/02-home.webp) |
+| ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
 Gallery には current Customer/Driver role stills と以前の local GPS/permission
 captures があります。Isolated E2E stack 接続の Android AVD、deterministic seed

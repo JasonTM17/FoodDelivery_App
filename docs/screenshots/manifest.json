@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-15T01:57:34Z",
+  "capturedAt": "2026-07-15T05:10:30Z",
   "adminUrl": "http://localhost:13000",
   "restaurantUrl": "http://localhost:13002",
   "seed": {
@@ -51,6 +51,18 @@
       "customer/01-login.webp"
     ]
   },
+  "customerAuthCapture": {
+    "capturedAt": "2026-07-15T05:08:52Z",
+    "sourceHead": "1cd8a838a6d166df833e6a34e653a26691749ec6",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 x86_64 emulator; Customer debug APK public authentication screens",
+    "build": "app-customer-debug.apk; SHA256 B2E8DA1AF6C6E68F35EF0D3C09AE5BA516AB3D26DD8981443748FF3DAF8F3F49",
+    "realtimeProvider": "socketio",
+    "privacyReview": "Approved: sign-in to registration and back without entered credentials, coordinates, tokens, email addresses, or personal notifications",
+    "files": [
+      "../media/gifs/customer-auth-flow.gif"
+    ]
+  },
   "mobileRoleCapture": {
     "capturedAt": "2026-07-15T01:57:34Z",
     "restoredAt": "2026-07-15T01:51:12Z",
@@ -63,6 +75,7 @@
     "location": "Fixed simulated GPS only; no Google Maps API key is used",
     "privacyReview": "Deterministic local seed identities only. Passwords remain masked; profile contact and vehicle values are synthetic seed data; no tokens, provider keys, production accounts, or real personal data are visible",
     "evidence": [
+      "Customer public sign-in and registration navigation was recorded without entering credentials",
       "Driver authenticated through the local NestJS API; active-delivery Home explicitly showed that GPS sharing must resume while Offline",
       "Driver earnings and profile surfaces rendered from deterministic seed data",
       "Customer and Driver stills were visually reviewed after metadata stripping"
@@ -79,6 +92,16 @@
       ]
     },
     "gifs": [
+      {
+        "path": "../media/gifs/customer-auth-flow.gif",
+        "generatedAt": "2026-07-15T05:09:30Z",
+        "source": "Android screenrecord from the privacy-reviewed Customer debug APK public authentication screens",
+        "frameCount": 35,
+        "dimensions": "360x800",
+        "durationSeconds": 4.38,
+        "sha256": "3E10A642B42869627E80BFCBAF084C2FCFA32A21605054176A4DF70D6DB1F625",
+        "privacyReview": "No entered credentials, coordinates, tokens, email addresses, or personal notifications"
+      },
       {
         "path": "../media/gifs/driver-role-flow.gif",
         "generatedAt": "2026-07-15T03:03:07Z",
