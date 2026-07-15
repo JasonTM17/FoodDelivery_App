@@ -40,6 +40,30 @@
       "gps/driver-foreground-location-notification.webp"
     ]
   },
+  "productionAndroidGpsCapture": {
+    "capturedAt": "2026-07-15T08:14:29Z",
+    "sourceHead": "89b520da4a693e2d0b438ca1f8a46ac318ecf51d",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 x86_64 emulator using the deployed Railway API and Supabase PostgreSQL/PostGIS/Realtime stack",
+    "build": "Driver debug APK targeting Android SDK 36, built from sourceHead plus the uncommitted GPS accuracy and session-recovery fixes recorded by this capture",
+    "realtimeProvider": "supabase",
+    "privacyReview": "Approved: synthetic temporary Driver only; no coordinates, email address, credential, token, provider key, or personal notification is visible; image metadata stripped and production test rows removed after verification",
+    "evidence": [
+      "Explicit Online started an Android location foreground service after runtime permission approval",
+      "Screen-off simulated movement advanced the production PostGIS history while the foreground service remained active",
+      "Airplane-mode samples were buffered with their original timestamps and flushed after connectivity returned",
+      "Unexpected process termination followed by relaunch refreshed the session, restored Online through the API, and restarted foreground tracking",
+      "A paired authenticated production smoke received the GPS event through an authorized private Supabase Broadcast channel",
+      "The temporary Driver profile and all captured production GPS rows were deleted after the smoke"
+    ],
+    "files": [
+      {
+        "path": "driver/driver-online-android-api35-recovery.webp",
+        "dimensions": "1080x2400",
+        "sha256": "C7898DF2E4EC951E478D3205D92665C60BF0E66725444A6D05EFA35470AD8851"
+      }
+    ]
+  },
   "customerLoginCapture": {
     "capturedAt": "2026-07-15T01:43:41Z",
     "restoredAt": "2026-07-15T01:51:12Z",

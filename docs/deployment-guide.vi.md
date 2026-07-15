@@ -64,6 +64,7 @@ API core:
 - Supabase pooled `DATABASE_URL`, direct `DIRECT_URL`
 - managed production `REDIS_URL` cho các cache/history path hiện còn sử dụng Redis
 - `REALTIME_PROVIDER=supabase`
+- `SUPABASE_REALTIME_PUBLISH_TIMEOUT_MS=5000` để chặn request Broadcast bị treo
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
 - `FOODFLOW_PROCESS_ROLE=api` cho API và `FOODFLOW_PROCESS_ROLE=worker` cho worker; production thiếu hoặc sai role sẽ fail startup

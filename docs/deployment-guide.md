@@ -186,6 +186,7 @@ Core/provider values:
 | `DIRECT_URL`                        | Supabase direct/session migration URL                                                                                               |
 | `REDIS_URL`                         | Current API contract still requires a managed production Redis endpoint for remaining cache/history paths; never point at localhost |
 | `REALTIME_PROVIDER`                 | `supabase`                                                                                                                          |
+| `SUPABASE_REALTIME_PUBLISH_TIMEOUT_MS` | Bounded private Broadcast request timeout; default and recommended production value is `5000`                                  |
 | `STORAGE_PROVIDER`                  | `supabase`                                                                                                                          |
 | `QUEUE_PROVIDER`                    | `supabase-postgres`                                                                                                                 |
 | `SUPABASE_URL`                      | Project HTTPS origin                                                                                                                |

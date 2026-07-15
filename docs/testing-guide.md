@@ -54,6 +54,19 @@ This is bounded local evidence, not release approval:
 - A simulated GPS update was accepted by the local E2E API, refreshed Redis liveness, reached PostGIS within seconds, and produced exactly one event for an authorized Admin Socket.IO subscriber.
 - This uses the explicit local `socketio` provider. It does not prove Supabase Broadcast, Railway, Vercel, or production device behavior.
 
+### 2026-07-15 authenticated production Android emulator evidence
+
+This smoke used an Android API 35 x86_64 emulator, a Driver debug APK, a temporary synthetic Driver, the deployed Railway API, and the linked Supabase project. It did not use a personal account or real coordinates.
+
+- Denying location left Driver Offline and did not start a foreground service. Granting precise while-in-use location plus notifications allowed the explicit Online action; Android reported the Geolocator service in foreground mode with the location service type.
+- With the emulator screen asleep, simulated movement produced accepted API updates and advanced PostGIS history from 3 to 5 rows.
+- During airplane mode, the app logged bounded GPS buffering without an API update. Restoring connectivity flushed two samples with their original timestamps and advanced PostGIS from 5 to 7 rows.
+- After an unexpected process termination, relaunch refreshed the expired access token, revalidated the session/KYC state, called `/driver/online`, resumed location submission, and restored the Android location foreground service. Regression tests cover the former ghost-Online failure path.
+- A separate authenticated production smoke subscribed a temporary Admin to its authorized private Supabase channel, submitted a valid Driver GPS sample, received the Broadcast event, and confirmed PostGIS persistence. The Driver could not subscribe to the Admin channel.
+- Cleanup removed the temporary profile and all production GPS rows; post-clean counts were zero. The app was cleared/uninstalled and the emulator stopped.
+
+This proves the Railway/Supabase path and Android API 35 emulator behavior. Android 10/12, approximate/background-permission variants, physical Android, physical iOS, app-store builds, and controlled FCM delivery remain unverified in this Windows environment.
+
 ## One-command local gate
 
 With production env/auth configured and a seeded browser stack available:

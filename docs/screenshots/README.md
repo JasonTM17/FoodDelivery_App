@@ -9,6 +9,7 @@ Privacy-reviewed product media for the four FoodFlow roles. Read the [capture ma
 | Admin / Restaurant | Google Chrome against the isolated `foodflow-batch4-e2e` Docker stack with deterministic seed data | Local web product/regression evidence; not a deployed browser journey or release certification. |
 | Customer / Driver role flows | Flutter debug APKs on an Android API 35 x86_64 AVD connected to the isolated E2E stack | Built from the current dirty working tree; not a mobile release or production-provider certification. |
 | Driver GPS / foreground tracking | Android API 35 emulator with fixed simulated location and local Socket.IO compatibility | Local command/persistence/fanout evidence only; not Supabase/Railway, payout, routing, or production proof. |
+| Driver production GPS recovery | Android API 35 x86_64 emulator using Railway and Supabase with a temporary synthetic Driver | Authenticated production-emulator evidence for foreground tracking, screen-off updates, offline flush, process recovery, PostGIS and private Broadcast; not physical-device, iOS, FCM, payout or app-store certification. |
 
 The manifest records only deterministic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. The mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap.
 
@@ -28,7 +29,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 | Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
 | Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
 | Customer | 1 WebP still + 1 GIF | Privacy-reviewed app launch and public sign-in/registration navigation without entered credentials. |
-| Driver | 6 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, two Online/GPS states; sign-in-to-profile role flow. |
+| Driver | 7 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, three Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
 
 ### Admin
@@ -52,6 +53,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 - `driver/04-profile.webp` — profile, vehicle summary, language, and sign-out.
 - `driver/driver-online-gps-e2e.webp` — Online after the verified local GPS chain.
 - `driver/driver-online-realtime-gps.webp` — Online while foreground tracking is active.
+- `driver/driver-online-android-api35-recovery.webp` — privacy-reviewed production-emulator Online state used for foreground, network-loss, and process-recovery verification.
 - `../media/gifs/driver-role-flow.gif` — four-frame sign-in, Home, earnings, and profile preview generated only from the privacy-reviewed Driver stills.
 - `gps/driver-notification-permission.webp` — Android notification permission for tracking.
 - `gps/driver-foreground-location-notification.webp` — foreground location notification.
