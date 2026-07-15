@@ -116,7 +116,7 @@ Coverage: auth, Admin dashboard, Restaurant queue/status, customer order end-to-
 
 Test backend: provider route/cache/failure, bound Việt Nam/service area, timestamp fresh, participant/phase, persisted polyline/distance/duration, remaining ETA và cross-tenant denial.
 
-Test web/mobile: không hardcoded camera/polyline/ETA, bỏ event stale/wrong-order/wrong-phase, chuyển pickup/dropoff đúng state, localized unavailable state, key thật bị giới hạn. Production dùng `post-deploy-smoke.ps1 -RequireRoutePolyline` với active order authorized.
+Test web/mobile: không hardcoded camera/polyline/ETA, bỏ event stale/wrong-order/wrong-phase, chuyển pickup/dropoff đúng state, localized unavailable state, key thật bị giới hạn. Production dùng `post-deploy-smoke.ps1 -RequireAuthenticatedChecks -RequireRoutePolyline` với đủ token smoke scoped và active order authorized. Public-only phải truyền rõ `-AllowUnauthenticatedOnly` và không phải chứng nhận release.
 
 ## Supabase Realtime
 

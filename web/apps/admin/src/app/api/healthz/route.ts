@@ -8,6 +8,7 @@ export function GET() {
     {
       status: 'ok',
       service: 'foodflow-admin',
+      revision: process.env.BUILD_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null,
       timestamp: new Date().toISOString(),
     },
     { status: 200 },

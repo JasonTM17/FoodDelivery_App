@@ -18,6 +18,7 @@ param(
   [switch]$AllowDegradedAi,
   [switch]$CreateExportJob,
   [switch]$RequireAuthenticatedChecks,
+  [switch]$AllowUnauthenticatedOnly,
   [switch]$RequireRoutePolyline,
   [switch]$SkipHealth,
   [switch]$PlanOnly
@@ -194,7 +195,7 @@ function Skip-Or-Fail {
     [Parameter(Mandatory = $true)][string]$Reason
   )
 
-  if ($RequireAuthenticatedChecks) {
+  if ($RequireAuthenticatedChecks -or -not $AllowUnauthenticatedOnly) {
     throw "$Name cannot run: $Reason"
   }
   Write-Output "SKIP ${Name}: $Reason"
@@ -396,6 +397,10 @@ $apiBase = Resolve-ApiBaseUrl $ApiUrl
 $adminBase = Resolve-WebBaseUrl 'Admin' $AdminUrl
 $restaurantBase = Resolve-WebBaseUrl 'Restaurant' $RestaurantUrl
 
+if ($RequireAuthenticatedChecks -and $AllowUnauthenticatedOnly) {
+  throw 'RequireAuthenticatedChecks and AllowUnauthenticatedOnly cannot be used together.'
+}
+
 $targets = @(
   @{ Name = 'API health'; Url = Join-FoodFlowUrl $apiBase '/healthz' },
   @{ Name = 'Admin health'; Url = Join-FoodFlowUrl $adminBase '/api/healthz' },
@@ -433,4 +438,8 @@ Invoke-AiChatCheck $apiBase
 Invoke-AdminExportCheck $apiBase
 Invoke-TrackingCheck $apiBase
 
-Write-Output 'FoodFlow post-deploy smoke passed.'
+if ($AllowUnauthenticatedOnly) {
+  Write-Output 'FoodFlow public-only smoke passed; authenticated checks were explicitly allowed to skip.'
+} else {
+  Write-Output 'FoodFlow authenticated post-deploy smoke passed.'
+}

@@ -35,6 +35,7 @@ FROM gcr.io/distroless/nodejs22-debian13@sha256:39d204f9061e310d3e090edd185f48b1
 WORKDIR /app
 
 ARG BUILD_SHA
+ENV BUILD_SHA=$BUILD_SHA
 LABEL org.opencontainers.image.source="https://github.com/JasonTM17/FoodDelivery_App"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.revision=$BUILD_SHA

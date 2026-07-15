@@ -1,9 +1,6 @@
 name: Docker Publish
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -51,24 +48,16 @@ jobs:
           set -euo pipefail
           git fetch --no-tags origin master
 
-          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            release_tag="$GITHUB_REF_NAME"
-            git merge-base --is-ancestor "$GITHUB_SHA" origin/master || {
-              echo 'Release tags must point to a commit contained in origin/master.'
-              exit 1
-            }
-          else
-            test "$GITHUB_SHA" = "$(git rev-parse origin/master)" || {
-              echo 'Manual Docker publishes must run from the current origin/master head.'
-              exit 1
-            }
-            release_tag=""
-            if [[ "$INPUT_PUBLISH_RELEASE" == "true" ]]; then
-              release_tag="$INPUT_RELEASE_TAG"
-            elif [[ "$INPUT_PROMOTE_LATEST" == "true" ]]; then
-              echo 'promote_latest requires publish_release.'
-              exit 1
-            fi
+          test "$GITHUB_SHA" = "$(git rev-parse origin/master)" || {
+            echo 'Docker publishes must run from the current origin/master head.'
+            exit 1
+          }
+          release_tag=""
+          if [[ "$INPUT_PUBLISH_RELEASE" == "true" ]]; then
+            release_tag="$INPUT_RELEASE_TAG"
+          elif [[ "$INPUT_PROMOTE_LATEST" == "true" ]]; then
+            echo 'promote_latest requires publish_release.'
+            exit 1
           fi
 
           if [[ -n "$release_tag" ]]; then
@@ -111,7 +100,7 @@ jobs:
             }
           done
 
-          node <<'NODE'
+          node --input-type=module <<'NODE'
           const values = [
             ['NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'railway-api'],
             ['NEXT_PUBLIC_ADMIN_URL', process.env.NEXT_PUBLIC_ADMIN_URL, 'vercel-origin'],
@@ -556,31 +545,48 @@ jobs:
 
   production-smoke:
     needs: [release-preflight, runtime-smoke, scan]
-    if: ${{ github.event_name == 'push' || inputs.publish_release }}
+    if: ${{ inputs.publish_release }}
     runs-on: ubuntu-latest
     steps:
-      - name: Verify API, Admin, and Restaurant production health
-        shell: bash
+      - name: Verify exact deployed revision and production health
         env:
           API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           ADMIN_URL: ${{ vars.NEXT_PUBLIC_ADMIN_URL }}
           RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
-          endpoints=(
-            "${API_URL%/}/healthz"
-            "${ADMIN_URL%/}/api/healthz"
-            "${RESTAURANT_URL%/}/api/healthz"
-          )
-          for endpoint in "${endpoints[@]}"; do
-            curl --silent --show-error --fail --location \
-              --retry 4 --retry-all-errors --retry-delay 3 --max-time 20 \
-              "$endpoint" > /dev/null
-          done
+          node <<'NODE'
+          const expected = process.env.EXPECTED_SHA
+          const endpoints = [
+            ['API health', `${process.env.API_URL.replace(/\/$/, '')}/healthz`, 'ok'],
+            ['API readiness', `${process.env.API_URL.replace(/\/$/, '')}/readyz`, 'ready'],
+            ['Admin health', `${process.env.ADMIN_URL.replace(/\/$/, '')}/api/healthz`, 'ok'],
+            ['Restaurant health', `${process.env.RESTAURANT_URL.replace(/\/$/, '')}/api/healthz`, 'ok'],
+          ]
+          for (const [name, url, expectedStatus] of endpoints) {
+            let response
+            for (let attempt = 1; attempt <= 5; attempt += 1) {
+              try {
+                response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(20_000) })
+                if (response.ok) break
+              } catch (error) {
+                if (attempt === 5) throw error
+              }
+              await new Promise(resolve => setTimeout(resolve, 3_000))
+            }
+            if (!response?.ok) throw new Error(`${name} returned HTTP ${response?.status}`)
+            const body = await response.json()
+            if (body.status !== expectedStatus) throw new Error(`${name} returned status ${body.status}`)
+            if (body.revision !== expected) {
+              throw new Error(`${name} revision ${body.revision ?? '<missing>'} does not match ${expected}`)
+            }
+            console.log(`${name} verified at ${expected}`)
+          }
+          NODE
 
   promote-release:
     needs: [release-preflight, production-smoke]
-    if: ${{ github.event_name == 'push' || inputs.publish_release }}
+    if: ${{ inputs.publish_release }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -645,7 +651,7 @@ jobs:
 
   promote-latest:
     needs: [release-preflight, promote-release]
-    if: ${{ inputs.promote_latest && (github.event_name == 'push' || inputs.publish_release) }}
+    if: ${{ inputs.promote_latest && inputs.publish_release }}
     runs-on: ubuntu-latest
     environment: production
     steps:

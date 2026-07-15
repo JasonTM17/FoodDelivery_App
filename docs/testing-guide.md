@@ -226,7 +226,7 @@ Web/mobile tests must verify:
 - Missing data produces localized unavailable/error UI.
 - Real provider key smoke is run only with an origin/package-restricted key.
 
-Production smoke should use `post-deploy-smoke.ps1 -RequireRoutePolyline` and an authorized active order.
+Production smoke should use `post-deploy-smoke.ps1 -RequireAuthenticatedChecks -RequireRoutePolyline` with all scoped smoke tokens and an authorized active order. Public-only checks require the explicit `-AllowUnauthenticatedOnly` opt-out and are not release certification.
 
 ## Supabase Realtime and tenant tests
 

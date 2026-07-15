@@ -55,6 +55,7 @@ LABEL org.opencontainers.image.revision=$BUILD_SHA
 LABEL org.opencontainers.image.title="foodflow-admin"
 
 ENV NODE_ENV=production
+ENV BUILD_SHA=$BUILD_SHA
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV

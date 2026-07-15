@@ -65,6 +65,7 @@ describe('HealthController', () => {
     expect(res.status).toHaveBeenCalledWith(200)
     const body = res.json.mock.calls[0][0]
     expect(body.status).toBe('ok')
+    expect(body.revision).toBeNull()
     expect(body.components.db.status).toBe('up')
     expect(body.components.redis.status).toBe('up')
     expect(body.components.storage).toMatchObject({
@@ -73,6 +74,25 @@ describe('HealthController', () => {
     })
     expect(body.uptime).toBeGreaterThan(0)
     expect(body.timestamp).toBeDefined()
+  })
+
+  it('exposes the immutable build revision without leaking configuration', async () => {
+    mockConfig.get.mockImplementation((key: string) => {
+      if (key === 'BUILD_SHA') return '0123456789abcdef0123456789abcdef01234567'
+      if (key === 'MINIO_ENDPOINT') return 'localhost'
+      if (key === 'MINIO_PORT') return 9000
+      if (key === 'MINIO_ACCESS_KEY') return 'minioadmin'
+      if (key === 'MINIO_SECRET_KEY') return 'minioadmin'
+      if (key === 'MINIO_BUCKET') return 'foodflow'
+      return null
+    })
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+
+    await controller.check(res as unknown as Response)
+
+    expect(res.json.mock.calls[0][0].revision).toBe(
+      '0123456789abcdef0123456789abcdef01234567',
+    )
   })
 
   it('returns 503 degraded when database is down', async () => {

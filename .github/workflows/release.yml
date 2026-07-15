@@ -1,52 +1,121 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing stable semver tag already promoted by Docker Publish
+        required: true
+        type: string
+      source_sha:
+        description: Full immutable source SHA deployed and promoted
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: read
+
+concurrency:
+  group: release-${{ inputs.release_tag }}
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
+    environment: production
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
+          ref: master
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+
+      - name: Validate source, tag, and promoted registry digests
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GHCR_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo 'release_tag must use stable semver format vMAJOR.MINOR.PATCH.'
+            exit 1
+          }
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo 'source_sha must be a full lowercase Git commit SHA.'
+            exit 1
+          }
+          test -n "$DOCKERHUB_USERNAME" || {
+            echo 'DOCKERHUB_USERNAME repository variable is required.'
+            exit 1
+          }
+
+          git fetch --force origin master "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          test "$SOURCE_SHA" = "$(git rev-parse origin/master)" || {
+            echo 'Releases must target the current origin/master head.'
+            exit 1
+          }
+          test "$SOURCE_SHA" = "$(git rev-list -n 1 "$RELEASE_TAG")" || {
+            echo 'The release tag does not point at source_sha.'
+            exit 1
+          }
+
+          images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
+          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
+          for image in "${images[@]}"; do
+            expected=''
+            for registry in "${registries[@]}"; do
+              sha_ref="$registry/$image:sha-$SOURCE_SHA"
+              release_ref="$registry/$image:$RELEASE_TAG"
+              sha_digest="$(docker buildx imagetools inspect "$sha_ref" | awk '/^Digest:/ {print $2; exit}')"
+              release_digest="$(docker buildx imagetools inspect "$release_ref" | awk '/^Digest:/ {print $2; exit}')"
+              test -n "$sha_digest" && test "$sha_digest" = "$release_digest" || {
+                echo "Release digest mismatch for $release_ref"
+                exit 1
+              }
+              if [[ -n "$expected" && "$expected" != "$sha_digest" ]]; then
+                echo "Registry digest mismatch for $image"
+                exit 1
+              fi
+              expected="$sha_digest"
+            done
+            echo "$image verified at $expected"
+          done
 
       - name: Generate changelog
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
         with:
           config: cliff.toml
         env:
           OUTPUT: CHANGELOG.md
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build Docker image for SBOM
-        run: docker build -t foodflow-backend:${{ github.ref_name }} ./backend
-
-      - name: Generate SBOM from source
-        uses: anchore/sbom-action@v0
+      - name: Generate source SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           path: ./
           format: spdx-json
           output-file: sbom-source.spdx.json
 
-      - name: Generate SBOM from Docker image
-        uses: anchore/sbom-action@v0
+      - name: Generate promoted backend SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
-          image: foodflow-backend:${{ github.ref_name }}
+          image: docker.io/${{ vars.DOCKERHUB_USERNAME }}/foodflow-backend:${{ inputs.release_tag }}
           format: spdx-json
           output-file: sbom-image.spdx.json
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+      - name: Create GitHub Release after immutable promotion
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
+          tag_name: ${{ inputs.release_tag }}
+          target_commitish: ${{ inputs.source_sha }}
           body_path: CHANGELOG.md
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             CHANGELOG.md
             sbom-source.spdx.json

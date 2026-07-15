@@ -40,7 +40,7 @@ Every credential pasted into chat, screenshots, logs, tickets, shell history, or
 ## Supabase, Railway, Vercel, and release checks
 
 - [ ] `REALTIME_PROVIDER=supabase`, `STORAGE_PROVIDER=supabase`, and `QUEUE_PROVIDER=supabase-postgres` are explicit in the API production environment.
-- [ ] `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS; only `realtime_outbox` is in the explicit Realtime publication.
+- [ ] `realtime_outbox`, `job_outbox`, and `ai_usage_events` have RLS; `realtime_outbox` is rollback-only and is not in a Realtime publication. Managed realtime uses authorized private Broadcast channels.
 - [ ] Realtime tokens have short TTL, only `private:` channels, ownership verification before signing, and cross-tenant/anon denial tests.
 - [ ] `SUPABASE_SECRET_KEY` and `SUPABASE_REALTIME_JWT_PRIVATE_KEY` are sealed server-only values and absent from browser bundles/logs.
 - [ ] FCM has `FCM_PROJECT_ID` plus either workload identity/ADC or sealed `FCM_SERVICE_ACCOUNT_JSON`; the legacy server key is absent. Before release, send to a controlled device token and record only redacted success/failure evidence.

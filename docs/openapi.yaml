@@ -3147,7 +3147,7 @@ paths:
         "200": { description: "OTP verified", content: { application/json: { schema: { type: object, properties: { message: { type: string } } } } } }
         "400": { description: "Invalid OTP", content: { application/json: { schema: { $ref: "#/components/schemas/ProblemDetail" } } } }
 
-  /auth/jwks.json:
+  /.well-known/jwks.json:
     get:
       tags: [auth]
       summary: JWKS endpoint for Ed25519 public keys

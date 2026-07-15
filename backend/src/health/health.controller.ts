@@ -18,6 +18,7 @@ import {
 
 interface HealthResponse {
   status: 'ok' | 'degraded'
+  revision: string | null
   uptime: number
   timestamp: string
   components: HealthComponents
@@ -26,6 +27,7 @@ interface HealthResponse {
 interface ReadinessResponse {
   status: 'ready' | 'not_ready'
   ready: boolean
+  revision: string | null
   timestamp: string
   components: HealthComponents
 }
@@ -45,6 +47,7 @@ export class HealthController {
 
     return res.status(httpStatus).json({
       status: overall,
+      revision: this.getBuildRevision(),
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       components,
@@ -59,6 +62,7 @@ export class HealthController {
     return res.status(outcome.httpStatus).json({
       status: outcome.status,
       ready: outcome.ready,
+      revision: this.getBuildRevision(),
       timestamp: new Date().toISOString(),
       components,
     } as ReadinessResponse)
@@ -71,6 +75,12 @@ export class HealthController {
       this.checkStorage(),
     ])
     return { db, redis, storage }
+  }
+
+  private getBuildRevision(): string | null {
+    const revision = this.config.get<string>('BUILD_SHA')?.trim()
+      || this.config.get<string>('RAILWAY_GIT_COMMIT_SHA')?.trim()
+    return revision || null
   }
 
   private async checkDatabase(): Promise<ComponentStatus> {

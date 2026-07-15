@@ -3,6 +3,21 @@
 # printing environment variable values or deploying. The API runs on Railway.
 $ErrorActionPreference = 'Stop'
 
+# Windows npm shims call `exit`, which can terminate the entire preflight after
+# `vercel --version`. Invoke the installed CLI entrypoint with Node directly on
+# Windows; other platforms use the normal executable.
+$vercelCommand = 'vercel'
+$vercelPrefix = @()
+if ($env:OS -eq 'Windows_NT') {
+  $vercelShim = Get-Command vercel.cmd -ErrorAction Stop
+  $vercelCli = Join-Path (Split-Path $vercelShim.Source) 'node_modules\vercel\dist\vc.js'
+  if (-not (Test-Path $vercelCli)) {
+    throw "Unable to locate the Vercel CLI entrypoint beside $($vercelShim.Source)."
+  }
+  $vercelCommand = (Get-Command node -ErrorAction Stop).Source
+  $vercelPrefix = @($vercelCli)
+}
+
 $adminProject = if ($env:ADMIN_VERCEL_PROJECT) { $env:ADMIN_VERCEL_PROJECT } else { 'food-delivery-app' }
 $restaurantProject = if ($env:RESTAURANT_VERCEL_PROJECT) {
   $env:RESTAURANT_VERCEL_PROJECT
@@ -122,12 +137,12 @@ function Assert-EnvNames {
 }
 
 Invoke-PreflightCheck 'Vercel CLI availability/auth' {
-  Invoke-NativeCapture vercel --version | Out-Null
+  Invoke-NativeCapture $vercelCommand @vercelPrefix --version | Out-Null
 }
 
 Invoke-PreflightCheck 'Vercel Admin project settings' {
   Write-Host "Checking Vercel Admin project settings for $adminProject..."
-  $adminInspect = Invoke-NativeCapture vercel project inspect $adminProject --no-color
+  $adminInspect = Invoke-NativeCapture $vercelCommand @vercelPrefix project inspect $adminProject --no-color
   Assert-ContainsLineValue $adminInspect 'Root Directory' 'web/apps/admin'
   Assert-ContainsLineValue $adminInspect 'Framework Preset' 'Next.js'
   Assert-ContainsLineValue $adminInspect 'Build Command' 'cd ../.. && pnpm --filter foodflow-admin build'
@@ -137,14 +152,14 @@ Invoke-PreflightCheck 'Vercel Admin project settings' {
 
 Invoke-PreflightCheck 'Vercel Admin production env names' {
   Write-Host 'Checking Vercel Admin production env names...'
-  $adminEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$adminProject/env?target=production" --raw
+  $adminEnvRaw = Invoke-NativeCapture $vercelCommand @vercelPrefix api "/v9/projects/$adminProject/env?target=production" --raw
   $adminEnv = Extract-JsonObject ($adminEnvRaw -join "`n")
   Assert-EnvNames $adminEnv $adminRequiredEnv 'Admin Vercel project'
 }
 
 Invoke-PreflightCheck 'Vercel Restaurant project settings' {
   Write-Host "Checking Vercel Restaurant project settings for $restaurantProject..."
-  $restaurantInspect = Invoke-NativeCapture vercel project inspect $restaurantProject --no-color
+  $restaurantInspect = Invoke-NativeCapture $vercelCommand @vercelPrefix project inspect $restaurantProject --no-color
   Assert-ContainsLineValue $restaurantInspect 'Root Directory' 'web/apps/restaurant'
   Assert-ContainsLineValue $restaurantInspect 'Framework Preset' 'Next.js'
   Assert-ContainsLineValue $restaurantInspect 'Build Command' 'cd ../.. && pnpm --filter restaurant build'
@@ -154,7 +169,7 @@ Invoke-PreflightCheck 'Vercel Restaurant project settings' {
 
 Invoke-PreflightCheck 'Vercel Restaurant production env names' {
   Write-Host "Checking Vercel Restaurant production env names for $restaurantProject..."
-  $restaurantEnvRaw = Invoke-NativeCapture vercel api "/v9/projects/$restaurantProject/env?target=production" --raw
+  $restaurantEnvRaw = Invoke-NativeCapture $vercelCommand @vercelPrefix api "/v9/projects/$restaurantProject/env?target=production" --raw
   $restaurantEnv = Extract-JsonObject ($restaurantEnvRaw -join "`n")
   Assert-EnvNames $restaurantEnv $restaurantRequiredEnv 'Restaurant Vercel project'
 }
