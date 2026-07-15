@@ -43,7 +43,8 @@ describe('AuthService', () => {
     NODE_ENV: 'test',
     PASSWORD_RESET_TOKEN_TTL_MINUTES: 60,
     PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.test/reset-password',
-    JWT_SECRET: 'test-secret',
+    JWT_SECRET: 'test-access-secret-must-be-long-enough-0001',
+    JWT_REFRESH_SECRET: 'test-refresh-secret-must-be-long-enough-0002',
   }
 
   const mockConfig = {
@@ -75,7 +76,8 @@ describe('AuthService', () => {
       NODE_ENV: 'test',
       PASSWORD_RESET_TOKEN_TTL_MINUTES: 60,
       PASSWORD_RESET_URL_BASE: 'https://admin.foodflow.test/reset-password',
-      JWT_SECRET: 'test-secret',
+      JWT_SECRET: 'test-access-secret-must-be-long-enough-0001',
+      JWT_REFRESH_SECRET: 'test-refresh-secret-must-be-long-enough-0002',
     })
     mockEd25519.canSign.mockReturnValue(false)
     mockEd25519.getPrivateKey.mockReturnValue(null)
@@ -150,6 +152,104 @@ describe('AuthService', () => {
       await expect(service.login({
         email: 'bad@test.com', password: 'test',
       })).rejects.toThrow(UnauthorizedException)
+    })
+  })
+
+  describe('refresh token secret isolation', () => {
+    const activeUser = {
+      id: 'user-1',
+      email: 'user@test.com',
+      fullName: 'User',
+      role: 'customer',
+      phone: null,
+      avatarUrl: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    it('signs refresh tokens with JWT_REFRESH_SECRET, not JWT_SECRET', async () => {
+      mockUsersService.findByEmail.mockResolvedValueOnce(null)
+      mockUsersService.create.mockResolvedValueOnce({ id: 'new-user', role: 'customer' })
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        ...activeUser,
+        id: 'new-user',
+      })
+
+      await service.register({
+        email: 'test@test.com', password: 'Test1234!', fullName: 'Test',
+      })
+
+      const refreshSignCall = mockJwtService.sign.mock.calls.find(
+        (call: unknown[]) => (call[0] as { type?: string })?.type === 'refresh',
+      )
+      expect(refreshSignCall).toBeDefined()
+      expect(refreshSignCall![1]).toEqual(
+        expect.objectContaining({
+          secret: mockConfigValues.JWT_REFRESH_SECRET,
+          algorithm: 'HS256',
+        }),
+      )
+      expect(refreshSignCall![1]).not.toEqual(
+        expect.objectContaining({ secret: mockConfigValues.JWT_SECRET }),
+      )
+    })
+
+    it('verifies refresh tokens with JWT_REFRESH_SECRET first', async () => {
+      mockJwtService.verify.mockImplementationOnce((token: string, opts?: { secret?: string }) => {
+        if (opts?.secret === mockConfigValues.JWT_REFRESH_SECRET) {
+          return { sub: 'user-1', role: 'customer', type: 'refresh', jti: 'jti-1', iat: 1 }
+        }
+        throw new Error('wrong secret')
+      })
+      mockUsersService.findById.mockResolvedValueOnce(activeUser)
+      mockPrisma.user.findUnique.mockResolvedValueOnce(activeUser)
+
+      const result = await service.refresh({ refreshToken: 'refresh-token-value' })
+
+      expect(mockJwtService.verify).toHaveBeenCalledWith(
+        'refresh-token-value',
+        expect.objectContaining({ secret: mockConfigValues.JWT_REFRESH_SECRET }),
+      )
+      expect(result.user.id).toBe('user-1')
+    })
+
+    it('accepts legacy refresh tokens signed with JWT_SECRET during dual-verify window', async () => {
+      mockJwtService.verify
+        .mockImplementationOnce(() => {
+          throw new Error('not refresh secret')
+        })
+        .mockImplementationOnce((token: string, opts?: { secret?: string }) => {
+          if (opts?.secret === mockConfigValues.JWT_SECRET) {
+            return { sub: 'user-1', role: 'customer', type: 'refresh', jti: 'jti-legacy', iat: 1 }
+          }
+          throw new Error('still wrong')
+        })
+      mockUsersService.findById.mockResolvedValueOnce(activeUser)
+      mockPrisma.user.findUnique.mockResolvedValueOnce(activeUser)
+
+      const result = await service.refresh({ refreshToken: 'legacy-refresh-token' })
+
+      expect(mockJwtService.verify).toHaveBeenNthCalledWith(
+        1,
+        'legacy-refresh-token',
+        expect.objectContaining({ secret: mockConfigValues.JWT_REFRESH_SECRET }),
+      )
+      expect(mockJwtService.verify).toHaveBeenNthCalledWith(
+        2,
+        'legacy-refresh-token',
+        expect.objectContaining({ secret: mockConfigValues.JWT_SECRET }),
+      )
+      expect(result.user.id).toBe('user-1')
+    })
+
+    it('rejects refresh tokens that fail both secrets', async () => {
+      mockJwtService.verify.mockImplementation(() => {
+        throw new Error('invalid')
+      })
+
+      await expect(service.refresh({ refreshToken: 'bad-token' }))
+        .rejects.toThrow(UnauthorizedException)
     })
   })
 

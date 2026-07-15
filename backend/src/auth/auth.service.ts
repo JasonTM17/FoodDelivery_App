@@ -159,7 +159,7 @@ export class AuthService {
   async refresh(dto: RefreshDto): Promise<AuthResult> {
     let payload: JwtPayload & { type?: string; jti?: string; iat?: number }
     try {
-      payload = this.jwtService.verify(dto.refreshToken)
+      payload = this.verifyRefreshToken(dto.refreshToken)
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token')
     }
@@ -188,7 +188,7 @@ export class AuthService {
     if (!refreshToken) return
 
     try {
-      const payload = this.jwtService.verify<JwtPayload & { type?: string; jti?: string }>(refreshToken)
+      const payload = this.verifyRefreshToken(refreshToken)
       if (payload.type === 'refresh' && payload.jti) {
         await this.refreshTokenStore.blocklist(payload.jti)
       }
@@ -314,7 +314,11 @@ export class AuthService {
 
     const refreshToken = this.jwtService.sign(
       { ...basePayload, type: 'refresh', jti: randomUUID() },
-      { expiresIn: AuthService.REFRESH_TOKEN_TTL },
+      {
+        secret: this.getRefreshSecret(),
+        algorithm: 'HS256',
+        expiresIn: AuthService.REFRESH_TOKEN_TTL,
+      },
     )
 
     return { accessToken, refreshToken }
@@ -341,6 +345,38 @@ export class AuthService {
     return this.jwtService.sign(payload, {
       expiresIn: AuthService.ACCESS_TOKEN_TTL_SECONDS,
     })
+  }
+
+  /**
+   * Refresh tokens are signed with JWT_REFRESH_SECRET.
+   * Dual-verify accepts legacy tokens signed with JWT_SECRET for one rolling TTL window.
+   */
+  private verifyRefreshToken(token: string): JwtPayload & { type?: string; jti?: string; iat?: number } {
+    const refreshSecret = this.getRefreshSecret()
+    try {
+      return this.jwtService.verify(token, {
+        secret: refreshSecret,
+        algorithms: ['HS256'],
+      }) as JwtPayload & { type?: string; jti?: string; iat?: number }
+    } catch {
+      const accessSecret = this.config.get<string>('JWT_SECRET')
+      if (!accessSecret || accessSecret === refreshSecret) {
+        throw new UnauthorizedException('Invalid or expired refresh token')
+      }
+      // Legacy fallback: tokens issued before refresh-key separation.
+      return this.jwtService.verify(token, {
+        secret: accessSecret,
+        algorithms: ['HS256'],
+      }) as JwtPayload & { type?: string; jti?: string; iat?: number }
+    }
+  }
+
+  private getRefreshSecret(): string {
+    const secret = this.config.get<string>('JWT_REFRESH_SECRET')
+    if (!secret || secret.length < 32) {
+      throw new Error('JWT_REFRESH_SECRET must be configured with at least 32 characters')
+    }
+    return secret
   }
 
   private hashPasswordResetToken(token: string): string {
