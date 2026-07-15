@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 15/07/2026:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` pass 145 suite / 1071 test, typecheck, lint, build, 10 workflow GitHub được trigger, runtime smoke đa kiến trúc và 8 scan image High/Critical. Railway migrate/API/worker và Vercel Admin/Restaurant chạy đúng revision này; đủ 41 migration effective, chỉ còn bucket public/private chuẩn và public health/readiness/login đều pass. Ba file migration cũ đã áp dụng vẫn lệch checksum provenance; guard đang chờ commit sẽ chặn rollout sau cho tới khi được đối soát có phê duyệt. GPS production kiểm soát đã tới private Supabase Broadcast và PostGIS trong 1437 ms, sau đó xóa sạch dữ liệu tạm. Đây **chưa** là chứng nhận production đầy đủ: còn thiếu FCM thiết bị kiểm soát, ma trận background location Android/iOS, role journey có xác thực và các integration payment/messaging/AI/owned routing thuộc phạm vi chứng nhận.
+> **Trạng thái 15/07/2026:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` pass 145 suite / 1071 test, typecheck, lint, build, 10 workflow GitHub được trigger, runtime smoke đa kiến trúc và 8 scan image High/Critical. Ba checksum migration lịch sử đã được đối soát bằng artifact immutable/Git qua đúng các cặp production/source được duyệt. Fail-closed guard và 5 test tập trung đã chuẩn bị trên source branch, nhưng Railway hiện còn chạy image cũ chưa có guard; chưa tuyên bố production đã được bảo vệ cho tới khi deploy image immutable mới và xác minh preflight. GPS production kiểm soát đã tới private Supabase Broadcast và PostGIS trong 1437 ms, sau đó xóa sạch dữ liệu tạm. Đây **chưa** là chứng nhận production đầy đủ: còn thiếu FCM thiết bị kiểm soát, ma trận background location Android/iOS, role journey có xác thực và các integration payment/messaging/AI/owned routing thuộc phạm vi chứng nhận.
 
 ## Xem trước sản phẩm
 
@@ -42,6 +42,8 @@ FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-
 | Driver     | [`main_driver.dart`](../mobile/lib/main_driver.dart)     | Ứng dụng mobile Flutter/Riverpod native (Android/iOS) | thiết bị/emulator; Android flavor `driver`   | [Hướng dẫn Tài xế](driver-guide.vi.md)                  |
 
 Customer và Driver không có URL web local. Dùng entrypoint Flutter tường minh; lệnh `--flavor` bên dưới chọn Android product flavor.
+
+Đối soát checksum migration: [bản đầy đủ](migration-checksum-reconciliation.vi.md) · [English](migration-checksum-reconciliation.md) · [日本語](migration-checksum-reconciliation.ja.md).
 
 Web dùng route `/:locale` với `vi`, `en`, `ja`. API dùng success envelope `{ success: true, data, meta? }` và RFC 7807 Problem Details cho lỗi.
 

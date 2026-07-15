@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-15 status:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` は 145 suites / 1071 tests、typecheck、lint、build、trigger された 10 GitHub workflows、multi-architecture runtime smoke、8 High/Critical image scans を pass。Railway migrate/API/worker と Vercel Admin/Restaurant は同じ revision で稼働し、41 effective migrations、public/private Storage、public health/readiness/login を確認。適用済みの過去 migration 3 件には checksum provenance の不一致が残り、pending guard は承認済み reconciliation まで次の rollout を block します。Controlled production GPS は private Supabase Broadcast と PostGIS に 1437 ms で到達し、一時データは削除済みです。Full production certification には controlled-device FCM、Android/iOS background-location matrix、authenticated role journeys、certification scope の payment/messaging/AI/owned-routing integrations が必要です。
+> **2026-07-15 status:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` は 145 suites / 1071 tests、typecheck、lint、build、trigger された 10 GitHub workflows、multi-architecture runtime smoke、8 High/Critical image scans を pass。過去 migration 3 件の checksum は immutable artifact/Git evidence と exact な承認済み production/source pair で照合済みです。fail-closed guard と 5 件の focused test は source branch に準備済みですが、Railway はまだ guard を含まない旧 image です。新しい immutable image の deploy と preflight 確認までは production protection を主張しません。Controlled production GPS は private Supabase Broadcast と PostGIS に 1437 ms で到達し、一時データは削除済みです。Full production certification には controlled-device FCM、Android/iOS background-location matrix、authenticated role journeys、certification scope の payment/messaging/AI/owned-routing integrations が必要です。
 
 ## Product preview
 
@@ -42,6 +42,8 @@ Mobile captures は simulated GPS と local stack を使用し、manifest は di
 | Driver     | [`main_driver.dart`](../mobile/lib/main_driver.dart)     | Flutter/Riverpod native mobile app (Android/iOS) | device/emulator; Android `driver` flavor   | [Driver ガイド](driver-guide.ja.md)                      |
 
 Customer と Driver に local web URL はありません。明示的な Flutter entrypoint を使用し、下記の `--flavor` command は Android product flavor を選択します。
+
+Migration checksum 照合: [詳細](migration-checksum-reconciliation.ja.md) · [English](migration-checksum-reconciliation.md) · [Tiếng Việt](migration-checksum-reconciliation.vi.md)。
 
 Web route は `vi`、`en`、`ja` の `/:locale` prefix を使用します。API success は `{ success: true, data, meta? }`、error は RFC 7807 Problem Details です。
 

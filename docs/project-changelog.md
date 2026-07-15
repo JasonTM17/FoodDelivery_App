@@ -101,10 +101,13 @@ authoritative source for individual commits and implementation detail.
   configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-route
   checks, accessibility, visual, tenant, device, and image-pull gates remain
   mandatory before release certification.
-- Three already-applied Supabase migration files have checksums that do not
-  match production history. The schema/index/RLS end-state has been verified,
-  the applied records were not rewritten, and the provenance exception remains
-  explicitly documented for future database audits.
+- Three already-applied Supabase migration checksums were reconciled from
+  immutable migrator/Git evidence without rewriting applied records. The exact
+  production/source pairs and the byte-identical Storage source are recorded in
+  [`migration-checksum-reconciliation.md`](migration-checksum-reconciliation.md).
+  The source branch now has a fail-closed guard and focused rejection coverage,
+  but the current Railway image predates the guard; production protection remains
+  a rollout gate.
 - At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
   Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
   352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and

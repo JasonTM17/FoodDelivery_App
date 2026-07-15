@@ -13,7 +13,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-15:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` passed 145 Jest suites / 1071 tests, typecheck, lint, build, all 10 triggered GitHub workflows, multi-architecture runtime smoke, and eight High/Critical image scans. Railway migrate/API/worker and both Vercel apps run that exact revision; all 41 effective migrations are applied, only the split public/private Storage buckets remain, and public health/readiness/login smoke passes. Three older applied migration files still have unresolved checksum provenance and the pending guard intentionally blocks a later rollout until they are reconciled. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
+> **Release status — 2026-07-15:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` passed 145 Jest suites / 1071 tests, typecheck, lint, build, all 10 triggered GitHub workflows, multi-architecture runtime smoke, and eight High/Critical image scans. The three historical checksum records are now reconciled to immutable artifact/Git evidence through exact approved production/source pairs. The fail-closed guard and focused 5-test coverage are prepared on this source branch, but the currently running Railway image predates the guard; production protection is not claimed until a new immutable image is deployed and its preflight is verified. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
 
 ## Product preview
 
@@ -209,8 +209,8 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 ## Deployment order
 
 1. Rotate exposed credentials and keep all configured Railway/provider values in sealed provider stores.
-2. Recheck all 41 effective production migrations and reconcile the three historical checksum mismatches before rollout; never bypass a failing guard or infer provider state from local Docker.
-3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
+2. Recheck all 41 effective production migrations against the [checksum reconciliation record](docs/migration-checksum-reconciliation.md); never bypass a failing guard or infer provider state from local Docker.
+3. Build, scan, and deploy one immutable SHA containing the guard to the one-off migrator first, then pin API/worker to that SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
 6. Preserve the verified `f2c02ed` Docker Hub/GHCR manifests and scans; promote semver/`latest` only after the remaining device/browser/provider production gates pass.
@@ -234,6 +234,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 - [Roadmap](docs/project-roadmap.md)
 - [Branch disposition](docs/branch-disposition.md)
 - [Batch 4 release report](docs/batch4-release-report.md)
+- [Migration checksum reconciliation](docs/migration-checksum-reconciliation.md) · [Tiếng Việt](docs/migration-checksum-reconciliation.vi.md) · [日本語](docs/migration-checksum-reconciliation.ja.md)
 
 ## Branch policy
 
