@@ -59,11 +59,11 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-15): migrate deployment `5e52c611-60d4-4c4a-a109-83d44eec21f0`, API deployment `8b8c3450-a5a7-4138-b030-c4c2b072702b`, and worker deployment `ff50c82f-5471-4be9-b4fc-899e559a3efc` are successful from immutable `f2c02ed` SHA images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-15): migrate deployment `6438d9ff-caa3-433c-afc1-81c4885797a8`, API deployment `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker deployment `6c2201d1-ccce-444f-b592-4ac4fb20c287` are successful from immutable SHA `17584153ff256b74a3413ae9844f4f27bff038cc` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
 
-### Last verified multi-registry candidate
+### Historical multi-registry candidate — superseded
 
-Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries. Docker Publish run `29387565225` pulled and smoke-tested both architectures and passed all eight High/Critical scans; Railway runs the exact backend/migrate digests:
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-15](#current-deployment-evidence--2026-07-15); do not use the table below for a new rollout.
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -222,6 +222,19 @@ The Railway worker owns both durable job draining and optional periodic RAG sync
 Same as Admin, replacing `NEXT_PUBLIC_ADMIN_URL` with `NEXT_PUBLIC_RESTAURANT_URL`.
 
 Public variables are baked into Next.js assets. Changing them requires a rebuild/redeploy. OpenFreeMap needs no browser key or billing account; Supabase still requires RLS and scoped realtime authorization.
+
+## Current deployment evidence — 2026-07-15
+
+Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed. Railway deployment IDs are migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287`; health/readiness and Vercel health revisions match this SHA. Docker Hub SHA, `v0.1.1`, and `latest` aliases match these digests:
+
+| Image | Digest |
+| --- | --- |
+| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` |
+| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` |
+| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` |
+| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
+
+The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
 ## 4. Supabase deployment
 

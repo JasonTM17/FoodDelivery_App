@@ -1,6 +1,12 @@
 # FoodFlow Batch 4 Release Report
 
-## Current production certification update — 2026-07-15
+## Final production certification update — 2026-07-15
+
+Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is the current deployed application revision. GitHub push gates and Docker Publish SHA-only run `29394704210` are green. Railway migrate/API/worker deployments `6438d9ff-caa3-433c-afc1-81c4885797a8`, `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and `6c2201d1-ccce-444f-b592-4ac4fb20c287` report success; API/ready health and both Vercel health endpoints return this exact revision. Supabase has 41 effective migrations with none pending, healthy PostgreSQL/Redis/Storage, private Broadcast authorization, signed private Storage access, and empty temporary-test state after cleanup.
+
+Docker Hub SHA, `v0.1.1`, and `latest` tags are digest-equal for backend, migrator, Admin, and Restaurant. GHCR SHA manifests are public and digest-equal; GHCR semver promotion is not claimed because the repository token returned `401 Unauthorized` for package-manifest writes. Full device certification remains open for real Android/iOS background-location, FCM delivery, and optional provider credentials.
+
+## Historical candidate snapshot — superseded
 
 Runtime code evidence is anchored at `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; subsequent report-only commits do not change any backend/web/mobile or Docker build context. Ten successful workflows are recorded for the runtime SHA: Docker Publish, Gitleaks, Lint, Build Check, Trivy, SBOM, CodeQL, CI, Integration Smoke Gate, and E2E. No Mobile CI or OpenAPI Validate run is recorded for that SHA. Fresh local backend checks passed lint, typecheck, build, and 145 Jest suites / 1071 tests; docs links, 143 confirmed config keys, manifest JSON, and migration fresh-database checks also passed. The final provider smoke must still bind each deployment to the final immutable SHA tag after the documentation commit.
 

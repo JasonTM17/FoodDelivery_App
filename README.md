@@ -13,7 +13,13 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
 
 FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-15:** runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` passed 145 Jest suites / 1071 tests, typecheck, lint, build, all 10 triggered GitHub workflows, multi-architecture runtime smoke, and eight High/Critical image scans. Railway migrate/API/worker and both Vercel apps run that exact revision; all 41 effective migrations are applied, only the split public/private Storage buckets remain, and public health/readiness/login smoke passes. Three older applied migration files still have unresolved checksum provenance and the pending guard intentionally blocks a later rollout until they are reconciled. A controlled production GPS update reached private Supabase Broadcast and PostGIS in 1437 ms, with test data removed afterward. This is **not** full production certification: controlled-device FCM, the Android/iOS background-location matrix, authenticated role journeys, and configured payment/messaging/AI/owned-routing integrations still need evidence.
+> **Release status — 2026-07-15:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. Push gates and Docker SHA-only smoke are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence, signed private uploads and token/reconnect checks passed with temporary data removed. Docker Hub SHA, `v0.1.1`, and `latest` aliases match all four verified image digests. Real Android/iOS background-location, FCM and optional provider credentials remain outside this environment and are not claimed as certified.
+
+## Current release evidence — 2026-07-15
+
+Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM and build gates are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence and token/reconnect checks passed with temporary data removed. Docker Hub SHA, `v0.1.1`, and `latest` resolve to matching digests for all four images. Real Android/iOS background-location, FCM and optional provider credentials remain outside this environment, so those are not claimed as certified.
+
+The release paragraph above the product preview is a historical candidate snapshot; this section is the current source of truth.
 
 ## Product preview
 
@@ -93,9 +99,20 @@ Provider selection is explicit:
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
-## Docker packages
+## Current Docker release — SHA 17584153
 
-The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`. Both registries were queried after publication. Docker Publish run `29387565225` pulled and smoke-tested both supported architectures and passed all eight High/Critical scans. Railway API/worker run the exact backend digest and the one-off migrator ran the exact migrate digest. `latest` remains unchanged until the remaining production certification gates pass.
+| Artifact | Docker Hub SHA digest | Docker Hub aliases |
+| --- | --- | --- |
+| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` | `v0.1.1`, `latest` |
+| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` | `v0.1.1`, `latest` |
+| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` | `v0.1.1`, `latest` |
+| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` | `v0.1.1`, `latest` |
+
+All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because the repository token returned `401 Unauthorized` for package-manifest writes.
+
+## Historical Docker candidate — superseded
+
+The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The current Docker Hub digests and aliases are recorded in [Current Docker release — SHA 17584153](#current-docker-release--sha-17584153).
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -213,7 +230,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
-6. Preserve the verified `f2c02ed` Docker Hub/GHCR manifests and scans; promote semver/`latest` only after the remaining device/browser/provider production gates pass.
+6. Preserve the verified immutable Docker Hub/GHCR manifests and scans; the current aliases are recorded in the release evidence section. Device/browser/provider certification remains a separate evidence gate.
 
 ## Documentation
 
