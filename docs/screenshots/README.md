@@ -1,42 +1,59 @@
 # FoodFlow Screenshot Inventory
 
-Historical non-production product stills for the root README and [product gallery](../product-gallery.md). The manifest records `capturedAt` 2026-07-10 but no source SHA, Compose reference, or image reference, so these assets do not prove the current source head or a release candidate. Admin and Restaurant images came from an isolated Docker/E2E stack with deterministic test data; Driver GPS images came from an Android API 35 emulator connected to that non-production stack.
+Privacy-reviewed product media for the four FoodFlow roles. Read the [capture manifest](./manifest.json) for timestamps, source heads, runtime context, seed identities, and dirty-working-tree boundaries.
 
-| Surface | Stored assets | Inventory status |
-|---|---:|---|
-| Admin | 10 PNG stills | Historical non-production web media. |
-| Restaurant | 10 PNG stills | Historical non-production web media. |
-| Customer | 1 WebP still | Test-only Android API 35 discovery result from simulated location; not production evidence. |
-| Driver | 4 WebP stills | Test-only Android API 35 simulated-GPS, Online, foreground-notification, and permission assets; not mobile-release, Supabase, Railway, or production evidence. |
+## Capture environments
 
-| File | Surface | Route/content |
+| Scope | Environment | Boundary |
 |---|---|---|
-| `admin/01-login.png` | Admin | `/vi/login` |
-| `admin/02-overview.png` | Admin | Overview KPIs/charts |
-| `admin/03-orders.png` | Admin | Orders |
-| `admin/04-restaurants.png` | Admin | Restaurants |
-| `admin/05-users.png` | Admin | Users |
-| `admin/06-drivers.png` | Admin | Drivers |
-| `admin/07-promotions.png` | Admin | Promotions |
-| `admin/08-support.png` | Admin | Support |
-| `admin/09-analytics.png` | Admin | Analytics |
-| `admin/10-settings.png` | Admin | Settings |
-| `restaurant/01-login.png` | Restaurant | `/vi/login` |
-| `restaurant/02-dashboard.png` | Restaurant | Dashboard |
-| `restaurant/03-orders.png` | Restaurant | Order queue |
-| `restaurant/04-menu.png` | Restaurant | Menu |
-| `restaurant/05-promotions.png` | Restaurant | Promotions |
-| `restaurant/06-revenue.png` | Restaurant | Revenue |
-| `restaurant/07-reviews.png` | Restaurant | Reviews |
-| `restaurant/08-staff.png` | Restaurant | Staff |
-| `restaurant/09-insights.png` | Restaurant | Insights |
-| `restaurant/10-settings.png` | Restaurant | Settings |
-| `customer/customer-nearby-restaurants.webp` | Customer | Nearby restaurants loaded from a simulated emulator location |
-| `driver/driver-online-gps-e2e.webp` | Driver | Online state after a verified emulator GPS update |
-| `driver/driver-online-realtime-gps.webp` | Driver | Current device-smoke Online state while foreground tracking is active |
-| `gps/driver-notification-permission.webp` | Android | Runtime notification permission prompted when the driver enables tracking |
-| `gps/driver-foreground-location-notification.webp` | Android | Privacy-reviewed foreground location notification while Driver is Online |
+| Admin / Restaurant | Google Chrome against the isolated `foodflow-batch4-e2e` Docker stack with deterministic seed data | Local web product/regression evidence; not a deployed browser journey or release certification. |
+| Customer / Driver role flows | Flutter debug APKs on an Android API 35 x86_64 AVD connected to the isolated E2E stack | Built from the current dirty working tree; not a mobile release or production-provider certification. |
+| Driver GPS / foreground tracking | Android API 35 emulator with fixed simulated location and local Socket.IO compatibility | Local command/persistence/fanout evidence only; not Supabase/Railway, payout, routing, or production proof. |
 
-`manifest.json` stores capture UTC, local base URLs, non-secret seed identities, source state, and bounded local GPS evidence. The 2026-07-14 mobile capture explicitly records a dirty workspace, so it is regression evidence rather than release evidence. A release-use recapture must additionally record Compose/image references and use a clean final head. The manifest and media must never contain real coordinates, passwords, access/refresh tokens, API keys, or provider secrets.
+The manifest records only deterministic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. The mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap.
 
-Regenerate with `node docs/scripts/capture-product-media.mjs` using the environment shown in the product gallery. Inspect every image after capture; successful automation can still record a CORS, API, or localization defect.
+## Role guides
+
+| Role | English | Tiếng Việt | 日本語 |
+|---|---|---|---|
+| Admin | [Guide](../admin-guide.md) | [Hướng dẫn](../admin-guide.vi.md) | [ガイド](../admin-guide.ja.md) |
+| Restaurant | [Guide](../restaurant-guide.md) | [Hướng dẫn](../restaurant-guide.vi.md) | [ガイド](../restaurant-guide.ja.md) |
+| Customer | [Guide](../customer-guide.md) | [Hướng dẫn](../customer-guide.vi.md) | [ガイド](../customer-guide.ja.md) |
+| Driver | [Guide](../driver-guide.md) | [Hướng dẫn](../driver-guide.vi.md) | [ガイド](../driver-guide.ja.md) |
+
+## Inventory
+
+| Surface | Stored assets | Contents |
+|---|---:|---|
+| Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
+| Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
+| Customer | 3 WebP stills + 1 GIF | App launch, authenticated Home, simulated-location nearby restaurants; launch/sign-in-to-Home flow. |
+| Driver | 6 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, two Online/GPS states; sign-in-to-Home flow. |
+| Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
+
+### Admin
+
+`admin/01-login.png` through `admin/10-settings.png`; GIF: `../media/gifs/admin-login-flow.gif`.
+
+### Restaurant
+
+`restaurant/01-login.png` through `restaurant/10-settings.png`; GIF: `../media/gifs/restaurant-orders-to-menu.gif`.
+
+### Customer
+
+- `customer/01-login.webp` — privacy-reviewed Customer app launch from the verified Android build.
+
+### Driver
+
+- `driver/01-login.webp` — Driver sign-in.
+- `driver/02-home.webp` — active-delivery Home with explicit GPS-resume status.
+- `driver/03-earnings.webp` — earnings summary/history.
+- `driver/04-profile.webp` — profile, vehicle summary, language, and sign-out.
+- `driver/driver-online-gps-e2e.webp` — Online after the verified local GPS chain.
+- `driver/driver-online-realtime-gps.webp` — Online while foreground tracking is active.
+- `gps/driver-notification-permission.webp` — Android notification permission for tracking.
+- `gps/driver-foreground-location-notification.webp` — foreground location notification.
+
+## Review and recapture
+
+Use the [product gallery](../product-gallery.md) for rendered media and the capture procedure. Before retaining any recapture, verify locale, visible error/loading states, API-backed data, crop/clipping, and privacy. A release-use recapture must bind media to a clean final source head and immutable runtime references. Successful local automation or a privacy review does not convert dirty-working-tree media into production certification.

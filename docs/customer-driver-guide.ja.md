@@ -19,17 +19,21 @@ Supabase Realtime credential 経由の allow-list event を受信します。Soc
 明示的な local/self-hosted 用だけです。Customer/Driver にブラウザで開く Web URL
 はありません。
 
-## Customer ガイド
+## Role guide
 
 注文手順、permission、住所制限、checkout、追跡、Help は独立した
 [Customer（注文者）ガイド](./customer-guide.ja.md) を参照してください。本書は
-Customer/Driver 共通の mobile/runtime overview として残します。
+Driver sign-in、Online/GPS、dispatch、earnings、profile は
+[Driver ガイド](./driver-guide.ja.md) を参照してください。本書は共通の
+mobile/runtime overview として残します。
 
 ## Customer の流れ
 
-1. **起動とログイン。** splash の後、認証済み Customer route を使います。新規
-   利用者は登録後 welcome、位置情報、通知 onboarding を進みます。位置情報や通知を
-   拒否してもよく、アプリは制限された実際の状態を示し、位置や push 成功を捏造しません。
+1. **起動とログイン。** splash の後、認証済み Customer route を使います。新規利用者も
+   登録でき、現行 auth routing はサインインと登録の両方を Home に直接送ります。位置情報と
+   通知の prompt は関連機能と端末側の flow で処理され、認証後の必須 onboarding chain では
+   ありません。permission を拒否してもよく、アプリは制限された実際の状態を示し、位置や
+   push 成功を捏造しません。
 2. **料理を探す。** Home、search、restaurant list/filter、restaurant detail、food
    detail から cart へ進みます。favorites と vouchers は認証済み Customer route です。
 3. **Cart と checkout。** Checkout には配達先 address の選択が必要です。選択 address、
@@ -97,12 +101,17 @@ Dart define に入れてはいけません。詳しい setup、Android build、t
 
 ## Visual と release の境界
 
-Gallery には privacy review 済みの Customer discovery still 一枚と、local Android
-emulator test の Driver GPS/permission capture 四枚があります。Capture record が clean
-source SHA と immutable runtime に紐付いていないため、mobile release や production の
-証拠として見せません。公開用 visual には、source SHA と runtime reference を記録した
-emulator/device capture と visual review が必要です。
-[capture procedure](./product-gallery.ja.md#recapture) を参照してください。
+| Customer app launch | Active-delivery Driver Home |
+|---|---|
+| ![Customer app launch](./screenshots/customer/01-login.webp) | ![Driver Home](./screenshots/driver/02-home.webp) |
+
+Gallery には current Customer/Driver role stills と以前の local GPS/permission
+captures があります。Isolated E2E stack 接続の Android AVD、deterministic seed
+identity、masked password、dirty working tree を使いました。Role capture は fixed
+simulated GPS を使い、Google Maps API key は使っていません。Privacy-reviewed
+regression/product evidence であり、mobile release、payment、dispatch、routing、
+background location、provider、production の証拠ではありません。Clean-head visual
+record には [capture procedure](./product-gallery.ja.md#recapture) を使います。
 
 関連: [product requirements](./project-overview-pdr.ja.md)、
 [testing guide](./testing-guide.ja.md)、[product gallery](./product-gallery.ja.md)。

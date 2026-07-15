@@ -63,16 +63,16 @@ Current production evidence (2026-07-14): migrate deployment `a9002614-ed2a-438c
 
 ### Last verified multi-registry candidate
 
-Evidence commit `ed25399298c01975c7943ff967d4178e0ceafdfa` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries; a clean pull/runtime smoke is still required:
+Runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9` is published as matching multi-architecture Docker Hub and public GHCR tags. The digests below were read back from both registries. Docker Publish run `29336146675` pulled and smoke-tested both architectures and passed all eight High/Critical scans; Railway runs the exact backend/migrate digests:
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| API + worker   | `nguyenson1710/foodflow-backend:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:b1a24c929d7178548c407c019aa75347da78fe5c1dd135177f2b5e4024e4143b`    |
-| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:feb11569b66cb88cdeafbc92c3e64ca9eaed8801859f42f3600237eb55ad3bb4`    |
-| Admin          | `nguyenson1710/foodflow-admin:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:43d8908d5a77efb7142744ce76ce6355631a3b406b5e8d5e6bed884a4ac02b12`      |
-| Restaurant     | `nguyenson1710/foodflow-restaurant:sha-ed25399298c01975c7943ff967d4178e0ceafdfa` — `sha256:7ba5838752a699f7dd3fb46d98110b2b37ef0c6a53f6f21aa2493c9e398da97e` |
+| API + worker   | `nguyenson1710/foodflow-backend:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:6d56cbefe7e9644703d957ae7a1abe96966d831b2567172edafc3063fc2e1f10`    |
+| Prisma migrate | `nguyenson1710/foodflow-migrate:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:f5131517198105f466ebb3daf2d52d5d56541f6b97dc0ec2cb99936e85e73f43`    |
+| Admin          | `nguyenson1710/foodflow-admin:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:481bf07929b66cd8a23ab9d4ed95f37f585e78c868af3bacd49b6186b26bcfe6`      |
+| Restaurant     | `nguyenson1710/foodflow-restaurant:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9` — `sha256:38c35c1470152cb42debdf284444572e2d2127e42d71939384b804cbe1e1fa1f` |
 
-`latest` intentionally remains on the prior candidate. All four GHCR packages are public, repository-linked, and grant Actions write access. Clean-pull and smoke all four artifacts, then complete the provider stages below before any semver or `latest` promotion.
+`latest` intentionally remains on the prior candidate. All four GHCR packages are public, repository-linked, and grant Actions write access. Complete the remaining provider/device/browser stages below before any semver or `latest` promotion.
 
 Expected Vercel projects:
 

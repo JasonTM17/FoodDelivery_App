@@ -31,7 +31,7 @@ the delivery-address and pricing checks required at checkout.
 
 1. Open Customer. You can browse Home, Search, restaurants, and food details before signing in.
 2. Choose **Register** to provide name, email, phone number, and password, or choose **Sign in** with email and password.
-3. After a successful sign-in, continue through the welcome, location, and notification onboarding screens. Declining a permission must not create a false location or a false push-success state.
+3. After a successful sign-in or registration, the current router opens Home directly. Location and notification permission prompts are feature- and device-driven; declining either permission must not create a false location or a false push-success state.
 
 ### Permission notes
 
@@ -116,6 +116,8 @@ message. This gives support context without relying on a guessed order.
 
 ## Visual and release boundary
 
-The [product gallery](./product-gallery.md#customer) contains one privacy-reviewed, test-only Customer discovery still from an Android API 35 emulator using simulated GPS. It is regression evidence from a dirty workspace, not release or production proof. Admin and Restaurant GIFs are retained for their own web flows and are not relabelled as Customer UI; no Customer GIF is stored yet.
+![Customer app launch](./screenshots/customer/01-login.webp)
+
+The current visual capture was made from a Flutter debug APK on an Android API 35 x86_64 AVD connected to the isolated local E2E stack. Authenticated Customer stills that exposed exact simulated coordinates were deliberately excluded. The retained dirty-working-tree media is privacy-reviewed regression/product evidence, not mobile release, payment, map/routing, Firebase, Supabase/Railway, or production proof.
 
 For mobile runtime, configuration, and build commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md) and [mobile README](../mobile/README.md).

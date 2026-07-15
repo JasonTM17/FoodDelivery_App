@@ -17,14 +17,14 @@ FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional 
 
 ## Product preview
 
-FoodFlow has four distinct product surfaces. The media below is historical non-production evidence: the manifest records `capturedAt` 2026-07-10 but no source SHA or image reference, so it does not prove the current source head or a release candidate. Start with the [Customer guide](docs/customer-guide.md) for the ordering app, then see the [full product gallery](docs/product-gallery.md) and [Customer and Driver mobile overview](docs/customer-driver-guide.md).
+FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide.md), [Restaurant](docs/restaurant-guide.md), [Customer](docs/customer-guide.md), or [Driver](docs/driver-guide.md) guide, then see the [full product gallery](docs/product-gallery.md) and [mobile overview](docs/customer-driver-guide.md). The manifest records source heads, runtimes, capture times, and privacy boundaries. Web media came from Google Chrome against the isolated local E2E stack; mobile media came from Flutter debug APKs on an Android API 35 x86_64 AVD. All are current local product/regression evidence from dirty working trees or local images—not production or release certification.
 
 | Surface    | Product runtime                  | Current visual evidence                  | How to review the product                                                                                 |
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Admin      | Next.js web dashboard            | Historical stills and GIF                | Run the Admin web app; see the gallery.                                                                   |
-| Restaurant | Next.js web dashboard            | Historical stills and GIF                | Run the Restaurant web app; see the gallery.                                                              |
-| Customer   | Flutter/Riverpod Android/iOS app | One test-only Android emulator still     | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
-| Driver     | Flutter/Riverpod Android/iOS app | Four test-only Android emulator captures | Launch `main_driver.dart`; existing GPS/notification captures are not release media.                      |
+| Admin      | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                                  |
+| Restaurant | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.                  |
+| Customer   | Flutter/Riverpod Android/iOS app | One privacy-reviewed local WebP          | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
+| Driver     | Flutter/Riverpod Android/iOS app | Six role/GPS WebPs and two tracking assets | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.                  |
 
 The mobile captures use simulated GPS and the isolated local stack. Their manifest records a dirty workspace, so authentic release media still requires a clean-head device/emulator recapture from the chosen release candidate. The documentation deliberately does not relabel local media as production evidence.
 
@@ -33,19 +33,22 @@ The mobile captures use simulated GPS and the isolated local stack. Their manife
   <img src="docs/screenshots/restaurant/04-menu.png" alt="FoodFlow Restaurant menu" width="48%" />
 </p>
 
-| Admin sign-in to overview                                   | Restaurant orders to menu                                               |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
+| Flow | Preview |
+|---|---|
+| Admin sign-in to overview | ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) |
+| Restaurant orders to menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
+| Customer app launch | ![Customer app launch](docs/screenshots/customer/01-login.webp) |
+| Driver active-delivery Home | ![Driver Home](docs/screenshots/driver/02-home.webp) |
 
 ## Applications
 
 | Surface     | Source                                                | Runtime                                          | Local target                                  | Primary guide                                              |
 | ----------- | ----------------------------------------------------- | ------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
 | Backend API | `backend/`                                            | NestJS 11, Prisma 6                              | `http://localhost:3001/api`                   | —                                                          |
-| Admin       | `web/apps/admin/`                                     | Next.js 15, React 18, next-intl                  | `http://localhost:3000`                       | —                                                          |
-| Restaurant  | `web/apps/restaurant/`                                | Next.js 15, React 18, next-intl                  | `http://localhost:3002`                       | —                                                          |
+| Admin       | `web/apps/admin/`                                     | Next.js 15, React 18, next-intl                  | `http://localhost:3000`                       | [Admin guide](docs/admin-guide.md)                         |
+| Restaurant  | `web/apps/restaurant/`                                | Next.js 15, React 18, next-intl                  | `http://localhost:3002`                       | [Restaurant guide](docs/restaurant-guide.md)               |
 | Customer    | [`main_customer.dart`](mobile/lib/main_customer.dart) | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `customer` flavor | [Customer guide](docs/customer-guide.md)                   |
-| Driver      | [`main_driver.dart`](mobile/lib/main_driver.dart)     | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor   | [Customer and Driver guide](docs/customer-driver-guide.md) |
+| Driver      | [`main_driver.dart`](mobile/lib/main_driver.dart)     | Flutter/Riverpod native mobile app (Android/iOS) | device or emulator; Android `driver` flavor   | [Driver guide](docs/driver-guide.md)                       |
 
 Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The API uses a shared success envelope (`{ success: true, data, meta? }`) and RFC 7807 Problem Details for errors.
 
@@ -92,22 +95,22 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Docker packages
 
-The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for evidence commit `ed25399298c01975c7943ff967d4178e0ceafdfa`. Both registries were queried after publication. These SHA manifests still require a clean pull/runtime smoke; they are not proof of Railway health. `latest` remains unchanged until the exact SHA artifacts pass provider deployment and production smoke.
+The table below records the matching multi-architecture Docker Hub and public GHCR manifests produced by the SHA-only workflow for runtime candidate `52f433641d5093f6d064cfba6c1cd99c8cb035e9`. Both registries were queried after publication. Docker Publish run `29336146675` pulled and smoke-tested both supported architectures and passed all eight High/Critical scans. Railway API/worker run the exact backend digest and the one-off migrator ran the exact migrate digest. `latest` remains unchanged until the remaining production certification gates pass.
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| API + worker   | [`nguyenson1710/foodflow-backend:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-backend)       | `sha256:b1a24c929d7178548c407c019aa75347da78fe5c1dd135177f2b5e4024e4143b` |
-| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate)       | `sha256:feb11569b66cb88cdeafbc92c3e64ca9eaed8801859f42f3600237eb55ad3bb4` |
-| Admin          | [`nguyenson1710/foodflow-admin:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-admin)           | `sha256:43d8908d5a77efb7142744ce76ce6355631a3b406b5e8d5e6bed884a4ac02b12` |
-| Restaurant     | [`nguyenson1710/foodflow-restaurant:sha-ed25399298c01975c7943ff967d4178e0ceafdfa`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:7ba5838752a699f7dd3fb46d98110b2b37ef0c6a53f6f21aa2493c9e398da97e` |
+| API + worker   | [`nguyenson1710/foodflow-backend:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-backend)       | `sha256:6d56cbefe7e9644703d957ae7a1abe96966d831b2567172edafc3063fc2e1f10` |
+| Prisma migrate | [`nguyenson1710/foodflow-migrate:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-migrate)       | `sha256:f5131517198105f466ebb3daf2d52d5d56541f6b97dc0ec2cb99936e85e73f43` |
+| Admin          | [`nguyenson1710/foodflow-admin:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-admin)           | `sha256:481bf07929b66cd8a23ab9d4ed95f37f585e78c868af3bacd49b6186b26bcfe6` |
+| Restaurant     | [`nguyenson1710/foodflow-restaurant:sha-52f433641d5093f6d064cfba6c1cd99c8cb035e9`](https://hub.docker.com/r/nguyenson1710/foodflow-restaurant) | `sha256:38c35c1470152cb42debdf284444572e2d2127e42d71939384b804cbe1e1fa1f` |
 
 The worker runs from the backend image with `dist/workers/main.js`; it is not a separately maintained release artifact. All four GHCR packages are public, linked to `JasonTM17/FoodDelivery_App`, and grant the repository Actions write access. Docker Hub and GHCR digests match for every SHA tag. No semver or `latest` tag was promoted.
 
 Release promotion order:
 
 1. Build and push `sha-<full-commit>`.
-2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings.
-3. Pass Supabase/Railway/Vercel production health and authenticated tracking smoke.
+2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings. Completed for `52f4336` by run `29336146675`.
+3. Pass Supabase/Railway/Vercel production health and authenticated tracking smoke. Provider health and controlled GPS Broadcast/PostGIS smoke passed; the wider device/browser matrix remains open.
 4. Build and scan every supported architecture, then create immutable `v4.0.0`.
 5. Promote `latest` only through an explicit manual release action.
 
@@ -210,11 +213,14 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.
-6. Pull and smoke the four matching Docker Hub/GHCR SHA manifests from a clean environment, verify scans, and promote semver/`latest` only after provider production smoke passes.
+6. Preserve the verified `52f4336` Docker Hub/GHCR manifests and scans; promote semver/`latest` only after the remaining device/browser/provider production gates pass.
 
 ## Documentation
 
+- [Admin guide](docs/admin-guide.md) — platform operations, support, reports, exports, and settings
+- [Restaurant guide](docs/restaurant-guide.md) — orders, menu, staff permissions, revenue, and settings
 - [Customer guide](docs/customer-guide.md) — ordering, permissions, map-based address selection, checkout, tracking, and support
+- [Driver guide](docs/driver-guide.md) — onboarding, Online/GPS, dispatch, earnings, and profile
 - [Product gallery](docs/product-gallery.md)
 - [Customer and Driver mobile guide](docs/customer-driver-guide.md)
 - [Project overview and requirements](docs/project-overview-pdr.md)

@@ -19,20 +19,22 @@ allow-listed events through scoped Supabase Realtime credentials; Socket.IO is
 only the explicit local/self-hosted option. There is no Customer or Driver web
 URL to browse.
 
-## Customer guide
+## Role guides
 
 For the Customer's step-by-step ordering journey, permission behaviour, address
 limitation, checkout, tracking, and help, use the standalone
-[Customer guide](./customer-guide.md). This document remains the cross-role
-mobile/runtime overview for Customer and Driver.
+[Customer guide](./customer-guide.md). For Driver sign-in, Online/GPS truth,
+dispatch, earnings, and profile, use the standalone [Driver guide](./driver-guide.md).
+This document remains the shared mobile/runtime overview.
 
 ## Customer journey
 
 1. **Start and sign in.** The app begins at the splash screen, then uses the
-   authenticated Customer routes. New users can register and proceed through
-   welcome, location, and notification onboarding. Location/notification
-   permission can be declined; the app must show the resulting limited state
-   rather than inventing location or push data.
+   authenticated Customer routes. New users can register; current auth routing
+   sends both sign-in and registration to Home. Location and notification
+   prompts are handled by the relevant feature and device flow, not a mandatory
+   post-auth onboarding chain. Either permission can be declined; the app must
+   show the resulting limited state rather than inventing location or push data.
 2. **Find food.** Home, search, restaurant list/filter, restaurant detail, and
    food detail screens lead to a cart. Favorites and vouchers are available
    from authenticated Customer routes.
@@ -116,13 +118,18 @@ a Dart define. Full setup, Android builds, and troubleshooting are in the
 
 ## Visual and release boundary
 
-The gallery contains one privacy-reviewed Customer discovery still and four
-Driver GPS/permission captures from local Android emulator testing. They are
-deliberately not presented as mobile-release or production proof because their
-capture record does not bind them to a clean source SHA and immutable runtime.
-A publishable visual record requires a new emulator/device capture from a
-recorded source SHA and runtime reference, followed by visual inspection; use
-the [gallery capture procedure](./product-gallery.md#capture-procedure).
+| Customer app launch | Driver active-delivery Home |
+|---|---|
+| ![Customer app launch](./screenshots/customer/01-login.webp) | ![Driver Home](./screenshots/driver/02-home.webp) |
+
+The gallery contains current Customer/Driver role stills plus earlier local
+GPS/permission captures. They came from Android AVD testing against the isolated
+E2E stack, using deterministic seed identities, masked passwords, and a dirty
+working tree. The role capture used fixed simulated GPS and no Google Maps API
+key. It is privacy-reviewed regression/product evidence, not mobile release,
+payment, dispatch, routing, background-location, provider, or production proof.
+Use the [gallery capture procedure](./product-gallery.md#capture-procedure) for
+a new clean-head visual record.
 
 Related: [product requirements](./project-overview-pdr.md),
 [testing guide](./testing-guide.md), and [product gallery](./product-gallery.md).

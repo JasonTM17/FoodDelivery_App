@@ -1,10 +1,12 @@
 {
-  "capturedAt": "2026-07-14T13:39:27.864Z",
+  "capturedAt": "2026-07-15T01:57:34Z",
   "adminUrl": "http://localhost:13000",
   "restaurantUrl": "http://localhost:13002",
   "seed": {
     "admin": "admin@foodflow.vn",
-    "restaurant": "restaurant1@foodflow.vn"
+    "restaurant": "restaurant1@foodflow.vn",
+    "customer": "customer1@foodflow.vn",
+    "driver": "driver1@foodflow.vn"
   },
   "driverGps": {
     "capturedAt": "2026-07-12T14:37:12Z",
@@ -29,16 +31,53 @@
     "realtimeProvider": "socketio",
     "privacyReview": "Approved: simulated location only; no coordinates, credentials, tokens, email addresses, or personal notifications are visible",
     "evidence": [
-      "Customer authenticated and loaded nearby restaurants from a simulated location",
       "Driver entered Online and the authenticated location command was accepted",
       "PostGIS retained the last location snapshot and the Android location foreground service was active only while Online",
       "Driver returned Offline, the foreground service stopped, and the database online flag changed to false"
     ],
     "files": [
-      "customer/customer-nearby-restaurants.webp",
       "driver/driver-online-realtime-gps.webp",
       "gps/driver-foreground-location-notification.webp"
     ]
+  },
+  "customerLoginCapture": {
+    "capturedAt": "2026-07-15T01:43:41Z",
+    "restoredAt": "2026-07-15T01:51:12Z",
+    "sourceHead": "b189e32152728f5f5658c323bad61e7b60d31a77",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 emulator; Customer app-launch screen before authentication routing",
+    "privacyReview": "Approved: no coordinates, credentials, tokens, email addresses, or personal notifications are visible; the WebP contains no EXIF/GPS profile",
+    "files": [
+      "customer/01-login.webp"
+    ]
+  },
+  "mobileRoleCapture": {
+    "capturedAt": "2026-07-15T01:57:34Z",
+    "restoredAt": "2026-07-15T01:51:12Z",
+    "sourceHead": "b189e32152728f5f5658c323bad61e7b60d31a77",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 x86_64 emulator connected to the isolated foodflow-batch4-e2e stack",
+    "build": "Flutter debug APKs built from the current working tree with customer and driver flavors",
+    "apiBaseUrl": "http://10.0.2.2:13001/api",
+    "realtimeProvider": "socketio",
+    "location": "Fixed simulated GPS only; no Google Maps API key is used",
+    "privacyReview": "Deterministic local seed identities only. Passwords remain masked; profile contact and vehicle values are synthetic seed data; no tokens, provider keys, production accounts, or real personal data are visible",
+    "evidence": [
+      "Driver authenticated through the local NestJS API; active-delivery Home explicitly showed that GPS sharing must resume while Offline",
+      "Driver earnings and profile surfaces rendered from deterministic seed data",
+      "Customer and Driver stills were visually reviewed after metadata stripping"
+    ],
+    "files": {
+      "customer": [
+        "customer/01-login.webp"
+      ],
+      "driver": [
+        "driver/01-login.webp",
+        "driver/02-home.webp",
+        "driver/03-earnings.webp",
+        "driver/04-profile.webp"
+      ]
+    }
   },
   "webCapture": {
     "capturedAt": "2026-07-14T13:39:27.864Z",

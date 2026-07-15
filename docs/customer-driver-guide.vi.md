@@ -19,18 +19,21 @@ allow-list qua credential Supabase Realtime có scope; Socket.IO chỉ là lựa
 local/self-hosted được chỉ định rõ. Customer và Driver không có URL web để mở
 bằng trình duyệt.
 
-## Hướng dẫn Khách hàng
+## Hướng dẫn theo vai trò
 
 Xem [hướng dẫn Khách hàng](./customer-guide.vi.md) độc lập để thao tác đặt món
-từng bước, quyền, giới hạn địa chỉ, checkout, theo dõi và trợ giúp. Tài liệu
-này vẫn là phần tổng quan mobile/runtime dùng chung cho Customer và Driver.
+từng bước, quyền, giới hạn địa chỉ, checkout, theo dõi và trợ giúp. Xem
+[hướng dẫn Tài xế](./driver-guide.vi.md) cho đăng nhập, Online/GPS, dispatch,
+thu nhập và hồ sơ. Tài liệu này vẫn là tổng quan mobile/runtime dùng chung.
 
 ## Hành trình Khách hàng
 
 1. **Mở app và đăng nhập.** App bắt đầu ở splash, sau đó dùng các route Customer
-   đã xác thực. Người mới có thể đăng ký và đi qua welcome, vị trí, thông báo.
-   Có thể từ chối location/notification; app phải hiển thị trạng thái giới hạn
-   thực tế, không được bịa vị trí hay push thành công.
+   đã xác thực. Người mới có thể đăng ký; route auth hiện tại đưa cả đăng nhập và
+   đăng ký thẳng tới Trang chủ. Hộp thoại quyền vị trí/thông báo do tính năng và
+   thiết bị liên quan xử lý, không phải chuỗi onboarding bắt buộc sau auth. Có thể
+   từ chối quyền; app phải hiển thị trạng thái giới hạn thực tế, không được bịa vị
+   trí hay push thành công.
 2. **Tìm món.** Home, search, danh sách/lọc nhà hàng, chi tiết nhà hàng và món
    dẫn tới giỏ hàng. Favorite và voucher là các route Customer đã xác thực.
 3. **Kiểm tra giỏ và thanh toán.** Checkout bắt buộc chọn địa chỉ giao. App gửi
@@ -105,12 +108,17 @@ và xử lý sự cố nằm trong [mobile README](../mobile/README.md).
 
 ## Ranh giới visual và release
 
-Gallery có một ảnh Customer discovery đã review riêng tư và bốn ảnh Driver
-GPS/quyền thông báo từ Android emulator local test. Chúng cố ý không được trình
-bày là bằng chứng mobile release hay production vì record capture chưa gắn với
-source SHA sạch và runtime immutable. Muốn có visual publishable phải capture
-mới từ emulator/thiết bị, ghi source SHA và runtime reference, sau đó review
-bằng mắt; xem [quy trình capture](./product-gallery.vi.md#tạo-lại).
+| Mở ứng dụng Customer | Trang chủ Driver khi đang giao |
+|---|---|
+| ![Mở ứng dụng Customer](./screenshots/customer/01-login.webp) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
+
+Gallery có ảnh role Customer/Driver hiện tại và các capture GPS/quyền local
+trước đó. Chúng được tạo trên Android AVD với E2E stack cô lập, seed identity
+deterministic, mật khẩu che và working tree dirty. Capture role dùng GPS mô
+phỏng cố định, không dùng Google Maps API key. Đây chỉ là evidence
+regression/product đã review riêng tư, không chứng nhận mobile release,
+payment, dispatch, routing, background location, provider hay production.
+Xem [quy trình capture](./product-gallery.vi.md#tạo-lại) để tạo visual clean-head mới.
 
 Liên quan: [yêu cầu sản phẩm](./project-overview-pdr.vi.md),
 [hướng dẫn test](./testing-guide.vi.md), [product gallery](./product-gallery.vi.md).

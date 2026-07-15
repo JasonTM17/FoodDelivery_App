@@ -28,7 +28,7 @@ thế kiểm tra địa chỉ giao và giá giao hàng bắt buộc khi checkout
 
 1. Mở Customer. Bạn có thể xem Home, tìm kiếm, danh sách nhà hàng và chi tiết món trước khi đăng nhập.
 2. Chọn **Đăng ký** để nhập họ tên, email, số điện thoại và mật khẩu; hoặc chọn **Đăng nhập** bằng email và mật khẩu.
-3. Sau khi đăng nhập thành công, đi qua welcome, onboarding vị trí và thông báo. Từ chối quyền không được tạo ra vị trí giả hoặc trạng thái push thành công giả.
+3. Sau khi đăng nhập hoặc đăng ký thành công, router hiện tại mở thẳng Trang chủ. Hộp thoại quyền vị trí và thông báo được kích hoạt theo tính năng và thiết bị; từ chối quyền không được tạo vị trí giả hoặc trạng thái push thành công giả.
 
 ### Lưu ý về quyền
 
@@ -112,6 +112,8 @@ cảnh thay vì phải đoán đơn cần xử lý.
 
 ## Ranh giới visual và release
 
-[Gallery sản phẩm](./product-gallery.vi.md#customer) có một ảnh Customer discovery test-only đã review riêng tư từ Android API 35 dùng GPS mô phỏng. Đây là evidence regression từ workspace dirty, không phải bằng chứng release hay production. GIF Admin/Restaurant chỉ giữ cho luồng web tương ứng, không được gắn lại thành UI Customer; hiện chưa có GIF Customer.
+![Mở ứng dụng Customer](./screenshots/customer/01-login.webp)
+
+Capture hiện tại dùng Flutter debug APK trên Android API 35 x86_64 AVD nối với E2E stack local cô lập. Các ảnh Customer đã xác thực có hiển thị tọa độ mô phỏng chính xác đã bị loại khỏi tài liệu. Media từ working tree dirty được giữ lại đã review riêng tư và chỉ là evidence regression/product, không chứng nhận mobile release, payment, map/routing, Firebase, Supabase/Railway hoặc production.
 
 Xem [hướng dẫn mobile Customer/Driver](./customer-driver-guide.vi.md) và [mobile README](../mobile/README.md) để biết runtime, cấu hình và lệnh build.
