@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a privacy-reviewed non-production gallery. `docs/screenshots/manifest.json` records source heads, capture times, runtime context, and dirty-workspace boundaries for the current media. These assets demonstrate real local product behavior, but they do **not** prove a clean release head, a final Docker build, or a production user journey.
+This privacy-reviewed gallery deliberately mixes three labelled evidence classes: local regression media, historical controlled-production web media, and bounded Driver production-emulator recovery media. `docs/screenshots/manifest.json` records source heads, capture times, runtime context, dirty-workspace boundaries, and SHA-256 for every asset. No image by itself proves a clean release head, a final Docker build, a current production journey, physical-device behavior, or app-store readiness.
 
 Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-product-media.mjs`. A new release-use capture must record its source commit plus the Compose/image references and whether it was run from a clean final head or a dirty workspace.
 
@@ -10,10 +10,10 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 
 | Surface | Product | Stored visual media | Primary guide | Evidence boundary |
 |---|---|---|---|---|
-| Admin | Next.js web dashboard | 10 local PNG stills and one GIF | [Admin guide](./admin-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
-| Restaurant | Next.js web dashboard | 10 local PNG stills and one GIF | [Restaurant guide](./restaurant-guide.md) | Google Chrome evidence from the isolated E2E stack; non-production only. |
+| Admin | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Admin guide](./admin-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; not current-revision certification. |
+| Restaurant | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Restaurant guide](./restaurant-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; public current access remains behind Vercel SSO. |
 | Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One privacy-reviewed local WebP still and one public-auth GIF | [Customer guide](./customer-guide.md) | Android AVD app-launch/public-auth evidence only; authenticated stills with exact coordinates were excluded. |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Android AVD role/GPS evidence only; not mobile release, provider, payout, or production proof. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, one production-emulator recovery WebP, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Local Android AVD role/GPS evidence plus one separately labelled Railway/Supabase production-emulator capture; not physical-device, iOS, FCM, payout, or app-store proof. |
 
 ## Choose a role guide
 
@@ -32,6 +32,14 @@ Customer and Driver have no browser URL. Launch their explicit Flutter entrypoin
 | Restaurant order queue → menu | ![Restaurant orders to menu](./media/gifs/restaurant-orders-to-menu.gif) |
 | Customer sign-in → registration → sign-in | ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) |
 | Driver sign-in → Home → earnings → profile | ![Driver role flow](./media/gifs/driver-role-flow.gif) |
+
+## Historical controlled-production web smoke
+
+These two Google Chrome captures belong to deployed revision `17584153ff256b74a3413ae9844f4f27bff038cc`, not current runtime `a703ece`. At capture time the Admin overview showed the four synthetic role-smoke users and one temporary restaurant; the Restaurant queue was scoped to that temporary restaurant and had no orders. Cleanup then removed every fixture user, profile, restaurant, order, and GPS row. The images prove only the bounded historical authentication journey described in the manifest.
+
+| Admin authenticated overview | Restaurant authenticated order queue |
+|---|---|
+| ![Historical controlled-production Admin overview](./screenshots/production/2026-07-15-admin-authenticated-overview.png) | ![Historical controlled-production Restaurant order queue](./screenshots/production/2026-07-15-restaurant-authenticated-orders.png) |
 
 GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames. Customer records only public sign-in → registration → sign-in navigation without entered credentials. Driver uses four privacy-reviewed Android AVD role stills. None of these previews certifies a production or mobile release journey.
 

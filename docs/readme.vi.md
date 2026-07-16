@@ -8,16 +8,16 @@ FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admi
 
 ## Xem trước sản phẩm
 
-FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-guide.vi.md), [Restaurant](restaurant-guide.vi.md), [Khách hàng](customer-guide.vi.md) hoặc [Tài xế](driver-guide.vi.md), rồi xem [gallery đầy đủ](product-gallery.vi.md) và [tổng quan mobile](customer-driver-guide.vi.md). Manifest ghi source head, runtime, thời gian và ranh giới riêng tư. Media web được capture bằng Google Chrome trên E2E stack local cô lập; media mobile dùng Flutter debug APK trên Android API 35 x86_64 AVD. Tất cả chỉ là evidence product/regression local từ working tree/image local, không phải chứng nhận release hay production.
+FoodFlow có bốn bề mặt sản phẩm. Chọn [hướng dẫn Admin](admin-guide.vi.md), [Restaurant](restaurant-guide.vi.md), [Khách hàng](customer-guide.vi.md) hoặc [Tài xế](driver-guide.vi.md), rồi xem [gallery đầy đủ](product-gallery.vi.md) và [tổng quan mobile](customer-driver-guide.vi.md). Manifest ghi source head, runtime, thời gian, ranh giới riêng tư và SHA-256 của toàn bộ asset. Phần lớn media web được capture bằng Google Chrome trên E2E stack local cô lập; hai ảnh Admin/Restaurant được gắn nhãn riêng là evidence production có kiểm soát lịch sử của SHA `17584153`. Media mobile dùng Flutter debug APK trên Android API 35 x86_64 AVD; một ảnh recovery Driver được gắn nhãn riêng là evidence production-emulator có phạm vi. Không asset nào chứng nhận thiết bị vật lý hay app-store.
 
 | Bề mặt     | Runtime                               | Bằng chứng trực quan hiện có              | Cách xem sản phẩm                                                                                       |
 | ---------- | ------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Admin      | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Admin](admin-guide.vi.md), rồi chạy Admin web.                                           |
-| Restaurant | Dashboard web Next.js                 | 10 PNG local và một GIF                   | Đọc [hướng dẫn Restaurant](restaurant-guide.vi.md), rồi chạy Restaurant web.                            |
+| Admin      | Dashboard web Next.js                 | 10 PNG local, một GIF và một PNG production lịch sử | Đọc [hướng dẫn Admin](admin-guide.vi.md), rồi chạy Admin web.                              |
+| Restaurant | Dashboard web Next.js                 | 10 PNG local, một GIF và một PNG production lịch sử | Đọc [hướng dẫn Restaurant](restaurant-guide.vi.md), rồi chạy Restaurant web.               |
 | Customer   | Ứng dụng Flutter/Riverpod Android/iOS | Một WebP và một GIF local đã kiểm duyệt riêng tư | Đọc [hướng dẫn Khách hàng](customer-guide.vi.md), rồi chạy `main_customer.dart` trên thiết bị/emulator. |
-| Driver     | Ứng dụng Flutter/Riverpod Android/iOS | Sáu WebP role/GPS, hai asset tracking và một GIF | Đọc [hướng dẫn Tài xế](driver-guide.vi.md), rồi chạy `main_driver.dart`.                              |
+| Driver     | Ứng dụng Flutter/Riverpod Android/iOS | Sáu WebP local, một WebP production-emulator, hai asset tracking và một GIF | Đọc [hướng dẫn Tài xế](driver-guide.vi.md), rồi chạy `main_driver.dart`.             |
 
-Ảnh mobile dùng GPS mô phỏng và local stack; manifest ghi rõ worktree còn dirty. Muốn có bằng chứng release phải capture lại từ clean head trên thiết bị/emulator của release candidate. Tài liệu không gắn bằng chứng local thành production.
+Manifest tách rõ capture local, production lịch sử và production-emulator có phạm vi. Muốn có bằng chứng release phải capture lại từ clean head trên thiết bị/emulator của release candidate; không gắn bất kỳ evidence có phạm vi nào thành chứng nhận production đầy đủ.
 
 <p align="center">
   <img src="screenshots/admin/02-overview.png" alt="Tổng quan Admin FoodFlow" width="48%" />
@@ -96,9 +96,14 @@ corepack pnpm prisma migrate dev
 corepack pnpm db:seed
 corepack pnpm start:dev
 
+# Terminal A: Admin
 cd ../web
 corepack pnpm install --frozen-lockfile
-corepack pnpm dev
+corepack pnpm --filter foodflow-admin dev --port 3000
+
+# Terminal B: Restaurant (từ thư mục gốc repo sau khi install)
+cd web
+corepack pnpm --filter restaurant dev --port 3002
 
 cd ../mobile
 flutter pub get --enforce-lockfile
