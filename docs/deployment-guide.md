@@ -59,7 +59,7 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful from immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. The deployed database has 41 migrations; candidate migration 42 is not deployed. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `e100789f-03c1-445d-9e69-b8a243973a95`, API deployment `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker deployment `2e4a41ea-6874-4b01-b549-d457c0a20997` are successful from immutable SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` images. API and worker share backend digest `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39`; the completed migrator uses `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The deployed database has 41 migrations; candidate migration 42 on the PR branch is not deployed. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
@@ -244,7 +244,7 @@ Both Vercel projects must define the public variables above in the `Preview` env
 
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. Vercel deployment IDs are Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public login smoke was recorded for `vi`, `en`, and `ja`, but a later direct recheck found public Restaurant requests redirect to Vercel SSO because `all_except_custom_domains` protection is enabled and the project has no custom domain. A temporary authenticated Driver/Admin smoke passed private Broadcast RLS, ES256 token, GPS validation, PostGIS persistence, and cleanup. Wider authenticated role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers are not certified. Docker Hub and GHCR `sha-a703ece...`, `v0.1.2`, and `latest` aliases match these digests:
+Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is deployed. Railway deployment IDs are migrate `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997`. Vercel deployment IDs are Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz`. API health/readiness, public Admin health, and authenticated Restaurant health report the same full SHA; database, Redis, and Supabase Storage are up. Public Restaurant requests still redirect to Vercel SSO because `all_except_custom_domains` protection is enabled and the project has no custom domain. The controlled Driver/Admin GPS smoke belongs to earlier release SHA `a703ece`, and the four-role Chrome/API journey belongs to SHA `17584153`; neither certifies runtime `977d55f`. Current-revision login/role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. The stable Docker Hub/GHCR `v0.1.2` and `latest` release still belongs to SHA `a703ece`; those tagged-release aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
@@ -253,13 +253,13 @@ Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway depl
 | `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
 | `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
 
-Docker Publish run `29474270122` and Release run `29478484699` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`.
+Docker Publish run `29474270122` and Release run `29478484699` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`. Do not infer that the stable aliases certify the newer `977d55f` runtime images.
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
 ### Historical documentation-only Vercel drift recovery
 
-Vercel had previously built documentation-only `master` commits while Railway stayed on SHA `17584153`; PR #80 later merged the docs-only deploy guard. For SHA `a703ece`, build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. Authenticated health now matches Railway. The release-time login smoke was recorded, but the later public Restaurant recheck redirects to Vercel SSO; the Driver/Admin GPS smoke also does not replace full four-role browser/native certification.
+Vercel had previously built documentation-only `master` commits while Railway stayed on SHA `17584153`; PR #80 later merged the docs-only deploy guard. For SHA `a703ece`, build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. At that release checkpoint authenticated health matched Railway. The release-time login smoke was recorded, but the later public Restaurant recheck redirected to Vercel SSO; the Driver/Admin GPS smoke also did not replace full four-role browser/native certification.
 
 ## 4. Supabase deployment
 

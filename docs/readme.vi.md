@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 16/07/2026:** runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel. CI, E2E, Integration Smoke, security, SBOM, build, runtime smoke đa kiến trúc và tám lượt scan image đều xanh; Prisma báo đủ 41 migration, không còn migration chờ. API health/readiness và health Admin/Restaurant trả đúng SHA này; database, Redis và Supabase Storage đều ready. Smoke GPS/Supabase có xác thực đã pass, gồm ES256, RLS private Broadcast, PostGIS, rejection reason và cleanup DB/Redis. Public Restaurant hiện bị Vercel SSO chuyển hướng vì chưa có custom domain. Migration ứng viên 42 và controller recovery được harden chưa deploy. Ảnh Chrome Admin/Restaurant cùng kiểm tra Customer/Driver API thuộc role-smoke lịch sử tại SHA `17584153`, không phải chứng nhận `a703ece`. Thiết bị vật lý Android/iOS, FCM kiểm soát, active-order và browser journey đầy đủ vẫn nằm ngoài evidence hiện tại.
+> **Trạng thái 16/07/2026:** các deployment Railway API/worker/migrator và phản hồi health của Vercel Admin/Restaurant hiện trả đúng runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Production có 41 migration database hiệu lực; migration ứng viên 42 và controller recovery đã harden vẫn chưa deploy. Revision này mới có evidence deployment/health: chưa rerun smoke Google Chrome đủ bốn role, luồng GPS hoặc chứng nhận thiết bị cho `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Role-smoke trước đó tại SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đã xác thực Admin/Restaurant bằng Google Chrome và kiểm tra contract API read-only của Customer/Driver; đây là evidence lịch sử. Các alias Docker Hub/GHCR `v0.1.2` và `latest` vẫn là release được gắn tag riêng tại SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`; CI xanh, scan image, smoke GPS/Supabase và recovery production-emulator Android API 35 của release đó không chứng nhận runtime hiện tại. Public Restaurant, thiết bị vật lý Android/iOS, FCM kiểm soát, active-order và browser journey đầy đủ vẫn nằm ngoài evidence hiện tại.
 
 ## Xem trước sản phẩm
 
@@ -69,9 +69,9 @@ Google Maps không bắt buộc để hệ thống khởi động. Nếu không 
 
 Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và nhận private Supabase Broadcast do server gửi tới các kênh mà JWT cho phép; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
-## Docker release hiện tại — SHA a703ece
+## Docker release đã gắn tag v0.1.2 — SHA a703ece
 
-Các alias SHA, `v0.1.2` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29474270122` và Release run `29478484699` đã xác minh các manifest được promote; GitHub Release kèm đúng ba asset changelog, SBOM source và SBOM image.
+Các alias SHA, `v0.1.2` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29474270122` và Release run `29478484699` đã xác minh các manifest được promote; GitHub Release kèm đúng ba asset changelog, SBOM source và SBOM image. Đây là evidence của release đã gắn tag, không phải SHA runtime Railway/Vercel hiện tại.
 
 | Artifact | Digest Docker Hub |
 | --- | --- |
