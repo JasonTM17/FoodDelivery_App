@@ -424,14 +424,15 @@ git ls-remote --heads origin
 
 Expected remote heads: `master` only. Do not promote an image for a different commit.
 
-Use the release workflow in this order; do not collapse the two Docker Publish runs:
+Use the release workflow in this order; do not rebuild or retag an unverified digest:
 
-1. Manually dispatch **Docker Publish** with `publish_release=false`, an empty `release_tag`, and `promote_latest=false`. This publishes only `sha-<full-commit>` manifests after both-architecture runtime smoke and scans.
+1. Manually dispatch **Docker Publish** from the current `master` head with an empty `source_sha`, `publish_release=false`, an empty `release_tag`, and `promote_latest=false`. This publishes only `sha-<full-commit>` manifests after both-architecture runtime smoke and scans.
 2. After migration checksum/backup gates pass, deploy that exact SHA: run the one-off migrator, pin Railway API/worker to the same backend digest, and deploy both Vercel projects from the same commit. Verify health, readiness, logs, revision equality, and authenticated role/provider smoke.
-3. Dispatch **Docker Publish** again from the unchanged `origin/master` head with `publish_release=true` and an unused stable `release_tag`. Its production gate requires API, Admin, and Restaurant health to report the exact workflow SHA before semver promotion. `promote_latest` remains a separate explicit choice.
-4. Create and push the Git semver tag at the verified SHA, then manually dispatch **Release** with that tag and the full `source_sha`. The workflow verifies the Git tag plus SHA/semver digests in Docker Hub and GHCR before creating the GitHub Release and SBOM attachments.
+3. Create and push the Git semver tag at the verified deployed SHA. The tag must exist before promotion and must resolve exactly to the full `source_sha`.
+4. Dispatch **Docker Publish** from the current `master` workflow with `source_sha=<deployed full SHA>`, `publish_release=true`, the stable `release_tag`, and the explicit `promote_latest` choice. The source must be a `master` ancestor, the Git tag must match it, both immutable registry manifests must already exist, and API/Admin/Restaurant health must report that exact source SHA. Docker Hub semver/latest promotion is authoritative; GHCR authorization refusal is reported without weakening Docker Hub digest checks.
+5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and SBOM attachments. A GHCR semver tag is verified when present but is not required while the provider denies manifest writes.
 
-Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 3–4 are authorized.
+Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 4–5 are authorized.
 
 Do not publish the historical `foodflow-worker` image; the backend image contains the worker entry point.
 

@@ -56,36 +56,63 @@ jobs:
           }
 
           git fetch --force origin master "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
-          test "$SOURCE_SHA" = "$(git rev-parse origin/master)" || {
-            echo 'Releases must target the current origin/master head.'
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" || {
+            echo 'The release workflow must run from the current origin/master head.'
             exit 1
           }
-          test "$SOURCE_SHA" = "$(git rev-list -n 1 "$RELEASE_TAG")" || {
+          git cat-file -e "$SOURCE_SHA^{commit}" || {
+            echo 'source_sha does not identify a repository commit.'
+            exit 1
+          }
+          git merge-base --is-ancestor "$SOURCE_SHA" origin/master || {
+            echo 'source_sha must be an ancestor of the current master head.'
+            exit 1
+          }
+          test "$SOURCE_SHA" = "$(git rev-parse "$RELEASE_TAG^{commit}")" || {
             echo 'The release tag does not point at source_sha.'
             exit 1
           }
 
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
-          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
+          dockerhub_registry="docker.io/$DOCKERHUB_USERNAME"
+          ghcr_registry="ghcr.io/${GHCR_OWNER,,}"
           for image in "${images[@]}"; do
-            expected=''
-            for registry in "${registries[@]}"; do
-              sha_ref="$registry/$image:sha-$SOURCE_SHA"
-              release_ref="$registry/$image:$RELEASE_TAG"
-              sha_digest="$(docker buildx imagetools inspect "$sha_ref" | awk '/^Digest:/ {print $2; exit}')"
-              release_digest="$(docker buildx imagetools inspect "$release_ref" | awk '/^Digest:/ {print $2; exit}')"
-              test -n "$sha_digest" && test "$sha_digest" = "$release_digest" || {
-                echo "Release digest mismatch for $release_ref"
+            dockerhub_sha_ref="$dockerhub_registry/$image:sha-$SOURCE_SHA"
+            dockerhub_release_ref="$dockerhub_registry/$image:$RELEASE_TAG"
+            dockerhub_sha_digest="$(docker buildx imagetools inspect "$dockerhub_sha_ref" | awk '/^Digest:/ {print $2; exit}')"
+            dockerhub_release_digest="$(docker buildx imagetools inspect "$dockerhub_release_ref" | awk '/^Digest:/ {print $2; exit}')"
+            test -n "$dockerhub_sha_digest" && test "$dockerhub_sha_digest" = "$dockerhub_release_digest" || {
+              echo "Docker Hub release digest mismatch for $dockerhub_release_ref"
+              exit 1
+            }
+
+            ghcr_sha_ref="$ghcr_registry/$image:sha-$SOURCE_SHA"
+            ghcr_release_ref="$ghcr_registry/$image:$RELEASE_TAG"
+            ghcr_sha_digest="$(docker buildx imagetools inspect "$ghcr_sha_ref" | awk '/^Digest:/ {print $2; exit}')"
+            test -n "$ghcr_sha_digest" && test "$ghcr_sha_digest" = "$dockerhub_sha_digest" || {
+              echo "GHCR SHA digest mismatch for $ghcr_sha_ref"
+              exit 1
+            }
+
+            if ghcr_release_inspect="$(docker buildx imagetools inspect "$ghcr_release_ref" 2>/dev/null)"; then
+              ghcr_release_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$ghcr_release_inspect")"
+              test "$ghcr_release_digest" = "$dockerhub_sha_digest" || {
+                echo "GHCR release digest mismatch for $ghcr_release_ref"
                 exit 1
               }
-              if [[ -n "$expected" && "$expected" != "$sha_digest" ]]; then
-                echo "Registry digest mismatch for $image"
-                exit 1
-              fi
-              expected="$sha_digest"
-            done
-            echo "$image verified at $expected"
+            else
+              echo "::warning::GHCR release tag is unavailable for $image; verified the public SHA manifest instead."
+              echo "GHCR semver unavailable for $image; public SHA digest verified." >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            echo "$image verified at $dockerhub_sha_digest"
           done
+
+      - name: Check out the verified release source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_sha }}
 
       - name: Generate changelog
         uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
