@@ -253,7 +253,7 @@ Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway depl
 | `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
 | `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
 
-Docker Publish run `29474270122` and Release run `29477368072` verified these remote aliases. The release includes `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`.
+Docker Publish run `29474270122` and Release run `29478484699` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`.
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
@@ -484,7 +484,7 @@ Use the release workflow in this order; do not rebuild or retag an unverified di
 2. After migration checksum/backup gates pass, deploy that exact SHA: run the one-off migrator, pin Railway API/worker to the same backend digest, and deploy both Vercel projects from the same commit. Verify health, readiness, logs, revision equality, and authenticated role/provider smoke.
 3. Create and push the Git semver tag at the verified deployed SHA. The tag must exist before promotion and must resolve exactly to the full `source_sha`.
 4. Dispatch **Docker Publish** from the current `master` workflow with `source_sha=<deployed full SHA>`, `publish_release=true`, the stable `release_tag`, and the explicit `promote_latest` choice. The source must be a `master` ancestor, the Git tag must match it, both immutable registry manifests must already exist, and API/Admin/Restaurant health must report that exact source SHA. Docker Hub promotion is authoritative and fail-closed; GHCR aliases are promoted and verified when the provider accepts package writes.
-5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and SBOM attachments. It also verifies a GHCR semver tag when present; `v0.1.2` completed this path on both registries.
+5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and its three canonical attachments. It also verifies a GHCR semver tag when present; `v0.1.2` completed this path on both registries without duplicate SBOM uploads.
 
 Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 4–5 are authorized.
 
