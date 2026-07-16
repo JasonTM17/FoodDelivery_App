@@ -11,7 +11,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       actions: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -31,6 +31,8 @@ jobs:
           image: foodflow-backend:${{ env.IMAGE_TAG }}
           format: spdx-json
           output-file: sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
 
       - name: Upload SBOM as workflow artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -38,20 +40,3 @@ jobs:
           name: sbom-${{ env.IMAGE_TAG }}
           path: sbom.spdx.json
           retention-days: 90
-
-      - name: Attach SBOM to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo "Attaching SBOM to release ${{ github.ref_name }}..."
-          # Wait up to 3 minutes for the release workflow to create the release
-          for i in $(seq 1 18); do
-            if gh release view "${{ github.ref_name }}" --json tagName > /dev/null 2>&1; then
-              echo "Release found."
-              break
-            fi
-            echo "Release not ready yet, retrying... ($i/18)"
-            sleep 10
-          done
-          gh release upload "${{ github.ref_name }}" sbom.spdx.json --clobber
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
