@@ -33,7 +33,7 @@
     "maplibre-gl": "5.24.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "date-fns": "^3.2.0",
+    "date-fns": "^4.4.0",
     "lucide-react": "^0.312.0",
     "next": "15.5.18",
     "next-intl": "^4.13.1",
