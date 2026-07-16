@@ -149,7 +149,16 @@ async function drainIssuedCapabilities(): Promise<void> {
 async function completeCleanup(expectation: ProductionSmokeCleanupExpectation): Promise<void> {
   await cleanup(expectation)
   if (!cleanupResult) throw new Error('Production role smoke cleanup result is unavailable')
-  if (cleanupResult.run) await drainIssuedCapabilities()
+  if (cleanupResult.run) {
+    // Supavisor session pooling does not guarantee that one PostgreSQL backend
+    // remains attached during a five-minute idle wait. The durable
+    // deletion_committed row blocks new provisioning while capabilities drain.
+    // Release explicitly, then reacquire a fresh exclusive lease before the
+    // final residue scan and lifecycle transition.
+    await releaseExclusiveLease()
+    await drainIssuedCapabilities()
+    await acquireExclusiveLease()
+  }
   await verifyProductionRoleSmokeFixtureResidue(prisma, {
     identities,
     restaurantSlug,

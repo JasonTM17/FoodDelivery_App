@@ -50,9 +50,32 @@ describe('production role smoke database lease', () => {
       backendPid: 654,
       databaseName: 'postgres',
       schemaName: 'public',
+      holdsLease: true,
     }])
 
     await expect(assertProductionRoleSmokeLease(prisma, 321)).rejects.toThrow('connection changed')
+  })
+
+  it('fails closed when the original backend no longer holds the advisory lease', async () => {
+    const prisma = prismaReturning([{
+      backendPid: 321,
+      databaseName: 'postgres',
+      schemaName: 'public',
+      holdsLease: false,
+    }])
+
+    await expect(assertProductionRoleSmokeLease(prisma, 321)).rejects.toThrow('no longer owns')
+  })
+
+  it('accepts a heartbeat only when the original backend still owns the advisory lease', async () => {
+    const prisma = prismaReturning([{
+      backendPid: 321,
+      databaseName: 'postgres',
+      schemaName: 'public',
+      holdsLease: true,
+    }])
+
+    await expect(assertProductionRoleSmokeLease(prisma, 321)).resolves.toBeUndefined()
   })
 
   it('requires unlock confirmation from the original backend', async () => {
