@@ -107,18 +107,20 @@ jobs:
             dockerhub_release_ref="$dockerhub_registry/$image:$RELEASE_TAG"
             dockerhub_sha_digest="$(read_registry_digest "$dockerhub_sha_ref")"
             dockerhub_release_digest="$(read_registry_digest "$dockerhub_release_ref")"
-            test -n "$dockerhub_sha_digest" && test "$dockerhub_sha_digest" = "$dockerhub_release_digest" || {
+            if ! test -n "$dockerhub_sha_digest" ||
+              ! test "$dockerhub_sha_digest" = "$dockerhub_release_digest"; then
               echo "Docker Hub release digest mismatch for $dockerhub_release_ref"
               exit 1
-            }
+            fi
 
             ghcr_sha_ref="$ghcr_registry/$image:sha-$SOURCE_SHA"
             ghcr_release_ref="$ghcr_registry/$image:$RELEASE_TAG"
             ghcr_sha_digest="$(read_registry_digest "$ghcr_sha_ref")"
-            test -n "$ghcr_sha_digest" && test "$ghcr_sha_digest" = "$dockerhub_sha_digest" || {
+            if ! test -n "$ghcr_sha_digest" ||
+              ! test "$ghcr_sha_digest" = "$dockerhub_sha_digest"; then
               echo "GHCR SHA digest mismatch for $ghcr_sha_ref"
               exit 1
-            }
+            fi
 
             ghcr_release_status=0
             if ghcr_release_digest="$(read_registry_digest "$ghcr_release_ref")"; then

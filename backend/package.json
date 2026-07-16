@@ -17,12 +17,13 @@
     "db:big-seed": "ts-node prisma/big-seed.ts",
     "db:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src scripts --ext .ts",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:ai-scenarios": "ts-node ../e2e/ai-scenarios/run-ai-scenarios.ts --fixtures ../e2e/ai-scenarios/canonical-conversations.json",
     "test:ai-scenarios:validate": "ts-node ../e2e/ai-scenarios/run-ai-scenarios.ts --validate-only true --fixtures ../e2e/ai-scenarios/canonical-conversations.json",
+    "smoke:production-role-fixture": "ts-node scripts/production-role-smoke-fixture.ts",
     "generate:openapi": "ts-node -e \"import { NestFactory } from '@nestjs/core'; import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; import { AppModule } from './src/app.module'; import * as fs from 'fs'; (async () => { const app = await NestFactory.create(AppModule); const c = new DocumentBuilder().setTitle('FoodFlow API').setVersion('0.1.0').addBearerAuth().build(); const d = SwaggerModule.createDocument(app, c); fs.writeFileSync('openapi.json', JSON.stringify(d, null, 2)); console.log('openapi.json written'); await app.close(); })()\""
   },
   "dependencies": {
