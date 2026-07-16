@@ -59,7 +59,7 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 - Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` で成功しています。API health/readiness は exact revision と database、Redis、Supabase Storage ready を報告し、worker poll は稼働、DeepSeek 不在のため RAG は disabled です。
 - Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。
 - Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` と Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` は SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` の exact deployment です。Canonical health は同じ revision を返し、public `vi/en/ja` login smoke と authenticated GPS/Supabase smoke は pass。より広い role journeys は pending です。
-- Docker Hub SHA、`v0.1.2`、`latest` aliases は 4 runtime images すべてで digest が一致します。Public GHCR SHA manifests も digest-equal です。Manifest write が `401 Unauthorized` を返したため、GHCR semver/`latest` promotion は claim しません。
+- Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 runtime images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29477368072` が promoted manifests を検証しました。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。
