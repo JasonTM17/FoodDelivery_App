@@ -117,6 +117,33 @@
       }
     ]
   },
+  "productionRoleSmokeCapture": {
+    "capturedAt": "2026-07-15T09:22:09Z",
+    "sourceRevision": "17584153ff256b74a3413ae9844f4f27bff038cc",
+    "environment": "Canonical Vercel Admin and Restaurant production aliases backed by the Railway API and Supabase production database",
+    "browser": "User-selected Google Chrome through the Chrome browser channel",
+    "locale": "vi",
+    "fixture": "Four exact temporary @example.invalid FoodFlow identities and one temporary restaurant; all rows were deactivated and deleted after capture",
+    "privacyReview": "Approved: only synthetic fixture labels and aggregate zero-state data are visible; no password, bearer token, provider key, real account, order, address, coordinate, or personal browser content is present",
+    "evidence": [
+      "Admin authenticated to /vi/overview",
+      "Restaurant authenticated to its own /vi/orders queue",
+      "Both protected routes rejected the retained browser sessions after fixture cleanup",
+      "Final inventory returned zero users, profiles, restaurants, orders, and driver location rows"
+    ],
+    "files": [
+      {
+        "path": "production/2026-07-15-admin-authenticated-overview.png",
+        "dimensions": "1530x822",
+        "sha256": "671D0C9DDE076D22F3291685D6CFD15359D703EE28F0A32EE8A1A1CB096ECBB0"
+      },
+      {
+        "path": "production/2026-07-15-restaurant-authenticated-orders.png",
+        "dimensions": "1536x770",
+        "sha256": "82936BF39CF3C93DEE3FF6C4B762EFDB1B1E6C93BDCED0ED799B865DD583F00B"
+      }
+    ]
+  },
   "webCapture": {
     "capturedAt": "2026-07-14T13:39:27.864Z",
     "sourceHead": "52f433641d5093f6d064cfba6c1cd99c8cb035e9",

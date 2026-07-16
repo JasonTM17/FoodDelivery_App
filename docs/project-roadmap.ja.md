@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-15 status: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。Exact-revision health、public `vi/en/ja` login smoke、Supabase 41-migration state は green ですが、full production certification は no-go です**。
+2026-07-15 status: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。Exact-revision health、public `vi/en/ja` login、Supabase 41 migrations、Admin/Restaurant Chrome auth、Customer/Driver read-only API auth は green ですが、full production certification は no-go です**。
 
 ## Completed and incorporated work
 
@@ -34,7 +34,7 @@ Batch 4 を一つの verified production line として完成: code/mobile parit
 
 ### Mobile release validation
 
-- 明示 launcher から Customer と Driver を個別 smoke します: auth と session restore/logout、許可された private realtime と cross-role/cross-tenant denial の証明、role flow。Live FCM は controlled registered device/token と real production credential が必要で、local lifecycle test は provider delivery の証拠ではありません。
+- Customer/Driver の read-only production API auth、private Realtime、cross-role denial は pass し、fixture は削除済みです。Native launcher で session restore/logout と実 UI role flow を引き続き検証します。Live FCM は controlled device/token と real production credential が必要です。
 - Mobile work は検証可能な branch、commit、patch evidence だけから reconcile します。Missing ref を命名、再作成、推測しません。
 - API contract、vi/en/ja、customer/driver、map/GPS、offline/reconnect、realtime denial、KYC、signed release build を再実行。
 - Android production signing と authorized macOS runner 上の iOS signing を確認。Local debug keystore は compile evidence のみです。
@@ -54,11 +54,11 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## Current-source evidence and external blockers
 
 - Historical local evidence: clean-volume Docker project `foodflow-batch4-e2e` は当時の migrations を適用し、disposable data を seed、RAG を index、Playwright 204/204 を pass しました。これらの count は 2026-07-14 の bounded evidence であり、runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` や production approval の結果ではありません。
-- Live Prisma status は repository の 41 migrations がすべて applied、pending なしと報告します。Database、Redis、Supabase Storage は ready です。Historical rolled-back/checksum-provenance records は audit history として保持し、applied SQL は変更していません。
+- Deployed SHA `17584153` には 41 migrations が適用済みで、Database、Redis、Supabase Storage は ready です。Candidate migration 42 は local validation 済みですが、PR review と synchronized rollout 前には deploy しません。Historical rolled-back/checksum-provenance records は audit history として保持し、applied SQL は変更していません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
 - Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`、API `340fd29c-8198-41f0-8dc4-a097ecbe3438`、worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` は runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` で成功しています。API health/readiness は exact revision と database、Redis、Supabase Storage ready を報告し、worker poll は稼働、DeepSeek 不在のため RAG は disabled です。
 - Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。
-- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` と Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` は SHA `17584153ff256b74a3413ae9844f4f27bff038cc` の exact redeploy です。Canonical health は同じ revision を返し、public `vi/en/ja` login smoke は pass。Authenticated Admin/Restaurant/Customer/Driver journeys は pending です。
+- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` と Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` は SHA `17584153ff256b74a3413ae9844f4f27bff038cc` の exact redeploy です。Canonical health、public `vi/en/ja` login、authenticated Chrome zero-state journey は pass。Customer/Driver API auth は pass、native mobile UI と active-order journey は pending です。
 - Docker Hub SHA、`v0.1.1`、`latest` aliases は 4 runtime images すべてで digest が一致します。Public GHCR SHA manifests も digest-equal で、より広い GHCR semver promotion は claim しません。
 - 以前貼られた provider key は rotate 必須。
 
@@ -68,7 +68,7 @@ Fake value や validation bypass は禁止です。
 
 1. Verified API/worker/Redis baseline を維持し、次回 release は一つの immutable SHA から deploy、health/readiness/worker polling を再確認。
 2. Certify 対象 integration のみ sealed store で設定し、Google Maps や provider values を捏造しない。
-3. Production Customer/Driver/Admin/Restaurant authenticated journeys、token refresh、GPS snapshot/delta/reconnect、configured map/routing、chatbot、export、payment、notification、tenant、controlled-device FCM を smoke。
+3. Native Customer/Driver UI、token refresh、active-order GPS snapshot/delta/reconnect、configured map/routing、chatbot、export、payment、notification、tenant、controlled-device FCM を完了。Pass 済み Admin/Restaurant Chrome と 4-role zero-state auth evidence は維持。
 4. Admin/Restaurant の exact SHA `17584153` health baseline を保持し、web deployment または API revision が変わるたび public/authenticated smoke を再実行。
 5. Future release では remaining smoke が green の後だけ verified immutable artifact を promote し、未検証 digest を rebuild/retag しない。
 

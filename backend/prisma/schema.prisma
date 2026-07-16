@@ -252,6 +252,11 @@ model User {
   fcmTokens               UserFcmToken[]
   aiUsageEvents           AiUsageEvent[]
   dispatchOffers          DispatchOffer[]
+  approvedRestaurants     Restaurant[]             @relation("RestaurantApprover")
+  createdPromotions       Promotion[]              @relation("PromotionCreator")
+  sentChatMessages        ChatMessage[]
+  createdSupportMacros    SupportMacro[]
+  supportCsatResponses    SupportCsatResponse[]
 
   @@index([email])
   @@index([phone])
@@ -370,9 +375,12 @@ model Restaurant {
   promotions      Promotion[]
   staffInvites    StaffInvite[]
   staffShifts     StaffShift[]
+  approvedBy      User?                      @relation("RestaurantApprover", fields: [approvedById], references: [id], onDelete: Restrict)
+  carts           Cart[]
 
   @@index([city])
   @@index([approvalStatus, createdAt(sort: Desc)])
+  @@index([approvedById])
   @@map("restaurants")
 }
 
@@ -524,9 +532,11 @@ model Cart {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  user  User       @relation(fields: [userId], references: [id])
-  items CartItem[]
+  user       User        @relation(fields: [userId], references: [id])
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  items      CartItem[]
 
+  @@index([restaurantId])
   @@map("carts")
 }
 
@@ -762,10 +772,12 @@ model Promotion {
   updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
 
   restaurant Restaurant?      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdBy  User?            @relation("PromotionCreator", fields: [createdById], references: [id], onDelete: Restrict)
   usages     PromotionUsage[]
   items      PromotionItem[]
 
   @@index([restaurantId, status, startsAt, expiresAt])
+  @@index([createdById])
   @@index([status, startsAt, expiresAt])
   @@map("promotions")
 }
@@ -845,8 +857,10 @@ model ChatMessage {
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz()
 
   session ChatSession @relation(fields: [sessionId], references: [id])
+  sender  User?       @relation(fields: [senderId], references: [id], onDelete: Restrict)
 
   @@index([sessionId, createdAt])
+  @@index([senderId])
   @@map("chat_messages")
 }
 
@@ -928,7 +942,10 @@ model SupportMacro {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
   @@index([isActive, name])
+  @@index([createdById])
   @@map("support_macros")
 }
 
@@ -941,8 +958,10 @@ model SupportCsatResponse {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   ticket AiSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([createdAt])
+  @@index([userId])
   @@map("support_csat_responses")
 }
 
@@ -1351,6 +1370,26 @@ model IdempotencyRequest {
 }
 
 // ─── RAG Knowledge Base ───
+
+// Durable, non-secret evidence for recovering a production role smoke after
+// fixture rows were deleted but the capability-drain window was interrupted.
+model ProductionRoleSmokeRun {
+  runId                 String    @id @map("run_id") @db.VarChar(32)
+  restaurantId          String    @map("restaurant_id") @db.Uuid
+  restaurantSlug        String    @map("restaurant_slug") @db.VarChar(200)
+  adminUserId           String    @map("admin_user_id") @db.Uuid
+  restaurantUserId      String    @map("restaurant_user_id") @db.Uuid
+  customerUserId        String    @map("customer_user_id") @db.Uuid
+  driverUserId          String    @map("driver_user_id") @db.Uuid
+  state                 String    @default("active") @db.VarChar(32)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletionCommittedAt   DateTime? @map("deletion_committed_at") @db.Timestamptz()
+  capabilityDrainDoneAt DateTime? @map("capability_drain_done_at") @db.Timestamptz()
+
+  @@index([state, createdAt])
+  @@map("production_role_smoke_runs")
+}
 
 model RagDocument {
   id        String   @id @default(uuid()) @db.Uuid

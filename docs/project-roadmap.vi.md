@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel; health đúng revision, public login smoke `vi/en/ja` và trạng thái 41 migration Supabase đều xanh, nhưng vẫn chưa đủ điều kiện chứng nhận production đầy đủ**.
+Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel; health đúng revision, public login `vi/en/ja`, 41 migration Supabase, Admin/Restaurant Chrome auth và Customer/Driver API read-only đều xanh, nhưng vẫn chưa đủ điều kiện chứng nhận production đầy đủ**.
 
 ## Đã hoàn thành và đã tích hợp
 
@@ -34,7 +34,7 @@ Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038c
 
 ### Mobile release validation
 
-- Chạy smoke riêng Customer và Driver từ entrypoint tường minh: auth rồi restore/logout session, chứng minh private realtime được phép và bị từ chối cross-role/cross-tenant, sau đó chạy role flow. FCM live vẫn cần thiết bị/token đã đăng ký có kiểm soát và credential production thật; test lifecycle local không chứng minh provider delivery.
+- Customer/Driver đã pass auth API production read-only, private Realtime và cross-role denial, sau đó toàn bộ fixture được xóa. Vẫn phải chạy từng native launcher để chứng minh restore/logout session và UI role thật. FCM live cần thiết bị/token kiểm soát cùng credential production thật; test local không chứng minh provider delivery.
 - Reconcile mobile chỉ từ branch, commit và patch evidence xác minh được; không đặt tên, tạo lại hoặc suy diễn ref thiếu.
 - Rerun API contract, vi/en/ja, customer/driver, map/GPS, offline/reconnect, realtime denial, KYC và signed release build.
 - Xác minh Android production signing và iOS signing trên runner macOS được cấp quyền; debug keystore local chỉ là bằng chứng compile.
@@ -58,11 +58,11 @@ Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038c
 ## Bằng chứng current-source và blocker bên ngoài
 
 - Bằng chứng local lịch sử: Docker volume sạch `foodflow-batch4-e2e` đã apply các migration hiện hành lúc đó, seed dữ liệu tạm, index RAG và pass Playwright 204/204. Các con số này chỉ là evidence ngày 14/07/2026, không phải kết quả của runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` hay chứng nhận production.
-- Kiểm tra Prisma live báo đủ 41 migration trong repository đã apply, không còn migration chờ. Database, Redis và Supabase Storage đều ready. Các record rolled-back hoặc checksum provenance lịch sử vẫn là audit history; không đảo hay sửa SQL đã apply.
+- SHA `17584153` đang deploy có 41 migration đã apply; Database, Redis và Supabase Storage đều ready. Migration ứng viên thứ 42 đã xác minh local nhưng chưa deploy trước khi PR được review và rollout đồng bộ. Các record rolled-back hoặc checksum provenance lịch sử vẫn là audit history; không đảo hay sửa SQL đã apply.
 - Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
 - Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438` và worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` thành công tại runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. API health/readiness trả đúng revision với database, Redis và Supabase Storage ready; worker poll bình thường và RAG chủ động tắt vì chưa có DeepSeek.
 - Google Maps là tùy chọn. Khi không có Google Directions hoặc OSRM do dự án sở hữu, routing trả `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` nhưng tiến trình vẫn healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing còn chưa cấu hình hoặc chưa smoke.
-- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` và Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` là hai exact redeploy của SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Health canonical trả revision này và public login smoke `vi/en/ja` pass; role journey Admin/Restaurant/Customer/Driver có xác thực vẫn còn chờ.
+- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` và Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` là hai exact redeploy của SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Health canonical, public login `vi/en/ja` và authenticated Chrome zero-state pass. Customer/Driver API auth pass; native mobile UI và active-order journey còn chờ.
 - Các alias Docker Hub SHA, `v0.1.1` và `latest` khớp digest cho cả bốn image runtime. Manifest SHA public trên GHCR khớp digest; tài liệu không tuyên bố promote GHCR semver rộng hơn.
 - Key provider từng paste phải rotate.
 
@@ -72,7 +72,7 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 
 1. Giữ baseline API/worker/Redis đã verify; release sau deploy từ một SHA immutable và kiểm lại health/readiness/worker polling.
 2. Chỉ cấu hình integration cần chứng nhận qua secret store; không bịa Google Maps hay provider khác.
-3. Smoke production Customer/Driver/Admin/Restaurant có xác thực, token refresh, GPS snapshot/delta/reconnect, map/routing đã cấu hình, chatbot, export, payment, notification và tenant; gồm một lần FCM tới controlled device.
+3. Hoàn tất native UI Customer/Driver, token refresh, active-order GPS snapshot/delta/reconnect, map/routing đã cấu hình, chatbot, export, payment, notification, tenant và một lần FCM tới controlled device; giữ nguyên evidence Admin/Restaurant Chrome và zero-state auth bốn role đã pass.
 4. Giữ baseline health đúng SHA `17584153` của Admin/Restaurant; chạy lại public và authenticated smoke mỗi khi web deployment hoặc API revision đổi.
 5. Với release tương lai, chỉ promote artifact immutable đã verify sau khi các smoke còn lại xanh; không rebuild hoặc retag digest chưa verify.
 

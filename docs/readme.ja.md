@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-15 status:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green、Prisma は 41 migrations すべて適用済みで pending はありません。API health/readiness と Admin/Restaurant health は同じ SHA を返し、database、Redis、Supabase Storage は ready です。Admin/Restaurant の `vi/en/ja` public login smoke も pass しました。Full production certification には authenticated role journeys、controlled-device FCM、Android/iOS background location、certification scope に含む optional providers の検証が必要です。
+> **2026-07-15 status:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green、deployed SHA には 41 migrations が適用済みです。Candidate migration 42 は disposable PostGIS で pass しましたが、PR review と synchronized rollout 前には deploy しません。Admin/Restaurant は Google Chrome で production login、Customer/Driver は read-only auth/API、private Realtime、cross-role denial を pass し、全 fixture row は削除され最終 inventory は 0 です。Full production certification には native mobile UI、active-order routing、controlled-device FCM、Android/iOS background location、optional providers の検証が必要です。
 
 ## Product preview
 

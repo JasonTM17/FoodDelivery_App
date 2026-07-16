@@ -133,6 +133,16 @@ powershell -File infra/scripts/post-deploy-smoke.ps1 \
 
 Health、locale pages、realtime channel、DeepSeek live、export、shipper route/polyline、tenant denial、SePay、notification、Storage が必須です。Bearer は出力されず、実行後に process から消去します。
 
+### Production が空の場合の authenticated role smoke
+
+FoodFlow user は Supabase Auth ではなく独自 JWT/Prisma user です。`backend/scripts/production-role-smoke-fixture.ts` は、4 個の一時 `@example.invalid` identity と ownership marker 付き inactive/closed restaurant 1 個だけを作成します。Exact confirmation、unique run ID、printable ASCII temporary password、absolute cleanup-signal path、provision 前に開始する 60–900 秒 cleanup-trigger deadline が必須です。`READY` は残り秒数を表示し、cleanup と capability drain の時間は別です。`RAILWAY_ENVIRONMENT_NAME=production`、同一 Supabase project ref、database `postgres`、schema `public`、direct/session port `5432`（transaction-pool `6543` は禁止）、serializable preflight の `0` user/restaurant/order/GPS を検証します。URL/row/credential/token は出力せず、Prisma は `connection_limit=1`、advisory lease、PostgreSQL backend PID heartbeat を使用します。
+
+Provision は run ID と immutable UUID だけを含む non-secret lifecycle row を fixture と同じ transaction で保存します。`READY` 後、Google Chrome で Admin/Restaurant を認証し、Customer/Driver は profile、orders/earnings、private Realtime、cross-role denial の read-only API のみを確認します。Order、payment、export、AI session、FCM、upload、GPS は作成しません。Realtime signer は active user の shared lock を保持します。Controller は同じ serializable transaction 内で lifecycle と ownership/topology を lock 後に再検証し、lease PID と semantic FK を確認し、immutable UUID だけで削除して lifecycle を `deletion_committed` にします。通常 run は `CLEANUP_OK ... outcome=deleted` が必須です。その後 protected route の login redirect を確認し、Chrome と全 Realtime client を閉じます。同じ lease/PID を 5 分 TTL + 5 秒まで保持した後に `CAPABILITY_DRAIN_OK realtimeTokensExpired=true` を出力し、residue を再検査して lifecycle を `complete` にし、最後に `FINAL_RESIDUE_OK users=0 profiles=0 restaurants=0 relations=0` を出力します。その後、独立した `0` user/profile/restaurant/order/GPS を確認します。
+
+Owner process が cleanup 前または capability drain 中に強制終了された場合、同じ run ID を再 provision しません。Exact confirmation、元の run ID、`FOODFLOW_PRODUCTION_SMOKE_MODE=cleanup` で recovery を実行します。古い password と signal path は不要です。`RECOVERY_CLEANUP`、`CLEANUP_OK`、`CAPABILITY_DRAIN_OK`、`FINAL_RESIDUE_OK` の順と、独立した zero inventory 再確認が必須です。Row が残る場合は `outcome=deleted`、元の immutable UUID と一致する durable lifecycle tombstone がある場合だけ `outcome=already-deleted` です。Durable record のない run ID は成功扱いせず、Owner が生存中なら advisory lease が拒否します。Mutation 開始後の provision failure は `RECOVERY_REQUIRED` を出し、有効な lease 下で完了した場合だけ `RECOVERY_RECONCILED`、未完了なら `RECOVERY_FAILED` を出します。
+
+Fixture 実行中に別 Prisma client を開かないでください。Supabase session pool が 15 client に達すると `EMAXCONNSESSION` になります。この smoke は zero-state auth/RBAC の証拠であり、active order/provider/device の full smoke ではありません。
+
 ## 7. Master and Docker
 
 Production smoke + remote CI green 後:
