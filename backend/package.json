@@ -15,6 +15,7 @@
     "db:generate": "prisma generate",
     "db:seed": "ts-node prisma/seed.ts",
     "db:big-seed": "ts-node prisma/big-seed.ts",
+    "db:audit:prod": "ts-node scripts/production-migration-audit.ts",
     "db:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src scripts --ext .ts",
