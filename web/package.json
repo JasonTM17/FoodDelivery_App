@@ -20,7 +20,7 @@
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.49.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/parser": "^8.64.0",
     "eslint-config-prettier": "^9.1.0",
     "turbo": "^2.6.0",
     "typescript": "^5.9.3"
