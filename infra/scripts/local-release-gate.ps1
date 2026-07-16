@@ -90,6 +90,10 @@ Invoke-Step 'Git hygiene and secret scan' $repoRoot {
   Invoke-SecretScan
 }
 
+Invoke-Step 'Product media integrity' $repoRoot {
+  Invoke-Native node --test docs/scripts/product-media-integrity.test.mjs
+}
+
 if (-not $SkipBackend) {
   if (-not $SkipInstall) {
     Invoke-Step 'Backend frozen install' (Join-Path $repoRoot 'backend') {

@@ -112,12 +112,17 @@ và xử lý sự cố nằm trong [mobile README](../mobile/README.md).
 |---|---|
 | ![Luồng xác thực công khai Customer](./media/gifs/customer-auth-flow.gif) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
 
-Gallery có ảnh role Customer/Driver hiện tại và các capture GPS/quyền local
-trước đó. Chúng được tạo trên Android AVD với E2E stack cô lập, seed identity
-deterministic, mật khẩu che và working tree dirty. Capture role dùng GPS mô
-phỏng cố định, không dùng Google Maps API key. Đây chỉ là evidence
-regression/product đã review riêng tư, không chứng nhận mobile release,
-payment, dispatch, routing, background location, provider hay production.
+Ảnh role, GIF Customer/Driver và các capture GPS/quyền local trước đó được tạo
+trên Android AVD với E2E stack cô lập, seed identity deterministic, mật khẩu
+che, working tree dirty, GPS mô phỏng cố định và không dùng Google Maps API
+key. Đây là evidence regression/product local đã review riêng tư, không chứng
+nhận mobile release, payment, dispatch, routing, provider hay production.
+
+Một WebP recovery Driver được gắn nhãn riêng đến từ smoke production-emulator
+Android API 35 có phạm vi với Railway và Supabase. Nó chỉ chứng minh foreground
+tracking, cập nhật khi tắt màn hình, offline flush, process recovery, PostGIS và
+private Broadcast cho lượt synthetic đó; không chứng nhận thiết bị vật lý, iOS,
+FCM, payout, routing hay app-store. Manifest ghi source head và cleanup.
 Xem [quy trình capture](./product-gallery.vi.md#tạo-lại) để tạo visual clean-head mới.
 
 Liên quan: [yêu cầu sản phẩm](./project-overview-pdr.vi.md),

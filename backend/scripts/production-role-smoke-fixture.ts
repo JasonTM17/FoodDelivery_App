@@ -17,6 +17,7 @@ import {
 } from '../src/operations/production-role-smoke-fixture-lease'
 import { provisionProductionRoleSmokeFixture } from '../src/operations/production-role-smoke-fixture-provision'
 import { markProductionSmokeCapabilityDrainComplete } from '../src/operations/production-role-smoke-fixture-lifecycle'
+import { productionRoleSmokeErrorSummary } from '../src/operations/production-role-smoke-error-summary'
 import {
   assertProductionDatabaseTarget,
   buildProductionSmokeIdentities,
@@ -210,8 +211,10 @@ async function main(): Promise<void> {
         await completeCleanup(ownsFixture ? 'complete' : 'reconcile')
         console.log(`RECOVERY_RECONCILED run=${config.runId}`)
       } catch (recoveryError) {
-        const recoveryName = recoveryError instanceof Error ? recoveryError.name : 'UnknownRecoveryFailure'
-        console.error(`RECOVERY_FAILED ${recoveryName}`)
+        console.error(`RECOVERY_FAILED ${productionRoleSmokeErrorSummary(
+          recoveryError,
+          'UnknownRecoveryFailure',
+        )}`)
         throw new AggregateError([error, recoveryError], 'Provisioning failed and automatic reconciliation did not complete')
       }
     } else if (provisionMutationStarted && !cleanupCompleted) {
@@ -223,23 +226,29 @@ async function main(): Promise<void> {
 
 main()
   .catch(error => {
-    const name = error instanceof Error ? error.name : 'UnknownFixtureFailure'
-    console.error(`FIXTURE_FAILED ${name}`)
+    console.error(`FIXTURE_FAILED ${productionRoleSmokeErrorSummary(
+      error,
+      'UnknownFixtureFailure',
+    )}`)
     process.exitCode = 1
   })
   .finally(async () => {
     try {
       await releaseExclusiveLease()
     } catch (error) {
-      const message = error instanceof Error ? error.name : 'Unknown lease release failure'
-      console.error(`LEASE_RELEASE_FAILED ${message}`)
+      console.error(`LEASE_RELEASE_FAILED ${productionRoleSmokeErrorSummary(
+        error,
+        'Unknown lease release failure',
+      )}`)
       process.exitCode = 1
     }
     try {
       await disconnectDatabase()
     } catch (error) {
-      const message = error instanceof Error ? error.name : 'Unknown disconnect failure'
-      console.error(`DISCONNECT_FAILED ${message}`)
+      console.error(`DISCONNECT_FAILED ${productionRoleSmokeErrorSummary(
+        error,
+        'Unknown disconnect failure',
+      )}`)
       process.exitCode = 1
     }
   })

@@ -274,6 +274,34 @@ corepack pnpm run db:migrate:prod
 cd ..
 ```
 
+Before any production mutation, run a read-only migration audit with the
+explicit Railway project and environment. Run it from `backend` so the local
+Prisma schema is the same source used by the migrator; `railway run` injects
+sealed variables into the local command and does not print their values:
+
+```powershell
+$env:RAILWAY_PROJECT_ID='<project-id>'
+Push-Location backend
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm run db:audit:prod
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm exec prisma migrate status --schema prisma/schema.prisma
+Pop-Location
+```
+
+An approved release must report no pending or remote-only migrations. A
+candidate migration that is intentionally not deployed, or a historical
+rolled-back row that has no local SQL, is a release blocker until its
+provenance is reviewed. The production migrator now fails before Storage API
+mutation or `prisma migrate deploy` when any successful migration differs from
+the immutable image SQL beyond an LF/CRLF-only representation change. Never use
+`prisma migrate resolve` to hide checksum drift; reconcile the source/backup
+history first. A missing `_prisma_migrations` table also blocks the Supabase
+Storage recovery path so a wrong or uninitialized database target cannot
+authorize provider mutation. Bootstrap a genuinely empty database separately
+with `db:migrate:prod` after target-identity preflight and without the Storage
+recovery path.
+
 Use `DIRECT_URL` for migration safety; do not run `prisma migrate dev`, reset, or a demo seed against production.
 
 ### Verify schema and security
@@ -336,7 +364,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal the three historical checksum mismatches. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum while treating only LF/CRLF representation as equivalent, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal the three historical checksum mismatches. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 

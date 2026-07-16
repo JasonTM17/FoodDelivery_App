@@ -10,13 +10,23 @@ Current production evidence は runtime SHA `a703ece61e66dcfe7f308cbf46a98098983
 
 | Area           | Result |
 | -------------- | ------ |
-| Backend        | Current post-merge local gates では Prisma generate/validate、typecheck、ESLint、Nest build が pass。Full Jest は 153 suites pass と gated integration suite 1 件 skip、1,160 tests pass と 1 test skip です。 |
+| Backend        | Current post-merge local gates では Prisma generate/validate、typecheck、ESLint、Nest build が pass。Full Jest は 156 suites pass と gated integration suite 1 件 skip、1,175 tests pass と 1 test skip です。Production migrator checksum guard には regression test があり、Storage mutation と `prisma migrate deploy` の前に実行されます。 |
 | Database       | Production SHA `a703ece` では repository の 41 migrations がすべて applied、pending はなく、Database、Redis、Supabase Storage readiness は pass です。Candidate migration 42 は disposable PostGIS で semantic FK preflight、clean apply、最終 index の deliberate failure 後の完全 rollback まで検証済みですが、review と synchronized rollout を待つため未 deploy です。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
 | Mobile Flutter | Current post-merge lock resolution と `flutter analyze` は issue なし。Full Customer/Driver suite は 373/373 tests pass。Physical Android/iOS device での background location は未認証です。 |
 | Web            | Current post-merge frozen install、typecheck、lint、Vercel build-selection tests は pass。Admin は 194/194 tests pass、70 routes build、Restaurant は 135/135 tests pass、55 routes build です。 |
 | Historical role/browser smoke | Admin/Restaurant の Chrome と Customer/Driver API による full role smoke、および Chrome desktop、Firefox、Pixel 5 mobile Chrome の clean-volume Playwright 204/204 は source head `17584153ff256b74a3413ae9844f4f27bff038cc` の evidence です。Current `a703ece` に対する four-role production certification としては再実行されていません。 |
 | FCM/providers  | Historical local notification/Flutter lifecycle tests は pass。Controlled live FCM、optional provider-backed integrations、physical-device coverage は未検証です。 |
 | Production     | Railway migrator `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は SHA `a703ece` で成功。Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` と Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` も同じ revision です。Controlled Admin/Driver GPS/Supabase smoke は 5 分間有効な ES256 token、private Broadcast RLS allow/deny、GPS fanout、PostGIS row の永続化、明示的な `poor_accuracy` / `driver_offline` rejection、temporary database/Redis data の完全 cleanup を確認して pass しました。Restaurant health は authenticated Vercel access で正確な revision を返しますが、public Restaurant request は Vercel SSO へ `302` redirect されます。Public Restaurant availability と current revision の full four-role certification は未完了です。 |
+
+### Migration provenance audit
+
+Release 前は、Railway project と environment を明示した read-only `prisma
+migrate status` を `backend` から実行します。current source で candidate
+migration 42 が pending、または historical rolled-back row が remote-only
+なら deploy approval ではありません。production migrator の checksum guard
+は Storage mutation と `prisma migrate deploy` より前に実行され、LF/CRLF
+だけの表現差を超えて immutable source と異なる適用済み migration を
+fail-closed します。
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 
