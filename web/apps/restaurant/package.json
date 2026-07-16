@@ -25,7 +25,7 @@
     "date-fns": "^3.6.0",
     "lucide-react": "^0.400.0",
     "next": "15.5.18",
-    "next-intl": "^4.13.1",
+    "next-intl": "^4.13.2",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "recharts": "^2.12.0",
