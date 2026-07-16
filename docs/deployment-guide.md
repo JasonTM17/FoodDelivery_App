@@ -317,11 +317,13 @@ local checksum remains present. Storage checksum
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`,
 applied at `2026-07-12T01:08Z` for
 `20260712143000_add_production_storage_bucket`, was not found in any Git object
-or inspected registry image. The read-only production audit now exits `1`
-naming only this sole unresolved provenance blocker. Schema end-state is not
-provenance. Production already has all 42 source migrations active; the
-unresolved checksum blocks every future migrator rollout until the original
-Storage SQL bytes are recovered and reviewed.
+or inspected registry image at the time of that historical review. On the
+current `master`, commit `84eeac3` restores the byte-compatible trailing
+newline and the migration checksum guard regression accepts the exact recorded
+checksum. The focused guard suite passes `10/10`, so the source-byte
+provenance blocker is resolved. Schema end-state is still not provenance:
+before any future migrator rollout, take a backup and run the read-only audit
+against the exact target.
 
 Use `DIRECT_URL` for migration safety; do not run `prisma migrate dev`, reset, or a demo seed against production.
 
@@ -385,7 +387,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum against local SQL or an exact immutable-image provenance entry, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal the unresolved production Storage checksum; the current audit must remain blocked until its original SQL bytes are recovered and reviewed. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum against local SQL or an exact immutable-image provenance entry, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal checksum drift; require the read-only audit to pass before rollout. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 
