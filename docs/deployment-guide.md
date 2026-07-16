@@ -59,11 +59,11 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. The deployed database has 41 migrations; candidate migration 42 is not deployed. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful from immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. The deployed database has 41 migrations; candidate migration 42 is not deployed. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
-Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA is recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not use the table below for a new rollout.
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not use the table below for a new rollout.
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -72,7 +72,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-At that historical snapshot, `latest` had not been promoted. The current runtime is recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
+At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
 
 Expected Vercel projects:
 
@@ -240,24 +240,20 @@ Public variables are baked into Next.js assets. Changing them requires a rebuild
 
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. API health/readiness and both Vercel health endpoints report the same full SHA; Restaurant verification currently requires authenticated Vercel CLI access because `all_except_custom_domains` SSO protection is enabled and the project has no custom domain. Do not claim public Restaurant availability until a reviewed custom-domain or protection decision is applied and unauthenticated smoke passes. Database, Redis, and Supabase Storage are ready. A read-only inventory reports 41 applied migrations and zero users, profiles, restaurants, orders, and GPS rows. The prior authenticated role journey and its screenshots belong to SHA `17584153`; rerun it only after candidate migration 42 and the hardened controller are reviewed and deployed together. Controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified.
-
-### Historical four-image release — SHA 17584153
-
-Docker Hub SHA, `v0.1.1`, and `latest` aliases matched these four digests at the earlier SHA. They are historical cross-registry evidence, not the complete current `a703ece` runtime inventory:
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. Vercel deployment IDs are Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN`. API health/readiness and both Vercel health endpoints report the same full SHA; Restaurant verification currently requires authenticated Vercel access because `all_except_custom_domains` SSO protection is enabled and the project has no custom domain. Do not claim public Restaurant availability until a reviewed custom-domain or protection decision is applied and unauthenticated smoke passes. Database, Redis, and Supabase Storage are ready. A read-only inventory reports 41 applied migrations and zero users, profiles, restaurants, orders, and GPS rows. A temporary authenticated Driver/Admin smoke passed private Broadcast RLS, ES256 token, GPS validation, PostGIS persistence, and cleanup. The prior four-role journey and screenshots belong to SHA `17584153`; rerun them only after candidate migration 42 and the hardened controller are reviewed and deployed together. Wider authenticated role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. Docker Hub SHA, `v0.1.2`, and `latest` aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` |
-| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` |
-| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` |
-| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
+| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
+| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
+| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
+| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
 ### Historical documentation-only Vercel drift recovery
 
-Vercel had automatically built later documentation-only `master` commits, while Railway remained on runtime SHA `17584153`. The web runtime inputs were unchanged, but the health revision no longer matched the API. Recovery redeployed the previously verified SHA `17584153` Admin and Restaurant builds exactly. At that time, `production-health-check.ps1` passed API/Admin/Restaurant and `post-deploy-smoke.ps1 -AllowUnauthenticatedOnly` passed all public `vi/en/ja` login routes. PR #80 later merged the docs-only deploy guard. Current health is aligned at SHA `a703ece`; the earlier unauthenticated result does not replace a current-revision authenticated smoke.
+Vercel had previously built documentation-only `master` commits while Railway stayed on SHA `17584153`; PR #80 later merged the docs-only deploy guard. For SHA `a703ece`, build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. Authenticated health now matches Railway. The release-time login smoke was recorded, but the later public Restaurant recheck redirects to Vercel SSO; the Driver/Admin GPS smoke also does not replace full four-role browser/native certification.
 
 ## 4. Supabase deployment
 
@@ -476,14 +472,15 @@ git ls-remote --heads origin
 
 Expected remote heads: `master` only. Do not promote an image for a different commit.
 
-Use the release workflow in this order; do not collapse the two Docker Publish runs:
+Use the release workflow in this order; do not rebuild or retag an unverified digest:
 
-1. Manually dispatch **Docker Publish** with `publish_release=false`, an empty `release_tag`, and `promote_latest=false`. This publishes only `sha-<full-commit>` manifests after both-architecture runtime smoke and scans.
+1. Manually dispatch **Docker Publish** from the current `master` head with an empty `source_sha`, `publish_release=false`, an empty `release_tag`, and `promote_latest=false`. This publishes only `sha-<full-commit>` manifests after both-architecture runtime smoke and scans.
 2. After migration checksum/backup gates pass, deploy that exact SHA: run the one-off migrator, pin Railway API/worker to the same backend digest, and deploy both Vercel projects from the same commit. Verify health, readiness, logs, revision equality, and authenticated role/provider smoke.
-3. Dispatch **Docker Publish** again from the unchanged `origin/master` head with `publish_release=true` and an unused stable `release_tag`. Its production gate requires API, Admin, and Restaurant health to report the exact workflow SHA before semver promotion. `promote_latest` remains a separate explicit choice.
-4. Create and push the Git semver tag at the verified SHA, then manually dispatch **Release** with that tag and the full `source_sha`. The workflow verifies the Git tag plus SHA/semver digests in Docker Hub and GHCR before creating the GitHub Release and SBOM attachments.
+3. Create and push the Git semver tag at the verified deployed SHA. The tag must exist before promotion and must resolve exactly to the full `source_sha`.
+4. Dispatch **Docker Publish** from the current `master` workflow with `source_sha=<deployed full SHA>`, `publish_release=true`, the stable `release_tag`, and the explicit `promote_latest` choice. The source must be a `master` ancestor, the Git tag must match it, both immutable registry manifests must already exist, and API/Admin/Restaurant health must report that exact source SHA. Docker Hub semver/latest promotion is authoritative; GHCR authorization refusal is reported without weakening Docker Hub digest checks.
+5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and SBOM attachments. A GHCR semver tag is verified when present but is not required while the provider denies manifest writes.
 
-Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 3–4 are authorized.
+Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 4–5 are authorized.
 
 Do not publish the historical `foodflow-worker` image; the backend image contains the worker entry point.
 

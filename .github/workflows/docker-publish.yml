@@ -8,6 +8,11 @@ on:
         required: false
         default: ""
         type: string
+      source_sha:
+        description: Full immutable deployed commit SHA; leave blank to use the current master head
+        required: false
+        default: ""
+        type: string
       publish_release:
         description: Verify exact deployed revisions, then promote SHA manifests to release_tag
         required: true
@@ -32,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-tag: ${{ steps.release.outputs.tag }}
+      source_sha: ${{ steps.release.outputs.source_sha }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
@@ -42,6 +48,7 @@ jobs:
         shell: bash
         env:
           INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+          INPUT_SOURCE_SHA: ${{ inputs.source_sha }}
           INPUT_PUBLISH_RELEASE: ${{ inputs.publish_release }}
           INPUT_PROMOTE_LATEST: ${{ inputs.promote_latest }}
         run: |
@@ -52,9 +59,35 @@ jobs:
             echo 'Docker publishes must run from the current origin/master head.'
             exit 1
           }
+
+          source_sha="$GITHUB_SHA"
+          if [[ -n "$INPUT_SOURCE_SHA" ]]; then
+            [[ "$INPUT_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+              echo 'source_sha must be a full lowercase 40-character commit SHA.'
+              exit 1
+            }
+            git cat-file -e "$INPUT_SOURCE_SHA^{commit}" || {
+              echo 'source_sha does not identify a repository commit.'
+              exit 1
+            }
+            source_sha="$(git rev-parse "$INPUT_SOURCE_SHA^{commit}")"
+            git merge-base --is-ancestor "$source_sha" origin/master || {
+              echo 'source_sha must be an ancestor of the current master head.'
+              exit 1
+            }
+            [[ "$INPUT_PUBLISH_RELEASE" == "true" ]] || {
+              echo 'An explicit source_sha is allowed only for release promotion.'
+              exit 1
+            }
+          fi
+
           release_tag=""
           if [[ "$INPUT_PUBLISH_RELEASE" == "true" ]]; then
             release_tag="$INPUT_RELEASE_TAG"
+            [[ -n "$release_tag" ]] || {
+              echo 'publish_release requires release_tag.'
+              exit 1
+            }
           elif [[ "$INPUT_PROMOTE_LATEST" == "true" ]]; then
             echo 'promote_latest requires publish_release.'
             exit 1
@@ -65,8 +98,14 @@ jobs:
               echo 'release_tag must use stable semver format vMAJOR.MINOR.PATCH.'
               exit 1
             }
+            git fetch --force origin "refs/tags/$release_tag:refs/tags/$release_tag"
+            test "$(git rev-parse "$release_tag^{commit}")" = "$source_sha" || {
+              echo 'release_tag must point to source_sha.'
+              exit 1
+            }
           fi
           echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
 
       - name: Validate registry secrets and public build URLs
         shell: bash
@@ -180,6 +219,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ needs.release-preflight.outputs.source_sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
@@ -206,7 +247,8 @@ jobs:
         env:
           DOCKERHUB_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
           GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
-          IMAGE_TAG: sha-${{ github.sha }}
+          IMAGE_TAG: sha-${{ needs.release-preflight.outputs.source_sha }}
+          REQUIRE_EXISTING: ${{ inputs.source_sha != '' }}
         run: |
           set -euo pipefail
           GHCR_IMAGE="${GHCR_IMAGE,,}"
@@ -244,6 +286,10 @@ jobs:
           fi
 
           if [[ -z "$dockerhub_digest" && -z "$ghcr_digest" ]]; then
+            if [[ "$REQUIRE_EXISTING" == "true" ]]; then
+              echo "Explicit source_sha requires existing immutable manifests for $IMAGE_TAG."
+              exit 1
+            fi
             echo 'exists=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -272,7 +318,7 @@ jobs:
             docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
             ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
           tags: |
-            type=raw,value=sha-${{ github.sha }}
+            type=raw,value=sha-${{ needs.release-preflight.outputs.source_sha }}
 
       - name: Build and push backend image
         if: ${{ !matrix.web && steps.immutable.outputs.exists != 'true' }}
@@ -286,7 +332,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BUILD_SHA=${{ github.sha }}
+            BUILD_SHA=${{ needs.release-preflight.outputs.source_sha }}
           provenance: mode=max
           sbom: true
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}:buildcache
@@ -304,7 +350,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BUILD_SHA=${{ github.sha }}
+            BUILD_SHA=${{ needs.release-preflight.outputs.source_sha }}
             NEXT_PUBLIC_APP_ENV=production
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_REALTIME_PROVIDER=supabase
@@ -324,7 +370,7 @@ jobs:
         env:
           DOCKERHUB_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.name }}
           GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
-          IMAGE_TAG: sha-${{ github.sha }}
+          IMAGE_TAG: sha-${{ needs.release-preflight.outputs.source_sha }}
         run: |
           set -euo pipefail
           GHCR_IMAGE="${GHCR_IMAGE,,}"
@@ -365,7 +411,7 @@ jobs:
           echo "Docker Hub and GHCR published $dockerhub_digest"
 
   runtime-smoke:
-    needs: build-and-push
+    needs: [release-preflight, build-and-push]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -395,7 +441,7 @@ jobs:
       - name: Smoke native runtime dependencies on AMD64 and ARM64
         shell: bash
         env:
-          IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ github.sha }}
+          IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ needs.release-preflight.outputs.source_sha }}
           KIND: ${{ matrix.kind }}
           WEB_PORT: ${{ matrix.port }}
         run: |
@@ -509,7 +555,7 @@ jobs:
           done
 
   scan:
-    needs: [build-and-push, runtime-smoke]
+    needs: [release-preflight, build-and-push, runtime-smoke]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -534,7 +580,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          image-ref: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ github.sha }}
+          image-ref: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:sha-${{ needs.release-preflight.outputs.source_sha }}
           scanners: vuln
           vuln-type: os,library
           format: table
@@ -553,7 +599,7 @@ jobs:
           API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           ADMIN_URL: ${{ vars.NEXT_PUBLIC_ADMIN_URL }}
           RESTAURANT_URL: ${{ vars.NEXT_PUBLIC_RESTAURANT_URL }}
-          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_SHA: ${{ needs.release-preflight.outputs.source_sha }}
         run: |
           node <<'NODE'
           const expected = process.env.EXPECTED_SHA
@@ -612,41 +658,123 @@ jobs:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           GHCR_OWNER: ${{ github.repository_owner }}
           RELEASE_TAG: ${{ needs.release-preflight.outputs.release-tag }}
-          SHA_TAG: sha-${{ github.sha }}
+          SHA_TAG: sha-${{ needs.release-preflight.outputs.source_sha }}
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
-          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
-          for image in "${images[@]}"; do
-            for registry in "${registries[@]}"; do
-              source="$registry/$image:$SHA_TAG"
-              target="$registry/$image:$RELEASE_TAG"
-              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-              test -n "$source_digest" || {
-                echo "Published SHA manifest has no digest for $source"
-                exit 1
-              }
 
-              if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
-                target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
-                test "$source_digest" = "$target_digest" || {
-                  echo "Refusing to overwrite immutable tag $target"
-                  echo "Existing: $target_digest"
-                  echo "Requested: $source_digest"
-                  exit 1
-                }
-                echo "$target already released at $target_digest"
-                continue
+          inspect_registry_manifest() {
+            local ref="$1"
+            local output=""
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              if output="$(docker buildx imagetools inspect "$ref" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
               fi
-
-              docker buildx imagetools create --tag "$target" "$source"
-              promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-              test "$source_digest" = "$promoted_digest" || {
-                echo "Release digest verification failed for $target"
-                exit 1
-              }
-              echo "$target released at $promoted_digest"
+              if grep -Eqi 'unauthorized|denied|not found|manifest unknown|no such manifest' <<< "$output"; then
+                printf '%s\n' "$output" >&2
+                return 1
+              fi
+              echo "Registry inspect transient failure for $ref (attempt $attempt/5)." >&2
+              if [[ "$attempt" -lt 5 ]]; then
+                sleep 5
+              fi
             done
+            printf '%s\n' "$output" >&2
+            return 2
+          }
+
+          create_registry_manifest() {
+            local target="$1"
+            local source="$2"
+            local output=""
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              if output="$(docker buildx imagetools create --tag "$target" "$source" 2>&1)"; then
+                return 0
+              fi
+              if grep -Eqi 'unauthorized|denied' <<< "$output"; then
+                printf '%s\n' "$output" >&2
+                return 1
+              fi
+              echo "Registry create transient failure for $target (attempt $attempt/5)." >&2
+              if [[ "$attempt" -lt 5 ]]; then
+                sleep 5
+              fi
+            done
+            printf '%s\n' "$output" >&2
+            return 2
+          }
+
+          promote_release_manifest() {
+            local source="$1"
+            local target="$2"
+            local source_digest target_digest target_inspect promoted_digest target_status create_status
+
+            source_digest="$(inspect_registry_manifest "$source" | awk '/^Digest:/ {print $2; exit}')"
+            test -n "$source_digest" || {
+              echo "Published SHA manifest has no digest for $source"
+              return 1
+            }
+
+            target_status=0
+            if target_inspect="$(inspect_registry_manifest "$target")"; then
+              target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
+              test "$source_digest" = "$target_digest" || {
+                echo "Refusing to overwrite immutable tag $target"
+                echo "Existing: $target_digest"
+                echo "Requested: $source_digest"
+                return 1
+              }
+              echo "$target already released at $target_digest"
+              return 0
+            else
+              target_status=$?
+              if [[ "$target_status" -ne 1 ]]; then
+                return "$target_status"
+              fi
+            fi
+
+            create_status=0
+            create_registry_manifest "$target" "$source" || create_status=$?
+            if [[ "$create_status" -ne 0 ]]; then
+              return "$create_status"
+            fi
+            promoted_digest="$(inspect_registry_manifest "$target" | awk '/^Digest:/ {print $2; exit}')"
+            test "$source_digest" = "$promoted_digest" || {
+              echo "Release digest verification failed for $target"
+              return 1
+            }
+            echo "$target released at $promoted_digest"
+          }
+
+          dockerhub_registry="docker.io/$DOCKERHUB_USERNAME"
+          for image in "${images[@]}"; do
+            promote_release_manifest \
+              "$dockerhub_registry/$image:$SHA_TAG" \
+              "$dockerhub_registry/$image:$RELEASE_TAG"
+          done
+
+          ghcr_registry="ghcr.io/${GHCR_OWNER,,}"
+          for image in "${images[@]}"; do
+            error_log="$(mktemp)"
+            if promote_release_manifest \
+              "$ghcr_registry/$image:$SHA_TAG" \
+              "$ghcr_registry/$image:$RELEASE_TAG" 2> >(tee "$error_log" >&2); then
+              rm -f "$error_log"
+              continue
+            fi
+
+            if grep -Eqi '401 Unauthorized|unauthorized|denied' "$error_log"; then
+              rm -f "$error_log"
+              echo "::warning::GHCR denied semver manifest writes; Docker Hub release remains authoritative."
+              echo "GHCR semver promotion unavailable; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            rm -f "$error_log"
+            exit 1
           done
 
   promote-latest:
@@ -680,18 +808,96 @@ jobs:
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
-          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
-          for image in "${images[@]}"; do
-            for registry in "${registries[@]}"; do
-              source="$registry/$image:$RELEASE_TAG"
-              target="$registry/$image:latest"
-              docker buildx imagetools create --tag "$target" "$source"
-              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-              target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-              if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
-                echo "Digest verification failed for $target"
-                exit 1
+
+          inspect_registry_manifest() {
+            local ref="$1"
+            local output=""
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              if output="$(docker buildx imagetools inspect "$ref" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
               fi
-              echo "$target promoted at $source_digest"
+              if grep -Eqi 'unauthorized|denied|not found|manifest unknown|no such manifest' <<< "$output"; then
+                printf '%s\n' "$output" >&2
+                return 1
+              fi
+              echo "Registry inspect transient failure for $ref (attempt $attempt/5)." >&2
+              if [[ "$attempt" -lt 5 ]]; then
+                sleep 5
+              fi
             done
+            printf '%s\n' "$output" >&2
+            return 2
+          }
+
+          create_registry_manifest() {
+            local target="$1"
+            local source="$2"
+            local output=""
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              if output="$(docker buildx imagetools create --tag "$target" "$source" 2>&1)"; then
+                return 0
+              fi
+              if grep -Eqi 'unauthorized|denied' <<< "$output"; then
+                printf '%s\n' "$output" >&2
+                return 1
+              fi
+              echo "Registry create transient failure for $target (attempt $attempt/5)." >&2
+              if [[ "$attempt" -lt 5 ]]; then
+                sleep 5
+              fi
+            done
+            printf '%s\n' "$output" >&2
+            return 2
+          }
+
+          promote_latest_manifest() {
+            local source="$1"
+            local target="$2"
+            local source_digest target_digest
+
+            create_registry_manifest "$target" "$source"
+            source_digest="$(inspect_registry_manifest "$source" | awk '/^Digest:/ {print $2; exit}')"
+            target_digest="$(inspect_registry_manifest "$target" | awk '/^Digest:/ {print $2; exit}')"
+            if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
+              echo "Digest verification failed for $target"
+              return 1
+            fi
+            echo "$target promoted at $source_digest"
+          }
+
+          dockerhub_registry="docker.io/$DOCKERHUB_USERNAME"
+          for image in "${images[@]}"; do
+            promote_latest_manifest \
+              "$dockerhub_registry/$image:$RELEASE_TAG" \
+              "$dockerhub_registry/$image:latest"
+          done
+
+          ghcr_registry="ghcr.io/${GHCR_OWNER,,}"
+          for image in "${images[@]}"; do
+            source="$ghcr_registry/$image:$RELEASE_TAG"
+            target="$ghcr_registry/$image:latest"
+            if ! docker buildx imagetools inspect "$source" >/dev/null 2>&1; then
+              echo "::warning::GHCR release tag is unavailable; skipping GHCR latest promotion."
+              echo "GHCR latest promotion skipped; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            error_log="$(mktemp)"
+            if promote_latest_manifest "$source" "$target" 2> >(tee "$error_log" >&2); then
+              rm -f "$error_log"
+              continue
+            fi
+
+            if grep -Eqi '401 Unauthorized|unauthorized|denied' "$error_log"; then
+              rm -f "$error_log"
+              echo "::warning::GHCR denied latest manifest writes; Docker Hub latest remains authoritative."
+              echo "GHCR latest promotion unavailable; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            rm -f "$error_log"
+            exit 1
           done

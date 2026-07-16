@@ -4,23 +4,23 @@
 
 A release is green only when the final source head passes every required local gate, fresh remote CI, provider preflight, and production smoke. A focused test proves only its bounded change. Historical counts and partially skipped scripts must never be presented as current full-release approval.
 
-## Evidence boundary — production 2026-07-15 and historical local 2026-07-14
+## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-Current production health evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Test counts below are explicitly historical local evidence from earlier heads; the authenticated Admin/Restaurant Chrome and Customer/Driver API role smoke belongs to SHA `17584153`, not current-revision certification.
+Current production evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Remote CI, E2E, Integration Smoke, OpenAPI, security, SBOM, build, multi-architecture runtime smoke, and eight image scans are green for this revision. The post-merge local counts and historical role/browser results below remain bounded evidence, not full end-to-end production approval.
 
-| Area           | Result                                                                                                                                                                                                                                                                                                                                                                                                                |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | Post-merge candidate: Prisma generate/validate, typecheck, ESLint, and Nest build pass; full Jest reports 153 passing suites, one gated integration suite skipped, 1,160 passing tests, and one skipped test. |
-| Database       | Deployed SHA `a703ece` has 41 applied migrations and passing Database/Redis/Supabase Storage readiness. Candidate migration 42 is validated only on disposable PostGIS and remains undeployed pending PR review and synchronized rollout. Historical rolled-back/checksum-provenance rows remain separately documented audit history. |
-| Mobile Flutter | Post-merge lock resolution and analyze pass with no issues; the full Customer/Driver suite passes 373 tests. Real physical-device Android/iOS background-location remains uncertified. |
-| Web            | Post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194 tests and builds 70 routes; Restaurant passes 135 tests and builds 55 routes. Current deployed health is verified separately at SHA `a703ece`. |
-| Browser E2E    | Historical clean-volume Playwright evidence passed 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome. Those counts were not rerun against the production deployment. |
-| FCM            | Historical local notification and Flutter lifecycle tests passed. Live delivery to a controlled production device remains uncertified. |
-| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at SHA `a703ece`; API/ready and both web health routes report the same revision. Restaurant health required authenticated Vercel CLI access because project SSO protection redirects public requests. Current-revision authenticated role journeys and public Restaurant access remain uncertified. |
+| Area           | Result |
+| -------------- | ------ |
+| Backend        | Current post-merge local gates pass Prisma generate/validate, typecheck, ESLint, and Nest build. Full Jest reports 153 passing suites plus one gated integration suite skipped, and 1,160 passing tests plus one skipped test. |
+| Database       | Production SHA `a703ece` has all 41 repository migrations applied with none pending; Database, Redis, and Supabase Storage readiness pass. Candidate migration 42 was validated on disposable PostGIS, including its semantic FK preflight, clean apply, and full rollback after a deliberate final-index failure, but remains undeployed pending review and synchronized rollout. Historical rolled-back/checksum-provenance rows remain separate audit history. |
+| Mobile Flutter | Current post-merge lock resolution and `flutter analyze` pass with no issues; the full Customer/Driver suite passes 373/373 tests. Native physical-device Android/iOS background-location remains uncertified. |
+| Web            | Current post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194/194 tests and builds 70 routes; Restaurant passes 135/135 tests and builds 55 routes. |
+| Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`a703ece` four-role production certification. |
+| FCM/providers | Historical local notification and Flutter lifecycle tests passed. Controlled live FCM, optional provider-backed integrations, and native physical-device coverage remain open. |
+| Production     | Railway migrator `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` succeeded at SHA `a703ece`. Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` carry the same revision. A controlled Admin/Driver GPS/Supabase smoke passed with a five-minute ES256 token, private Broadcast RLS allow/deny, GPS fanout, a persisted PostGIS row, explicit `poor_accuracy` and `driver_offline` rejection paths, and complete temporary database/Redis cleanup. Restaurant health returned the exact revision through authenticated Vercel access, while public Restaurant requests redirect `302` to Vercel SSO. Public Restaurant availability and full current four-role certification remain open. |
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 
-The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied its then-current 38 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. With explicit local URLs, that historical stack passed Chrome desktop 68/68, Firefox 68/68, and Pixel 5 mobile Chrome 68/68: 204/204 with no failed or skipped cases. These are local 2026-07-14 results, not SHA `17584153` production tests. Live FCM and authenticated production journeys remain unverified.
+The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied its then-current 38 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. With explicit local URLs, source head `17584153ff256b74a3413ae9844f4f27bff038cc` passed Chrome desktop 68/68, Firefox 68/68, and Pixel 5 mobile Chrome 68/68: 204/204 with no failed or skipped cases. These are local 2026-07-14 results, not production tests or current-`a703ece` certification. Live FCM and full current production role journeys remain unverified.
 
 ### Web build environment boundary
 
@@ -34,7 +34,7 @@ The newer clean-volume worker also indexed 402 RAG documents after its fresh see
 
 The rebuilt API/Admin/Restaurant images passed that historical three-project matrix. The later fresh clean-volume E2E reported 204 expected, 0 unexpected, 0 flaky, and 0 skipped in 353316 ms. Coverage includes axe serious/critical checks, auth/refresh/RBAC, customer API orders, REST-observed status convergence, tenant isolation, maps, contracts, visual structure, responsive navigation, and Restaurant form-login/reload persistence. Immutable registry provenance remains a separate release gate.
 
-Authenticated Railway/Supabase production smoke and a controlled live FCM delivery remain mandatory. Optional FCM/SMTP/Twilio/SePay/DeepSeek/owned-routing integrations must be configured and tested only when included in the certified feature set; missing Google/OSRM produces the expected routing 503 rather than blocking startup.
+The controlled Admin/Driver Railway/Supabase smoke described above passed. Broader role coverage and controlled live FCM remain open. Optional FCM/SMTP/Twilio/SePay/DeepSeek/owned-routing integrations must be configured and tested only when included in the certified feature set; missing Google/OSRM produces the expected routing 503 rather than blocking startup.
 
 ### Historical 2026-07-13 database runtime evidence
 
@@ -42,7 +42,7 @@ An isolated local PostGIS + pgvector container previously applied all 33 then-tr
 
 This historical run predates the local 36-migration evidence. A dated external record reports 36 checksum-verified Supabase migrations, but the local seed data described here is not production data and must not be used to infer production contents.
 
-Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The fresh clean-volume current-source matrix supersedes the old 128/134 image result. Provider-backed production smoke and controlled FCM delivery remain required; rerun the relevant evidence if the release head changes.
+Earlier broader web/browser/container evidence is retained in the [release report](batch4-release-report.md). The historical clean-volume matrix from source head `17584153ff256b74a3413ae9844f4f27bff038cc` supersedes the old 128/134 image result. Broader provider-backed production smoke and controlled FCM delivery remain open; rerun the relevant evidence if the release head changes.
 
 ### 2026-07-12 focused Driver GPS E2E evidence
 

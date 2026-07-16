@@ -16,9 +16,9 @@ FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Adm
 > **Live Admin:** [food-delivery-app-one-liard.vercel.app](https://food-delivery-app-one-liard.vercel.app)<br />
 > This is the deployed sign-in surface. Public demo credentials are not documented; review the screenshots or run the seeded local stack for authenticated workflows.
 
-## Current release evidence — 2026-07-15
+## Current release evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway API/worker/migrator and both Vercel apps. API health/readiness and both web health endpoints return that exact revision; Restaurant health currently requires authenticated Vercel access because the project has SSO protection and no custom domain. Railway reports 41 applied migrations with healthy PostgreSQL/Redis/Supabase Storage. Android API 35 production-emulator foreground tracking, screen-off updates, offline flush, and process recovery passed. The earlier controlled role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts, then removed every fixture row; it is historical evidence and is not current-`a703ece` certification. Candidate migration 42 and its hardened recovery controller remain undeployed pending PR review and a synchronized rollout. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM, build, multi-architecture runtime smoke, and eight image scans are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. A controlled production smoke verified five-minute ES256 tokens, private Broadcast RLS allow/deny, accepted GPS delivery, PostGIS persistence, explicit rejection reasons, and complete temporary DB/Redis cleanup. Docker Hub SHA, `v0.1.2`, and `latest` resolve to matching digests for all four images. Restaurant health returns the exact revision through authenticated Vercel access, but public requests redirect to Vercel SSO because the project has no custom domain. The earlier full role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts; it remains historical evidence, not current-`a703ece` certification. Candidate migration 42 and its hardened recovery controller are undeployed. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
 
 ## Product preview
 
@@ -98,23 +98,23 @@ Provider selection is explicit:
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
-## Last fully cross-registry-verified Docker release — SHA 17584153
+## Current Docker release — SHA a703ece
 
 | Artifact | Docker Hub SHA digest | Docker Hub aliases |
 | --- | --- | --- |
-| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` | `v0.1.1`, `latest` |
-| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` | `v0.1.1`, `latest` |
-| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` | `v0.1.1`, `latest` |
-| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` | `v0.1.1`, `latest` |
+| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` | `v0.1.2`, `latest` |
+| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` | `v0.1.2`, `latest` |
+| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` | `v0.1.2`, `latest` |
+| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` | `v0.1.2`, `latest` |
 
-All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because the repository token returned `401 Unauthorized` for package-manifest writes.
+All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because both the repository token and a local package-write token returned `401 Unauthorized` for package-manifest writes.
 
 <details>
 <summary><strong>Historical Docker candidate — superseded</strong></summary>
 
 <br />
 
-The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The last fully cross-registry-verified Docker digests and aliases are recorded in [Last fully cross-registry-verified Docker release — SHA 17584153](#last-fully-cross-registry-verified-docker-release--sha-17584153). Production currently runs a newer `a703ece` backend image; this older four-image table is not the current runtime inventory.
+The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The current Docker Hub digests and aliases are recorded in [Current Docker release — SHA a703ece](#current-docker-release--sha-a703ece).
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
