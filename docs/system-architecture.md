@@ -98,14 +98,14 @@ sequenceDiagram
     participant RT as Supabase Realtime
 
     Client->>API: POST /api/realtime/token {orderId?, restaurantId?}
-    API->>DB: Verify user/order/restaurant ownership
+    API->>DB: Lock active user FOR SHARE; verify role and requested scope
     API-->>Client: ES256 JWT, expiresAt, allowed channels
     Client->>RT: setAuth(token) + subscribe to private channel
     API->>RT: Broadcast(channel,event,payload)
     RT-->>Client: Event only when realtime.messages policy allows channel claim
 ```
 
-The JWT TTL is five minutes. Claims contain `sub`, application role, and `realtime_channels`. The private Broadcast policy on `realtime.messages` reads those claims and permits subscribe only to an explicitly allowed channel. `realtime_outbox` remains only for the one-cycle rollback path; broad public channels are not part of the design.
+The JWT TTL is five minutes. Token signing runs inside a database transaction that holds a shared lock on the active user row and rechecks the role, so account deactivation/deletion cannot overtake an in-flight token issue. Claims contain `sub`, application role, and `realtime_channels`. The private Broadcast policy on `realtime.messages` reads those claims and permits subscribe only to an explicitly allowed channel. `realtime_outbox` remains only for the one-cycle rollback path; broad public channels are not part of the design.
 
 Canonical channel families cover user notifications, admin orders/drivers, restaurant tenants, drivers, orders, and restaurant-driver chat. A requested order or restaurant scope is rejected before token issue when ownership cannot be proven.
 
@@ -178,7 +178,9 @@ Any key previously pasted into chat or logs must be rotated before live smoke or
 ## Tenant and data security
 
 - Prisma queries scope restaurant resources by the authenticated active profile.
-- Realtime channel authorization is verified before ES256 JWT signing and again through the private Supabase Broadcast policy on `realtime.messages`.
+- Realtime channel authorization is verified under an active-user shared row lock before ES256 JWT signing and again through the private Supabase Broadcast policy on `realtime.messages`.
+- Database foreign keys protect semantic creator/sender/approver and cart-restaurant UUIDs from late-write orphans; fixture cleanup also scans those references before deletion and after its capability-drain window.
+- Controlled production role smoke stores a non-secret exact-ID lifecycle row atomically with its fixture. Cleanup moves that row from `active` to `deletion_committed` in the same transaction that deletes identities, holds the advisory lease through the Realtime capability drain, then records `complete`. This tombstone allows recovery after a hard kill without treating an unknown run ID as owned data.
 - Public job/telemetry tables enable RLS; the retained realtime outbox is rollback-only and is not a client broadcast source.
 - Export jobs are tied to the requesting admin; unsupported Parquet creation is rejected rather than generating fake output.
 - Webhooks require provider/generic secrets and replay protection.

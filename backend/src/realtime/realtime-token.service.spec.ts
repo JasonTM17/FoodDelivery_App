@@ -15,6 +15,8 @@ describe('RealtimeTokenService', () => {
     }),
   }
   const prisma = {
+    $queryRaw: jest.fn().mockResolvedValue([{ id: customerUuid(1) }]),
+    $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     order: { findUnique: jest.fn() },
     restaurantProfile: { findFirst: jest.fn() },
   }
@@ -89,6 +91,14 @@ describe('RealtimeTokenService', () => {
 
     await expect(service.issueToken({ sub: customerUuid(1), role: UserRole.admin }))
       .rejects.toBeInstanceOf(InternalServerErrorException)
+  })
+
+  it('refuses to sign after the database user becomes inactive or changes role', async () => {
+    prisma.$queryRaw.mockResolvedValueOnce([])
+    const service = new RealtimeTokenService(config as never, prisma as never)
+
+    await expect(service.issueToken({ sub: customerUuid(1), role: UserRole.admin }))
+      .rejects.toMatchObject({ message: 'REALTIME_USER_INACTIVE' })
   })
 })
 

@@ -6,6 +6,7 @@ Privacy-reviewed product media for the four FoodFlow roles. Read the [capture ma
 
 | Scope | Environment | Boundary |
 |---|---|---|
+| Admin / Restaurant controlled production smoke | Google Chrome against the canonical Vercel aliases, Railway API, and Supabase production | Historical authenticated zero-state role evidence for runtime SHA `17584153`; synthetic fixture rows were removed. Current runtime is `a703ece`, so these captures are not current-revision certification. Not active-order, payment, provider, or device certification. |
 | Admin / Restaurant | Google Chrome against the isolated `foodflow-batch4-e2e` Docker stack with deterministic seed data | Local web product/regression evidence; not a deployed browser journey or release certification. |
 | Customer / Driver role flows | Flutter debug APKs on an Android API 35 x86_64 AVD connected to the isolated E2E stack | Built from the current dirty working tree; not a mobile release or production-provider certification. |
 | Driver GPS / foreground tracking | Android API 35 emulator with fixed simulated location and local Socket.IO compatibility | Local command/persistence/fanout evidence only; not Supabase/Railway, payout, routing, or production proof. |
@@ -31,6 +32,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 | Customer | 1 WebP still + 1 GIF | Privacy-reviewed app launch and public sign-in/registration navigation without entered credentials. |
 | Driver | 7 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, three Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
+| Controlled production web smoke | 2 PNG stills | Authenticated Admin overview and tenant-scoped Restaurant empty order queue; synthetic identities deleted after capture. |
 
 ### Admin
 
@@ -39,6 +41,13 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 ### Restaurant
 
 `restaurant/01-login.png` through `restaurant/10-settings.png`; GIF: `../media/gifs/restaurant-orders-to-menu.gif`.
+
+### Controlled production web smoke
+
+- `production/2026-07-15-admin-authenticated-overview.png` — canonical Admin overview after a temporary Admin authenticated in Google Chrome.
+- `production/2026-07-15-restaurant-authenticated-orders.png` — canonical Restaurant queue scoped to the temporary smoke restaurant.
+
+These two images are bounded authenticated role evidence, not general production data. The corresponding Customer and Driver check used read-only API contracts because those products are native Flutter apps; it is not presented as mobile UI or device evidence.
 
 ### Customer
 

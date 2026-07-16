@@ -59,7 +59,7 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful from immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful from immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. The deployed database has 41 migrations; candidate migration 42 is not deployed. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
@@ -238,9 +238,13 @@ Same as Admin, replacing `NEXT_PUBLIC_ADMIN_URL` with `NEXT_PUBLIC_RESTAURANT_UR
 
 Public variables are baked into Next.js assets. Changing them requires a rebuild/redeploy. OpenFreeMap needs no browser key or billing account; Supabase still requires RLS and scoped realtime authorization.
 
+### Vercel Preview environment boundary
+
+Both Vercel projects must define the public variables above in the `Preview` environment (and for the release branch when branch-scoped): `NEXT_PUBLIC_APP_ENV`, `NEXT_PUBLIC_API_URL`, the role URL, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_MAP_PROVIDER`, and `NEXT_PUBLIC_MAP_STYLE_URL`. A missing role URL fails the Next.js build during metadata collection instead of guessing a host. Keep `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Vercel's sensitive secret store; never copy it into GitHub variables, docs, or browser screenshots. After changing any value, redeploy the preview and verify the generated deployment before relying on the GitHub Vercel check.
+
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. Vercel deployment IDs are Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public Admin/Restaurant login smoke passes for `vi`, `en`, and `ja`. A temporary authenticated Driver/Admin smoke also passed private Broadcast RLS, ES256 token, GPS validation, PostGIS persistence, and cleanup. Wider authenticated role journeys, controlled-device FCM, physical Android/iOS background location, and optional providers are not certified. Docker Hub and GHCR `sha-a703ece...`, `v0.1.2`, and `latest` aliases match these digests:
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. Vercel deployment IDs are Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public login smoke was recorded for `vi`, `en`, and `ja`, but a later direct recheck found public Restaurant requests redirect to Vercel SSO because `all_except_custom_domains` protection is enabled and the project has no custom domain. A temporary authenticated Driver/Admin smoke passed private Broadcast RLS, ES256 token, GPS validation, PostGIS persistence, and cleanup. Wider authenticated role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers are not certified. Docker Hub and GHCR `sha-a703ece...`, `v0.1.2`, and `latest` aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
@@ -253,9 +257,9 @@ Docker Publish run `29474270122` and Release run `29478484699` verified these re
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
-### Documentation-only Vercel drift recovery
+### Historical documentation-only Vercel drift recovery
 
-Vercel build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. Canonical health now matches Railway at SHA `a703ece`; all public `vi/en/ja` login routes return 200. The authenticated GPS/Supabase smoke covers the Driver/Admin realtime path but does not replace full customer/restaurant browser journey certification.
+Vercel had previously built documentation-only `master` commits while Railway stayed on SHA `17584153`; PR #80 later merged the docs-only deploy guard. For SHA `a703ece`, build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. Authenticated health now matches Railway. The release-time login smoke was recorded, but the later public Restaurant recheck redirects to Vercel SSO; the Driver/Admin GPS smoke also does not replace full four-role browser/native certification.
 
 ## 4. Supabase deployment
 
@@ -401,6 +405,54 @@ powershell -File infra/scripts/post-deploy-smoke.ps1 \
 ```
 
 The script never prints bearer values. Clear all process tokens afterward.
+
+### Controlled zero-data role authentication
+
+When production intentionally has no approved users or orders, use the fixture controller only for the bounded authentication/RBAC check. FoodFlow application users are custom Prisma/JWT users; do not create Supabase Auth users for this test.
+
+In one terminal, set a unique run ID, a temporary printable-ASCII password, an absolute cleanup-signal path, and the exact mutation confirmation. The controller refuses to start unless `RAILWAY_ENVIRONMENT_NAME=production`, `DATABASE_URL` resolves to the same Supabase project reference as `SUPABASE_URL`, uses the `postgres` database and `public` Prisma schema through direct/session port `5432`, and one serializable preflight finds zero users, restaurants, orders, and GPS rows; transaction-pool port `6543` is not allowed. No URL or row data is printed. It opens one Prisma connection, acquires one database advisory lease bound to the live PostgreSQL backend PID, creates four `@example.invalid` role identities plus one ownership-marked inactive/closed restaurant, and starts the 60–900 second cleanup-trigger deadline before provisioning. `READY` reports the remaining seconds; cleanup and the final credential-drain period are additional, and database operations retain their own 30-second limits:
+
+```powershell
+$runId = 'release-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
+$signalPath = Join-Path $env:TEMP "foodflow-$runId.cleanup"
+Remove-Item -LiteralPath $signalPath -Force -ErrorAction SilentlyContinue
+
+$env:FOODFLOW_PRODUCTION_SMOKE_CONFIRM='CREATE_AND_DELETE_EXACT_FOODFLOW_PRODUCTION_SMOKE_IDENTITIES'
+$env:FOODFLOW_PRODUCTION_SMOKE_RUN_ID=$runId
+$env:FOODFLOW_PRODUCTION_SMOKE_PASSWORD='<generated-temporary-password>'
+$env:FOODFLOW_PRODUCTION_SMOKE_SIGNAL_PATH=$signalPath
+$env:FOODFLOW_PRODUCTION_SMOKE_MAX_SECONDS='480'
+
+railway run --service foodflow-migrate --environment production --no-local `
+  corepack pnpm --dir backend smoke:production-role-fixture
+```
+
+Wait for `READY`. In Google Chrome, authenticate the derived Admin and Restaurant addresses, verify their protected zero-state pages, and check console errors. Use the Customer and Driver addresses only for read-only login, `/users/me`, orders/earnings, private Realtime token, and cross-role denial checks. Do not create an order, payment, export, AI session, FCM registration, upload, or GPS row in this bounded smoke.
+
+Create the cleanup signal from a second terminal as soon as checks finish:
+
+```powershell
+New-Item -ItemType File -Path '<same-absolute-signal-path>' -Force
+```
+
+Provisioning writes a non-secret lifecycle row containing the run ID, restaurant UUID/slug, and four user UUIDs in the same serializable transaction as the fixture. Before deletion, the controller locks that lifecycle row, verifies the exact UUID/email/role/name/profile topology and restaurant ownership marker, locks the fixture rows, revalidates them, and verifies that the transaction still owns the original lease backend PID. Realtime signing holds a shared user-row lock, so cleanup cannot overtake a token that is being issued. Database foreign keys protect the remaining semantic creator/sender/approver references. Cleanup refuses any unexpected order, GPS, FCM, notification, export, AI/support, wallet/referral, chat sender, cart/approval/audit target, menu/promotion, RAG, or related business row. Only then does it mark exact users inactive, delete by immutable UUID, and atomically move the lifecycle state to `deletion_committed`. Ownership, residue, namespace, serialization, and connection failures are not retried; they require exact recovery or investigation.
+
+Successful normal row cleanup must print `CLEANUP_OK remainingUsers=0 remainingProfiles=0 remainingRestaurants=0 outcome=deleted`. During the following 305-second capability-drain window, navigate retained Chrome sessions to protected data routes and require both to return to login, then close Chrome and every Customer/Driver Realtime client. The controller keeps the same database backend PID and advisory lease while waiting for the five-minute Realtime JWT TTL plus five seconds. It then prints `CAPABILITY_DRAIN_OK realtimeTokensExpired=true`, repeats the full core and semantic-residue scan, marks the lifecycle state `complete`, and finally prints `FINAL_RESIDUE_OK users=0 profiles=0 restaurants=0 relations=0`; only then are the lease and database connection released. The retained lifecycle row contains no password, token, or personal account data and is the durable proof needed for interrupted post-delete recovery. Finally query counts independently without listing account data and confirm zero users, profiles, restaurants, orders, and driver-location rows. Clear every `FOODFLOW_PRODUCTION_SMOKE_*` variable and remove the signal file.
+
+If the owner process was terminated before it could clean up, do not provision the same run ID again. Run the exact-namespace recovery mode with that original run ID; it does not require the old password or signal path:
+
+```powershell
+$env:FOODFLOW_PRODUCTION_SMOKE_CONFIRM='CREATE_AND_DELETE_EXACT_FOODFLOW_PRODUCTION_SMOKE_IDENTITIES'
+$env:FOODFLOW_PRODUCTION_SMOKE_MODE='cleanup'
+$env:FOODFLOW_PRODUCTION_SMOKE_RUN_ID='<original-run-id>'
+
+railway run --service foodflow-migrate --environment production --no-local `
+  corepack pnpm --dir backend smoke:production-role-fixture
+```
+
+Require `RECOVERY_CLEANUP`, `CLEANUP_OK`, `CAPABILITY_DRAIN_OK`, and `FINAL_RESIDUE_OK` in that order, then independently repeat the zero-row inventory. Recovery reports `outcome=deleted` when exact fixture rows still existed, or `outcome=already-deleted` only when a durable lifecycle tombstone proves that the original immutable UUIDs were already deleted. It never performs a broad `prod-smoke-*` deletion, and an unknown run ID with no durable record is rejected instead of reporting a successful no-op. An advisory lease rejects recovery while a live fixture owner is still running. A hard process kill cannot execute automatic cleanup, so this recovery command is a mandatory incident step, including when the kill happened during the 305-second post-delete drain. A provision error after mutation begins prints `RECOVERY_REQUIRED`; the controller attempts one exact-run reconciliation under a verified or reacquired lease and prints `RECOVERY_RECONCILED` only if that succeeds. If it prints `RECOVERY_FAILED`, run this incident command with the original run ID.
+
+Do not run another Prisma/Railway database client while the fixture controller owns its connection. Supabase session mode is capped; a concurrent client can fail with `EMAXCONNSESSION`. The controller adds `connection_limit=1`, a backend-PID heartbeat, an inactive/closed public restaurant record, a bounded cleanup-trigger timeout, exact-namespace refusal, and capability drain, but those safeguards do not make unrelated concurrent operational clients safe.
 
 Smoke must cover:
 

@@ -6,21 +6,21 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
-Evidence production hiện tại gắn với runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Các gate GitHub và provider smoke hiện tại đã chạy lại cho SHA này; test count local cũ bên dưới vẫn chỉ là evidence lịch sử có phạm vi, không phải phê duyệt production end-to-end.
+Evidence production hiện tại gắn với runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Các workflow CI, E2E, Integration Smoke, OpenAPI, security, SBOM, build, runtime smoke đa kiến trúc và tám lượt quét image từ xa đều xanh cho revision này. Các số liệu local sau merge và kết quả role/browser lịch sử bên dưới chỉ là evidence có phạm vi, không phải phê duyệt production end-to-end đầy đủ.
 
-| Khu vực        | Kết quả                                                                                                                                                                                                                                                                                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Backend        | Tại runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`, CI, E2E, Integration Smoke, security, SBOM, build, runtime smoke đa kiến trúc và tám lượt scan image đều xanh. Con số 145 suite / 1071 test vẫn là evidence local cũ của `f2c02ed`, không phải count hiện tại. |
-| Database       | `prisma migrate status` live báo đủ 41 migration trong repository đã apply, không còn migration chờ. Readiness của database, Redis và Supabase Storage đều pass. Các record rolled-back/checksum provenance lịch sử được ghi riêng như audit history. |
-| Mobile Flutter | Evidence local lịch sử pass 369 test và `flutter analyze`. Background location Android/iOS thật và evidence thiết bị production vẫn chưa được chứng nhận. |
-| Web            | Typecheck/lint, Vitest và production-build count local lịch sử chỉ là evidence có phạm vi. Health Admin/Restaurant và sáu route đăng nhập theo locale đã được verify tại SHA `a703ece`. |
-| Browser E2E    | Evidence Playwright volume sạch lịch sử pass 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5. Các count này chưa được chạy lại trên deployment production. |
-| FCM            | Notification backend và lifecycle Flutter local lịch sử đã pass. Live delivery tới controlled production device vẫn chưa được chứng nhận. |
-| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại SHA `a703ece`. Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` và Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` trả cùng revision. Public login `vi/en/ja` và smoke GPS/Broadcast/PostGIS có xác thực đều pass; browser journey đầy đủ của customer/restaurant vẫn chưa được chứng nhận. |
+| Khu vực        | Kết quả |
+| -------------- | ------- |
+| Backend        | Các gate local hiện tại sau merge pass Prisma generate/validate, typecheck, ESLint và Nest build. Full Jest có 153 suite pass cộng 1 suite integration có gate bị skip; 1.160 test pass cộng 1 test skip. |
+| Database       | Production SHA `a703ece` đã apply đủ 41 migration trong repository, không còn migration chờ; readiness của Database, Redis và Supabase Storage đều pass. Migration ứng viên thứ 42 đã được kiểm chứng trên PostGIS dùng một lần, gồm preflight semantic FK, clean apply và rollback toàn bộ sau lỗi cố ý ở index cuối, nhưng vẫn chưa deploy trong khi chờ review và rollout đồng bộ. Các record rollback/checksum provenance lịch sử vẫn là audit history riêng. |
+| Mobile Flutter | Lock resolution và `flutter analyze` hiện tại sau merge pass không lỗi; full suite Customer/Driver pass 373/373 test. Background location Android/iOS trên thiết bị vật lý thật vẫn chưa được chứng nhận. |
+| Web            | Frozen install, typecheck, lint và test chọn build Vercel hiện tại sau merge đều pass. Admin pass 194/194 test và build 70 route; Restaurant pass 135/135 test và build 55 route. |
+| Role/browser lịch sử | Full role smoke Admin/Restaurant bằng Chrome và Customer/Driver qua API, cùng kết quả Playwright volume sạch 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5, thuộc source head `17584153ff256b74a3413ae9844f4f27bff038cc`. Các lượt này chưa được chạy lại để chứng nhận production bốn role trên `a703ece`. |
+| FCM/provider   | Notification backend và lifecycle Flutter local lịch sử đã pass. FCM live có kiểm soát, các tích hợp dùng provider tùy chọn và coverage thiết bị vật lý thật vẫn còn mở. |
+| Production     | Railway migrator `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại SHA `a703ece`. Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` và Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` dùng cùng revision. Smoke GPS/Supabase có kiểm soát cho Admin/Driver đã pass với token ES256 thời hạn 5 phút, Broadcast private kiểm tra RLS allow/deny, fanout GPS, một row PostGIS được lưu, các nhánh từ chối rõ ràng `poor_accuracy` và `driver_offline`, cùng cleanup toàn bộ dữ liệu tạm trong database/Redis. Health Restaurant trả đúng revision qua truy cập Vercel đã xác thực, còn request Restaurant công khai bị chuyển hướng `302` tới Vercel SSO. Khả dụng Restaurant công khai và chứng nhận đầy đủ bốn role trên revision hiện tại vẫn còn mở. |
 
 ### Docker volume sạch lịch sử — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 38 migration hiện hành lúc đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review; worker index 402 RAG document. Với local URL tường minh, stack lịch sử pass Chrome desktop 68/68, Firefox 68/68 và Chrome mobile Pixel 5 68/68: tổng 204/204, không fail hay skip. Đây là kết quả local ngày 14/07/2026, không phải test production của SHA `17584153`. FCM live và role journey production có xác thực vẫn chưa verify.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 38 migration hiện hành lúc đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review; worker index 402 RAG document. Với local URL tường minh, source head `17584153ff256b74a3413ae9844f4f27bff038cc` pass Chrome desktop 68/68, Firefox 68/68 và Chrome mobile Pixel 5 68/68: tổng 204/204, không fail hay skip. Đây là kết quả local ngày 14/07/2026, không phải test production hay chứng nhận hiện tại của `a703ece`. FCM live và full role journey production hiện tại vẫn chưa verify.
 
 ### Ranh giới môi trường build web
 
@@ -32,17 +32,17 @@ Phần này giữ evidence local ngày 13/07/2026: lúc đó repository có 34 m
 
 Worker clean-volume mới cũng index 402 RAG document sau fresh seed. Không có DeepSeek key nên embedding vẫn pending và không có vector giả. Volume tái sử dụng cũ còn 44 FAQ và 8 policy row có source ID rỗng từ lần local cũ; các dòng lịch sử này không tính vào evidence worker hiện tại. Không dữ liệu nào ở đây là production hoặc phê duyệt embedding/provider production.
 
-Image API/Admin/Restaurant của lượt lịch sử đã pass ma trận ba project; E2E clean-volume current-source mới nhất pass 204/204 trong 353 giây. Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, visual structure, responsive navigation và Restaurant form-login/reload persistence. Provenance registry immutable current-head vẫn là gate riêng.
+Image API/Admin/Restaurant của lượt lịch sử đã pass ma trận ba project; E2E clean-volume lịch sử từ source head `17584153ff256b74a3413ae9844f4f27bff038cc` pass 204/204 trong 353 giây. Coverage gồm axe serious/critical, auth/refresh/RBAC, customer order qua API, hội tụ trạng thái REST, tenant isolation, map, contract, visual structure, responsive navigation và Restaurant form-login/reload persistence. Provenance registry immutable current-head vẫn là gate riêng.
 
-Production smoke Railway/Supabase có xác thực và FCM live tới thiết bị kiểm soát vẫn bắt buộc. Chỉ cấu hình/test FCM/SMTP/Twilio/SePay/DeepSeek/owned routing khi feature đó thuộc phạm vi chứng nhận; thiếu Google/OSRM phải trả routing 503 đúng contract, không được làm hệ thống mất startup.
+Smoke Railway/Supabase có kiểm soát cho Admin/Driver nêu trên đã pass. Coverage role rộng hơn và FCM live tới thiết bị kiểm soát vẫn còn mở. Chỉ cấu hình/test FCM/SMTP/Twilio/SePay/DeepSeek/owned routing khi feature đó thuộc phạm vi chứng nhận; thiếu Google/OSRM phải trả routing 503 đúng contract, không được làm hệ thống mất startup.
 
 ### Database runtime evidence lịch sử 13/07/2026
 
 Container PostGIS + pgvector dùng một lần trước đây đã apply đủ 33 migration đang được track khi đó, xác minh PostGIS, vector, `rag_documents`, source/content index và cosine HNSW index. Lệnh `db:big-seed` tạo thật trong DB này 50 restaurant đã duyệt, 50 driver, 100 customer, 509 order, 123 review và 10 promotion; đây là bằng chứng generator ghi database, không phải fixture fix cứng lúc runtime. Worker local đồng bộ 32 document restaurant/menu sống; do chưa có DeepSeek key nên cả 32 ở trạng thái chờ embedding, không sinh vector giả. Migration FCM-revocation thứ 34 chưa có trong lượt evidence lịch sử này.
 
-Lượt lịch sử này có trước trạng thái migration hiện tại. Supabase production đã apply và checksum-verify đủ 36 migration. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
+Lượt lịch sử này có trước trạng thái migration hiện tại. Một record bên ngoài có ngày ghi nhận 36 migration Supabase đã được checksum-verify; production hiện tại đã apply đủ 41 migration trong repository. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
 
-Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md). Ma trận clean-volume current-source mới thay kết quả image cũ 128/134. Provider-backed production smoke và controlled FCM delivery vẫn bắt buộc; phải chạy lại evidence phù hợp nếu release head thay đổi.
+Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md). Ma trận clean-volume lịch sử từ source head `17584153ff256b74a3413ae9844f4f27bff038cc` thay kết quả image cũ 128/134. Provider-backed production smoke phạm vi rộng hơn và controlled FCM delivery vẫn còn mở; phải chạy lại evidence phù hợp nếu release head thay đổi.
 
 ## Gate tổng
 
