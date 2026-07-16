@@ -1,6 +1,6 @@
 # Production Current State
 
-Last verified: 2026-07-16 (UTC), after `master` commit `d2024a87397a0395e174fbc0237e83732fc07ae9`.
+Last verified: 2026-07-16 (UTC), after `master` commits `d2024a87397a0395e174fbc0237e83732fc07ae9` and `84eeac3`.
 
 This page is the authoritative operational snapshot. Older release paragraphs in the README, roadmap, testing guide, and gallery describe bounded evidence captured before this rollout; they are not a second current deployment.
 
@@ -13,7 +13,9 @@ This page is the authoritative operational snapshot. Older release paragraphs in
 | Railway migrator | `e100789f-03c1-445d-9e69-b8a243973a95` | `foodflow-migrate:sha-977d55f19ddc4fecafb8a758d2df034f4b6ff21d` | Successful, stopped |
 | Vercel Admin | Existing production deployment | Revision `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` | HTTP 200 |
 
-The checkout response fix is backend-only. The Prisma schema and migration directory did not change, so no production migrator run was authorized. The existing checksum guard remains fail-closed for the unresolved `20260712143000_add_production_storage_bucket` provenance.
+The checkout response fix is backend-only, so no production migrator run was authorized. Commit `84eeac3` restores the production Storage migration's byte-compatible trailing newline and adds a regression for the recorded checksum
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`.
+The migration checksum guard suite passes `10/10`; the sole source-byte provenance blocker is resolved. Future schema changes still require a backup and a fresh read-only production audit before running the migrator.
 
 ## Health evidence
 
