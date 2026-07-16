@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-16 status:** runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、security、SBOM、build、multi-architecture runtime smoke、8 image scans は green、Prisma は 41 migrations すべて適用済みで pending はありません。API health/readiness と Admin/Restaurant health は同じ SHA を返し、database、Redis、Supabase Storage は ready です。Authenticated GPS/Supabase smoke（ES256、private Broadcast RLS、PostGIS、rejection reason、cleanup）も pass しました。Public Restaurant request は custom domain 不在のため Vercel SSO に redirect されます。Candidate migration 42 と hardened recovery controller は未 deploy です。Google Chrome Admin/Restaurant と Customer/Driver API checks は historical SHA `17584153` の role-smoke evidence で、`a703ece` certification ではありません。Physical Android/iOS、controlled-device FCM、active-order、full browser journeys は未認証です。
+> **2026-07-16 status:** Railway API/worker/migrator deployments と Vercel Admin/Restaurant health responses は、現在の runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を正確に返します。Production には 41 effective database migrations があり、candidate migration 42 と hardened recovery controller は未 deploy です。この revision で現在確認済みなのは deployment/health evidence のみで、`977d55f19ddc4fecafb8a758d2df034f4b6ff21d` に対する 4-role Google Chrome smoke、GPS flow、device certification は再実行していません。以前の SHA `17584153ff256b74a3413ae9844f4f27bff038cc` role-smoke は Google Chrome で Admin/Restaurant を認証し、Customer/Driver read-only API contracts を確認した historical evidence です。Docker Hub/GHCR の `v0.1.2` と `latest` aliases は、SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` の別の tagged release のままです。その green CI、image scans、GPS/Supabase smoke、Android API 35 production-emulator recovery evidence は current runtime を認証しません。Public Restaurant、physical Android/iOS、controlled FCM、active-order、full browser journeys は current evidence の対象外です。
 
 ## Product preview
 
@@ -69,9 +69,9 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Current Docker release — SHA a703ece
+## Tagged Docker release v0.1.2 — SHA a703ece
 
-Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29478484699` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。
+Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29478484699` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。これは tagged-release evidence であり、現在の Railway/Vercel runtime SHA ではありません。
 
 | Artifact | Docker Hub digest |
 | --- | --- |

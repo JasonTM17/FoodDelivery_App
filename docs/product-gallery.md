@@ -35,7 +35,7 @@ Customer and Driver have no browser URL. Launch their explicit Flutter entrypoin
 
 ## Historical controlled-production web smoke
 
-These two Google Chrome captures belong to deployed revision `17584153ff256b74a3413ae9844f4f27bff038cc`, not current runtime `a703ece`. At capture time the Admin overview showed the four synthetic role-smoke users and one temporary restaurant; the Restaurant queue was scoped to that temporary restaurant and had no orders. Cleanup then removed every fixture user, profile, restaurant, order, and GPS row. The images prove only the bounded historical authentication journey described in the manifest.
+These two Google Chrome captures belong to deployed revision `17584153ff256b74a3413ae9844f4f27bff038cc`, not current runtime `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Railway API/worker/migrator and Vercel Admin/Restaurant health now report that current SHA, but the four-role Chrome, GPS, and device certification has not been rerun for it. At capture time the Admin overview showed the four synthetic role-smoke users and one temporary restaurant; the Restaurant queue was scoped to that temporary restaurant and had no orders. Cleanup then removed every fixture user, profile, restaurant, order, and GPS row. The images prove only the bounded historical authentication journey described in the manifest.
 
 | Admin authenticated overview | Restaurant authenticated order queue |
 |---|---|
