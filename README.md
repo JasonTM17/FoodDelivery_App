@@ -28,10 +28,10 @@ FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Admin      | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                       |
 | Restaurant | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.         |
-| Customer   | Flutter/Riverpod Android/iOS app | Four privacy-reviewed local WebPs and two GIFs | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
-| Driver     | Flutter/Riverpod Android/iOS app | Seven Driver WebPs, two Android notification WebPs, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.       |
+| Customer   | Flutter/Riverpod Android/iOS app | Nine privacy-reviewed local WebPs and two GIFs | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
+| Driver     | Flutter/Riverpod Android/iOS app | Eight Driver WebPs, two Android notification WebPs, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.       |
 
-The mobile captures use simulated GPS. Most use the isolated local stack; the manifest separately records the privacy-reviewed production-emulator recovery smoke. Because each was captured from a dirty workspace, authentic release media still requires a clean-head recapture from the chosen release candidate.
+The mobile captures use simulated GPS. Most use the isolated local stack; the manifest separately records the privacy-reviewed production-emulator recovery smoke. The latest local capture also covers Customer discovery → menu → cart → checkout → tracking and a realtime Driver dispatch offer. Because each was captured from a dirty workspace, authentic release media still requires a clean-head recapture from the chosen release candidate.
 
 <p align="center">
   <img src="docs/screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />

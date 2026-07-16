@@ -146,7 +146,6 @@ Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai
 
 Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、local SQL または exact immutable-image provenance entry に対して最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。未解決の production Storage checksum を隠すために `prisma migrate resolve` を使わず、original SQL bytes の復元と review まで audit を blocker のままにします。
 
-
 ```powershell
 railway login
 railway link

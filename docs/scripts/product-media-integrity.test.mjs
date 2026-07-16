@@ -17,7 +17,7 @@ test('all curated media paths match the checked-in integrity manifest', async ()
     baseDirectory: screenshotsDirectory,
   })
 
-  assert.equal(Object.keys(actual.files).length, 40)
+  assert.equal(Object.keys(actual.files).length, 46)
   assert.deepEqual(actual, manifest.assetIntegrity)
 })
 

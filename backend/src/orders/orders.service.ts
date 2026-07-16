@@ -385,9 +385,19 @@ export class OrdersService {
       },
     )
 
+    // Return the same serialized contract as GET /orders/:id. Returning the
+    // raw Prisma row leaks Decimal values as strings, which makes the mobile
+    // client reject an otherwise successful 201 response and remain on the
+    // checkout screen.
+    const responseOrder = await this.getOrderDetail(
+      order.id,
+      userId,
+      UserRole.customer,
+    )
+
     return paymentResult.paymentIntent
-      ? { ...order, status, paymentIntent: paymentResult.paymentIntent }
-      : { ...order, status }
+      ? { ...responseOrder, paymentIntent: paymentResult.paymentIntent }
+      : responseOrder
   }
 
   async getRestaurantOrders(userId: string, status?: string) {

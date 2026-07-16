@@ -12,8 +12,8 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Admin guide](./admin-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; not current-revision certification. |
 | Restaurant | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Restaurant guide](./restaurant-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; public current access remains behind Vercel SSO. |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Four privacy-reviewed local WebPs and two GIFs | [Customer guide](./customer-guide.md) | Android AVD public-auth plus authenticated local-fixture Home/Orders/Profile evidence; no exact coordinates are visible. |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, one production-emulator recovery WebP, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Local Android AVD role/GPS evidence plus one separately labelled Railway/Supabase production-emulator capture; not physical-device, iOS, FCM, payout, routing, or app-store proof. |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Nine privacy-reviewed local WebP stills and two GIFs | [Customer guide](./customer-guide.md) | Android AVD public-auth, authenticated role, and discovery/order-flow evidence with simulated GPS only; no exact coordinates are visible. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Seven local WebP stills, one production-emulator recovery WebP, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Local Android AVD role/GPS/dispatch evidence plus one separately labelled Railway/Supabase production-emulator capture; not physical-device, iOS, FCM, payout, or app-store proof. |
 
 ## Choose a role guide
 
@@ -138,7 +138,7 @@ Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it 
 
 For the cross-role Customer/Driver workflow, permission behaviour, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
 
-The following privacy-reviewed Android AVD media contains the public-auth flow plus an authenticated local-fixture Home → Orders → Profile flow. Fixed simulated GPS was used, but the retained UI exposes only the generic current-location label and no exact coordinate. The manifest records dirty-workspace provenance, so this media is regression evidence only and cannot become visual release evidence without a clean-head recapture.
+The following privacy-reviewed Android AVD media contains the public-auth flow, an authenticated Home → Orders → Profile fixture, and a real local Customer journey through nearby restaurants, menu, cart, checkout, and order tracking. GPS is fixed simulated HCMC data; retained UI exposes no exact coordinates. The manifest records dirty-workspace provenance, so this media is regression evidence only and cannot become visual release evidence without a clean-head recapture.
 
 ### Customer public authentication and app launch
 
@@ -155,6 +155,18 @@ The following privacy-reviewed Android AVD media contains the public-auth flow p
 | ![Customer Home](./screenshots/customer/02-home.webp) | ![Customer active orders](./screenshots/customer/03-orders.webp) | ![Customer Profile](./screenshots/customer/04-profile.webp) |
 
 The Orders image is post-fix visual evidence that backend enum `restaurant_pending` renders as Vietnamese copy (`Chờ nhà hàng`) rather than leaking an internal key. Focused tests separately cover all 15 backend `OrderStatus` values in English, Vietnamese, and Japanese and the localized unknown-state fallback. These frames contain synthetic local fixture data only and are not production or release certification.
+
+### Customer ordering journey
+
+| Nearby restaurants | Restaurant menu | Cart |
+|---|---|---|
+| ![Customer nearby restaurants](./screenshots/customer/02-home-nearby-restaurants.webp) | ![Customer restaurant menu](./screenshots/customer/03-restaurant-menu.webp) | ![Customer cart](./screenshots/customer/04-cart.webp) |
+
+| Checkout | Order tracking |
+|---|---|
+| ![Customer checkout](./screenshots/customer/05-checkout.webp) | ![Customer order tracking degraded state](./screenshots/customer/06-order-tracking-degraded.webp) |
+
+The checkout capture is paired with the serialized-order response regression fix: HTTP 201 now returns numeric contract fields that the mobile model accepts, so the device navigates to tracking. The tracking still intentionally shows the truthful degraded/no-driver state rather than inventing a location.
 
 ## Driver
 
@@ -177,6 +189,12 @@ Driver is a first-class Flutter/Riverpod native Android/iOS product. Start it fr
 ### Driver profile
 
 ![Driver profile](./screenshots/driver/04-profile.webp)
+
+### Realtime dispatch offer
+
+![Driver realtime dispatch offer](./screenshots/driver/05-dispatch-offer.webp)
+
+This local Android API 35 capture shows a restaurant-accepted order delivered to the Online Driver through the realtime dispatch flow. The synthetic offer expired without acceptance, so the backend cancelled it using the normal timeout policy; no production order is implied.
 
 ### GPS and foreground-tracking evidence
 

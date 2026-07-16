@@ -12,7 +12,7 @@ Privacy-reviewed product media for the four FoodFlow roles. Read the [capture ma
 | Driver GPS / foreground tracking | Android API 35 emulator with fixed simulated location and local Socket.IO compatibility | Local command/persistence/fanout evidence only; not Supabase/Railway, payout, routing, or production proof. |
 | Driver production GPS recovery | Android API 35 x86_64 emulator using Railway and Supabase with a temporary synthetic Driver | Authenticated production-emulator evidence for foreground tracking, screen-off updates, offline flush, process recovery, PostGIS and private Broadcast; not physical-device, iOS, FCM, payout or app-store certification. |
 
-The manifest records only synthetic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. The authenticated Customer capture shows only a generic current-location label and generic profile identity. Mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap. `assetIntegrity.files` records SHA-256 for all 40 curated media paths, resolved relative to this directory.
+The manifest records only deterministic synthetic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. Authenticated Customer captures show only generic/synthetic fixture content and no exact coordinate. Mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap. `assetIntegrity.files` records SHA-256 for all 46 curated media paths, resolved relative to this directory.
 
 ## Role guides
 
@@ -29,8 +29,8 @@ The manifest records only synthetic seed identities. Passwords stay masked and a
 |---|---:|---|
 | Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
 | Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
-| Customer | 4 WebP stills + 2 GIFs | App launch/public auth plus authenticated Home, Orders, Profile, and role-flow evidence from synthetic local fixtures. |
-| Driver | 7 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, three Online/GPS states; sign-in-to-profile role flow. |
+| Customer | 9 WebP stills + 2 GIFs | App launch/public auth, authenticated Home/Orders/Profile, nearby restaurants, menu, cart, checkout, truthful tracking state, and role-flow evidence. |
+| Driver | 8 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, dispatch offer, three Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
 | Controlled production web smoke | 2 PNG stills | Authenticated Admin overview and tenant-scoped Restaurant empty order queue; synthetic identities deleted after capture. |
 
@@ -55,6 +55,11 @@ These two images are bounded authenticated role evidence, not general production
 - `customer/02-home.webp` — authenticated Home with generic current location, promotion, and nearby synthetic restaurant data.
 - `customer/03-orders.webp` — active synthetic order with post-fix localized `Chờ nhà hàng` status.
 - `customer/04-profile.webp` — generic profile label and synthetic aggregate/menu data without contact details.
+- `customer/02-home-nearby-restaurants.webp` — nearby restaurant discovery with fixed simulated GPS.
+- `customer/03-restaurant-menu.webp` — restaurant menu and item selection.
+- `customer/04-cart.webp` — cart totals and checkout action.
+- `customer/05-checkout.webp` — delivery address, payment method, and order summary.
+- `customer/06-order-tracking-degraded.webp` — truthful tracking state before a Driver is assigned.
 - `../media/gifs/customer-auth-flow.gif` — real Customer sign-in → registration → sign-in navigation recorded without entering credentials.
 - `../media/gifs/customer-role-flow.gif` — three-frame authenticated Home → Orders → Profile preview generated from the reviewed Customer stills.
 
@@ -64,6 +69,7 @@ These two images are bounded authenticated role evidence, not general production
 - `driver/02-home.webp` — active-delivery Home with explicit GPS-resume status.
 - `driver/03-earnings.webp` — earnings summary/history.
 - `driver/04-profile.webp` — profile, vehicle summary, language, and sign-out.
+- `driver/05-dispatch-offer.webp` — realtime dispatch offer received while Driver is Online.
 - `driver/driver-online-gps-e2e.webp` — Online after the verified local GPS chain.
 - `driver/driver-online-realtime-gps.webp` — Online while foreground tracking is active.
 - `driver/driver-online-android-api35-recovery.webp` — privacy-reviewed production-emulator Online state used for foreground, network-loss, and process-recovery verification.

@@ -358,6 +358,90 @@ describe('OrdersService', () => {
       })
       mockPrisma.address.findFirst.mockResolvedValue({ id: 'address-1', userId })
       mockTx.order.create.mockResolvedValue({ id: 'order-new', total: 115000 })
+      mockPrisma.order.findUniqueOrThrow.mockResolvedValue({
+        id: 'order-new',
+        customerId: userId,
+        restaurantId: 'restaurant-1',
+        driverId: null,
+        status: 'restaurant_pending',
+        subtotal: new Prisma.Decimal(100000),
+        deliveryFee: new Prisma.Decimal(15000),
+        promotionDiscount: new Prisma.Decimal(0),
+        total: new Prisma.Decimal(115000),
+        paymentMethod: 'cash',
+        notes: null,
+        promotionCode: null,
+        estimatedDeliveryTimeMinutes: null,
+        routePolyline: null,
+        createdAt: new Date('2026-07-16T12:00:00.000Z'),
+        updatedAt: new Date('2026-07-16T12:00:01.000Z'),
+        deliveredAt: null,
+        restaurant: {
+          id: 'restaurant-1',
+          name: 'Pho 24',
+          logoUrl: null,
+          phone: null,
+        },
+        driver: null,
+        deliveryAddress: { addressLine: '100 Le Loi' },
+        orderItems: [
+          {
+            id: 'order-item-1',
+            menuItemId: 'menu-1',
+            nameSnapshot: 'Pho bo',
+            quantity: 1,
+            unitPrice: new Prisma.Decimal(100000),
+            selectedOptions: [],
+          },
+        ],
+        statusHistory: [
+          {
+            status: 'restaurant_pending',
+            createdAt: new Date('2026-07-16T12:00:01.000Z'),
+            note: null,
+          },
+        ],
+      })
+    })
+
+    it('returns the serialized customer contract after a successful checkout', async () => {
+      const result = await service.placeOrder(userId, {
+        addressId: 'address-1',
+        paymentMethod: PaymentMethodDto.cash,
+      })
+
+      expect(result).toMatchObject({
+        id: 'order-new',
+        customerId: userId,
+        restaurantId: 'restaurant-1',
+        restaurantName: 'Pho 24',
+        status: 'restaurant_pending',
+        subtotal: 100000,
+        deliveryFee: 15000,
+        total: 115000,
+        paymentMethod: 'cash',
+        deliveryAddress: { addressLine: '100 Le Loi' },
+        items: [
+          {
+            menuItemId: 'menu-1',
+            name: 'Pho bo',
+            unitPrice: 100000,
+            totalPrice: 100000,
+          },
+        ],
+      })
+      expect(mockPrisma.order.findUniqueOrThrow).toHaveBeenCalledWith({
+        where: { id: 'order-new' },
+        include: {
+          orderItems: true,
+          restaurant: true,
+          driver: { select: { id: true, fullName: true, phone: true } },
+          deliveryAddress: true,
+          statusHistory: { orderBy: { createdAt: 'asc' } },
+          payment: true,
+          deliveryTask: true,
+        },
+      })
     })
 
     it('charges the base total when no promotion code is present', async () => {

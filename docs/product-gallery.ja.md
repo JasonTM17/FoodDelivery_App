@@ -10,8 +10,8 @@
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | Local PNG 10 枚、GIF 1 件、historical production PNG 1 枚 | [Admin ガイド](./admin-guide.ja.md) | Local Chrome regression と別ラベルの SHA `17584153` controlled-production evidence。Current revision certification ではありません。 |
 | Restaurant | Next.js web dashboard | Local PNG 10 枚、GIF 1 件、historical production PNG 1 枚 | [Restaurant ガイド](./restaurant-guide.ja.md) | Local Chrome regression と別ラベルの SHA `17584153` controlled-production evidence。Current public access は Vercel SSO 配下です。 |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed local WebP 4 枚と GIF 2 件 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD public-auth と authenticated local-fixture Home/Orders/Profile evidence。Exact coordinates は表示しません。 |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Local WebP 6 枚、production-emulator recovery WebP 1 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Local Android AVD role/GPS evidence と別ラベルの Railway/Supabase production-emulator capture。Physical device、iOS、FCM、payout、routing、app-store を認証しません。 |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed local WebP 9 枚と GIF 2 件 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD public-auth、authenticated role、discovery/order evidence。Simulated GPS only、exact coordinates は非表示です。 |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Local WebP 7 枚、production-emulator recovery WebP 1 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Local Android AVD role/GPS/dispatch evidence と別ラベルの Railway/Supabase production-emulator capture。Physical device、iOS、FCM、payout、app-store を認証しません。 |
 
 ## Role guide を選ぶ
 
@@ -82,7 +82,7 @@ Customer は first-class Flutter/Riverpod native Android/iOS product です。[`
 
 Customer/Driver 共通 workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
 
-次の privacy-reviewed Android AVD media は public-auth flow と authenticated local-fixture Home → Orders → Profile flow を含みます。Fixed simulated GPS を使いますが、retained UI は一般的な current-location label だけを表示し、exact coordinate は表示しません。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
+次の privacy-reviewed Android AVD media は public-auth flow、authenticated local-fixture Home → Orders → Profile flow、nearby restaurant、menu、cart、checkout、order tracking の local Customer journey を収録します。GPS は固定 simulated HCMC data で、retained UI に exact coordinates は表示しません。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
 
 ### Customer public authentication と app launch
 
@@ -100,6 +100,18 @@ Customer/Driver 共通 workflow、permission、通知動作、実行コマンド
 
 Orders image は backend enum `restaurant_pending` が internal key のままではなく Vietnamese copy (`Chờ nhà hàng`) として表示される post-fix visual evidence です。Focused tests は backend の 15 個の `OrderStatus` を English、Vietnamese、Japanese で確認し、未知の status に対する localized fallback も確認します。Synthetic local fixture data のみで、production/release certification ではありません。
 
+### Customer ordering journey
+
+| Nearby restaurants | Restaurant menu | Cart |
+|---|---|---|
+| ![Nearby restaurants](./screenshots/customer/02-home-nearby-restaurants.webp) | ![Restaurant menu](./screenshots/customer/03-restaurant-menu.webp) | ![Cart](./screenshots/customer/04-cart.webp) |
+
+| Checkout | Order tracking |
+|---|---|
+| ![Checkout](./screenshots/customer/05-checkout.webp) | ![Degraded order tracking](./screenshots/customer/06-order-tracking-degraded.webp) |
+
+Checkout HTTP 201 now returns the serialized numeric contract accepted by the mobile model, and the device navigates to tracking. The tracking image intentionally keeps the truthful no-driver/degraded state.
+
 ## Driver
 
 Driver は first-class Flutter/Riverpod native Android/iOS product です。[`main_driver.dart`](../mobile/lib/main_driver.dart) から Android `driver` flavor で起動します。[Driver ガイド](./driver-guide.ja.md)で sign-in、onboarding、truthful Online、dispatch、earnings、profile を確認し、runtime/build は [mobile guide](../mobile/README.md) を参照してください。
@@ -113,6 +125,12 @@ Driver は first-class Flutter/Riverpod native Android/iOS product です。[`ma
 | Earnings | Profile |
 |---|---|
 | ![Driver earnings](./screenshots/driver/03-earnings.webp) | ![Driver profile](./screenshots/driver/04-profile.webp) |
+
+### Realtime dispatch offer
+
+![Driver realtime dispatch offer](./screenshots/driver/05-dispatch-offer.webp)
+
+Local Android API 35 evidence of a restaurant-accepted order offered to an Online Driver. The synthetic offer expired without acceptance under the normal timeout policy; it is not a production order.
 
 ### Local GPS / foreground tracking evidence
 

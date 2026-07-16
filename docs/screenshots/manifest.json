@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-16T12:56:17Z",
+  "capturedAt": "2026-07-16T15:35:14Z",
   "assetIntegrity": {
     "algorithm": "SHA-256",
     "basePath": "docs/screenshots",
@@ -23,10 +23,16 @@
       "customer/02-home.webp": "0EE56B074DD03ED0B56021AE5C347F77CBD15765FFAFBE28FA95BE45ACF58F25",
       "customer/03-orders.webp": "C31F66CC72966C53016D56186920BF7C1351504DB8D9CCFEF2979F3D99332FDD",
       "customer/04-profile.webp": "1B6EB989BD657209BCD270754DCE7097FA682904D3D67782265D3AB07BDE4945",
+      "customer/02-home-nearby-restaurants.webp": "1F143FE4829F50D1C1304E379871B49EEAF439BF36BFE07465F6D20EC31367D2",
+      "customer/03-restaurant-menu.webp": "486A9B8C6DFFFE8318C45AFF100081A1DD44F2E34DE145466E5E4BA225835BD2",
+      "customer/04-cart.webp": "CFC181E14F82EA5D2215494D1FCF0CE78C1BFC4977FA3B76E728931F894D4DE3",
+      "customer/05-checkout.webp": "D50B2267C1F14D1F6F5497A32FA5055E09BD994848AD0F99DF3FF9C32856140A",
+      "customer/06-order-tracking-degraded.webp": "B4EE070EAFC15446894291F490AECD400D1031F2EB7088A62957B15C91B74088",
       "driver/01-login.webp": "81081988928AA754987179733C0326EB00842ECCF5CB289366A283F581FC777F",
       "driver/02-home.webp": "3842BFEE08812DB36B863488FF803694BDA4FF27F719BCDAA54424ED11C6B279",
       "driver/03-earnings.webp": "FE64634FFD244A921CE6527235C4FA979FAA4E5200B68772EA8693E291D24763",
       "driver/04-profile.webp": "4AF17E79C20DC95BCCD272F92012F5024B61C569B706DA2DB372C33C1E3738AB",
+      "driver/05-dispatch-offer.webp": "B54BB4143B6D46EF6F91CDBFBACBE10CE2574B3F6893F1B5E831F3DDAA432C33",
       "driver/driver-online-android-api35-recovery.webp": "C7898DF2E4EC951E478D3205D92665C60BF0E66725444A6D05EFA35470AD8851",
       "driver/driver-online-gps-e2e.webp": "4C95759268F51393376A9B1D6F4F0891319F62D97EBD4BC85CFDC0F079F2A8E0",
       "driver/driver-online-realtime-gps.webp": "EE5485C1CB20E698683BA54DD9081C710AE68E15F14836CA23494C093960B124",
@@ -167,6 +173,34 @@
       "dimensions": "360x800 canvas",
       "sha256": "83981B1755B6FA1FA172399863702F87A5CE98CEE7686ACD26323364C37CA4E6",
       "privacyReview": "Uses only the three authenticated local Customer fixture frames; metadata stripped"
+    }
+  },
+  "customerOrderAndDriverDispatchCapture": {
+    "capturedAt": "2026-07-16T15:35:14Z",
+    "sourceBase": "3d2a5aefe6e05797ea4882eb91f829de5c533690",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 x86_64 emulator connected to the isolated local Docker E2E stack with deterministic seed data",
+    "realtimeProvider": "socketio",
+    "location": "Fixed simulated Ho Chi Minh City route; exact coordinates are not visible in the curated media",
+    "privacyReview": "Approved: restaurant, menu, delivery address, pricing, Customer, and Driver content comes only from deterministic local seed data; no credential, token, provider key, email address, exact coordinate, personal notification, or real personal data is visible; WebP metadata stripped",
+    "evidence": [
+      "Customer rendered nearby restaurants, restaurant menu, cart, checkout, and the degraded order-tracking state from the local API",
+      "The device regression exposed a successful POST /orders response whose raw Prisma Decimal fields could not be parsed by the mobile client",
+      "The backend fix returned the serialized customer order contract; the focused OrdersService suite passed 32 tests and the same Android flow navigated from checkout to order tracking after HTTP 201",
+      "Driver explicitly entered Online, started Android foreground location tracking, refreshed Redis liveness, and persisted a synthetic PostGIS location",
+      "After restaurant acceptance, the Driver app received the bounded dispatch offer in realtime; the unaccepted offer expired and the order was cancelled by the existing timeout policy"
+    ],
+    "files": {
+      "customer": [
+        "customer/02-home-nearby-restaurants.webp",
+        "customer/03-restaurant-menu.webp",
+        "customer/04-cart.webp",
+        "customer/05-checkout.webp",
+        "customer/06-order-tracking-degraded.webp"
+      ],
+      "driver": [
+        "driver/05-dispatch-offer.webp"
+      ]
     }
   },
   "mobileRoleCapture": {
