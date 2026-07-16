@@ -45,6 +45,23 @@ describe('migration checksum guard', () => {
     ).toBe(false);
   });
 
+  it('keeps the production Storage migration byte-compatible', () => {
+    const migrationSql = readFileSync(
+      join(
+        process.cwd(),
+        'prisma',
+        'migrations',
+        '20260712143000_add_production_storage_bucket',
+        'migration.sql',
+      ),
+      'utf8',
+    );
+
+    expect(createMigrationChecksumVariants(migrationSql)).toContain(
+      '4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6',
+    );
+  });
+
   it('blocks applied checksum drift and missing local migrations', () => {
     const appliedAt = new Date('2026-07-15T00:00:00Z');
     const applied: AppliedMigrationChecksum[] = [
