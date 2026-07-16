@@ -10,13 +10,32 @@ Current runtime health evidence is tied to SHA `977d55f19ddc4fecafb8a758d2df034f
 
 | Area           | Result |
 | -------------- | ------ |
-| Backend        | Current post-merge local gates pass Prisma generate/validate, typecheck, ESLint, and Nest build. Full Jest reports 156 passing suites plus one gated integration suite skipped, and 1,175 passing tests plus one skipped test. The production migrator checksum guard has focused regression coverage and runs before Storage mutation or `prisma migrate deploy`. |
-| Database       | Production has 41 applied migrations at SHA `977d55f`; candidate migration 42 is present in source but remains undeployed. Database, Redis, and Supabase Storage readiness pass. A read-only `prisma migrate status` audit against the current PR source reports candidate migration 42 as pending and the historical rolled-back HNSW row as remote-only; neither is deploy approval. Candidate migration 42 was validated on disposable PostGIS, including its semantic FK preflight, clean apply, and full rollback after a deliberate final-index failure, but remains undeployed pending review and synchronized rollout. Historical rolled-back/checksum-provenance rows remain separate audit history. |
+| Backend        | Current post-merge local gates pass Prisma generate/validate, typecheck, ESLint, and Nest build. Full Jest reports 156 passing suites plus one gated integration suite skipped, and 1,179 passing tests plus one skipped test. The production migrator checksum guard has focused regression coverage and runs before Storage mutation or `prisma migrate deploy`. |
+| Database       | Production has 41 applied migrations at SHA `977d55f`; candidate migration 42 is present in source but remains undeployed. Database, Redis, and Supabase Storage readiness pass. Exact Realtime and Job checksum provenance was recovered from immutable image revision `1f761a65`; the production Storage checksum remains the sole provenance blocker, and the read-only audit exits `1` naming only `20260712143000_add_production_storage_bucket`. Candidate migration 42 was validated on disposable PostGIS, including its semantic FK preflight, clean apply, and full rollback after a deliberate final-index failure, but remains undeployed pending review and synchronized rollout. |
 | Mobile Flutter | Current post-merge lock resolution and `flutter analyze` pass with no issues; the full Customer/Driver suite passes 373/373 tests. Native physical-device Android/iOS background-location remains uncertified. |
 | Web            | Current post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194/194 tests and builds 70 routes; Restaurant passes 135/135 tests and builds 55 routes. |
 | Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`977d55f` four-role production certification. |
 | FCM/providers | Historical local notification and Flutter lifecycle tests passed. Controlled live FCM, optional provider-backed integrations, and native physical-device coverage remain open. |
 | Production     | Railway migrator `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997` succeeded at SHA `977d55f`. Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` carry the same revision. API health/readiness, public Admin health, and authenticated Restaurant health return that exact revision. The controlled Admin/Driver GPS/Supabase smoke belongs to earlier SHA `a703ece`, not the current runtime. Public Restaurant requests redirect to Vercel SSO; public availability and full current four-role certification remain open. |
+
+### Migration provenance audit
+
+Before release, run the read-only audit from `backend` with the Railway project
+and production environment selected. Realtime checksum
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+and Job checksum
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+were recovered byte-for-byte from immutable migrator image
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+at revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`. Their reviewed differences
+are limited to line endings and, for Job, one non-executable host comment.
+Storage checksum
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+was not found in Git objects or inspected registry images, so the audit must
+exit `1` naming only `20260712143000_add_production_storage_bucket`. A matching
+schema end-state is insufficient evidence; never use `prisma migrate resolve`
+to hide the blocker. The approved entries are exact and require the reviewed
+local checksum to remain unchanged. Migration 42 remains undeployed.
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 

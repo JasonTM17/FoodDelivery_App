@@ -10,8 +10,8 @@ Current runtime health evidence は SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21
 
 | Area           | Result |
 | -------------- | ------ |
-| Backend        | Current post-merge local gates では Prisma generate/validate、typecheck、ESLint、Nest build が pass。Full Jest は 156 suites pass と gated integration suite 1 件 skip、1,175 tests pass と 1 test skip です。Production migrator checksum guard には regression test があり、Storage mutation と `prisma migrate deploy` の前に実行されます。 |
-| Database       | Production は SHA `977d55f` 時点で 41 migrations が applied です。Candidate migration 42 は source に存在しますが未 deploy です。Database、Redis、Supabase Storage readiness は pass です。Current PR source の read-only audit は candidate migration 42 を pending、historical rolled-back HNSW row を remote-only と報告し、どちらも deploy approval ではありません。Candidate migration 42 は disposable PostGIS で semantic FK preflight、clean apply、最終 index の deliberate failure 後の完全 rollback まで検証済みですが、review と synchronized rollout を待つため未 deploy です。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
+| Backend        | Current post-merge local gates では Prisma generate/validate、typecheck、ESLint、Nest build が pass。Full Jest は 156 suites pass と gated integration suite 1 件 skip、1,179 tests pass と 1 test skip です。Production migrator checksum guard には regression test があり、Storage mutation と `prisma migrate deploy` の前に実行されます。 |
+| Database       | Production は SHA `977d55f` 時点で 41 migrations が applied です。Candidate migration 42 は source に存在しますが未 deploy です。Database、Redis、Supabase Storage readiness は pass です。Realtime と Job の exact checksum provenance は immutable image revision `1f761a65` から復元されました。Production Storage checksum は sole provenance blocker で、read-only audit は `20260712143000_add_production_storage_bucket` だけを示して exit `1` します。Candidate migration 42 は disposable PostGIS で semantic FK preflight、clean apply、最終 index の deliberate failure 後の完全 rollback まで検証済みですが、review と synchronized rollout を待つため未 deploy です。 |
 | Mobile Flutter | Current post-merge lock resolution と `flutter analyze` は issue なし。Full Customer/Driver suite は 373/373 tests pass。Physical Android/iOS device での background location は未認証です。 |
 | Web            | Current post-merge frozen install、typecheck、lint、Vercel build-selection tests は pass。Admin は 194/194 tests pass、70 routes build、Restaurant は 135/135 tests pass、55 routes build です。 |
 | Historical role/browser smoke | Admin/Restaurant の Chrome と Customer/Driver API による full role smoke、および Chrome desktop、Firefox、Pixel 5 mobile Chrome の clean-volume Playwright 204/204 は source head `17584153ff256b74a3413ae9844f4f27bff038cc` の evidence です。Current `977d55f` に対する four-role production certification としては再実行されていません。 |
@@ -20,13 +20,22 @@ Current runtime health evidence は SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21
 
 ### Migration provenance audit
 
-Release 前は、Railway project と environment を明示した read-only `prisma
-migrate status` を `backend` から実行します。current source で candidate
-migration 42 が pending、または historical rolled-back row が remote-only
-なら deploy approval ではありません。production migrator の checksum guard
-は Storage mutation と `prisma migrate deploy` より前に実行され、LF/CRLF
-だけの表現差を超えて immutable source と異なる適用済み migration を
-fail-closed します。
+Release 前は、Railway project と production environment を明示した read-only
+audit を `backend` から実行します。Realtime checksum
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+と Job checksum
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+は immutable migrator image
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+の revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0` から byte-for-byte で
+復元されました。Review 済みの差は line ending と、Job の非実行 host comment
+だけです。Storage checksum
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+は Git object と調査済み registry image に見つからないため、audit は
+`20260712143000_add_production_storage_bucket` だけを示して exit `1` する
+必要があります。Schema end-state だけでは不十分であり、`prisma migrate
+resolve` で blocker を隠しません。Approved entry は exact で、review 済み
+local checksum が変わらない場合だけ pass します。Migration 42 は undeployed のままです。
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 

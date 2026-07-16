@@ -10,13 +10,31 @@ Evidence health runtime hiện tại gắn với SHA `977d55f19ddc4fecafb8a758d2
 
 | Khu vực        | Kết quả |
 | -------------- | ------- |
-| Backend        | Các gate local hiện tại sau merge pass Prisma generate/validate, typecheck, ESLint và Nest build. Full Jest có 156 suite pass cộng 1 suite integration có gate bị skip; 1.175 test pass cộng 1 test skip. Checksum guard của production migrator có regression test riêng và chạy trước Storage mutation hoặc `prisma migrate deploy`. |
-| Database       | Production có 41 migration đã apply tại SHA `977d55f`; migration ứng viên 42 đã có trong source nhưng vẫn chưa deploy. Readiness của Database, Redis và Supabase Storage đều pass. Audit `prisma migrate status` chỉ-đọc với source PR hiện tại báo migration ứng viên 42 đang pending và row HNSW rolled-back lịch sử là remote-only; cả hai không phải tín hiệu cho phép deploy. Migration ứng viên thứ 42 đã được kiểm chứng trên PostGIS dùng một lần, gồm preflight semantic FK, clean apply và rollback toàn bộ sau lỗi cố ý ở index cuối, nhưng vẫn chưa deploy trong khi chờ review và rollout đồng bộ. Các record rollback/checksum provenance lịch sử vẫn là audit history riêng. |
+| Backend        | Các gate local hiện tại sau merge pass Prisma generate/validate, typecheck, ESLint và Nest build. Full Jest có 156 suite pass cộng 1 suite integration có gate bị skip; 1.179 test pass cộng 1 test skip. Checksum guard của production migrator có regression test riêng và chạy trước Storage mutation hoặc `prisma migrate deploy`. |
+| Database       | Production có 41 migration đã apply tại SHA `977d55f`; migration ứng viên 42 đã có trong source nhưng vẫn chưa deploy. Readiness của Database, Redis và Supabase Storage đều pass. Provenance checksum Realtime và Job chính xác đã được khôi phục từ revision image immutable `1f761a65`; checksum Storage production là blocker provenance duy nhất, audit chỉ-đọc exit `1` và chỉ nêu `20260712143000_add_production_storage_bucket`. Migration ứng viên thứ 42 đã được kiểm chứng trên PostGIS dùng một lần, gồm preflight semantic FK, clean apply và rollback toàn bộ sau lỗi cố ý ở index cuối, nhưng vẫn chưa deploy trong khi chờ review và rollout đồng bộ. |
 | Mobile Flutter | Lock resolution và `flutter analyze` hiện tại sau merge pass không lỗi; full suite Customer/Driver pass 373/373 test. Background location Android/iOS trên thiết bị vật lý thật vẫn chưa được chứng nhận. |
 | Web            | Frozen install, typecheck, lint và test chọn build Vercel hiện tại sau merge đều pass. Admin pass 194/194 test và build 70 route; Restaurant pass 135/135 test và build 55 route. |
 | Role/browser lịch sử | Full role smoke Admin/Restaurant bằng Chrome và Customer/Driver qua API, cùng kết quả Playwright volume sạch 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5, thuộc source head `17584153ff256b74a3413ae9844f4f27bff038cc`. Các lượt này chưa được chạy lại để chứng nhận production bốn role trên `977d55f`. |
 | FCM/provider   | Notification backend và lifecycle Flutter local lịch sử đã pass. FCM live có kiểm soát, các tích hợp dùng provider tùy chọn và coverage thiết bị vật lý thật vẫn còn mở. |
 | Production     | Railway migrator `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4` và worker `2e4a41ea-6874-4b01-b549-d457c0a20997` thành công tại SHA `977d55f`. Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` và Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` dùng cùng revision. API health/readiness, health Admin công khai và health Restaurant có xác thực trả đúng SHA này. Smoke GPS/Supabase có kiểm soát cho Admin/Driver thuộc SHA trước `a703ece`, không chứng nhận runtime hiện tại. Request Restaurant công khai vẫn bị Vercel SSO chuyển hướng; khả dụng công khai và chứng nhận đầy đủ bốn role hiện tại còn mở. |
+
+### Audit provenance migration
+
+Trước release, chạy audit chỉ-đọc từ `backend` với đúng Railway project và
+environment production. Checksum Realtime
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+và Job
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+đã được khôi phục byte-for-byte từ image migrator immutable
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+ở revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`. Khác biệt đã review chỉ
+gồm xuống dòng và, với Job, một comment host không thực thi. Checksum Storage
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+không có trong Git object hay registry image đã kiểm tra; audit phải exit `1`
+và chỉ nêu `20260712143000_add_production_storage_bucket`. Schema end-state
+không đủ chứng minh provenance; không dùng `prisma migrate resolve` để che.
+Entry được duyệt là exact và chỉ pass khi checksum local đã review không đổi.
+Migration 42 vẫn chưa deploy.
 
 ### Docker volume sạch lịch sử — 14/07/2026
 

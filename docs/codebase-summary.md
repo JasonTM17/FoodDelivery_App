@@ -57,6 +57,23 @@ Major module groups:
 
 The candidate Prisma schema declares 60 models across 42 ordered migrations. PostGIS geometry is used for addresses, restaurants, delivery tasks, and location history; the tracked RAG migrations add pgvector-backed storage, a cosine HNSW index, content hashes, and source lookup indexes. Migrations 34–38 cover FCM revocation, public Storage-listing removal, scoped registration revocation, the single-default-address invariant, and the database UUID default. Migrations 39–41 remove empty legacy buckets, add spatial lookup indexes, and verify bucket cleanup. Candidate migration 42 adds a non-secret `production_role_smoke_runs` lifecycle/tombstone table plus restrictive foreign keys and indexes for semantic restaurant approver, cart restaurant, promotion creator, chat sender, support macro creator, and CSAT user references. It preflights all six references and wraps the complete DDL in one explicit transaction. A fresh disposable PostGIS database applies all 42, and deliberate final-index failure proves candidate DDL rollback; deployed SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` still has 41 applied migrations, so migration 42 remains rollout work after PR review. Current Railway API/readiness and authenticated Admin/Restaurant web health return exact SHA `977d55f`; Database, Redis, and Supabase Storage are ready. Full four-role, GPS, and device certification has not been rerun on that revision. Historical release SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` remains the tagged `v0.1.2` Docker baseline, not the current runtime. The remote audit found row-level security on application tables, one readable PostGIS metadata table (`spatial_ref_sys`), scoped private-Broadcast policies, and empty Storage/business/retrieval metadata. Supabase flags PostGIS and pgvector in `public`; do not relocate either extension without a separately approved geometry/search-path migration. `realtime_outbox`, `job_outbox`, durable payment webhook/refund records, `dispatch_offers`, private driver KYC submissions, and `ai_usage_events` support the managed-production topology.
 
+Migration provenance is enforced before production Storage or schema mutation. Exact
+production Realtime checksum
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+and Job checksum
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+were recovered from immutable migrator image
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+at revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`; only line endings and one
+non-executable Job host comment differ from current source. The exact approval map
+requires the reviewed local checksum, so a missing or changed migration fails.
+Storage checksum
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+was not recovered from Git objects or inspected registry images, so the read-only
+audit exits `1` naming only `20260712143000_add_production_storage_bucket`.
+Schema end-state cannot substitute for source provenance; migration 42 remains
+undeployed and `prisma migrate resolve` must not conceal the blocker.
+
 Notifications are persisted and fanned out by channel. Push delivery uses Firebase Admin SDK/FCM HTTP v1 (`FCM_PROJECT_ID` plus ADC/workload identity or sealed `FCM_SERVICE_ACCOUNT_JSON`); provider-request failures are retryable and permanently invalid tokens are marked stale. The mobile FCM lifecycle is enabled only after a valid Customer/Driver session, calls the authenticated token endpoint with Zod-validated input, tracks Firebase token rotation, and persists cleanup intent before bounded non-blocking logout cleanup. Registration UUIDs plus per-token PostgreSQL advisory locks and seven-day revocation tombstones prevent a late POST from recreating a logged-out binding. The worker targets the Android notification channel and APNs sound; foreground Android/iOS presentation and local-only deep-link taps are handled by the client. The open Driver inbox consumes authenticated realtime notification records and de-duplicates by ID; background delivery uses the FCM notification payload. This describes current-source behavior, not live-delivery evidence: Railway verification and controlled live FCM remain blocked by external real-provider configuration and credentials.
 
 ## Web

@@ -111,14 +111,31 @@ Pop-Location
 承認済み release は pending と remote-only migration がない状態でなければ
 なりません。未 deploy の candidate migration、または local SQL がない
 historical rolled-back row は provenance review が終わるまで blocker です。
-production migrator は、適用済み migration の内容が LF/CRLF だけの表現差を
-超えて immutable image SQL と違う場合、Storage API と `prisma migrate deploy`
-の前に fail-closed します。checksum drift を隠すために `prisma migrate
+production migrator は、適用済み migration の内容が local SQL と LF/CRLF
+表現を超えて異なり、かつ exact checksum が明示的に review 済みの immutable-image
+provenance entry にない場合、Storage API と `prisma migrate deploy` の前に
+fail-closed します。checksum drift を隠すために `prisma migrate
 resolve` を使わず、source と backup の履歴を先に reconcile してください。
 `_prisma_migrations` table がない場合も Supabase Storage recovery を停止し、
 誤った、または未初期化の database target に provider mutation を許可しません。
 本当に空の database は target identity preflight 後、Storage recovery を使わず
 `db:migrate:prod` で別途 bootstrap してください。
+
+Current provenance review では immutable migrator image
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+の revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0` から 2 件の production
+record を byte-for-byte で復元しました。Realtime checksum
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+は current source と line ending のみ異なり、Job checksum
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+は line ending と非実行 worker-host comment のみ異なります。Guard はこの
+exact migration-name/checksum entry を、review 済み local checksum が変わらない
+場合だけ認めます。`20260712143000_add_production_storage_bucket` の Storage checksum
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+（`2026-07-12T01:08Z` applied）は Git object と調査済み registry image の
+どちらにも見つかりませんでした。Read-only production audit はこの sole
+provenance blocker だけを示して exit `1` します。Schema end-state は provenance
+ではなく、candidate migration 42 は undeployed のままです。
 
 Production で `migrate dev`、reset、demo seed は実行しません。
 
@@ -126,7 +143,7 @@ Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai
 
 ## 5. Railway API, worker, migrator, Redis
 
-Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、LF/CRLF の表現差だけを同一とみなして最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。3 件の過去 checksum 不一致を隠すために `prisma migrate resolve` を使わないでください。
+Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、local SQL または exact immutable-image provenance entry に対して最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。未解決の production Storage checksum を隠すために `prisma migrate resolve` を使わず、original SQL bytes の復元と review まで audit を blocker のままにします。
 
 ```powershell
 railway login
