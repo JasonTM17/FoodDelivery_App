@@ -616,37 +616,65 @@ jobs:
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
-          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
+
+          promote_release_manifest() {
+            local source="$1"
+            local target="$2"
+            local source_digest target_digest target_inspect promoted_digest
+
+            source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+            test -n "$source_digest" || {
+              echo "Published SHA manifest has no digest for $source"
+              return 1
+            }
+
+            if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
+              target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
+              test "$source_digest" = "$target_digest" || {
+                echo "Refusing to overwrite immutable tag $target"
+                echo "Existing: $target_digest"
+                echo "Requested: $source_digest"
+                return 1
+              }
+              echo "$target already released at $target_digest"
+              return 0
+            fi
+
+            docker buildx imagetools create --tag "$target" "$source"
+            promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+            test "$source_digest" = "$promoted_digest" || {
+              echo "Release digest verification failed for $target"
+              return 1
+            }
+            echo "$target released at $promoted_digest"
+          }
+
+          dockerhub_registry="docker.io/$DOCKERHUB_USERNAME"
           for image in "${images[@]}"; do
-            for registry in "${registries[@]}"; do
-              source="$registry/$image:$SHA_TAG"
-              target="$registry/$image:$RELEASE_TAG"
-              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-              test -n "$source_digest" || {
-                echo "Published SHA manifest has no digest for $source"
-                exit 1
-              }
+            promote_release_manifest \
+              "$dockerhub_registry/$image:$SHA_TAG" \
+              "$dockerhub_registry/$image:$RELEASE_TAG"
+          done
 
-              if target_inspect="$(docker buildx imagetools inspect "$target" 2>/dev/null)"; then
-                target_digest="$(awk '/^Digest:/ {print $2; exit}' <<< "$target_inspect")"
-                test "$source_digest" = "$target_digest" || {
-                  echo "Refusing to overwrite immutable tag $target"
-                  echo "Existing: $target_digest"
-                  echo "Requested: $source_digest"
-                  exit 1
-                }
-                echo "$target already released at $target_digest"
-                continue
-              fi
+          ghcr_registry="ghcr.io/${GHCR_OWNER,,}"
+          for image in "${images[@]}"; do
+            error_log="$(mktemp)"
+            if promote_release_manifest \
+              "$ghcr_registry/$image:$SHA_TAG" \
+              "$ghcr_registry/$image:$RELEASE_TAG" 2> >(tee "$error_log" >&2); then
+              rm -f "$error_log"
+              continue
+            fi
 
-              docker buildx imagetools create --tag "$target" "$source"
-              promoted_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-              test "$source_digest" = "$promoted_digest" || {
-                echo "Release digest verification failed for $target"
-                exit 1
-              }
-              echo "$target released at $promoted_digest"
-            done
+            if grep -Eqi '401 Unauthorized|unauthorized|denied' "$error_log"; then
+              rm -f "$error_log"
+              echo "::warning::GHCR denied semver manifest writes; Docker Hub release remains authoritative."
+              echo "GHCR semver promotion unavailable; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            rm -f "$error_log"
+            exit 1
           done
 
   promote-latest:
@@ -680,18 +708,52 @@ jobs:
         run: |
           set -euo pipefail
           images=(foodflow-backend foodflow-migrate foodflow-admin foodflow-restaurant)
-          registries=("docker.io/$DOCKERHUB_USERNAME" "ghcr.io/${GHCR_OWNER,,}")
+
+          promote_latest_manifest() {
+            local source="$1"
+            local target="$2"
+            local source_digest target_digest
+
+            docker buildx imagetools create --tag "$target" "$source"
+            source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
+            target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
+            if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
+              echo "Digest verification failed for $target"
+              return 1
+            fi
+            echo "$target promoted at $source_digest"
+          }
+
+          dockerhub_registry="docker.io/$DOCKERHUB_USERNAME"
           for image in "${images[@]}"; do
-            for registry in "${registries[@]}"; do
-              source="$registry/$image:$RELEASE_TAG"
-              target="$registry/$image:latest"
-              docker buildx imagetools create --tag "$target" "$source"
-              source_digest="$(docker buildx imagetools inspect "$source" | awk '/^Digest:/ {print $2; exit}')"
-              target_digest="$(docker buildx imagetools inspect "$target" | awk '/^Digest:/ {print $2; exit}')"
-              if [[ -z "$source_digest" || "$source_digest" != "$target_digest" ]]; then
-                echo "Digest verification failed for $target"
-                exit 1
-              fi
-              echo "$target promoted at $source_digest"
-            done
+            promote_latest_manifest \
+              "$dockerhub_registry/$image:$RELEASE_TAG" \
+              "$dockerhub_registry/$image:latest"
+          done
+
+          ghcr_registry="ghcr.io/${GHCR_OWNER,,}"
+          for image in "${images[@]}"; do
+            source="$ghcr_registry/$image:$RELEASE_TAG"
+            target="$ghcr_registry/$image:latest"
+            if ! docker buildx imagetools inspect "$source" >/dev/null 2>&1; then
+              echo "::warning::GHCR release tag is unavailable; skipping GHCR latest promotion."
+              echo "GHCR latest promotion skipped; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            error_log="$(mktemp)"
+            if promote_latest_manifest "$source" "$target" 2> >(tee "$error_log" >&2); then
+              rm -f "$error_log"
+              continue
+            fi
+
+            if grep -Eqi '401 Unauthorized|unauthorized|denied' "$error_log"; then
+              rm -f "$error_log"
+              echo "::warning::GHCR denied latest manifest writes; Docker Hub latest remains authoritative."
+              echo "GHCR latest promotion unavailable; immutable SHA packages remain public." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+
+            rm -f "$error_log"
+            exit 1
           done
