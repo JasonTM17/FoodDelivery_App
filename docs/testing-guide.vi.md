@@ -4,19 +4,19 @@
 
 Chỉ được coi là xanh khi final source head pass toàn bộ local gate, remote CI mới, provider preflight và production smoke. Focused test chỉ chứng minh đúng cụm đó; số lịch sử hoặc script có skip không được dùng làm release approval.
 
-## Ranh giới evidence — production 15/07/2026 và local lịch sử 14/07/2026
+## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
-Evidence production hiện tại gắn với runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Các test count bên dưới được ghi rõ là evidence local lịch sử từ head cũ; chúng chưa được chạy lại tại SHA `17584153` và không phải phê duyệt production end-to-end.
+Evidence production hiện tại gắn với runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Các gate GitHub và provider smoke hiện tại đã chạy lại cho SHA này; test count local cũ bên dưới vẫn chỉ là evidence lịch sử có phạm vi, không phải phê duyệt production end-to-end.
 
 | Khu vực        | Kết quả                                                                                                                                                                                                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Backend        | Tại runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`, các gate CI, E2E, Integration Smoke, OpenAPI, security, SBOM và build được trigger đều xanh. Con số 145 suite / 1071 test thuộc evidence local cũ của `f2c02ed`, không được tuyên bố là lần chạy lại tại SHA `17584153`. |
+| Backend        | Tại runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`, CI, E2E, Integration Smoke, security, SBOM, build, runtime smoke đa kiến trúc và tám lượt scan image đều xanh. Con số 145 suite / 1071 test vẫn là evidence local cũ của `f2c02ed`, không phải count hiện tại. |
 | Database       | `prisma migrate status` live báo đủ 41 migration trong repository đã apply, không còn migration chờ. Readiness của database, Redis và Supabase Storage đều pass. Các record rolled-back/checksum provenance lịch sử được ghi riêng như audit history. |
 | Mobile Flutter | Evidence local lịch sử pass 369 test và `flutter analyze`. Background location Android/iOS thật và evidence thiết bị production vẫn chưa được chứng nhận. |
-| Web            | Typecheck/lint, Vitest và production-build count local lịch sử chỉ là evidence có phạm vi. Revision health của Admin/Restaurant đang deploy được verify riêng tại SHA `17584153`. |
+| Web            | Typecheck/lint, Vitest và production-build count local lịch sử chỉ là evidence có phạm vi. Health Admin/Restaurant và sáu route đăng nhập theo locale đã được verify tại SHA `a703ece`. |
 | Browser E2E    | Evidence Playwright volume sạch lịch sử pass 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5. Các count này chưa được chạy lại trên deployment production. |
 | FCM            | Notification backend và lifecycle Flutter local lịch sử đã pass. Live delivery tới controlled production device vẫn chưa được chứng nhận. |
-| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438` và worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` thành công tại SHA `17584153`. Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` và Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` trả cùng revision. Public login smoke `vi/en/ja` pass; role journey có xác thực đã skip và chưa được chứng nhận. |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại SHA `a703ece`. Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` và Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` trả cùng revision. Public login `vi/en/ja` và smoke GPS/Broadcast/PostGIS có xác thực đều pass; browser journey đầy đủ của customer/restaurant vẫn chưa được chứng nhận. |
 
 ### Docker volume sạch lịch sử — 14/07/2026
 

@@ -4,19 +4,19 @@
 
 Final source head が full local gates、fresh remote CI、provider preflight、production smoke をすべて pass した場合のみ green です。Focused test や historical count、skip 付き script は release approval ではありません。
 
-## Evidence boundary — production 2026-07-15 / historical local 2026-07-14
+## Evidence boundary — production 2026-07-16 / historical local 2026-07-14
 
-Current production evidence is tied to runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Counts below are explicitly historical local evidence from older heads; they were not rerun at SHA `17584153` and are not end-to-end production approval.
+Current production evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Current GitHub gates and provider smokes were rerun for this SHA; older local counts below remain bounded historical evidence and are not end-to-end production approval.
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` で triggered CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green です。145 suites / 1071 tests は older `f2c02ed` local evidence であり、SHA `17584153` rerun として claim しません。 |
+| Backend        | Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` で CI、E2E、Integration Smoke、security、SBOM、build、multi-architecture runtime smoke、8 image scans は green です。145 suites / 1071 tests は older `f2c02ed` local evidence であり、current count として claim しません。 |
 | Database       | Live `prisma migrate status` は repository の 41 migrations がすべて applied、pending なしと報告します。Database、Redis、Supabase Storage readiness は pass。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
 | Mobile Flutter | Historical local evidence は 369 tests と `flutter analyze` を pass。Real Android/iOS background location と production-device evidence は未認証です。 |
-| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current deployed Admin/Restaurant health revision は SHA `17584153` で別途 verified です。 |
+| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current Admin/Restaurant health と 6 localized login routes は SHA `a703ece` で verified です。 |
 | Browser E2E    | Historical clean-volume Playwright evidence は Chrome desktop、Firefox、Pixel 5 mobile Chrome で 204/204 を pass。Production deployment に対して再実行した count ではありません。 |
 | FCM            | Historical local notification/Flutter lifecycle tests は pass。Controlled production device への live delivery は未認証です。 |
-| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`、API `340fd29c-8198-41f0-8dc4-a097ecbe3438`、worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` は SHA `17584153` で成功。Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` と Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` も同じ revision です。Public `vi/en/ja` login smoke は pass、authenticated role journeys は skip され未認証です。 |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は SHA `a703ece` で成功。Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` と Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` も同じ revision です。Public `vi/en/ja` login と authenticated GPS/Broadcast/PostGIS smoke は pass、full customer/restaurant browser journeys は未認証です。 |
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 

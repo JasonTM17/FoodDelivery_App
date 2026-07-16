@@ -4,7 +4,7 @@
 
 Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-15: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed across Railway API/worker/migrator and both Vercel apps; exact-revision health, public `vi/en/ja` login smoke, and the 41-migration Supabase state are green, while full production certification remains no-go**.
+Status on 2026-07-16: **runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed across Railway API/worker/migrator and both Vercel apps; exact-revision health, public `vi/en/ja` login smoke, the 41-migration Supabase state, and authenticated GPS/private Broadcast/PostGIS production smoke are green. Physical Android/iOS certification, controlled-device FCM, and full authenticated browser journeys remain outside the current evidence**.
 
 ## Completed and incorporated work
 
@@ -62,10 +62,10 @@ Status on 2026-07-15: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` i
 - Historical local evidence: the clean-volume Docker project `foodflow-batch4-e2e` applied its then-current migrations, seeded disposable data, indexed RAG documents, and passed Playwright 204/204. Those counts are bounded 2026-07-14 evidence, not a claim about runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` or production approval.
 - The live Prisma status check reports all 41 repository migrations applied with none pending. Database, Redis, and Supabase Storage are ready. Historical rolled-back or checksum-provenance records remain audit history; applied SQL was not reversed or rewritten.
 - The remaining extension-advisor warnings are documented constraints: PostGIS is non-relocatable, and moving pgvector would break the current Prisma/raw-operator search path. They are not hidden by unsafe schema changes.
-- Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` are successful at runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. API health/readiness report the exact revision with database, Redis, and Supabase Storage ready; worker polling runs and RAG is intentionally disabled without DeepSeek.
+- Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. API health/readiness report the exact revision with database, Redis, and Supabase Storage ready; worker polling runs and RAG is intentionally disabled without DeepSeek.
 - Google Maps is optional. With neither Google Directions nor an owned OSRM service, routing returns `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` while the processes remain healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing remain unconfigured or unsmoked.
-- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` are exact redeploys of SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Canonical health returns that revision and public `vi/en/ja` login smoke passes; authenticated Admin/Restaurant/Customer/Driver journeys remain pending.
-- Docker Hub SHA, `v0.1.1`, and `latest` aliases match for all four runtime images. Public GHCR SHA manifests are digest-equal; no broader GHCR semver promotion is claimed.
+- Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` are exact deployments of SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Canonical health returns that revision and public `vi/en/ja` login smoke passes; authenticated GPS/Supabase smoke passes while the wider role journeys remain pending.
+- Docker Hub SHA, `v0.1.2`, and `latest` aliases match for all four runtime images. Public GHCR SHA manifests are digest-equal; GHCR semver/latest promotion is not claimed because manifest writes returned `401 Unauthorized`.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.
@@ -75,7 +75,7 @@ These are release blockers, not permission to add fake values or bypass validati
 1. Preserve the verified API/worker/Redis baseline; deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 2. Configure only integrations being certified through sealed stores; do not fabricate Google Maps or other provider values.
 3. Run production Customer/Driver/Admin/Restaurant authenticated journeys, token refresh, GPS snapshot/delta/reconnect, configured map/routing, chatbot, export, payment, notification, and tenant smoke; include one controlled-device FCM delivery.
-4. Preserve the exact Admin and Restaurant SHA `17584153` health baseline; rerun public and authenticated smoke whenever either deployment or the API revision changes.
+4. Preserve the exact Admin and Restaurant SHA `a703ece` health baseline; rerun public and authenticated smoke whenever either deployment or the API revision changes.
 5. For a future release, promote only the already verified immutable artifact after all remaining smoke; never rebuild or retag an unverified digest.
 6. Update final release report, registry digests, GitHub About/topics/homepage, and landing notes.
 

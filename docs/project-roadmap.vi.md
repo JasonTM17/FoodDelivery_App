@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel; health đúng revision, public login smoke `vi/en/ja` và trạng thái 41 migration Supabase đều xanh, nhưng vẫn chưa đủ điều kiện chứng nhận production đầy đủ**.
+Trạng thái 16/07/2026: **runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel; health đúng revision, public login smoke `vi/en/ja`, trạng thái 41 migration Supabase và production smoke GPS/private Broadcast/PostGIS có xác thực đều xanh. Chứng nhận Android/iOS vật lý, FCM trên thiết bị kiểm soát và browser journey có xác thực đầy đủ vẫn nằm ngoài evidence hiện tại**.
 
 ## Đã hoàn thành và đã tích hợp
 
@@ -60,10 +60,10 @@ Trạng thái 15/07/2026: **runtime SHA `17584153ff256b74a3413ae9844f4f27bff038c
 - Bằng chứng local lịch sử: Docker volume sạch `foodflow-batch4-e2e` đã apply các migration hiện hành lúc đó, seed dữ liệu tạm, index RAG và pass Playwright 204/204. Các con số này chỉ là evidence ngày 14/07/2026, không phải kết quả của runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` hay chứng nhận production.
 - Kiểm tra Prisma live báo đủ 41 migration trong repository đã apply, không còn migration chờ. Database, Redis và Supabase Storage đều ready. Các record rolled-back hoặc checksum provenance lịch sử vẫn là audit history; không đảo hay sửa SQL đã apply.
 - Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
-- Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438` và worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` thành công tại runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. API health/readiness trả đúng revision với database, Redis và Supabase Storage ready; worker poll bình thường và RAG chủ động tắt vì chưa có DeepSeek.
+- Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. API health/readiness trả đúng revision với database, Redis và Supabase Storage ready; worker poll bình thường và RAG chủ động tắt vì chưa có DeepSeek.
 - Google Maps là tùy chọn. Khi không có Google Directions hoặc OSRM do dự án sở hữu, routing trả `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` nhưng tiến trình vẫn healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing còn chưa cấu hình hoặc chưa smoke.
-- Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` và Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` là hai exact redeploy của SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Health canonical trả revision này và public login smoke `vi/en/ja` pass; role journey Admin/Restaurant/Customer/Driver có xác thực vẫn còn chờ.
-- Các alias Docker Hub SHA, `v0.1.1` và `latest` khớp digest cho cả bốn image runtime. Manifest SHA public trên GHCR khớp digest; tài liệu không tuyên bố promote GHCR semver rộng hơn.
+- Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` và Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` là hai exact deployment của SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Health canonical trả revision này và public login smoke `vi/en/ja` pass; smoke GPS/Supabase có xác thực đã pass còn các role journey rộng hơn vẫn đang chờ.
+- Các alias Docker Hub SHA, `v0.1.2` và `latest` khớp digest cho cả bốn image runtime. Manifest SHA public trên GHCR khớp digest; GHCR semver/`latest` không được tuyên bố vì thao tác ghi manifest trả `401 Unauthorized`.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.
@@ -73,7 +73,7 @@ Không được dùng fake value hoặc bypass validation để vượt blocker.
 1. Giữ baseline API/worker/Redis đã verify; release sau deploy từ một SHA immutable và kiểm lại health/readiness/worker polling.
 2. Chỉ cấu hình integration cần chứng nhận qua secret store; không bịa Google Maps hay provider khác.
 3. Smoke production Customer/Driver/Admin/Restaurant có xác thực, token refresh, GPS snapshot/delta/reconnect, map/routing đã cấu hình, chatbot, export, payment, notification và tenant; gồm một lần FCM tới controlled device.
-4. Giữ baseline health đúng SHA `17584153` của Admin/Restaurant; chạy lại public và authenticated smoke mỗi khi web deployment hoặc API revision đổi.
+4. Giữ baseline health đúng SHA `a703ece` của Admin/Restaurant; chạy lại public và authenticated smoke mỗi khi web deployment hoặc API revision đổi.
 5. Với release tương lai, chỉ promote artifact immutable đã verify sau khi các smoke còn lại xanh; không rebuild hoặc retag digest chưa verify.
 
 ## Sau release

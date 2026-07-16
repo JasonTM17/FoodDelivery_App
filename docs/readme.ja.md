@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-15 status:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green、Prisma は 41 migrations すべて適用済みで pending はありません。API health/readiness と Admin/Restaurant health は同じ SHA を返し、database、Redis、Supabase Storage は ready です。Admin/Restaurant の `vi/en/ja` public login smoke も pass しました。Full production certification には authenticated role journeys、controlled-device FCM、Android/iOS background location、certification scope に含む optional providers の検証が必要です。
+> **2026-07-16 status:** runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、security、SBOM、build、multi-architecture runtime smoke、8 image scans は green、Prisma は 41 migrations すべて適用済みで pending はありません。API health/readiness と Admin/Restaurant health は同じ SHA を返し、database、Redis、Supabase Storage は ready です。`vi/en/ja` public login と authenticated GPS/Supabase smoke（ES256、private Broadcast RLS、PostGIS、rejection reason、cleanup）も pass しました。Physical Android/iOS、controlled-device FCM、full browser journeys は未認証です。
 
 ## Product preview
 
@@ -69,16 +69,16 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Current Docker release — SHA 17584153
+## Current Docker release — SHA a703ece
 
-Docker Hub の SHA、`v0.1.1`、`latest` aliases は 4 images すべてで digest が一致します。GHCR SHA manifests は public かつ同一 digest です。GHCR semver/`latest` promotion は claim しません。
+Docker Hub の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。GHCR SHA manifests は public かつ同一 digest です。Provider が manifest write を `401 Unauthorized` で拒否したため、GHCR semver/`latest` promotion は claim しません。
 
 | Artifact | Docker Hub digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` |
-| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` |
-| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` |
-| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
+| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
+| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
+| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
+| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
 
 Worker は backend image の `dist/workers/main.js` を使用し、別 release artifact ではありません。Old candidate evidence は [release report](batch4-release-report.md) に保持し、新しい rollout の source には使用しません。
 

@@ -4,19 +4,19 @@
 
 A release is green only when the final source head passes every required local gate, fresh remote CI, provider preflight, and production smoke. A focused test proves only its bounded change. Historical counts and partially skipped scripts must never be presented as current full-release approval.
 
-## Evidence boundary — production 2026-07-15 and historical local 2026-07-14
+## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-Current production evidence is tied to runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Test counts below are explicitly historical local evidence from earlier heads; they were not rerun at SHA `17584153` and are not end-to-end production approval.
+Current production evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Current GitHub gates and production provider smokes were rerun for this SHA; older local test counts below remain bounded historical evidence and are not end-to-end production approval.
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | At runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`, the triggered CI, E2E, Integration Smoke, OpenAPI, security, SBOM, and build gates are green. The 145 suites / 1071 tests belong to the older `f2c02ed` local evidence and are not claimed as a SHA `17584153` rerun. |
+| Backend        | At runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`, CI, E2E, Integration Smoke, security, SBOM, build, multi-architecture runtime smoke, and eight image scans are green. The 145 suites / 1071 tests remain older `f2c02ed` local evidence rather than a current exact count. |
 | Database       | Live `prisma migrate status` reports all 41 repository migrations applied with none pending. Database, Redis, and Supabase Storage readiness pass. Historical rolled-back/checksum-provenance rows remain separately documented audit history. |
 | Mobile Flutter | Historical local evidence passed 369 tests and `flutter analyze`. Real Android/iOS background-location and production-device evidence remain uncertified. |
-| Web            | Historical local typecheck/lint, Vitest, and production-build counts remain bounded evidence only. The current deployed Admin/Restaurant health revision is verified separately at SHA `17584153`. |
+| Web            | Historical local typecheck/lint, Vitest, and production-build counts remain bounded evidence only. Current Admin/Restaurant health and six localized login routes are verified at SHA `a703ece`. |
 | Browser E2E    | Historical clean-volume Playwright evidence passed 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome. Those counts were not rerun against the production deployment. |
 | FCM            | Historical local notification and Flutter lifecycle tests passed. Live delivery to a controlled production device remains uncertified. |
-| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` are successful at SHA `17584153`. Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` report the same revision. Public Admin/Restaurant `vi/en/ja` login smoke passes; authenticated role journeys were skipped and are not certified. |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at SHA `a703ece`. Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` report the same revision. Public `vi/en/ja` login smoke and authenticated GPS/Broadcast/PostGIS smoke pass; full customer/restaurant browser journeys remain uncertified. |
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 

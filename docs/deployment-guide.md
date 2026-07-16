@@ -59,11 +59,11 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-15): migrate deployment `6438d9ff-caa3-433c-afc1-81c4885797a8`, API deployment `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker deployment `6c2201d1-ccce-444f-b592-4ac4fb20c287` are successful from immutable SHA `17584153ff256b74a3413ae9844f4f27bff038cc` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `49579ce7-9808-4a35-afcc-82432943bc70`, API deployment `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker deployment `413dedcc-6ba7-46be-8c99-901f592c558f` are successful from immutable SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` images. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are ready. Worker logs show the 1000 ms PostgreSQL outbox poll, disabled RAG sync, and `FoodFlow Worker started`. `FOODFLOW_PROCESS_ROLE` is explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
-Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-15](#current-deployment-evidence--2026-07-15); do not use the table below for a new rollout.
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not use the table below for a new rollout.
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -72,7 +72,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-15](#current-deployment-evidence--2026-07-15); do not infer current tag state from this superseded table.
+At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
 
 Expected Vercel projects:
 
@@ -238,22 +238,22 @@ Same as Admin, replacing `NEXT_PUBLIC_ADMIN_URL` with `NEXT_PUBLIC_RESTAURANT_UR
 
 Public variables are baked into Next.js assets. Changing them requires a rebuild/redeploy. OpenFreeMap needs no browser key or billing account; Supabase still requires RLS and scoped realtime authorization.
 
-## Current deployment evidence — 2026-07-15
+## Current deployment evidence — 2026-07-16
 
-Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed. Railway deployment IDs are migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287`. Vercel exact-redeploy IDs are Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public Admin/Restaurant login smoke passes for `vi`, `en`, and `ja`. Authenticated role journeys, controlled-device FCM, Android/iOS background location, and optional providers are not certified by this public smoke. Docker Hub SHA, `v0.1.1`, and `latest` aliases match these digests:
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. Vercel deployment IDs are Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. Public Admin/Restaurant login smoke passes for `vi`, `en`, and `ja`. A temporary authenticated Driver/Admin smoke also passed private Broadcast RLS, ES256 token, GPS validation, PostGIS persistence, and cleanup. Wider authenticated role journeys, controlled-device FCM, physical Android/iOS background location, and optional providers are not certified. Docker Hub SHA, `v0.1.2`, and `latest` aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:e8ddfa76c173dd3c1736e78fafb9f38dbd37e8a08b6ee8f68a8806864e8a652b` |
-| `foodflow-migrate` | `sha256:bd01a525a5a9fd987868ac4d61f1d58e4941690373ff5c4e5686f16378d9e297` |
-| `foodflow-admin` | `sha256:ba4f33aa0379d28fbb03bd17c237c763dd432cf8c72b0d5036b263859b2b99c1` |
-| `foodflow-restaurant` | `sha256:e30daa95ab9af25d568b91db2cb406c6776ac5020ef838b78dc02186451a8dec` |
+| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
+| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
+| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
+| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
 ### Documentation-only Vercel drift recovery
 
-Vercel had automatically built later documentation-only `master` commits, while Railway remained on runtime SHA `17584153`. The web runtime inputs were unchanged, but the health revision no longer matched the API. Recovery redeployed the previously verified SHA `17584153` Admin and Restaurant builds exactly, producing the deployment IDs above. After recovery, `production-health-check.ps1` passed API/Admin/Restaurant and `post-deploy-smoke.ps1 -AllowUnauthenticatedOnly` passed all public `vi/en/ja` login routes. The unauthenticated opt-out is explicit: this result does not replace the required authenticated smoke.
+Vercel build-ignore correctly skipped the backend-only final fix, so the release staged tracked web source without `ignoreCommand`, injected the immutable `BUILD_SHA`, and promoted only after both builds were `Ready`. Canonical health now matches Railway at SHA `a703ece`; all public `vi/en/ja` login routes return 200. The authenticated GPS/Supabase smoke covers the Driver/Admin realtime path but does not replace full customer/restaurant browser journey certification.
 
 ## 4. Supabase deployment
 
