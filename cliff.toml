@@ -94,3 +94,7 @@ link_parsers = [
   { pattern = "https://github.com/JasonTM17/foodflow/pull/(\\d+)", href = "https://github.com/JasonTM17/foodflow/pull/$1" },
 ]
 limit_commits = 500
+
+[remote.github]
+owner = "JasonTM17"
+repo = "FoodDelivery_App"

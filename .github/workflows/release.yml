@@ -139,6 +139,10 @@ jobs:
             echo "$image verified at $dockerhub_sha_digest"
           done
 
+      - name: Preserve the validated release changelog configuration
+        shell: bash
+        run: cp cliff.toml "$RUNNER_TEMP/foodflow-cliff.toml"
+
       - name: Check out the verified release source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
@@ -148,7 +152,7 @@ jobs:
       - name: Generate changelog
         uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
         with:
-          config: cliff.toml
+          config: ${{ runner.temp }}/foodflow-cliff.toml
         env:
           OUTPUT: CHANGELOG.md
 
