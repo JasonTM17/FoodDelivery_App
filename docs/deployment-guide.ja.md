@@ -132,11 +132,9 @@ record を byte-for-byte で復元しました。Realtime checksum
 exact migration-name/checksum entry を、review 済み local checksum が変わらない
 場合だけ認めます。`20260712143000_add_production_storage_bucket` の Storage checksum
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
-（`2026-07-12T01:08Z` applied）は Git object と調査済み registry image の
-どちらにも見つかりませんでした。Read-only production audit はこの sole
-provenance blocker だけを示して exit `1` します。Schema end-state は provenance
-ではありません。Source migrations 42 件はすべて active で、この blocker は
-future migrator rollout を停止します。
+（`2026-07-12T01:08Z` applied）は Git blob
+`c29c069ea180ed6c3107411759b8ceb2150dc8e7` から byte-for-byte で復元されました。
+Read-only production audit は active migrations 42/42 で pass します。
 
 Production で `migrate dev`、reset、demo seed は実行しません。
 
@@ -144,7 +142,7 @@ Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai
 
 ## 5. Railway API, worker, migrator, Redis
 
-Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、local SQL または exact immutable-image provenance entry に対して最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。未解決の production Storage checksum を隠すために `prisma migrate resolve` を使わず、original SQL bytes の復元と review まで audit を blocker のままにします。
+Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、local SQL または exact immutable-image provenance entry に対して最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。production Storage checksum は Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7` から byte-for-byte で復元され、audit は 42/42 で pass します。新しい drift を隠すために `prisma migrate resolve` を使用しません。
 
 ```powershell
 railway login
@@ -153,6 +151,14 @@ powershell -File infra/scripts/railway-preflight.ps1
 ```
 
 Railway の `/api/healthz`、`/api/readyz`、Redis/Supabase Storage readiness、secret-free worker logs を確認します。API が green でなければ Web を deploy しません。
+
+Vercel production は clean `origin/master` SHA を build/runtime health に注入する
+helper で deploy し、bare `vercel deploy --prod` は使用しません。
+
+```powershell
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App admin
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App restaurant
+```
 
 Verified API alias を Web env に設定して preview/test 後に promote:
 

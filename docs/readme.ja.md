@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-16 status:** Railway API/worker/migrator と Vercel Admin/Restaurant health は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を返します。Production は source migrations 42 件すべて active、Prisma history は 46 rows で rolled-back audit rows 4 件を保持します。Realtime と Job の original checksum bytes は immutable migrator image から復元済みですが、`20260712143000_add_production_storage_bucket` の original bytes は未復元です。そのため guard は future migrator rollout を fail-closed で停止し、現在 deploy 済み schema/runtime の health には影響しません。この revision の synthetic HCMC GPS smoke は 5 分 ES256 realtime token、private Broadcast RLS allow/deny、1,271 ms fanout、PostGIS persistence、`poor_accuracy`/`driver_offline` rejection、exact zero-residue cleanup を検証しました。Docker Hub/public GHCR の SHA、`v0.1.3`、`latest` aliases と 3-asset GitHub Release も `977d55f` に紐づきます。SHA `17584153` の 4-role smoke は historical evidence のままです。Physical Android/iOS、controlled FCM、active-order、optional providers、current-revision full browser journey は未認証です。
+> **2026-07-16 status:** Railway API/worker/migrator は runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で稼働し、API health/readiness、Database、Redis、Supabase Storage は green です。Production migrations 42 件と checksum audit 42/42 は pass し、Storage bytes は Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7` から exact recovery しました。Admin Vercel は同じ source から rebuild 済みです。Restaurant は free-team daily deployment quota のため直前の healthy production deployment を維持しています。Public web smoke と GPS/private Broadcast/PostGIS smoke は pass。Docker Hub/public GHCR には 4 つの immutable SHA manifests があり、`latest`/semver は未 promotion です。
 
 ## Product preview
 
@@ -69,16 +69,16 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Tagged Docker release v0.1.3 — SHA 977d55f
+## Immutable Docker artifacts — SHA 84eeac3
 
-Docker Hub と public GHCR の SHA、`v0.1.3`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29490699451` と Release run `29490929946` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。この release は現在の Railway/Vercel runtime SHA と一致します。
+Docker Publish run `29515529360` は AMD64/ARM64 の build、runtime smoke、High/Critical scan、immutable SHA publish を完了しました。`latest` と semver aliases は変更していません。
 
 | Artifact | Docker Hub digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` |
-| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` |
-| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` |
-| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` |
+| `foodflow-backend` | `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` |
+| `foodflow-migrate` | `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` |
+| `foodflow-admin` | `sha256:1f75f3fd4cd6b9cc4b0814efee3aab79643f5f9ce6962cabd1505ef57c4992db` |
+| `foodflow-restaurant` | `sha256:d92f6b8baaccc0a7ae8f83a22bff4d5d949fa07f6242fa456616465b44059316` |
 
 Worker は backend image の `dist/workers/main.js` を使用し、別 release artifact ではありません。Old candidate evidence は [release report](batch4-release-report.md) に保持し、新しい rollout の source には使用しません。
 
@@ -138,7 +138,7 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 ## Deploy order
 
 1. Exposed key を rotate し、設定済み Railway/provider values は sealed secret store のみに保持。
-2. 残る Storage checksum provenance を復元・review し、checksum audit の pass 後に backup を取得してから、承認済み production environment で future migration rollout を行う。Schema end-state/local Docker から provenance を推測せず、`prisma migrate resolve` で blocker を隠さない。
+2. Storage checksum provenance は Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7` から byte-for-byte で復元され、production audit は 42/42 で pass する。今後も backup 後にのみ migration rollout を行い、`prisma migrate resolve` で新しい drift を隠さない。
 3. Verified Railway API/worker deployments を保持し、次回 release は同一 immutable SHA から deploy して health/readiness/worker polling を再確認。
 4. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
 5. Current Railway API に対して exact Admin/Restaurant Vercel deployments、configured map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。

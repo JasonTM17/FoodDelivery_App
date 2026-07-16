@@ -6,17 +6,17 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Evidence boundary — production 2026-07-16 / historical local 2026-07-14
 
-Current runtime health evidence は SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` に紐づきます。Railway API/worker/migrator と両 Vercel public health routes はこの revision を返し、database、Redis、Supabase Storage は up です。Docker Hub/public GHCR の `v0.1.3`、`latest`、SHA aliases と 3-asset GitHub Release も `977d55f` に紐づきます。Current-revision controlled GPS/private Broadcast/PostGIS smoke は pass 済みです。Historical role/browser result は範囲を限定した evidence であり、完全な end-to-end production approval ではありません。
+Current runtime health evidence は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` に紐づきます。Railway API/worker/migrator はこの revision を返し、database、Redis、Supabase Storage は up です。Admin Vercel は同じ source から rebuild、Restaurant は daily quota のため直前の healthy deployment を維持します。Docker Hub/public GHCR immutable SHA manifests と GPS/private Broadcast/PostGIS smoke は pass 済みです。
 
 | Area           | Result |
 | -------------- | ------ |
 | Backend        | Current post-merge local gates では Prisma generate/validate、typecheck、ESLint、Nest build が pass。Full Jest は 156 suites pass と gated integration suite 1 件 skip、1,178 tests pass と 1 test skip です。Production migrator checksum guard には regression test があり、Storage mutation と `prisma migrate deploy` の前に実行されます。 |
-| Database       | Production は SHA `977d55f` で source migrations 42 件すべて active です。Prisma history は 46 rows で、rolled-back audit rows 4 件を保持します。Database、Redis、Supabase Storage readiness は pass です。Realtime と Job の exact provenance は immutable image から復元済みです。Read-only audit は original bytes 未復元の `20260712143000_add_production_storage_bucket` だけを意図的に exit `1` で示し、future migrator rollout を停止します。 |
+| Database       | Production は SHA `84eeac3` で source migrations 42 件すべて active です。Database、Redis、Supabase Storage readiness と Realtime/Job/Storage provenance audit 42/42 は pass です。 |
 | Mobile Flutter | Current post-merge lock resolution と `flutter analyze` は issue なし。Full Customer/Driver suite は 373/373 tests pass。Physical Android/iOS device での background location は未認証です。 |
 | Web            | Current post-merge frozen install、typecheck、lint、Vercel build-selection tests は pass。Admin は 194/194 tests pass、70 routes build、Restaurant は 135/135 tests pass、55 routes build です。 |
-| Historical role/browser smoke | Admin/Restaurant の Chrome と Customer/Driver API による full role smoke、および Chrome desktop、Firefox、Pixel 5 mobile Chrome の clean-volume Playwright 204/204 は source head `17584153ff256b74a3413ae9844f4f27bff038cc` の evidence です。Current `977d55f` に対する four-role production certification としては再実行されていません。 |
+| Historical role/browser smoke | Admin/Restaurant の Chrome と Customer/Driver API による full role smoke、および Chrome desktop、Firefox、Pixel 5 mobile Chrome の clean-volume Playwright 204/204 は source head `17584153ff256b74a3413ae9844f4f27bff038cc` の evidence です。Current `84eeac3` に対する four-role production certification としては再実行されていません。 |
 | FCM/providers  | Historical local notification/Flutter lifecycle tests は pass。Controlled live FCM、optional provider-backed integrations、physical-device coverage は未検証です。 |
-| Production     | Railway migrator `e100789f-03c1-445d-9e69-b8a243973a95`、API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`、worker `2e4a41ea-6874-4b01-b549-d457c0a20997` は SHA `977d55f` で成功。Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` と Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` も同じ revision で、両 public health routes が exact SHA を返します。Current-revision GPS smoke は 5 分 ES256 token、private Broadcast RLS allow/deny、1,271 ms fanout、PostGIS persistence、rejection paths、exact cleanup を検証しました。Physical device と full current four-role certification は未完了です。 |
+| Production     | Railway migrator `67331bd5-0a58-4224-bb18-b97b48702eee`、API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`、worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` は SHA `84eeac3` で成功。Admin Vercel は rebuild 済み、Restaurant は quota reset 待ちです。Public web と GPS/private Broadcast/PostGIS smoke は pass。Physical device と full four-role certification は未完了です。 |
 
 ### Migration provenance audit
 
@@ -31,11 +31,10 @@ audit を `backend` から実行します。Realtime checksum
 復元されました。Review 済みの差は line ending と、Job の非実行 host comment
 だけです。Storage checksum
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
-は Git object と調査済み registry image に見つからないため、audit は
-`20260712143000_add_production_storage_bucket` だけを示して exit `1` する
-必要があります。Schema end-state だけでは不十分であり、`prisma migrate
-resolve` で blocker を隠しません。Approved entry は exact で、review 済み
-local checksum が変わらない場合だけ pass します。Source migrations 42 件はすべて active で、この unresolved provenance は next migrator rollout を停止します。
+は dangling Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7`
+から byte-for-byte で復元され、missing final newline だけを tracked source に
+戻しました。Audit は active migrations 42/42 で pass します。今後も
+`prisma migrate resolve` で新しい checksum drift を隠しません。
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 

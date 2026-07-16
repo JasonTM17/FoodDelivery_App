@@ -7,6 +7,13 @@ authoritative source for individual commits and implementation detail.
 
 ### Changed
 
+- Published immutable multi-architecture Docker SHA images for
+  `84eeac3a2845868fc3a7fd45f8a73775e834a09d`, rolled the same backend digest
+  through Railway API/worker, completed the one-off migrator, and rebuilt the
+  Admin Vercel production deployment.
+- Added a fail-closed Vercel production deploy helper that requires a clean
+  `origin/master`, injects the immutable SHA into build/runtime metadata, and
+  rejects a deployment whose public health revision does not match.
 - Added a standalone Customer guide in English, Vietnamese, and Japanese, with
   prominent README/gallery navigation, a quick-start checklist, map-based
   delivery-address selection, checkout and tracking guidance, troubleshooting,
@@ -42,6 +49,9 @@ authoritative source for individual commits and implementation detail.
 
 ### Fixed
 
+- Restored the exact production Storage migration bytes from dangling Git blob
+  `c29c069ea180ed6c3107411759b8ceb2150dc8e7`, added a checksum regression test,
+  and returned the production migration audit to `42/42` passing records.
 - Serialized default-address replacement on the user row, enforced at most one
   default address per user with a partial unique index, and aligned the database
   UUID default with Prisma. A fresh database applied all 38 migrations and the

@@ -75,15 +75,17 @@ Current evidence:
 - Storage checksum
   `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
   for `20260712143000_add_production_storage_bucket`, applied at
-  `2026-07-12T01:08Z`, was not found in any Git object or inspected registry
-  image. It is the sole remaining provenance blocker; the production audit
-  intentionally exits `1` naming only this migration.
+  `2026-07-12T01:08Z`, was recovered exactly from dangling Git blob
+  `c29c069ea180ed6c3107411759b8ceb2150dc8e7`. The only byte difference from
+  the tracked file was the missing final newline; the restored staged blob now
+  matches production exactly.
 
-Schema end-state inspection cannot reconstruct the exact SQL that was applied.
-Never use `prisma migrate resolve` to conceal checksum drift. Recover and review
-the original bytes or keep the release fail-closed. All 42 source migrations
-are already active in production; this blocker prevents every future migrator
-rollout until provenance review and a new backup are complete.
+The audit passes `42/42` active migrations. A fresh Supabase backup was captured
+before the no-op migrator rollout at
+`D:\Food_Delivery-backups\supabase-prod-pre-final-migrate-20260716.sql`
+(SHA-256 `869c568475986e48387e171e050162d0de4f6716a83dea8ef581f2ae49629446`).
+Never use `prisma migrate resolve` to conceal checksum drift; future changes
+must add a forward migration and rerun this audit before provider mutation.
 
 Use prisma migrate deploy (the db:migrate:prod script) in production. Do not
 run any of the following against Supabase production:

@@ -18,9 +18,9 @@ FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Adm
 
 ## Current release evidence — 2026-07-16
 
-See the [authoritative production current-state record](docs/production-current-state.md) for the latest split Railway/Vercel revisions, immutable backend digest, health evidence, quota boundary, and rollback steps. The detailed release paragraph below is the prior `977d55f` baseline and should be read as historical web/release evidence after the checkout rollout.
+See the [authoritative production current-state record](docs/production-current-state.md) for the latest split Railway/Vercel revisions, immutable image digests, health evidence, quota boundary, and rollback steps.
 
-Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is reported by the Railway API/worker/migrator deployments and the Vercel Admin/Restaurant health responses. Production has all 42 source migrations active; its 46-row Prisma history also retains four rolled-back audit rows. Exact Realtime and Job checksum provenance was recovered from immutable migrator revision `1f761a65`; the original bytes for `20260712143000_add_production_storage_bucket` have not been recovered, so the checksum guard intentionally blocks every future migrator rollout until that provenance is resolved. This blocker does not change the verified health of the currently deployed schema or runtime. A controlled synthetic HCMC GPS run on this revision proved a five-minute ES256 realtime token, private Broadcast allow/deny RLS, accepted GPS fanout in 1,271 ms, PostGIS persistence, `poor_accuracy` and `driver_offline` rejection, and exact zero-residue cleanup. The earlier four-role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` remains historical evidence. Docker Hub and public GHCR `v0.1.3`, `latest`, and immutable SHA aliases all resolve to the four release manifests built from `977d55f`; the GitHub Release contains exactly the changelog and two SBOM assets. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, optional provider credentials, and a fresh full four-role UI journey remain outside current certification.
+Runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` is deployed to Railway API/worker/migrator. The read-only production audit passes `42/42` active migrations after restoring the exact applied Storage migration bytes (`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`) and recording a Supabase backup at `D:\Food_Delivery-backups\supabase-prod-pre-final-migrate-20260716.sql` (SHA-256 `869c568475986e48387e171e050162d0de4f6716a83dea8ef581f2ae49629446`). API/worker share Docker Hub digest `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e`; the migrator uses `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d`. Railway health/readiness report Database, Redis, and Supabase Storage up, and the public Admin/Restaurant smoke passes. Admin Vercel was rebuilt from current tracked source, but its health metadata still reports `977d55f` because the manual CLI upload omitted explicit `BUILD_SHA`; Restaurant remains on the last healthy production deployment because Vercel's free-team quota rejected a new deployment (`api-deployments-free-per-day`). The committed deploy helper now injects and verifies the clean source SHA on the next quota-eligible rollout. A controlled synthetic HCMC GPS run proved ES256 token issuance, private Broadcast authorization, GPS validation/fanout, PostGIS persistence, rejection paths, and cleanup. Physical-device Android/iOS, controlled FCM, active-order routing, optional provider credentials, and a fresh full four-role UI journey remain outside current certification.
 
 ## Product preview
 
@@ -101,23 +101,23 @@ Provider selection is explicit:
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
-## Tagged Docker release v0.1.3 — SHA 977d55f
+## Immutable Docker artifacts — SHA 84eeac3
 
 | Artifact | Verified SHA digest | Aliases on Docker Hub and GHCR |
 | --- | --- | --- |
-| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` | `v0.1.3`, `latest` |
-| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` | `v0.1.3`, `latest` |
-| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` | `v0.1.3`, `latest` |
-| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` | `v0.1.3`, `latest` |
+| `foodflow-backend` | `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` | `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d` |
+| `foodflow-migrate` | `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` | `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d` |
+| `foodflow-admin` | `sha256:1f75f3fd4cd6b9cc4b0814efee3aab79643f5f9ce6962cabd1505ef57c4992db` | `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d` |
+| `foodflow-restaurant` | `sha256:d92f6b8baaccc0a7ae8f83a22bff4d5d949fa07f6242fa456616465b44059316` | `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d` |
 
-All four GHCR packages are public. Remote inspection after Docker Publish run `29490699451` and Release run `29490929946` confirmed that `sha-977d55f19ddc4fecafb8a758d2df034f4b6ff21d`, `v0.1.3`, and `latest` resolve to the table digest on both registries. This immutable tagged release matches the current Railway/Vercel runtime SHA.
+All four Docker Hub and public GHCR SHA packages are public. Docker Publish run `29515529360` built and scanned these four immutable manifests; `latest` and semver aliases are intentionally unchanged until the remaining current-role/device evidence is certified.
 
 <details>
 <summary><strong>Historical Docker candidate — superseded</strong></summary>
 
 <br />
 
-The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The stable Docker Hub digests and aliases are recorded in [Tagged Docker release v0.1.3 — SHA 977d55f](#tagged-docker-release-v013--sha-977d55f).
+The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The current immutable Docker manifests are recorded in [Immutable Docker artifacts — SHA 84eeac3](#immutable-docker-artifacts--sha-84eeac3).
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |

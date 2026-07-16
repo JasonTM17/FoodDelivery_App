@@ -143,10 +143,9 @@ nhận đúng cặp tên/checksum này khi checksum local đã review vẫn khô
 Checksum Storage
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
 của `20260712143000_add_production_storage_bucket`, apply lúc
-`2026-07-12T01:08Z`, không có trong bất kỳ Git object hay registry image đã
-kiểm tra nào. Audit production chỉ-đọc hiện exit `1` và chỉ nêu migration này;
-đây là blocker provenance duy nhất. Schema end-state không phải provenance.
-Cả 42 migration source đã active; blocker này chặn mọi migrator tiếp theo.
+`2026-07-12T01:08Z`, đã được khôi phục byte-for-byte từ Git blob
+`c29c069ea180ed6c3107411759b8ceb2150dc8e7`. Audit production chỉ-đọc hiện
+pass 42/42; backup Supabase được giữ ngoài repo trước migrator rollout.
 
 Không chạy `migrate dev`, reset hoặc demo seed trên production.
 
@@ -164,7 +163,7 @@ Realtime smoke phải chứng minh authorized event nhận được, cross-tenan
 
 ## 5. Railway API, worker, migrator, Redis
 
-Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: trước hết kiểm tra checksum mọi migration đã áp dụng với SQL local hoặc entry provenance chính xác từ image immutable; sau đó dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), chỉ resolve bản ghi migration bucket rỗng đã fail sau khi cleanup thành công, rồi chạy `prisma migrate deploy`. Checksum nội dung lệch hoặc lỗi inventory/delete bucket sẽ fail-closed trước rollout schema. Không dùng `prisma migrate resolve` để che checksum Storage production chưa rõ nguồn; audit phải tiếp tục chặn cho tới khi khôi phục và review byte SQL gốc.
+Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: trước hết kiểm tra checksum mọi migration đã áp dụng với SQL local hoặc entry provenance chính xác từ image immutable; sau đó dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), chỉ resolve bản ghi migration bucket rỗng đã fail sau khi cleanup thành công, rồi chạy `prisma migrate deploy`. Checksum nội dung lệch hoặc lỗi inventory/delete bucket sẽ fail-closed trước rollout schema. Checksum Storage production đã được khôi phục byte-for-byte từ Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7`; audit hiện pass 42/42. Không dùng `prisma migrate resolve` để che bất kỳ drift mới nào.
 
 ```powershell
 railway login
@@ -173,6 +172,14 @@ powershell -File infra/scripts/railway-preflight.ps1
 ```
 
 Xác minh Railway `/api/healthz`, `/api/readyz`, Redis/Supabase Storage ready và worker log không lộ secret. Nếu API chưa xanh thì không deploy web.
+
+Deploy Vercel production bằng helper để inject đúng SHA sạch vào cả build và
+runtime health; không dùng bare `vercel deploy --prod`:
+
+```powershell
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App admin
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App restaurant
+```
 
 ## 6. Admin và Restaurant
 

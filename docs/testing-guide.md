@@ -6,17 +6,17 @@ A release is green only when the final source head passes every required local g
 
 ## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-Current runtime health evidence is tied to SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Railway API/worker/migrator and both public Vercel health routes report that revision, while database, Redis, and Supabase Storage are up. Docker Hub/public GHCR `v0.1.3`, `latest`, and SHA aliases plus the three-asset GitHub Release are also bound to `977d55f`. A current-revision controlled GPS/private Broadcast/PostGIS smoke passed; historical role/browser results remain bounded evidence, not full end-to-end production approval.
+Current runtime health evidence is tied to SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Railway API/worker/migrator report that revision, while database, Redis, and Supabase Storage are up. Docker Hub/public GHCR immutable SHA manifests were built and scanned by Docker Publish run `29515529360`. Admin Vercel was rebuilt from this head; Restaurant remains on the last healthy production deployment because the free-team deployment quota was exhausted. A current-revision controlled GPS/private Broadcast/PostGIS smoke passed; historical role/browser results remain bounded evidence, not full end-to-end production approval.
 
 | Area           | Result |
 | -------------- | ------ |
 | Backend        | Current post-merge local gates pass Prisma generate/validate, typecheck, ESLint, and Nest build. Full Jest reports 156 passing suites plus one gated integration suite skipped, and 1,178 passing tests plus one skipped test. The production migrator checksum guard has focused regression coverage and runs before Storage mutation or `prisma migrate deploy`. |
-| Database       | Production has all 42 source migrations active at SHA `977d55f`; its 46-row Prisma history retains four rolled-back audit rows. Database, Redis, and Supabase Storage readiness pass. Exact Realtime and Job provenance was recovered from an immutable image; the read-only audit intentionally exits `1` only for the unrecovered `20260712143000_add_production_storage_bucket` bytes and blocks every future migrator rollout. |
+| Database       | Production has all 42 source migrations active at SHA `84eeac3a`; its 46-row Prisma history retains four rolled-back audit rows. Database, Redis, and Supabase Storage readiness pass. Exact Realtime, Job, and Storage provenance is now recovered; the read-only audit passes `42/42` before the migrator rollout. |
 | Mobile Flutter | Current post-merge lock resolution and `flutter analyze` pass with no issues; the full Customer/Driver suite passes 373/373 tests. Native physical-device Android/iOS background-location remains uncertified. |
 | Web            | Current post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194/194 tests and builds 70 routes; Restaurant passes 135/135 tests and builds 55 routes. |
-| Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`977d55f` four-role production certification. |
+| Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`84eeac3` four-role production certification. |
 | FCM/providers | Historical local notification and Flutter lifecycle tests passed. Controlled live FCM, optional provider-backed integrations, and native physical-device coverage remain open. |
-| Production     | Railway migrator `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997` succeeded at SHA `977d55f`. Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` carry the same revision; both public health routes return it. Current-revision GPS smoke verified ES256 five-minute tokens, private Broadcast RLS allow/deny, 1,271 ms fanout, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
+| Production     | Railway migrator `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` succeeded at SHA `84eeac3`. Admin Vercel rebuilt current source but still reports stale `977d55f` metadata because the manual upload omitted `BUILD_SHA`; Restaurant remains on the last healthy deployment because the quota rejected a new deployment. Public health/login smoke passes, and the new helper requires exact revision equality on the next rollout. Current-revision GPS smoke verified ES256 five-minute tokens, private Broadcast RLS allow/deny, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
 
 ### Migration provenance audit
 
@@ -31,11 +31,13 @@ at revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`. Their reviewed differenc
 are limited to line endings and, for Job, one non-executable host comment.
 Storage checksum
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
-was not found in Git objects or inspected registry images, so the audit must
-exit `1` naming only `20260712143000_add_production_storage_bucket`. A matching
-schema end-state is insufficient evidence; never use `prisma migrate resolve`
-to hide the blocker. The approved entries are exact and require the reviewed
-local checksum to remain unchanged. All 42 source migrations are already active; this unresolved provenance blocks the next migrator rollout.
+was recovered exactly from dangling Git blob
+`c29c069ea180ed6c3107411759b8ceb2150dc8e7`; the tracked migration now includes
+the required final newline. The audit passes all 42 active records. A Supabase
+backup was captured at
+`D:\Food_Delivery-backups\supabase-prod-pre-final-migrate-20260716.sql`
+with SHA-256 `869c568475986e48387e171e050162d0de4f6716a83dea8ef581f2ae49629446`.
+Never use `prisma migrate resolve` to hide a future checksum mismatch.
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 

@@ -61,7 +61,7 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `e100789f-03c1-445d-9e69-b8a243973a95`, API deployment `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker deployment `2e4a41ea-6874-4b01-b549-d457c0a20997` are successful from immutable SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` images. API and worker share backend digest `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39`; the completed migrator uses `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The deployed database has all 42 source migrations active; the 46-row migration history retains four rolled-back audit rows. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `67331bd5-0a58-4224-bb18-b97b48702eee`, API deployment `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker deployment `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` are successful from immutable SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` images. API and worker share backend digest `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e`; the completed migrator uses `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The production checksum audit passes all 42 active source migrations. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
@@ -244,18 +244,29 @@ Public variables are baked into Next.js assets. Changing them requires a rebuild
 
 Both Vercel projects must define the public variables above in the `Preview` environment (and for the release branch when branch-scoped): `NEXT_PUBLIC_APP_ENV`, `NEXT_PUBLIC_API_URL`, the role URL, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_MAP_PROVIDER`, and `NEXT_PUBLIC_MAP_STYLE_URL`. A missing role URL fails the Next.js build during metadata collection instead of guessing a host. Keep `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Vercel's sensitive secret store; never copy it into GitHub variables, docs, or browser screenshots. After changing any value, redeploy the preview and verify the generated deployment before relying on the GitHub Vercel check.
 
+For manual production deployments, use the fail-closed helper so both build-time
+and runtime health metadata receive the exact clean `origin/master` SHA:
+
+```powershell
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App admin
+powershell -File infra/scripts/vercel-deploy-production.ps1 -App restaurant
+```
+
+Do not call bare `vercel deploy --prod` for a release. CLI source uploads can
+otherwise retain stale Git metadata even when the uploaded source is newer.
+
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is deployed. Railway deployment IDs are migrate `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997`. Vercel deployment IDs are Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz`. API health/readiness and both public web health routes report the same full SHA; database, Redis, and Supabase Storage are up. A controlled synthetic HCMC run on this revision proved a five-minute ES256 token, private Broadcast RLS allow/deny, accepted GPS fanout in 1,271 ms, PostGIS persistence, poor-accuracy/offline rejection, and zero-residue cleanup. The four-role Chrome/API journey remains historical SHA `17584153` evidence. Current-revision full role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. Stable Docker Hub/public GHCR `v0.1.3`, `latest`, and immutable SHA aliases belong to this same `977d55f` release and match these digests:
+Runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` is deployed to Railway. Railway deployment IDs are migrate `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588`. Admin Vercel deployment `dpl_4D8BMjZtB66Q8145tUxaGHsZcQNm` rebuilt current tracked source and is `Ready`, but its public health metadata remains `977d55f` because the manual CLI upload omitted explicit `BUILD_SHA`. Restaurant remains on the previous healthy production deployment because Vercel rejected the new build after the free-team daily deployment limit was reached. The fail-closed helper above fixes both conditions for the next quota-eligible rollout. API health/readiness and public Admin/Restaurant smoke pass; database, Redis, and Supabase Storage are up. A controlled synthetic HCMC run proved a five-minute ES256 token, private Broadcast RLS allow/deny, accepted GPS fanout, PostGIS persistence, poor-accuracy/offline rejection, and zero-residue cleanup. The four-role Chrome/API journey remains historical SHA `17584153` evidence. Current-revision full role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. Docker Hub/public GHCR immutable SHA aliases match these digests:
 
 | Image | Digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` |
-| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` |
-| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` |
-| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` |
+| `foodflow-backend` | `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` |
+| `foodflow-migrate` | `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` |
+| `foodflow-admin` | `sha256:1f75f3fd4cd6b9cc4b0814efee3aab79643f5f9ce6962cabd1505ef57c4992db` |
+| `foodflow-restaurant` | `sha256:d92f6b8baaccc0a7ae8f83a22bff4d5d949fa07f6242fa456616465b44059316` |
 
-Docker Publish run `29490699451` and Release run `29490929946` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`.
+Docker Publish run `29515529360` verified these remote SHA aliases, multi-architecture runtime smoke, and High/Critical image scans. Semver and `latest` remain unchanged.
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
@@ -316,14 +327,17 @@ accepts only these exact migration-name/checksum entries while each reviewed
 local checksum remains present. Storage checksum
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`,
 applied at `2026-07-12T01:08Z` for
-`20260712143000_add_production_storage_bucket`, was not found in any Git object
-or inspected registry image at the time of that historical review. On the
-current `master`, commit `84eeac3` restores the byte-compatible trailing
-newline and the migration checksum guard regression accepts the exact recorded
-checksum. The focused guard suite passes `10/10`, so the source-byte
-provenance blocker is resolved. Schema end-state is still not provenance:
-before any future migrator rollout, take a backup and run the read-only audit
-against the exact target.
+`20260712143000_add_production_storage_bucket`, was recovered exactly from
+dangling Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7`. The restored
+tracked SQL differs only by the previously missing final newline, so the
+read-only production audit now passes all `42/42` active migrations. A fresh
+Supabase backup was taken before the no-op migrator rollout at
+`D:\Food_Delivery-backups\supabase-prod-pre-final-migrate-20260716.sql`
+(SHA-256 `869c568475986e48387e171e050162d0de4f6716a83dea8ef581f2ae49629446`).
+The focused migration checksum guard suite passes `10/10`, so the source-byte
+provenance blocker is resolved. Schema end-state is not provenance; before
+every future migrator or provider mutation, take a backup and run the exact-byte
+read-only audit against the target.
 
 Use `DIRECT_URL` for migration safety; do not run `prisma migrate dev`, reset, or a demo seed against production.
 
@@ -387,7 +401,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum against local SQL or an exact immutable-image provenance entry, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal checksum drift; require the read-only audit to pass before rollout. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum against local SQL or an exact immutable-image provenance entry, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal checksum drift; the audit must pass before provider mutation. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 
