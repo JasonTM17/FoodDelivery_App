@@ -874,6 +874,36 @@ abstract class AppLocalizations {
   /// **'日本語'**
   String get languageJa;
 
+  /// No description provided for @orderStatusCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo'**
+  String get orderStatusCreated;
+
+  /// No description provided for @orderStatusPendingPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ thanh toán'**
+  String get orderStatusPendingPayment;
+
+  /// No description provided for @orderStatusPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get orderStatusPaid;
+
+  /// No description provided for @orderStatusRestaurantPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ nhà hàng'**
+  String get orderStatusRestaurantPending;
+
+  /// No description provided for @orderStatusRestaurantAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà hàng đã nhận'**
+  String get orderStatusRestaurantAccepted;
+
   /// No description provided for @orderStatusPending.
   ///
   /// In vi, this message translates to:
@@ -892,11 +922,35 @@ abstract class AppLocalizations {
   /// **'Đang chuẩn bị'**
   String get orderStatusPreparing;
 
+  /// No description provided for @orderStatusReadyForPickup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẵn sàng lấy hàng'**
+  String get orderStatusReadyForPickup;
+
+  /// No description provided for @orderStatusDriverAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có tài xế'**
+  String get orderStatusDriverAssigned;
+
+  /// No description provided for @orderStatusDriverArrivingRestaurant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài xế đang đến nhà hàng'**
+  String get orderStatusDriverArrivingRestaurant;
+
   /// No description provided for @orderStatusPickedUp.
   ///
   /// In vi, this message translates to:
-  /// **'Đang giao'**
+  /// **'Đã lấy hàng'**
   String get orderStatusPickedUp;
+
+  /// No description provided for @orderStatusDelivering.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang giao'**
+  String get orderStatusDelivering;
 
   /// No description provided for @orderStatusDelivered.
   ///
@@ -904,11 +958,29 @@ abstract class AppLocalizations {
   /// **'Đã giao'**
   String get orderStatusDelivered;
 
+  /// No description provided for @orderStatusCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get orderStatusCompleted;
+
   /// No description provided for @orderStatusCancelled.
   ///
   /// In vi, this message translates to:
   /// **'Đã hủy'**
   String get orderStatusCancelled;
+
+  /// No description provided for @orderStatusRefunded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hoàn tiền'**
+  String get orderStatusRefunded;
+
+  /// No description provided for @orderStatusUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang cập nhật'**
+  String get orderStatusUnknown;
 
   /// No description provided for @cartTitle.
   ///

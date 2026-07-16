@@ -101,15 +101,17 @@ Dart define に入れてはいけません。詳しい setup、Android build、t
 
 ## Visual と release の境界
 
-| Customer app launch | Active-delivery Driver Home |
+| Authenticated Customer role flow | Active-delivery Driver Home |
 |---|---|
-| ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
+| ![Customer Home、Orders、Profile](./media/gifs/customer-role-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
-Customer/Driver role still、GIF、以前の local GPS/permission capture は isolated
-E2E stack 接続の Android AVD、deterministic seed identity、masked password、dirty
+Customer/Driver role still、GIF、以前の local GPS/permission capture は local
+FoodFlow stack 接続の Android AVD、synthetic seed identity、masked password、dirty
 working tree、fixed simulated GPS を使い、Google Maps API key は使っていません。
-Privacy-reviewed local regression/product evidence であり、mobile release、payment、
-dispatch、routing、provider、production の証拠ではありません。
+Customer には exact coordinate や account contact を表示しない authenticated
+Home、Orders、Profile evidence が追加されました。Privacy-reviewed local
+regression/product evidence であり、mobile release、payment、dispatch、routing、
+provider、production の証拠ではありません。
 
 別にラベル付けした Driver recovery WebP 1 枚は Railway と Supabase に対する bounded
 Android API 35 production-emulator smoke です。その synthetic run の foreground

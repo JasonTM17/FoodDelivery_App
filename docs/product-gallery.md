@@ -12,8 +12,8 @@ Capture manifest: `docs/screenshots/manifest.json`. Tool: `docs/scripts/capture-
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Admin guide](./admin-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; not current-revision certification. |
 | Restaurant | Next.js web dashboard | 10 local PNG stills, one GIF, and one historical production PNG | [Restaurant guide](./restaurant-guide.md) | Local Chrome regression plus separately labelled SHA `17584153` controlled-production evidence; public current access remains behind Vercel SSO. |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | One privacy-reviewed local WebP still and one public-auth GIF | [Customer guide](./customer-guide.md) | Android AVD app-launch/public-auth evidence only; authenticated stills with exact coordinates were excluded. |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, one production-emulator recovery WebP, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Local Android AVD role/GPS evidence plus one separately labelled Railway/Supabase production-emulator capture; not physical-device, iOS, FCM, payout, or app-store proof. |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Four privacy-reviewed local WebPs and two GIFs | [Customer guide](./customer-guide.md) | Android AVD public-auth plus authenticated local-fixture Home/Orders/Profile evidence; no exact coordinates are visible. |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Six local WebP stills, one production-emulator recovery WebP, two tracking/permission assets, and one GIF | [Driver guide](./driver-guide.md) | Local Android AVD role/GPS evidence plus one separately labelled Railway/Supabase production-emulator capture; not physical-device, iOS, FCM, payout, routing, or app-store proof. |
 
 ## Choose a role guide
 
@@ -31,6 +31,7 @@ Customer and Driver have no browser URL. Launch their explicit Flutter entrypoin
 | Admin sign-in → overview | ![Admin sign-in to overview](./media/gifs/admin-login-flow.gif) |
 | Restaurant order queue → menu | ![Restaurant orders to menu](./media/gifs/restaurant-orders-to-menu.gif) |
 | Customer sign-in → registration → sign-in | ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) |
+| Customer Home → Orders → Profile | ![Customer authenticated role flow](./media/gifs/customer-role-flow.gif) |
 | Driver sign-in → Home → earnings → profile | ![Driver role flow](./media/gifs/driver-role-flow.gif) |
 
 ## Historical controlled-production web smoke
@@ -41,7 +42,7 @@ These two Google Chrome captures belong to deployed revision `17584153ff256b74a3
 |---|---|
 | ![Historical controlled-production Admin overview](./screenshots/production/2026-07-15-admin-authenticated-overview.png) | ![Historical controlled-production Restaurant order queue](./screenshots/production/2026-07-15-restaurant-authenticated-orders.png) |
 
-GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames. Customer records only public sign-in → registration → sign-in navigation without entered credentials. Driver uses four privacy-reviewed Android AVD role stills. None of these previews certifies a production or mobile release journey.
+GIFs are silent, optimized previews. Admin/Restaurant use reviewed Google Chrome frames. Customer includes both public authentication navigation without entered credentials and an authenticated Home → Orders → Profile flow from synthetic local fixtures. Driver uses four privacy-reviewed Android AVD role stills. None of these previews certifies a production or mobile release journey.
 
 ## Admin
 
@@ -137,7 +138,7 @@ Customer is a first-class Flutter/Riverpod native Android/iOS product. Start it 
 
 For the cross-role Customer/Driver workflow, permission behaviour, and explicit run commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md).
 
-The following privacy-reviewed Android AVD media contains one app-launch still and one public-auth GIF showing sign-in → registration → sign-in without entered credentials. Authenticated Home/discovery stills that exposed exact simulated coordinates are intentionally not retained. The manifest records dirty-workspace provenance, so this media is regression evidence only and cannot become visual release evidence without a clean-head recapture.
+The following privacy-reviewed Android AVD media contains the public-auth flow plus an authenticated local-fixture Home → Orders → Profile flow. Fixed simulated GPS was used, but the retained UI exposes only the generic current-location label and no exact coordinate. The manifest records dirty-workspace provenance, so this media is regression evidence only and cannot become visual release evidence without a clean-head recapture.
 
 ### Customer public authentication and app launch
 
@@ -145,7 +146,15 @@ The following privacy-reviewed Android AVD media contains one app-launch still a
 
 ![Customer app launch on Android emulator](./screenshots/customer/01-login.webp)
 
-Authenticated Customer stills that showed exact simulated coordinates were excluded from this gallery. The coordinate-redaction behavior is covered by mobile regression tests instead of altered screenshots.
+### Customer authenticated local fixture
+
+![Customer Home, Orders, and Profile flow](./media/gifs/customer-role-flow.gif)
+
+| Home and nearby restaurants | Active orders | Profile |
+|---|---|---|
+| ![Customer Home](./screenshots/customer/02-home.webp) | ![Customer active orders](./screenshots/customer/03-orders.webp) | ![Customer Profile](./screenshots/customer/04-profile.webp) |
+
+The Orders image is post-fix visual evidence that backend enum `restaurant_pending` renders as Vietnamese copy (`Chờ nhà hàng`) rather than leaking an internal key. Focused tests separately cover all 15 backend `OrderStatus` values in English, Vietnamese, and Japanese and the localized unknown-state fallback. These frames contain synthetic local fixture data only and are not production or release certification.
 
 ## Driver
 
@@ -175,13 +184,13 @@ These test-only Android API 35 emulator images use only a simulated route and de
 
 The associated local E2E check accepted the authenticated GPS command, refreshed Redis liveness, persisted the sample to PostGIS, and delivered one authorized Admin Socket.IO event. This is local Socket.IO compatibility evidence only, **not** Supabase, Railway, Vercel, or production evidence.
 
-A separate 2026-07-15 Android API 35 production-emulator smoke used a temporary synthetic Driver against Railway and Supabase. It verified explicit Online foreground tracking, screen-off updates, bounded airplane-mode buffering with original timestamps, refresh/restart after process termination, PostGIS persistence, and an authorized private Broadcast received by a temporary Admin subscriber. The test account and GPS rows were deleted afterward. This is production backend/provider and emulator evidence, not physical-device, iOS, FCM, payout, or app-store certification.
+A separate 2026-07-15 Android API 35 production-emulator smoke used a temporary synthetic Driver against Railway and Supabase. That bounded run recorded explicit Online foreground tracking, screen-off updates, airplane-mode buffering with original timestamps, refresh/restart after process termination, PostGIS persistence, and an authorized private Broadcast received by a temporary Admin subscriber. The test account and GPS rows were deleted afterward. This is evidence from one bounded run against the production backend/providers on an Android emulator; it is not physical-device, iOS, FCM, payout, routing, app-store, or broader production certification.
 
 ### Driver Online after GPS verification
 
 ![Driver Online after verified GPS update](./screenshots/driver/driver-online-gps-e2e.webp)
 
-### Current Driver Online device smoke
+### Current Driver Online emulator smoke
 
 ![Driver Online while foreground GPS tracking is active](./screenshots/driver/driver-online-realtime-gps.webp)
 

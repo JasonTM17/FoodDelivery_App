@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../utils/order_status_groups.dart';
 import '../utils/order_status_labels.dart';
 
 class OrderStatusBadge extends StatelessWidget {
@@ -44,54 +45,52 @@ class OrderStatusBadge extends StatelessWidget {
   }
 
   _StatusConfig _getStatusConfig(String status, AppLocalizations l10n) {
-    switch (status) {
-      case 'pending':
+    switch (orderStatusGroup(status)) {
+      case OrderStatusGroup.pending:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderPending.withValues(alpha: 0.1),
           borderColor: AppColors.orderPending.withValues(alpha: 0.3),
           textColor: AppColors.orderPending,
         );
-      case 'confirmed':
+      case OrderStatusGroup.accepted:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderConfirmed.withValues(alpha: 0.1),
           borderColor: AppColors.orderConfirmed.withValues(alpha: 0.3),
           textColor: AppColors.orderConfirmed,
         );
-      case 'preparing':
+      case OrderStatusGroup.preparing:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderPreparing.withValues(alpha: 0.1),
           borderColor: AppColors.orderPreparing.withValues(alpha: 0.3),
           textColor: AppColors.orderPreparing,
         );
-      case 'picked_up':
-      case 'delivering':
+      case OrderStatusGroup.delivering:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderDelivering.withValues(alpha: 0.1),
           borderColor: AppColors.orderDelivering.withValues(alpha: 0.3),
           textColor: AppColors.orderDelivering,
         );
-      case 'delivered':
+      case OrderStatusGroup.completed:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderDelivered.withValues(alpha: 0.1),
           borderColor: AppColors.orderDelivered.withValues(alpha: 0.3),
           textColor: AppColors.orderDelivered,
         );
-      case 'canceled':
-      case 'cancelled':
+      case OrderStatusGroup.cancelled:
         return _StatusConfig(
           label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.orderCancelled.withValues(alpha: 0.1),
           borderColor: AppColors.orderCancelled.withValues(alpha: 0.3),
           textColor: AppColors.orderCancelled,
         );
-      default:
+      case OrderStatusGroup.unknown:
         return _StatusConfig(
-          label: status,
+          label: localizedOrderStatus(l10n, status),
           backgroundColor: AppColors.textHint.withValues(alpha: 0.1),
           borderColor: AppColors.textHint.withValues(alpha: 0.3),
           textColor: AppColors.textSecondary,

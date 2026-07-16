@@ -108,21 +108,24 @@ và xử lý sự cố nằm trong [mobile README](../mobile/README.md).
 
 ## Ranh giới visual và release
 
-| Mở ứng dụng Customer | Trang chủ Driver khi đang giao |
+| Luồng Customer đã xác thực | Trang chủ Driver khi đang giao |
 |---|---|
-| ![Luồng xác thực công khai Customer](./media/gifs/customer-auth-flow.gif) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
+| ![Customer Trang chủ, Đơn hàng và Cá nhân](./media/gifs/customer-role-flow.gif) | ![Trang chủ Driver](./screenshots/driver/02-home.webp) |
 
 Ảnh role, GIF Customer/Driver và các capture GPS/quyền local trước đó được tạo
-trên Android AVD với E2E stack cô lập, seed identity deterministic, mật khẩu
-che, working tree dirty, GPS mô phỏng cố định và không dùng Google Maps API
-key. Đây là evidence regression/product local đã review riêng tư, không chứng
-nhận mobile release, payment, dispatch, routing, provider hay production.
+trên Android AVD với các stack FoodFlow local, seed identity synthetic, mật khẩu
+che, working tree dirty, GPS mô phỏng cố định và không dùng Google Maps API key.
+Customer hiện có evidence Trang chủ, Đơn hàng và Cá nhân đã xác thực, không hiện
+tọa độ chính xác hay thông tin liên hệ tài khoản. Đây vẫn là evidence
+regression/product local đã review riêng tư, không chứng nhận mobile release,
+payment, dispatch, routing, provider hay production.
 
 Một WebP recovery Driver được gắn nhãn riêng đến từ smoke production-emulator
-Android API 35 có phạm vi với Railway và Supabase. Nó chỉ chứng minh foreground
+Android API 35 có phạm vi với Railway và Supabase. Lượt đó ghi nhận foreground
 tracking, cập nhật khi tắt màn hình, offline flush, process recovery, PostGIS và
-private Broadcast cho lượt synthetic đó; không chứng nhận thiết bị vật lý, iOS,
-FCM, payout, routing hay app-store. Manifest ghi source head và cleanup.
+private Broadcast được cấp quyền cho fixture synthetic; không chứng nhận thiết bị
+vật lý, iOS, FCM, payout, routing, app-store hay production rộng hơn. Manifest ghi
+source head và cleanup.
 Xem [quy trình capture](./product-gallery.vi.md#tạo-lại) để tạo visual clean-head mới.
 
 Liên quan: [yêu cầu sản phẩm](./project-overview-pdr.vi.md),

@@ -398,6 +398,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get languageJa => '日本語';
 
   @override
+  String get orderStatusCreated => '作成済み';
+
+  @override
+  String get orderStatusPendingPayment => '支払い待ち';
+
+  @override
+  String get orderStatusPaid => '支払い済み';
+
+  @override
+  String get orderStatusRestaurantPending => '店舗確認待ち';
+
+  @override
+  String get orderStatusRestaurantAccepted => '店舗受付済み';
+
+  @override
   String get orderStatusPending => '保留中';
 
   @override
@@ -407,13 +422,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get orderStatusPreparing => '準備中';
 
   @override
-  String get orderStatusPickedUp => '配達中';
+  String get orderStatusReadyForPickup => '受け取り準備完了';
+
+  @override
+  String get orderStatusDriverAssigned => '配達員決定済み';
+
+  @override
+  String get orderStatusDriverArrivingRestaurant => '配達員が店舗へ移動中';
+
+  @override
+  String get orderStatusPickedUp => '受け取り済み';
+
+  @override
+  String get orderStatusDelivering => '配達中';
 
   @override
   String get orderStatusDelivered => '配達完了';
 
   @override
+  String get orderStatusCompleted => '完了';
+
+  @override
   String get orderStatusCancelled => 'キャンセル済み';
+
+  @override
+  String get orderStatusRefunded => '返金済み';
+
+  @override
+  String get orderStatusUnknown => 'ステータス更新中';
 
   @override
   String get cartTitle => 'カート';

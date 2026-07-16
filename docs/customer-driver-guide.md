@@ -118,22 +118,24 @@ a Dart define. Full setup, Android builds, and troubleshooting are in the
 
 ## Visual and release boundary
 
-| Customer app launch | Driver active-delivery Home |
+| Customer authenticated role flow | Driver active-delivery Home |
 |---|---|
-| ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
+| ![Customer Home, Orders, and Profile](./media/gifs/customer-role-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
 The Customer/Driver role stills, GIFs, and earlier GPS/permission captures came
-from Android AVD testing against the isolated E2E stack, using deterministic seed
+from Android AVD testing against local FoodFlow stacks, using synthetic seed
 identities, masked passwords, a dirty working tree, fixed simulated GPS, and no
-Google Maps API key. They are privacy-reviewed local regression/product evidence,
-not mobile release, payment, dispatch, routing, provider, or production proof.
+Google Maps API key. Customer now includes privacy-reviewed authenticated Home,
+Orders, and Profile evidence with no exact coordinate or account contact shown.
+They remain local regression/product evidence, not mobile release, payment,
+dispatch, routing, provider, or production proof.
 
 One separately labelled Driver recovery WebP came from a bounded Android API 35
-production-emulator smoke against Railway and Supabase. It proves foreground
-tracking, screen-off updates, offline flush, process recovery, PostGIS persistence,
-and private Broadcast for that synthetic run only. It is not physical-device, iOS,
-FCM, payout, routing, or app-store certification. See the manifest for cleanup and
-source-head boundaries.
+production-emulator smoke against Railway and Supabase. That bounded run recorded
+foreground tracking, screen-off updates, offline flush, process recovery, PostGIS
+persistence, and authorized private Broadcast for its synthetic fixture only. It is
+not physical-device, iOS, FCM, payout, routing, app-store, or broader production
+certification. See the manifest for cleanup and source-head boundaries.
 Use the [gallery capture procedure](./product-gallery.md#capture-procedure) for
 a new clean-head visual record.
 

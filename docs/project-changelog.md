@@ -30,9 +30,12 @@ authoritative source for individual commits and implementation detail.
   provenance is required before they support a current-release claim.
 - Made Customer and Driver product coverage explicit in the product gallery and
   documented the boundary between web captures and device/emulator evidence.
+- Added privacy-reviewed authenticated Customer Home, Orders, and Profile stills
+  plus a three-frame role GIF from synthetic local fixtures. The inventory now
+  records four Customer WebPs and two GIFs, with no credential, exact coordinate,
+  contact detail, production account, or release-certification claim.
 - Added a privacy-reviewed four-frame Driver role GIF from the existing Android
-  stills and corrected the screenshot inventory: Customer currently has one
-  safe launch still, not a fabricated authenticated GIF.
+  stills and kept its local/production-emulator evidence boundaries explicit.
 - Recorded the successful Railway API/worker deployments, the corrected public
   domain port, Supabase Storage readiness, and the remaining production-smoke
   boundary without relabeling infrastructure health as release approval.
@@ -46,6 +49,14 @@ authoritative source for individual commits and implementation detail.
 - Required a valid map selection when Customer creates a delivery address,
   prevented duplicate submissions while saving, fixed the compact promotion
   carousel overflow, and skipped redundant KYC onboarding for verified drivers.
+- Localized all 15 backend order statuses in Customer badges for English,
+  Vietnamese, and Japanese. `restaurant_pending` now renders as `Chờ nhà hàng`
+  in the retained Vietnamese capture instead of exposing the raw enum; unknown
+  future statuses use a localized safe fallback, backed by focused mapping and
+  widget tests. Customer history now consistently groups `delivered` and
+  `completed` as completed, and `cancelled` and `refunded` as cancelled; the
+  supported non-cancelled lifecycle maps across four tracking phases. Focused
+  grouping and provider-contract tests protect these boundaries.
 - Hardened GPS/ETA processing so stale buffered locations and planned geometry
   do not masquerade as live delivery movement.
 - Removed runtime hard-coded i18n fallbacks and added locale routing/error-state
@@ -74,6 +85,11 @@ authoritative source for individual commits and implementation detail.
 - Made Driver availability and session cleanup race-safe, localized login
   errors, removed duplicate initial dashboard loading, and corrected dark
   operational text semantics.
+- Hardened Driver terminal realtime cleanup for `completed`, `cancelled`, and
+  `refunded`: active/background order state now clears immediately, order-status
+  and ETA subscriptions are cancelled, and the order channel is unsubscribed.
+  Completed-stat refresh preserves a newly assigned order; a parameterized
+  realtime regression covers representatives of both terminal status groups.
 - Rebuilt Restaurant navigation as a responsive accessible sidebar/drawer with
   skip navigation, visible focus, locale-preserving controls, and reduced
   motion behavior.

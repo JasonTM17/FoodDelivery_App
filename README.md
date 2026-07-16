@@ -28,7 +28,7 @@ FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Admin      | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                       |
 | Restaurant | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.         |
-| Customer   | Flutter/Riverpod Android/iOS app | One privacy-reviewed local WebP and one GIF | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
+| Customer   | Flutter/Riverpod Android/iOS app | Four privacy-reviewed local WebPs and two GIFs | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
 | Driver     | Flutter/Riverpod Android/iOS app | Seven Driver WebPs, two Android notification WebPs, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.       |
 
 The mobile captures use simulated GPS. Most use the isolated local stack; the manifest separately records the privacy-reviewed production-emulator recovery smoke. Because each was captured from a dirty workspace, authentic release media still requires a clean-head recapture from the chosen release candidate.
@@ -43,6 +43,7 @@ The mobile captures use simulated GPS. Most use the isolated local stack; the ma
 | Admin sign-in to overview | ![Admin sign-in flow](docs/media/gifs/admin-login-flow.gif) |
 | Restaurant orders to menu | ![Restaurant navigation](docs/media/gifs/restaurant-orders-to-menu.gif) |
 | Customer sign-in → registration → sign-in | ![Customer authentication flow](docs/media/gifs/customer-auth-flow.gif) |
+| Customer Home → Orders → Profile | ![Customer authenticated role flow](docs/media/gifs/customer-role-flow.gif) |
 | Driver sign-in → Home → earnings → profile | ![Driver role flow](docs/media/gifs/driver-role-flow.gif) |
 
 ## Applications
@@ -229,7 +230,7 @@ powershell -File infra/scripts/local-release-gate.ps1 -RunE2E
 
 The gate covers frozen installs, Prisma validation, backend typecheck/lint/Jest/build, web typecheck/ESLint/Vitest/build, OpenAPI Spectral, Compose config, Chromium + Firefox, Flutter analyze/test, and high-confidence secret checks. Additional release evidence includes axe serious/critical, visual regression, tenant isolation, realtime authorization, maps/routes, AI fail-closed/live smoke, and multi-architecture image scans.
 
-The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 migrations, seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews, then indexed 402 RAG documents. A transaction check rejected a second default address for the same user. With explicit E2E URLs, the current rebuilt stack passed all 68 cases in Chrome desktop (173.0 s), Firefox (172.9 s), and Pixel 5 mobile Chrome (117.3 s): 204/204 total. `flutter analyze` remained clean and the full Customer/Driver suite passed 369 tests. Direct Chrome review also found the public Admin and Restaurant sign-in forms usable at desktop and Pixel 5 widths, with no console errors or horizontal overflow. None of this local evidence validates remote provider state, a deployed image, or live Firebase delivery.
+The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 migrations, seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews, then indexed 402 RAG documents. A transaction check rejected a second default address for the same user. With explicit E2E URLs, that rebuilt stack passed all 68 cases in Chrome desktop (173.0 s), Firefox (172.9 s), and Pixel 5 mobile Chrome (117.3 s): 204/204 total. The same historical run had clean `flutter analyze` output and 369 passing Customer/Driver tests; see the [testing guide](docs/testing-guide.md) for the newer mobile gate. Direct Chrome review also found the public Admin and Restaurant sign-in forms usable at desktop and Pixel 5 widths, with no console errors or horizontal overflow. None of this local evidence validates remote provider state, a deployed image, or live Firebase delivery.
 
 ## Deployment order
 

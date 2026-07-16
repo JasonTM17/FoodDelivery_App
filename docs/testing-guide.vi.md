@@ -157,6 +157,22 @@ flutter build apk --debug --flavor driver -t lib/main_driver.dart \
   --dart-define=REALTIME_PROVIDER=socketio
 ```
 
+Regression tập trung cho trạng thái đơn Customer:
+
+```powershell
+flutter test test/shared/order_status_labels_test.dart `
+  test/shared/order_status_groups_test.dart `
+  test/customer/order_provider_contract_test.dart
+```
+
+Bộ test tập trung kiểm tra đủ 15 nhãn `OrderStatus` backend bằng tiếng Anh, Việt,
+Nhật, fallback đã localize cho trạng thái chưa biết và `restaurant_pending` phải
+hiện `Chờ nhà hàng` thay vì key enum thô. Bộ test cũng xác minh `delivered` và
+`completed` vào nhóm lịch sử hoàn tất; `cancelled` và `refunded` vào nhóm đã hủy;
+mọi trạng thái vòng đời được hỗ trợ và không bị hủy ánh xạ vào một trong bốn phase
+tracking. Provider contract kiểm tra lại đúng các nhóm này trên envelope đơn hàng
+backend. Evidence tập trung này không phải chứng nhận production.
+
 Production release còn phải test token/channel Supabase, cross-scope denial, reconnect/refresh và receive-only dispatch; entry Customer/Driver; permission/GPS/background/offline/reconnect/route phase; KYC upload private và Admin signed review; vi/en/ja; API/base URL fail-closed; cấu hình map và signing production an toàn.
 
 ## Docker và security

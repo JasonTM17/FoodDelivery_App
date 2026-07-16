@@ -7,6 +7,7 @@ import 'package:foodflow_customer/driver/providers/driver_provider.dart';
 import 'package:foodflow_customer/shared/api/api_client.dart';
 import 'package:foodflow_customer/shared/api/realtime_client.dart';
 import 'package:foodflow_customer/shared/config/app_config.dart';
+import 'package:foodflow_customer/shared/models/order.dart';
 
 class _TestDriverNotifier extends DriverNotifier {
   _TestDriverNotifier({required RealtimeClient realtime})
@@ -29,6 +30,157 @@ class _LogoutApiInterceptor extends Interceptor {
         ),
       );
       return;
+    }
+    handler.reject(
+      DioException(
+        requestOptions: options,
+        message: 'Unexpected API request: ${options.path}',
+      ),
+    );
+  }
+}
+
+class _ActiveOrderApiInterceptor extends Interceptor {
+  int activeOrderFetchCount = 0;
+  int todayStatsFetchCount = 0;
+  final todayStatsRequested = Completer<void>();
+  final todayStatsResponse = Completer<void>();
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.path == '/driver/orders/active' && options.method == 'GET') {
+      activeOrderFetchCount += 1;
+      if (activeOrderFetchCount > 1) {
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            message: 'Terminal realtime status must not refetch active order',
+          ),
+        );
+        return;
+      }
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: _activeOrderPayload,
+        ),
+      );
+      return;
+    }
+    if (options.path == '/driver/earnings' &&
+        options.method == 'GET' &&
+        options.queryParameters['period'] == 'today') {
+      todayStatsFetchCount += 1;
+      if (!todayStatsRequested.isCompleted) todayStatsRequested.complete();
+      todayStatsResponse.future.then((_) {
+        handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: const {'totalEarnings': 120000, 'totalOrders': 4},
+          ),
+        );
+      });
+      return;
+    }
+    handler.reject(
+      DioException(
+        requestOptions: options,
+        message: 'Unexpected API request: ${options.path}',
+      ),
+    );
+  }
+}
+
+class _TerminalStatusRaceInterceptor extends Interceptor {
+  int activeOrderFetchCount = 0;
+  int todayStatsFetchCount = 0;
+  final patchStarted = Completer<void>();
+  final patchResponse = Completer<void>();
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.path == '/driver/orders/active' && options.method == 'GET') {
+      activeOrderFetchCount += 1;
+      final orderId = activeOrderFetchCount == 1 ? 'order-active' : 'order-new';
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: {..._activeOrderPayload, 'id': orderId},
+        ),
+      );
+      return;
+    }
+    if (options.path == '/driver/orders/order-active/status' &&
+        options.method == 'PATCH') {
+      if (!patchStarted.isCompleted) patchStarted.complete();
+      patchResponse.future.then((_) {
+        handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: const {},
+          ),
+        );
+      });
+      return;
+    }
+    if (options.path == '/driver/earnings' &&
+        options.method == 'GET' &&
+        options.queryParameters['period'] == 'today') {
+      todayStatsFetchCount += 1;
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: const {'totalEarnings': 120000, 'totalOrders': 4},
+        ),
+      );
+      return;
+    }
+    handler.reject(
+      DioException(
+        requestOptions: options,
+        message: 'Unexpected API request: ${options.path}',
+      ),
+    );
+  }
+}
+
+class _StaleActiveOrderSnapshotInterceptor extends Interceptor {
+  int activeOrderFetchCount = 0;
+  final staleFetchStarted = Completer<void>();
+  final staleFetchResponse = Completer<void>();
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.path == '/driver/orders/active' && options.method == 'GET') {
+      activeOrderFetchCount += 1;
+      if (activeOrderFetchCount == 1) {
+        handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: _activeOrderPayload,
+          ),
+        );
+        return;
+      }
+      if (activeOrderFetchCount == 2) {
+        if (!staleFetchStarted.isCompleted) staleFetchStarted.complete();
+        staleFetchResponse.future.then((_) {
+          handler.resolve(
+            Response<Map<String, dynamic>>(
+              requestOptions: options,
+              statusCode: 200,
+              data: _activeOrderPayload,
+            ),
+          );
+        });
+        return;
+      }
     }
     handler.reject(
       DioException(
@@ -95,6 +247,9 @@ class _ControllableRealtimeTransport implements RealtimeTransport {
 
   bool connected = false;
   int disconnectCount = 0;
+  int unsubscribeOrderCount = 0;
+  final subscribedOrderIds = <String>[];
+  final unsubscribedOrderIds = <String>[];
 
   @override
   bool get isConnected => connected;
@@ -135,13 +290,22 @@ class _ControllableRealtimeTransport implements RealtimeTransport {
   Future<void> reconnectWithToken(String newToken) async {}
 
   @override
-  Future<void> subscribeOrder(String orderId) async {}
+  Future<void> subscribeOrder(String orderId) async {
+    subscribedOrderIds.add(orderId);
+  }
 
   @override
-  Future<void> unsubscribeOrder(String orderId) async {}
+  Future<void> unsubscribeOrder(String orderId) async {
+    unsubscribeOrderCount += 1;
+    unsubscribedOrderIds.add(orderId);
+  }
 
   void addOffer(Map<String, dynamic> offer) {
     _offer.add(offer);
+  }
+
+  void addOrderStatus(Map<String, dynamic> status) {
+    _orderStatus.add(status);
   }
 
   Future<void> close() async {
@@ -173,8 +337,206 @@ const _dispatchOffer = {
   'surgeMultiplier': 1.0,
 };
 
+final _activeOrderPayload = <String, dynamic>{
+  'id': 'order-active',
+  'customerId': 'customer-1',
+  'restaurantId': 'restaurant-1',
+  'restaurant': {'name': 'Pho 24'},
+  'deliveryAddress': {'addressLine': '2 Le Loi'},
+  'orderItems': [
+    {
+      'menuItemId': 'menu-1',
+      'nameSnapshot': 'Pho bo',
+      'quantity': 1,
+      'unitPrice': 95000,
+    },
+  ],
+  'status': 'delivering',
+  'subtotal': 95000,
+  'deliveryFee': 20000,
+  'discount': 0,
+  'total': 115000,
+  'paymentMethod': 'cash',
+  'createdAt': '2026-07-05T10:00:00.000Z',
+  'updatedAt': '2026-07-05T10:05:00.000Z',
+};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  for (final terminalStatus in ['refunded', 'completed']) {
+    test(
+      '$terminalStatus realtime clears local tracking and subscriptions',
+      () async {
+        FlutterSecureStorage.setMockInitialValues({});
+        final interceptor = _ActiveOrderApiInterceptor();
+        ApiClient.instance.dio.interceptors.add(interceptor);
+        final transport = _ControllableRealtimeTransport();
+        final realtime = RealtimeClient.forTesting(
+          provider: RealtimeProvider.supabase,
+          transport: transport,
+          postCommand: (_, _) async {},
+        );
+        final notifier = _TestDriverNotifier(realtime: realtime)
+          ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+        try {
+          await notifier.fetchActiveOrder();
+          expect(notifier.state.activeOrder?.id, 'order-active');
+
+          transport.addOrderStatus({
+            'orderId': 'order-active',
+            'status': terminalStatus,
+          });
+
+          if (terminalStatus == 'completed') {
+            await interceptor.todayStatsRequested.future.timeout(
+              const Duration(seconds: 1),
+            );
+            notifier.seed(
+              notifier.state.copyWith(
+                activeOrder: OrderModel.fromJson({
+                  ..._activeOrderPayload,
+                  'id': 'order-new',
+                }),
+              ),
+            );
+            interceptor.todayStatsResponse.complete();
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+
+          expect(
+            notifier.state.activeOrder?.id,
+            terminalStatus == 'completed' ? 'order-new' : null,
+          );
+          expect(interceptor.activeOrderFetchCount, 1);
+          expect(transport.unsubscribeOrderCount, 1);
+          expect(
+            interceptor.todayStatsFetchCount,
+            terminalStatus == 'completed' ? 1 : 0,
+          );
+        } finally {
+          if (!interceptor.todayStatsResponse.isCompleted) {
+            interceptor.todayStatsResponse.complete();
+          }
+          notifier.dispose();
+          await Future<void>.delayed(Duration.zero);
+          await transport.close();
+          ApiClient.instance.dio.interceptors.remove(interceptor);
+        }
+      },
+    );
+  }
+
+  test(
+    'a delayed terminal PATCH cannot clear a newly assigned order',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final interceptor = _TerminalStatusRaceInterceptor();
+      ApiClient.instance.dio.interceptors.add(interceptor);
+      final transport = _ControllableRealtimeTransport();
+      final realtime = RealtimeClient.forTesting(
+        provider: RealtimeProvider.supabase,
+        transport: transport,
+        postCommand: (_, _) async {},
+      );
+      final notifier = _TestDriverNotifier(realtime: realtime)
+        ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+      try {
+        await notifier.fetchActiveOrder();
+        expect(notifier.state.activeOrder?.id, 'order-active');
+
+        final update = notifier.updateOrderStatus('order-active', 'completed');
+        await interceptor.patchStarted.future;
+
+        transport.addOrderStatus({
+          'orderId': 'order-active',
+          'status': 'completed',
+        });
+        for (var attempt = 0; attempt < 20; attempt += 1) {
+          if (transport.unsubscribeOrderCount == 1 &&
+              interceptor.todayStatsFetchCount == 1) {
+            break;
+          }
+          await Future<void>.delayed(Duration.zero);
+        }
+        expect(notifier.state.activeOrder, isNull);
+
+        await notifier.fetchActiveOrder();
+        expect(notifier.state.activeOrder?.id, 'order-new');
+
+        interceptor.patchResponse.complete();
+        await update;
+
+        expect(notifier.state.activeOrder?.id, 'order-new');
+        expect(transport.subscribedOrderIds, ['order-active', 'order-new']);
+        expect(transport.unsubscribedOrderIds, ['order-active']);
+        expect(interceptor.todayStatsFetchCount, 1);
+      } finally {
+        if (!interceptor.patchResponse.isCompleted) {
+          interceptor.patchResponse.complete();
+        }
+        notifier.dispose();
+        await Future<void>.delayed(Duration.zero);
+        await transport.close();
+        ApiClient.instance.dio.interceptors.remove(interceptor);
+      }
+    },
+  );
+
+  test(
+    'a stale active-order snapshot cannot resurrect a terminal order',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final interceptor = _StaleActiveOrderSnapshotInterceptor();
+      ApiClient.instance.dio.interceptors.add(interceptor);
+      final transport = _ControllableRealtimeTransport();
+      final realtime = RealtimeClient.forTesting(
+        provider: RealtimeProvider.supabase,
+        transport: transport,
+        postCommand: (_, _) async {},
+      );
+      final notifier = _TestDriverNotifier(realtime: realtime)
+        ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+      try {
+        await notifier.fetchActiveOrder();
+        expect(notifier.state.activeOrder?.id, 'order-active');
+
+        final staleFetch = notifier.fetchActiveOrder();
+        await interceptor.staleFetchStarted.future;
+
+        transport.addOrderStatus({
+          'orderId': 'order-active',
+          'status': 'refunded',
+        });
+        for (var attempt = 0; attempt < 20; attempt += 1) {
+          if (transport.unsubscribeOrderCount == 1 &&
+              notifier.state.activeOrder == null) {
+            break;
+          }
+          await Future<void>.delayed(Duration.zero);
+        }
+        expect(notifier.state.activeOrder, isNull);
+
+        interceptor.staleFetchResponse.complete();
+        await staleFetch;
+
+        expect(notifier.state.activeOrder, isNull);
+        expect(transport.subscribedOrderIds, ['order-active']);
+        expect(transport.unsubscribedOrderIds, ['order-active']);
+      } finally {
+        if (!interceptor.staleFetchResponse.isCompleted) {
+          interceptor.staleFetchResponse.complete();
+        }
+        notifier.dispose();
+        await Future<void>.delayed(Duration.zero);
+        await transport.close();
+        ApiClient.instance.dio.interceptors.remove(interceptor);
+      }
+    },
+  );
 
   for (final provider in RealtimeProvider.values) {
     test(
@@ -314,29 +676,32 @@ void main() {
     },
   );
 
-  test('a missing fresh GPS sample cannot preserve a stale online state', () async {
-    FlutterSecureStorage.setMockInitialValues({});
-    final interceptor = _AvailabilityRaceInterceptor();
-    ApiClient.instance.dio.interceptors.add(interceptor);
-    final transport = _ControllableRealtimeTransport();
-    final realtime = RealtimeClient.forTesting(
-      provider: RealtimeProvider.supabase,
-      transport: transport,
-      postCommand: (_, _) async {},
-    );
-    final notifier = _TestDriverNotifier(realtime: realtime)
-      ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+  test(
+    'a missing fresh GPS sample cannot preserve a stale online state',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final interceptor = _AvailabilityRaceInterceptor();
+      ApiClient.instance.dio.interceptors.add(interceptor);
+      final transport = _ControllableRealtimeTransport();
+      final realtime = RealtimeClient.forTesting(
+        provider: RealtimeProvider.supabase,
+        transport: transport,
+        postCommand: (_, _) async {},
+      );
+      final notifier = _TestDriverNotifier(realtime: realtime)
+        ..seed(const DriverState(isAuthenticated: true, isOnline: true));
 
-    try {
-      await notifier.goOnline(10.7769, 106.7009, sampledAt: null);
+      try {
+        await notifier.goOnline(10.7769, 106.7009, sampledAt: null);
 
-      expect(notifier.state.isOnline, isFalse);
-      expect(interceptor.calls, ['offline']);
-    } finally {
-      notifier.dispose();
-      await Future<void>.delayed(Duration.zero);
-      await transport.close();
-      ApiClient.instance.dio.interceptors.remove(interceptor);
-    }
-  });
+        expect(notifier.state.isOnline, isFalse);
+        expect(interceptor.calls, ['offline']);
+      } finally {
+        notifier.dispose();
+        await Future<void>.delayed(Duration.zero);
+        await transport.close();
+        ApiClient.instance.dio.interceptors.remove(interceptor);
+      }
+    },
+  );
 }

@@ -120,6 +120,12 @@ message. This gives support context without relying on a guessed order.
 
 ![Customer app launch](./screenshots/customer/01-login.webp)
 
-The current visual captures were made from a Flutter debug APK on an Android API 35 x86_64 AVD. The GIF records only public sign-in and registration navigation, without entered credentials. Authenticated Customer stills that exposed exact simulated coordinates were deliberately excluded. The retained dirty-working-tree media is privacy-reviewed regression/product evidence, not mobile release, payment, map/routing, Firebase, Supabase/Railway, or production proof.
+![Customer Home, Orders, and Profile flow](./media/gifs/customer-role-flow.gif)
+
+| Home and nearby restaurants | Active orders | Profile |
+|---|---|---|
+| ![Customer Home](./screenshots/customer/02-home.webp) | ![Customer active orders](./screenshots/customer/03-orders.webp) | ![Customer Profile](./screenshots/customer/04-profile.webp) |
+
+The current visual captures were made from Flutter debug APKs on an Android API 35 x86_64 AVD. The public-auth GIF contains no entered credentials. The authenticated local fixture capture uses fixed simulated GPS but exposes only the generic current-location label; it shows Home data, the Vietnamese `Chờ nhà hàng` badge for backend status `restaurant_pending`, and Profile rendering. The mapper and focused tests cover all 15 backend `OrderStatus` values in English, Vietnamese, and Japanese, plus a localized fallback for an unknown future status. The retained dirty-working-tree media is privacy-reviewed regression/product evidence, not mobile release, payment, map/routing, Firebase, Supabase/Railway, or production proof.
 
 For mobile runtime, configuration, and build commands, see the [Customer and Driver mobile guide](./customer-driver-guide.md) and [mobile README](../mobile/README.md).

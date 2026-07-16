@@ -151,6 +151,24 @@ flutter build apk --debug --flavor driver -t lib/main_driver.dart \
   --dart-define=REALTIME_PROVIDER=socketio
 ```
 
+Customer order status の focused regression:
+
+```powershell
+flutter test test/shared/order_status_labels_test.dart `
+  test/shared/order_status_groups_test.dart `
+  test/customer/order_provider_contract_test.dart
+```
+
+この focused set は backend の 15 個の `OrderStatus` label を English、
+Vietnamese、Japanese で確認し、未知の status の localized fallback と、
+`restaurant_pending` が raw enum key ではなく `Chờ nhà hàng` と表示される
+ことを確認します。また、`delivered` と `completed` が completed history
+bucket、`cancelled` と `refunded` が cancelled bucket に入り、supported かつ
+non-cancelled な lifecycle status が 4 tracking phases のいずれかに map する
+ことを検証します。Provider contract は backend order envelope でも同じ
+bucket contract を確認します。この focused evidence は production
+certification ではありません。
+
 Production release では Supabase token/channel、cross-scope denial、reconnect/refresh、receive-only dispatch、Customer/Driver entry、permission/GPS/background/offline/reconnect/route phase、private KYC upload と Admin signed review、vi/en/ja、API/base URL fail-closed、secure map/signing config を追加検証します。
 
 ## Docker/security

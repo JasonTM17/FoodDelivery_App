@@ -3,6 +3,7 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/models/order.dart';
+import '../../shared/utils/order_status_groups.dart';
 import '../../shared/utils/order_status_labels.dart';
 
 class OrderTimeline extends StatelessWidget {
@@ -17,7 +18,6 @@ class OrderTimeline extends StatelessWidget {
 
   static const _steps = [
     _Step('pending', Icons.access_time_rounded),
-    _Step('confirmed', Icons.check_circle_outline),
     _Step('preparing', Icons.restaurant_rounded),
     _Step('delivering', Icons.delivery_dining_rounded),
     _Step('delivered', Icons.check_circle_rounded),
@@ -26,10 +26,9 @@ class OrderTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isCancelled = currentStatus == 'cancelled';
-    final activeIndex = isCancelled
-        ? -1
-        : _steps.indexWhere((s) => s.status == currentStatus);
+    final statusGroup = orderStatusGroup(currentStatus);
+    final isCancelled = statusGroup == OrderStatusGroup.cancelled;
+    final activeIndex = orderTrackingPhaseIndex(currentStatus) ?? -1;
 
     return Column(
       children: [
@@ -47,8 +46,8 @@ class OrderTimeline extends StatelessWidget {
         }),
         if (isCancelled)
           _CancelledRow(
-            label: localizedOrderStatus(l10n, 'cancelled'),
-            timestamp: _timestampFor('cancelled'),
+            label: localizedOrderStatus(l10n, currentStatus),
+            timestamp: _timestampFor(currentStatus),
           ),
       ],
     );
