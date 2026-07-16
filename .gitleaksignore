@@ -1,3 +1,8 @@
 # Deterministic non-secret fixture password in the original role-smoke test commit.
 # The current test builds the value from segments; keep this exact historical fingerprint ignored.
 14a5e39fde1543c14b576d98c07f17dfdd81094b:backend/src/operations/production-role-smoke-fixture-config.spec.ts:generic-api-key:17
+
+# SHA-256 media manifest paths are public asset identifiers, not credentials.
+9c8abf10eec2de3c14d4102c3882eb616fb5be09:docs/screenshots/manifest.json:generic-api-key:8
+9c8abf10eec2de3c14d4102c3882eb616fb5be09:docs/screenshots/manifest.json:generic-api-key:26
+9c8abf10eec2de3c14d4102c3882eb616fb5be09:docs/screenshots/manifest.json:generic-api-key:32
