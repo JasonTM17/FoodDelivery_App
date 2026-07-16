@@ -18,7 +18,7 @@ FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Adm
 
 ## Current release evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM, build, multi-architecture runtime smoke, and eight image scans are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. A controlled production smoke verified five-minute ES256 tokens, private Broadcast RLS allow/deny, accepted GPS delivery, PostGIS persistence, explicit rejection reasons, and complete temporary DB/Redis cleanup. Docker Hub SHA, `v0.1.2`, and `latest` resolve to matching digests for all four images. Restaurant health returns the exact revision through authenticated Vercel access, but public requests redirect to Vercel SSO because the project has no custom domain. The earlier full role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts; it remains historical evidence, not current-`a703ece` certification. Candidate migration 42 and its hardened recovery controller are undeployed. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM, build, multi-architecture runtime smoke, and eight image scans are green; Railway reports 41 migrations with none pending and healthy PostgreSQL/Redis/Supabase Storage. A controlled production smoke verified five-minute ES256 tokens, private Broadcast RLS allow/deny, accepted GPS delivery, PostGIS persistence, explicit rejection reasons, and complete temporary DB/Redis cleanup. Docker Hub and GHCR SHA, `v0.1.2`, and `latest` aliases resolve to matching digests for all four images; [GitHub Release v0.1.2](https://github.com/JasonTM17/FoodDelivery_App/releases/tag/v0.1.2) includes the verified changelog plus source and image SBOMs. Android API 35 production-emulator foreground tracking, screen-off updates, offline flush and process recovery passed. Restaurant health returns the exact revision through authenticated Vercel access, but public requests redirect to Vercel SSO because the project has no custom domain. The earlier full role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts; it remains historical evidence, not current-`a703ece` certification. Candidate migration 42 and its hardened recovery controller are undeployed. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
 
 ## Product preview
 
@@ -100,14 +100,14 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 ## Current Docker release — SHA a703ece
 
-| Artifact | Docker Hub SHA digest | Docker Hub aliases |
+| Artifact | Verified SHA digest | Aliases on Docker Hub and GHCR |
 | --- | --- | --- |
 | `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` | `v0.1.2`, `latest` |
 | `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` | `v0.1.2`, `latest` |
 | `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` | `v0.1.2`, `latest` |
 | `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` | `v0.1.2`, `latest` |
 
-All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because both the repository token and a local package-write token returned `401 Unauthorized` for package-manifest writes.
+All four GHCR packages are public. Remote inspection after Docker Publish run `29474270122` and Release run `29477368072` confirmed that `sha-a703ece61e66dcfe7f308cbf46a98098983233e7`, `v0.1.2`, and `latest` resolve to the table digest on both registries.
 
 <details>
 <summary><strong>Historical Docker candidate — superseded</strong></summary>

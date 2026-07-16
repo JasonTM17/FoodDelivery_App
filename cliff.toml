@@ -16,8 +16,8 @@ body = """
 {% for commit in commits %}
 - {% if commit.breaking %}**BREAKING:** {% endif %}\
 {{ commit.message | upper_first }}\
-{% if commit.github.username %} by @{{ commit.github.username }}{% endif %}\
- ([{{ commit.id | truncate(length=7, end="") }}]({{ self::remote_url() }}/commit/{{ commit.id }}))
+{% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+ ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }}))
 {%- endfor %}
 
 {% endfor %}
@@ -33,8 +33,8 @@ template = """
 {% for commit in commits %}
 - {% if commit.breaking %}**BREAKING:** {% endif %}\
 {{ commit.message | upper_first }}\
-{% if commit.github.username %} by @{{ commit.github.username }}{% endif %}\
- ([{{ commit.id | truncate(length=7, end="") }}]({{ self::remote_url() }}/commit/{{ commit.id }}))
+{% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+ ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }}))
 {%- endfor %}
 
 {% endfor %}
@@ -47,8 +47,8 @@ template = """
 {% for commit in commits %}
 - {% if commit.breaking %}**BREAKING:** {% endif %}\
 {{ commit.message | upper_first }}\
-{% if commit.github.username %} by @{{ commit.github.username }}{% endif %}\
- ([{{ commit.id | truncate(length=7, end="") }}]({{ self::remote_url() }}/commit/{{ commit.id }}))
+{% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+ ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }}))
 {%- endfor %}
 
 {% endfor %}
@@ -94,3 +94,7 @@ link_parsers = [
   { pattern = "https://github.com/JasonTM17/foodflow/pull/(\\d+)", href = "https://github.com/JasonTM17/foodflow/pull/$1" },
 ]
 limit_commits = 500
+
+[remote.github]
+owner = "JasonTM17"
+repo = "FoodDelivery_App"
