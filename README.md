@@ -258,7 +258,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 
 ## Branch policy
 
-At the 2026-07-14 check, the remote advertised only `origin/master`; the retained linked worktree ref is already an ancestor of `master`, not pending work. Do not merge, recreate, push, or delete local worktree refs without explicit direction. Local branch ancestry and local tests are not production approval; see the evidence-backed [branch disposition](docs/branch-disposition.md).
+`master` is the only long-lived release branch. Feature, fix, and dependency branches must be short-lived, pass the repository gates, merge through a pull request, and be deleted after integration. Compatible dependency updates are grouped; major runtime or tooling upgrades require an explicit migration branch. See the evidence-backed [branch disposition](docs/branch-disposition.md).
 
 ## License
 

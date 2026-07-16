@@ -2,7 +2,7 @@ name: OpenAPI Validate
 
 on:
   push:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
     paths:
       - 'docs/openapi.yaml'
       - 'docs/openapi/.spectral.yaml'
@@ -11,7 +11,7 @@ on:
       - 'web/pnpm-workspace.yaml'
       - '.github/workflows/openapi-validate.yml'
   pull_request:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
     paths:
       - 'docs/openapi.yaml'
       - 'docs/openapi/.spectral.yaml'

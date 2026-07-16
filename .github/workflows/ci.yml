@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
   pull_request:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
 
 jobs:
   backend:

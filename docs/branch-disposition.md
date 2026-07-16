@@ -1,37 +1,47 @@
-# Branch Disposition — Batch 4
+# Branch disposition
 
-## Audited disposition
+## Current policy
 
-Audit date: **2026-07-14**. Runtime branch facts were refreshed at `52f433641d5093f6d064cfba6c1cd99c8cb035e9`; a later evidence-only commit may advance `master` without changing the merge topology.
+`master` is the only long-lived release branch. All other branches are temporary and must follow this lifecycle:
 
-| Scope            | Verified state                                                                                                                                                                                                                                            | Disposition                                                                           |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Release ref      | Local `HEAD`, `master`, cached `origin/master`, and live `git ls-remote --heads origin` resolve to `52f433641d5093f6d064cfba6c1cd99c8cb035e9` at `refs/heads/master`.                                                                                     | Keep `master` as the release ref. Local equivalence is not production approval.       |
-| Remote refs      | `git branch -r --no-merged master` and `git branch --no-merged master` produced no output.                                                                                                                                                                | There is no branch to merge. No remote branch action is authorized.                   |
-| Legacy local ref | `worktree-agent-a62965db0e804d23d` is a merged, non-release local ref. Its merge-base with `master` is `51f377d1a517d9adabce72ca5151d223f5e12d33`; `master...legacy` is `33/0`, so `master` is 33 commits ahead and the legacy ref has no unique commits. | Retain it. Do not raw-merge, recreate, push, or delete it without explicit direction. |
-| Worktrees        | `git worktree list --porcelain` reported only the primary `D:/Food_Delivery` worktree.                                                                                                                                                                    | No linked worktree or unmerged branch needs cleanup.                                  |
+1. keep the change focused;
+2. pass CI, security, build, and relevant test gates;
+3. merge through a pull request;
+4. delete the source branch after merge.
 
-## Evidence boundary
+Dependabot groups compatible minor and patch updates to keep review volume manageable. Runtime and tooling major versions are intentionally excluded from routine batches because they require a dedicated migration, compatibility review, and complete regression gate. Security updates remain enabled.
 
-- A current read-only Supabase audit found the linked production project active and healthy with all 38 Prisma migrations applied, including the default-address migrations. The earlier 36-migration provider record is historical only.
-- This migration boundary does not turn local branch equivalence into production approval.
-- Railway migrate `a9002614-ed2a-438c-9a4e-7170954052fc`, API `4e51ae50-1218-4c1b-a315-3c31ddf6de5c`, and worker `4f818c68-ce66-4aab-ae6e-f8ed708b4f91` are successful from immutable `52f4336` images. API health/readiness return 200 and the worker runs the PostgreSQL outbox loop.
-- This audit does not prove every authenticated browser journey, configured third-party integration, controlled live FCM delivery, device background-location matrix, or full release readiness.
+## 2026-07-16 consolidation
 
-## Read-only verification commands
+The consolidation into `master` uses one reviewed integration branch instead of merging a queue of overlapping or failing branches independently.
+
+| Disposition | Pull requests | Reason |
+| --- | --- | --- |
+| Integrated with original history | #81, #82, #83 | Production-role smoke hardening, pinned backend runtime image, and current `setup-node` action passed their focused checks. |
+| Consolidated as compatible updates | #84, #86, #87, #88, #90, #91, #92, #98, #101, #103 | Patch/minor framework and tooling updates were applied together so the lockfiles and peer dependencies are verified as one coherent state. |
+| Deferred to migration work | #85, #89, #93, #94, #96, #97, #99, #100, #102 | These change a major runtime, framework, lint, type, or build-tool contract and are not safe routine maintenance. |
+| Deferred by supply-chain policy | #95 | The proposed Supabase release did not meet the repository minimum-release-age gate at audit time. |
+
+After the integration pull request lands, superseded pull requests are closed with their disposition recorded and all temporary remote branches are deleted. The final branch audit must show only `refs/heads/master` and no open pull requests.
+
+## Follow-up engineering work
+
+The consolidation is safe for the reviewed path, but these items remain explicit follow-up work rather than hidden assumptions:
+
+- run the production-role migration off-peak and monitor lock waits because the foreign-key/index rollout is transactional;
+- provide a disposable PostgreSQL target in CI if destructive fixture integration coverage is promoted from opt-in to a required gate;
+- add process-level coverage for signal interruption, lease reacquisition, and capability-drain recovery;
+- define retention/archival for completed `production_role_smoke_runs` tombstones;
+- keep user deletion flows on the deactivation path unless a future GDPR/admin-delete design explicitly handles the new `ON DELETE RESTRICT` constraints.
+
+## Verification
+
+Run the following commands against the live remote rather than relying on cached local refs:
 
 ```powershell
-$legacy = 'worktree-agent-a62965db0e804d23d'
-
-git rev-parse master
-git rev-parse origin/master
 git ls-remote --heads origin
-git merge-base master $legacy
-git rev-list --left-right --count master...$legacy  # right count expected: 0
-git rev-list --count "$legacy..master"             # informational; grows with new commits
-git branch --no-merged master                       # expected: no output
-git worktree list --porcelain
-git status --short
+gh pr list --repo JasonTM17/FoodDelivery_App --state open
+gh run list --repo JasonTM17/FoodDelivery_App --branch master --limit 20
 ```
 
-Re-run these checks before requesting a future branch or worktree action. They do not authorize a merge, push, recreation, deletion, or production release.
+Branch ancestry and local test results are necessary evidence, but they do not replace the protected-branch checks on the final `master` commit.
