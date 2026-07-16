@@ -2,7 +2,7 @@ name: Trivy Vulnerability Scan
 
 on:
   push:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
   schedule:
     - cron: '0 6 * * *'
 
@@ -24,6 +24,7 @@ jobs:
           image-ref: foodflow-backend:test
           format: 'sarif'
           output: 'trivy-results.sarif'
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
       - name: Upload results
         uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4

@@ -2,16 +2,16 @@
 
 Ngôn ngữ: [English](product-gallery.md) · **Tiếng Việt** · [日本語](product-gallery.ja.md)
 
-Đây là gallery non-production đã review riêng tư. `docs/screenshots/manifest.json` ghi source head, thời gian, runtime và ranh giới working tree dirty cho media hiện tại. Ảnh/GIF chứng minh hành vi sản phẩm local thật, không chứng minh clean release head, Docker build cuối hay hành trình production.
+Gallery đã review riêng tư này cố ý trộn ba lớp evidence có nhãn rõ ràng: regression local, web production có kiểm soát lịch sử và recovery Driver production-emulator có phạm vi. `docs/screenshots/manifest.json` ghi source head, thời gian, runtime, ranh giới working tree dirty và SHA-256 cho toàn bộ asset. Không ảnh nào tự chứng minh clean release head, Docker build cuối, hành trình production hiện tại, thiết bị vật lý hay app-store.
 
 ## Phạm vi bề mặt
 
 | Bề mặt | Sản phẩm | Media trực quan đã lưu | Hướng dẫn chính | Ranh giới bằng chứng |
 |---|---|---|---|---|
-| Admin | Dashboard web Next.js | 10 PNG local và một GIF | [Hướng dẫn Admin](./admin-guide.vi.md) | Bằng chứng Google Chrome từ E2E stack cô lập; chỉ non-production. |
-| Restaurant | Dashboard web Next.js | 10 PNG local và một GIF | [Hướng dẫn Restaurant](./restaurant-guide.vi.md) | Bằng chứng Google Chrome từ E2E stack cô lập; chỉ non-production. |
+| Admin | Dashboard web Next.js | 10 PNG local, một GIF và một PNG production lịch sử | [Hướng dẫn Admin](./admin-guide.vi.md) | Regression Chrome local cộng evidence production có kiểm soát SHA `17584153` được gắn nhãn riêng; không chứng nhận revision hiện tại. |
+| Restaurant | Dashboard web Next.js | 10 PNG local, một GIF và một PNG production lịch sử | [Hướng dẫn Restaurant](./restaurant-guide.vi.md) | Regression Chrome local cộng evidence production có kiểm soát SHA `17584153`; truy cập public hiện tại vẫn sau Vercel SSO. |
 | Customer | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `customer` | Một WebP mở app và một GIF auth công khai đã kiểm duyệt riêng tư | [Hướng dẫn Khách hàng](./customer-guide.vi.md) | Bằng chứng mở app/auth công khai trên Android AVD; ảnh xác thực có tọa độ chính xác đã bị loại. |
-| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Sáu WebP role/GPS, hai asset tracking/quyền và một GIF | [Hướng dẫn Tài xế](./driver-guide.vi.md) | Bằng chứng role/GPS trên Android AVD; không chứng nhận release, provider, payout hay production. |
+| Driver | Ứng dụng Flutter/Riverpod native Android/iOS; Android flavor `driver` | Sáu WebP local, một WebP recovery production-emulator, hai asset tracking/quyền và một GIF | [Hướng dẫn Tài xế](./driver-guide.vi.md) | Evidence role/GPS Android AVD local cộng một capture Railway/Supabase production-emulator được gắn nhãn riêng; không chứng nhận thiết bị vật lý, iOS, FCM, payout hay app-store. |
 
 ## Chọn hướng dẫn theo vai trò
 
@@ -32,6 +32,14 @@ Customer/Driver không có URL trình duyệt. Chạy đúng Flutter entrypoint 
 | Driver đăng nhập → Trang chủ → Thu nhập → Hồ sơ | ![Luồng Driver](media/gifs/driver-role-flow.gif) |
 
 GIF là preview im lặng đã tối ưu. Admin/Restaurant dùng frame Google Chrome đã review. Customer chỉ ghi điều hướng công khai Đăng nhập → Đăng ký → Đăng nhập, không nhập credential. Driver dùng bốn ảnh role Android AVD đã kiểm duyệt riêng tư. Không preview nào chứng nhận hành trình production hoặc mobile release.
+
+## Web production có kiểm soát lịch sử
+
+Hai ảnh Google Chrome này thuộc revision đã deploy `17584153ff256b74a3413ae9844f4f27bff038cc`, không phải runtime hiện tại `a703ece`. Khi chụp, Admin hiển thị bốn user synthetic của role-smoke và một restaurant tạm; queue Restaurant được scope vào restaurant đó và không có đơn. Cleanup sau đó xóa toàn bộ user, profile, restaurant, order và GPS row của fixture. Ảnh chỉ chứng minh hành trình xác thực lịch sử có phạm vi ghi trong manifest.
+
+| Tổng quan Admin đã xác thực | Queue đơn Restaurant đã xác thực |
+|---|---|
+| ![Admin production có kiểm soát lịch sử](./screenshots/production/2026-07-15-admin-authenticated-overview.png) | ![Restaurant production có kiểm soát lịch sử](./screenshots/production/2026-07-15-restaurant-authenticated-orders.png) |
 
 ## Admin
 
@@ -107,6 +115,12 @@ Local E2E lịch sử đã nhận GPS command xác thực, làm mới Redis live
 | Driver Online trong device smoke hiện tại | ![Driver Online realtime GPS](screenshots/driver/driver-online-realtime-gps.webp) |
 | Quyền notification foreground tracking | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
 | Foreground location notification | ![Driver foreground location notification](screenshots/gps/driver-foreground-location-notification.webp) |
+
+### Recovery production-emulator Android API 35
+
+Một smoke riêng ngày 15/07/2026 dùng Driver synthetic tạm trên Android API 35 với Railway và Supabase. Lượt này xác minh foreground tracking sau thao tác Online, cập nhật khi tắt màn hình, buffer offline giữ timestamp gốc, flush khi có mạng, refresh/restart sau process termination, PostGIS và private Broadcast được cấp quyền. Tài khoản và GPS row tạm đã được xóa. Đây là evidence backend/provider production và emulator, không phải thiết bị vật lý, iOS, FCM, payout, routing hay app-store.
+
+![Driver Online sau recovery Android production-emulator](./screenshots/driver/driver-online-android-api35-recovery.webp)
 
 ## Tạo lại
 

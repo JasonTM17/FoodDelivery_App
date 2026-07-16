@@ -14,7 +14,7 @@ RUN DATABASE_URL=postgresql://foodflow:foodflow_dev@localhost:5432/foodflow \
   DIRECT_URL=postgresql://foodflow:foodflow_dev@localhost:5432/foodflow \
   pnpm prisma generate && pnpm build
 
-FROM gcr.io/distroless/nodejs22-debian13@sha256:39d204f9061e310d3e090edd185f48b1e9f70ef4771819a555ed716ccb42d229 AS migrator
+FROM gcr.io/distroless/nodejs22-debian13@sha256:4693a48bdba4a676bf3f0c0a66c106c242ba3167fbc97d5008171c37d96dee12 AS migrator
 WORKDIR /app
 ARG BUILD_SHA
 LABEL org.opencontainers.image.source="https://github.com/JasonTM17/FoodDelivery_App"
@@ -32,7 +32,7 @@ CMD ["dist/migrations/production-migrate.js"]
 FROM builder AS prod-deps
 RUN pnpm prune --prod
 
-FROM gcr.io/distroless/nodejs22-debian13@sha256:39d204f9061e310d3e090edd185f48b1e9f70ef4771819a555ed716ccb42d229 AS runner
+FROM gcr.io/distroless/nodejs22-debian13@sha256:4693a48bdba4a676bf3f0c0a66c106c242ba3167fbc97d5008171c37d96dee12 AS runner
 WORKDIR /app
 
 ARG BUILD_SHA

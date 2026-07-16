@@ -2,7 +2,7 @@ name: SBOM Generation
 
 on:
   push:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
     tags: ['v*']
   schedule:
     - cron: '0 0 1 * *'

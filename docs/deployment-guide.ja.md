@@ -93,13 +93,40 @@ corepack pnpm run db:migrate:prod
 cd ..
 ```
 
+本番変更の前に、Railway の project と environment を明示した read-only
+migration audit を実行します。migrator と同じ local Prisma schema を使う
+ため `backend` から実行してください。`railway run` は sealed variable を
+local command に注入するだけで、値は表示しません。
+
+```powershell
+$env:RAILWAY_PROJECT_ID='<project-id>'
+Push-Location backend
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm run db:audit:prod
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm exec prisma migrate status --schema prisma/schema.prisma
+Pop-Location
+```
+
+承認済み release は pending と remote-only migration がない状態でなければ
+なりません。未 deploy の candidate migration、または local SQL がない
+historical rolled-back row は provenance review が終わるまで blocker です。
+production migrator は、適用済み migration の内容が LF/CRLF だけの表現差を
+超えて immutable image SQL と違う場合、Storage API と `prisma migrate deploy`
+の前に fail-closed します。checksum drift を隠すために `prisma migrate
+resolve` を使わず、source と backup の履歴を先に reconcile してください。
+`_prisma_migrations` table がない場合も Supabase Storage recovery を停止し、
+誤った、または未初期化の database target に provider mutation を許可しません。
+本当に空の database は target identity preflight 後、Storage recovery を使わず
+`db:migrate:prod` で別途 bootstrap してください。
+
 Production で `migrate dev`、reset、demo seed は実行しません。
 
 Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai_usage_events` の RLS、明示的 realtime publication、JWT channel claim policy、anon denial、Storage bucket policy を確認します。KYC bucket は private、driver write は owner-scoped signed grant、Admin read は 5 分で失効し、browser response に raw object key を返しません。Authorized event は届き、cross-tenant/expired token は拒否される必要があります。
 
 ## 5. Railway API, worker, migrator, Redis
 
-Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。checksum 不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。3 件の過去 checksum 不一致を隠すために `prisma migrate resolve` を使わないでください。
+Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、LF/CRLF の表現差だけを同一とみなして最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。3 件の過去 checksum 不一致を隠すために `prisma migrate resolve` を使わないでください。
 
 ```powershell
 railway login

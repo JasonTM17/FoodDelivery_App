@@ -105,13 +105,18 @@ Dart define に入れてはいけません。詳しい setup、Android build、t
 |---|---|
 | ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
-Gallery には current Customer/Driver role stills と以前の local GPS/permission
-captures があります。Isolated E2E stack 接続の Android AVD、deterministic seed
-identity、masked password、dirty working tree を使いました。Role capture は fixed
-simulated GPS を使い、Google Maps API key は使っていません。Privacy-reviewed
-regression/product evidence であり、mobile release、payment、dispatch、routing、
-background location、provider、production の証拠ではありません。Clean-head visual
-record には [capture procedure](./product-gallery.ja.md#recapture) を使います。
+Customer/Driver role still、GIF、以前の local GPS/permission capture は isolated
+E2E stack 接続の Android AVD、deterministic seed identity、masked password、dirty
+working tree、fixed simulated GPS を使い、Google Maps API key は使っていません。
+Privacy-reviewed local regression/product evidence であり、mobile release、payment、
+dispatch、routing、provider、production の証拠ではありません。
+
+別にラベル付けした Driver recovery WebP 1 枚は Railway と Supabase に対する bounded
+Android API 35 production-emulator smoke です。その synthetic run の foreground
+tracking、screen-off update、offline flush、process recovery、PostGIS、private
+Broadcast のみを示し、physical device、iOS、FCM、payout、routing、app-store を
+認証しません。Source head と cleanup boundary は manifest に記録しています。
+Clean-head visual record には [capture procedure](./product-gallery.ja.md#recapture) を使います。
 
 関連: [product requirements](./project-overview-pdr.ja.md)、
 [testing guide](./testing-guide.ja.md)、[product gallery](./product-gallery.ja.md)。

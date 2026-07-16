@@ -109,7 +109,7 @@ Snapshot date: **2026-07-12**. Status at that snapshot: **integration pushed to 
 | Remote branches       | `master` only                                            |
 | Remote head           | `origin/master@714d908ecab099876f5795a96ab6d0d6bca38514` |
 | Release branch        | `master`                                                 |
-| Integration branch    | `codex/batch4-integration` is an ancestor of `master`    |
+| Integration branch    | Historical integration ref, now deleted after merge     |
 | Ahead/behind          | `0 / 0` after the controlled fast-forward                |
 | Planned release       | `v4.0.0` after all gates                                 |
 | Production deployment | Not completed                                            |

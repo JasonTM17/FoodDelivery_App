@@ -2,9 +2,9 @@ name: CodeQL Security Scan
 
 on:
   push:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
   pull_request:
-    branches: [master, main, codex/batch4-integration]
+    branches: [master]
   schedule:
     - cron: '0 8 * * 1'
 
