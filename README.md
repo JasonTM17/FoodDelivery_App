@@ -107,7 +107,7 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 | `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` | `v0.1.2`, `latest` |
 | `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` | `v0.1.2`, `latest` |
 
-All four GHCR packages are public. Remote inspection after Docker Publish run `29474270122` and Release run `29477368072` confirmed that `sha-a703ece61e66dcfe7f308cbf46a98098983233e7`, `v0.1.2`, and `latest` resolve to the table digest on both registries.
+All four GHCR packages are public. Remote inspection after Docker Publish run `29474270122` and Release run `29478484699` confirmed that `sha-a703ece61e66dcfe7f308cbf46a98098983233e7`, `v0.1.2`, and `latest` resolve to the table digest on both registries.
 
 <details>
 <summary><strong>Historical Docker candidate — superseded</strong></summary>

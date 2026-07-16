@@ -65,7 +65,7 @@ Status on 2026-07-16: **runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` i
 - Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. API health/readiness report the exact revision with database, Redis, and Supabase Storage ready; worker polling runs and RAG is intentionally disabled without DeepSeek.
 - Google Maps is optional. With neither Google Directions nor an owned OSRM service, routing returns `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` while the processes remain healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing remain unconfigured or unsmoked.
 - Vercel Admin `dpl_7CFZKPxtNsYeF1Y6BZmnoJEoXyiF` and Restaurant `dpl_6jqguNYtbVCMVaQ6GvikiceYVsGN` are exact deployments of SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Canonical health returns that revision and public `vi/en/ja` login smoke passes; authenticated GPS/Supabase smoke passes while the wider role journeys remain pending.
-- Docker Hub and public GHCR SHA, `v0.1.2`, and `latest` aliases are digest-equal for all four runtime images; Docker Publish run `29474270122` and Release run `29477368072` verified the promoted manifests.
+- Docker Hub and public GHCR SHA, `v0.1.2`, and `latest` aliases are digest-equal for all four runtime images; Docker Publish run `29474270122` and Release run `29478484699` verified the promoted manifests.
 - Any previously pasted DeepSeek/provider key must be rotated before live smoke.
 
 These are release blockers, not permission to add fake values or bypass validation.

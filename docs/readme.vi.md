@@ -71,7 +71,7 @@ Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, s
 
 ## Docker release hiện tại — SHA a703ece
 
-Các alias SHA, `v0.1.2` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29474270122` và Release run `29477368072` đã xác minh các manifest được promote; GitHub Release kèm changelog cùng SBOM source/image.
+Các alias SHA, `v0.1.2` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29474270122` và Release run `29478484699` đã xác minh các manifest được promote; GitHub Release kèm đúng ba asset changelog, SBOM source và SBOM image.
 
 | Artifact | Digest Docker Hub |
 | --- | --- |

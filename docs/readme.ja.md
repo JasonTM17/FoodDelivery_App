@@ -71,7 +71,7 @@ Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realti
 
 ## Current Docker release — SHA a703ece
 
-Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29477368072` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM が添付されています。
+Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29478484699` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。
 
 | Artifact | Docker Hub digest |
 | --- | --- |
