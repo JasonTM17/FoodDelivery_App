@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import {
+  createApprovedMigrationChecksumRequirements,
+  type ApprovedMigrationChecksumRequirements,
+} from './approved-migration-checksum-provenance';
 
 export type AppliedMigrationChecksum = {
   migration_name: string;
@@ -37,6 +41,8 @@ export function createMigrationChecksumVariants(sql: string): ReadonlySet<string
 export function findAppliedMigrationChecksumMismatches(
   appliedMigrations: AppliedMigrationChecksum[],
   localChecksums: LocalMigrationChecksums,
+  approvedChecksums: ApprovedMigrationChecksumRequirements =
+    createApprovedMigrationChecksumRequirements(),
 ): string[] {
   return appliedMigrations
     .filter(
@@ -44,10 +50,23 @@ export function findAppliedMigrationChecksumMismatches(
         migration.finished_at !== null && migration.rolled_back_at === null,
     )
     .filter(
-      (migration) =>
-        !localChecksums
-          .get(migration.migration_name)
-          ?.has(migration.checksum),
+      (migration) => {
+        const migrationChecksums = localChecksums.get(
+          migration.migration_name,
+        );
+        if (!migrationChecksums) {
+          return true;
+        }
+
+        return (
+          !migrationChecksums.has(migration.checksum) &&
+          !approvedChecksums.get(migration.migration_name)?.some(
+            (approval) =>
+              approval.appliedChecksum === migration.checksum &&
+              migrationChecksums.has(approval.reviewedLocalChecksum),
+          )
+        );
+      },
     )
     .map((migration) => migration.migration_name);
 }
@@ -88,7 +107,8 @@ async function hasPrismaMigrationTable(prisma: PrismaClient): Promise<boolean> {
 
 /**
  * Fail before Storage API calls or `prisma migrate deploy` when applied
- * migration provenance differs from the immutable image source.
+ * migration provenance differs from the immutable image source or an exact,
+ * independently recoverable historical image approval.
  */
 export async function assertAppliedMigrationChecksums(
   prisma: PrismaClient,

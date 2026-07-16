@@ -46,6 +46,45 @@ Production deployment is a gated, one-way operation:
    affected product flow.
 6. Record the release evidence before web/API production deployment continues.
 
+### Production checksum provenance
+
+Run the read-only production audit before any provider or schema mutation:
+
+~~~powershell
+cd backend
+corepack pnpm run db:audit:prod
+~~~
+
+The guard accepts the migration SQL shipped locally, LF/CRLF variants of those
+exact bytes, and only explicitly reviewed historical checksums recovered from
+an immutable image. An approved historical checksum still requires the matching
+local migration directory and its reviewed local checksum; a missing or changed
+local migration cannot pass.
+
+Current evidence:
+
+- Realtime checksum
+  `3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+  and Job checksum
+  `72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+  were recovered byte-for-byte from immutable migrator image
+  `docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+  at revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`. Realtime differs
+  from current source only by line endings; Job differs only by line endings
+  and a non-executable worker-host comment.
+- Storage checksum
+  `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+  for `20260712143000_add_production_storage_bucket`, applied at
+  `2026-07-12T01:08Z`, was not found in any Git object or inspected registry
+  image. It is the sole remaining provenance blocker; the production audit
+  intentionally exits `1` naming only this migration.
+
+Schema end-state inspection cannot reconstruct the exact SQL that was applied.
+Never use `prisma migrate resolve` to conceal checksum drift. Recover and review
+the original bytes or keep the release fail-closed. Candidate migration 42
+remains undeployed until this blocker, review, backup, and synchronized rollout
+are complete.
+
 Use prisma migrate deploy (the db:migrate:prod script) in production. Do not
 run any of the following against Supabase production:
 

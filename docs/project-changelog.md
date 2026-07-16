@@ -101,10 +101,15 @@ authoritative source for individual commits and implementation detail.
   configured FCM/SMTP/Twilio/SePay/DeepSeek/owned-route
   checks, accessibility, visual, tenant, device, and image-pull gates remain
   mandatory before release certification.
-- Three already-applied Supabase migration files have checksums that do not
-  match production history. The schema/index/RLS end-state has been verified,
-  the applied records were not rewritten, and the provenance exception remains
-  explicitly documented for future database audits.
+- Recovered exact production Realtime and Job migration bytes from immutable
+  migrator image revision `1f761a65`; the approved checksum entries accept only
+  those reviewed bytes while each reviewed local checksum remains unchanged.
+  Production Storage checksum
+  `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+  remains the sole provenance blocker because it was absent from all Git objects
+  and inspected registry images. The read-only audit names only that migration
+  and remains fail-closed; schema end-state and `prisma migrate resolve` are not
+  substitutes for original SQL provenance. Migration 42 remains undeployed.
 - At local `eb598c7b7da40f122901a866e35050f3a2e98c1c`, a fresh clean-volume
   Docker stack completed 36 migrations, seeded 201 users / 50 restaurants /
   352 menu items / 509 orders / 123 reviews, indexed 402 RAG documents, and
