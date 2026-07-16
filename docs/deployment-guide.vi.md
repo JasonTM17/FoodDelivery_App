@@ -89,6 +89,10 @@ Restaurant tương tự, dùng `NEXT_PUBLIC_RESTAURANT_URL`.
 
 Public env được bake vào bundle nên đổi value phải rebuild. OpenFreeMap không cần API key hay billing; Supabase public key vẫn phải được bảo vệ bằng RLS và realtime scope.
 
+### Ranh giới env Vercel Preview
+
+Hai project Vercel phải có các public variable ở môi trường `Preview` (và branch release nếu cấu hình theo branch): `NEXT_PUBLIC_APP_ENV`, `NEXT_PUBLIC_API_URL`, URL của role, `NEXT_PUBLIC_REALTIME_PROVIDER`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_MAP_PROVIDER` và `NEXT_PUBLIC_MAP_STYLE_URL`. Thiếu URL role sẽ làm Next.js fail ở bước thu thập metadata thay vì tự đoán host. Đặt `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` trong secret store nhạy cảm của Vercel; không đưa vào GitHub variable, tài liệu hay ảnh chụp trình duyệt. Mỗi lần đổi value phải redeploy Preview và kiểm tra deployment mới trước khi tin vào Vercel check trên GitHub.
+
 ## 4. Supabase
 
 Sau khi tất cả gate xanh:
