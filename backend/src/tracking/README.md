@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Realtime GPS tracking + routed ETA computation. Driver location ingest qua WebSocket, anti-spoofing detection (speed jump > 150 km/h, GPS hopping), batch flush to PostGIS, Google Directions / OSRM provider abstraction với polyline persist + deviation-triggered ETA recompute (BullMQ). Gọi bởi: driver mobile (location ping), customer mobile (subscribe), admin tracking dashboard.
+Realtime GPS tracking + routed ETA computation. Driver location ingest qua REST/WebSocket dùng chung semantic validation (tọa độ, timestamp, bearing, speed, accuracy tối đa 50 m, teleport), batch flush có retry vào PostGIS, Google Directions / OSRM provider abstraction với polyline persist + deviation-triggered ETA recompute (BullMQ). Gọi bởi: driver mobile (location ping), customer mobile (subscribe), admin tracking dashboard.
 
 ## API surface
 

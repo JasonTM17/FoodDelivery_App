@@ -118,6 +118,7 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   FOODFLOW_PROCESS_ROLE: z.enum(['api', 'worker']).optional(),
   REALTIME_PROVIDER: z.enum(['socketio', 'supabase']).default('socketio'),
+  SUPABASE_REALTIME_PUBLISH_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(5_000),
   STORAGE_PROVIDER: z.enum(['minio', 'supabase']).default('minio'),
   QUEUE_PROVIDER: z.enum(['bullmq', 'supabase-postgres']).default('bullmq'),
   JOB_OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(100).max(60_000).default(1_000),

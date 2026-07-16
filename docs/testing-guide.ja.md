@@ -6,17 +6,17 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Evidence boundary — production 2026-07-15 / historical local 2026-07-14
 
-Current production evidence is tied to runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Counts below are explicitly historical local evidence from older heads; they were not rerun at SHA `17584153` and are not end-to-end production approval.
+Current production health evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Counts below are historical local evidence; Admin/Restaurant Chrome と Customer/Driver API role-smoke は SHA `17584153` の evidence であり、current-revision certification ではありません。
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` で triggered CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green です。145 suites / 1071 tests は older `f2c02ed` local evidence であり、SHA `17584153` rerun として claim しません。 |
-| Database       | Deployed SHA `17584153` には 41 migrations が適用済みで、Database/Redis/Supabase Storage readiness は pass です。Candidate migration 42 は non-secret lifecycle tombstone、6 semantic FK preflight、explicit DDL transaction を追加します。Disposable PostGIS で最終 index の deliberate failure が先行 DDL を全 rollback することと clean apply を確認済みですが、PR review と synchronized rollout 前には deploy しません。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
+| Backend        | Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` の API/ready と web health endpoints は green です。Post-merge PR source gates は別途記録し、older suite counts は bounded historical evidence とします。 |
+| Database       | Deployed SHA `a703ece` には 41 migrations が適用済みで、Database/Redis/Supabase Storage readiness は pass です。Candidate migration 42 は non-secret lifecycle tombstone、6 semantic FK preflight、explicit DDL transaction を追加します。Disposable PostGIS で最終 index の deliberate failure が先行 DDL を全 rollback することと clean apply を確認済みですが、PR review と synchronized rollout 前には deploy しません。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
 | Mobile Flutter | Historical local evidence は 369 tests と `flutter analyze` を pass。Real Android/iOS background location と production-device evidence は未認証です。 |
-| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current deployed Admin/Restaurant health revision は SHA `17584153` で別途 verified です。 |
+| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current deployed Admin/Restaurant health revision は SHA `a703ece` で別途 verified です。 |
 | Browser E2E    | Historical clean-volume Playwright evidence は Chrome desktop、Firefox、Pixel 5 mobile Chrome で 204/204 を pass。Production deployment に対して再実行した count ではありません。 |
 | FCM            | Historical local notification/Flutter lifecycle tests は pass。Controlled production device への live delivery は未認証です。 |
-| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`、API `340fd29c-8198-41f0-8dc4-a097ecbe3438`、worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` は SHA `17584153` で成功。Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` と Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` も同じ revision です。Public `vi/en/ja` login smoke は pass、authenticated role journeys は skip され未認証です。 |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は SHA `a703ece` で成功し、API/ready と両 canonical web health は同一 revision を返します。Current-revision authenticated role journeys は未認証です。 |
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 

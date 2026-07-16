@@ -6,17 +6,17 @@ A release is green only when the final source head passes every required local g
 
 ## Evidence boundary — production 2026-07-15 and historical local 2026-07-14
 
-Current production evidence is tied to runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`. Test counts below are explicitly historical local evidence from earlier heads; they were not rerun at SHA `17584153` and are not end-to-end production approval.
+Current production health evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Test counts below are explicitly historical local evidence from earlier heads; the authenticated Admin/Restaurant Chrome and Customer/Driver API role smoke belongs to SHA `17584153`, not current-revision certification.
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | At runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc`, the triggered CI, E2E, Integration Smoke, OpenAPI, security, SBOM, and build gates are green. The 145 suites / 1071 tests belong to the older `f2c02ed` local evidence and are not claimed as a SHA `17584153` rerun. |
-| Database       | Deployed SHA `17584153` has 41 applied migrations and passing Database/Redis/Supabase Storage readiness. Candidate migration 42 is validated only on disposable PostGIS and remains undeployed pending PR review and synchronized rollout. Historical rolled-back/checksum-provenance rows remain separately documented audit history. |
+| Backend        | Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` returns healthy API/ready and web health endpoints. Full post-merge source gates for this PR are recorded separately; older suite counts remain bounded historical evidence. |
+| Database       | Deployed SHA `a703ece` has 41 applied migrations and passing Database/Redis/Supabase Storage readiness. Candidate migration 42 is validated only on disposable PostGIS and remains undeployed pending PR review and synchronized rollout. Historical rolled-back/checksum-provenance rows remain separately documented audit history. |
 | Mobile Flutter | Historical local evidence passed 369 tests and `flutter analyze`. Real Android/iOS background-location and production-device evidence remain uncertified. |
-| Web            | Historical local typecheck/lint, Vitest, and production-build counts remain bounded evidence only. The current deployed Admin/Restaurant health revision is verified separately at SHA `17584153`. |
+| Web            | Historical local typecheck/lint, Vitest, and production-build counts remain bounded evidence only. The current deployed Admin/Restaurant health revision is verified separately at SHA `a703ece`. |
 | Browser E2E    | Historical clean-volume Playwright evidence passed 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome. Those counts were not rerun against the production deployment. |
 | FCM            | Historical local notification and Flutter lifecycle tests passed. Live delivery to a controlled production device remains uncertified. |
-| Production     | Railway migrate `6438d9ff-caa3-433c-afc1-81c4885797a8`, API `340fd29c-8198-41f0-8dc4-a097ecbe3438`, and worker `6c2201d1-ccce-444f-b592-4ac4fb20c287` are successful at SHA `17584153`. Vercel Admin `dpl_3Gm3hB31QJrrRq7QPSSQD9x2Wkgp` and Restaurant `dpl_8YVNGQCyWCzkCezeXYD1gKAb89CZ` report the same revision. Public Admin/Restaurant `vi/en/ja` login smoke passes; authenticated role journeys were skipped and are not certified. |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f` are successful at SHA `a703ece`; API/ready and both canonical web health routes report the same revision. Current-revision authenticated role journeys remain uncertified. |
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 
@@ -53,6 +53,19 @@ This is bounded local evidence, not release approval:
 - The Driver's explicit Online action prompted for notification permission; once allowed, Android reported a running location foreground service.
 - A simulated GPS update was accepted by the local E2E API, refreshed Redis liveness, reached PostGIS within seconds, and produced exactly one event for an authorized Admin Socket.IO subscriber.
 - This uses the explicit local `socketio` provider. It does not prove Supabase Broadcast, Railway, Vercel, or production device behavior.
+
+### 2026-07-15 authenticated production Android emulator evidence
+
+This smoke used an Android API 35 x86_64 emulator, a Driver debug APK, a temporary synthetic Driver, the deployed Railway API, and the linked Supabase project. It did not use a personal account or real coordinates.
+
+- Denying location left Driver Offline and did not start a foreground service. Granting precise while-in-use location plus notifications allowed the explicit Online action; Android reported the Geolocator service in foreground mode with the location service type.
+- With the emulator screen asleep, simulated movement produced accepted API updates and advanced PostGIS history from 3 to 5 rows.
+- During airplane mode, the app logged bounded GPS buffering without an API update. Restoring connectivity flushed two samples with their original timestamps and advanced PostGIS from 5 to 7 rows.
+- After an unexpected process termination, relaunch refreshed the expired access token, revalidated the session/KYC state, called `/driver/online`, resumed location submission, and restored the Android location foreground service. Regression tests cover the former ghost-Online failure path.
+- A separate authenticated production smoke subscribed a temporary Admin to its authorized private Supabase channel, submitted a valid Driver GPS sample, received the Broadcast event, and confirmed PostGIS persistence. The Driver could not subscribe to the Admin channel.
+- Cleanup removed the temporary profile and all production GPS rows; post-clean counts were zero. The app was cleared/uninstalled and the emulator stopped.
+
+This proves the Railway/Supabase path and Android API 35 emulator behavior. Android 10/12, approximate/background-permission variants, physical Android, physical iOS, app-store builds, and controlled FCM delivery remain unverified in this Windows environment.
 
 ## One-command local gate
 

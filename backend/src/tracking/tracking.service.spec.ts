@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { getQueueToken } from '@nestjs/bullmq'
-import { TrackingService } from './tracking.service'
+import { DriverOfflineLocationError, TrackingService } from './tracking.service'
 import { DirectionsApiService } from './directions-api.service'
 import { EtaCacheService } from './eta-cache.service'
 import { PrismaService } from '../database/prisma.service'
@@ -10,8 +10,7 @@ describe('TrackingService', () => {
   let module: TestingModule
 
   const mockRedis = {
-    geoadd: jest.fn(),
-    setex: jest.fn(),
+    eval: jest.fn().mockResolvedValue(1),
     set: jest.fn(),
     del: jest.fn(),
     get: jest.fn(),
@@ -63,14 +62,33 @@ describe('TrackingService', () => {
       const orderId = await service.handleLocationUpdate('d1', {
         lat: 10.8, lng: 106.7, bearing: 90, speed: 20, accuracy: 10, timestamp: sampledAt,
       })
-      expect(mockRedis.geoadd).toHaveBeenCalled()
-      expect(mockRedis.setex).toHaveBeenCalledWith('driver:d1:alive', 35, '1')
-      expect(mockRedis.setex).toHaveBeenCalledWith(
+      expect(mockRedis.eval).toHaveBeenCalledWith(
+        expect.stringContaining("status ~= 'online' and status ~= 'busy'"),
+        4,
+        'driver:d1:status',
+        'drivers:active',
+        'driver:d1:alive',
         'driver:d1:last_seen_at',
-        35,
+        '106.7',
+        '10.8',
+        'driver:d1',
+        '35',
         sampledAt,
       )
       expect(orderId).toBe('order-123')
+    })
+
+    it('atomically rejects GPS updates after the driver goes Offline', async () => {
+      mockRedis.eval.mockResolvedValueOnce(0)
+
+      await expect(service.handleLocationUpdate('d1', {
+        lat: 10.8,
+        lng: 106.7,
+        timestamp: '2026-07-06T01:02:03.456Z',
+      })).rejects.toBeInstanceOf(DriverOfflineLocationError)
+
+      expect(mockRedis.get).not.toHaveBeenCalled()
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled()
     })
 
     it('returns null when driver has no current order', async () => {
@@ -126,9 +144,17 @@ describe('TrackingService', () => {
       })
       await (service as unknown as { flush: () => Promise<void> }).flush()
 
-      expect(mockRedis.setex).toHaveBeenCalledWith(
+      expect(mockRedis.eval).toHaveBeenCalledWith(
+        expect.any(String),
+        4,
+        expect.any(String),
+        'drivers:active',
+        expect.any(String),
         'driver:00000000-0000-0000-0000-000000000001:last_seen_at',
-        35,
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        '35',
         sampledAt,
       )
       const [query] = mockPrisma.$executeRaw.mock.calls[0]
@@ -141,8 +167,7 @@ describe('TrackingService', () => {
         lng: 106.7,
       } as never)).rejects.toThrow('INVALID_DRIVER_LOCATION_TIMESTAMP')
 
-      expect(mockRedis.geoadd).not.toHaveBeenCalled()
-      expect(mockRedis.setex).not.toHaveBeenCalled()
+      expect(mockRedis.eval).not.toHaveBeenCalled()
     })
   })
 
@@ -229,6 +254,45 @@ describe('TrackingService', () => {
       expect(params[7]).toBe(106.71)
       expect(params[8]).toBe(10.81)
       expect(params[9]).toBeInstanceOf(Date)
+    })
+
+    it('requeues a failed location batch and persists it on the next flush', async () => {
+      mockRedis.get.mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst.mockResolvedValueOnce(null)
+      mockPrisma.$executeRaw
+        .mockRejectedValueOnce(new Error('database temporarily unavailable'))
+        .mockResolvedValueOnce(1)
+
+      await service.handleLocationUpdate('00000000-0000-0000-0000-000000000003', {
+        lat: 10.82,
+        lng: 106.72,
+        timestamp: '2026-07-06T01:02:11.456Z',
+      })
+
+      await (service as unknown as { flush: () => Promise<void> }).flush()
+      await (service as unknown as { flush: () => Promise<void> }).flush()
+
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(2)
+      const [retriedQuery] = mockPrisma.$executeRaw.mock.calls[1]
+      expect(retriedQuery.values[0]).toBe('00000000-0000-0000-0000-000000000003')
+      expect((retriedQuery.values[4] as Date).toISOString()).toBe('2026-07-06T01:02:11.456Z')
+    })
+
+    it('flushes the final buffered location during module shutdown', async () => {
+      mockRedis.get.mockResolvedValueOnce(null)
+      mockPrisma.order.findFirst.mockResolvedValueOnce(null)
+
+      await service.handleLocationUpdate('00000000-0000-0000-0000-000000000004', {
+        lat: 10.83,
+        lng: 106.73,
+        timestamp: '2026-07-06T01:02:15.456Z',
+      })
+
+      await service.onModuleDestroy()
+
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
+      const [query] = mockPrisma.$executeRaw.mock.calls[0]
+      expect(query.values[0]).toBe('00000000-0000-0000-0000-000000000004')
     })
   })
 

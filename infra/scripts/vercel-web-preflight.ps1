@@ -29,6 +29,7 @@ $restaurantProject = if ($env:RESTAURANT_VERCEL_PROJECT) {
 
 $adminRequiredEnv = @(
   'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_WS_URL',
   'NEXT_PUBLIC_ADMIN_URL',
   'NEXT_PUBLIC_MAP_PROVIDER',
   'NEXT_PUBLIC_MAP_STYLE_URL',
@@ -39,6 +40,7 @@ $adminRequiredEnv = @(
 
 $restaurantRequiredEnv = @(
   'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_WS_URL',
   'NEXT_PUBLIC_RESTAURANT_URL',
   'NEXT_PUBLIC_MAP_PROVIDER',
   'NEXT_PUBLIC_MAP_STYLE_URL',

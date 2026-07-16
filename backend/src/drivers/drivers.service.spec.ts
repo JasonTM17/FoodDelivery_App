@@ -6,6 +6,7 @@ import { BadRequestException } from '@nestjs/common'
 describe('DriversService', () => {
   let service: DriversService
   const mockRedis = {
+    eval: jest.fn().mockResolvedValue(1),
     geoadd: jest.fn(), set: jest.fn(), setex: jest.fn(), del: jest.fn(), zrem: jest.fn(),
   }
   const mockPrisma = {
@@ -19,6 +20,7 @@ describe('DriversService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    mockPrisma.order.findFirst.mockResolvedValue(null)
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DriversService,
@@ -29,6 +31,30 @@ describe('DriversService', () => {
     service = module.get(DriversService)
   })
 
+  describe('goOffline', () => {
+    it('atomically removes the Online marker and active GEO member', async () => {
+      mockPrisma.driverProfile.update.mockResolvedValueOnce({})
+
+      await expect(service.goOffline('d1')).resolves.toEqual({ isOnline: false })
+
+      expect(mockRedis.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call('ZREM', KEYS[1], ARGV[1])"),
+        6,
+        'drivers:active',
+        'driver:d1:status',
+        'driver:d1:alive',
+        'driver:d1:last_seen_at',
+        'driver:d1:idle_since',
+        'driver:d1:current_order',
+        'driver:d1',
+      )
+      expect(mockPrisma.driverProfile.update).toHaveBeenCalledWith({
+        where: { userId: 'd1' },
+        data: { isOnline: false },
+      })
+    })
+  })
+
   describe('goOnline', () => {
     it('rejects driver online coordinates outside the Vietnam delivery bounds', async () => {
       await expect(
@@ -37,7 +63,7 @@ describe('DriversService', () => {
         new BadRequestException('LOCATION_OUT_OF_DELIVERY_AREA'),
       )
       expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
-      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+      expect(mockRedis.eval).not.toHaveBeenCalled()
     })
 
     it('rejects stale online coordinates before writing live Redis state', async () => {
@@ -47,8 +73,7 @@ describe('DriversService', () => {
         service.goOnline('d1', 10.8, 106.7, staleSampledAt),
       ).rejects.toThrow(new BadRequestException('STALE_DRIVER_LOCATION_TIMESTAMP'))
       expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
-      expect(mockRedis.geoadd).not.toHaveBeenCalled()
-      expect(mockRedis.setex).not.toHaveBeenCalled()
+      expect(mockRedis.eval).not.toHaveBeenCalled()
     })
 
     it('rejects malformed online coordinate timestamps before writing live Redis state', async () => {
@@ -56,7 +81,15 @@ describe('DriversService', () => {
         service.goOnline('d1', 10.8, 106.7, 'not-a-date'),
       ).rejects.toThrow(new BadRequestException('INVALID_DRIVER_LOCATION_TIMESTAMP'))
       expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
-      expect(mockRedis.geoadd).not.toHaveBeenCalled()
+      expect(mockRedis.eval).not.toHaveBeenCalled()
+    })
+
+    it('rejects poor-accuracy online samples before writing live Redis state', async () => {
+      await expect(
+        service.goOnline('d1', 10.8, 106.7, new Date().toISOString(), 50.1),
+      ).rejects.toThrow(new BadRequestException('POOR_DRIVER_LOCATION_ACCURACY'))
+      expect(mockPrisma.driverProfile.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(mockRedis.eval).not.toHaveBeenCalled()
     })
 
     it('throws if driver not verified', async () => {
@@ -83,19 +116,87 @@ describe('DriversService', () => {
         lat: 10.8,
         lng: 106.7,
       })
-      expect(mockRedis.geoadd).toHaveBeenCalled()
-      expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:status', 'online')
-      expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:rating', '4.5')
-      expect(mockRedis.set).toHaveBeenCalledWith('driver:d1:total_deliveries', '37')
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        'driver:d1:idle_since',
-        expect.stringMatching(/^\d+$/),
-      )
-      expect(mockRedis.setex).toHaveBeenCalledWith(
+      expect(mockRedis.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call('GEOADD', KEYS[1]"),
+        8,
+        'drivers:active',
+        'driver:d1:status',
+        'driver:d1:alive',
         'driver:d1:last_seen_at',
-        35,
+        'driver:d1:rating',
+        'driver:d1:total_deliveries',
+        'driver:d1:idle_since',
+        'driver:d1:current_order',
+        '106.7',
+        '10.8',
+        'driver:d1',
+        'online',
+        '35',
         sampledAt,
+        '4.5',
+        '37',
+        expect.stringMatching(/^\d+$/),
+        '',
       )
+    })
+
+    it('restores the busy order marker when an active driver session recovers', async () => {
+      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
+        isVerified: true,
+        rating: '4.5',
+        totalDeliveries: 37,
+      })
+      mockPrisma.order.findFirst.mockResolvedValueOnce({ id: 'order-active' })
+      mockPrisma.driverProfile.update.mockResolvedValueOnce({})
+
+      await service.goOnline('d1', 10.8, 106.7, new Date().toISOString(), 5)
+
+      expect(mockRedis.eval).toHaveBeenCalledWith(
+        expect.any(String),
+        8,
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        'busy',
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        'order-active',
+      )
+    })
+
+    it('rolls the database profile back to Offline when Redis setup fails', async () => {
+      mockPrisma.driverProfile.findUniqueOrThrow.mockResolvedValueOnce({
+        isVerified: true,
+        rating: '4.5',
+        totalDeliveries: 37,
+      })
+      mockPrisma.driverProfile.update.mockResolvedValue({})
+      mockRedis.eval.mockRejectedValueOnce(new Error('Redis unavailable'))
+
+      await expect(
+        service.goOnline('d1', 10.8, 106.7, new Date().toISOString(), 5),
+      ).rejects.toThrow('Redis unavailable')
+
+      expect(mockRedis.eval).toHaveBeenCalledTimes(2)
+      expect(mockPrisma.driverProfile.update).toHaveBeenNthCalledWith(1, {
+        where: { userId: 'd1' },
+        data: { isOnline: true, currentLat: 10.8, currentLng: 106.7 },
+      })
+      expect(mockPrisma.driverProfile.update).toHaveBeenNthCalledWith(2, {
+        where: { userId: 'd1' },
+        data: { isOnline: false },
+      })
     })
   })
 

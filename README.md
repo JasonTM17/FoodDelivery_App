@@ -11,28 +11,27 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
   <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-tenant food-delivery system with a NestJS API, professional Admin and Restaurant dashboards, and Flutter customer/driver applications. Its managed-production design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
+FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Admin and Restaurant dashboards, and Flutter customer/driver applications. Its deployment design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
 
-> **Release status — 2026-07-15:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. Push gates and Docker SHA-only smoke are green; that deployed SHA has 41 applied migrations and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence, signed private uploads and token/reconnect checks passed with temporary data removed. Controlled production role smoke authenticated Admin/Restaurant in Google Chrome and Customer/Driver through read-only API contracts, then removed every fixture row. Candidate migration 42 hardens semantic identity foreign keys but is not deployed until PR review and synchronized rollout. Docker Hub SHA, `v0.1.1`, and `latest` aliases match all four verified image digests. Real Android/iOS background-location, FCM, active-order routing, and optional provider credentials remain outside this evidence and are not claimed as certified.
+> **Live Admin:** [food-delivery-app-one-liard.vercel.app](https://food-delivery-app-one-liard.vercel.app)<br />
+> This is the deployed sign-in surface. Public demo credentials are not documented; review the screenshots or run the seeded local stack for authenticated workflows.
 
 ## Current release evidence — 2026-07-15
 
-Runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` is deployed to Railway API/worker/migrator and both Vercel apps. CI, E2E, Integration Smoke, OpenAPI, security, SBOM and build gates are green; the deployed SHA has 41 applied migrations and healthy PostgreSQL/Redis/Supabase Storage. Supabase private Broadcast/Storage authorization, GPS PostGIS persistence and token/reconnect checks passed with temporary data removed. Controlled Admin/Restaurant Chrome authentication and Customer/Driver read-only API role checks also passed with zero fixture residue. Candidate migration 42 remains undeployed pending PR review and synchronized rollout. Docker Hub SHA, `v0.1.1`, and `latest` resolve to matching digests for all four images. Real Android/iOS background-location, FCM, active-order routing and optional provider credentials remain outside this environment, so those are not claimed as certified.
-
-The release paragraph above is a concise status summary; this section is the current source of truth.
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway API/worker/migrator and both Vercel apps. API health/readiness and both web health endpoints return that exact revision; Railway reports 41 applied migrations with healthy PostgreSQL/Redis/Supabase Storage. Android API 35 production-emulator foreground tracking, screen-off updates, offline flush, and process recovery passed. The earlier controlled role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts, then removed every fixture row; it is historical evidence and is not current-`a703ece` certification. Candidate migration 42 and its hardened recovery controller remain undeployed pending PR review and a synchronized rollout. Physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
 
 ## Product preview
 
-FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide.md), [Restaurant](docs/restaurant-guide.md), [Customer](docs/customer-guide.md), or [Driver](docs/driver-guide.md) guide, then see the [full product gallery](docs/product-gallery.md) and [mobile overview](docs/customer-driver-guide.md). The manifest records source heads, runtimes, capture times, and privacy boundaries. Web media came from Google Chrome against the isolated local E2E stack; mobile media came from Flutter debug APKs on an Android API 35 x86_64 AVD. All are current local product/regression evidence from dirty working trees or local images—not production or release certification.
+FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide.md), [Restaurant](docs/restaurant-guide.md), [Customer](docs/customer-guide.md), or [Driver](docs/driver-guide.md) guide, then see the [full product gallery](docs/product-gallery.md) and [mobile overview](docs/customer-driver-guide.md). The manifest records source heads, runtimes, capture times, and privacy boundaries. Web media came from Google Chrome against the isolated local E2E stack; mobile media came from Flutter debug APKs on an Android API 35 x86_64 AVD. The manifest separates local regression media from the production-emulator GPS capture; neither is physical-device or app-store certification.
 
 | Surface    | Product runtime                  | Current visual evidence                  | How to review the product                                                                                 |
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Admin      | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                                  |
 | Restaurant | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.                  |
 | Customer   | Flutter/Riverpod Android/iOS app | One privacy-reviewed local WebP and one GIF | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
-| Driver     | Flutter/Riverpod Android/iOS app | Six role/GPS WebPs, two tracking assets, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.                  |
+| Driver     | Flutter/Riverpod Android/iOS app | Seven Driver WebPs, two Android notification WebPs, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.       |
 
-The mobile captures use simulated GPS and the isolated local stack. Their manifest records a dirty workspace, so authentic release media still requires a clean-head device/emulator recapture from the chosen release candidate. The documentation deliberately does not relabel local media as production evidence.
+The mobile captures use simulated GPS. Most use the isolated local stack; the manifest separately records the privacy-reviewed production-emulator recovery smoke. Because each was captured from a dirty workspace, authentic release media still requires a clean-head recapture from the chosen release candidate.
 
 <p align="center">
   <img src="docs/screenshots/admin/02-overview.png" alt="FoodFlow Admin overview" width="48%" />
@@ -99,7 +98,7 @@ Provider selection is explicit:
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
-## Current Docker release — SHA 17584153
+## Last fully cross-registry-verified Docker release — SHA 17584153
 
 | Artifact | Docker Hub SHA digest | Docker Hub aliases |
 | --- | --- | --- |
@@ -110,9 +109,12 @@ Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scope
 
 All four GHCR SHA manifests are public and digest-equal to Docker Hub. GHCR semver/latest promotion is intentionally not claimed because the repository token returned `401 Unauthorized` for package-manifest writes.
 
-## Historical Docker candidate — superseded
+<details>
+<summary><strong>Historical Docker candidate — superseded</strong></summary>
 
-The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The current Docker Hub digests and aliases are recorded in [Current Docker release — SHA 17584153](#current-docker-release--sha-17584153).
+<br />
+
+The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The last fully cross-registry-verified Docker digests and aliases are recorded in [Last fully cross-registry-verified Docker release — SHA 17584153](#last-fully-cross-registry-verified-docker-release--sha-17584153). Production currently runs a newer `a703ece` backend image; this older four-image table is not the current runtime inventory.
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -132,6 +134,8 @@ Release promotion order:
 5. Promote `latest` only through an explicit manual release action.
 
 For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
+
+</details>
 
 ## Repository layout
 

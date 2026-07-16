@@ -19,6 +19,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message = 'Internal server error'
     let code = 'INTERNAL_ERROR'
     let errors: unknown
+    let reason: string | undefined
 
     if (exception instanceof HttpException) {
       status = exception.getStatus()
@@ -40,6 +41,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         code = typeof resp.code === 'string' ? resp.code : code
         errors ??= resp.details
+        reason = typeof resp.reason === 'string' ? resp.reason : undefined
       }
     }
 
@@ -51,6 +53,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status,
       instance: redactSensitiveRequestPath(request.url),
       ...(errors === undefined ? {} : { errors }),
+      ...(reason === undefined ? {} : { reason }),
     }
 
     response.status(status).type('application/problem+json').json(problem)

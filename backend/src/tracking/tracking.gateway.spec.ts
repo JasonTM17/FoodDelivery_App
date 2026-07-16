@@ -1,6 +1,7 @@
 import { UserRole } from '@prisma/client'
 import type { Socket } from 'socket.io'
 import { TrackingGateway } from './tracking.gateway'
+import { DriverOfflineLocationError } from './tracking.service'
 
 describe('TrackingGateway authorization', () => {
   const handleLocationUpdate = jest.fn()
@@ -13,12 +14,16 @@ describe('TrackingGateway authorization', () => {
   const orderFindUnique = jest.fn()
   const queryRaw = jest.fn()
   const notifyAdminDriverLocation = jest.fn()
+  const recordGpsAccepted = jest.fn()
+  const recordGpsRejected = jest.fn()
+  const recordSocketConnection = jest.fn()
   const emitToRoom = jest.fn()
   const to = jest.fn(() => ({ emit: emitToRoom }))
   let gateway: TrackingGateway
 
   beforeEach(() => {
     jest.clearAllMocks()
+    maybeEnqueueRecompute.mockResolvedValue(undefined)
     gateway = new TrackingGateway(
       {
         handleLocationUpdate,
@@ -33,6 +38,8 @@ describe('TrackingGateway authorization', () => {
       { notifyAdminDriverLocation } as never,
       { authenticate, getUser } as never,
       { canAccessOrder } as never,
+      undefined,
+      { recordGpsAccepted, recordGpsRejected, recordSocketConnection } as never,
     )
     gateway.server = { to } as never
   })
@@ -44,6 +51,7 @@ describe('TrackingGateway authorization', () => {
     await gateway.handleConnection(client)
 
     expect(client.disconnect).toHaveBeenCalledWith(true)
+    expect(recordSocketConnection).toHaveBeenCalledWith('rejected')
   })
 
   it('signals readiness only after authenticating a client', async () => {
@@ -54,6 +62,16 @@ describe('TrackingGateway authorization', () => {
 
     expect(client.emit).toHaveBeenCalledWith('auth:ready')
     expect(client.disconnect).not.toHaveBeenCalled()
+    expect(recordSocketConnection).toHaveBeenCalledWith('authenticated')
+  })
+
+  it('records recovered Socket.IO connections separately', async () => {
+    const client = { ...makeClient(), recovered: true } as unknown as Socket
+    authenticate.mockResolvedValue({ sub: 'driver-1', role: UserRole.driver })
+
+    await gateway.handleConnection(client)
+
+    expect(recordSocketConnection).toHaveBeenCalledWith('recovered')
   })
 
   it('only accepts driver location events from driver accounts', async () => {
@@ -114,6 +132,7 @@ describe('TrackingGateway authorization', () => {
     }))
     expect(queryRaw).not.toHaveBeenCalled()
     expect(getOrFetchRoute).not.toHaveBeenCalled()
+    expect(recordGpsAccepted).toHaveBeenCalledWith(expect.any(Number))
   })
 
   it('rejects invalid driver GPS timestamps before mutating tracking state', async () => {
@@ -177,6 +196,72 @@ describe('TrackingGateway authorization', () => {
     expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', { reason: 'future_timestamp' })
     expect(handleLocationUpdate).not.toHaveBeenCalled()
     expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    null,
+    { lat: Number.NaN, lng: 106.7, timestamp: new Date().toISOString() },
+    { lat: 10.8, lng: Number.POSITIVE_INFINITY, timestamp: new Date().toISOString() },
+  ])('rejects malformed coordinates at the WebSocket boundary', async (sample) => {
+    await gateway.processLocationUpdate('driver-1', sample as never)
+
+    expect(recordGpsRejected).toHaveBeenCalledWith('invalid_coordinates')
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+  })
+
+  it('rejects low-quality GPS samples before mutating tracking state', async () => {
+    const client = makeClient()
+    getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.handleLocationUpdate(client, {
+      lat: 10.8,
+      lng: 106.7,
+      accuracy: 50.1,
+      timestamp: new Date().toISOString(),
+    })
+
+    expect(client.emit).toHaveBeenCalledWith('driver:location_rejected', {
+      reason: 'poor_accuracy',
+    })
+    expect(recordGpsRejected).toHaveBeenCalledWith('poor_accuracy')
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
+    expect(emitToRoom).not.toHaveBeenCalled()
+  })
+
+  it('rejects GPS updates atomically after the driver goes Offline', async () => {
+    getDriverLocation.mockResolvedValue(null)
+    handleLocationUpdate.mockRejectedValueOnce(new DriverOfflineLocationError())
+
+    await expect(gateway.processLocationUpdate('driver-1', {
+      lat: 10.8,
+      lng: 106.7,
+      accuracy: 5,
+      timestamp: new Date().toISOString(),
+    })).resolves.toEqual({ accepted: false, reason: 'driver_offline' })
+
+    expect(recordGpsRejected).toHaveBeenCalledWith('driver_offline')
+    expect(notifyAdminDriverLocation).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [{ bearing: -1 }, 'invalid_bearing'],
+    [{ bearing: 360 }, 'invalid_bearing'],
+    [{ speed: -0.1 }, 'invalid_speed'],
+    [{ speed: 150.1 }, 'speed_exceeded'],
+  ] as const)('rejects invalid motion metadata %p', async (motion, reason) => {
+    getDriverLocation.mockResolvedValue(null)
+
+    await gateway.processLocationUpdate('driver-1', {
+      lat: 10.8,
+      lng: 106.7,
+      accuracy: 5,
+      timestamp: new Date().toISOString(),
+      ...motion,
+    })
+
+    expect(recordGpsRejected).toHaveBeenCalledWith(reason)
+    expect(handleLocationUpdate).not.toHaveBeenCalled()
   })
 
   it('accepts the idempotent initial GPS replay after going online', async () => {
@@ -393,6 +478,146 @@ describe('TrackingGateway authorization', () => {
       routePolyline: '_k|`A_zfjSf{Cf{Cf{Cf{C',
       routePhase: 'dropoff',
     })
+  })
+
+  it('broadcasts the latest throttled GPS sample on the trailing edge', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-07-15T08:00:00.000Z'))
+    try {
+      getUser.mockReturnValue({ sub: 'driver-1', role: UserRole.driver })
+      getDriverLocation.mockResolvedValue(null)
+      handleLocationUpdate.mockResolvedValue('order-1')
+      queryRaw.mockResolvedValue([{
+        status: 'delivering',
+        restaurantLat: 10.77,
+        restaurantLng: 106.68,
+        deliveryLat: 10.75,
+        deliveryLng: 106.65,
+      }])
+      getOrFetchRoute.mockResolvedValue(null)
+
+      await gateway.handleLocationUpdate(makeClient(), {
+        lat: 10.8,
+        lng: 106.7,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+      await jest.advanceTimersByTimeAsync(500)
+      await gateway.handleLocationUpdate(makeClient(), {
+        lat: 10.801,
+        lng: 106.701,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+
+      const locationBroadcasts = () => emitToRoom.mock.calls
+        .filter(([event]) => event === 'driver:location_changed')
+      expect(locationBroadcasts()).toHaveLength(1)
+
+      await jest.advanceTimersByTimeAsync(1_500)
+
+      expect(locationBroadcasts()).toHaveLength(2)
+      expect(locationBroadcasts()[1][1]).toEqual(expect.objectContaining({
+        lat: 10.801,
+        lng: 106.701,
+      }))
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('serializes trailing GPS broadcasts behind a slow earlier route lookup', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-07-15T08:00:00.000Z'))
+    const routeTarget = [{
+      status: 'delivering',
+      restaurantLat: 10.77,
+      restaurantLng: 106.68,
+      deliveryLat: 10.75,
+      deliveryLng: 106.65,
+    }]
+    let releaseFirstQuery!: (value: typeof routeTarget) => void
+    const firstQuery = new Promise<typeof routeTarget>((resolve) => {
+      releaseFirstQuery = resolve
+    })
+
+    try {
+      getDriverLocation.mockResolvedValue(null)
+      handleLocationUpdate.mockResolvedValue('order-1')
+      queryRaw
+        .mockImplementationOnce(() => firstQuery)
+        .mockResolvedValue(routeTarget)
+      getOrFetchRoute.mockResolvedValue(null)
+
+      const firstUpdate = gateway.processLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+      for (let attempt = 0; attempt < 10 && queryRaw.mock.calls.length === 0; attempt += 1) {
+        await Promise.resolve()
+      }
+      expect(queryRaw).toHaveBeenCalledTimes(1)
+
+      await jest.advanceTimersByTimeAsync(500)
+      await gateway.processLocationUpdate('driver-1', {
+        lat: 10.801,
+        lng: 106.701,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+      await jest.advanceTimersByTimeAsync(1_500)
+
+      const locationBroadcasts = () => emitToRoom.mock.calls
+        .filter(([event]) => event === 'driver:location_changed')
+      expect(locationBroadcasts()).toHaveLength(0)
+
+      releaseFirstQuery(routeTarget)
+      await firstUpdate
+      await gateway.onModuleDestroy()
+
+      expect(locationBroadcasts().map(([, payload]) => payload.lat)).toEqual([
+        10.8,
+        10.801,
+      ])
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('broadcasts the latest throttled GPS sample to Admin on the trailing edge', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-07-15T08:00:00.000Z'))
+    try {
+      getDriverLocation.mockResolvedValue(null)
+      handleLocationUpdate.mockResolvedValue(null)
+
+      await gateway.processLocationUpdate('driver-1', {
+        lat: 10.8,
+        lng: 106.7,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+      await jest.advanceTimersByTimeAsync(500)
+      await gateway.processLocationUpdate('driver-1', {
+        lat: 10.801,
+        lng: 106.701,
+        accuracy: 5,
+        timestamp: new Date().toISOString(),
+      })
+
+      expect(notifyAdminDriverLocation).toHaveBeenCalledTimes(1)
+      await jest.advanceTimersByTimeAsync(1_500)
+
+      expect(notifyAdminDriverLocation).toHaveBeenCalledTimes(2)
+      expect(notifyAdminDriverLocation).toHaveBeenLastCalledWith(expect.objectContaining({
+        lat: 10.801,
+        lng: 106.701,
+      }))
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it('does not broadcast into an order room when the active order is not assigned to the driver', async () => {

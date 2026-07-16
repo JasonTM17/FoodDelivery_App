@@ -1,6 +1,7 @@
-import { Injectable, Inject, Logger, ServiceUnavailableException } from '@nestjs/common'
+import { Injectable, Inject, Logger, Optional, ServiceUnavailableException } from '@nestjs/common'
 import Redis from 'ioredis'
 import { GeoPoint, RouteResult } from '../common/types/location.types'
+import { TrackingMetrics } from './tracking.metrics'
 
 // ─── Provider response shapes ────────────────────────────────────────────────
 
@@ -137,7 +138,10 @@ export class DirectionsApiService {
   /** Daily limit before switching to OSRM. Default 10 000 (Google free tier). */
   private readonly dailyLimit: number
 
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    @Optional() private readonly metrics?: TrackingMetrics,
+  ) {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY
     this.googleProvider = apiKey ? new GoogleDirectionsProvider(apiKey) : null
     const osrmUrl = resolveOsrmUrl(process.env)
@@ -156,6 +160,7 @@ export class DirectionsApiService {
         await this.incrementQuota()
         return result
       } catch (err) {
+        this.metrics?.recordRouteProviderFailure('google')
         this.logger.warn(
           `Google Directions failed, falling back to OSRM: ${(err as Error).message}`,
         )
@@ -165,10 +170,16 @@ export class DirectionsApiService {
     }
 
     if (!this.osrmProvider) {
+      this.metrics?.recordRouteProviderFailure('unconfigured')
       throw new ServiceUnavailableException('DIRECTIONS_PROVIDER_NOT_CONFIGURED')
     }
 
-    return this.osrmProvider.fetchRoute(origin, destination)
+    try {
+      return await this.osrmProvider.fetchRoute(origin, destination)
+    } catch (error) {
+      this.metrics?.recordRouteProviderFailure('osrm')
+      throw error
+    }
   }
 
   // ─── Quota helpers ──────────────────────────────────────────────────────────

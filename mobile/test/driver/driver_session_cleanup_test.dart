@@ -43,11 +43,15 @@ class _AvailabilityRaceInterceptor extends Interceptor {
   final onlineStarted = Completer<void>();
   final onlineResponse = Completer<void>();
   final calls = <String>[];
+  Map<String, dynamic>? onlinePayload;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (options.path == '/driver/online') {
       calls.add('online');
+      onlinePayload = Map<String, dynamic>.from(
+        options.data as Map<String, dynamic>,
+      );
       if (!onlineStarted.isCompleted) onlineStarted.complete();
       onlineResponse.future.then((_) {
         handler.resolve(
@@ -286,8 +290,10 @@ void main() {
           10.7769,
           106.7009,
           sampledAt: DateTime.now(),
+          accuracy: 5,
         );
         await interceptor.onlineStarted.future;
+        expect(interceptor.onlinePayload?['accuracy'], 5);
 
         final offline = notifier.goOffline();
         await Future<void>.delayed(Duration.zero);
@@ -307,4 +313,30 @@ void main() {
       }
     },
   );
+
+  test('a missing fresh GPS sample cannot preserve a stale online state', () async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final interceptor = _AvailabilityRaceInterceptor();
+    ApiClient.instance.dio.interceptors.add(interceptor);
+    final transport = _ControllableRealtimeTransport();
+    final realtime = RealtimeClient.forTesting(
+      provider: RealtimeProvider.supabase,
+      transport: transport,
+      postCommand: (_, _) async {},
+    );
+    final notifier = _TestDriverNotifier(realtime: realtime)
+      ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+    try {
+      await notifier.goOnline(10.7769, 106.7009, sampledAt: null);
+
+      expect(notifier.state.isOnline, isFalse);
+      expect(interceptor.calls, ['offline']);
+    } finally {
+      notifier.dispose();
+      await Future<void>.delayed(Duration.zero);
+      await transport.close();
+      ApiClient.instance.dio.interceptors.remove(interceptor);
+    }
+  });
 }

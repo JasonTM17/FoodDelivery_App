@@ -61,7 +61,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   sendToUser(userId: string, notification: Record<string, unknown>): void {
     const room = `user:${userId}:notifications`
     this.server?.to(room).emit('notification:new', notification)
-    void this.realtimePublisher?.publish(
+    void this.realtimePublisher?.publishBestEffort(
       realtimeChannels.userNotifications(userId),
       'notification:new',
       notification,

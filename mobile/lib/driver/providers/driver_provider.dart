@@ -443,6 +443,10 @@ class DriverNotifier extends StateNotifier<DriverState> {
       }
 
       state = state.copyWith(isLoading: false, isAuthenticated: true);
+      if (state.isOnline) {
+        await goOnlineWithGps();
+        if (!_isCurrentSession(sessionEpoch)) return;
+      }
       unawaited(FcmTokenSession.activate());
     } catch (_) {
       if (!_isCurrentSession(sessionEpoch)) return;
@@ -743,13 +747,19 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // Online / Offline
   // -----------------------------------------------------------------------
 
-  Future<void> goOnline(double lat, double lng, {DateTime? sampledAt}) async {
+  Future<void> goOnline(
+    double lat,
+    double lng, {
+    DateTime? sampledAt,
+    double? accuracy,
+  }) async {
     final sessionEpoch = _sessionEpoch;
     final availabilityEpoch = _invalidateAvailability();
     await _goOnline(
       lat,
       lng,
       sampledAt: sampledAt,
+      accuracy: accuracy,
       sessionEpoch: sessionEpoch,
       availabilityEpoch: availabilityEpoch,
     );
@@ -759,16 +769,17 @@ class DriverNotifier extends StateNotifier<DriverState> {
     double lat,
     double lng, {
     required DateTime? sampledAt,
+    double? accuracy,
     required int sessionEpoch,
     required int availabilityEpoch,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     final sample = sampledAt;
     if (sample == null || !isFreshDriverOnlineSample(sample, DateTime.now())) {
-      if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Không lấy được vị trí GPS mới',
+      await _failGpsAvailability(
+        reconcilePersistedOnlineState: state.isOnline,
+        sessionEpoch: sessionEpoch,
+        availabilityEpoch: availabilityEpoch,
       );
       return;
     }
@@ -780,6 +791,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
               'lat': lat,
               'lng': lng,
               'sampledAt': sample.toUtc().toIso8601String(),
+              if (accuracy != null) 'accuracy': accuracy,
             },
           )
           .then<void>((_) {});
@@ -799,7 +811,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
         return;
       }
       state = state.copyWith(isLoading: false, isOnline: true);
-      _startLocationUpdates(lat, lng, sampledAt: sample);
+      _startLocationUpdates(
+        lat,
+        lng,
+        sampledAt: sample,
+        accuracy: accuracy,
+      );
     } on DioException catch (e) {
       if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
       try {
@@ -808,13 +825,17 @@ class DriverNotifier extends StateNotifier<DriverState> {
       final msg =
           e.response?.data?['message'] as String? ??
           'Không thể chuyển sang trực tuyến';
-      state = state.copyWith(isLoading: false, error: msg);
+      state = state.copyWith(isLoading: false, isOnline: false, error: msg);
     } catch (e) {
       if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
       try {
         await _api.post('/driver/offline');
       } catch (_) {}
-      state = state.copyWith(isLoading: false, error: 'Có lỗi xảy ra');
+      state = state.copyWith(
+        isLoading: false,
+        isOnline: false,
+        error: 'Có lỗi xảy ra',
+      );
     }
   }
 
@@ -845,10 +866,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<void> goOnlineWithGps() async {
     final sessionEpoch = _sessionEpoch;
     final availabilityEpoch = _invalidateAvailability();
+    final wasAlreadyOnline = state.isOnline;
     state = state.copyWith(isLoading: true, error: null);
     try {
       double? lat;
       double? lng;
+      double? accuracy;
       DateTime? sampledAt;
       final permitted = await BackgroundLocationService.instance
           .requestPermissions();
@@ -862,6 +885,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
           ).timeout(const Duration(seconds: 8));
           lat = pos.latitude;
           lng = pos.longitude;
+          accuracy = normalizeGpsAccuracyMeters(pos.accuracy);
           sampledAt = pos.timestamp;
         } catch (_) {
           // GPS timed out; do not reuse in-memory coordinates as live.
@@ -870,11 +894,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
       if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
       if (lat == null ||
           lng == null ||
+          accuracy == null ||
           sampledAt == null ||
           !isFreshDriverOnlineSample(sampledAt, DateTime.now())) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Không lấy được vị trí GPS',
+        await _failGpsAvailability(
+          reconcilePersistedOnlineState: wasAlreadyOnline,
+          sessionEpoch: sessionEpoch,
+          availabilityEpoch: availabilityEpoch,
         );
         return;
       }
@@ -887,26 +913,61 @@ class DriverNotifier extends StateNotifier<DriverState> {
         lat,
         lng,
         sampledAt: sampledAt,
+        accuracy: accuracy,
         sessionEpoch: sessionEpoch,
         availabilityEpoch: availabilityEpoch,
       );
     } catch (e) {
-      if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Không lấy được vị trí GPS',
+      await _failGpsAvailability(
+        reconcilePersistedOnlineState: wasAlreadyOnline,
+        sessionEpoch: sessionEpoch,
+        availabilityEpoch: availabilityEpoch,
       );
     }
+  }
+
+  Future<void> _failGpsAvailability({
+    required bool reconcilePersistedOnlineState,
+    required int sessionEpoch,
+    required int availabilityEpoch,
+  }) async {
+    if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
+    if (reconcilePersistedOnlineState) {
+      try {
+        await _api.post('/driver/offline');
+      } catch (_) {}
+    }
+    if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
+    _stopLocationUpdates();
+    await _cancelAvailabilitySubscriptions();
+    if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
+    state = state.copyWith(
+      isLoading: false,
+      isOnline: false,
+      error: 'Không lấy được vị trí GPS',
+    );
   }
 
   // -----------------------------------------------------------------------
   // Location
   // -----------------------------------------------------------------------
 
-  void _startLocationUpdates(double lat, double lng, {DateTime? sampledAt}) {
+  void _startLocationUpdates(
+    double lat,
+    double lng, {
+    DateTime? sampledAt,
+    double? accuracy,
+  }) {
     // Emit the initial known position only when it came from a real GPS sample.
     if (sampledAt != null) {
-      unawaited(_realtime.emitLocationPing(lat, lng, timestamp: sampledAt));
+      unawaited(
+        _realtime.emitLocationPing(
+          lat,
+          lng,
+          accuracy: accuracy,
+          timestamp: sampledAt,
+        ),
+      );
     }
     BackgroundLocationService.instance.start(
       hasActiveOrder: state.activeOrder != null,

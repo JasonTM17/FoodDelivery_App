@@ -161,11 +161,13 @@ Driver is a first-class Flutter/Riverpod native Android/iOS product. Start it fr
 
 ![Driver profile](./screenshots/driver/04-profile.webp)
 
-### Local GPS and foreground-tracking evidence
+### GPS and foreground-tracking evidence
 
 These test-only Android API 35 emulator images use only a simulated route and deterministic test data. They demonstrate the Driver's explicit Online action, Android notification-permission flow, and the location foreground notification. No real location, production account, password, credential, token, or unrelated personal notification is visible.
 
 The associated local E2E check accepted the authenticated GPS command, refreshed Redis liveness, persisted the sample to PostGIS, and delivered one authorized Admin Socket.IO event. This is local Socket.IO compatibility evidence only, **not** Supabase, Railway, Vercel, or production evidence.
+
+A separate 2026-07-15 Android API 35 production-emulator smoke used a temporary synthetic Driver against Railway and Supabase. It verified explicit Online foreground tracking, screen-off updates, bounded airplane-mode buffering with original timestamps, refresh/restart after process termination, PostGIS persistence, and an authorized private Broadcast received by a temporary Admin subscriber. The test account and GPS rows were deleted afterward. This is production backend/provider and emulator evidence, not physical-device, iOS, FCM, payout, or app-store certification.
 
 ### Driver Online after GPS verification
 
@@ -174,6 +176,10 @@ The associated local E2E check accepted the authenticated GPS command, refreshed
 ### Current Driver Online device smoke
 
 ![Driver Online while foreground GPS tracking is active](./screenshots/driver/driver-online-realtime-gps.webp)
+
+### Android API 35 production recovery smoke
+
+![Driver Online after Android process and foreground-tracking recovery](./screenshots/driver/driver-online-android-api35-recovery.webp)
 
 ### Android foreground-tracking notification permission
 

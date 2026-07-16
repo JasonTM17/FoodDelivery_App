@@ -9,6 +9,7 @@ import { RedisModule } from '../redis/redis.module'
 import { OrdersModule } from '../orders/orders.module'
 import { AuthModule } from '../auth/auth.module'
 import { QueueProviderModule } from '../common/queue/queue-provider.module'
+import { TrackingMetrics } from './tracking.metrics'
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     DirectionsApiService,
     EtaCacheService,
     EtaRecomputeProcessor,
+    TrackingMetrics,
   ],
   controllers: [TrackingController],
   exports: [TrackingGateway, TrackingService],

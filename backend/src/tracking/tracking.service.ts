@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Injectable, Inject, Logger, OnModuleDestroy, Optional } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import { OrderStatus, Prisma } from '@prisma/client'
@@ -8,8 +8,28 @@ import { EtaCacheService } from './eta-cache.service'
 import { hasDeviatedFromRoute } from '../common/utils/route.utils'
 import { RouteResult } from '../common/types/location.types'
 import Redis from 'ioredis'
+import { TrackingMetrics } from './tracking.metrics'
 
 export type DeliveryRoutePhase = 'pickup' | 'dropoff'
+
+export class DriverOfflineLocationError extends Error {
+  constructor() {
+    super('DRIVER_OFFLINE')
+    this.name = DriverOfflineLocationError.name
+  }
+}
+
+const DRIVER_LIVENESS_TTL_SECONDS = 35
+const UPDATE_ONLINE_DRIVER_LOCATION_SCRIPT = `
+local status = redis.call('GET', KEYS[1])
+if status ~= 'online' and status ~= 'busy' then
+  return 0
+end
+redis.call('GEOADD', KEYS[2], ARGV[1], ARGV[2], ARGV[3])
+redis.call('SETEX', KEYS[3], ARGV[4], '1')
+redis.call('SETEX', KEYS[4], ARGV[4], ARGV[5])
+return 1
+`
 
 const ACTIVE_DRIVER_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.driver_assigned,
@@ -88,6 +108,7 @@ export class TrackingService implements OnModuleDestroy {
   private readonly logger = new Logger(TrackingService.name)
   private batchBuffer: LocationRecord[] = []
   private flushInterval: ReturnType<typeof setInterval> | null = null
+  private flushInFlight: Promise<void> | null = null
 
   constructor(
     private readonly prisma: PrismaService,
@@ -95,22 +116,39 @@ export class TrackingService implements OnModuleDestroy {
     private readonly etaCache: EtaCacheService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     @InjectQueue('tracking-eta') private readonly etaQueue: Queue,
+    @Optional() private readonly metrics?: TrackingMetrics,
   ) {
     this.flushInterval = setInterval(() => this.flush(), 15000)
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     if (this.flushInterval) {
       clearInterval(this.flushInterval)
       this.flushInterval = null
     }
+
+    if (this.flushInFlight) {
+      await this.flushInFlight
+    }
+    await this.flush()
   }
 
   async handleLocationUpdate(driverId: string, data: LocationData): Promise<string | null> {
     const recordedAt = parseLocationRecordedAt(data.timestamp)
-    await this.redis.geoadd('drivers:active', data.lng, data.lat, `driver:${driverId}`)
-    await this.redis.setex(`driver:${driverId}:alive`, 35, '1')
-    await this.redis.setex(`driver:${driverId}:last_seen_at`, 35, recordedAt.toISOString())
+    const accepted = await this.redis.eval(
+      UPDATE_ONLINE_DRIVER_LOCATION_SCRIPT,
+      4,
+      `driver:${driverId}:status`,
+      'drivers:active',
+      `driver:${driverId}:alive`,
+      `driver:${driverId}:last_seen_at`,
+      String(data.lng),
+      String(data.lat),
+      `driver:${driverId}`,
+      String(DRIVER_LIVENESS_TTL_SECONDS),
+      recordedAt.toISOString(),
+    )
+    if (Number(accepted) !== 1) throw new DriverOfflineLocationError()
 
     const orderId = await this.resolveActiveOrderForDriver(driverId)
     this.batchBuffer.push({ driverId, orderId: orderId || null, lng: data.lng, lat: data.lat, recordedAt })
@@ -319,24 +357,45 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   private async flush(): Promise<void> {
+    if (this.flushInFlight) {
+      await this.flushInFlight
+      return
+    }
     if (this.batchBuffer.length === 0) return
+
     const batch = [...this.batchBuffer]
     this.batchBuffer = []
+
+    const flushPromise = this.persistLocationBatch(batch)
+    this.flushInFlight = flushPromise
     try {
-      const rows = batch.map((r) => Prisma.sql`(
-        CAST(${r.driverId} AS uuid),
-        CAST(${r.orderId} AS uuid),
-        ST_SetSRID(
-          ST_MakePoint(CAST(${r.lng} AS double precision), CAST(${r.lat} AS double precision)),
-          4326
-        ),
-        CAST(${r.recordedAt} AS timestamptz)
-      )`)
+      await flushPromise
+    } finally {
+      if (this.flushInFlight === flushPromise) {
+        this.flushInFlight = null
+      }
+    }
+  }
+
+  private async persistLocationBatch(batch: LocationRecord[]): Promise<void> {
+    const rows = batch.map((r) => Prisma.sql`(
+      CAST(${r.driverId} AS uuid),
+      CAST(${r.orderId} AS uuid),
+      ST_SetSRID(
+        ST_MakePoint(CAST(${r.lng} AS double precision), CAST(${r.lat} AS double precision)),
+        4326
+      ),
+      CAST(${r.recordedAt} AS timestamptz)
+    )`)
+
+    try {
       await this.prisma.$executeRaw(Prisma.sql`
         INSERT INTO driver_location_history (driver_id, order_id, location, recorded_at)
         VALUES ${Prisma.join(rows)}
       `)
     } catch (err) {
+      this.batchBuffer = [...batch, ...this.batchBuffer]
+      this.metrics?.recordLocationBatchFlushFailure()
       this.logger.error(`Failed to flush location batch: ${(err as Error).message}`)
     }
   }

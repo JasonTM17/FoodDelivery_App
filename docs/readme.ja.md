@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-15 status:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` は Railway API/worker/migrator と両 Vercel apps で稼働中です。CI、E2E、Integration Smoke、OpenAPI、security、SBOM、build gates は green、deployed SHA には 41 migrations が適用済みです。Candidate migration 42 は disposable PostGIS で pass しましたが、PR review と synchronized rollout 前には deploy しません。Admin/Restaurant は Google Chrome で production login、Customer/Driver は read-only auth/API、private Realtime、cross-role denial を pass し、全 fixture row は削除され最終 inventory は 0 です。Full production certification には native mobile UI、active-order routing、controlled-device FCM、Android/iOS background location、optional providers の検証が必要です。
+> **2026-07-16 status:** runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` は Railway API/worker/migrator と両 Vercel apps で稼働中です。API health/readiness と Admin/Restaurant health は exact revision を返し、Database、Redis、Supabase Storage は ready、production には 41 migrations が適用済みです。Candidate migration 42 と hardened recovery controller は PR review と synchronized rollout 前には deploy しません。Google Chrome の Admin/Restaurant screenshots と Customer/Driver API checks は historical SHA `17584153` の role-smoke evidence であり、`a703ece` auth certification ではありません。Native mobile UI、active-order routing、controlled-device FCM、physical Android/iOS background location、optional providers の検証は pending です。
 
 ## Product preview
 
@@ -69,7 +69,7 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Current Docker release — SHA 17584153
+## Last fully verified four-image Docker release — SHA 17584153
 
 Docker Hub の SHA、`v0.1.1`、`latest` aliases は 4 images すべてで digest が一致します。GHCR SHA manifests は public かつ同一 digest です。GHCR semver/`latest` promotion は claim しません。
 

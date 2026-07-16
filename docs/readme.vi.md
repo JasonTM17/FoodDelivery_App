@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 15/07/2026:** runtime SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel. Các gate CI, E2E, Integration Smoke, OpenAPI, security, SBOM và build đã xanh; SHA đang deploy có 41 migration đã apply. Migration ứng viên thứ 42 đã pass PostGIS disposable nhưng chưa deploy trước khi PR được review và rollout đồng bộ. API health/readiness và health của Admin/Restaurant đều trả đúng SHA này; database, Redis và Supabase Storage đều ready. Admin/Restaurant đã đăng nhập production bằng Google Chrome; Customer/Driver đã pass auth/API read-only, private Realtime và cross-role denial. Toàn bộ fixture đã được xóa, inventory cuối bằng 0. Đây **chưa** là chứng nhận production đầy đủ: mobile UI thật, active-order routing, FCM trên thiết bị kiểm soát, background location Android/iOS và provider tùy chọn vẫn chưa được xác minh.
+> **Trạng thái 16/07/2026:** runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel. API health/readiness cùng health Admin/Restaurant trả đúng revision; database, Redis và Supabase Storage đều ready, production có 41 migration đã apply. Migration ứng viên thứ 42 và controller recovery được harden vẫn chưa deploy trước khi PR được review và rollout đồng bộ. Ảnh Admin/Restaurant trên Google Chrome cùng kiểm tra Customer/Driver API thuộc lần role-smoke lịch sử tại SHA `17584153`, không phải chứng nhận auth cho `a703ece`. Mobile UI thật, active-order routing, FCM trên thiết bị kiểm soát, background location Android/iOS vật lý và provider tùy chọn vẫn chưa được xác minh.
 
 ## Xem trước sản phẩm
 
@@ -69,7 +69,7 @@ Google Maps không bắt buộc để hệ thống khởi động. Nếu không 
 
 Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và nhận private Supabase Broadcast do server gửi tới các kênh mà JWT cho phép; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
-## Docker release hiện tại — SHA 17584153
+## Docker release bốn image được xác minh đầy đủ gần nhất — SHA 17584153
 
 Các alias Docker Hub SHA, `v0.1.1` và `latest` khớp digest cho cả bốn image. Manifest SHA trên GHCR là public và khớp digest; tài liệu không tuyên bố GHCR semver/`latest` đã được promote.
 

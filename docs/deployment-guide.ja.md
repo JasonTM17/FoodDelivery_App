@@ -64,6 +64,7 @@ API core:
 - Supabase pooled `DATABASE_URL`、direct `DIRECT_URL`
 - 現在残る cache/history 用の managed `REDIS_URL`（localhost 禁止）
 - `REALTIME_PROVIDER=supabase`
+- Broadcast request を有界にする `SUPABASE_REALTIME_PUBLISH_TIMEOUT_MS=5000`
 - `STORAGE_PROVIDER=supabase`
 - `QUEUE_PROVIDER=supabase-postgres`
 - API は `FOODFLOW_PROCESS_ROLE=api`、worker は `FOODFLOW_PROCESS_ROLE=worker`。Production で role が未設定または不正なら startup は fail closed

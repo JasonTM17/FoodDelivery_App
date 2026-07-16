@@ -84,7 +84,7 @@ Do not use a Supabase secret/service key, `SUPABASE_JWT_SECRET`, raw outbox SQL,
 
 `GET /orders/{id}/tracking` is participant scoped. `driverLocation`, `etaMinutes`, and `routePolyline` can be null; null means unavailable, not permission to calculate a straight line or make up an ETA. `routePhase` is required (`pickup` or `dropoff`) so clients do not reuse stale route geometry after pickup.
 
-Driver location submissions preserve the real `sampledAt` timestamp. The backend rejects stale, future, invalid, or unauthorized samples before mutating live state.
+Driver location submissions preserve the real `timestamp` capture time (`/driver/online` names its equivalent field `sampledAt`). REST and WebSocket share semantic rejection rules for the explicit Online session, finite coordinates, bearing, speed, accuracy up to 50 metres, freshness and anti-teleport checks; rejected samples do not mutate live state.
 
 ## AI contract
 
