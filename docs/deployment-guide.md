@@ -11,6 +11,8 @@ This runbook deploys the managed-production topology:
 
 It does not authorize deployment while secrets, CLI access, current-head tests, remote CI, or production health are incomplete. Local green checks are necessary but not a substitute for provider and remote release approval.
 
+For the latest verified rollout, use [Production Current State](./production-current-state.md). It records the split Railway/Vercel revisions, immutable image digest, health evidence, quota boundary, and rollback image. The historical release evidence below remains useful for provenance but must not be treated as the current Railway revision.
+
 ## Release invariants
 
 1. Work only from a clean, approved release worktree.
