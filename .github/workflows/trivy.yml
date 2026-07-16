@@ -26,6 +26,9 @@ jobs:
           output: 'trivy-results.sarif'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          # SARIF includes every severity by default; align the report and exit
+          # policy with the release gate above instead of failing on MEDIUM/LOW.
+          limit-severities-for-sarif: true
       - name: Upload results
         uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
         continue-on-error: true
