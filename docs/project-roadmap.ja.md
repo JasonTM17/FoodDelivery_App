@@ -54,7 +54,8 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## Current-source evidence and external blockers
 
 - Historical local evidence: clean-volume Docker project `foodflow-batch4-e2e` は当時の migrations を適用し、disposable data を seed、RAG を index、Playwright 204/204 を pass しました。これらの count は 2026-07-14 の bounded evidence であり、current runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` や production approval の結果ではありません。
-- Deployed SHA `977d55f` は source migrations 42 件すべて active で、46-row Prisma history に rolled-back audit rows 4 件を保持します。Database、Redis、Supabase Storage は ready です。Checksum audit は exact pinned historical remote/local pairs 3 件で pass し、applied SQL と remote history は書き換えていません。
+- Deployed SHA `977d55f` は source migrations 42 件すべて active で、46-row Prisma history に rolled-back audit rows 4 件を保持します。Database、Redis、Supabase Storage は ready です。Realtime と Job の exact provenance は immutable migrator image に紐づきます。Audit は original bytes 未復元の `20260712143000_add_production_storage_bucket` だけを意図的に fail し、applied SQL や remote history を書き換えずに future migrator rollout を停止します。
+
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
 - Railway migrate `e100789f-03c1-445d-9e69-b8a243973a95`、API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`、worker `2e4a41ea-6874-4b01-b549-d457c0a20997` は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` で成功しています。API health/readiness は exact revision と Database、Redis、Supabase Storage ready を報告し、worker poll は稼働、DeepSeek 不在のため RAG は disabled です。
 - Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。

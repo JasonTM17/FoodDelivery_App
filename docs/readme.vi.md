@@ -4,7 +4,8 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 16/07/2026:** các deployment Railway API/worker/migrator và health Vercel Admin/Restaurant đều trả đúng runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Production có đủ 42 migration source đang active; lịch sử Prisma gồm 46 row với bốn row rolled-back được giữ để audit. Smoke GPS HCMC giả lập trên revision này đã chứng minh token realtime ES256 năm phút, private Broadcast RLS allow/deny, fanout 1.271 ms, persist PostGIS, rejection `poor_accuracy`/`driver_offline` và cleanup về zero chính xác. Docker Hub/GHCR public với alias SHA, `v0.1.3`, `latest` cùng GitHub Release ba asset đều gắn với `977d55f`. Role-smoke bốn role ở SHA `17584153` vẫn là evidence lịch sử; thiết bị vật lý Android/iOS, FCM kiểm soát, active-order, provider tùy chọn và full browser journey revision hiện tại vẫn nằm ngoài chứng nhận.
+> **Trạng thái 16/07/2026:** các deployment Railway API/worker/migrator và health Vercel Admin/Restaurant đều trả đúng runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Production có đủ 42 migration source đang active; lịch sử Prisma gồm 46 row với bốn row rolled-back được giữ để audit. Byte gốc checksum Realtime và Job đã được khôi phục từ image migrator immutable; byte gốc của `20260712143000_add_production_storage_bucket` chưa tìm thấy nên guard chủ động chặn mọi migrator tiếp theo, không ảnh hưởng health schema/runtime hiện đang deploy. Smoke GPS HCMC giả lập trên revision này đã chứng minh token realtime ES256 năm phút, private Broadcast RLS allow/deny, fanout 1.271 ms, persist PostGIS, rejection `poor_accuracy`/`driver_offline` và cleanup về zero chính xác. Docker Hub/GHCR public với alias SHA, `v0.1.3`, `latest` cùng GitHub Release ba asset đều gắn với `977d55f`. Role-smoke bốn role ở SHA `17584153` vẫn là evidence lịch sử; thiết bị vật lý Android/iOS, FCM kiểm soát, active-order, provider tùy chọn và full browser journey revision hiện tại vẫn nằm ngoài chứng nhận.
+
 
 ## Xem trước sản phẩm
 
@@ -142,7 +143,7 @@ Lần chạy Docker volume sạch ngày 14/07/2026 của project `foodflow-batch
 ## Thứ tự deploy
 
 1. Rotate key bị lộ và giữ mọi giá trị Railway/provider đã cấu hình trong secret store.
-2. Apply và xác minh tất cả migration qua môi trường migration production đã được duyệt; không suy luận trạng thái provider từ Docker local.
+2. Khôi phục/review provenance checksum Storage còn lại, yêu cầu audit checksum pass, rồi backup trước mọi rollout migration tiếp theo qua môi trường production đã duyệt. Không suy luận provenance từ schema end-state/Docker local hoặc dùng `prisma migrate resolve` để che blocker.
 3. Giữ hai deployment Railway đã verify; lần release sau deploy API/worker từ cùng một SHA immutable rồi kiểm lại health/readiness/worker polling.
 4. Smoke Supabase Broadcast private allow/deny, token refresh, Storage, GPS snapshot/delta/reconnect và tenant isolation qua API live.
 5. Smoke lại đúng deployment Vercel Admin/Restaurant với API Railway hiện tại, rồi kiểm map/route đã cấu hình, chatbot, notification, export, payment và FCM thiết bị kiểm soát.

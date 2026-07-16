@@ -11,12 +11,30 @@ Evidence health runtime hiện tại gắn với SHA `977d55f19ddc4fecafb8a758d2
 | Khu vực        | Kết quả |
 | -------------- | ------- |
 | Backend        | Các gate local hiện tại sau merge pass Prisma generate/validate, typecheck, ESLint và Nest build. Full Jest có 156 suite pass cộng 1 suite integration có gate bị skip; 1.178 test pass cộng 1 test skip. Checksum guard của production migrator có regression test riêng và chạy trước Storage mutation hoặc `prisma migrate deploy`. |
-| Database       | Production có đủ 42 migration source đang active tại SHA `977d55f`; lịch sử Prisma gồm 46 row và giữ bốn row rolled-back để audit. Audit chỉ-đọc báo không có migration unresolved và checksum status `ok`. Ba khác biệt checksum trước thời kỳ immutable chỉ được chấp nhận bằng đúng cặp digest remote/local đã ghim; đổi bất kỳ phía nào sẽ fail-closed. Readiness Database, Redis và Supabase Storage đều pass. |
+| Database       | Production có đủ 42 migration source đang active tại SHA `977d55f`; lịch sử Prisma gồm 46 row và giữ bốn row rolled-back để audit. Readiness Database, Redis và Supabase Storage đều pass. Provenance Realtime và Job chính xác đã được khôi phục từ image immutable; audit chỉ-đọc chủ động exit `1` duy nhất cho byte chưa khôi phục của `20260712143000_add_production_storage_bucket` và chặn mọi migrator tiếp theo. |
 | Mobile Flutter | Lock resolution và `flutter analyze` hiện tại sau merge pass không lỗi; full suite Customer/Driver pass 373/373 test. Background location Android/iOS trên thiết bị vật lý thật vẫn chưa được chứng nhận. |
 | Web            | Frozen install, typecheck, lint và test chọn build Vercel hiện tại sau merge đều pass. Admin pass 194/194 test và build 70 route; Restaurant pass 135/135 test và build 55 route. |
 | Role/browser lịch sử | Full role smoke Admin/Restaurant bằng Chrome và Customer/Driver qua API, cùng kết quả Playwright volume sạch 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5, thuộc source head `17584153ff256b74a3413ae9844f4f27bff038cc`. Các lượt này chưa được chạy lại để chứng nhận production bốn role trên `977d55f`. |
 | FCM/provider   | Notification backend và lifecycle Flutter local lịch sử đã pass. FCM live có kiểm soát, các tích hợp dùng provider tùy chọn và coverage thiết bị vật lý thật vẫn còn mở. |
 | Production     | Railway migrator `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4` và worker `2e4a41ea-6874-4b01-b549-d457c0a20997` thành công tại SHA `977d55f`. Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` và Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` dùng cùng revision; hai health route công khai đều trả đúng SHA. Smoke GPS revision hiện tại chứng minh token ES256 năm phút, Broadcast private cho phép/từ chối đúng RLS, fanout 1.271 ms, persist PostGIS, các nhánh rejection và cleanup chính xác. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở. |
+
+### Audit provenance migration
+
+Trước release, chạy audit chỉ-đọc từ `backend` với đúng Railway project và
+environment production. Checksum Realtime
+`3f9705062cd288d93484e62d3afa98e3e5d9190941a9a1d62af8169eafb325a7`
+và Job
+`72d4edd8a9a2397e604b38438025670f4b35d8beb7008ff0ae33157df58a7bdf`
+đã được khôi phục byte-for-byte từ image migrator immutable
+`docker.io/nguyenson1710/foodflow-migrate@sha256:542510dde5c0105fb5e856487cbde851e1fefe2a2a218ca89cbd54f2d737a756`
+ở revision `1f761a65b4a7053858a512bf6eb09a3fd2adbef0`. Khác biệt đã review chỉ
+gồm xuống dòng và, với Job, một comment host không thực thi. Checksum Storage
+`4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`
+không có trong Git object hay registry image đã kiểm tra; audit phải exit `1`
+và chỉ nêu `20260712143000_add_production_storage_bucket`. Schema end-state
+không đủ chứng minh provenance; không dùng `prisma migrate resolve` để che.
+Entry được duyệt là exact và chỉ pass khi checksum local đã review không đổi.
+Cả 42 migration source đã active; provenance chưa giải quyết này chặn migrator tiếp theo.
 
 ### Docker volume sạch lịch sử — 14/07/2026
 
@@ -40,7 +58,7 @@ Smoke Railway/Supabase có kiểm soát cho Admin/Driver nêu trên đã pass. C
 
 Container PostGIS + pgvector dùng một lần trước đây đã apply đủ 33 migration đang được track khi đó, xác minh PostGIS, vector, `rag_documents`, source/content index và cosine HNSW index. Lệnh `db:big-seed` tạo thật trong DB này 50 restaurant đã duyệt, 50 driver, 100 customer, 509 order, 123 review và 10 promotion; đây là bằng chứng generator ghi database, không phải fixture fix cứng lúc runtime. Worker local đồng bộ 32 document restaurant/menu sống; do chưa có DeepSeek key nên cả 32 ở trạng thái chờ embedding, không sinh vector giả. Migration FCM-revocation thứ 34 chưa có trong lượt evidence lịch sử này.
 
-Lượt lịch sử này có trước trạng thái migration hiện tại. Một record bên ngoài có ngày ghi nhận 36 migration Supabase đã được checksum-verify; production hiện tại đã apply đủ 41 migration trong repository. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
+Lượt lịch sử này có trước trạng thái migration hiện tại. Một record bên ngoài có ngày ghi nhận 36 migration Supabase đã được checksum-verify; production hiện tại đã apply đủ 42 migration source trong repository. Seed local nêu ở đây không phải dữ liệu production và không được dùng để suy ra nội dung production.
 
 Evidence web/browser/container rộng hơn được giữ trong [release report](batch4-release-report.md). Ma trận clean-volume lịch sử từ source head `17584153ff256b74a3413ae9844f4f27bff038cc` thay kết quả image cũ 128/134. Provider-backed production smoke phạm vi rộng hơn và controlled FCM delivery vẫn còn mở; phải chạy lại evidence phù hợp nếu release head thay đổi.
 

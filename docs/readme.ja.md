@@ -4,7 +4,8 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-16 status:** Railway API/worker/migrator と Vercel Admin/Restaurant health は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を返します。Production は source migrations 42 件すべて active、Prisma history は 46 rows で rolled-back audit rows 4 件を保持します。この revision の synthetic HCMC GPS smoke は 5 分 ES256 realtime token、private Broadcast RLS allow/deny、1,271 ms fanout、PostGIS persistence、`poor_accuracy`/`driver_offline` rejection、exact zero-residue cleanup を検証しました。Docker Hub/public GHCR の SHA、`v0.1.3`、`latest` aliases と 3-asset GitHub Release も `977d55f` に紐づきます。SHA `17584153` の 4-role smoke は historical evidence のままです。Physical Android/iOS、controlled FCM、active-order、optional providers、current-revision full browser journey は未認証です。
+> **2026-07-16 status:** Railway API/worker/migrator と Vercel Admin/Restaurant health は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を返します。Production は source migrations 42 件すべて active、Prisma history は 46 rows で rolled-back audit rows 4 件を保持します。Realtime と Job の original checksum bytes は immutable migrator image から復元済みですが、`20260712143000_add_production_storage_bucket` の original bytes は未復元です。そのため guard は future migrator rollout を fail-closed で停止し、現在 deploy 済み schema/runtime の health には影響しません。この revision の synthetic HCMC GPS smoke は 5 分 ES256 realtime token、private Broadcast RLS allow/deny、1,271 ms fanout、PostGIS persistence、`poor_accuracy`/`driver_offline` rejection、exact zero-residue cleanup を検証しました。Docker Hub/public GHCR の SHA、`v0.1.3`、`latest` aliases と 3-asset GitHub Release も `977d55f` に紐づきます。SHA `17584153` の 4-role smoke は historical evidence のままです。Physical Android/iOS、controlled FCM、active-order、optional providers、current-revision full browser journey は未認証です。
+
 
 ## Product preview
 
@@ -138,7 +139,7 @@ Gate は frozen install、Prisma、backend typecheck/lint/Jest/build、web typec
 ## Deploy order
 
 1. Exposed key を rotate し、設定済み Railway/provider values は sealed secret store のみに保持。
-2. 承認された production migration environment で全 migration を apply/verify する。local Docker から provider state を推測しない。
+2. 残る Storage checksum provenance を復元・review し、checksum audit の pass 後に backup を取得してから、承認済み production environment で future migration rollout を行う。Schema end-state/local Docker から provenance を推測せず、`prisma migrate resolve` で blocker を隠さない。
 3. Verified Railway API/worker deployments を保持し、次回 release は同一 immutable SHA から deploy して health/readiness/worker polling を再確認。
 4. Live API 経由で private Broadcast allow/deny、token refresh、Storage、GPS snapshot/delta/reconnect、tenant isolation を smoke。
 5. Current Railway API に対して exact Admin/Restaurant Vercel deployments、configured map/route、chatbot、notification、export、payment、controlled-device FCM を smoke。

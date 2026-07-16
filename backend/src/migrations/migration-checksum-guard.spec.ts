@@ -5,6 +5,9 @@ import {
   type AppliedMigrationChecksum,
 } from './migration-checksum-guard';
 import type { PrismaClient } from '@prisma/client';
+import { APPROVED_MIGRATION_CHECKSUM_PROVENANCE } from './approved-migration-checksum-provenance';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('migration checksum guard', () => {
   it('fails closed when production provider mutation has no history table', async () => {
@@ -78,6 +81,112 @@ describe('migration checksum guard', () => {
     ]);
   });
 
+  it('accepts every exact checksum recovered from approved immutable images', () => {
+    const appliedAt = new Date('2026-07-15T00:00:00Z');
+    const applied: AppliedMigrationChecksum[] =
+      APPROVED_MIGRATION_CHECKSUM_PROVENANCE.map((provenance) => ({
+        migration_name: provenance.migrationName,
+        checksum: provenance.checksum,
+        finished_at: appliedAt,
+        rolled_back_at: null,
+      }));
+
+    expect(
+      findAppliedMigrationChecksumMismatches(
+        applied,
+        new Map(
+          APPROVED_MIGRATION_CHECKSUM_PROVENANCE.map((provenance) => [
+            provenance.migrationName,
+            new Set([provenance.reviewedLocalChecksum]),
+          ]),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it('binds every historical approval to the reviewed local migration bytes', () => {
+    for (const provenance of APPROVED_MIGRATION_CHECKSUM_PROVENANCE) {
+      const migrationSql = readFileSync(
+        join(
+          process.cwd(),
+          'prisma',
+          'migrations',
+          provenance.migrationName,
+          'migration.sql',
+        ),
+        'utf8',
+      );
+
+      expect(createMigrationChecksumVariants(migrationSql)).toContain(
+        provenance.reviewedLocalChecksum,
+      );
+    }
+  });
+
+  it('revokes historical approval when the reviewed local migration changes', () => {
+    const appliedAt = new Date('2026-07-15T00:00:00Z');
+    const [approvedRealtime] = APPROVED_MIGRATION_CHECKSUM_PROVENANCE;
+
+    expect(
+      findAppliedMigrationChecksumMismatches(
+        [
+          {
+            migration_name: approvedRealtime.migrationName,
+            checksum: approvedRealtime.checksum,
+            finished_at: appliedAt,
+            rolled_back_at: null,
+          },
+        ],
+        new Map([
+          [approvedRealtime.migrationName, new Set(['changed-local-checksum'])],
+        ]),
+      ),
+    ).toEqual([approvedRealtime.migrationName]);
+  });
+
+  it('does not let provenance approve another checksum or a missing local migration', () => {
+    const appliedAt = new Date('2026-07-15T00:00:00Z');
+    const [approvedRealtime] = APPROVED_MIGRATION_CHECKSUM_PROVENANCE;
+    const applied: AppliedMigrationChecksum[] = [
+      {
+        migration_name: approvedRealtime.migrationName,
+        checksum: 'unapproved-checksum',
+        finished_at: appliedAt,
+        rolled_back_at: null,
+      },
+      {
+        migration_name: '20260712143000_add_production_storage_bucket',
+        checksum:
+          '4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6',
+        finished_at: appliedAt,
+        rolled_back_at: null,
+      },
+      {
+        migration_name: 'missing_local_migration',
+        checksum: approvedRealtime.checksum,
+        finished_at: appliedAt,
+        rolled_back_at: null,
+      },
+    ];
+
+    expect(
+      findAppliedMigrationChecksumMismatches(
+        applied,
+        new Map([
+          [approvedRealtime.migrationName, new Set(['current-checksum'])],
+          [
+            '20260712143000_add_production_storage_bucket',
+            new Set(['current-storage-checksum']),
+          ],
+        ]),
+      ),
+    ).toEqual([
+      approvedRealtime.migrationName,
+      '20260712143000_add_production_storage_bucket',
+      'missing_local_migration',
+    ]);
+  });
+
   it('accepts matching active records and ignores rolled-back records', () => {
     const appliedAt = new Date('2026-07-15T00:00:00Z');
     expect(
@@ -107,34 +216,4 @@ describe('migration checksum guard', () => {
     ).toEqual([]);
   });
 
-  it('accepts only an exact historical checksum pair pinned on both sides', () => {
-    const appliedAt = new Date('2026-07-15T00:00:00Z');
-    const applied: AppliedMigrationChecksum[] = [{
-      migration_name: 'legacy_migration',
-      checksum: 'recorded-production-checksum',
-      finished_at: appliedAt,
-      rolled_back_at: null,
-    }];
-    const approved = [{
-      migrationName: 'legacy_migration',
-      recordedChecksum: 'recorded-production-checksum',
-      canonicalLocalChecksum: 'reviewed-local-checksum',
-    }];
-
-    expect(findAppliedMigrationChecksumMismatches(
-      applied,
-      new Map([['legacy_migration', new Set(['reviewed-local-checksum'])]]),
-      approved,
-    )).toEqual([]);
-    expect(findAppliedMigrationChecksumMismatches(
-      [{ ...applied[0], checksum: 'unexpected-production-checksum' }],
-      new Map([['legacy_migration', new Set(['reviewed-local-checksum'])]]),
-      approved,
-    )).toEqual(['legacy_migration']);
-    expect(findAppliedMigrationChecksumMismatches(
-      applied,
-      new Map([['legacy_migration', new Set(['changed-local-checksum'])]]),
-      approved,
-    )).toEqual(['legacy_migration']);
-  });
 });
