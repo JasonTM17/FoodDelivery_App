@@ -12,6 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { spawnSync } from 'node:child_process'
+import { buildManifestAssetIntegrity } from './product-media-integrity.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
@@ -376,6 +377,9 @@ async function main() {
       },
     },
   }
+  manifest.assetIntegrity = await buildManifestAssetIntegrity(manifest, {
+    baseDirectory: SHOTS,
+  })
   await writeFile(path.join(SHOTS, 'manifest.json'), JSON.stringify(manifest, null, 2))
   console.log('done')
 }

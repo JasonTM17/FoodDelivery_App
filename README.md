@@ -22,12 +22,12 @@ Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed to Railway AP
 
 ## Product preview
 
-FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide.md), [Restaurant](docs/restaurant-guide.md), [Customer](docs/customer-guide.md), or [Driver](docs/driver-guide.md) guide, then see the [full product gallery](docs/product-gallery.md) and [mobile overview](docs/customer-driver-guide.md). The manifest records source heads, runtimes, capture times, and privacy boundaries. Web media came from Google Chrome against the isolated local E2E stack; mobile media came from Flutter debug APKs on an Android API 35 x86_64 AVD. The manifest separates local regression media from the production-emulator GPS capture; neither is physical-device or app-store certification.
+FoodFlow has four distinct product surfaces. Choose the [Admin](docs/admin-guide.md), [Restaurant](docs/restaurant-guide.md), [Customer](docs/customer-guide.md), or [Driver](docs/driver-guide.md) guide, then see the [full product gallery](docs/product-gallery.md) and [mobile overview](docs/customer-driver-guide.md). The manifest records source heads, runtimes, capture times, privacy boundaries, and SHA-256 for every curated asset. Most web media came from Google Chrome against the isolated local E2E stack; two separately labelled Admin/Restaurant images are historical controlled-production evidence from SHA `17584153`. Mobile media came from Flutter debug APKs on an Android API 35 x86_64 AVD; one separately labelled Driver recovery image is bounded production-emulator evidence. None is physical-device or app-store certification.
 
 | Surface    | Product runtime                  | Current visual evidence                  | How to review the product                                                                                 |
 | ---------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Admin      | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                                  |
-| Restaurant | Next.js web dashboard            | 10 local PNGs and one GIF                | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.                  |
+| Admin      | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Admin guide](docs/admin-guide.md), then run the Admin web app.                       |
+| Restaurant | Next.js web dashboard            | 10 local PNGs, one GIF, one historical production PNG | Read the [Restaurant guide](docs/restaurant-guide.md), then run the Restaurant web app.         |
 | Customer   | Flutter/Riverpod Android/iOS app | One privacy-reviewed local WebP and one GIF | Read the [Customer guide](docs/customer-guide.md), then launch `main_customer.dart` on a device/emulator. |
 | Driver     | Flutter/Riverpod Android/iOS app | Seven Driver WebPs, two Android notification WebPs, and one GIF | Read the [Driver guide](docs/driver-guide.md), then launch `main_driver.dart`.       |
 
@@ -175,10 +175,14 @@ corepack pnpm prisma migrate dev
 corepack pnpm db:seed
 corepack pnpm start:dev
 
-# Admin + Restaurant
+# Terminal A: Admin
 cd ../web
 corepack pnpm install --frozen-lockfile
-corepack pnpm dev
+corepack pnpm --filter foodflow-admin dev --port 3000
+
+# Terminal B: Restaurant (from the repository root after install)
+cd web
+corepack pnpm --filter restaurant dev --port 3002
 
 # Customer or Driver
 cd ../mobile

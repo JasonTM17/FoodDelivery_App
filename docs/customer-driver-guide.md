@@ -122,12 +122,18 @@ a Dart define. Full setup, Android builds, and troubleshooting are in the
 |---|---|
 | ![Customer public authentication flow](./media/gifs/customer-auth-flow.gif) | ![Driver Home](./screenshots/driver/02-home.webp) |
 
-The gallery contains current Customer/Driver role stills plus earlier local
-GPS/permission captures. They came from Android AVD testing against the isolated
-E2E stack, using deterministic seed identities, masked passwords, and a dirty
-working tree. The role capture used fixed simulated GPS and no Google Maps API
-key. It is privacy-reviewed regression/product evidence, not mobile release,
-payment, dispatch, routing, background-location, provider, or production proof.
+The Customer/Driver role stills, GIFs, and earlier GPS/permission captures came
+from Android AVD testing against the isolated E2E stack, using deterministic seed
+identities, masked passwords, a dirty working tree, fixed simulated GPS, and no
+Google Maps API key. They are privacy-reviewed local regression/product evidence,
+not mobile release, payment, dispatch, routing, provider, or production proof.
+
+One separately labelled Driver recovery WebP came from a bounded Android API 35
+production-emulator smoke against Railway and Supabase. It proves foreground
+tracking, screen-off updates, offline flush, process recovery, PostGIS persistence,
+and private Broadcast for that synthetic run only. It is not physical-device, iOS,
+FCM, payout, routing, or app-store certification. See the manifest for cleanup and
+source-head boundaries.
 Use the [gallery capture procedure](./product-gallery.md#capture-procedure) for
 a new clean-head visual record.
 

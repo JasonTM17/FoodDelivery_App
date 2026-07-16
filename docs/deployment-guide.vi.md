@@ -104,6 +104,32 @@ corepack pnpm run db:migrate:prod
 cd ..
 ```
 
+Trước mọi thay đổi production, chạy audit migration chỉ-đọc bằng project và
+environment Railway tường minh. Chạy từ thư mục `backend` để schema local
+trùng với source của migrator; `railway run` chỉ inject biến sealed vào lệnh
+local và không in giá trị secret:
+
+```powershell
+$env:RAILWAY_PROJECT_ID='<project-id>'
+Push-Location backend
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm run db:audit:prod
+railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --environment production --no-local -- `
+  corepack pnpm exec prisma migrate status --schema prisma/schema.prisma
+Pop-Location
+```
+
+Release được duyệt phải báo không còn migration pending hoặc remote-only.
+Migration ứng viên chưa deploy hoặc row lịch sử rolled-back không còn SQL
+local đều là blocker cho tới khi provenance được review. Production migrator
+hiện fail-closed trước Storage API và `prisma migrate deploy` nếu nội dung của
+bất kỳ migration đã apply khác SQL immutable ngoài khác biệt biểu diễn LF/CRLF.
+Không dùng `prisma migrate resolve` để che checksum drift; phải đối soát
+source/backup trước. Thiếu bảng `_prisma_migrations` cũng chặn luồng recovery
+Supabase Storage để database đích sai hoặc chưa khởi tạo không thể cho phép
+provider mutation. Chỉ bootstrap database thật sự rỗng bằng `db:migrate:prod`
+sau preflight danh tính đích và không dùng luồng Storage recovery.
+
 Không chạy `migrate dev`, reset hoặc demo seed trên production.
 
 Xác minh:
@@ -120,7 +146,7 @@ Realtime smoke phải chứng minh authorized event nhận được, cross-tenan
 
 ## 5. Railway API, worker, migrator, Redis
 
-Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: trước hết kiểm tra checksum mọi migration đã áp dụng; sau đó dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), chỉ resolve bản ghi migration bucket rỗng đã fail sau khi cleanup thành công, rồi chạy `prisma migrate deploy`. Checksum lệch hoặc lỗi inventory/delete bucket sẽ fail-closed trước rollout schema. Không dùng `prisma migrate resolve` để che ba checksum lịch sử đang lệch.
+Tạo Railway services `foodflow-api` (root `backend`, `backend/railway.toml`), `foodflow-worker` (backend image cùng SHA, command `dist/workers/main.js`), `foodflow-migrate` (migrate image cùng SHA) và managed Redis. Chạy migrator một lần sau backup Supabase và trước API; chỉ deploy Admin/Restaurant trên Vercel. Image migrator chạy `dist/migrations/production-migrate.js`: trước hết kiểm tra checksum mọi migration đã áp dụng và chỉ coi biểu diễn LF/CRLF là tương đương; sau đó dùng `SUPABASE_SERVICE_ROLE_KEY` dạng JWT để xoá qua Storage API đúng hai bucket legacy (Supabase sẽ từ chối nếu bucket có object), chỉ resolve bản ghi migration bucket rỗng đã fail sau khi cleanup thành công, rồi chạy `prisma migrate deploy`. Checksum nội dung lệch hoặc lỗi inventory/delete bucket sẽ fail-closed trước rollout schema. Không dùng `prisma migrate resolve` để che ba checksum lịch sử đang lệch.
 
 ```powershell
 railway login
