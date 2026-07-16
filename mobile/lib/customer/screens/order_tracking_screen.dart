@@ -10,6 +10,7 @@ import '../../shared/maps/lat_lng_validation.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/theme/vietnam_map_constants.dart';
+import '../../shared/utils/order_status_groups.dart';
 import '../../shared/widgets/vietnam_boundary_overlay.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../../l10n/app_localizations.dart';
@@ -420,14 +421,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       },
     ];
 
-    final statusOrder = [
-      'pending',
-      'confirmed',
-      'preparing',
-      'delivering',
-      'delivered',
-    ];
-    final currentIndex = statusOrder.indexOf(order.status);
+    final currentPhaseIndex = orderTrackingPhaseIndex(order.status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,8 +438,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           final index = entry.key;
           final step = entry.value;
           final isCompleted =
-              currentIndex >= statusOrder.indexOf(step['status'] as String);
-          final isCurrent = order.status == step['status'];
+              currentPhaseIndex != null && currentPhaseIndex >= index;
+          final isCurrent = currentPhaseIndex == index;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,

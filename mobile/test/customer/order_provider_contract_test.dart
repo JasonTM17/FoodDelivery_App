@@ -64,10 +64,18 @@ void main() {
       await notifier.fetchOrders();
 
       expect(notifier.state.activeOrders, hasLength(1));
-      expect(notifier.state.completedOrders, hasLength(1));
-      expect(notifier.state.cancelledOrders, hasLength(1));
+      expect(notifier.state.completedOrders, hasLength(2));
+      expect(notifier.state.cancelledOrders, hasLength(2));
       expect(notifier.state.activeOrders.single.restaurantName, 'Pho 24');
       expect(notifier.state.activeOrders.single.items.single.name, 'Pho bo');
+      expect(
+        notifier.state.completedOrders.map((order) => order.status).toSet(),
+        {'delivered', 'completed'},
+      );
+      expect(
+        notifier.state.cancelledOrders.map((order) => order.status).toSet(),
+        {'cancelled', 'refunded'},
+      );
     },
   );
 
@@ -175,6 +183,22 @@ void main() {
     expect(
       order.copyWith(routePhase: 'pickup', routePolyline: null).routePolyline,
       isNull,
+    );
+  });
+
+  test('OrderModel treats every terminal backend status as inactive', () {
+    for (final status in ['delivered', 'completed', 'cancelled', 'refunded']) {
+      final order = OrderModel.fromJson(
+        _orderPayload(id: 'order-$status', status: status),
+      );
+      expect(order.isActive, isFalse, reason: status);
+    }
+
+    expect(
+      OrderModel.fromJson(
+        _orderPayload(id: 'order-active', status: 'restaurant_pending'),
+      ).isActive,
+      isTrue,
     );
   });
 
@@ -288,9 +312,11 @@ class _OrderApiInterceptor extends Interceptor {
                 'orders': [
                   _orderPayload(id: 'order-active', status: 'preparing'),
                   _orderPayload(id: 'order-complete', status: 'delivered'),
+                  _orderPayload(id: 'order-completed', status: 'completed'),
                   _orderPayload(id: 'order-cancelled', status: 'cancelled'),
+                  _orderPayload(id: 'order-refunded', status: 'refunded'),
                 ],
-                'meta': {'total': 3},
+                'meta': {'total': 5},
               },
         ),
       );

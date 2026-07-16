@@ -6,6 +6,7 @@ import '../../shared/providers/order_provider.dart';
 import '../../shared/models/order.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
+import '../../shared/utils/order_status_groups.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/loading_shimmer.dart';
@@ -222,7 +223,8 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen>
                       style: const TextStyle(fontSize: 12),
                     ),
                   )
-                else if (order.status == 'delivered')
+                else if (orderStatusGroup(order.status) ==
+                    OrderStatusGroup.completed)
                   TextButton(
                     onPressed: () =>
                         context.push(Routes.review, extra: order.id),

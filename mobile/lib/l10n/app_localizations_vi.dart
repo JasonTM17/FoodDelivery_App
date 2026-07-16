@@ -404,6 +404,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get languageJa => '日本語';
 
   @override
+  String get orderStatusCreated => 'Đã tạo';
+
+  @override
+  String get orderStatusPendingPayment => 'Chờ thanh toán';
+
+  @override
+  String get orderStatusPaid => 'Đã thanh toán';
+
+  @override
+  String get orderStatusRestaurantPending => 'Chờ nhà hàng';
+
+  @override
+  String get orderStatusRestaurantAccepted => 'Nhà hàng đã nhận';
+
+  @override
   String get orderStatusPending => 'Đang chờ';
 
   @override
@@ -413,13 +428,34 @@ class AppLocalizationsVi extends AppLocalizations {
   String get orderStatusPreparing => 'Đang chuẩn bị';
 
   @override
-  String get orderStatusPickedUp => 'Đang giao';
+  String get orderStatusReadyForPickup => 'Sẵn sàng lấy hàng';
+
+  @override
+  String get orderStatusDriverAssigned => 'Đã có tài xế';
+
+  @override
+  String get orderStatusDriverArrivingRestaurant => 'Tài xế đang đến nhà hàng';
+
+  @override
+  String get orderStatusPickedUp => 'Đã lấy hàng';
+
+  @override
+  String get orderStatusDelivering => 'Đang giao';
 
   @override
   String get orderStatusDelivered => 'Đã giao';
 
   @override
+  String get orderStatusCompleted => 'Hoàn tất';
+
+  @override
   String get orderStatusCancelled => 'Đã hủy';
+
+  @override
+  String get orderStatusRefunded => 'Đã hoàn tiền';
+
+  @override
+  String get orderStatusUnknown => 'Đang cập nhật';
 
   @override
   String get cartTitle => 'Giỏ hàng';

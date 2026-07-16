@@ -1,4 +1,5 @@
 import '../utils/backend_date_time.dart';
+import '../utils/order_status_groups.dart';
 
 const _orderModelUnset = Object();
 
@@ -265,7 +266,7 @@ class OrderModel {
   }
 
   bool get isActive {
-    return !['delivered', 'cancelled'].contains(status);
+    return isActiveOrderStatus(status);
   }
 }
 

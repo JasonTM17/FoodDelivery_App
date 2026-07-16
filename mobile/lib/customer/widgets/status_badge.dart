@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/theme/foodflow_colors.dart';
+import '../../shared/utils/order_status_groups.dart';
 import '../../shared/utils/order_status_labels.dart';
 
 class StatusBadge extends StatelessWidget {
@@ -61,31 +62,15 @@ class StatusBadge extends StatelessWidget {
     String status,
     AppLocalizations l10n,
   ) {
-    Color c;
-    switch (status) {
-      case 'pending':
-        c = FoodFlowColors.orderPending;
-        break;
-      case 'confirmed':
-        c = FoodFlowColors.orderConfirmed;
-        break;
-      case 'preparing':
-        c = FoodFlowColors.orderPreparing;
-        break;
-      case 'picked_up':
-      case 'delivering':
-        c = FoodFlowColors.orderDelivering;
-        break;
-      case 'delivered':
-        c = FoodFlowColors.orderDelivered;
-        break;
-      case 'canceled':
-      case 'cancelled':
-        c = FoodFlowColors.orderCancelled;
-        break;
-      default:
-        c = FoodFlowColors.neutral400;
-    }
+    final c = switch (orderStatusGroup(status)) {
+      OrderStatusGroup.pending => FoodFlowColors.orderPending,
+      OrderStatusGroup.accepted => FoodFlowColors.orderConfirmed,
+      OrderStatusGroup.preparing => FoodFlowColors.orderPreparing,
+      OrderStatusGroup.delivering => FoodFlowColors.orderDelivering,
+      OrderStatusGroup.completed => FoodFlowColors.orderDelivered,
+      OrderStatusGroup.cancelled => FoodFlowColors.orderCancelled,
+      OrderStatusGroup.unknown => FoodFlowColors.neutral400,
+    };
     return (
       label: localizedOrderStatus(l10n, status),
       bg: c.withValues(alpha: 0.1),

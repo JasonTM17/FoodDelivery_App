@@ -9,6 +9,7 @@ import '../../shared/models/order.dart';
 import '../../shared/notifications/firebase_fcm_token_session.dart';
 import '../../shared/services/secure_storage_service.dart';
 import '../../shared/utils/app_error_messages.dart';
+import '../../shared/utils/order_status_groups.dart';
 import '../services/background_location_service.dart';
 
 const _kMaxOnlineSampleAge = Duration(seconds: 45);
@@ -811,12 +812,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
         return;
       }
       state = state.copyWith(isLoading: false, isOnline: true);
-      _startLocationUpdates(
-        lat,
-        lng,
-        sampledAt: sample,
-        accuracy: accuracy,
-      );
+      _startLocationUpdates(lat, lng, sampledAt: sample, accuracy: accuracy);
     } on DioException catch (e) {
       if (!_isCurrentAvailability(sessionEpoch, availabilityEpoch)) return;
       try {
@@ -1041,16 +1037,14 @@ class DriverNotifier extends StateNotifier<DriverState> {
       );
       if (!_isCurrentSession(sessionEpoch)) return;
 
-      if (status == 'delivered') {
-        // Refresh stats & clear active order after a moment
-        await fetchTodayStats();
-        if (!_isCurrentSession(sessionEpoch)) return;
-        state = state.copyWith(
-          isLoading: false,
-          activeOrder: null,
-          successMessage: 'Giao hàng thành công!',
+      final statusGroup = orderStatusGroup(status);
+      if (statusGroup == OrderStatusGroup.completed ||
+          statusGroup == OrderStatusGroup.cancelled) {
+        await _clearTerminalOrder(
+          orderId: orderId,
+          statusGroup: statusGroup,
+          sessionEpoch: sessionEpoch,
         );
-        BackgroundLocationService.instance.setActiveOrderMode(false);
       } else {
         await fetchActiveOrder();
         if (!_isCurrentSession(sessionEpoch)) return;
@@ -1176,6 +1170,35 @@ class DriverNotifier extends StateNotifier<DriverState> {
     }
   }
 
+  Future<void> _clearTerminalOrder({
+    required String orderId,
+    required OrderStatusGroup statusGroup,
+    required int sessionEpoch,
+  }) async {
+    if (!_isCurrentSession(sessionEpoch) || state.activeOrder?.id != orderId) {
+      return;
+    }
+
+    state = state.copyWith(isLoading: false, activeOrder: null);
+    BackgroundLocationService.instance.setActiveOrderMode(false);
+
+    await _cancelOrderStatusSubscriptions();
+    if (!_isCurrentSession(sessionEpoch)) return;
+    try {
+      await _realtime.unsubscribeOrder(orderId);
+    } catch (_) {}
+    if (!_isCurrentSession(sessionEpoch)) return;
+
+    if (statusGroup == OrderStatusGroup.completed) {
+      await fetchTodayStats();
+      if (!_isCurrentSession(sessionEpoch)) return;
+      state = state.copyWith(
+        isLoading: false,
+        successMessage: 'Giao hàng thành công!',
+      );
+    }
+  }
+
   // -----------------------------------------------------------------------
   // WebSocket
   // -----------------------------------------------------------------------
@@ -1194,14 +1217,14 @@ class DriverNotifier extends StateNotifier<DriverState> {
       final id = data['orderId'] as String? ?? data['order_id'] as String?;
       final status = data['status'] as String?;
       if (id == orderId && status != null && state.activeOrder?.id == id) {
-        if (status == 'delivered') {
-          await fetchTodayStats();
-          if (!_isCurrentSession(sessionEpoch)) return;
-          state = state.copyWith(
-            activeOrder: null,
-            successMessage: 'Giao hàng thành công!',
+        final statusGroup = orderStatusGroup(status);
+        if (statusGroup == OrderStatusGroup.completed ||
+            statusGroup == OrderStatusGroup.cancelled) {
+          await _clearTerminalOrder(
+            orderId: orderId,
+            statusGroup: statusGroup,
+            sessionEpoch: sessionEpoch,
           );
-          BackgroundLocationService.instance.setActiveOrderMode(false);
         } else {
           await fetchActiveOrder();
         }

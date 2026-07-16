@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../api/api_client.dart';
 import '../models/order.dart';
+import '../utils/order_status_groups.dart';
 // ignore_for_file: avoid_print
 
 final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
@@ -44,7 +45,9 @@ class OrderState {
       activeOrders: activeOrders ?? this.activeOrders,
       completedOrders: completedOrders ?? this.completedOrders,
       cancelledOrders: cancelledOrders ?? this.cancelledOrders,
-      currentTrackingOrder: currentTrackingOrder == _unset ? this.currentTrackingOrder : currentTrackingOrder as OrderModel?,
+      currentTrackingOrder: currentTrackingOrder == _unset
+          ? this.currentTrackingOrder
+          : currentTrackingOrder as OrderModel?,
       isPlacingOrder: isPlacingOrder ?? this.isPlacingOrder,
     );
   }
@@ -117,12 +120,20 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final cancelled = <OrderModel>[];
 
       for (final order in allOrders) {
-        if (order.status == 'cancelled') {
-          cancelled.add(order);
-        } else if (order.status == 'delivered') {
-          completed.add(order);
-        } else {
-          active.add(order);
+        switch (orderStatusGroup(order.status)) {
+          case OrderStatusGroup.completed:
+            completed.add(order);
+            break;
+          case OrderStatusGroup.cancelled:
+            cancelled.add(order);
+            break;
+          case OrderStatusGroup.pending:
+          case OrderStatusGroup.accepted:
+          case OrderStatusGroup.preparing:
+          case OrderStatusGroup.delivering:
+          case OrderStatusGroup.unknown:
+            active.add(order);
+            break;
         }
       }
 
