@@ -72,7 +72,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-15](#current-deployment-evidence--2026-07-15); do not infer current tag state from this superseded table.
+At that historical snapshot, `latest` had not been promoted. The current runtime is recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
 
 Expected Vercel projects:
 
@@ -240,7 +240,7 @@ Public variables are baked into Next.js assets. Changing them requires a rebuild
 
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. API health/readiness and both canonical Vercel health endpoints report the same full SHA; database, Redis, and Supabase Storage are ready. A read-only inventory reports 41 applied migrations and zero users, profiles, restaurants, orders, and GPS rows. The prior authenticated role journey and its screenshots belong to SHA `17584153`; rerun it only after candidate migration 42 and the hardened controller are reviewed and deployed together. Controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified.
+Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` is deployed. Railway deployment IDs are migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`, and worker `413dedcc-6ba7-46be-8c99-901f592c558f`. API health/readiness and both Vercel health endpoints report the same full SHA; Restaurant verification currently requires authenticated Vercel CLI access because `all_except_custom_domains` SSO protection is enabled and the project has no custom domain. Do not claim public Restaurant availability until a reviewed custom-domain or protection decision is applied and unauthenticated smoke passes. Database, Redis, and Supabase Storage are ready. A read-only inventory reports 41 applied migrations and zero users, profiles, restaurants, orders, and GPS rows. The prior authenticated role journey and its screenshots belong to SHA `17584153`; rerun it only after candidate migration 42 and the hardened controller are reviewed and deployed together. Controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified.
 
 ### Historical four-image release — SHA 17584153
 

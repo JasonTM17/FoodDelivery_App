@@ -4,19 +4,19 @@
 
 Final source head が full local gates、fresh remote CI、provider preflight、production smoke をすべて pass した場合のみ green です。Focused test や historical count、skip 付き script は release approval ではありません。
 
-## Evidence boundary — production 2026-07-15 / historical local 2026-07-14
+## Evidence boundary — production 2026-07-16 / historical local 2026-07-14
 
 Current production health evidence is tied to runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Counts below are historical local evidence; Admin/Restaurant Chrome と Customer/Driver API role-smoke は SHA `17584153` の evidence であり、current-revision certification ではありません。
 
 | Area           | Result                                                                                                                                                                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend        | Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` の API/ready と web health endpoints は green です。Post-merge PR source gates は別途記録し、older suite counts は bounded historical evidence とします。 |
+| Backend        | Post-merge candidate: Prisma generate/validate、typecheck、ESLint、Nest build は pass。Full Jest は 153 suites pass、1 gated integration suite skip、1,160 tests pass、1 test skip です。 |
 | Database       | Deployed SHA `a703ece` には 41 migrations が適用済みで、Database/Redis/Supabase Storage readiness は pass です。Candidate migration 42 は non-secret lifecycle tombstone、6 semantic FK preflight、explicit DDL transaction を追加します。Disposable PostGIS で最終 index の deliberate failure が先行 DDL を全 rollback することと clean apply を確認済みですが、PR review と synchronized rollout 前には deploy しません。Historical rolled-back/checksum-provenance rows は別の audit history です。 |
-| Mobile Flutter | Historical local evidence は 369 tests と `flutter analyze` を pass。Real Android/iOS background location と production-device evidence は未認証です。 |
-| Web            | Historical local typecheck/lint、Vitest、production-build counts は bounded evidence のみです。Current deployed Admin/Restaurant health revision は SHA `a703ece` で別途 verified です。 |
+| Mobile Flutter | Post-merge lock resolution と analyze は issue なし、full Customer/Driver suite は 373 tests pass。Physical Android/iOS background location は未認証です。 |
+| Web            | Post-merge frozen install、typecheck、lint、Vercel build-selection tests は pass。Admin は 194 tests/70 routes、Restaurant は 135 tests/55 routes を pass/build。Deployment health は SHA `a703ece` で別途 verified です。 |
 | Browser E2E    | Historical clean-volume Playwright evidence は Chrome desktop、Firefox、Pixel 5 mobile Chrome で 204/204 を pass。Production deployment に対して再実行した count ではありません。 |
 | FCM            | Historical local notification/Flutter lifecycle tests は pass。Controlled production device への live delivery は未認証です。 |
-| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は SHA `a703ece` で成功し、API/ready と両 canonical web health は同一 revision を返します。Current-revision authenticated role journeys は未認証です。 |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`、API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06`、worker `413dedcc-6ba7-46be-8c99-901f592c558f` は SHA `a703ece` で成功し、API/ready と両 web health は同一 revision を返します。Restaurant health は public request が SSO protection に redirect されるため authenticated Vercel CLI を使用しました。Current-revision authenticated role journeys と public Restaurant access は未認証です。 |
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 

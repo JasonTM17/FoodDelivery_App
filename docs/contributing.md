@@ -37,7 +37,7 @@ Use a worktree for work that must not disturb another checkout:
 
 ~~~bash
 git fetch --prune origin
-git worktree add ../foodflow-feature -b codex/short-scope origin/master
+git worktree add ../foodflow-feature -b feature/short-scope origin/master
 cd ../foodflow-feature
 ~~~
 

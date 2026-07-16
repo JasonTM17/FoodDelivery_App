@@ -4,19 +4,19 @@
 
 Chỉ được coi là xanh khi final source head pass toàn bộ local gate, remote CI mới, provider preflight và production smoke. Focused test chỉ chứng minh đúng cụm đó; số lịch sử hoặc script có skip không được dùng làm release approval.
 
-## Ranh giới evidence — production 15/07/2026 và local lịch sử 14/07/2026
+## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
 Evidence health production hiện tại gắn với runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`. Các test count bên dưới là evidence local lịch sử; role-smoke Admin/Restaurant Chrome và Customer/Driver API thuộc SHA `17584153`, không phải chứng nhận revision hiện tại.
 
 | Khu vực        | Kết quả                                                                                                                                                                                                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Backend        | Runtime SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` trả health API/ready và web đều xanh. Gate source đầy đủ sau merge của PR được ghi riêng; các count suite cũ chỉ là evidence lịch sử có phạm vi. |
+| Backend        | Candidate sau merge: Prisma generate/validate, typecheck, ESLint và Nest build pass; full Jest có 153 suite pass, 1 suite integration có gate bị skip, 1.160 test pass và 1 test skip. |
 | Database       | SHA `a703ece` đang deploy có 41 migration đã apply và readiness Database/Redis/Supabase Storage đều pass. Migration ứng viên thứ 42 thêm lifecycle tombstone không chứa secret, preflight đủ 6 semantic FK và dùng transaction DDL rõ ràng; PostGIS disposable đã chứng minh lỗi cố ý ở index cuối rollback toàn bộ DDL trước đó rồi clean apply thành công. Migration này chưa deploy trước khi PR được review và rollout đồng bộ. Các record rolled-back/checksum provenance lịch sử được ghi riêng như audit history. |
-| Mobile Flutter | Evidence local lịch sử pass 369 test và `flutter analyze`. Background location Android/iOS thật và evidence thiết bị production vẫn chưa được chứng nhận. |
-| Web            | Typecheck/lint, Vitest và production-build count local lịch sử chỉ là evidence có phạm vi. Revision health của Admin/Restaurant đang deploy được verify riêng tại SHA `a703ece`. |
+| Mobile Flutter | Lock resolution và analyze sau merge pass không lỗi; full suite Customer/Driver pass 373 test. Background location Android/iOS vật lý vẫn chưa được chứng nhận. |
+| Web            | Frozen install, typecheck, lint và test chọn build Vercel sau merge pass. Admin pass 194 test và build 70 route; Restaurant pass 135 test và build 55 route. Health deployment được verify riêng tại SHA `a703ece`. |
 | Browser E2E    | Evidence Playwright volume sạch lịch sử pass 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5. Các count này chưa được chạy lại trên deployment production. |
 | FCM            | Notification backend và lifecycle Flutter local lịch sử đã pass. Live delivery tới controlled production device vẫn chưa được chứng nhận. |
-| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại SHA `a703ece`; API/ready và hai web health canonical trả cùng revision. Role journey có xác thực trên revision hiện tại chưa được chứng nhận. |
+| Production     | Railway migrate `49579ce7-9808-4a35-afcc-82432943bc70`, API `9c823cd9-290a-4eb0-94a2-fdf01c3f0b06` và worker `413dedcc-6ba7-46be-8c99-901f592c558f` thành công tại SHA `a703ece`; API/ready và hai web health trả cùng revision. Health Restaurant cần Vercel CLI đã xác thực vì public request bị SSO protection chuyển hướng. Role journey có xác thực trên revision hiện tại và truy cập Restaurant công khai chưa được chứng nhận. |
 
 ### Docker volume sạch lịch sử — 14/07/2026
 
