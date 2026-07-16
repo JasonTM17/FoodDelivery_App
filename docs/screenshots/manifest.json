@@ -1,11 +1,12 @@
 {
-  "capturedAt": "2026-07-15T05:10:30Z",
+  "capturedAt": "2026-07-16T12:56:17Z",
   "assetIntegrity": {
     "algorithm": "SHA-256",
     "basePath": "docs/screenshots",
     "files": {
       "../media/gifs/admin-login-flow.gif": "C7CBB4A0422D8573998CEC5A6F53FE2360B4548333E349FE81726A7DDE75E4E2",
       "../media/gifs/customer-auth-flow.gif": "3E10A642B42869627E80BFCBAF084C2FCFA32A21605054176A4DF70D6DB1F625",
+      "../media/gifs/customer-role-flow.gif": "83981B1755B6FA1FA172399863702F87A5CE98CEE7686ACD26323364C37CA4E6",
       "../media/gifs/driver-role-flow.gif": "79FBFA2907CDAD333C89FE4A07A9EFE359069D9D5A9E1219155D912B3D5614B5",
       "../media/gifs/restaurant-orders-to-menu.gif": "A543C8B0DE937B4B4A02D6A248BB44CB28A004CDD4EB5403842852A08C316ECF",
       "admin/01-login.png": "3A2125F39F015B3A5059B9321F909EAF5849693C4AAE6F04951348DC6042FD7D",
@@ -19,6 +20,9 @@
       "admin/09-analytics.png": "8D71C02ADBE75B5E50D151DDF0766C7E4A13EBBBE49EEAD593C669FED9F12BCE",
       "admin/10-settings.png": "13C45F292D7540A4AFE618187FA64E46681057AB1BD24962B150A3B313D99240",
       "customer/01-login.webp": "BEA081EF5E25259ED59322E986F372FEBF0213EC0AA1552C9CAFA9017F12994A",
+      "customer/02-home.webp": "0EE56B074DD03ED0B56021AE5C347F77CBD15765FFAFBE28FA95BE45ACF58F25",
+      "customer/03-orders.webp": "C31F66CC72966C53016D56186920BF7C1351504DB8D9CCFEF2979F3D99332FDD",
+      "customer/04-profile.webp": "1B6EB989BD657209BCD270754DCE7097FA682904D3D67782265D3AB07BDE4945",
       "driver/01-login.webp": "81081988928AA754987179733C0326EB00842ECCF5CB289366A283F581FC777F",
       "driver/02-home.webp": "3842BFEE08812DB36B863488FF803694BDA4FF27F719BCDAA54424ED11C6B279",
       "driver/03-earnings.webp": "FE64634FFD244A921CE6527235C4FA979FAA4E5200B68772EA8693E291D24763",
@@ -128,6 +132,42 @@
     "files": [
       "../media/gifs/customer-auth-flow.gif"
     ]
+  },
+  "customerAuthenticatedCapture": {
+    "capturedAt": "2026-07-16T12:56:17Z",
+    "sourceHead": "870bcc0dda58f761dce9003e0801a3e15709db3d",
+    "dirtyWorkspace": true,
+    "environment": "Android API 35 x86_64 AVD connected to the local FoodFlow Docker Compose stack",
+    "build": "Customer debug APK for android-x64; SHA256 E7F6AFB217188172BBB090C46A6482B1A5A113463DD1EABD3756EC16DB328068",
+    "apiBaseUrl": "http://10.0.2.2:3001/api",
+    "realtimeProvider": "socketio",
+    "location": "Fixed simulated GPS near the synthetic seed restaurants; UI exposes only the generic current-location label and uses no Google Maps API key",
+    "privacyReview": "Approved local fixture evidence: seeded Customer identity only; no password, email, phone, exact coordinate, address, token, provider key, production account, or personal notification is visible",
+    "evidence": [
+      "Seeded Customer authenticated through the local NestJS API and refreshed the retained session after APK replacement",
+      "Home loaded local promotions and nearby seeded restaurants after Android location permission and fixed simulated GPS",
+      "Orders rendered restaurant_pending as the localized Vietnamese label Chờ nhà hàng; the mobile mapper now covers every backend OrderStatus in English, Vietnamese, and Japanese with a safe unknown-state fallback",
+      "Profile exposed only a generic user label and synthetic aggregate counts",
+      "All retained WebP and GIF files were visually reviewed after metadata stripping"
+    ],
+    "files": [
+      "customer/02-home.webp",
+      "customer/03-orders.webp",
+      "customer/04-profile.webp"
+    ],
+    "gif": {
+      "path": "../media/gifs/customer-role-flow.gif",
+      "generatedAt": "2026-07-16T13:02:25Z",
+      "sourceFrames": [
+        "customer/02-home.webp",
+        "customer/03-orders.webp",
+        "customer/04-profile.webp"
+      ],
+      "frameCount": 3,
+      "dimensions": "360x800 canvas",
+      "sha256": "83981B1755B6FA1FA172399863702F87A5CE98CEE7686ACD26323364C37CA4E6",
+      "privacyReview": "Uses only the three authenticated local Customer fixture frames; metadata stripped"
+    }
   },
   "mobileRoleCapture": {
     "capturedAt": "2026-07-15T01:57:34Z",

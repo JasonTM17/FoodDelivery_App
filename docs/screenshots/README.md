@@ -8,11 +8,11 @@ Privacy-reviewed product media for the four FoodFlow roles. Read the [capture ma
 |---|---|---|
 | Admin / Restaurant controlled production smoke | Google Chrome against the canonical Vercel aliases, Railway API, and Supabase production | Historical authenticated role evidence for runtime SHA `17584153`; capture-time aggregates show four synthetic users and one temporary restaurant, then final cleanup returned production inventory to zero. Current Railway API/worker/migrator and Vercel Admin/Restaurant health report `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. A separate current-revision API/realtime GPS smoke passed, but these captures are not current-revision four-role UI, active-order, payment, provider, or device certification. |
 | Admin / Restaurant | Google Chrome against the isolated `foodflow-batch4-e2e` Docker stack with deterministic seed data | Local web product/regression evidence; not a deployed browser journey or release certification. |
-| Customer / Driver role flows | Flutter debug APKs on an Android API 35 x86_64 AVD connected to the isolated E2E stack | Built from the current dirty working tree; not a mobile release or production-provider certification. |
+| Customer / Driver role flows | Flutter debug APKs on an Android API 35 x86_64 AVD connected to local FoodFlow stacks | Public-auth plus authenticated synthetic-fixture Customer/Driver evidence from dirty working trees; not mobile release or production-provider certification. |
 | Driver GPS / foreground tracking | Android API 35 emulator with fixed simulated location and local Socket.IO compatibility | Local command/persistence/fanout evidence only; not Supabase/Railway, payout, routing, or production proof. |
 | Driver production GPS recovery | Android API 35 x86_64 emulator using Railway and Supabase with a temporary synthetic Driver | Authenticated production-emulator evidence for foreground tracking, screen-off updates, offline flush, process recovery, PostGIS and private Broadcast; not physical-device, iOS, FCM, payout or app-store certification. |
 
-The manifest records only deterministic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. The mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap. `assetIntegrity.files` records SHA-256 for all 36 curated media paths, resolved relative to this directory.
+The manifest records only synthetic seed identities. Passwords stay masked and are not stored in docs or media. No token, provider key, production account, real coordinate, or personal notification is approved for capture. The authenticated Customer capture shows only a generic current-location label and generic profile identity. Mobile role capture used no Google Maps API key. Admin/Restaurant web map configuration accepts only the keyless OpenFreeMap style through MapLibre; mobile map widgets are a separate integration and are not relabelled as OpenFreeMap. `assetIntegrity.files` records SHA-256 for all 40 curated media paths, resolved relative to this directory.
 
 ## Role guides
 
@@ -29,7 +29,7 @@ The manifest records only deterministic seed identities. Passwords stay masked a
 |---|---:|---|
 | Admin | 10 PNG stills + 1 GIF | Sign-in, overview, orders, restaurants, users, drivers, promotions, support, analytics, settings; login-to-overview flow. |
 | Restaurant | 10 PNG stills + 1 GIF | Sign-in, dashboard, orders, menu, promotions, revenue, reviews, staff, insights, settings; orders-to-menu flow. |
-| Customer | 1 WebP still + 1 GIF | Privacy-reviewed app launch and public sign-in/registration navigation without entered credentials. |
+| Customer | 4 WebP stills + 2 GIFs | App launch/public auth plus authenticated Home, Orders, Profile, and role-flow evidence from synthetic local fixtures. |
 | Driver | 7 WebP stills + 1 GIF | Sign-in, Home, earnings, profile, three Online/GPS states; sign-in-to-profile role flow. |
 | Android GPS | 2 WebP stills | Notification permission and foreground location notification while Driver is Online. |
 | Controlled production web smoke | 2 PNG stills | Authenticated Admin overview and tenant-scoped Restaurant empty order queue; synthetic identities deleted after capture. |
@@ -52,7 +52,11 @@ These two images are bounded authenticated role evidence, not general production
 ### Customer
 
 - `customer/01-login.webp` — privacy-reviewed Customer app launch from the verified Android build.
+- `customer/02-home.webp` — authenticated Home with generic current location, promotion, and nearby synthetic restaurant data.
+- `customer/03-orders.webp` — active synthetic order with post-fix localized `Chờ nhà hàng` status.
+- `customer/04-profile.webp` — generic profile label and synthetic aggregate/menu data without contact details.
 - `../media/gifs/customer-auth-flow.gif` — real Customer sign-in → registration → sign-in navigation recorded without entering credentials.
+- `../media/gifs/customer-role-flow.gif` — three-frame authenticated Home → Orders → Profile preview generated from the reviewed Customer stills.
 
 ### Driver
 

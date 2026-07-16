@@ -10,8 +10,8 @@
 |---|---|---|---|---|
 | Admin | Next.js web dashboard | Local PNG 10 枚、GIF 1 件、historical production PNG 1 枚 | [Admin ガイド](./admin-guide.ja.md) | Local Chrome regression と別ラベルの SHA `17584153` controlled-production evidence。Current revision certification ではありません。 |
 | Restaurant | Next.js web dashboard | Local PNG 10 枚、GIF 1 件、historical production PNG 1 枚 | [Restaurant ガイド](./restaurant-guide.ja.md) | Local Chrome regression と別ラベルの SHA `17584153` controlled-production evidence。Current public access は Vercel SSO 配下です。 |
-| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed app-launch WebP 1 枚と public-auth GIF 1 件 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD app-launch/public-auth evidence のみ。Exact coordinates を含む authenticated still は除外しました。 |
-| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Local WebP 6 枚、production-emulator recovery WebP 1 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Local Android AVD role/GPS evidence と別ラベルの Railway/Supabase production-emulator capture。Physical device、iOS、FCM、payout、app-store を認証しません。 |
+| Customer | Flutter/Riverpod native Android/iOS app; Android `customer` flavor | Privacy-reviewed local WebP 4 枚と GIF 2 件 | [Customer（注文者）ガイド](./customer-guide.ja.md) | Android AVD public-auth と authenticated local-fixture Home/Orders/Profile evidence。Exact coordinates は表示しません。 |
+| Driver | Flutter/Riverpod native Android/iOS app; Android `driver` flavor | Local WebP 6 枚、production-emulator recovery WebP 1 枚、tracking/permission asset 2 件、GIF 1 件 | [Driver ガイド](./driver-guide.ja.md) | Local Android AVD role/GPS evidence と別ラベルの Railway/Supabase production-emulator capture。Physical device、iOS、FCM、payout、routing、app-store を認証しません。 |
 
 ## Role guide を選ぶ
 
@@ -29,9 +29,10 @@ Customer/Driver に browser URL はありません。正しい Flutter entrypoin
 | Admin login → overview | ![Admin](media/gifs/admin-login-flow.gif) |
 | Restaurant orders → menu | ![Restaurant](media/gifs/restaurant-orders-to-menu.gif) |
 | Customer sign-in → registration → sign-in | ![Customer public authentication flow](media/gifs/customer-auth-flow.gif) |
+| Customer Home → Orders → Profile | ![Customer authenticated role flow](media/gifs/customer-role-flow.gif) |
 | Driver sign-in → Home → Earnings → Profile | ![Driver flow](media/gifs/driver-role-flow.gif) |
 
-GIF は silent optimized preview です。Admin/Restaurant は review 済み Google Chrome frame を使います。Customer は credential を入力しない public sign-in → registration → sign-in navigation のみを記録します。Driver は privacy-reviewed Android AVD role still 4 枚を使います。いずれも production または mobile release journey の認証ではありません。
+GIF は silent optimized preview です。Admin/Restaurant は review 済み Google Chrome frame を使います。Customer は credential を入力しない public authentication navigation と、synthetic local fixture による authenticated Home → Orders → Profile flow の両方を記録します。Driver は privacy-reviewed Android AVD role still 4 枚を使います。いずれも production または mobile release journey の認証ではありません。
 
 ## Historical controlled-production web smoke
 
@@ -81,13 +82,23 @@ Customer は first-class Flutter/Riverpod native Android/iOS product です。[`
 
 Customer/Driver 共通 workflow、permission、通知動作、実行コマンドは [Customer / Driver モバイルガイド](./customer-driver-guide.ja.md) にあります。
 
-次の privacy-reviewed Android AVD media は app-launch still 1 枚と、credential を入力しない public sign-in → registration → sign-in GIF 1 件です。Exact simulated coordinates を表示した authenticated Home/discovery still は保持しません。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
+次の privacy-reviewed Android AVD media は public-auth flow と authenticated local-fixture Home → Orders → Profile flow を含みます。Fixed simulated GPS を使いますが、retained UI は一般的な current-location label だけを表示し、exact coordinate は表示しません。Manifest は dirty workspace と記録するため regression/product evidence のみで、release evidence には clean-head recapture が必要です。
+
+### Customer public authentication と app launch
 
 ![Customer sign-in、registration、return flow](./media/gifs/customer-auth-flow.gif)
 
 ![Customer app launch](./screenshots/customer/01-login.webp)
 
-Exact simulated coordinates を表示した authenticated Customer stills は gallery から除外しました。Coordinate-redaction behavior は altered screenshot ではなく mobile regression test で確認します。
+### Authenticated local fixture
+
+![Customer Home、Orders、Profile flow](./media/gifs/customer-role-flow.gif)
+
+| Home と近隣店舗 | Active orders | Profile |
+|---|---|---|
+| ![Customer Home](./screenshots/customer/02-home.webp) | ![Customer orders](./screenshots/customer/03-orders.webp) | ![Customer Profile](./screenshots/customer/04-profile.webp) |
+
+Orders image は backend enum `restaurant_pending` が internal key のままではなく Vietnamese copy (`Chờ nhà hàng`) として表示される post-fix visual evidence です。Focused tests は backend の 15 個の `OrderStatus` を English、Vietnamese、Japanese で確認し、未知の status に対する localized fallback も確認します。Synthetic local fixture data のみで、production/release certification ではありません。
 
 ## Driver
 
@@ -112,13 +123,13 @@ Historical local E2E は authenticated GPS command を受け取り、Redis liven
 | Screen | Image |
 |---|---|
 | Driver Online after GPS verification | ![Driver Online](screenshots/driver/driver-online-gps-e2e.webp) |
-| Current Driver Online device smoke | ![Driver Online realtime GPS](screenshots/driver/driver-online-realtime-gps.webp) |
+| Current Driver Online emulator smoke | ![Driver Online realtime GPS](screenshots/driver/driver-online-realtime-gps.webp) |
 | Foreground-tracking notification permission | ![Driver notification permission](screenshots/gps/driver-notification-permission.webp) |
 | Foreground location notification | ![Driver foreground location notification](screenshots/gps/driver-foreground-location-notification.webp) |
 
 ### Android API 35 production-emulator recovery
 
-2026-07-15 の別 smoke は temporary synthetic Driver を Android API 35 上で Railway と Supabase に接続しました。明示的 Online 後の foreground tracking、screen-off update、original timestamp を保持した offline buffer/flush、process termination 後の refresh/restart、PostGIS persistence、authorized private Broadcast を検証し、temporary account と GPS row を削除しました。Production backend/provider と emulator の限定 evidence であり、physical device、iOS、FCM、payout、routing、app-store を認証しません。
+2026-07-15 の別 smoke は temporary synthetic Driver を Android API 35 上で Railway と Supabase に接続しました。この bounded run は明示的 Online 後の foreground tracking、screen-off update、original timestamp を保持した offline buffer/flush、process termination 後の refresh/restart、PostGIS persistence、authorized private Broadcast を記録し、temporary account と GPS row を削除しました。Production backend/provider に対する Android emulator 1 回の限定 evidence であり、physical device、iOS、FCM、payout、routing、app-store、または broader production を認証しません。
 
 ![Driver after Android production-emulator recovery](./screenshots/driver/driver-online-android-api35-recovery.webp)
 

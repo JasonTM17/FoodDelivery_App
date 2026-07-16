@@ -293,6 +293,23 @@ flutter build apk --debug --flavor driver -t lib/main_driver.dart \
   --dart-define=REALTIME_PROVIDER=socketio
 ```
 
+Focused Customer order-status regression:
+
+```powershell
+flutter test test/shared/order_status_labels_test.dart `
+  test/shared/order_status_groups_test.dart `
+  test/customer/order_provider_contract_test.dart
+```
+
+This focused set verifies all 15 backend `OrderStatus` labels in English,
+Vietnamese, and Japanese, the localized unknown-state fallback, and that
+`restaurant_pending` renders as `Chờ nhà hàng` instead of a raw enum key. It
+also verifies that `delivered` and `completed` enter the completed history
+bucket, `cancelled` and `refunded` enter the cancelled bucket, and every
+supported non-cancelled lifecycle status maps to one of four tracking phases.
+The provider contract exercises the same buckets against the backend order
+envelope. This focused evidence is not production certification.
+
 Production release additionally requires:
 
 - Supabase token/channel claims, cross-scope denial, reconnect/refresh, and receive-only event dispatch.
