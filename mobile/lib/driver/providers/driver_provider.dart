@@ -384,6 +384,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   final RealtimeClient _realtime;
   final SecureStorageService _storage;
   StreamSubscription<Map<String, dynamic>>? _orderStatusSub;
+  StreamSubscription<Map<String, dynamic>>? _terminalStatusSub;
   StreamSubscription<Map<String, dynamic>>? _etaSub;
   StreamSubscription<Map<String, dynamic>>? _offerSub;
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
@@ -743,11 +744,13 @@ class DriverNotifier extends StateNotifier<DriverState> {
   Future<void> _cancelAllRealtimeSubscriptions() async {
     final subscriptions = [
       _orderStatusSub,
+      _terminalStatusSub,
       _etaSub,
       _offerSub,
       _assignedOrderSub,
     ];
     _orderStatusSub = null;
+    _terminalStatusSub = null;
     _etaSub = null;
     _offerSub = null;
     _assignedOrderSub = null;
@@ -1281,6 +1284,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
     if (!_isCurrentActiveOrderRequest(sessionEpoch, activeOrderRequestEpoch)) {
       return;
     }
+    _ensureTerminalStatusListener();
     final orderStatusSubscriptionEpoch = _beginOrderStatusSubscription();
     await _cancelOrderStatusSubscriptions();
     if (!_isCurrentOrderStatusSubscription(
@@ -1357,6 +1361,29 @@ class DriverNotifier extends StateNotifier<DriverState> {
           routePhase: routePhase,
           routePolyline: routePolyline,
         ),
+      );
+    });
+  }
+
+  void _ensureTerminalStatusListener() {
+    if (_terminalStatusSub != null) return;
+    final listenerSessionEpoch = _sessionEpoch;
+    _terminalStatusSub = _realtime.onOrderStatus.listen((data) async {
+      if (!_isCurrentSession(listenerSessionEpoch)) return;
+      final id = data['orderId'] as String? ?? data['order_id'] as String?;
+      final status = data['status'] as String?;
+      if (id == null || status == null || state.activeOrder?.id != id) {
+        return;
+      }
+      final statusGroup = orderStatusGroup(status);
+      if (statusGroup != OrderStatusGroup.completed &&
+          statusGroup != OrderStatusGroup.cancelled) {
+        return;
+      }
+      await _clearTerminalOrder(
+        orderId: id,
+        statusGroup: statusGroup,
+        sessionEpoch: listenerSessionEpoch,
       );
     });
   }

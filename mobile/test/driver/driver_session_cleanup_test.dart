@@ -40,6 +40,38 @@ class _LogoutApiInterceptor extends Interceptor {
   }
 }
 
+class _LogoutWithActiveOrderApiInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.path == '/driver/orders/active' && options.method == 'GET') {
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: _activeOrderPayload,
+        ),
+      );
+      return;
+    }
+    if (options.path == '/driver/offline' || options.path == '/auth/logout') {
+      handler.resolve(
+        Response<Map<String, dynamic>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: const {},
+        ),
+      );
+      return;
+    }
+    handler.reject(
+      DioException(
+        requestOptions: options,
+        message: 'Unexpected API request: ${options.path}',
+      ),
+    );
+  }
+}
+
 class _ActiveOrderApiInterceptor extends Interceptor {
   int activeOrderFetchCount = 0;
   int todayStatsFetchCount = 0;
@@ -324,6 +356,45 @@ class _ControllableRealtimeTransport implements RealtimeTransport {
   void dispose() {}
 }
 
+class _QueuedOrderStatusTransport extends _ControllableRealtimeTransport {
+  final _listeners = <MultiStreamController<Map<String, dynamic>>>[];
+  final _queuedEvents =
+      <
+        ({
+          List<MultiStreamController<Map<String, dynamic>>> listeners,
+          Map<String, dynamic> data,
+        })
+      >[];
+  late final Stream<Map<String, dynamic>> _queuedOrderStatus = Stream.multi((
+    controller,
+  ) {
+    _listeners.add(controller);
+    controller.onCancel = () {
+      _listeners.remove(controller);
+    };
+  }, isBroadcast: true);
+
+  @override
+  Stream<Map<String, dynamic>> get onOrderStatus => _queuedOrderStatus;
+
+  @override
+  void addOrderStatus(Map<String, dynamic> status) {
+    _queuedEvents.add((
+      listeners: List<MultiStreamController<Map<String, dynamic>>>.of(
+        _listeners,
+      ),
+      data: Map<String, dynamic>.of(status),
+    ));
+  }
+
+  void flushOrderStatus() {
+    final event = _queuedEvents.removeAt(0);
+    for (final listener in event.listeners) {
+      listener.add(event.data);
+    }
+  }
+}
+
 const _dispatchOffer = {
   'orderId': 'order-1',
   'offerToken': 'offer-token',
@@ -537,6 +608,97 @@ void main() {
       }
     },
   );
+
+  test(
+    'a queued terminal event wins when a stale fetch installs a new listener first',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final interceptor = _StaleActiveOrderSnapshotInterceptor();
+      ApiClient.instance.dio.interceptors.add(interceptor);
+      final transport = _QueuedOrderStatusTransport();
+      final realtime = RealtimeClient.forTesting(
+        provider: RealtimeProvider.supabase,
+        transport: transport,
+        postCommand: (_, _) async {},
+      );
+      final notifier = _TestDriverNotifier(realtime: realtime)
+        ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+      try {
+        await notifier.fetchActiveOrder();
+        expect(notifier.state.activeOrder?.id, 'order-active');
+
+        final staleFetch = notifier.fetchActiveOrder();
+        await interceptor.staleFetchStarted.future;
+
+        // The realtime controller queues delivery asynchronously. Completing
+        // the stale response now lets its continuation rotate the listener
+        // before the already-queued terminal event is dispatched.
+        transport.addOrderStatus({
+          'orderId': 'order-active',
+          'status': 'refunded',
+        });
+        scheduleMicrotask(interceptor.staleFetchResponse.complete);
+        await staleFetch;
+        transport.flushOrderStatus();
+        for (var attempt = 0; attempt < 20; attempt += 1) {
+          if (transport.unsubscribeOrderCount == 1 &&
+              notifier.state.activeOrder == null) {
+            break;
+          }
+          await Future<void>.delayed(Duration.zero);
+        }
+
+        expect(notifier.state.activeOrder, isNull);
+        expect(transport.subscribedOrderIds, ['order-active', 'order-active']);
+        expect(transport.unsubscribedOrderIds, ['order-active']);
+      } finally {
+        if (!interceptor.staleFetchResponse.isCompleted) {
+          interceptor.staleFetchResponse.complete();
+        }
+        notifier.dispose();
+        await Future<void>.delayed(Duration.zero);
+        await transport.close();
+        ApiClient.instance.dio.interceptors.remove(interceptor);
+      }
+    },
+  );
+
+  test('persistent terminal listener is inert after logout', () async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final interceptor = _LogoutWithActiveOrderApiInterceptor();
+    ApiClient.instance.dio.interceptors.add(interceptor);
+    final transport = _QueuedOrderStatusTransport();
+    final realtime = RealtimeClient.forTesting(
+      provider: RealtimeProvider.supabase,
+      transport: transport,
+      postCommand: (_, _) async {},
+    );
+    final notifier = _TestDriverNotifier(realtime: realtime)
+      ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+    try {
+      await notifier.fetchActiveOrder();
+      expect(notifier.state.activeOrder?.id, 'order-active');
+
+      transport.addOrderStatus({
+        'orderId': 'order-active',
+        'status': 'refunded',
+      });
+      await notifier.logout();
+      transport.flushOrderStatus();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(notifier.state.isAuthenticated, isFalse);
+      expect(notifier.state.activeOrder, isNull);
+      expect(transport.unsubscribeOrderCount, 1);
+    } finally {
+      notifier.dispose();
+      await Future<void>.delayed(Duration.zero);
+      await transport.close();
+      ApiClient.instance.dio.interceptors.remove(interceptor);
+    }
+  });
 
   for (final provider in RealtimeProvider.values) {
     test(
