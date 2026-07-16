@@ -149,6 +149,48 @@ class _TerminalStatusRaceInterceptor extends Interceptor {
   }
 }
 
+class _StaleActiveOrderSnapshotInterceptor extends Interceptor {
+  int activeOrderFetchCount = 0;
+  final staleFetchStarted = Completer<void>();
+  final staleFetchResponse = Completer<void>();
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.path == '/driver/orders/active' && options.method == 'GET') {
+      activeOrderFetchCount += 1;
+      if (activeOrderFetchCount == 1) {
+        handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: _activeOrderPayload,
+          ),
+        );
+        return;
+      }
+      if (activeOrderFetchCount == 2) {
+        if (!staleFetchStarted.isCompleted) staleFetchStarted.complete();
+        staleFetchResponse.future.then((_) {
+          handler.resolve(
+            Response<Map<String, dynamic>>(
+              requestOptions: options,
+              statusCode: 200,
+              data: _activeOrderPayload,
+            ),
+          );
+        });
+        return;
+      }
+    }
+    handler.reject(
+      DioException(
+        requestOptions: options,
+        message: 'Unexpected API request: ${options.path}',
+      ),
+    );
+  }
+}
+
 class _AvailabilityRaceInterceptor extends Interceptor {
   final onlineStarted = Completer<void>();
   final onlineResponse = Completer<void>();
@@ -434,6 +476,59 @@ void main() {
       } finally {
         if (!interceptor.patchResponse.isCompleted) {
           interceptor.patchResponse.complete();
+        }
+        notifier.dispose();
+        await Future<void>.delayed(Duration.zero);
+        await transport.close();
+        ApiClient.instance.dio.interceptors.remove(interceptor);
+      }
+    },
+  );
+
+  test(
+    'a stale active-order snapshot cannot resurrect a terminal order',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final interceptor = _StaleActiveOrderSnapshotInterceptor();
+      ApiClient.instance.dio.interceptors.add(interceptor);
+      final transport = _ControllableRealtimeTransport();
+      final realtime = RealtimeClient.forTesting(
+        provider: RealtimeProvider.supabase,
+        transport: transport,
+        postCommand: (_, _) async {},
+      );
+      final notifier = _TestDriverNotifier(realtime: realtime)
+        ..seed(const DriverState(isAuthenticated: true, isOnline: true));
+
+      try {
+        await notifier.fetchActiveOrder();
+        expect(notifier.state.activeOrder?.id, 'order-active');
+
+        final staleFetch = notifier.fetchActiveOrder();
+        await interceptor.staleFetchStarted.future;
+
+        transport.addOrderStatus({
+          'orderId': 'order-active',
+          'status': 'refunded',
+        });
+        for (var attempt = 0; attempt < 20; attempt += 1) {
+          if (transport.unsubscribeOrderCount == 1 &&
+              notifier.state.activeOrder == null) {
+            break;
+          }
+          await Future<void>.delayed(Duration.zero);
+        }
+        expect(notifier.state.activeOrder, isNull);
+
+        interceptor.staleFetchResponse.complete();
+        await staleFetch;
+
+        expect(notifier.state.activeOrder, isNull);
+        expect(transport.subscribedOrderIds, ['order-active']);
+        expect(transport.unsubscribedOrderIds, ['order-active']);
+      } finally {
+        if (!interceptor.staleFetchResponse.isCompleted) {
+          interceptor.staleFetchResponse.complete();
         }
         notifier.dispose();
         await Future<void>.delayed(Duration.zero);

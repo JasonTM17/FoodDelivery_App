@@ -14,6 +14,7 @@ import '../services/background_location_service.dart';
 
 const _kMaxOnlineSampleAge = Duration(seconds: 45);
 const _kMaxOnlineSampleFutureSkew = Duration(seconds: 15);
+const _kMaxRememberedTerminalOrderIds = 32;
 
 // ---------------------------------------------------------------------------
 // Models
@@ -388,6 +389,9 @@ class DriverNotifier extends StateNotifier<DriverState> {
   StreamSubscription<Map<String, dynamic>>? _assignedOrderSub;
   int _sessionEpoch = 0;
   int _availabilityEpoch = 0;
+  int _activeOrderRequestEpoch = 0;
+  int _orderStatusSubscriptionEpoch = 0;
+  final Set<String> _terminalOrderIds = <String>{};
   Future<void>? _pendingOnlineRequest;
   bool _isDisposed = false;
 
@@ -663,9 +667,22 @@ class DriverNotifier extends StateNotifier<DriverState> {
     await _clearAuthTokens();
   }
 
-  int _invalidateSession() => ++_sessionEpoch;
+  int _invalidateSession() {
+    _terminalOrderIds.clear();
+    _activeOrderRequestEpoch += 1;
+    _orderStatusSubscriptionEpoch += 1;
+    return ++_sessionEpoch;
+  }
 
   int _invalidateAvailability() => ++_availabilityEpoch;
+
+  int _beginActiveOrderRequest() => ++_activeOrderRequestEpoch;
+
+  int _beginOrderStatusSubscription() => ++_orderStatusSubscriptionEpoch;
+
+  void _invalidateOrderStatusSubscription() {
+    _orderStatusSubscriptionEpoch += 1;
+  }
 
   bool _isCurrentSession(int sessionEpoch) {
     return !_isDisposed && sessionEpoch == _sessionEpoch;
@@ -674,6 +691,30 @@ class DriverNotifier extends StateNotifier<DriverState> {
   bool _isCurrentAvailability(int sessionEpoch, int availabilityEpoch) {
     return _isCurrentSession(sessionEpoch) &&
         availabilityEpoch == _availabilityEpoch;
+  }
+
+  bool _isCurrentActiveOrderRequest(
+    int sessionEpoch,
+    int activeOrderRequestEpoch,
+  ) {
+    return _isCurrentSession(sessionEpoch) &&
+        activeOrderRequestEpoch == _activeOrderRequestEpoch;
+  }
+
+  bool _isCurrentOrderStatusSubscription(
+    int sessionEpoch,
+    int orderStatusSubscriptionEpoch,
+  ) {
+    return _isCurrentSession(sessionEpoch) &&
+        orderStatusSubscriptionEpoch == _orderStatusSubscriptionEpoch;
+  }
+
+  void _rememberTerminalOrder(String orderId) {
+    _terminalOrderIds.remove(orderId);
+    _terminalOrderIds.add(orderId);
+    while (_terminalOrderIds.length > _kMaxRememberedTerminalOrderIds) {
+      _terminalOrderIds.remove(_terminalOrderIds.first);
+    }
   }
 
   Future<void> _waitForPendingOnlineRequest() async {
@@ -1104,26 +1145,53 @@ class DriverNotifier extends StateNotifier<DriverState> {
 
   Future<void> fetchActiveOrder() async {
     final sessionEpoch = _sessionEpoch;
+    final activeOrderRequestEpoch = _beginActiveOrderRequest();
     try {
       final response = await _api.get('/driver/orders/active');
-      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!_isCurrentActiveOrderRequest(
+        sessionEpoch,
+        activeOrderRequestEpoch,
+      )) {
+        return;
+      }
       if (response.data != null &&
           (response.data as Map<String, dynamic>).isNotEmpty) {
         final order = OrderModel.fromJson(
           response.data as Map<String, dynamic>,
         );
+        if (_terminalOrderIds.contains(order.id)) return;
         state = state.copyWith(activeOrder: order);
-        await _listenOrderStatus(order.id);
-        if (!_isCurrentSession(sessionEpoch)) return;
+        await _listenOrderStatus(
+          order.id,
+          activeOrderRequestEpoch: activeOrderRequestEpoch,
+        );
+        if (!_isCurrentActiveOrderRequest(
+              sessionEpoch,
+              activeOrderRequestEpoch,
+            ) ||
+            state.activeOrder?.id != order.id) {
+          return;
+        }
         BackgroundLocationService.instance.setActiveOrderMode(true);
       } else {
+        _invalidateOrderStatusSubscription();
         await _cancelOrderStatusSubscriptions();
-        if (!_isCurrentSession(sessionEpoch)) return;
+        if (!_isCurrentActiveOrderRequest(
+          sessionEpoch,
+          activeOrderRequestEpoch,
+        )) {
+          return;
+        }
         state = state.copyWith(activeOrder: null);
         BackgroundLocationService.instance.setActiveOrderMode(false);
       }
     } catch (_) {
-      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!_isCurrentActiveOrderRequest(
+        sessionEpoch,
+        activeOrderRequestEpoch,
+      )) {
+        return;
+      }
       state = state.copyWith(error: 'DRIVER_ACTIVE_ORDER_UNAVAILABLE');
     }
   }
@@ -1179,6 +1247,8 @@ class DriverNotifier extends StateNotifier<DriverState> {
       return;
     }
 
+    _rememberTerminalOrder(orderId);
+    _invalidateOrderStatusSubscription();
     state = state.copyWith(isLoading: false, activeOrder: null);
     BackgroundLocationService.instance.setActiveOrderMode(false);
 
@@ -1203,17 +1273,47 @@ class DriverNotifier extends StateNotifier<DriverState> {
   // WebSocket
   // -----------------------------------------------------------------------
 
-  Future<void> _listenOrderStatus(String orderId) async {
+  Future<void> _listenOrderStatus(
+    String orderId, {
+    required int activeOrderRequestEpoch,
+  }) async {
     final sessionEpoch = _sessionEpoch;
+    if (!_isCurrentActiveOrderRequest(sessionEpoch, activeOrderRequestEpoch)) {
+      return;
+    }
+    final orderStatusSubscriptionEpoch = _beginOrderStatusSubscription();
     await _cancelOrderStatusSubscriptions();
-    if (!_isCurrentSession(sessionEpoch)) return;
+    if (!_isCurrentOrderStatusSubscription(
+          sessionEpoch,
+          orderStatusSubscriptionEpoch,
+        ) ||
+        state.activeOrder?.id != orderId) {
+      return;
+    }
     await _realtime.connect();
-    if (!_isCurrentSession(sessionEpoch)) return;
+    if (!_isCurrentOrderStatusSubscription(
+          sessionEpoch,
+          orderStatusSubscriptionEpoch,
+        ) ||
+        state.activeOrder?.id != orderId) {
+      return;
+    }
     await _realtime.subscribeOrder(orderId);
-    if (!_isCurrentSession(sessionEpoch)) return;
+    if (!_isCurrentOrderStatusSubscription(
+          sessionEpoch,
+          orderStatusSubscriptionEpoch,
+        ) ||
+        state.activeOrder?.id != orderId) {
+      return;
+    }
 
     _orderStatusSub = _realtime.onOrderStatus.listen((data) async {
-      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!_isCurrentOrderStatusSubscription(
+        sessionEpoch,
+        orderStatusSubscriptionEpoch,
+      )) {
+        return;
+      }
       final id = data['orderId'] as String? ?? data['order_id'] as String?;
       final status = data['status'] as String?;
       if (id == orderId && status != null && state.activeOrder?.id == id) {
@@ -1232,7 +1332,12 @@ class DriverNotifier extends StateNotifier<DriverState> {
     });
 
     _etaSub = _realtime.onEtaUpdate.listen((data) {
-      if (!_isCurrentSession(sessionEpoch)) return;
+      if (!_isCurrentOrderStatusSubscription(
+        sessionEpoch,
+        orderStatusSubscriptionEpoch,
+      )) {
+        return;
+      }
       if (data['orderId'] != orderId || state.activeOrder?.id != orderId) {
         return;
       }
