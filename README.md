@@ -18,7 +18,7 @@ FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Adm
 
 ## Current release evidence — 2026-07-16
 
-Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is now reported by the Railway API/worker/migrator deployments and by the Vercel Admin/Restaurant health responses. Production has 41 effective database migrations; candidate migration 42 and its hardened recovery controller remain undeployed. This revision currently has deployment and health evidence only: the four-role Google Chrome smoke, GPS flow, and device certification have not been rerun for `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. The earlier role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` authenticated Admin/Restaurant in Google Chrome and checked Customer/Driver read-only API contracts; it remains historical evidence. Docker Hub and GHCR `v0.1.2` and `latest` aliases remain the separately tagged release at SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`; its green CI, image scans, controlled GPS/Supabase smoke, and Android API 35 production-emulator recovery evidence do not certify the current runtime. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, and optional provider credentials remain outside current certification.
+Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is reported by the Railway API/worker/migrator deployments and the Vercel Admin/Restaurant health responses. Production has all 42 source migrations active; its 46-row Prisma history also retains four rolled-back audit rows. A controlled synthetic HCMC GPS run on this revision proved a five-minute ES256 realtime token, private Broadcast allow/deny RLS, accepted GPS fanout in 1,271 ms, PostGIS persistence, `poor_accuracy` and `driver_offline` rejection, and exact zero-residue cleanup. The earlier four-role smoke at SHA `17584153ff256b74a3413ae9844f4f27bff038cc` remains historical evidence. Docker Hub and public GHCR `v0.1.3`, `latest`, and immutable SHA aliases all resolve to the four release manifests built from `977d55f`; the GitHub Release contains exactly the changelog and two SBOM assets. Public Restaurant access, physical-device Android/iOS, controlled FCM, active-order routing, optional provider credentials, and a fresh full four-role UI journey remain outside current certification.
 
 ## Product preview
 
@@ -98,23 +98,23 @@ Provider selection is explicit:
 
 Admin, Restaurant, Customer, and Driver clients obtain short-lived, tenant-scoped realtime credentials from `POST /api/realtime/token` in managed mode. Mobile publishes GPS and dispatch decisions through authenticated REST and receives only allow-listed private Supabase Broadcast events; Socket.IO remains an explicit local/self-hosted compatibility provider.
 
-## Tagged Docker release v0.1.2 — SHA a703ece
+## Tagged Docker release v0.1.3 — SHA 977d55f
 
 | Artifact | Verified SHA digest | Aliases on Docker Hub and GHCR |
 | --- | --- | --- |
-| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` | `v0.1.2`, `latest` |
-| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` | `v0.1.2`, `latest` |
-| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` | `v0.1.2`, `latest` |
-| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` | `v0.1.2`, `latest` |
+| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` | `v0.1.3`, `latest` |
+| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` | `v0.1.3`, `latest` |
+| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` | `v0.1.3`, `latest` |
+| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` | `v0.1.3`, `latest` |
 
-All four GHCR packages are public. Remote inspection after Docker Publish run `29474270122` and Release run `29478484699` confirmed that `sha-a703ece61e66dcfe7f308cbf46a98098983233e7`, `v0.1.2`, and `latest` resolve to the table digest on both registries. This is immutable tagged-release evidence, not the current Railway/Vercel runtime SHA.
+All four GHCR packages are public. Remote inspection after Docker Publish run `29490699451` and Release run `29490929946` confirmed that `sha-977d55f19ddc4fecafb8a758d2df034f4b6ff21d`, `v0.1.3`, and `latest` resolve to the table digest on both registries. This immutable tagged release matches the current Railway/Vercel runtime SHA.
 
 <details>
 <summary><strong>Historical Docker candidate — superseded</strong></summary>
 
 <br />
 
-The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The stable Docker Hub digests and aliases are recorded in [Tagged Docker release v0.1.2 — SHA a703ece](#tagged-docker-release-v012--sha-a703ece).
+The table below is retained as historical evidence for superseded runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b`; do not use it for a new deployment. The stable Docker Hub digests and aliases are recorded in [Tagged Docker release v0.1.3 — SHA 977d55f](#tagged-docker-release-v013--sha-977d55f).
 
 | Artifact       | SHA tag                                                                                                                                        | Matching remote digest                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -130,10 +130,10 @@ Release promotion order:
 1. Build and push `sha-<full-commit>`.
 2. Pull that SHA in a clean environment; run compose smoke and block High/Critical image findings. Completed for `f2c02ed` by run `29387565225`.
 3. Pass Supabase/Railway/Vercel production health and authenticated tracking smoke. Provider health and controlled GPS Broadcast/PostGIS smoke passed; the wider device/browser matrix remains open.
-4. Build and scan every supported architecture, then create immutable `v4.0.0`.
+4. Build and scan every supported architecture, then create the immutable release semver tag.
 5. Promote `latest` only through an explicit manual release action.
 
-For self-hosting, pin `IMAGE_TAG=v4.0.0` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
+For self-hosting, pin `IMAGE_TAG=v0.1.3` or `sha-<full-commit>` and use the base Compose file plus `docker-compose.prod.yml`. Never deploy an unverified `latest` tag.
 
 </details>
 
@@ -234,7 +234,7 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 ## Deployment order
 
 1. Rotate exposed credentials and keep all configured Railway/provider values in sealed provider stores.
-2. Recheck all 41 effective production migrations and reconcile the three historical checksum mismatches before rollout; never bypass a failing guard or infer provider state from local Docker.
+2. Recheck all 42 active source migrations plus the four retained rolled-back history rows. The guard accepts only the three reviewed historical remote/local checksum pairs and LF/CRLF variants; every other content change fails closed.
 3. Preserve the verified Railway API/worker deployments, then deploy future releases from one immutable SHA and recheck health/readiness/worker polling.
 4. Run authenticated Supabase private-Broadcast allow/deny, token refresh, Storage, GPS snapshot/delta, reconnect, and tenant-isolation smoke through the live API.
 5. Re-smoke the exact Admin and Restaurant Vercel deployments against the current Railway API, then smoke configured maps/routes, chatbot, notifications, exports, payments, and one controlled-device FCM delivery.

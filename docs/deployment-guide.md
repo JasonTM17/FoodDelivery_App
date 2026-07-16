@@ -59,7 +59,7 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `e100789f-03c1-445d-9e69-b8a243973a95`, API deployment `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker deployment `2e4a41ea-6874-4b01-b549-d457c0a20997` are successful from immutable SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` images. API and worker share backend digest `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39`; the completed migrator uses `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The deployed database has 41 migrations; candidate migration 42 on the PR branch is not deployed. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
+Current production evidence (2026-07-16): migrate deployment `e100789f-03c1-445d-9e69-b8a243973a95`, API deployment `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker deployment `2e4a41ea-6874-4b01-b549-d457c0a20997` are successful from immutable SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` images. API and worker share backend digest `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39`; the completed migrator uses `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The deployed database has all 42 source migrations active; the 46-row migration history retains four rolled-back audit rows. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
@@ -244,16 +244,16 @@ Both Vercel projects must define the public variables above in the `Preview` env
 
 ## Current deployment evidence — 2026-07-16
 
-Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is deployed. Railway deployment IDs are migrate `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997`. Vercel deployment IDs are Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz`. API health/readiness, public Admin health, and authenticated Restaurant health report the same full SHA; database, Redis, and Supabase Storage are up. Public Restaurant requests still redirect to Vercel SSO because `all_except_custom_domains` protection is enabled and the project has no custom domain. The controlled Driver/Admin GPS smoke belongs to earlier release SHA `a703ece`, and the four-role Chrome/API journey belongs to SHA `17584153`; neither certifies runtime `977d55f`. Current-revision login/role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. The stable Docker Hub/GHCR `v0.1.2` and `latest` release still belongs to SHA `a703ece`; those tagged-release aliases match these digests:
+Runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` is deployed. Railway deployment IDs are migrate `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`, and worker `2e4a41ea-6874-4b01-b549-d457c0a20997`. Vercel deployment IDs are Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` and Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz`. API health/readiness and both public web health routes report the same full SHA; database, Redis, and Supabase Storage are up. A controlled synthetic HCMC run on this revision proved a five-minute ES256 token, private Broadcast RLS allow/deny, accepted GPS fanout in 1,271 ms, PostGIS persistence, poor-accuracy/offline rejection, and zero-residue cleanup. The four-role Chrome/API journey remains historical SHA `17584153` evidence. Current-revision full role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. Stable Docker Hub/public GHCR `v0.1.3`, `latest`, and immutable SHA aliases belong to this same `977d55f` release and match these digests:
 
 | Image | Digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
-| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
-| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
-| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
+| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` |
+| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` |
+| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` |
+| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` |
 
-Docker Publish run `29474270122` and Release run `29478484699` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`. Do not infer that the stable aliases certify the newer `977d55f` runtime images.
+Docker Publish run `29490699451` and Release run `29490929946` verified these remote aliases. The release includes exactly `CHANGELOG.md`, `sbom-source.spdx.json`, and `sbom-image.spdx.json`.
 
 The older candidate tables in this guide are historical evidence and must not be used for a new deploy.
 
@@ -289,14 +289,14 @@ railway run --project $env:RAILWAY_PROJECT_ID --service foodflow-migrate --envir
 Pop-Location
 ```
 
-An approved release must report no pending or remote-only migrations. A
-candidate migration that is intentionally not deployed, or a historical
-rolled-back row that has no local SQL, is a release blocker until its
-provenance is reviewed. The production migrator now fails before Storage API
-mutation or `prisma migrate deploy` when any successful migration differs from
-the immutable image SQL beyond an LF/CRLF-only representation change. Never use
-`prisma migrate resolve` to hide checksum drift; reconcile the source/backup
-history first. A missing `_prisma_migrations` table also blocks the Supabase
+An approved release must report no pending or unexplained remote-only
+migrations. Rolled-back rows remain audit history and must be reviewed. The
+production migrator fails before Storage API mutation or `prisma migrate
+deploy` when a successful migration differs from immutable image SQL. It
+accepts LF/CRLF representations plus only the three exact historical pairs
+whose recorded production digest and canonical local digest are both pinned;
+changing either side fails closed. Never use `prisma migrate resolve` to hide
+checksum drift. A missing `_prisma_migrations` table also blocks the Supabase
 Storage recovery path so a wrong or uninitialized database target cannot
 authorize provider mutation. Bootstrap a genuinely empty database separately
 with `db:migrate:prod` after target-identity preflight and without the Storage
@@ -364,7 +364,7 @@ Using a short-lived authenticated application token in a secure shell:
 
 In the Railway dashboard, create managed Redis, `foodflow-api`, `foodflow-worker`, and `foodflow-migrate`. Set `foodflow-api` to the repository root directory `backend`; its committed `railway.toml` supplies the API healthcheck. Configure worker and migrator from the immutable Docker Hub SHA tags recorded in the README, not `latest`. The public domain must target the runtime `PORT`; the verified deployment uses 8080, not the local development port 3001.
 
-Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum while treating only LF/CRLF representation as equivalent, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. A content checksum mismatch or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal the three historical checksum mismatches. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
+Run the migrator once after the Supabase backup and before API rollout. Give it `DATABASE_URL` and `DIRECT_URL`; when `STORAGE_PROVIDER=supabase`, also provide the sealed `SUPABASE_URL` and JWT `SUPABASE_SERVICE_ROLE_KEY`. The dedicated image runs `dist/migrations/production-migrate.js`: it first verifies every applied migration checksum, accepting LF/CRLF variants and only the three exact dual-pinned historical checksum pairs, then deletes only the two known legacy buckets through the Storage API (Supabase rejects deletion when objects remain), resolves only the previously failed empty-bucket migration after successful cleanup, and finally runs `prisma migrate deploy`. Any unapproved checksum, changed side of an approved pair, or bucket inventory/delete error fails closed before schema rollout. Never use `prisma migrate resolve` to conceal provenance drift. Share the sealed API/worker environment contract and reference Railway Redis for `REDIS_URL`.
 
 Deploy the API only after migration success, then start the worker with `dist/workers/main.js`. Confirm:
 
@@ -512,7 +512,7 @@ Use the release workflow in this order; do not rebuild or retag an unverified di
 2. After migration checksum/backup gates pass, deploy that exact SHA: run the one-off migrator, pin Railway API/worker to the same backend digest, and deploy both Vercel projects from the same commit. Verify health, readiness, logs, revision equality, and authenticated role/provider smoke.
 3. Create and push the Git semver tag at the verified deployed SHA. The tag must exist before promotion and must resolve exactly to the full `source_sha`.
 4. Dispatch **Docker Publish** from the current `master` workflow with `source_sha=<deployed full SHA>`, `publish_release=true`, the stable `release_tag`, and the explicit `promote_latest` choice. The source must be a `master` ancestor, the Git tag must match it, both immutable registry manifests must already exist, and API/Admin/Restaurant health must report that exact source SHA. Docker Hub promotion is authoritative and fail-closed; GHCR aliases are promoted and verified when the provider accepts package writes.
-5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and its three canonical attachments. It also verifies a GHCR semver tag when present; `v0.1.2` completed this path on both registries without duplicate SBOM uploads.
+5. Manually dispatch **Release** with the same tag and full `source_sha`. It verifies the Git tag, Docker Hub SHA/semver digests, and the public GHCR SHA digest before creating or updating the GitHub Release and its three canonical attachments. It also verifies a GHCR semver tag when present; `v0.1.3` completed this path on both registries without duplicate SBOM uploads.
 
 Tag pushes do not trigger publication or GitHub Release creation. The production GitHub Environment must have the required reviewers/protection configured before steps 4–5 are authorized.
 

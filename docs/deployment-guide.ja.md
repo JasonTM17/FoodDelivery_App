@@ -126,7 +126,7 @@ Final source head のすべての migration、`realtime_outbox`/`job_outbox`/`ai
 
 ## 5. Railway API, worker, migrator, Redis
 
-Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、LF/CRLF の表現差だけを同一とみなして最初に適用済み migration の checksum を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。内容 checksum の不一致または bucket inventory/delete エラーは schema rollout 前に fail-closed です。3 件の過去 checksum 不一致を隠すために `prisma migrate resolve` を使わないでください。
+Railway に `foodflow-api`（root `backend` と `backend/railway.toml`）、`foodflow-worker`（同じ SHA backend image、`dist/workers/main.js`）、`foodflow-migrate`（同じ SHA migrate image）、managed Redis を作成します。Supabase の backup 後、API より前に migrator を一度実行し、Vercel は Admin/Restaurant のみを deploy します。migrator image は `dist/migrations/production-migrate.js` を実行し、LF/CRLF variants と exact pinned historical remote/local checksum pairs 3 件だけを許可して適用済み migration を検証します。その後、JWT の `SUPABASE_SERVICE_ROLE_KEY` で Storage API を呼び出し、legacy bucket を削除し、cleanup が成功した場合だけ空 bucket migration の失敗レコードを resolve してから `prisma migrate deploy` を実行します。未承認 checksum、pinned pair のどちらかの変更、bucket inventory/delete error は schema rollout 前に fail-closed です。Provenance drift を隠すために `prisma migrate resolve` を使わないでください。
 
 ```powershell
 railway login

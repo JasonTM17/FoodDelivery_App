@@ -13,7 +13,7 @@ Dependabot groups compatible minor and patch updates to keep review volume manag
 
 ## 2026-07-16 consolidation
 
-The consolidation into `master` uses one reviewed integration branch instead of merging a queue of overlapping or failing branches independently.
+The consolidation into `master` merged the two reviewed human-owned integration branches with their original history instead of merging a queue of overlapping or failing automation branches independently.
 
 | Disposition | Pull requests | Reason |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ The consolidation into `master` uses one reviewed integration branch instead of 
 | Deferred to migration work | #85, #89, #93, #94, #96, #97, #99, #100, #102 | These change a major runtime, framework, lint, type, or build-tool contract and are not safe routine maintenance. |
 | Deferred by supply-chain policy | #95 | The proposed Supabase release did not meet the repository minimum-release-age gate at audit time. |
 
-After the integration pull request lands, superseded pull requests are closed with their disposition recorded and all temporary remote branches are deleted. The final branch audit must show only `refs/heads/master` and no open pull requests.
+The human integration histories are now ancestors of `master`. After the final source commit is pushed and its replacement Dependabot policy is active, superseded pull requests are closed with their disposition recorded and all temporary remote branches are deleted. The final branch audit must show only `refs/heads/master` and no open pull requests.
 
 ## Follow-up engineering work
 

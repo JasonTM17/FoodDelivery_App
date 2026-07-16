@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 16/07/2026: **runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel. API health/readiness cùng health web Admin/Restaurant có xác thực đều trả đúng revision này; Database, Redis và Supabase Storage ready với 41 migration database đã apply. Migration ứng viên 42 chưa deploy. Chứng nhận đầy đủ bốn role, GPS và thiết bị chưa được chạy lại trên `977d55f`, vì vậy chứng nhận production đầy đủ vẫn no-go**.
+Trạng thái 16/07/2026: **runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` đang chạy trên Railway API/worker/migrator và hai ứng dụng Vercel. API health/readiness cùng hai health route web công khai đều trả đúng revision này; Database, Redis và Supabase Storage ready với đủ 42 migration source đang active. Smoke GPS/private Broadcast/PostGIS trên revision hiện tại pass trong 1.271 ms. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở**.
 
 ## Đã hoàn thành và đã tích hợp
 
@@ -58,12 +58,12 @@ Trạng thái 16/07/2026: **runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21
 ## Bằng chứng current-source và blocker bên ngoài
 
 - Bằng chứng local lịch sử: Docker volume sạch `foodflow-batch4-e2e` đã apply các migration hiện hành lúc đó, seed dữ liệu tạm, index RAG và pass Playwright 204/204. Các con số này chỉ là evidence ngày 14/07/2026, không phải kết quả của runtime hiện tại SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` hay chứng nhận production.
-- SHA `977d55f` đang deploy có 41 migration đã apply; Database, Redis và Supabase Storage đều ready. Migration ứng viên thứ 42 đã xác minh local nhưng chưa deploy trước khi PR được review và rollout đồng bộ. Các record rolled-back hoặc checksum provenance lịch sử vẫn là audit history; không đảo hay sửa SQL đã apply.
+- SHA `977d55f` đang deploy có đủ 42 migration source active; lịch sử Prisma gồm 46 row và giữ bốn row rolled-back để audit. Database, Redis và Supabase Storage đều ready. Checksum audit pass với ba cặp remote/local lịch sử được ghim chính xác; không sửa SQL đã apply hay lịch sử remote.
 - Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
 - Railway migrate `e100789f-03c1-445d-9e69-b8a243973a95`, API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4` và worker `2e4a41ea-6874-4b01-b549-d457c0a20997` thành công tại runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. API health/readiness trả đúng revision với Database, Redis và Supabase Storage ready; worker poll bình thường và RAG chủ động tắt vì chưa có DeepSeek.
 - Google Maps là tùy chọn. Khi không có Google Directions hoặc OSRM do dự án sở hữu, routing trả `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` nhưng tiến trình vẫn healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing còn chưa cấu hình hoặc chưa smoke.
-- Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` và Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` là hai exact deployment của SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`; health web có xác thực trả revision này. Public Restaurant vẫn yêu cầu Vercel SSO. Journey bốn role Chrome/API vẫn là evidence lịch sử ở SHA `17584153`, còn smoke GPS/private Broadcast/PostGIS có xác thực là evidence release có giới hạn ở `a703ece`; chưa evidence nào được chạy lại để chứng nhận current-`977d55f`.
-- Baseline release lịch sử `a703ece61e66dcfe7f308cbf46a98098983233e7` được tag `v0.1.2`. Các alias SHA, `v0.1.2` và `latest` của baseline này trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image runtime; Docker Publish run `29474270122` và Release run `29478484699` đã xác minh các manifest được promote. Không gắn lại evidence registry này thành build hay smoke của `977d55f`.
+- Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` và Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` là hai exact deployment của SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`; hai health route web công khai trả revision này. Journey bốn role Chrome/API vẫn là evidence lịch sử ở SHA `17584153`. Smoke GPS/private Broadcast/PostGIS revision hiện tại đã pass nhưng không thay thế chứng nhận thiết bị vật lý hay full UI.
+- Baseline release `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` được tag `v0.1.3`. Các alias SHA, `v0.1.3` và `latest` trên Docker Hub/GHCR public khớp digest cho cả bốn image; Docker Publish run `29490699451` và Release run `29490929946` đã xác minh manifest và ba asset release.
 - Key provider từng paste phải rotate.
 
 Không được dùng fake value hoặc bypass validation để vượt blocker.

@@ -4,7 +4,7 @@ Ngôn ngữ: [English](../README.md) · **Tiếng Việt** · [日本語](readme
 
 FoodFlow là hệ thống giao đồ ăn multi-tenant gồm API NestJS, web Admin/Restaurant và ứng dụng Flutter Customer/Driver. Kiến trúc production dùng Supabase (PostgreSQL/PostGIS, Realtime, Storage), Railway (API, worker, migrator, Redis) và Vercel (Admin, Restaurant). Docker Compose giữ một profile tương thích riêng cho local/self-hosted bằng Socket.IO, Redis/BullMQ và MinIO.
 
-> **Trạng thái 16/07/2026:** các deployment Railway API/worker/migrator và phản hồi health của Vercel Admin/Restaurant hiện trả đúng runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Production có 41 migration database hiệu lực; migration ứng viên 42 và controller recovery đã harden vẫn chưa deploy. Revision này mới có evidence deployment/health: chưa rerun smoke Google Chrome đủ bốn role, luồng GPS hoặc chứng nhận thiết bị cho `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Role-smoke trước đó tại SHA `17584153ff256b74a3413ae9844f4f27bff038cc` đã xác thực Admin/Restaurant bằng Google Chrome và kiểm tra contract API read-only của Customer/Driver; đây là evidence lịch sử. Các alias Docker Hub/GHCR `v0.1.2` và `latest` vẫn là release được gắn tag riêng tại SHA `a703ece61e66dcfe7f308cbf46a98098983233e7`; CI xanh, scan image, smoke GPS/Supabase và recovery production-emulator Android API 35 của release đó không chứng nhận runtime hiện tại. Public Restaurant, thiết bị vật lý Android/iOS, FCM kiểm soát, active-order và browser journey đầy đủ vẫn nằm ngoài evidence hiện tại.
+> **Trạng thái 16/07/2026:** các deployment Railway API/worker/migrator và health Vercel Admin/Restaurant đều trả đúng runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`. Production có đủ 42 migration source đang active; lịch sử Prisma gồm 46 row với bốn row rolled-back được giữ để audit. Smoke GPS HCMC giả lập trên revision này đã chứng minh token realtime ES256 năm phút, private Broadcast RLS allow/deny, fanout 1.271 ms, persist PostGIS, rejection `poor_accuracy`/`driver_offline` và cleanup về zero chính xác. Docker Hub/GHCR public với alias SHA, `v0.1.3`, `latest` cùng GitHub Release ba asset đều gắn với `977d55f`. Role-smoke bốn role ở SHA `17584153` vẫn là evidence lịch sử; thiết bị vật lý Android/iOS, FCM kiểm soát, active-order, provider tùy chọn và full browser journey revision hiện tại vẫn nằm ngoài chứng nhận.
 
 ## Xem trước sản phẩm
 
@@ -69,16 +69,16 @@ Google Maps không bắt buộc để hệ thống khởi động. Nếu không 
 
 Admin, Restaurant, Customer và Driver lấy credential realtime ngắn hạn, scope theo tenant từ `POST /api/realtime/token` trong managed mode. Mobile gửi GPS/quyết định dispatch qua REST đã xác thực và nhận private Supabase Broadcast do server gửi tới các kênh mà JWT cho phép; Socket.IO chỉ còn là provider explicit cho local/self-hosted.
 
-## Docker release đã gắn tag v0.1.2 — SHA a703ece
+## Docker release đã gắn tag v0.1.3 — SHA 977d55f
 
-Các alias SHA, `v0.1.2` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29474270122` và Release run `29478484699` đã xác minh các manifest được promote; GitHub Release kèm đúng ba asset changelog, SBOM source và SBOM image. Đây là evidence của release đã gắn tag, không phải SHA runtime Railway/Vercel hiện tại.
+Các alias SHA, `v0.1.3` và `latest` trên Docker Hub lẫn GHCR public khớp digest cho cả bốn image. Docker Publish run `29490699451` và Release run `29490929946` đã xác minh các manifest được promote; GitHub Release kèm đúng ba asset changelog, SBOM source và SBOM image. Release này khớp SHA runtime Railway/Vercel hiện tại.
 
 | Artifact | Digest Docker Hub |
 | --- | --- |
-| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
-| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
-| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
-| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
+| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` |
+| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` |
+| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` |
+| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` |
 
 Worker chạy từ backend image với `dist/workers/main.js`, không phải artifact release riêng. Lịch sử candidate cũ được giữ trong [release report](batch4-release-report.md), không dùng làm nguồn cho rollout mới.
 

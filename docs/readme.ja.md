@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-16 status:** Railway API/worker/migrator deployments と Vercel Admin/Restaurant health responses は、現在の runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を正確に返します。Production には 41 effective database migrations があり、candidate migration 42 と hardened recovery controller は未 deploy です。この revision で現在確認済みなのは deployment/health evidence のみで、`977d55f19ddc4fecafb8a758d2df034f4b6ff21d` に対する 4-role Google Chrome smoke、GPS flow、device certification は再実行していません。以前の SHA `17584153ff256b74a3413ae9844f4f27bff038cc` role-smoke は Google Chrome で Admin/Restaurant を認証し、Customer/Driver read-only API contracts を確認した historical evidence です。Docker Hub/GHCR の `v0.1.2` と `latest` aliases は、SHA `a703ece61e66dcfe7f308cbf46a98098983233e7` の別の tagged release のままです。その green CI、image scans、GPS/Supabase smoke、Android API 35 production-emulator recovery evidence は current runtime を認証しません。Public Restaurant、physical Android/iOS、controlled FCM、active-order、full browser journeys は current evidence の対象外です。
+> **2026-07-16 status:** Railway API/worker/migrator と Vercel Admin/Restaurant health は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` を返します。Production は source migrations 42 件すべて active、Prisma history は 46 rows で rolled-back audit rows 4 件を保持します。この revision の synthetic HCMC GPS smoke は 5 分 ES256 realtime token、private Broadcast RLS allow/deny、1,271 ms fanout、PostGIS persistence、`poor_accuracy`/`driver_offline` rejection、exact zero-residue cleanup を検証しました。Docker Hub/public GHCR の SHA、`v0.1.3`、`latest` aliases と 3-asset GitHub Release も `977d55f` に紐づきます。SHA `17584153` の 4-role smoke は historical evidence のままです。Physical Android/iOS、controlled FCM、active-order、optional providers、current-revision full browser journey は未認証です。
 
 ## Product preview
 
@@ -69,16 +69,16 @@ Google Maps は起動要件ではありません。Google Directions と owned O
 
 Managed mode では Admin、Restaurant、Customer、Driver が `POST /api/realtime/token` から短時間・tenant scoped credential を取得します。Mobile の GPS/dispatch decision は authenticated REST で送信し、server が JWT で許可された channel に private Supabase Broadcast を送信します。Socket.IO は explicit local/self-hosted provider のみです。
 
-## Tagged Docker release v0.1.2 — SHA a703ece
+## Tagged Docker release v0.1.3 — SHA 977d55f
 
-Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29474270122` と Release run `29478484699` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。これは tagged-release evidence であり、現在の Railway/Vercel runtime SHA ではありません。
+Docker Hub と public GHCR の SHA、`v0.1.3`、`latest` aliases は 4 images すべてで digest が一致します。Docker Publish run `29490699451` と Release run `29490929946` が promoted manifests を検証し、GitHub Release には changelog と source/image SBOM の3 assetだけが添付されています。この release は現在の Railway/Vercel runtime SHA と一致します。
 
 | Artifact | Docker Hub digest |
 | --- | --- |
-| `foodflow-backend` | `sha256:621fc5be66f102f46cc0f9982488b3d417a660ee46cb4a60e24c6b8e122c158b` |
-| `foodflow-migrate` | `sha256:5cae801324ae727bb8db2f8cb8a5ace98afa93e65f8e940aa7347ab4e0013581` |
-| `foodflow-admin` | `sha256:ce41f8f63cd4c495742b5f1f240705d9488976641975f300164e20ea06a13ab3` |
-| `foodflow-restaurant` | `sha256:84009fc61789a4f0d176b0b433675dc99ff30f533387787cfeaa5d4c21bde7ce` |
+| `foodflow-backend` | `sha256:473664235ffd0ce5b6746cb7da237f595f75ccdc27825450fdcaade73909cf39` |
+| `foodflow-migrate` | `sha256:ec366c6498e8c594efccd1dd5e259172a6b68ab2e2effc74ddd6bb58dae023a0` |
+| `foodflow-admin` | `sha256:57e8df7987edc43f0ff36af6d92d2781bc25f9fc7d8b4c16789d0d8ad791dd7b` |
+| `foodflow-restaurant` | `sha256:31a39e3d87dcfefba07f781d73f7dfb9e5272258d9f99a2a7200d0d670e9e1df` |
 
 Worker は backend image の `dist/workers/main.js` を使用し、別 release artifact ではありません。Old candidate evidence は [release report](batch4-release-report.md) に保持し、新しい rollout の source には使用しません。
 

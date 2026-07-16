@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-16 status: **runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` は Railway API/worker/migrator と両 Vercel apps で稼働中です。API health/readiness と authenticated Admin/Restaurant web health はこの exact revision を返し、Database、Redis、Supabase Storage は ready、database migrations は 41 件 applied です。Candidate migration 42 は undeployed です。4-role、GPS、device の full certification は `977d55f` で再実行されていないため、full production certification は no-go です**。
+2026-07-16 status: **runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` は Railway API/worker/migrator と両 Vercel apps で稼働中です。API health/readiness と両 public web health routes は exact revision を返し、Database、Redis、Supabase Storage は ready、source migrations 42 件すべて active です。Current-revision GPS/private Broadcast/PostGIS smoke は 1,271 ms で pass。Physical device と full current four-role certification は未完了です**。
 
 ## Completed and incorporated work
 
@@ -54,12 +54,12 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 ## Current-source evidence and external blockers
 
 - Historical local evidence: clean-volume Docker project `foodflow-batch4-e2e` は当時の migrations を適用し、disposable data を seed、RAG を index、Playwright 204/204 を pass しました。これらの count は 2026-07-14 の bounded evidence であり、current runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` や production approval の結果ではありません。
-- Deployed SHA `977d55f` には 41 migrations が適用済みで、Database、Redis、Supabase Storage は ready です。Candidate migration 42 は local validation 済みですが、PR review と synchronized rollout 前には deploy しません。Historical rolled-back/checksum-provenance records は audit history として保持し、applied SQL は変更していません。
+- Deployed SHA `977d55f` は source migrations 42 件すべて active で、46-row Prisma history に rolled-back audit rows 4 件を保持します。Database、Redis、Supabase Storage は ready です。Checksum audit は exact pinned historical remote/local pairs 3 件で pass し、applied SQL と remote history は書き換えていません。
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
 - Railway migrate `e100789f-03c1-445d-9e69-b8a243973a95`、API `a84c63d1-c95e-4a69-a7eb-408e1a7dc9f4`、worker `2e4a41ea-6874-4b01-b549-d457c0a20997` は runtime SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` で成功しています。API health/readiness は exact revision と Database、Redis、Supabase Storage ready を報告し、worker poll は稼働、DeepSeek 不在のため RAG は disabled です。
 - Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。
-- Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` と Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` は SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` の exact deployment で、authenticated web health は同 revision を返します。Public Restaurant access は引き続き Vercel SSO が必要です。4-role Chrome/API journey は historical SHA `17584153`、authenticated GPS/private Broadcast/PostGIS smoke は bounded `a703ece` release evidence であり、どちらも current-`977d55f` certification として再実行されていません。
-- Historical release baseline `a703ece61e66dcfe7f308cbf46a98098983233e7` は `v0.1.2` tag です。その Docker Hub と public GHCR の SHA、`v0.1.2`、`latest` aliases は 4 runtime images すべてで digest が一致し、Docker Publish run `29474270122` と Release run `29478484699` が promoted manifests を検証しました。この registry evidence を `977d55f` build/smoke と再ラベルしません。
+- Vercel Admin `dpl_bE5TgrKS9GqKGHSShGHk1pX41Xqs` と Restaurant `dpl_J6sXb2UHV68XKAYBF4KLvqoXAjwz` は SHA `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` の exact deployment で、両 public web health routes は同 revision を返します。4-role Chrome/API journey は historical SHA `17584153` evidence です。Current-revision GPS/private Broadcast/PostGIS smoke は pass しましたが、physical-device/full UI certification の代替ではありません。
+- Release baseline `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` は `v0.1.3` tag です。Docker Hub/public GHCR の SHA、`v0.1.3`、`latest` aliases は 4 runtime images すべてで digest が一致し、Docker Publish run `29490699451` と Release run `29490929946` が manifests と 3 assets を検証しました。
 - 以前貼られた provider key は rotate 必須。
 
 Fake value や validation bypass は禁止です。
