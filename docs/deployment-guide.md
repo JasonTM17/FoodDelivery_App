@@ -65,7 +65,7 @@ Historical production snapshot (2026-07-16): migrate deployment `67331bd5-0a58-4
 
 ### Historical multi-registry candidate — superseded
 
-Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not use the table below for a new rollout.
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. Its later immutable checkpoint is recorded in [Historical deployment evidence — 2026-07-16](#historical-deployment-evidence--2026-07-16); use [Production Current State](./production-current-state.md) and live health endpoints for a new rollout.
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -74,7 +74,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
+At that historical snapshot, `latest` had not been promoted. The later checkpoint is recorded in [Historical deployment evidence — 2026-07-16](#historical-deployment-evidence--2026-07-16); do not infer current tag state from either historical table.
 
 Expected Vercel projects:
 
