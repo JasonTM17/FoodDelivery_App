@@ -1,8 +1,9 @@
 # Production Current State
 
 Live production truth is tag-bound. Resolve the promoted source with
-`git rev-list -n 1 v0.1.4`, then require the Railway API, Vercel Admin, and
-Vercel Restaurant health endpoints to return that same full SHA. Dated
+`git rev-list -n 1 v0.1.4`, then require Railway API health, Railway worker
+image metadata, and the Vercel Admin/Restaurant health endpoints to resolve to
+that same full SHA. Dated
 deployment IDs below are evidence snapshots and must not be read as dynamic
 provider state.
 
@@ -92,7 +93,8 @@ an exact-byte read-only audit before the migrator runs.
 The earlier daily quota block cleared, but the 2026-07-17 recovery recheck found
 split web revisions: Admin returned `e6def517…` and Restaurant returned
 `977d55f…`. HTTP 200 alone is not release certification. Both canonical web
-health endpoints and Railway API health must equal the promoted tag SHA.
+health endpoints, Railway API health, and the Railway worker image must equal
+the promoted tag SHA.
 
 Use the committed helper for both next deployments:
 

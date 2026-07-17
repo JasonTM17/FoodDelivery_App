@@ -6,7 +6,7 @@ A release is green only when the final source head passes every required local g
 
 ## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-The 2026-07-17 recovery evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. After Supabase credential rotation, API/worker/migrator, database, Redis, Supabase Storage, and the 42/42 migration audit passed. Admin and Restaurant returned HTTP 200 but reported split sources `e6def517…` and `977d55f…`; this is not unified release evidence. A release passes only when the promoted tag, `origin/master`, Railway API, and both Vercel health endpoints match. Historical role/browser and controlled GPS results remain bounded evidence, not full end-to-end production approval.
+The 2026-07-17 recovery evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. After Supabase credential rotation, API/worker/migrator, database, Redis, Supabase Storage, and the 42/42 migration audit passed. Admin and Restaurant returned HTTP 200 but reported split sources `e6def517…` and `977d55f…`; this is not unified release evidence. A release passes only when the promoted tag, `origin/master`, Railway API/worker, and both Vercel health endpoints match. Historical role/browser and controlled GPS results remain bounded evidence, not full end-to-end production approval.
 
 | Area           | Result |
 | -------------- | ------ |

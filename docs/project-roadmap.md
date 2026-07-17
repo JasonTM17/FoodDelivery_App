@@ -4,7 +4,7 @@
 
 Finish Batch 4 as one verified production line: complete code and mobile parity, pass every local/remote gate, deploy Supabase + Railway + Vercel, verify production behavior, and publish immutable Docker artifacts from the verified `master` head.
 
-Status on 2026-07-17: **Railway recovered at SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` after Supabase credential rotation; all six database URL changes, health/readiness, and the 42/42 migration audit passed. Admin and Restaurant were healthy but split at `e6def517…` and `977d55f…`, so no unified release was claimed. Production certification is tag-bound: Railway API and both Vercel health endpoints must equal the promoted tag SHA. Physical-device and full current four-role certification remain open**.
+Status on 2026-07-17: **Railway recovered at SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` after Supabase credential rotation; all six database URL changes, health/readiness, and the 42/42 migration audit passed. Admin and Restaurant were healthy but split at `e6def517…` and `977d55f…`, so no unified release was claimed. Production certification is tag-bound: Railway API/worker and both Vercel health endpoints must equal the promoted tag SHA. Physical-device and full current four-role certification remain open**.
 
 ## Completed and incorporated work
 

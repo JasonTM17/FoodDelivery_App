@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-17 status: **Supabase credential rotation と 6 database URL rollout 後、Railway は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で復旧し、health/readiness と 42/42 migration audit は pass。Admin/Restaurant は HTTP 200 でしたが revision は `e6def517…` と `977d55f…` に分かれており、unified release とは認定していません。Tag SHA、`origin/master`、Railway API、両 Vercel health endpoint の一致が certification 条件です。Physical device と full current four-role certification は未完了です**。
+2026-07-17 status: **Supabase credential rotation と 6 database URL rollout 後、Railway は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で復旧し、health/readiness と 42/42 migration audit は pass。Admin/Restaurant は HTTP 200 でしたが revision は `e6def517…` と `977d55f…` に分かれており、unified release とは認定していません。Tag SHA、`origin/master`、Railway API/worker、両 Vercel health endpoint の一致が certification 条件です。Physical device と full current four-role certification は未完了です**。
 
 ## Completed and incorporated work
 

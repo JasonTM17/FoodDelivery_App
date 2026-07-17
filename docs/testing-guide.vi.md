@@ -6,7 +6,7 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
-Evidence khôi phục 17/07/2026 gắn với Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Sau khi xoay credential Supabase, API/worker/migrator, database, Redis, Supabase Storage và migration audit 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng source bị tách ở `e6def517…` và `977d55f…`; đây không phải evidence của release thống nhất. Release chỉ pass khi tag, `origin/master`, Railway API và hai health endpoint Vercel trùng SHA. Smoke GPS và kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
+Evidence khôi phục 17/07/2026 gắn với Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Sau khi xoay credential Supabase, API/worker/migrator, database, Redis, Supabase Storage và migration audit 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng source bị tách ở `e6def517…` và `977d55f…`; đây không phải evidence của release thống nhất. Release chỉ pass khi tag, `origin/master`, Railway API/worker và hai health endpoint Vercel trùng SHA. Smoke GPS và kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
 
 | Khu vực        | Kết quả |
 | -------------- | ------- |

@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 17/07/2026: **Railway đã healthy lại ở SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` sau khi xoay credential Supabase; sáu URL database, health/readiness và audit migration 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng revision bị tách ở `e6def517…` và `977d55f…`, nên chưa được chứng nhận là release thống nhất. Chỉ chứng nhận khi SHA của tag, `origin/master`, Railway API và hai health endpoint Vercel trùng nhau. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở**.
+Trạng thái 17/07/2026: **Railway đã healthy lại ở SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` sau khi xoay credential Supabase; sáu URL database, health/readiness và audit migration 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng revision bị tách ở `e6def517…` và `977d55f…`, nên chưa được chứng nhận là release thống nhất. Chỉ chứng nhận khi SHA của tag, `origin/master`, Railway API/worker và hai health endpoint Vercel trùng nhau. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở**.
 
 ## Đã hoàn thành và đã tích hợp
 

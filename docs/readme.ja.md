@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-17 recovery snapshot:** Supabase credential rotation と Railway の 6 database URL rollout 後、Railway は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で復旧し、health/readiness と 42/42 migration audit は pass しました。Admin/Restaurant は HTTP 200 でしたが revision は `e6def517…` と `977d55f…` に分かれていたため、unified release とは認定していません。Release は tag SHA、`origin/master`、Railway API、両 Vercel health endpoint が一致した場合のみ有効です。Physical device、controlled FCM、active-order routing、optional providers は個別 evidence がない限り certification 対象外です。
+> **2026-07-17 recovery snapshot:** Supabase credential rotation と Railway の 6 database URL rollout 後、Railway は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で復旧し、health/readiness と 42/42 migration audit は pass しました。Admin/Restaurant は HTTP 200 でしたが revision は `e6def517…` と `977d55f…` に分かれていたため、unified release とは認定していません。Release は tag SHA、`origin/master`、Railway API/worker、両 Vercel health endpoint が一致した場合のみ有効です。Physical device、controlled FCM、active-order routing、optional providers は個別 evidence がない限り certification 対象外です。
 
 ## Product preview
 

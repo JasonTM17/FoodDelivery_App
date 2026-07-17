@@ -6,7 +6,7 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Evidence boundary — production 2026-07-16 / historical local 2026-07-14
 
-2026-07-17 recovery evidence は Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` に紐づきます。Supabase credential rotation 後、API/worker/migrator、database、Redis、Supabase Storage、42/42 migration audit は pass。Admin/Restaurant は HTTP 200 でしたが source は `e6def517…` と `977d55f…` に分かれており、unified release evidence ではありません。Tag、`origin/master`、Railway API、両 Vercel health endpoint が同じ SHA の場合のみ release pass です。
+2026-07-17 recovery evidence は Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` に紐づきます。Supabase credential rotation 後、API/worker/migrator、database、Redis、Supabase Storage、42/42 migration audit は pass。Admin/Restaurant は HTTP 200 でしたが source は `e6def517…` と `977d55f…` に分かれており、unified release evidence ではありません。Tag、`origin/master`、Railway API/worker、両 Vercel health endpoint が同じ SHA の場合のみ release pass です。
 
 | Area           | Result |
 | -------------- | ------ |
