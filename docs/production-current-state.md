@@ -1,6 +1,6 @@
 # Production Current State
 
-Last verified: 2026-07-16 (UTC), runtime revision
+Last verified: 2026-07-17 (UTC), runtime revision
 `84eeac3a2845868fc3a7fd45f8a73775e834a09d`.
 
 This page is the authoritative operational snapshot. Older release paragraphs
@@ -11,11 +11,11 @@ evidence, not a second current deployment.
 
 | Component | Deployment | Immutable artifact / revision | Result |
 | --- | --- | --- | --- |
-| Railway API (`foodflow-api`) | `a0b5c5d4-1695-4584-9a73-12bcf66b1080` | `docker.io/nguyenson1710/foodflow-backend@sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` | Running |
-| Railway worker (`foodflow-worker`) | `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` | Same backend digest | Running |
-| Railway migrator | `67331bd5-0a58-4224-bb18-b97b48702eee` | `docker.io/nguyenson1710/foodflow-migrate@sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` | Successful, stopped |
-| Vercel Admin | `dpl_4D8BMjZtB66Q8145tUxaGHsZcQNm` | Built from current tracked source; health metadata still reports `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` | Ready, public HTTP 200 |
-| Vercel Restaurant | Last healthy production deployment | Previous verified web revision | Public HTTP 200; replacement blocked by free-team daily deployment quota |
+| Railway API (`foodflow-api`) | `f4292a62-4497-4f7d-9f8d-1c53bb2ca938` | `docker.io/nguyenson1710/foodflow-backend@sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` | Running after credential rotation |
+| Railway worker (`foodflow-worker`) | `e654a826-6255-4402-aed8-af57cd4fcd67` | Same backend digest | Running after credential rotation |
+| Railway migrator | `e61a23bc-ce7e-4ef7-9daa-12160e20f105` | `docker.io/nguyenson1710/foodflow-migrate@sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` | Successful, stopped; no pending migrations |
+| Vercel Admin | Canonical production alias | Exact source `e6def517334681f3e003685489bd190e72408344` | Ready, health/login HTTP 200 |
+| Vercel Restaurant | Canonical production alias | Exact source `e6def517334681f3e003685489bd190e72408344` | Ready, health/login HTTP 200 |
 
 The runtime SHA tag is
 `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Docker Publish run
@@ -27,8 +27,10 @@ Trivy checks passed. The remaining public image digests are:
 - Restaurant:
   `sha256:d92f6b8baaccc0a7ae8f83a22bff4d5d949fa07f6242fa456616465b44059316`
 
-`latest` and semantic release tags were intentionally not moved: the current
-Vercel web rollout is not yet revision-verifiable.
+All four Docker Hub and GHCR packages are public. The worker intentionally uses
+the backend image with a worker command rather than a fifth duplicate package.
+`latest` and semantic release tags remain on the last fully promoted release;
+new candidates are always published first as immutable `sha-<full-commit>` tags.
 
 ## Supabase and migration evidence
 
@@ -38,6 +40,24 @@ blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7`; its production SHA-256 is
 `4664ac4299eea854a16316be6a9ed689a3320c1fca2557a4fd00f011368fd8e6`.
 The focused checksum guard passes `10/10`, and the read-only Railway audit
 returns `checksumStatus: ok`.
+
+The Supabase database password was rotated on 2026-07-17 after an unsafe local
+diagnostic exposed the previous value. The replacement is stored only in
+Supabase/Railway secret stores. Railway deployed both `DATABASE_URL` and
+`DIRECT_URL` changes for API, worker, and migrator. Post-rotation evidence is:
+
+- migrator: 42 migrations found, no pending migration;
+- checksum audit: `checksumStatus: ok`, `activeAppliedMigrations: 42`;
+- API/worker logs: no error, exception, fatal, or authentication-failure match;
+- `/api/healthz` and `/api/readyz`: HTTP 200 with Database, Redis, and Supabase
+  Storage up.
+
+Storage contains exactly `foodflow-public` (public, image MIME allow-list, 5 MB)
+and `foodflow-private` (private, image/PDF allow-list, 4 MB). Supabase Realtime
+has one authenticated Broadcast SELECT policy that requires the requested topic
+to appear in the JWT `realtime_channels` claim. Security Advisor has zero errors
+and only the known `postgis`/`vector` extension-location warnings; Performance
+Advisor has zero errors and zero warnings.
 
 The pre-rollout Supabase backup is stored outside the repository at:
 
@@ -64,12 +84,12 @@ an exact-byte read-only audit before the migrator runs.
   private Supabase Broadcast authorization, accepted GPS fanout, PostGIS
   persistence, rejection paths, and cleanup.
 
-## Vercel quota and revision boundary
+## Vercel revision boundary
 
-The Admin CLI deployment reached `Ready`, but the upload omitted an explicit
-`BUILD_SHA`; therefore its health endpoint cannot prove the new source revision.
-The Restaurant replacement was rejected with
-`api-deployments-free-per-day` (retry after the provider quota resets).
+The earlier daily quota block is resolved. Admin and Restaurant were rebuilt
+from exact clean source `e6def517334681f3e003685489bd190e72408344`; both
+canonical health endpoints returned that full revision and both login pages
+returned HTTP 200.
 
 Use the committed helper for both next deployments:
 
@@ -78,10 +98,10 @@ Use the committed helper for both next deployments:
 .\infra\scripts\vercel-deploy-production.ps1 -App restaurant
 ```
 
-It requires a clean `master` exactly matching `origin/master`, injects the full
-Git SHA at build and runtime, then rejects a canonical health response whose
-service, status, or revision is wrong. Do not bypass this gate or alter
-production secrets to work around the provider quota.
+It requires a clean `master` exactly matching `origin/master`, requires Railway
+API health to report the same SHA first, injects the full Git SHA at build and
+runtime, then rejects a canonical health response whose service, status, or
+revision is wrong. Do not bypass this gate.
 
 ## Rollback
 

@@ -6,7 +6,7 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
-Evidence health runtime hiện tại gắn với SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Railway API/worker/migrator báo revision này; database, Redis và Supabase Storage đều up. Admin Vercel đã rebuild từ cùng source, còn Restaurant giữ deployment healthy gần nhất vì quota deploy miễn phí đã hết. Docker Hub/GHCR public có đủ bốn manifest SHA immutable mới. Smoke GPS/private Broadcast/PostGIS có kiểm soát đã pass; kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
+Evidence health runtime hiện tại gắn với Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Sau khi xoay credential Supabase, API/worker/migrator, database, Redis, Supabase Storage và migration audit 42/42 đều pass. Admin và Restaurant Vercel cùng báo exact source `e6def517334681f3e003685489bd190e72408344`; quota cũ đã đóng. Docker Hub/GHCR public có đủ bốn package immutable; worker dùng chung backend image. Smoke GPS/private Broadcast/PostGIS có kiểm soát đã pass; kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
 
 | Khu vực        | Kết quả |
 | -------------- | ------- |
@@ -16,7 +16,7 @@ Evidence health runtime hiện tại gắn với SHA `84eeac3a2845868fc3a7fd45f8
 | Web            | Frozen install, typecheck, lint và test chọn build Vercel hiện tại sau merge đều pass. Admin pass 194/194 test và build 70 route; Restaurant pass 135/135 test và build 55 route. |
 | Role/browser lịch sử | Full role smoke Admin/Restaurant bằng Chrome và Customer/Driver qua API, cùng kết quả Playwright volume sạch 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5, thuộc source head `17584153ff256b74a3413ae9844f4f27bff038cc`. Các lượt này chưa được chạy lại để chứng nhận production bốn role trên `84eeac3`. |
 | FCM/provider   | Notification backend và lifecycle Flutter local lịch sử đã pass. FCM live có kiểm soát, các tích hợp dùng provider tùy chọn và coverage thiết bị vật lý thật vẫn còn mở. |
-| Production     | Railway migrator `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080` và worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` thành công tại SHA `84eeac3`. Admin Vercel đã rebuild; Restaurant chờ quota reset. Smoke web công khai và GPS/private Broadcast/PostGIS pass. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở. |
+| Production     | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938` và worker `e654a826-6255-4402-aed8-af57cd4fcd67` thành công sau credential rotation tại runtime SHA `84eeac3`. Admin/Restaurant Vercel cùng báo source `e6def517`; public web và GPS/private Broadcast/PostGIS smoke pass. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở. |
 
 ### Audit provenance migration
 
@@ -38,7 +38,7 @@ Cả 42 migration source đã active; provenance chưa giải quyết này chặ
 
 ### Docker volume sạch lịch sử — 14/07/2026
 
-Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 38 migration hiện hành lúc đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review; worker index 402 RAG document. Với local URL tường minh, source head `17584153ff256b74a3413ae9844f4f27bff038cc` pass Chrome desktop 68/68, Firefox 68/68 và Chrome mobile Pixel 5 68/68: tổng 204/204, không fail hay skip. Đây là kết quả local ngày 14/07/2026, không phải test production hay chứng nhận hiện tại của `977d55f`. FCM live và full role journey production hiện tại vẫn chưa verify.
+Project Docker volume sạch rebuild `foodflow-batch4-e2e` đã apply 38 migration hiện hành lúc đó, sau đó seed 201 user, 50 restaurant, 352 menu item, 509 order và 123 review; worker index 402 RAG document. Với local URL tường minh, source head `17584153ff256b74a3413ae9844f4f27bff038cc` pass Chrome desktop 68/68, Firefox 68/68 và Chrome mobile Pixel 5 68/68: tổng 204/204, không fail hay skip. Đây là kết quả local ngày 14/07/2026, không phải test production hay chứng nhận hiện tại. FCM live và full role journey production hiện tại vẫn chưa verify.
 
 ### Ranh giới môi trường build web
 

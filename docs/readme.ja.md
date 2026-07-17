@@ -4,7 +4,7 @@
 
 FoodFlow は NestJS API、Admin/Restaurant Web、Flutter Customer/Driver を持つ multi-tenant フードデリバリーシステムです。Managed production は Supabase（PostgreSQL/PostGIS、Realtime、Storage）、Railway（API、worker、migrator、Redis）、Vercel（Admin、Restaurant）を使用します。Docker Compose は local/self-hosted 用に Socket.IO、Redis/BullMQ、MinIO の互換 profile を維持します。
 
-> **2026-07-16 status:** Railway API/worker/migrator は runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で稼働し、API health/readiness、Database、Redis、Supabase Storage は green です。Production migrations 42 件と checksum audit 42/42 は pass し、Storage bytes は Git blob `c29c069ea180ed6c3107411759b8ceb2150dc8e7` から exact recovery しました。Admin Vercel は同じ source から rebuild 済みです。Restaurant は free-team daily deployment quota のため直前の healthy production deployment を維持しています。Public web smoke と GPS/private Broadcast/PostGIS smoke は pass。Docker Hub/public GHCR には 4 つの immutable SHA manifests があり、`latest`/semver は未 promotion です。
+> **2026-07-17 status:** Railway API/worker/migrator は runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で稼働しています。Supabase database credential を rotation し、Railway の 6 database URL changes を deploy 後、API health/readiness、Database、Redis、Supabase Storage、42/42 migration audit は green です。Admin/Restaurant Vercel は exact source SHA `e6def517334681f3e003685489bd190e72408344` を返し、旧 quota block は解消しました。Supabase は expected public/private buckets、claim-scoped private Broadcast policy、Advisor error 0 を確認済みです。Docker Hub/public GHCR は 4 public SHA packages を保持し、worker は backend image を共有します。
 
 ## Product preview
 

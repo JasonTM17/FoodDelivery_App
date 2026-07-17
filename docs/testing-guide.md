@@ -6,7 +6,7 @@ A release is green only when the final source head passes every required local g
 
 ## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-Current runtime health evidence is tied to SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Railway API/worker/migrator report that revision, while database, Redis, and Supabase Storage are up. Docker Hub/public GHCR immutable SHA manifests were built and scanned by Docker Publish run `29515529360`. Admin Vercel was rebuilt from this head; Restaurant remains on the last healthy production deployment because the free-team deployment quota was exhausted. A current-revision controlled GPS/private Broadcast/PostGIS smoke passed; historical role/browser results remain bounded evidence, not full end-to-end production approval.
+Current runtime health evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. After Supabase credential rotation, API/worker/migrator, database, Redis, Supabase Storage, and the 42/42 migration audit pass. Admin and Restaurant Vercel both report exact source `e6def517334681f3e003685489bd190e72408344`; the previous quota block is resolved. Docker Hub/public GHCR expose four public immutable packages, with worker sharing the backend image. A controlled GPS/private Broadcast/PostGIS smoke passed; historical role/browser results remain bounded evidence, not full end-to-end production approval.
 
 | Area           | Result |
 | -------------- | ------ |
@@ -16,7 +16,7 @@ Current runtime health evidence is tied to SHA `84eeac3a2845868fc3a7fd45f8a73775
 | Web            | Current post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194/194 tests and builds 70 routes; Restaurant passes 135/135 tests and builds 55 routes. |
 | Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`84eeac3` four-role production certification. |
 | FCM/providers | Historical local notification and Flutter lifecycle tests passed. Controlled live FCM, optional provider-backed integrations, and native physical-device coverage remain open. |
-| Production     | Railway migrator `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` succeeded at SHA `84eeac3`. Admin Vercel rebuilt current source but still reports stale `977d55f` metadata because the manual upload omitted `BUILD_SHA`; Restaurant remains on the last healthy deployment because the quota rejected a new deployment. Public health/login smoke passes, and the new helper requires exact revision equality on the next rollout. Current-revision GPS smoke verified ES256 five-minute tokens, private Broadcast RLS allow/deny, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
+| Production     | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938`, and worker `e654a826-6255-4402-aed8-af57cd4fcd67` succeeded after credential rotation at runtime SHA `84eeac3`. Admin and Restaurant Vercel both report exact source `e6def517`; public health/login smoke passes. GPS smoke verified ES256 five-minute tokens, private Broadcast allow/deny, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
 
 ### Migration provenance audit
 
@@ -41,7 +41,7 @@ Never use `prisma migrate resolve` to hide a future checksum mismatch.
 
 ### Historical fresh clean-volume Docker details — 2026-07-14
 
-The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied its then-current 38 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. With explicit local URLs, source head `17584153ff256b74a3413ae9844f4f27bff038cc` passed Chrome desktop 68/68, Firefox 68/68, and Pixel 5 mobile Chrome 68/68: 204/204 with no failed or skipped cases. These are local 2026-07-14 results, not production tests or current-`977d55f` certification. Live FCM and full current production role journeys remain unverified.
+The rebuilt clean-volume Docker project `foodflow-batch4-e2e` applied its then-current 38 migrations, then seeded 201 users, 50 restaurants, 352 menu items, 509 orders, and 123 reviews. Its worker indexed 402 RAG documents. With explicit local URLs, source head `17584153ff256b74a3413ae9844f4f27bff038cc` passed Chrome desktop 68/68, Firefox 68/68, and Pixel 5 mobile Chrome 68/68: 204/204 with no failed or skipped cases. These are local 2026-07-14 results, not production tests or current certification. Live FCM and full current production role journeys remain unverified.
 
 ### Web build environment boundary
 

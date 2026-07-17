@@ -7,6 +7,16 @@ authoritative source for individual commits and implementation detail.
 
 ### Changed
 
+- Rotated the Supabase database credential, deployed all six Railway database
+  URL changes, reran the 42/42 migration checksum audit, and reverified API,
+  worker, Redis, database, and Supabase Storage health without committing a
+  credential value.
+- Rebuilt both Vercel production applications with exact revision metadata and
+  hardened the deploy helper so a web rollout requires the same clean remote
+  SHA from Railway API health first.
+- Verified that Docker Hub and public GHCR expose backend, migrate, admin, and
+  restaurant packages; the worker intentionally reuses the backend image.
+
 - Published immutable multi-architecture Docker SHA images for
   `84eeac3a2845868fc3a7fd45f8a73775e834a09d`, rolled the same backend digest
   through Railway API/worker, completed the one-off migrator, and rebuilt the

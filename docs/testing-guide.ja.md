@@ -6,7 +6,7 @@ Final source head が full local gates、fresh remote CI、provider preflight、
 
 ## Evidence boundary — production 2026-07-16 / historical local 2026-07-14
 
-Current runtime health evidence は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` に紐づきます。Railway API/worker/migrator はこの revision を返し、database、Redis、Supabase Storage は up です。Admin Vercel は同じ source から rebuild、Restaurant は daily quota のため直前の healthy deployment を維持します。Docker Hub/public GHCR immutable SHA manifests と GPS/private Broadcast/PostGIS smoke は pass 済みです。
+Current runtime health evidence は Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` に紐づきます。Supabase credential rotation 後、API/worker/migrator、database、Redis、Supabase Storage、42/42 migration audit は pass。Admin/Restaurant Vercel は exact source `e6def517334681f3e003685489bd190e72408344` を返し、quota issue は解消済みです。Docker Hub/public GHCR は 4 public immutable packages、worker は backend image を共有し、GPS/private Broadcast/PostGIS smoke は pass 済みです。
 
 | Area           | Result |
 | -------------- | ------ |
@@ -16,7 +16,7 @@ Current runtime health evidence は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09
 | Web            | Current post-merge frozen install、typecheck、lint、Vercel build-selection tests は pass。Admin は 194/194 tests pass、70 routes build、Restaurant は 135/135 tests pass、55 routes build です。 |
 | Historical role/browser smoke | Admin/Restaurant の Chrome と Customer/Driver API による full role smoke、および Chrome desktop、Firefox、Pixel 5 mobile Chrome の clean-volume Playwright 204/204 は source head `17584153ff256b74a3413ae9844f4f27bff038cc` の evidence です。Current `84eeac3` に対する four-role production certification としては再実行されていません。 |
 | FCM/providers  | Historical local notification/Flutter lifecycle tests は pass。Controlled live FCM、optional provider-backed integrations、physical-device coverage は未検証です。 |
-| Production     | Railway migrator `67331bd5-0a58-4224-bb18-b97b48702eee`、API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`、worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` は SHA `84eeac3` で成功。Admin Vercel は rebuild 済み、Restaurant は quota reset 待ちです。Public web と GPS/private Broadcast/PostGIS smoke は pass。Physical device と full four-role certification は未完了です。 |
+| Production     | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`、API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938`、worker `e654a826-6255-4402-aed8-af57cd4fcd67` は credential rotation 後の runtime SHA `84eeac3` で成功。Admin/Restaurant Vercel は source `e6def517` を返し、public web と GPS/private Broadcast/PostGIS smoke は pass。Physical device と full four-role certification は未完了です。 |
 
 ### Migration provenance audit
 
@@ -38,7 +38,7 @@ audit を `backend` から実行します。Realtime checksum
 
 ### Historical fresh clean-volume Docker evidence — 2026-07-14
 
-Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は当時の 38 migrations を適用し、users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed、worker は RAG documents 402 件を index しました。Explicit local URLs で source head `17584153ff256b74a3413ae9844f4f27bff038cc` は Chrome desktop 68/68、Firefox 68/68、Pixel 5 mobile Chrome 68/68、合計 204/204、failed/skip なしでした。これは 2026-07-14 local result であり、production test や current `977d55f` certification ではありません。Live FCM と current production の full role journeys は未検証です。
+Rebuilt clean-volume Docker project `foodflow-batch4-e2e` は当時の 38 migrations を適用し、users 201、restaurants 50、menu items 352、orders 509、reviews 123 を seed、worker は RAG documents 402 件を index しました。Explicit local URLs で source head `17584153ff256b74a3413ae9844f4f27bff038cc` は Chrome desktop 68/68、Firefox 68/68、Pixel 5 mobile Chrome 68/68、合計 204/204、failed/skip なしでした。これは 2026-07-14 local result であり、production test や current certification ではありません。Live FCM と current production の full role journeys は未検証です。
 
 ### Web build environment boundary
 
