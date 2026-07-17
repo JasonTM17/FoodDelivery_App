@@ -6,6 +6,7 @@ param(
   [string]$Scope = $(if ($env:VERCEL_SCOPE) { $env:VERCEL_SCOPE } else { 'nguyensonbmt06-6377s-projects' }),
   [string]$Branch = 'master',
   [string]$SourceSha,
+  [string]$ApiHealthUrl = 'https://foodflow-api-production.up.railway.app/api/healthz',
   [int]$HealthAttempts = 12,
   [int]$HealthDelaySeconds = 5,
   [switch]$PlanOnly
@@ -13,6 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+Import-Module (Join-Path $PSScriptRoot 'vercel-deploy-production.core.psm1') -Force
 
 $targets = @{
   admin = @{
@@ -27,76 +29,57 @@ $targets = @{
   }
 }
 
-function Invoke-Native {
-  param(
-    [Parameter(Mandatory = $true)][string]$Command,
-    [Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments
-  )
-
-  & $Command @Arguments
-  if ($LASTEXITCODE -ne 0) {
-    throw "$Command failed with exit code $LASTEXITCODE."
-  }
-}
-
 Push-Location $repoRoot
 try {
   if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'Git is required.'
   }
-  if (-not (Get-Command vercel -ErrorAction SilentlyContinue)) {
-    throw 'Vercel CLI is required.'
-  }
-
   $head = (git rev-parse HEAD).Trim()
   if ([string]::IsNullOrWhiteSpace($SourceSha)) {
     $SourceSha = $head
   }
-  if ($SourceSha -notmatch '^[0-9a-f]{40}$') {
-    throw 'SourceSha must be a full lowercase 40-character commit SHA.'
-  }
-  if ($SourceSha -ne $head) {
-    throw "SourceSha must equal the checked-out HEAD ($head)."
-  }
+  Assert-ReleaseSha -SourceSha $SourceSha -HeadSha $head
 
   $target = $targets[$App]
-  $deployArguments = @(
-    'deploy',
-    '.',
-    '--prod',
-    '--yes',
-    '--scope',
-    $Scope,
-    '--build-env',
-    "BUILD_SHA=$SourceSha",
-    '--env',
-    "BUILD_SHA=$SourceSha",
-    '--meta',
-    "githubCommitSha=$SourceSha",
-    '--meta',
-    "githubCommitRef=$Branch"
-  )
+  $deployArguments = New-VercelDeployArguments `
+    -SourceSha $SourceSha `
+    -Scope $Scope `
+    -Branch $Branch
 
   if ($PlanOnly) {
     Write-Output "Project: $($target.Project)"
     Write-Output "Source SHA: $SourceSha"
+    Write-Output "API health: $ApiHealthUrl"
+    Write-Output "Required API revision: $SourceSha"
     Write-Output "Health: $($target.HealthUrl)"
     Write-Output 'PlanOnly: no Vercel state changed.'
-    exit 0
+    return
   }
 
-  if (-not [string]::IsNullOrWhiteSpace((git status --porcelain))) {
-    throw 'Working tree must be clean before a production deployment.'
+  if (-not (Get-Command vercel -ErrorAction SilentlyContinue)) {
+    throw 'Vercel CLI is required.'
   }
 
-  Invoke-Native git fetch --quiet origin $Branch
+  Invoke-CheckedNative -Command git -Arguments @('fetch', '--quiet', 'origin', $Branch)
   $remoteHead = (git rev-parse "origin/$Branch").Trim()
-  if ($remoteHead -ne $SourceSha) {
-    throw "origin/$Branch must equal SourceSha before deployment."
+  Assert-ReleaseProvenance `
+    -SourceSha $SourceSha `
+    -RemoteSha $remoteHead `
+    -WorkingTreeStatus (git status --porcelain | Out-String)
+
+  $apiHealth = Invoke-RestMethod -Uri $ApiHealthUrl -Headers @{
+    'Cache-Control' = 'no-cache'
+  } -TimeoutSec 20
+  if (-not (Test-ReleaseHealthResponse `
+      -Response $apiHealth `
+      -ExpectedRevision $SourceSha)) {
+    throw "Railway API health must report SourceSha $SourceSha before Vercel deployment."
   }
 
-  Invoke-Native vercel link --project $target.Project --scope $Scope --yes
-  Invoke-Native vercel @deployArguments
+  Invoke-CheckedNative -Command vercel -Arguments @(
+    'link', '--project', $target.Project, '--scope', $Scope, '--yes'
+  )
+  Invoke-CheckedNative -Command vercel -Arguments $deployArguments
 
   for ($attempt = 1; $attempt -le $HealthAttempts; $attempt++) {
     try {
@@ -104,13 +87,12 @@ try {
         'Cache-Control' = 'no-cache'
       } -TimeoutSec 20
 
-      if (
-        $response.status -eq 'ok' -and
-        $response.service -eq $target.Service -and
-        $response.revision -eq $SourceSha
-      ) {
+      if (Test-ReleaseHealthResponse `
+          -Response $response `
+          -ExpectedRevision $SourceSha `
+          -ExpectedService $target.Service) {
         Write-Output "Vercel production health verified at $SourceSha."
-        exit 0
+        return
       }
     } catch {
       if ($attempt -eq $HealthAttempts) {
