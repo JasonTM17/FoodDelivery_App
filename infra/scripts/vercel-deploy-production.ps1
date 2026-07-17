@@ -6,7 +6,6 @@ param(
   [string]$Scope = $(if ($env:VERCEL_SCOPE) { $env:VERCEL_SCOPE } else { 'nguyensonbmt06-6377s-projects' }),
   [string]$Branch = 'master',
   [string]$SourceSha,
-  [string]$ApiHealthUrl = 'https://foodflow-api-production.up.railway.app/api/healthz',
   [int]$HealthAttempts = 12,
   [int]$HealthDelaySeconds = 5,
   [switch]$PlanOnly
@@ -15,6 +14,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 Import-Module (Join-Path $PSScriptRoot 'vercel-deploy-production.core.psm1') -Force
+$apiHealthUrl = 'https://foodflow-api-production.up.railway.app/api/healthz'
 
 $targets = @{
   admin = @{
@@ -49,7 +49,7 @@ try {
   if ($PlanOnly) {
     Write-Output "Project: $($target.Project)"
     Write-Output "Source SHA: $SourceSha"
-    Write-Output "API health: $ApiHealthUrl"
+    Write-Output "API health: $apiHealthUrl"
     Write-Output "Required API revision: $SourceSha"
     Write-Output "Health: $($target.HealthUrl)"
     Write-Output 'PlanOnly: no Vercel state changed.'
@@ -67,7 +67,7 @@ try {
     -RemoteSha $remoteHead `
     -WorkingTreeStatus (git status --porcelain | Out-String)
 
-  $apiHealth = Invoke-RestMethod -Uri $ApiHealthUrl -Headers @{
+  $apiHealth = Invoke-RestMethod -Uri $apiHealthUrl -Headers @{
     'Cache-Control' = 'no-cache'
   } -TimeoutSec 20
   if (-not (Test-ReleaseHealthResponse `

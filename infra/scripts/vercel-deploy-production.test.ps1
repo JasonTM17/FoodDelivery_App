@@ -129,6 +129,8 @@ Invoke-TestCase 'propagates a native command failure' {
 }
 
 Invoke-TestCase 'prints both application plans without contacting Vercel' {
+  $command = Get-Command $scriptPath
+  Assert-True (-not $command.Parameters.ContainsKey('ApiHealthUrl'))
   $head = (git -C (Join-Path $PSScriptRoot '..\..') rev-parse HEAD).Trim()
   $adminPlan = & $scriptPath -App admin -SourceSha $head -PlanOnly | Out-String
   $restaurantPlan = & $scriptPath -App restaurant -SourceSha $head -PlanOnly | Out-String
