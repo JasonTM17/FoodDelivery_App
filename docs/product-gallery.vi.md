@@ -36,7 +36,7 @@ GIF là preview im lặng đã tối ưu. Admin/Restaurant dùng frame Google Ch
 
 ## Web production có kiểm soát lịch sử
 
-Hai ảnh Google Chrome này thuộc revision đã deploy `17584153ff256b74a3413ae9844f4f27bff038cc`, không phải runtime Railway hiện tại `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Một smoke GPS API/realtime riêng trên revision hiện tại đã pass, nhưng chứng nhận đủ bốn role trên Chrome và thiết bị vật lý chưa được rerun. Khi chụp, Admin hiển thị bốn user synthetic của role-smoke và một restaurant tạm; queue Restaurant được scope vào restaurant đó và không có đơn. Cleanup sau đó xóa toàn bộ user, profile, restaurant, order và GPS row của fixture. Ảnh chỉ chứng minh hành trình xác thực lịch sử có phạm vi ghi trong manifest.
+Hai ảnh Google Chrome này thuộc revision đã deploy `17584153ff256b74a3413ae9844f4f27bff038cc`, không phải snapshot khôi phục Railway sau đó `84eeac3a2845868fc3a7fd45f8a73775e834a09d` hay một release được promote. Smoke GPS API/realtime riêng đã pass trên revision khôi phục, nhưng chứng nhận đủ bốn role trên Chrome và thiết bị vật lý chưa được rerun. Khi chụp, Admin hiển thị bốn user synthetic của role-smoke và một restaurant tạm; queue Restaurant được scope vào restaurant đó và không có đơn. Cleanup sau đó xóa toàn bộ user, profile, restaurant, order và GPS row của fixture. Ảnh chỉ chứng minh hành trình xác thực lịch sử có phạm vi ghi trong manifest.
 
 | Tổng quan Admin đã xác thực | Queue đơn Restaurant đã xác thực |
 |---|---|

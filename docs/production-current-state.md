@@ -1,7 +1,11 @@
 # Production Current State
 
-Last verified: 2026-07-17 (UTC), runtime revision
-`84eeac3a2845868fc3a7fd45f8a73775e834a09d`.
+Live production truth is tag-bound. Resolve the promoted source with
+`git rev-list -n 1 v0.1.4`, then require Railway API health, Railway worker
+image metadata, and the Vercel Admin/Restaurant health endpoints to resolve to
+that same full SHA. Dated
+deployment IDs below are evidence snapshots and must not be read as dynamic
+provider state.
 
 This page is the authoritative operational snapshot. Older release paragraphs
 in the README, roadmap, testing guide, and gallery are bounded historical
@@ -11,11 +15,11 @@ evidence, not a second current deployment.
 
 | Component | Deployment | Immutable artifact / revision | Result |
 | --- | --- | --- | --- |
-| Railway API (`foodflow-api`) | `f4292a62-4497-4f7d-9f8d-1c53bb2ca938` | `docker.io/nguyenson1710/foodflow-backend@sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` | Running after credential rotation |
-| Railway worker (`foodflow-worker`) | `e654a826-6255-4402-aed8-af57cd4fcd67` | Same backend digest | Running after credential rotation |
+| Railway API (`foodflow-api`) | `5b545476-8e0b-4208-8532-9d696bd5e00f` | `docker.io/nguyenson1710/foodflow-backend@sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e` | Recovery snapshot: running after credential rotation |
+| Railway worker (`foodflow-worker`) | `e3b8a1cf-6432-4e6b-ac09-6e142e338da4` | Same backend digest | Recovery snapshot: running after credential rotation |
 | Railway migrator | `e61a23bc-ce7e-4ef7-9daa-12160e20f105` | `docker.io/nguyenson1710/foodflow-migrate@sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d` | Successful, stopped; no pending migrations |
-| Vercel Admin | Canonical production alias | Exact source `e6def517334681f3e003685489bd190e72408344` | Ready, health/login HTTP 200 |
-| Vercel Restaurant | Canonical production alias | Exact source `e6def517334681f3e003685489bd190e72408344` | Ready, health/login HTTP 200 |
+| Vercel Admin | Canonical production alias | Recovery snapshot source `e6def517334681f3e003685489bd190e72408344` | Ready, health/login HTTP 200 |
+| Vercel Restaurant | Canonical production alias | Recovery snapshot source `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` | Ready, health/login HTTP 200; revision differed from Admin/Railway |
 
 The runtime SHA tag is
 `sha-84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Docker Publish run
@@ -86,10 +90,11 @@ an exact-byte read-only audit before the migrator runs.
 
 ## Vercel revision boundary
 
-The earlier daily quota block is resolved. Admin and Restaurant were rebuilt
-from exact clean source `e6def517334681f3e003685489bd190e72408344`; both
-canonical health endpoints returned that full revision and both login pages
-returned HTTP 200.
+The earlier daily quota block cleared, but the 2026-07-17 recovery recheck found
+split web revisions: Admin returned `e6def517…` and Restaurant returned
+`977d55f…`. HTTP 200 alone is not release certification. Both canonical web
+health endpoints, Railway API health, and the Railway worker image must equal
+the promoted tag SHA.
 
 Use the committed helper for both next deployments:
 

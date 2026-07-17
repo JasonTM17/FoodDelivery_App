@@ -61,11 +61,11 @@ Expected Railway services:
 | `foodflow-migrate` | `nguyenson1710/foodflow-migrate:sha-<commit>` | run once before API rollout                           |
 | Redis              | Railway managed Redis                         | reference its private `REDIS_URL` from API and worker |
 
-Current production evidence (2026-07-16): migrate deployment `67331bd5-0a58-4224-bb18-b97b48702eee`, API deployment `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker deployment `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` are successful from immutable SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` images. API and worker share backend digest `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e`; the completed migrator uses `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d`. The API domain targets Railway `PORT=8080`; `/api/healthz` returns 200 `status: ok`, `/api/readyz` returns 200 `status: ready`, both return the full current revision, and database, Redis, and Supabase Storage are up. The production checksum audit passes all 42 active source migrations. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
+Historical production snapshot (2026-07-16): migrate deployment `67331bd5-0a58-4224-bb18-b97b48702eee`, API deployment `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker deployment `0e1b7b4a-db42-4a2a-b61f-bbddeb244588` succeeded from immutable SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` images. API and worker shared backend digest `sha256:09bae57f907fc6d13c9874a673a8d73397510e3d50f75b6f20415e948285c24e`; the completed migrator used `sha256:04a089f17269d8ceb94f3f55cb241c91e0eb16db68ffaae4067c8f9a7bbbe16d`. At that checkpoint health/readiness and the production checksum audit passed all 42 active source migrations. `FOODFLOW_PROCESS_ROLE` remains explicit and fail-closed for both services.
 
 ### Historical multi-registry candidate — superseded
 
-Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. The current immutable SHA and aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not use the table below for a new rollout.
+Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as historical evidence only. Its later immutable checkpoint is recorded in [Historical deployment evidence — 2026-07-16](#historical-deployment-evidence--2026-07-16); use [Production Current State](./production-current-state.md) and live health endpoints for a new rollout.
 
 | Artifact       | SHA tag and verified digest                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -74,7 +74,7 @@ Runtime candidate `f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` is retained as hist
 | Admin          | `nguyenson1710/foodflow-admin:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:6f4757635d983ecf74a784749ca4aa4222066f68928a6c88e5deb0da9bf09744`      |
 | Restaurant     | `nguyenson1710/foodflow-restaurant:sha-f2c02ed76fb6a79671c1c51d10d8b6aef0f55b8b` — `sha256:272ce1e2b56ac85078ccea008effdffad4e84f82ec1816026a9ae53559923753` |
 
-At that historical snapshot, `latest` had not been promoted. The current Docker Hub aliases are recorded in [Current deployment evidence — 2026-07-16](#current-deployment-evidence--2026-07-16); do not infer current tag state from this superseded table.
+At that historical snapshot, `latest` had not been promoted. The later checkpoint is recorded in [Historical deployment evidence — 2026-07-16](#historical-deployment-evidence--2026-07-16); do not infer current tag state from either historical table.
 
 Expected Vercel projects:
 
@@ -255,9 +255,9 @@ powershell -File infra/scripts/vercel-deploy-production.ps1 -App restaurant
 Do not call bare `vercel deploy --prod` for a release. CLI source uploads can
 otherwise retain stale Git metadata even when the uploaded source is newer.
 
-## Current deployment evidence — 2026-07-16
+## Historical deployment evidence — 2026-07-16
 
-Runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` is deployed to Railway. Railway deployment IDs are migrate `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588`. Admin Vercel deployment `dpl_4D8BMjZtB66Q8145tUxaGHsZcQNm` rebuilt current tracked source and is `Ready`, but its public health metadata remains `977d55f` because the manual CLI upload omitted explicit `BUILD_SHA`. Restaurant remains on the previous healthy production deployment because Vercel rejected the new build after the free-team daily deployment limit was reached. The fail-closed helper above fixes both conditions for the next quota-eligible rollout. API health/readiness and public Admin/Restaurant smoke pass; database, Redis, and Supabase Storage are up. A controlled synthetic HCMC run proved a five-minute ES256 token, private Broadcast RLS allow/deny, accepted GPS fanout, PostGIS persistence, poor-accuracy/offline rejection, and zero-residue cleanup. The four-role Chrome/API journey remains historical SHA `17584153` evidence. Current-revision full role journeys, controlled-device FCM, physical Android/iOS background location, active-order routing, and optional providers remain uncertified. Docker Hub/public GHCR immutable SHA aliases match these digests:
+At this dated checkpoint Railway ran SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`; deployment IDs were migrate `67331bd5-0a58-4224-bb18-b97b48702eee`, API `a0b5c5d4-1695-4584-9a73-12bcf66b1080`, and worker `0e1b7b4a-db42-4a2a-b61f-bbddeb244588`. The later Admin CLI build still exposed stale `977d55f` metadata and the Restaurant replacement hit a daily quota boundary. This section is preserved as drift evidence only. Use [Production Current State](./production-current-state.md) and live health endpoints for release decisions. The controlled synthetic HCMC GPS test proved a five-minute ES256 token, private Broadcast RLS allow/deny, PostGIS persistence, rejection paths, and zero-residue cleanup; it did not certify physical devices or full four-role UI journeys. The immutable checkpoint digests were:
 
 | Image | Digest |
 | --- | --- |

@@ -11,9 +11,9 @@ authoritative source for individual commits and implementation detail.
   URL changes, reran the 42/42 migration checksum audit, and reverified API,
   worker, Redis, database, and Supabase Storage health without committing a
   credential value.
-- Rebuilt both Vercel production applications with exact revision metadata and
-  hardened the deploy helper so a web rollout requires the same clean remote
-  SHA from Railway API health first.
+- Detected and documented the split Admin/Restaurant Vercel revisions instead
+  of treating HTTP 200 as release proof, and hardened the deploy helper so a
+  web rollout requires the same clean remote SHA from Railway API health first.
 - Verified that Docker Hub and public GHCR expose backend, migrate, admin, and
   restaurant packages; the worker intentionally reuses the backend image.
 

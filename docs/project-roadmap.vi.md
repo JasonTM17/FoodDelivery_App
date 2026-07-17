@@ -4,7 +4,7 @@
 
 Chốt Batch 4 thành một production line đã verify: hoàn thiện code/mobile, pass mọi local/remote gate, deploy Supabase + Railway + Vercel, smoke production và publish Docker immutable từ `master` đã verify.
 
-Trạng thái 17/07/2026: **runtime Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` healthy sau khi xoay credential Supabase và deploy đủ sáu URL database; migration audit 42/42 pass. Admin và Restaurant Vercel cùng báo source chính xác `e6def517334681f3e003685489bd190e72408344`; quota cũ đã được giải quyết. Database, Redis, Supabase Storage, private Broadcast policy, Advisor, public web smoke và GPS/private Broadcast/PostGIS smoke đều pass. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở**.
+Trạng thái 17/07/2026: **Railway đã healthy lại ở SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` sau khi xoay credential Supabase; sáu URL database, health/readiness và audit migration 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng revision bị tách ở `e6def517…` và `977d55f…`, nên chưa được chứng nhận là release thống nhất. Chỉ chứng nhận khi SHA của tag, `origin/master`, Railway API/worker và hai health endpoint Vercel trùng nhau. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở**.
 
 ## Đã hoàn thành và đã tích hợp
 
@@ -61,9 +61,9 @@ Trạng thái 17/07/2026: **runtime Railway SHA `84eeac3a2845868fc3a7fd45f8a7377
 - SHA `84eeac3` đang deploy có đủ 42 migration source active. Database, Redis và Supabase Storage đều ready. Provenance Realtime, Job và Storage chính xác; audit pass 42/42 sau khi khôi phục blob Storage byte-for-byte và tạo backup Supabase ngoài repo.
 
 - Hai cảnh báo extension còn lại là ràng buộc đã phân tích: PostGIS không relocatable; chuyển pgvector sẽ phá search path của Prisma/raw operator hiện tại. Không “làm xanh” advisor bằng thay đổi schema nguy hiểm.
-- Railway migrate `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938` và worker `e654a826-6255-4402-aed8-af57cd4fcd67` thành công sau credential rotation tại runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. API health/readiness trả đúng revision với Database, Redis và Supabase Storage ready.
+- Snapshot khôi phục Railway: migrate `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `5b545476-8e0b-4208-8532-9d696bd5e00f` và worker `e3b8a1cf-6432-4e6b-ac09-6e142e338da4` tại runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. API health/readiness trả Database, Redis và Supabase Storage ready.
 - Google Maps là tùy chọn. Khi không có Google Directions hoặc OSRM do dự án sở hữu, routing trả `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED` nhưng tiến trình vẫn healthy. FCM/SMTP/Twilio/SePay/DeepSeek/owned routing còn chưa cấu hình hoặc chưa smoke.
-- Admin và Restaurant Vercel cùng báo exact source `e6def517334681f3e003685489bd190e72408344`; lỗi quota trước đã đóng. Journey bốn role Chrome/API vẫn là evidence lịch sử ở SHA `17584153`.
+- Recheck phát hiện Admin ở `e6def517334681f3e003685489bd190e72408344` và Restaurant ở `977d55f19ddc4fecafb8a758d2df034f4b6ff21d`; HTTP 200 không đủ để bỏ qua revision lệch. Journey bốn role Chrome/API vẫn là evidence lịch sử ở SHA `17584153`.
 - Docker Publish run `29515529360` đã publish bốn manifest SHA immutable `84eeac3` lên Docker Hub/GHCR public; chưa promote `latest`/semver.
 - Key provider từng paste phải rotate.
 

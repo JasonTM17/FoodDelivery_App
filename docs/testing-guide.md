@@ -6,7 +6,7 @@ A release is green only when the final source head passes every required local g
 
 ## Evidence boundary — production 2026-07-16 and historical local 2026-07-14
 
-Current runtime health evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. After Supabase credential rotation, API/worker/migrator, database, Redis, Supabase Storage, and the 42/42 migration audit pass. Admin and Restaurant Vercel both report exact source `e6def517334681f3e003685489bd190e72408344`; the previous quota block is resolved. Docker Hub/public GHCR expose four public immutable packages, with worker sharing the backend image. A controlled GPS/private Broadcast/PostGIS smoke passed; historical role/browser results remain bounded evidence, not full end-to-end production approval.
+The 2026-07-17 recovery evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. After Supabase credential rotation, API/worker/migrator, database, Redis, Supabase Storage, and the 42/42 migration audit passed. Admin and Restaurant returned HTTP 200 but reported split sources `e6def517…` and `977d55f…`; this is not unified release evidence. A release passes only when the promoted tag, `origin/master`, Railway API/worker, and both Vercel health endpoints match. Historical role/browser and controlled GPS results remain bounded evidence, not full end-to-end production approval.
 
 | Area           | Result |
 | -------------- | ------ |
@@ -16,7 +16,7 @@ Current runtime health evidence is tied to Railway SHA `84eeac3a2845868fc3a7fd45
 | Web            | Current post-merge frozen install, typecheck, lint, and Vercel build-selection tests pass. Admin passes 194/194 tests and builds 70 routes; Restaurant passes 135/135 tests and builds 55 routes. |
 | Historical role/browser smoke | The full Admin/Restaurant Chrome and Customer/Driver API role smoke, plus the clean-volume Playwright result of 204/204 across Chrome desktop, Firefox, and Pixel 5 mobile Chrome, belong to source head `17584153ff256b74a3413ae9844f4f27bff038cc`. They were not rerun as current-`84eeac3` four-role production certification. |
 | FCM/providers | Historical local notification and Flutter lifecycle tests passed. Controlled live FCM, optional provider-backed integrations, and native physical-device coverage remain open. |
-| Production     | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938`, and worker `e654a826-6255-4402-aed8-af57cd4fcd67` succeeded after credential rotation at runtime SHA `84eeac3`. Admin and Restaurant Vercel both report exact source `e6def517`; public health/login smoke passes. GPS smoke verified ES256 five-minute tokens, private Broadcast allow/deny, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
+| Production recovery snapshot | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `5b545476-8e0b-4208-8532-9d696bd5e00f`, and worker `e3b8a1cf-6432-4e6b-ac09-6e142e338da4` succeeded after credential rotation at runtime SHA `84eeac3`. Admin `e6def517` and Restaurant `977d55f` were healthy but revision-split. GPS smoke verified ES256 five-minute tokens, private Broadcast allow/deny, PostGIS persistence, rejection paths, and exact cleanup. Physical-device and full current four-role certification remain open. |
 
 ### Migration provenance audit
 
