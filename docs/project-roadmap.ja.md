@@ -4,7 +4,7 @@
 
 Batch 4 を一つの verified production line として完成: code/mobile parity、全 local/remote gate、Supabase + Railway + Vercel deploy、production smoke、verified `master` head から immutable Docker publish。
 
-2026-07-17 status: **Railway runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` は Supabase credential rotation と 6 database URL rollout 後も healthy、42/42 migration audit は pass。Admin/Restaurant Vercel は exact source `e6def517334681f3e003685489bd190e72408344` を返し、旧 quota block は解消。Database、Redis、Supabase Storage、private Broadcast policy、Advisor、public web、GPS/private Broadcast/PostGIS smoke は pass。Physical device と full current four-role certification は未完了です**。
+2026-07-17 status: **Supabase credential rotation と 6 database URL rollout 後、Railway は SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で復旧し、health/readiness と 42/42 migration audit は pass。Admin/Restaurant は HTTP 200 でしたが revision は `e6def517…` と `977d55f…` に分かれており、unified release とは認定していません。Tag SHA、`origin/master`、Railway API、両 Vercel health endpoint の一致が certification 条件です。Physical device と full current four-role certification は未完了です**。
 
 ## Completed and incorporated work
 
@@ -57,9 +57,9 @@ Full backend、full web、Chromium/Firefox、critical-page axe 0、visual/Stitch
 - Deployed SHA `84eeac3` は source migrations 42 件すべて active です。Database、Redis、Supabase Storage と Realtime/Job/Storage provenance audit 42/42 は pass します。
 
 - 残る extension advisor warnings は解析済み制約です: PostGIS は non-relocatable、pgvector 移動は現在の Prisma/raw-operator search path を壊します。Unsafe schema change で warning を隠しません。
-- Railway migrate `e61a23bc-ce7e-4ef7-9daa-12160e20f105`、API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938`、worker `e654a826-6255-4402-aed8-af57cd4fcd67` は credential rotation 後の runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` で成功しています。
+- Railway recovery snapshot は migrate `e61a23bc-ce7e-4ef7-9daa-12160e20f105`、API `5b545476-8e0b-4208-8532-9d696bd5e00f`、worker `e3b8a1cf-6432-4e6b-ac09-6e142e338da4`、runtime SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d` です。
 - Google Maps は optional です。Google Directions と owned OSRM が未設定なら routing は `503 DIRECTIONS_PROVIDER_NOT_CONFIGURED`、process は healthy のままです。FCM/SMTP/Twilio/SePay/DeepSeek/owned routing は未設定または未 smoke です。
-- Admin/Restaurant Vercel は exact source `e6def517334681f3e003685489bd190e72408344` を返し、quota issue は解消済みです。4-role Chrome/API journey は historical SHA `17584153` evidence です。
+- Recheck では Admin が `e6def517334681f3e003685489bd190e72408344`、Restaurant が `977d55f19ddc4fecafb8a758d2df034f4b6ff21d` でした。HTTP 200 だけでは revision drift を許容しません。4-role Chrome/API journey は historical SHA `17584153` evidence です。
 - Docker Publish run `29515529360` は Docker Hub/public GHCR に 4 immutable SHA manifests を publish しました。`latest`/semver は未 promotion です。
 - 以前貼られた provider key は rotate 必須。
 

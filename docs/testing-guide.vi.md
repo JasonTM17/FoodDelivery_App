@@ -6,7 +6,7 @@ Chỉ được coi là xanh khi final source head pass toàn bộ local gate, re
 
 ## Ranh giới evidence — production 16/07/2026 và local lịch sử 14/07/2026
 
-Evidence health runtime hiện tại gắn với Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Sau khi xoay credential Supabase, API/worker/migrator, database, Redis, Supabase Storage và migration audit 42/42 đều pass. Admin và Restaurant Vercel cùng báo exact source `e6def517334681f3e003685489bd190e72408344`; quota cũ đã đóng. Docker Hub/GHCR public có đủ bốn package immutable; worker dùng chung backend image. Smoke GPS/private Broadcast/PostGIS có kiểm soát đã pass; kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
+Evidence khôi phục 17/07/2026 gắn với Railway SHA `84eeac3a2845868fc3a7fd45f8a73775e834a09d`. Sau khi xoay credential Supabase, API/worker/migrator, database, Redis, Supabase Storage và migration audit 42/42 đều pass. Admin và Restaurant trả HTTP 200 nhưng source bị tách ở `e6def517…` và `977d55f…`; đây không phải evidence của release thống nhất. Release chỉ pass khi tag, `origin/master`, Railway API và hai health endpoint Vercel trùng SHA. Smoke GPS và kết quả role/browser lịch sử vẫn chỉ là evidence có phạm vi.
 
 | Khu vực        | Kết quả |
 | -------------- | ------- |
@@ -16,7 +16,7 @@ Evidence health runtime hiện tại gắn với Railway SHA `84eeac3a2845868fc3
 | Web            | Frozen install, typecheck, lint và test chọn build Vercel hiện tại sau merge đều pass. Admin pass 194/194 test và build 70 route; Restaurant pass 135/135 test và build 55 route. |
 | Role/browser lịch sử | Full role smoke Admin/Restaurant bằng Chrome và Customer/Driver qua API, cùng kết quả Playwright volume sạch 204/204 trên Chrome desktop, Firefox và Chrome mobile Pixel 5, thuộc source head `17584153ff256b74a3413ae9844f4f27bff038cc`. Các lượt này chưa được chạy lại để chứng nhận production bốn role trên `84eeac3`. |
 | FCM/provider   | Notification backend và lifecycle Flutter local lịch sử đã pass. FCM live có kiểm soát, các tích hợp dùng provider tùy chọn và coverage thiết bị vật lý thật vẫn còn mở. |
-| Production     | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `f4292a62-4497-4f7d-9f8d-1c53bb2ca938` và worker `e654a826-6255-4402-aed8-af57cd4fcd67` thành công sau credential rotation tại runtime SHA `84eeac3`. Admin/Restaurant Vercel cùng báo source `e6def517`; public web và GPS/private Broadcast/PostGIS smoke pass. Thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở. |
+| Snapshot khôi phục production | Railway migrator `e61a23bc-ce7e-4ef7-9daa-12160e20f105`, API `5b545476-8e0b-4208-8532-9d696bd5e00f` và worker `e3b8a1cf-6432-4e6b-ac09-6e142e338da4` thành công sau credential rotation tại runtime SHA `84eeac3`. Admin `e6def517` và Restaurant `977d55f` healthy nhưng lệch revision. GPS/private Broadcast/PostGIS smoke pass; thiết bị vật lý và full journey bốn role hiện tại vẫn còn mở. |
 
 ### Audit provenance migration
 

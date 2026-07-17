@@ -36,7 +36,7 @@ GIF は silent optimized preview です。Admin/Restaurant は review 済み Goo
 
 ## Historical controlled-production web smoke
 
-この Google Chrome 2 枚は deployed revision `17584153ff256b74a3413ae9844f4f27bff038cc` の証拠であり、current Railway runtime `84eeac3a2845868fc3a7fd45f8a73775e834a09d` の証拠ではありません。Separate current-revision API/realtime GPS smoke は pass しましたが、4-role Chrome と physical-device certification は再実行していません。Capture 時の Admin overview には synthetic role-smoke user 4 件と temporary restaurant 1 件が表示され、Restaurant queue はその restaurant に scope され order は 0 件でした。その後 cleanup が fixture user、profile、restaurant、order、GPS row をすべて削除しました。Manifest に記録した bounded historical authentication journey のみを示します。
+この Google Chrome 2 枚は deployed revision `17584153ff256b74a3413ae9844f4f27bff038cc` の証拠であり、後の Railway recovery snapshot `84eeac3a2845868fc3a7fd45f8a73775e834a09d` や promoted release の証拠ではありません。Recovery revision の separate API/realtime GPS smoke は pass しましたが、4-role Chrome と physical-device certification は再実行していません。Capture 時の Admin overview には synthetic role-smoke user 4 件と temporary restaurant 1 件が表示され、Restaurant queue はその restaurant に scope され order は 0 件でした。その後 cleanup が fixture user、profile、restaurant、order、GPS row をすべて削除しました。Manifest に記録した bounded historical authentication journey のみを示します。
 
 | Authenticated Admin overview | Authenticated Restaurant order queue |
 |---|---|
