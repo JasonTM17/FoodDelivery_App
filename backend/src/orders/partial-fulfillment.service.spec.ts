@@ -13,7 +13,7 @@ describe('PartialFulfillmentService', () => {
   }
 
   const mockPrisma = {
-    restaurantProfile: { findUnique: jest.fn() },
+    restaurantProfile: { findUnique: jest.fn(), findFirst: jest.fn() },
     order: { findUnique: jest.fn() },
     $transaction: jest.fn().mockImplementation(
       (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
@@ -44,6 +44,7 @@ describe('PartialFulfillmentService', () => {
       (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
     )
     mockPrisma.restaurantProfile.findUnique.mockResolvedValue({ restaurantId })
+    mockPrisma.restaurantProfile.findFirst.mockResolvedValue({ restaurantId })
     mockPrisma.order.findUnique.mockResolvedValue({ ...baseOrder })
 
     service = new PartialFulfillmentService(
@@ -109,10 +110,19 @@ describe('PartialFulfillmentService', () => {
   })
 
   it('throws NotFoundException when restaurant profile not found', async () => {
-    mockPrisma.restaurantProfile.findUnique.mockResolvedValue(null)
+    mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
     await expect(
       service.markItemsUnavailable(orderId, restaurantUserId, { unavailableItemIds: ['item-1'] }),
     ).rejects.toThrow(NotFoundException)
+  })
+
+  it('throws NotFoundException when the restaurant profile is deactivated', async () => {
+    mockPrisma.restaurantProfile.findUnique.mockResolvedValue({ restaurantId, isActive: false })
+    mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+    await expect(
+      service.markItemsUnavailable(orderId, restaurantUserId, { unavailableItemIds: ['item-1'] }),
+    ).rejects.toThrow(NotFoundException)
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled()
   })
 
   it('throws NotFoundException when order not found', async () => {

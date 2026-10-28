@@ -95,7 +95,9 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({ where: { id: reviewId } })
     if (!review) throw new NotFoundException('Review not found')
 
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+    })
     if (!profile || profile.restaurantId !== review.restaurantId) {
       throw new ForbiddenException('Not authorized to reply to this review')
     }
@@ -141,7 +143,9 @@ export class ReviewsService {
   }
 
   async getRestaurantReviews(userId: string, page: number, limit: number, rating?: number) {
-    const profile = await this.prisma.restaurantProfile.findUnique({ where: { userId } })
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
+    })
     if (!profile) throw new ForbiddenException('RESTAURANT_PROFILE_NOT_FOUND')
     const where = {
       restaurantId: profile.restaurantId,

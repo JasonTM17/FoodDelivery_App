@@ -98,8 +98,8 @@ export class OrderChatService {
   }
 
   private async findRestaurantOrderForChat(orderId: string, userId: string): Promise<RestaurantOrderForChat> {
-    const profile = await this.prisma.restaurantProfile.findUnique({
-      where: { userId },
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
       select: { restaurantId: true },
     })
     if (!profile) {

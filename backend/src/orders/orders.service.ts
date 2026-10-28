@@ -1,4 +1,4 @@
-import { Inject, Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { Inject, Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import type Redis from 'ioredis'
@@ -24,6 +24,7 @@ import { buildPromotionCartContext } from '../promotions/build-promotion-cart-co
 import { routePhaseForStatus } from '../tracking/tracking.service'
 import { PaymentRefundJobData } from '../payments/refund.processor'
 import { DeliveryPricingService } from './delivery-pricing.service'
+import { ReviewsService } from '../reviews/reviews.service'
 
 const ORDER_CODE_CREATE_ATTEMPTS = 8
 
@@ -41,6 +42,7 @@ export class OrdersService {
     @InjectQueue('payment-refund') private readonly refundQueue: Queue,
     @InjectQueue('order-timeout') private readonly orderTimeoutQueue: Queue,
     @InjectQueue('commission-split') private readonly commissionQueue: Queue,
+    private readonly reviewsService: ReviewsService,
   ) {}
 
   async transition(
@@ -64,7 +66,9 @@ export class OrdersService {
 
       const order = await tx.order.findUniqueOrThrow({ where: { id: orderId } })
       if (role === 'restaurant') {
-        const profile = await tx.restaurantProfile.findUnique({ where: { userId: actorId } })
+        const profile = await tx.restaurantProfile.findFirst({
+          where: { userId: actorId, isActive: true },
+        })
         if (!profile || profile.restaurantId !== order.restaurantId) {
           throw new NotFoundException('ORDER_NOT_FOUND')
         }
@@ -444,6 +448,8 @@ export class OrdersService {
   }
 
   async getCustomerOrders(userId: string, page = 1, limit = 20, status?: string) {
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20
     const where: Record<string, unknown> = { customerId: userId }
     if (status) where.status = status
 
@@ -467,15 +473,15 @@ export class OrdersService {
           statusHistory: { orderBy: { createdAt: 'asc' } },
         },
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
       }),
       this.prisma.order.count({ where }),
     ])
 
     return {
       orders: orders.map(serializeCustomerOrder),
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      meta: { page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) },
     }
   }
 
@@ -547,23 +553,24 @@ export class OrdersService {
   }
 
   async submitReview(orderId: string, userId: string, dto: CreateReviewDto) {
-    const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } })
-    if (order.customerId !== userId) throw new NotFoundException('ORDER_NOT_FOUND')
-
-    const existing = await this.prisma.review.findUnique({ where: { orderId } })
-    if (existing) throw new BadRequestException('ALREADY_REVIEWED')
-
-    return this.prisma.review.create({
-      data: {
-        orderId,
-        customerId: userId,
-        restaurantId: order.restaurantId,
-        driverId: order.driverId,
+    try {
+      return await this.reviewsService.createReview(orderId, userId, {
         foodRating: dto.foodRating,
         deliveryRating: dto.deliveryRating,
         comment: dto.comment,
-      },
-    })
+        photos: [],
+      })
+    } catch (error) {
+      // Keep this endpoint's established privacy/error contract while sharing
+      // delivered-window, moderation and aggregation rules with ReviewsService.
+      if (error instanceof ForbiddenException && error.message === 'Not your order') {
+        throw new NotFoundException('ORDER_NOT_FOUND')
+      }
+      if (error instanceof ConflictException && error.message === 'Review already submitted for this order') {
+        throw new BadRequestException('ALREADY_REVIEWED')
+      }
+      throw error
+    }
   }
 }
 

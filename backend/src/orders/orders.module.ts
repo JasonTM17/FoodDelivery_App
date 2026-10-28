@@ -15,6 +15,7 @@ import { DeliveryPricingService } from './delivery-pricing.service'
 import { AuthModule } from '../auth/auth.module'
 import { RealtimeRoomAccessService } from './realtime-room-access.service'
 import { PromotionsModule } from '../promotions/promotions.module'
+import { ReviewsModule } from '../reviews/reviews.module'
 import { QueueProviderModule } from '../common/queue/queue-provider.module'
 
 @Module({
@@ -23,6 +24,7 @@ import { QueueProviderModule } from '../common/queue/queue-provider.module'
     forwardRef(() => CartModule),
     PaymentsModule,
     PromotionsModule,
+    ReviewsModule,
     QueueProviderModule.registerQueue({ name: 'dispatch' }),
     QueueProviderModule.registerQueue({ name: 'payment-refund' }),
     QueueProviderModule.registerQueue({ name: 'order-timeout' }),

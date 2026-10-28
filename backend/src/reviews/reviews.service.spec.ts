@@ -32,7 +32,7 @@ describe('ReviewsService', () => {
   let mockPrisma: {
     order: { findUnique: jest.Mock }
     review: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock; count: jest.Mock; findMany: jest.Mock; groupBy: jest.Mock }
-    restaurantProfile: { findUnique: jest.Mock; findMany: jest.Mock }
+    restaurantProfile: { findUnique: jest.Mock; findFirst: jest.Mock; findMany: jest.Mock }
     $transaction: jest.Mock
   }
   let mockTx: { review: { create: jest.Mock } }
@@ -57,12 +57,16 @@ describe('ReviewsService', () => {
       },
       restaurantProfile: {
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         findMany: jest.fn().mockResolvedValue([]),
       },
       $transaction: jest
         .fn()
         .mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
     }
+    mockPrisma.restaurantProfile.findFirst.mockImplementation(
+      (args: unknown) => mockPrisma.restaurantProfile.findUnique(args),
+    )
     mockNotifications = { fanout: jest.fn().mockResolvedValue({ sent: true }) }
     mockModeration = {
       checkProfanity: jest.fn().mockReturnValue({ clean: true, flagged_words: [] }),
@@ -236,6 +240,22 @@ describe('ReviewsService', () => {
       })
       await expect(service.restaurantReply(REVIEW_ID, USER_ID, dto)).resolves.toBeDefined()
     })
+
+    it('rejects reply writes for a deactivated restaurant profile', async () => {
+      mockPrisma.review.findUnique.mockResolvedValue({
+        id: REVIEW_ID,
+        restaurantId: RESTAURANT_ID,
+        replyAt: null,
+      })
+      mockPrisma.restaurantProfile.findUnique.mockResolvedValue({
+        userId: USER_ID,
+        restaurantId: RESTAURANT_ID,
+      })
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(service.restaurantReply(REVIEW_ID, USER_ID, dto)).rejects.toThrow(ForbiddenException)
+      expect(mockPrisma.review.update).not.toHaveBeenCalled()
+    })
   })
 
   describe('getRestaurantReviews()', () => {
@@ -280,6 +300,17 @@ describe('ReviewsService', () => {
       expect(mockPrisma.review.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ restaurantId: RESTAURANT_ID }) }),
       )
+    })
+
+    it('rejects the dashboard for a deactivated restaurant profile', async () => {
+      mockPrisma.restaurantProfile.findUnique.mockResolvedValue({
+        userId: USER_ID,
+        restaurantId: RESTAURANT_ID,
+      })
+      mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(service.getRestaurantReviews(USER_ID, 1, 20)).rejects.toThrow(ForbiddenException)
+      expect(mockPrisma.review.findMany).not.toHaveBeenCalled()
     })
   })
 
