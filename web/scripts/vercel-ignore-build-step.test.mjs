@@ -8,6 +8,8 @@ import { pathToFileURL } from 'node:url';
 
 import { evaluateVercelBuild } from './vercel-ignore-build-step.mjs';
 
+const WEB_SURFACES = ['admin', 'restaurant', 'customer', 'driver'];
+
 function runGit(repositoryRoot, args) {
   const result = spawnSync('git', args, {
     cwd: repositoryRoot,
@@ -49,7 +51,7 @@ test('build selection is scoped by app and shared web inputs', (context) => {
   writeFixture(repositoryRoot, 'README.md', 'docs only\n');
   const docsSha = commitFixture(repositoryRoot, 'docs');
 
-  for (const surface of ['admin', 'restaurant']) {
+  for (const surface of WEB_SURFACES) {
     const result = evaluateVercelBuild({
       surface,
       previousSha: initialSha,
@@ -84,7 +86,7 @@ test('build selection is scoped by app and shared web inputs', (context) => {
   writeFixture(repositoryRoot, 'web/packages/ui/index.ts', 'shared v2\n');
   const sharedSha = commitFixture(repositoryRoot, 'shared');
 
-  for (const surface of ['admin', 'restaurant']) {
+  for (const surface of WEB_SURFACES) {
     assert.equal(
       evaluateVercelBuild({
         surface,
@@ -103,7 +105,7 @@ test('build selection is scoped by app and shared web inputs', (context) => {
   );
   const guardSha = commitFixture(repositoryRoot, 'guard');
 
-  for (const surface of ['admin', 'restaurant']) {
+  for (const surface of WEB_SURFACES) {
     assert.equal(
       evaluateVercelBuild({
         surface,
@@ -118,7 +120,7 @@ test('build selection is scoped by app and shared web inputs', (context) => {
   writeFixture(repositoryRoot, '.vercelignore', 'private-artifacts\n');
   const vercelIgnoreSha = commitFixture(repositoryRoot, 'vercel ignore');
 
-  for (const surface of ['admin', 'restaurant']) {
+  for (const surface of WEB_SURFACES) {
     assert.equal(
       evaluateVercelBuild({
         surface,

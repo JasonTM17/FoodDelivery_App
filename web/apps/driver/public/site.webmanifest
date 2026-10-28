@@ -1,0 +1,17 @@
+{
+  "name": "FoodFlow Driver",
+  "short_name": "Driver",
+  "description": "Deliver orders with FoodFlow.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "/foodflow-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

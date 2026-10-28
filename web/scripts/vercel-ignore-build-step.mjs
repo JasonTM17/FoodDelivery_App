@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const SUPPORTED_SURFACES = new Set(['admin', 'restaurant']);
+const SUPPORTED_SURFACES = new Set(['admin', 'restaurant', 'customer', 'driver']);
 const FULL_GIT_SHA = /^[0-9a-f]{40}$/i;
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const DEFAULT_REPOSITORY_ROOT = resolve(dirname(SCRIPT_PATH), '..', '..');
