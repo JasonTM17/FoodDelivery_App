@@ -11,9 +11,9 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
   <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, four Next.js web applications (Admin, Restaurant, Customer and Driver), and Flutter customer/driver applications. The current managed demo setup uses Vercel API/worker projects, Supabase PostgreSQL/PostGIS/Realtime/Storage and TLS Redis. See [hosted demo setup and evidence](docs/hosted-demo.md). Docker Compose retains a separate Socket.IO/Redis/MinIO profile for local development and self-hosting. The historical Railway and release evidence below describes earlier snapshots.
+FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, four Next.js web applications (Admin, Restaurant, Customer and Driver), and Flutter customer/driver applications. The current free demo uses a Render API with an opt-in embedded Postgres worker, Vercel frontends, Supabase PostgreSQL/PostGIS/Realtime/Storage and TLS Redis. The user accepted Render Free sleep limits: durable jobs pause while the service sleeps. See [hosted demo setup and evidence](docs/hosted-demo.md). Docker Compose retains a separate Socket.IO/Redis/MinIO profile for local development and self-hosting. The historical Railway and release evidence below describes earlier snapshots.
 
-> **Live Admin:** [food-delivery-app-one-liard.vercel.app](https://food-delivery-app-one-liard.vercel.app)<br />
+> **Demo web:** [Customer](https://foodflow-customer.vercel.app) · [Driver](https://foodflow-driver.vercel.app) · [Admin](https://foodflow-admin-two.vercel.app) · [Restaurant](https://foodflow-restaurant-ochre.vercel.app)<br />
 > This is the deployed sign-in surface. Public demo credentials are not documented; review the screenshots or run the seeded local stack for authenticated workflows.
 
 ## Release evidence and production truth
@@ -60,7 +60,7 @@ The mobile captures use simulated GPS. Most use the isolated local stack; the ma
 
 Admin and Restaurant routes are locale-prefixed for `vi`, `en`, and `ja`. The API uses a shared success envelope (`{ success: true, data, meta? }`) and RFC 7807 Problem Details for errors.
 
-Customer and Driver have no local web URLs. Use their explicit Flutter entrypoints; the `--flavor` commands below select the Android product flavors.
+Customer and Driver also have Next.js web apps in `web/apps/customer` (port3003) and `web/apps/driver` (port3004). The Flutter `--flavor` commands below select the separate Android product flavors.
 
 ## Capabilities
 
