@@ -12,7 +12,6 @@ import type {
   RestaurantDetail,
   RestaurantMenu,
   RestaurantReview,
-  ReviewsPage,
 } from '@/lib/types';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { MenuItemDialog } from '@/components/menu-item-dialog';
@@ -39,8 +38,8 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
       setRestaurant(restaurantResult);
       setMenu(Array.isArray(menuResult?.categories) ? menuResult.categories : []);
       api
-        .get<ReviewsPage>(`/restaurants/${id}/reviews?limit=5`)
-        .then((r) => setReviews(r.items ?? []))
+        .getPage<RestaurantReview>(`/restaurants/${id}/reviews?limit=5`)
+        .then((r) => setReviews(r.items))
         .catch(() => setReviews([]));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load this restaurant.');

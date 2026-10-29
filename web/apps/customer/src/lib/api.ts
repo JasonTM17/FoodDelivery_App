@@ -14,6 +14,11 @@ export const CUSTOMER_REFRESH_KEY = 'customer_refresh_token';
 
 interface FetchOptions extends Omit<ApiRequestOptions, 'body'> {}
 
+export function pageFromEnvelope<T>(envelope: { data: T[]; meta?: PaginationMeta }) {
+  return { items: envelope.data, total: envelope.meta?.total ?? envelope.data.length,
+    page: envelope.meta?.page ?? 1, limit: envelope.meta?.limit ?? envelope.data.length };
+}
+
 function getStorageValue(key: string): string | null {
   return typeof window === 'undefined' ? null : localStorage.getItem(key);
 }
@@ -82,6 +87,8 @@ export function apiFetchEnvelope<T>(
 }
 
 export const api = {
+  getPage: async <T>(endpoint: string, options?: FetchOptions) =>
+    pageFromEnvelope(await apiFetchEnvelope<T[]>(endpoint, { ...options, method: 'GET' })),
   get: <T>(endpoint: string, options?: FetchOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'GET' }),
 

@@ -46,6 +46,10 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
+      if (!usingLocation && !submittedQuery.trim()) {
+        if (seq === requestSeq.current) { setSearch(null); setNearby(null); }
+        return;
+      }
       if (usingLocation) {
         const params = new URLSearchParams({
           lat: String(location.lat),
@@ -54,14 +58,14 @@ export default function HomePage() {
           limit: String(PAGE_SIZE),
         });
         if (cuisine) params.set('cuisine', cuisine);
-        params.set('radius', '10000');
-        const result = await api.get<Paged<NearbyRestaurant>>(`/restaurants/nearby?${params}`);
+        params.set('radius', '10'); // Backend radius is kilometres, bounded to 1–100.
+        const result = await api.getPage<NearbyRestaurant>(`/restaurants/nearby?${params}`);
         if (seq === requestSeq.current) setNearby(result);
         if (seq === requestSeq.current) setSearch(null);
       } else {
         const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
         if (submittedQuery) params.set('q', submittedQuery);
-        const result = await api.get<Paged<SearchRestaurant>>(`/restaurants/search?${params}`);
+        const result = await api.getPage<SearchRestaurant>(`/restaurants/search?${params}`);
         if (seq === requestSeq.current) {
           setSearch(result);
           setNearby(null);
@@ -188,8 +192,8 @@ export default function HomePage() {
       ) : error ? (
         <ErrorBlock message={error} onRetry={load} />
       ) : items.length === 0 ? (
-        <EmptyBlock icon={Store} title="No restaurants found">
-          <p className="text-sm text-muted-foreground">Try a different search or filter.</p>
+        <EmptyBlock icon={Store} title={!usingLocation && !submittedQuery ? 'Find your next meal' : 'No restaurants found'}>
+          <p className="text-sm text-muted-foreground">Search for a restaurant, or choose Near me to browse nearby places.</p>
         </EmptyBlock>
       ) : (
         <>
