@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, Mail, Phone, User, ShoppingBag, RotateCcw } from 'lucide-react';
 import { Link } from '@/navigation';
 import OrderStatusBadge from '@/components/badges/order-status-badge';
+import UserRoleBadge from '@/components/badges/user-role-badge';
 import UserKycModal from './user-kyc-modal';
 import { UserDetailLoadingState } from './user-detail-loading-state';
 import { UserDetailSummaryCards } from './user-detail-summary-cards';
@@ -147,7 +148,7 @@ export default function UserDetailClient({ userId }: { userId: string }) {
               <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{user.email}</span></div>
               <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{user.phone || '—'}</span></div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('role')}</span><Badge variant="outline">{user.role}</Badge></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">{t('role')}</span><UserRoleBadge role={user.role} /></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t('memberSince')}</span><span>{formatDate(user.createdAt)}</span></div>
             </CardContent>
           </Card>

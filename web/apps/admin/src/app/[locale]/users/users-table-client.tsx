@@ -5,6 +5,7 @@ import { apiGet, apiPatch } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useTableFilters } from '@/hooks/use-table-filters';
 import { Badge } from '@/components/ui/badge';
+import UserRoleBadge from '@/components/badges/user-role-badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,20 +58,9 @@ interface RawUsersResponse {
   totalPages?: number;
 }
 
-const roleVariants: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
-  admin: 'destructive',
-  restaurant: 'default',
-  driver: 'secondary',
-  customer: 'outline',
-};
-
 function userStatus(user: RawUser): 'active' | 'banned' {
   if (typeof user.isActive === 'boolean') return user.isActive ? 'active' : 'banned';
   return user.status === 'active' ? 'active' : 'banned';
-}
-
-function userRoleLabelKey(role: string): string {
-  return role === 'restaurant' ? 'restaurant_owner' : role;
 }
 
 export function normalizeUsersResponse(response: RawUsersResponse): UsersResponse {
@@ -169,9 +159,7 @@ export default function UsersTableClient() {
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>{user.phone || '—'}</TableCell>
                       <TableCell>
-                        <Badge variant={roleVariants[user.role] || 'outline'}>
-                          {user.role in roleVariants ? t(`roles.${userRoleLabelKey(user.role)}`) : user.role}
-                        </Badge>
+                        <UserRoleBadge role={user.role} />
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.status === 'active' ? 'success' : 'destructive'}>
