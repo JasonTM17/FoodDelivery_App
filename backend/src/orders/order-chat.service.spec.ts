@@ -7,7 +7,7 @@ import { OrderChatService } from './order-chat.service'
 describe('OrderChatService', () => {
   let service: OrderChatService
   let mockPrisma: {
-    restaurantProfile: { findUnique: jest.Mock }
+    restaurantProfile: { findUnique: jest.Mock; findFirst: jest.Mock }
     order: { findFirst: jest.Mock }
     chatSession: { findFirst: jest.Mock }
     $transaction: jest.Mock
@@ -42,7 +42,10 @@ describe('OrderChatService', () => {
       },
     }
     mockPrisma = {
-      restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId }) },
+      restaurantProfile: {
+        findUnique: jest.fn().mockResolvedValue({ restaurantId }),
+        findFirst: jest.fn().mockResolvedValue({ restaurantId }),
+      },
       order: { findFirst: jest.fn().mockResolvedValue({ id: orderId, driverId: 'driver-1' }) },
       chatSession: { findFirst: jest.fn().mockResolvedValue(null) },
       $transaction: jest.fn().mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
@@ -89,6 +92,19 @@ describe('OrderChatService', () => {
     await expect(
       service.getRestaurantOrderMessages(orderId, restaurantUserId),
     ).rejects.toThrow(NotFoundException)
+  })
+
+  it('rejects chat reads and writes for a deactivated restaurant profile', async () => {
+    mockPrisma.restaurantProfile.findFirst.mockResolvedValue(null)
+
+    await expect(
+      service.getRestaurantOrderMessages(orderId, restaurantUserId),
+    ).rejects.toThrow(NotFoundException)
+    await expect(
+      service.createRestaurantOrderMessage(orderId, restaurantUserId, { content: 'Ready' }),
+    ).rejects.toThrow(NotFoundException)
+    expect(mockPrisma.order.findFirst).not.toHaveBeenCalled()
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled()
   })
 
   it('does not create a message before a driver is assigned', async () => {

@@ -1,0 +1,17 @@
+{
+  "name": "FoodFlow",
+  "short_name": "FoodFlow",
+  "description": "Order food from restaurants near you.",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "/foodflow-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

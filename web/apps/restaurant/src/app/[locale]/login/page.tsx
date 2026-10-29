@@ -113,6 +113,22 @@ export default function LoginPage() {
             >
               {isLoading ? t('loggingIn') : tCommon('login')}
             </button>
+                      <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/70 p-3 text-left">
+              <p className="text-xs font-semibold text-orange-950">Tài khoản nhà hàng mẫu (Demo):</p>
+              <div className="mt-2">
+                <button
+                  type="button"
+                  className="flex h-8 w-full items-center justify-between rounded border border-gray-200 bg-white px-2.5 text-xs text-gray-700 hover:bg-orange-50"
+                  onClick={() => {
+                    setEmail('restaurant1@foodflow.vn');
+                    setPassword('Demo@123456');
+                  }}
+                >
+                  <span>Nhà hàng: <strong className="text-gray-900">restaurant1@foodflow.vn</strong></span>
+                  <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+                </button>
+              </div>
+            </div>
           </form>
         </div>
       </div>

@@ -354,7 +354,7 @@ export class DispatchOfferService {
 
   private async claimDriverAssignment(driverId: string, orderId: string): Promise<boolean> {
     const result = await this.redis.eval(
-      `local current = redis.call("get", KEYS[2]); if current == ARGV[1] then return 1 end; if redis.call("get", KEYS[1]) ~= "online" or current then return 0 end; redis.call("set", KEYS[1], "busy"); redis.call("set", KEYS[2], ARGV[1]); redis.call("del", KEYS[3]); return 1`,
+      `local current = redis.call("get", KEYS[2]); if current == ARGV[1] then return 1 end; if redis.call("get", KEYS[1]) ~= "online" or (current and current ~= "") then return 0 end; redis.call("set", KEYS[1], "busy"); redis.call("set", KEYS[2], ARGV[1]); redis.call("del", KEYS[3]); return 1`,
       3,
       `driver:${driverId}:status`,
       `driver:${driverId}:current_order`,

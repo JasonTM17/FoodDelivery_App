@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, OnModuleDestroy, Optional } from '@nestjs/common'
+import { Injectable, Inject, Logger, Optional } from '@nestjs/common'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import { OrderStatus, Prisma } from '@prisma/client'
@@ -104,11 +104,8 @@ export interface RecomputeJobData {
 }
 
 @Injectable()
-export class TrackingService implements OnModuleDestroy {
+export class TrackingService {
   private readonly logger = new Logger(TrackingService.name)
-  private batchBuffer: LocationRecord[] = []
-  private flushInterval: ReturnType<typeof setInterval> | null = null
-  private flushInFlight: Promise<void> | null = null
 
   constructor(
     private readonly prisma: PrismaService,
@@ -117,21 +114,7 @@ export class TrackingService implements OnModuleDestroy {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     @InjectQueue('tracking-eta') private readonly etaQueue: Queue,
     @Optional() private readonly metrics?: TrackingMetrics,
-  ) {
-    this.flushInterval = setInterval(() => this.flush(), 15000)
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    if (this.flushInterval) {
-      clearInterval(this.flushInterval)
-      this.flushInterval = null
-    }
-
-    if (this.flushInFlight) {
-      await this.flushInFlight
-    }
-    await this.flush()
-  }
+  ) {}
 
   async handleLocationUpdate(driverId: string, data: LocationData): Promise<string | null> {
     const recordedAt = parseLocationRecordedAt(data.timestamp)
@@ -151,7 +134,9 @@ export class TrackingService implements OnModuleDestroy {
     if (Number(accepted) !== 1) throw new DriverOfflineLocationError()
 
     const orderId = await this.resolveActiveOrderForDriver(driverId)
-    this.batchBuffer.push({ driverId, orderId: orderId || null, lng: data.lng, lat: data.lat, recordedAt })
+    await this.persistLocationBatch([
+      { driverId, orderId: orderId || null, lng: data.lng, lat: data.lat, recordedAt },
+    ])
     return orderId || null
   }
 
@@ -356,27 +341,6 @@ export class TrackingService implements OnModuleDestroy {
     `)
   }
 
-  private async flush(): Promise<void> {
-    if (this.flushInFlight) {
-      await this.flushInFlight
-      return
-    }
-    if (this.batchBuffer.length === 0) return
-
-    const batch = [...this.batchBuffer]
-    this.batchBuffer = []
-
-    const flushPromise = this.persistLocationBatch(batch)
-    this.flushInFlight = flushPromise
-    try {
-      await flushPromise
-    } finally {
-      if (this.flushInFlight === flushPromise) {
-        this.flushInFlight = null
-      }
-    }
-  }
-
   private async persistLocationBatch(batch: LocationRecord[]): Promise<void> {
     const rows = batch.map((r) => Prisma.sql`(
       CAST(${r.driverId} AS uuid),
@@ -394,9 +358,9 @@ export class TrackingService implements OnModuleDestroy {
         VALUES ${Prisma.join(rows)}
       `)
     } catch (err) {
-      this.batchBuffer = [...batch, ...this.batchBuffer]
       this.metrics?.recordLocationBatchFlushFailure()
-      this.logger.error(`Failed to flush location batch: ${(err as Error).message}`)
+      this.logger.error(`Failed to persist location batch: ${(err as Error).message}`)
+      throw err
     }
   }
 }

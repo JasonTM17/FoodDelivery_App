@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node scripts/build-worker-static.mjs",
+  "outputDirectory": ".vercel-static",
+  "daemons": {
+    "worker": {
+      "root": ".",
+      "entrypoint": "Dockerfile",
+      "command": ["node", "dist/workers/main.js"],
+      "instances": {"sin1": 1},
+      "resources": {"requests": {"memory": "1Gi"}},
+      "terminationGracePeriodSeconds": 30
+    }
+  }
+}

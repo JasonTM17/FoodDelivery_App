@@ -25,7 +25,6 @@ interface SubscribeOptions {
   onError?: (error: Error) => void;
 }
 
-let supabaseClient: SupabaseClient | null = null;
 
 export function resolveRealtimeProvider(): RealtimeProvider {
   const configured = process.env.NEXT_PUBLIC_REALTIME_PROVIDER?.trim().toLowerCase();
@@ -41,19 +40,37 @@ export function resolveRealtimeProvider(): RealtimeProvider {
 
 export function subscribeToSupabaseOutbox(options: SubscribeOptions): () => void {
   let active = true;
+  const client = createSubscriptionClient();
   let realtimeChannel: RealtimeChannel | null = null;
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  const cleanup = () => {
+    if (!active) return;
+    active = false;
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = null;
+    options.onStatus?.('disconnected');
+    if (realtimeChannel) {
+      void client.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+  };
 
   options.onStatus?.('connecting');
-  void (async () => {
+  const authorize = async () => {
     const { apiPost } = await import('@/lib/api');
+    if (!active) return;
     const token = await apiPost<RealtimeTokenResponse>('/realtime/token', options.scope ?? {});
+    if (!active) return;
     if (!token.channels.includes(options.channel)) {
       throw new Error(`Realtime token does not include required channel: ${options.channel}`);
     }
+    const expires = Date.parse(token.expiresAt);
+    if (!Number.isFinite(expires) || expires <= Date.now()) throw new Error('Realtime credential expired');
 
-    const client = getSupabaseClient();
-    client.realtime.setAuth(token.token);
+    await client.realtime.setAuth(token.token);
     if (!active) return;
+    refreshTimer = setTimeout(() => { void authorize().catch(fail); }, Math.max(1000, expires - Date.now() - 30000));
+    if (realtimeChannel) return;
 
     realtimeChannel = client
       .channel(options.channel, { config: { private: true } })
@@ -61,6 +78,7 @@ export function subscribeToSupabaseOutbox(options: SubscribeOptions): () => void
         'broadcast',
         { event: '*' },
         ({ event, payload }) => {
+          if (!active) return;
           const handler = options.events[event];
           if (handler) handler(payload);
         },
@@ -71,33 +89,21 @@ export function subscribeToSupabaseOutbox(options: SubscribeOptions): () => void
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') options.onStatus?.('error');
         if (status === 'CLOSED') options.onStatus?.('disconnected');
       });
-  })().catch((error) => {
+  };
+  const fail = (error: unknown) => {
     if (!active) return;
+    cleanup();
     options.onStatus?.('error');
     options.onError?.(error instanceof Error ? error : new Error(String(error)));
-  });
-
-  return () => {
-    active = false;
-    options.onStatus?.('disconnected');
-    if (realtimeChannel) {
-      void getSupabaseClient().removeChannel(realtimeChannel);
-    }
   };
+  void authorize().catch(fail);
+  return cleanup;
 }
 
-function getSupabaseClient(): SupabaseClient {
-  if (!supabaseClient) {
-    const url = resolveSupabaseUrl();
-    const publishableKey = resolveSupabasePublishableKey();
-    supabaseClient = createClient(url, publishableKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-  }
-  return supabaseClient;
+function createSubscriptionClient(): SupabaseClient {
+  return createClient(resolveSupabaseUrl(), resolveSupabasePublishableKey(), {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 function resolveSupabaseUrl(): string {

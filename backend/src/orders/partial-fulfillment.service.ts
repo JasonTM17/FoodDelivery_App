@@ -25,8 +25,8 @@ export class PartialFulfillmentService {
       throw new BadRequestException('ITEMS_REQUIRED')
     }
 
-    const profile = await this.prisma.restaurantProfile.findUnique({
-      where: { userId: restaurantUserId },
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId: restaurantUserId, isActive: true },
       select: { restaurantId: true },
     })
     if (!profile) throw new NotFoundException('RESTAURANT_PROFILE_NOT_FOUND')

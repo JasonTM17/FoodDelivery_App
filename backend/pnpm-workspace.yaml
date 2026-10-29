@@ -4,13 +4,25 @@ packages:
 overrides:
   form-data: 4.0.6
   js-yaml@3.14.2: 3.15.0
-  js-yaml@4.1.1: 4.2.0
-  multer: 2.2.0
+  js-yaml@4: ^4.3.2
+  multer: ^2.5.0
+  proxy-addr: ^2.0.8
+  body-parser@2: ^2.4.0
+  brace-expansion@2: ^2.1.6
+  socket.io-parser: ^4.2.7
+  engine.io: ^6.6.10
+  '@grpc/grpc-js': ^1.14.5
+  '@fastify/busboy': ^3.2.1
+  deepmerge-ts: ^8.0.0
+  nanoid: ^5.1.16
+  nodemailer: ^10.2.1
+  zod: ^4.6.7
   # Firebase Admin's storage stack still resolves uuid 9; use its fixed CommonJS-compatible release.
   uuid@9.0.1: 11.1.1
   ws: 8.21.0
 
 allowBuilds:
+  '@parcel/watcher': false
   '@firebase/util': false
   '@nestjs/core': true
   '@prisma/client': true

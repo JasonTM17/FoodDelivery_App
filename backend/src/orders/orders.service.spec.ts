@@ -22,11 +22,12 @@ describe('OrdersService', () => {
   let mockPaymentsService: { processPayment: jest.Mock }
   let mockPromotionsService: { claimInTransaction: jest.Mock }
   let mockDeliveryPricingService: { getBaseDeliveryFeeVnd: jest.Mock }
+  let mockReviewsService: { createReview: jest.Mock }
   let mockRedis: { get: jest.Mock; set: jest.Mock; del: jest.Mock }
   let mockTx: {
     $executeRaw: jest.Mock
     order: { findUniqueOrThrow: jest.Mock; update: jest.Mock; create: jest.Mock }
-    restaurantProfile: { findUnique: jest.Mock }
+    restaurantProfile: { findUnique: jest.Mock; findFirst: jest.Mock }
     orderStatusHistory: { create: jest.Mock }
     payment: { findUnique: jest.Mock; update: jest.Mock }
     paymentRefundRequest: { aggregate: jest.Mock }
@@ -54,7 +55,10 @@ describe('OrdersService', () => {
         update: jest.fn().mockResolvedValue({ id: orderId, status: 'restaurant_pending' }),
         create: jest.fn().mockResolvedValue({ id: 'order-new', total: 115000 }),
       },
-      restaurantProfile: { findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }) },
+      restaurantProfile: {
+        findUnique: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }),
+        findFirst: jest.fn().mockResolvedValue({ restaurantId: 'restaurant-1' }),
+      },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       payment: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
       paymentRefundRequest: {
@@ -85,6 +89,9 @@ describe('OrdersService', () => {
     mockDeliveryPricingService = {
       getBaseDeliveryFeeVnd: jest.fn().mockReturnValue(15_000),
     }
+    mockReviewsService = {
+      createReview: jest.fn(),
+    }
     mockRedis = {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn().mockResolvedValue('OK'),
@@ -95,7 +102,10 @@ describe('OrdersService', () => {
     mockOrderTimeoutQueue = { add: jest.fn().mockResolvedValue({}) }
     mockCommissionQueue = { add: jest.fn().mockResolvedValue({}) }
 
-    service = new OrdersService(
+    const OrdersServiceCtor = OrdersService as unknown as new (
+      ...args: unknown[]
+    ) => OrdersService
+    service = new OrdersServiceCtor(
       mockPrisma as unknown as PrismaService,
       mockPaymentsService as unknown as PaymentsService,
       mockGateway as unknown as OrdersGateway,
@@ -107,6 +117,7 @@ describe('OrdersService', () => {
       mockRefundQueue as unknown as Queue,
       mockOrderTimeoutQueue as unknown as Queue,
       mockCommissionQueue as unknown as Queue,
+      mockReviewsService,
     )
   })
 
@@ -316,6 +327,31 @@ describe('OrdersService', () => {
       })
       expect(result.orders[0].orderItems[0]).toEqual(result.orders[0].items[0])
       expect(result.orders[0].timeline[0]).toMatchObject({ status: 'preparing', timestamp: updatedAt })
+    })
+
+    it('clamps non-positive and non-integer pagination params to safe bounds', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([])
+      mockPrisma.order.count.mockResolvedValue(0)
+
+      const result = await service.getCustomerOrders(userId, 0, -5)
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      )
+      expect(result.meta).toEqual({ page: 1, limit: 20, total: 0, totalPages: 0 })
+
+      mockPrisma.order.findMany.mockClear()
+      const nanResult = await service.getCustomerOrders(userId, Number('abc'), Number('abc'))
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      )
+      expect(nanResult.meta).toEqual({ page: 1, limit: 20, total: 0, totalPages: 0 })
+
+      mockPrisma.order.findMany.mockClear()
+      const oversized = await service.getCustomerOrders(userId, 1, 10_000)
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100 }),
+      )
+      expect(oversized.meta.limit).toBe(100)
     })
   })
 
@@ -798,6 +834,59 @@ describe('OrdersService', () => {
         }),
       )
       expect(result).toMatchObject({ status: 'restaurant_accepted' })
+    })
+  })
+
+  describe('restaurant profile active-state enforcement', () => {
+    it('rejects a restaurant transition when the staff profile is deactivated', async () => {
+      mockTx.order.findUniqueOrThrow.mockResolvedValue({
+        id: orderId,
+        status: 'restaurant_pending',
+        restaurantId: 'restaurant-1',
+        driverId: null,
+      })
+      mockTx.restaurantProfile.findFirst.mockResolvedValue(null)
+
+      await expect(
+        service.transition(orderId, 'restaurant_accepted', 'rest-user-1', 'restaurant'),
+      ).rejects.toThrow(NotFoundException)
+      expect(mockTx.order.update).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('submitReview()', () => {
+    it('keeps another customer order hidden behind the existing not-found response', async () => {
+      mockReviewsService.createReview.mockRejectedValue(new ForbiddenException('Not your order'))
+      await expect(service.submitReview(orderId, userId, { foodRating: 5, deliveryRating: 5 }))
+        .rejects.toMatchObject({ status: 404, message: 'ORDER_NOT_FOUND' })
+    })
+
+    it('keeps the existing duplicate-review response', async () => {
+      mockReviewsService.createReview.mockRejectedValue(new ConflictException('Review already submitted for this order'))
+      await expect(service.submitReview(orderId, userId, { foodRating: 5, deliveryRating: 5 }))
+        .rejects.toMatchObject({ status: 400, message: 'ALREADY_REVIEWED' })
+    })
+
+    it('propagates canonical delivered-window and moderation rejections', async () => {
+      const rejection = new BadRequestException('Order must be delivered before reviewing')
+      mockReviewsService.createReview.mockRejectedValue(rejection)
+      await expect(service.submitReview(orderId, userId, { foodRating: 5, deliveryRating: 5 })).rejects.toBe(rejection)
+    })
+
+    it('delegates to the canonical review pipeline', async () => {
+      const review = { id: 'review-1', orderId }
+      mockReviewsService.createReview.mockResolvedValue(review)
+      const dto = { foodRating: 5, deliveryRating: 4, comment: 'Great' }
+
+      const result = await service.submitReview(orderId, userId, dto)
+
+      expect(mockReviewsService.createReview).toHaveBeenCalledWith(orderId, userId, {
+        foodRating: 5,
+        deliveryRating: 4,
+        comment: 'Great',
+        photos: [],
+      })
+      expect(result).toBe(review)
     })
   })
 })

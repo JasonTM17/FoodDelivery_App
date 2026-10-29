@@ -12,8 +12,8 @@ export class MenuService {
   constructor(private prisma: PrismaService) {}
 
   private async getOwnedRestaurantId(userId: string): Promise<string> {
-    const profile = await this.prisma.restaurantProfile.findUnique({
-      where: { userId },
+    const profile = await this.prisma.restaurantProfile.findFirst({
+      where: { userId, isActive: true },
     })
     if (!profile) {
       throw new ForbiddenException('User does not own a restaurant')
