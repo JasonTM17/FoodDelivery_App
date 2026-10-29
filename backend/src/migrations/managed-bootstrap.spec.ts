@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import type { PrismaClient } from '@prisma/client';
 import {
@@ -347,7 +348,7 @@ describe('runManagedBootstrap', () => {
     expect(pending).toHaveLength(4);
     expect(completed).toHaveLength(4);
     expect(pending[0].canonicalChecksum).toBe(
-      'a448c52c08905709ced445aadc5ba016428fdf731acff993c8af26d91c5b8e2b',
+      createHash('sha256').update(await realMigrationSql(pending[0].migrationName)).digest('hex'),
     );
     expect(state.unfinished).toHaveLength(0);
   });
@@ -660,6 +661,8 @@ describe('runManagedBootstrap', () => {
     const completed = logs.filter((l) => l.status === 'completed');
     expect(completed.map((l) => l.migrationName)).toEqual([AUTHORIZE_BROADCAST_MIGRATION]);
     // the earlier verified work is still on the record — no silent loss
-    expect(completed[0].canonicalChecksum).toBe(BROADCAST_CHECKSUM);
+    expect(completed[0].canonicalChecksum).toBe(
+      createHash('sha256').update(await realMigrationSql(AUTHORIZE_BROADCAST_MIGRATION)).digest('hex'),
+    );
   });
 });
