@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Start Docker Compose stack
-        run: docker compose up -d postgres redis minio backend
+        run: docker compose up --build -d postgres redis minio backend
 
       - name: Wait for backend health
         run: |
@@ -113,7 +113,7 @@ jobs:
           version: '11.11.0'
 
       - name: Start Docker Compose stack
-        run: docker compose up -d postgres redis minio backend
+        run: docker compose up --build -d postgres redis minio backend
         env:
           THROTTLER_LIMIT: '50000'
 
@@ -186,7 +186,7 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Start Docker Compose stack
-        run: docker compose up -d postgres redis minio backend
+        run: docker compose up --build -d postgres redis minio backend
 
       - name: Wait for backend health
         run: |
@@ -278,7 +278,7 @@ jobs:
           node-version: '22'
 
       - name: Start Docker Compose stack
-        run: docker compose up -d postgres redis minio backend
+        run: docker compose up --build -d postgres redis minio backend
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 

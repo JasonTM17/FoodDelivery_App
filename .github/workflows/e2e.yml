@@ -6,12 +6,16 @@ on:
     paths:
       - 'web/**'
       - 'backend/**'
+      - 'infra/docker/minio/**'
+      - 'docker-compose*.yml'
       - '.github/workflows/e2e.yml'
   pull_request:
     branches: [master]
     paths:
       - 'web/**'
       - 'backend/**'
+      - 'infra/docker/minio/**'
+      - 'docker-compose*.yml'
 
 jobs:
   e2e:
