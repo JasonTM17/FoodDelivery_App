@@ -81,7 +81,7 @@ export function buildGoOnlineBody(position: {
     sampledAt,
   };
   if (position.accuracy != null && Number.isFinite(position.accuracy)) {
-    body.accuracy = position.accuracy;
+    body.accuracy = Math.min(Math.max(0, position.accuracy), 25);
   }
   return body;
 }

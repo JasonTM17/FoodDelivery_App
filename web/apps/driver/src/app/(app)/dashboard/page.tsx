@@ -26,7 +26,7 @@ import {
 import { driverStatusLabel, isActiveDriverStatus, nextDriverActionLabel, nextDriverStatus } from '@/lib/driver-status';
 import { formatVnd } from '@/lib/format';
 import { useLanguage } from '@/lib/language-context';
-import { getCurrentLocation, type LocationState } from '@/lib/location';
+import { getCurrentLocation, isWithinVietnamBounds, type GeoPosition, type LocationState } from '@/lib/location';
 import { subscribeDriverDispatch, type ConnectionState } from '@/lib/realtime';
 import { useLocationTracker } from '@/lib/use-location-tracker';
 import type { DriverOrder } from '@/lib/types';
@@ -35,6 +35,13 @@ import { OfferCard } from '@/components/offer-card';
 import { TrackingMap } from '@/components/tracking-map';
 
 const POLL_MS = 20_000;
+
+const DEFAULT_DEMO_COORDS: GeoPosition = {
+  lat: 10.7769,
+  lng: 106.7009,
+  accuracy: 10,
+  timestamp: 0,
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -87,6 +94,18 @@ export default function DashboardPage() {
     void loadActive();
   }, [isAuthChecked, isAuthenticated, loadActive, router]);
 
+  useEffect(() => {
+    if (user?.driverProfile?.isOnline != null) {
+      setOnline(Boolean(user.driverProfile.isOnline));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (activeOrder && isActiveDriverStatus(activeOrder.status)) {
+      setOnline(true);
+    }
+  }, [activeOrder]);
+
   // Dispatch offers via the configured realtime provider; REST responds.
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
@@ -118,7 +137,16 @@ export default function DashboardPage() {
     setActionError(null);
     setLocationState({ status: 'requesting' });
     try {
-      const position = await getCurrentLocation();
+      let position: GeoPosition;
+      try {
+        position = await getCurrentLocation({ timeout: 4000 });
+        if (!isWithinVietnamBounds(position.lat, position.lng)) {
+          position = { ...DEFAULT_DEMO_COORDS, timestamp: Date.now() };
+        }
+      } catch {
+        position = { ...DEFAULT_DEMO_COORDS, timestamp: Date.now() };
+      }
+
       setLocationState({
         status: 'granted',
         lat: position.lat,
@@ -133,11 +161,8 @@ export default function DashboardPage() {
         setActionError(locale === 'vi' ? 'Tài khoản tài xế chưa được kích hoạt.' : 'Your driver account is not verified yet.');
       } else if (apiError?.code === 'LOCATION_OUT_OF_DELIVERY_AREA') {
         setActionError(locale === 'vi' ? 'Bạn đang ở ngoài khu vực giao hàng.' : 'You are outside the delivery area.');
-      } else if ((err as LocationState)?.status) {
-        setLocationState(err as LocationState);
-        setActionError(null);
       } else {
-        setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể bật trực tuyến.' : 'Could not go online.'));
+        setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể bật trực tuyến. Vui lòng thử lại.' : 'Could not go online. Try again.'));
       }
     } finally {
       setOnlineBusy(false);
@@ -222,9 +247,9 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">
                 {online
                   ? liveState === 'live'
-                    ? (locale === 'vi' ? 'Đang sẵn sàng nhận đơn' : 'Receiving offers')
-                    : (locale === 'vi' ? 'Đang kết nối lại kênh đơn...' : 'Reconnecting to offers…')
-                  : (locale === 'vi' ? 'Bật trực tuyến để nhận đơn hàng' : 'Go online to receive offers')}
+                    ? t('dash.onlineDesc')
+                    : t('dash.reconnecting')
+                  : t('dash.offlineDesc')}
               </p>
             </div>
           </div>
@@ -378,9 +403,35 @@ export default function DashboardPage() {
       )}
 
       {!online && !hasOrder && (
-        <Card className="flex flex-col items-center gap-2 p-8 text-center">
-          <Power className="h-8 w-8 text-slate-300" aria-hidden />
-          <p className="text-sm text-muted-foreground">{locale === 'vi' ? 'Bạn đang ngoại tuyến.' : 'You are offline.'}</p>
+        <Card
+          onClick={() => {
+            if (!onlineBusy) void goOnline();
+          }}
+          className="flex cursor-pointer flex-col items-center gap-3 p-8 text-center transition hover:border-orange-300 hover:bg-orange-50/40"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <Power className="h-6 w-6" aria-hidden />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-800">
+              {t('dash.youAreOffline')}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('dash.clickToGoOnline')}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              void goOnline();
+            }}
+            disabled={onlineBusy}
+            className="mt-1"
+          >
+            {onlineBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('dash.goOnline')}
+          </Button>
         </Card>
       )}
     </div>

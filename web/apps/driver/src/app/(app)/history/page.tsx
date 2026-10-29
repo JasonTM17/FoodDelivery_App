@@ -8,12 +8,14 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
 import { driverStatusLabel } from '@/lib/driver-status';
 import { formatVnd, formatDateTime } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import type { DriverOrder } from '@/lib/types';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/feedback';
 
 export default function HistoryPage() {
   const router = useRouter();
   const { isAuthenticated, isAuthChecked } = useAuth();
+  const { t, locale } = useLanguage();
   const [orders, setOrders] = useState<DriverOrder[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +47,9 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Trips</h1>
+      <h1 className="text-xl font-bold text-gray-900">{locale === "vi" ? "Lịch sử chuyến đi" : "Trips"}</h1>
       {(orders ?? []).length === 0 ? (
-        <EmptyBlock icon={History} title="No completed trips yet" />
+        <EmptyBlock icon={History} title={locale === "vi" ? "Chưa có chuyến đi nào hoàn thành" : "No completed trips yet"} />
       ) : (
         <ul className="space-y-3">
           {(orders ?? []).map((order) => (

@@ -1,3 +1,13 @@
+export interface DriverProfile {
+  id?: string;
+  isOnline?: boolean;
+  isVerified?: boolean;
+  currentLat?: number | null;
+  currentLng?: number | null;
+  rating?: string | number | null;
+  totalDeliveries?: number | null;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -5,6 +15,7 @@ export interface AuthUser {
   role: string;
   phone?: string | null;
   avatarUrl?: string | null;
+  driverProfile?: DriverProfile | null;
 }
 
 export interface AuthResult {

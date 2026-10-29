@@ -7,12 +7,14 @@ import { LogOut, Star } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
 import { formatDateTime } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import type { DriverRatings } from '@/lib/types';
 import { LoadingBlock } from '@/components/feedback';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isAuthChecked, logout } = useAuth();
+  const { locale } = useLanguage();
   const [ratings, setRatings] = useState<DriverRatings | null>(null);
   const [ratingsUnavailable, setRatingsUnavailable] = useState(false);
 
@@ -33,7 +35,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Account</h1>
+      <h1 className="text-xl font-bold text-gray-900">{locale === "vi" ? "Tài khoản tài xế" : "Account"}</h1>
 
       <Card className="p-4">
         <div className="flex items-center gap-3">
@@ -51,7 +53,7 @@ export default function ProfilePage() {
       </Card>
 
       <Card className="p-4">
-        <h2 className="mb-2 font-semibold text-gray-900">Ratings</h2>
+        <h2 className="mb-2 font-semibold text-gray-900">{locale === "vi" ? "Đánh giá chất lượng" : "Ratings"}</h2>
         {ratingsUnavailable ? (
           <p className="text-sm text-muted-foreground">Ratings are not available yet.</p>
         ) : ratings ? (

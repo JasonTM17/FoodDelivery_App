@@ -6,6 +6,7 @@ import { Card, Tabs, TabsContent, TabsList, TabsTrigger } from '@foodflow/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
 import { formatVnd, formatDateTime } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import type { DriverEarnings, DriverEarningsSummary } from '@/lib/types';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 
@@ -18,6 +19,7 @@ const PERIODS = [
 export default function EarningsPage() {
   const router = useRouter();
   const { isAuthenticated, isAuthChecked } = useAuth();
+  const { locale } = useLanguage();
   const [today, setToday] = useState<DriverEarnings | null>(null);
   const [summary, setSummary] = useState<DriverEarningsSummary | null>(null);
   const [period, setPeriod] = useState('7d');
@@ -71,10 +73,10 @@ export default function EarningsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Earnings</h1>
+      <h1 className="text-xl font-bold text-gray-900">{locale === "vi" ? "Thu nhập" : "Earnings"}</h1>
 
       <Card className="p-4">
-        <p className="text-sm text-muted-foreground">Today</p>
+        <p className="text-sm text-muted-foreground">{locale === "vi" ? "Hôm nay" : "Today"}</p>
         <p className="mt-1 text-3xl font-bold text-gray-900">
           {formatVnd(today?.totalEarnings ?? 0)}
         </p>
