@@ -25,6 +25,7 @@ import {
 } from '@/lib/dispatch';
 import { driverStatusLabel, isActiveDriverStatus, nextDriverActionLabel, nextDriverStatus } from '@/lib/driver-status';
 import { formatVnd } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import { getCurrentLocation, type LocationState } from '@/lib/location';
 import { subscribeDriverDispatch, type ConnectionState } from '@/lib/realtime';
 import { useLocationTracker } from '@/lib/use-location-tracker';
@@ -38,6 +39,7 @@ const POLL_MS = 20_000;
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isAuthChecked } = useAuth();
+  const { t, locale } = useLanguage();
 
   const [online, setOnline] = useState(false);
   const [onlineBusy, setOnlineBusy] = useState(false);
@@ -66,15 +68,15 @@ export default function DashboardPage() {
       if (!silent) {
         const e = err as ApiClientError;
         if (e?.status === 403) {
-          setLoadError('This account does not have driver access.');
+          setLoadError(locale === 'vi' ? 'Tài khoản này không có quyền truy cập tài xế.' : 'This account does not have driver access.');
         } else {
-          setLoadError('Could not load your active delivery.');
+          setLoadError(locale === 'vi' ? 'Không thể tải đơn hàng hiện tại.' : 'Could not load your active delivery.');
         }
       }
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (!isAuthChecked) return;
@@ -91,7 +93,6 @@ export default function DashboardPage() {
     const unsubscribe = subscribeDriverDispatch(user.id, {
       onEvent: (event, payload) => {
         if (event === 'driver:new_order') {
-          // Latest offer wins — the backend re-offers to the next candidate.
           const parsed = parseDispatchOffer(payload);
           if (parsed) setOffer(parsed);
         }
@@ -129,14 +130,14 @@ export default function DashboardPage() {
     } catch (err) {
       const apiError = err as ApiClientError;
       if (apiError?.code === 'DRIVER_NOT_VERIFIED') {
-        setActionError('Your driver account is not verified yet.');
+        setActionError(locale === 'vi' ? 'Tài khoản tài xế chưa được kích hoạt.' : 'Your driver account is not verified yet.');
       } else if (apiError?.code === 'LOCATION_OUT_OF_DELIVERY_AREA') {
-        setActionError('You are outside the delivery area.');
+        setActionError(locale === 'vi' ? 'Bạn đang ở ngoài khu vực giao hàng.' : 'You are outside the delivery area.');
       } else if ((err as LocationState)?.status) {
         setLocationState(err as LocationState);
         setActionError(null);
       } else {
-        setActionError(apiError?.detail || 'Could not go online.');
+        setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể bật trực tuyến.' : 'Could not go online.'));
       }
     } finally {
       setOnlineBusy(false);
@@ -152,7 +153,7 @@ export default function DashboardPage() {
       setOffer(null);
     } catch (err) {
       const apiError = err as ApiClientError;
-      setActionError(apiError?.detail || 'Could not go offline.');
+      setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể tắt trực tuyến.' : 'Could not go offline.'));
     } finally {
       setOnlineBusy(false);
     }
@@ -172,9 +173,9 @@ export default function DashboardPage() {
       const apiError = err as ApiClientError;
       if (apiError?.status === 409) {
         setOffer(null);
-        setActionError('That offer expired or was already taken.');
+        setActionError(locale === 'vi' ? 'Đơn hàng này đã hết hạn hoặc được nhận bởi tài xế khác.' : 'That offer expired or was already taken.');
       } else {
-        setActionError(apiError?.detail || `Could not ${decision} the offer.`);
+        setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể phản hồi đơn hàng.' : `Could not ${decision} the offer.`));
       }
     } finally {
       setOfferBusy(false);
@@ -192,16 +193,16 @@ export default function DashboardPage() {
       await loadActive(true);
     } catch (err) {
       const apiError = err as ApiClientError;
-      setActionError(apiError?.detail || 'Could not update the delivery status.');
+      setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể cập nhật trạng thái đơn hàng.' : 'Could not update the delivery status.'));
     } finally {
       setTransitionBusy(false);
     }
   };
 
-  if (!isAuthChecked || loading) return <LoadingBlock label="Loading dashboard" />;
+  if (!isAuthChecked || loading) return <LoadingBlock label={t('common.loading')} />;
   if (loadError) return <ErrorBlock message={loadError} onRetry={loadActive} />;
 
-  const actionLabel = activeOrder ? nextDriverActionLabel(activeOrder.status) : null;
+  const actionLabel = activeOrder ? nextDriverActionLabel(activeOrder.status, locale) : null;
 
   return (
     <div className="space-y-4">
@@ -217,13 +218,13 @@ export default function DashboardPage() {
               <Power className="h-5 w-5" aria-hidden />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">{online ? 'Online' : 'Offline'}</p>
+              <p className="font-semibold text-gray-900">{online ? t('dash.online') : t('dash.offline')}</p>
               <p className="text-xs text-muted-foreground">
                 {online
                   ? liveState === 'live'
-                    ? 'Receiving offers'
-                    : 'Reconnecting to offers…'
-                  : 'Go online to receive offers'}
+                    ? (locale === 'vi' ? 'Đang sẵn sàng nhận đơn' : 'Receiving offers')
+                    : (locale === 'vi' ? 'Đang kết nối lại kênh đơn...' : 'Reconnecting to offers…')
+                  : (locale === 'vi' ? 'Bật trực tuyến để nhận đơn hàng' : 'Go online to receive offers')}
               </p>
             </div>
           </div>
@@ -233,7 +234,7 @@ export default function DashboardPage() {
             disabled={onlineBusy}
             aria-pressed={online}
           >
-            {onlineBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : online ? 'Go offline' : 'Go online'}
+            {onlineBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : online ? t('dash.goOffline') : t('dash.goOnline')}
           </Button>
         </div>
 
@@ -244,10 +245,14 @@ export default function DashboardPage() {
             ) : (
               <WifiOff className="h-3.5 w-3.5 text-amber-600" aria-hidden />
             )}
-            <span>{liveState === 'live' ? 'Live offer channel connected' : 'Offer channel offline — polling'}</span>
+            <span>
+              {liveState === 'live'
+                ? (locale === 'vi' ? 'Đã kết nối kênh đơn hàng thời gian thực' : 'Live offer channel connected')
+                : (locale === 'vi' ? 'Kênh trực tiếp ngắt — đang tự động tải' : 'Offer channel offline — polling')}
+            </span>
             {tracker.state.status === 'granted' && tracker.lastSentAt && (
               <span className="ml-auto">
-                GPS sharing on · last sent {new Date(tracker.lastSentAt).toLocaleTimeString()}
+                GPS ON · {new Date(tracker.lastSentAt).toLocaleTimeString()}
               </span>
             )}
           </div>
@@ -256,25 +261,7 @@ export default function DashboardPage() {
 
       {(locationState.status === 'denied' || tracker.state.status === 'denied') && (
         <p role="alert" className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Location permission was denied — enable it in your browser to go online and share GPS.
-        </p>
-      )}
-      {(locationState.status === 'unavailable' ||
-        locationState.status === 'timeout' ||
-        tracker.state.status === 'unavailable' ||
-        tracker.state.status === 'timeout') && (
-        <p role="alert" className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Could not get your location. Check GPS and try again.
-        </p>
-      )}
-      {tracker.state.status === 'unsupported' && (
-        <p role="alert" className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          This browser does not support location sharing.
-        </p>
-      )}
-      {tracker.lastError && (
-        <p role="status" className="text-xs text-muted-foreground">
-          {tracker.lastError}
+          {locale === 'vi' ? 'Quyền vị trí bị từ chối — vui lòng bật định vị để nhận đơn.' : 'Location permission was denied — enable it in your browser to go online and share GPS.'}
         </p>
       )}
       {actionError && (
@@ -288,8 +275,8 @@ export default function DashboardPage() {
       {hasOrder && activeOrder && (
         <Card className="space-y-4 p-4">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold text-gray-900">Active delivery</h2>
-            <Badge variant="info">{driverStatusLabel(activeOrder.status)}</Badge>
+            <h2 className="font-semibold text-gray-900">{t('dash.activeTrip')}</h2>
+            <Badge variant="info">{driverStatusLabel(activeOrder.status, locale)}</Badge>
           </div>
 
           <TrackingMap
@@ -323,7 +310,7 @@ export default function DashboardPage() {
                     className="ml-2 inline-flex items-center gap-1 text-xs text-primary"
                   >
                     <Phone className="h-3 w-3" aria-hidden />
-                    Call
+                    {locale === 'vi' ? 'Gọi quán' : 'Call'}
                   </a>
                 )}
               </span>
@@ -359,11 +346,13 @@ export default function DashboardPage() {
               ))}
             </ul>
             <div className="flex justify-between border-t pt-2 text-sm">
-              <span className="text-muted-foreground">Collect on delivery ({activeOrder.paymentMethod})</span>
+              <span className="text-muted-foreground">
+                {locale === 'vi' ? 'Thu hộ tiền mặt' : 'Collect on delivery'} ({activeOrder.paymentMethod})
+              </span>
               <span className="font-semibold">{formatVnd(activeOrder.total)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Your fee</span>
+              <span className="text-muted-foreground">{locale === 'vi' ? 'Cước tài xế nhận' : 'Your fee'}</span>
               <span className="font-semibold text-green-700">{formatVnd(activeOrder.deliveryFee)}</span>
             </div>
           </div>
@@ -384,14 +373,14 @@ export default function DashboardPage() {
       {!hasOrder && !offer && online && (
         <Card className="flex flex-col items-center gap-2 p-8 text-center">
           <Bike className="h-8 w-8 text-slate-300" aria-hidden />
-          <p className="text-sm text-muted-foreground">Waiting for delivery offers…</p>
+          <p className="text-sm text-muted-foreground">{t('dash.waiting')}</p>
         </Card>
       )}
 
       {!online && !hasOrder && (
         <Card className="flex flex-col items-center gap-2 p-8 text-center">
           <Power className="h-8 w-8 text-slate-300" aria-hidden />
-          <p className="text-sm text-muted-foreground">You are offline.</p>
+          <p className="text-sm text-muted-foreground">{locale === 'vi' ? 'Bạn đang ngoại tuyến.' : 'You are offline.'}</p>
         </Card>
       )}
     </div>

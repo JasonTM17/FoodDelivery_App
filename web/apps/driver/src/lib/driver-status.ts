@@ -16,6 +16,13 @@ export const DRIVER_NEXT_ACTION_LABEL: Record<string, string> = {
   delivering: 'Confirm delivery',
 };
 
+export const DRIVER_NEXT_ACTION_LABEL_VI: Record<string, string> = {
+  driver_assigned: 'Đến nhà hàng lấy món',
+  driver_arriving_restaurant: 'Xác nhận đã lấy món',
+  picked_up: 'Bắt đầu giao đến khách',
+  delivering: 'Xác nhận đã giao hàng',
+};
+
 export const DRIVER_STATUS_LABELS: Record<string, string> = {
   driver_assigned: 'Assigned',
   driver_arriving_restaurant: 'Heading to restaurant',
@@ -27,15 +34,28 @@ export const DRIVER_STATUS_LABELS: Record<string, string> = {
   refunded: 'Refunded',
 };
 
+export const DRIVER_STATUS_LABELS_VI: Record<string, string> = {
+  driver_assigned: 'Đã nhận chuyến',
+  driver_arriving_restaurant: 'Đang đến quán',
+  picked_up: 'Đã lấy món',
+  delivering: 'Đang giao hàng',
+  delivered: 'Đã giao thành công',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+  refunded: 'Đã hoàn tiền',
+};
+
 export function nextDriverStatus(status: string): string | null {
   return DRIVER_NEXT_STATUS[status] ?? null;
 }
 
-export function nextDriverActionLabel(status: string): string | null {
+export function nextDriverActionLabel(status: string, locale: 'vi' | 'en' = 'en'): string | null {
+  if (locale === 'vi') return DRIVER_NEXT_ACTION_LABEL_VI[status] ?? DRIVER_NEXT_ACTION_LABEL[status] ?? null;
   return DRIVER_NEXT_ACTION_LABEL[status] ?? null;
 }
 
-export function driverStatusLabel(status: string): string {
+export function driverStatusLabel(status: string, locale: 'vi' | 'en' = 'en'): string {
+  if (locale === 'vi') return DRIVER_STATUS_LABELS_VI[status] ?? DRIVER_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
   return DRIVER_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
 }
 

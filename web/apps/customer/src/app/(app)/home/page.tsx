@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, Button, cn } from '@foodflow/ui';
 import { Loader2, MapPin, Search, Store } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/lib/language-context';
 import { getCurrentLocation, type LocationState } from '@/lib/location';
 import {
   toCardRestaurant,
@@ -22,10 +23,10 @@ const CUISINES = [
 ];
 
 const DEFAULT_COORDS = { lat: 10.7769, lng: 106.7009 };
-
 const PAGE_SIZE = 12;
 
 export default function HomePage() {
+  const { t, locale } = useLanguage();
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [cuisine, setCuisine] = useState<string | null>(null);
@@ -81,7 +82,7 @@ export default function HomePage() {
   }, [load]);
 
   const items = useMemo(() => {
-    if (submittedQuery.trim() && search) {
+    if (submittedQuery.trim()) {
       return (search?.items ?? []).map((restaurant) => ({
         card: toCardRestaurant(restaurant),
         distance: null,
@@ -126,13 +127,13 @@ export default function HomePage() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search restaurants or dishes"
+            placeholder={t('home.searchPlaceholder')}
             aria-label="Search restaurants or dishes"
             className="input-field pl-9"
           />
         </label>
-        <Button type="submit" variant="outline">
-          Search
+        <Button type="submit" variant="outline" aria-label="Search">
+          {t('home.searchBtn')}
         </Button>
         <Button
           type="button"
@@ -147,13 +148,15 @@ export default function HomePage() {
           ) : (
             <MapPin className="h-4 w-4" aria-hidden />
           )}
-          <span className="hidden sm:inline">Near me</span>
+          <span className="hidden sm:inline">
+            {location.status === 'requesting' ? t('home.requestingLocation') : t('home.useLocation')}
+          </span>
         </Button>
       </form>
 
       {location.status === 'denied' && (
         <p role="status" className="text-sm text-muted-foreground">
-          Location is off — enable it in your browser to sort by distance.
+          {t('home.locationDenied')}
         </p>
       )}
 
@@ -167,7 +170,7 @@ export default function HomePage() {
               setPage(1);
             }}
           >
-            All
+            {t('home.allCuisines')}
           </Badge>
           {CUISINES.map((c) => (
             <Badge
@@ -179,19 +182,19 @@ export default function HomePage() {
                 setPage(1);
               }}
             >
-              {c.replace('_', ' ')}
+              {t(`cuisine.${c}`) || c.replace('_', ' ')}
             </Badge>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <LoadingBlock label="Loading restaurants" />
+        <LoadingBlock label={t('common.loading')} />
       ) : error ? (
         <ErrorBlock message={error} onRetry={load} />
       ) : items.length === 0 ? (
-        <EmptyBlock icon={Store} title={submittedQuery ? 'No restaurants found' : 'No restaurants in this area'}>
-          <p className="text-sm text-muted-foreground">Try a different search or clear cuisine filters.</p>
+        <EmptyBlock icon={Store} title={t('home.emptyTitle')}>
+          <p className="text-sm text-muted-foreground">{t('home.emptyDesc')}</p>
         </EmptyBlock>
       ) : (
         <>
@@ -210,10 +213,11 @@ export default function HomePage() {
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Previous
+                {t('home.prev')}
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
+                {locale === 'vi' ? `Trang ${page} / ${totalPages}` : `Page ${page} of ${totalPages}`}
+                <span className="sr-only">Page {page} of {totalPages}</span>
               </span>
               <Button
                 variant="outline"
@@ -221,7 +225,7 @@ export default function HomePage() {
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                {t('home.next')}
               </Button>
             </nav>
           )}
@@ -233,7 +237,9 @@ export default function HomePage() {
 
 function errorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'detail' in err) {
-    return String((err as { detail: unknown }).detail);
+    const detail = (err as { detail?: unknown }).detail;
+    if (typeof detail === 'string') return detail;
   }
+  if (err instanceof Error) return err.message;
   return 'Could not load restaurants.';
 }

@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { AuthProvider } from '@/lib/auth-provider';
+import { LanguageProvider } from '@/lib/language-context';
 
 export const metadata: Metadata = {
-  title: { template: '%s | FoodFlow Driver', default: 'FoodFlow Driver' },
-  description: 'Deliver orders with FoodFlow.',
+  title: { template: '%s | FoodFlow Driver', default: 'FoodFlow Driver — Ứng dụng Tài xế' },
+  description: 'Nhận đơn và giao hàng cùng FoodFlow.',
   manifest: '/site.webmanifest',
   icons: {
     icon: [
@@ -23,9 +24,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body className="font-sans">
-        <AuthProvider>{children}</AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

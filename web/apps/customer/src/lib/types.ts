@@ -264,6 +264,7 @@ export interface CardRestaurant {
   cuisineTypes: string[];
   rating: number | null;
   isOpen: boolean;
+  prepTimeAvgMinutes?: number | null;
 }
 
 export function toCardRestaurant(
@@ -286,6 +287,7 @@ export function toCardRestaurant(
       (anyRestaurant.cuisineTypes as string[]) ?? (anyRestaurant.cuisine_types as string[]) ?? [],
     rating: Number.isFinite(rating) ? rating : null,
     isOpen: (anyRestaurant.isOpen ?? anyRestaurant.is_open) !== false,
+    prepTimeAvgMinutes: Number(anyRestaurant.prepTimeAvgMinutes ?? anyRestaurant.prep_time_avg_minutes) || null,
   };
 }
 

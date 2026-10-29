@@ -15,19 +15,21 @@ import {
   type PaymentMethod,
 } from '@/lib/checkout';
 import { formatVnd } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import type { Address, CreateOrderResponse, DeliveryPricing } from '@/lib/types';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
-
-const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
-  { id: 'cash', label: 'Cash on delivery' },
-  { id: 'wallet', label: 'FoodFlow wallet' },
-  { id: 'sepay', label: 'Bank transfer (SePay)' },
-];
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { isAuthenticated, isAuthChecked } = useAuth();
   const { cart, subtotal, markOrderPlaced } = useCart();
+  const { t, locale } = useLanguage();
+
+  const paymentMethods: { id: PaymentMethod; label: string }[] = [
+    { id: 'cash', label: t('checkout.cash') },
+    { id: 'wallet', label: t('checkout.wallet') },
+    { id: 'sepay', label: t('checkout.sepay') },
+  ];
 
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [addressId, setAddressId] = useState<string>('');
@@ -50,11 +52,11 @@ export default function CheckoutPage() {
       const def = items.find((a) => a.isDefault) ?? items[0];
       setAddressId((current) => current || def?.id || '');
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Could not load your addresses.');
+      setLoadError(err instanceof Error ? err.message : (locale === 'vi' ? 'Không thể tải sổ địa chỉ.' : 'Could not load your addresses.'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (!isAuthChecked) return;
@@ -109,8 +111,9 @@ export default function CheckoutPage() {
       const apiError = err as ApiClientError;
       if (apiError?.status === 409 || apiError?.code === 'ORDER_PRICE_MISMATCH') {
         setSubmitError(
-          apiError.detail ||
-            'Prices changed since you added these items. Review your cart and try again.',
+          locale === 'vi'
+            ? 'Giá món ăn đã thay đổi. Vui lòng kiểm tra lại giỏ hàng và thử lại.'
+            : 'Prices changed since you added these items. Review your cart and try again.',
         );
       } else {
         setSubmitError(describeOrderError(err));
@@ -120,14 +123,14 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!isAuthChecked || loading) return <LoadingBlock label="Loading checkout" />;
+  if (!isAuthChecked || loading) return <LoadingBlock label={t('common.loading')} />;
   if (loadError) return <ErrorBlock message={loadError} onRetry={load} />;
 
   if (cart.items.length === 0) {
     return (
       <ErrorBlock
-        title="Your cart is empty"
-        message="Add items before checking out."
+        title={t('cart.empty')}
+        message={locale === 'vi' ? 'Hãy thêm món vào giỏ trước khi thanh toán.' : 'Add items before checking out.'}
         onRetry={() => router.push('/home')}
       />
     );
@@ -137,22 +140,22 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('checkout.title')}</h1>
       {cart.restaurantName && (
-        <p className="text-sm text-muted-foreground">From {cart.restaurantName}</p>
+        <p className="text-sm text-muted-foreground">{t('cart.from')} {cart.restaurantName}</p>
       )}
 
       <section aria-labelledby="address-heading" className="space-y-2">
         <h2 id="address-heading" className="font-semibold text-gray-900">
-          Delivery address
+          {t('checkout.addressTitle')}
         </h2>
         {!hasAddress ? (
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">You need a delivery address.</p>
+            <p className="text-sm text-muted-foreground">{t('checkout.noAddress')}</p>
             <Button asChild variant="outline" size="sm" className="mt-3 gap-1.5">
               <Link href="/addresses?new=1&next=/checkout">
                 <Plus className="h-4 w-4" aria-hidden />
-                Add address
+                {t('checkout.addAddress')}
               </Link>
             </Button>
           </Card>
@@ -181,7 +184,7 @@ export default function CheckoutPage() {
                       <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden />
                       {address.label}
                       {address.isDefault && (
-                        <span className="text-xs font-normal text-muted-foreground">(default)</span>
+                        <span className="text-xs font-normal text-muted-foreground">({locale === 'vi' ? 'mặc định' : 'default'})</span>
                       )}
                     </span>
                     <span className="mt-0.5 block text-sm text-muted-foreground">
@@ -195,17 +198,17 @@ export default function CheckoutPage() {
         )}
         {hasAddress && (
           <Link href="/addresses?next=/checkout" className="text-sm font-medium text-primary hover:underline">
-            Manage addresses
+            {locale === 'vi' ? 'Quản lý sổ địa chỉ' : 'Manage addresses'}
           </Link>
         )}
       </section>
 
       <section aria-labelledby="payment-heading" className="space-y-2">
         <h2 id="payment-heading" className="font-semibold text-gray-900">
-          Payment
+          {t('checkout.paymentMethod')}
         </h2>
         <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Payment method">
-          {PAYMENT_METHODS.map((method) => (
+          {paymentMethods.map((method) => (
             <label
               key={method.id}
               className={cn(
@@ -230,43 +233,40 @@ export default function CheckoutPage() {
       </section>
 
       <label className="block">
-        <span className="label">Delivery notes</span>
+        <span className="label">{t('checkout.notes')}</span>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           maxLength={300}
           className="input-field resize-none"
-          placeholder="Optional"
+          placeholder={t('checkout.notesPlaceholder')}
         />
       </label>
 
       <Card className="space-y-2 p-4">
         <dl className="space-y-1.5 text-sm">
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Subtotal ({cart.items.length} items)</dt>
+            <dt className="text-muted-foreground">{t('cart.subtotal')} ({cart.items.length} {locale === 'vi' ? 'món' : 'items'})</dt>
             <dd className="font-medium">{formatVnd(subtotal)}</dd>
           </div>
           {cart.discount > 0 && (
             <div className="flex justify-between text-green-700">
-              <dt>Discount</dt>
+              <dt>{t('cart.discount')}</dt>
               <dd>−{formatVnd(cart.discount)}</dd>
             </div>
           )}
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Delivery fee</dt>
+            <dt className="text-muted-foreground">{t('cart.deliveryFee')}</dt>
             <dd className="font-medium">
-              {deliveryFee != null ? formatVnd(deliveryFee) : 'Calculated at order'}
+              {deliveryFee != null ? formatVnd(deliveryFee) : (locale === 'vi' ? 'Tính khi đặt đơn' : 'Calculated at order')}
             </dd>
           </div>
           <div className="flex justify-between border-t pt-2 text-base font-bold text-gray-900">
-            <dt>Estimated total</dt>
+            <dt>{t('cart.total')}</dt>
             <dd>{formatVnd(estimatedTotal)}</dd>
           </div>
         </dl>
-        <p className="text-xs text-muted-foreground">
-          Final prices are confirmed by the server when the order is placed.
-        </p>
       </Card>
 
       {submitError && (
@@ -279,10 +279,10 @@ export default function CheckoutPage() {
         <Button
           size="lg"
           className="w-full shadow-lg"
-          disabled={!hasAddress || !addressId || submitting}
+          disabled={submitting || !hasAddress}
           onClick={placeOrder}
         >
-          {submitting ? 'Placing order…' : 'Place order'}
+          {submitting ? t('checkout.submitting') : t('checkout.placeOrder')}
         </Button>
       </div>
     </div>

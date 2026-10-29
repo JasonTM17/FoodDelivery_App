@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Card, Input } from '@foodflow/ui';
 import { api, ApiClientError, clearToken } from '@/lib/api';
 import { CUSTOMER_ROLE, useAuth } from '@/lib/auth-provider';
+import { useLanguage } from '@/lib/language-context';
 import { sanitizeNextPath } from '@/lib/redirects';
 import type { AuthResult } from '@/lib/types';
 
@@ -13,6 +14,7 @@ function RegisterInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { completeLogin } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -23,16 +25,15 @@ function RegisterInner() {
     e.preventDefault();
     setError(null);
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t('auth.passwordTooShort'));
       return;
     }
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.password)) {
-      setError('Password needs an uppercase letter, a lowercase letter, and a number.');
+      setError(t('auth.passwordComplexity'));
       return;
     }
     setBusy(true);
     try {
-      // Registration always creates a customer account per the backend contract.
       const result = await api.post<AuthResult>('/auth/register', {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
@@ -41,14 +42,14 @@ function RegisterInner() {
       });
       if (result.user?.role !== CUSTOMER_ROLE) {
         clearToken();
-        setError('This account cannot be used here.');
+        setError(t('auth.notCustomer'));
         return;
       }
       await completeLogin(result);
       router.replace(next);
     } catch (err) {
       const apiError = err as ApiClientError;
-      setError(apiError?.detail || 'Could not create the account. Try again.');
+      setError(apiError?.detail || t('auth.genericError'));
     } finally {
       setBusy(false);
     }
@@ -56,40 +57,42 @@ function RegisterInner() {
 
   return (
     <Card className="w-full max-w-sm p-6">
-      <h1 className="text-xl font-bold text-gray-900">Create account</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('auth.signUpTitle')}</h1>
       <form onSubmit={submit} className="mt-5 space-y-4">
         <label className="block">
-          <span className="label">Full name</span>
+          <span className="label">{t('auth.fullName')}</span>
           <Input
             autoComplete="name"
             required
             maxLength={100}
+            placeholder="Nguyễn Văn A"
             value={form.fullName}
             onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
           />
         </label>
         <label className="block">
-          <span className="label">Email</span>
+          <span className="label">{t('auth.email')}</span>
           <Input
             type="email"
             autoComplete="email"
             required
+            placeholder="name@example.com"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
         </label>
         <label className="block">
-          <span className="label">Phone</span>
+          <span className="label">{t('auth.phone')}</span>
           <Input
             type="tel"
             autoComplete="tel"
-            placeholder="Optional"
+            placeholder={t('auth.phoneOptional')}
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
           />
         </label>
         <label className="block">
-          <span className="label">Password</span>
+          <span className="label">{t('auth.password')}</span>
           <Input
             type="password"
             autoComplete="new-password"
@@ -100,26 +103,26 @@ function RegisterInner() {
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
           />
-          <span id="password-hint" className="mt-1 block text-xs text-muted-foreground">
-            8+ characters with uppercase, lowercase, and a number
-          </span>
         </label>
+        <p id="password-hint" className="text-xs text-muted-foreground">
+          {t('auth.passwordHint')}
+        </p>
         {error && (
           <p role="alert" className="text-sm text-red-600">
             {error}
           </p>
         )}
         <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? 'Creating…' : 'Create account'}
+          {busy ? t('auth.signingUp') : t('auth.signUpBtn')}
         </Button>
       </form>
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Already registered?{' '}
+        {t('auth.hasAccount')}{' '}
         <Link
           href={`/login?next=${encodeURIComponent(next)}`}
           className="font-medium text-primary hover:underline"
         >
-          Sign in
+          {t('auth.signInBtn')}
         </Link>
       </p>
     </Card>

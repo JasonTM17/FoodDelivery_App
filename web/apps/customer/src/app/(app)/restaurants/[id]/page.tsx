@@ -7,6 +7,7 @@ import { ChevronLeft, Clock, MapPin, Star, UtensilsCrossed } from 'lucide-react'
 import { api } from '@/lib/api';
 import { useCart } from '@/lib/cart-store';
 import { formatVnd } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import type {
   MenuItem,
   RestaurantDetail,
@@ -19,6 +20,7 @@ import { MenuItemDialog } from '@/components/menu-item-dialog';
 export default function RestaurantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { addLine, itemCount } = useCart();
+  const { t, locale } = useLanguage();
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
   const [menu, setMenu] = useState<RestaurantMenu['categories']>([]);
   const [reviews, setReviews] = useState<RestaurantReview[] | null>(null);
@@ -42,11 +44,11 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
         .then((r) => setReviews(r.items))
         .catch(() => setReviews([]));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load this restaurant.');
+      setError(err instanceof Error ? err.message : (locale === 'vi' ? 'Không thể tải nhà hàng này.' : 'Could not load this restaurant.'));
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, locale]);
 
   useEffect(() => {
     void load();
@@ -54,15 +56,15 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
 
   useEffect(() => {
     if (!added) return;
-    const t = setTimeout(() => setAdded(false), 2500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setAdded(false), 2500);
+    return () => clearTimeout(timer);
   }, [added]);
 
   const categories = useMemo(() => menu.filter((c) => (c.items ?? []).length > 0), [menu]);
 
-  if (loading) return <LoadingBlock label="Loading restaurant" />;
+  if (loading) return <LoadingBlock label={t('common.loading')} />;
   if (error) return <ErrorBlock message={error} onRetry={load} />;
-  if (!restaurant) return <ErrorBlock message="Restaurant not found." />;
+  if (!restaurant) return <ErrorBlock message={locale === 'vi' ? 'Không tìm thấy nhà hàng.' : 'Restaurant not found.'} />;
 
   const closed = restaurant.isOpen === false;
 
@@ -73,10 +75,10 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
         className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-gray-900"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden />
-        Restaurants
+        {t('restaurant.back')}
       </Link>
 
-      <header className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+      <header className="overflow-hidden rounded-2xl border bg-white shadow-xs">
         <div className="h-40 bg-gradient-to-r from-orange-200 to-amber-100 sm:h-52">
           {(restaurant.coverImageUrl || restaurant.logoUrl) && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -90,7 +92,9 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
         <div className="space-y-2 p-4">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900">{restaurant.name}</h1>
-            <Badge variant={closed ? 'secondary' : 'success'}>{closed ? 'Closed' : 'Open'}</Badge>
+            <Badge variant={closed ? 'secondary' : 'success'}>
+              {closed ? t('home.closed') : t('home.open')}
+            </Badge>
           </div>
           {restaurant.description && (
             <p className="text-sm text-muted-foreground">{restaurant.description}</p>
@@ -100,7 +104,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
               <span className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
                 {Number(restaurant.rating).toFixed(1)}
-                {restaurant.totalReviews != null && ` (${restaurant.totalReviews})`}
+                {restaurant.totalReviews != null && ` (${restaurant.totalReviews} ${t('home.rating')})`}
               </span>
             )}
             {restaurant.addressLine && (
@@ -113,7 +117,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
             {restaurant.prepTimeAvgMinutes != null && (
               <span className="flex items-center gap-1">
                 <Clock className="h-4 w-4" aria-hidden />
-                ~{restaurant.prepTimeAvgMinutes} min prep
+                ~{restaurant.prepTimeAvgMinutes} {t('home.mins')}
               </span>
             )}
           </div>
@@ -122,12 +126,12 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
 
       {closed && (
         <p role="status" className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          This restaurant is not taking orders right now.
+          {locale === 'vi' ? 'Nhà hàng này hiện đang tạm ngưng nhận đơn.' : 'This restaurant is not taking orders right now.'}
         </p>
       )}
 
       {categories.length === 0 ? (
-        <EmptyBlock icon={UtensilsCrossed} title="No menu items yet" />
+        <EmptyBlock icon={UtensilsCrossed} title={t('restaurant.emptyMenu')} />
       ) : (
         categories.map((category) => {
           const items = category.items ?? [];
@@ -148,7 +152,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
                             <h3 className="font-medium text-gray-900">{item.name}</h3>
-                            {item.isPopular && <Badge variant="warning">Popular</Badge>}
+                            {item.isPopular && <Badge variant="warning">{locale === 'vi' ? 'Món chạy' : 'Popular'}</Badge>}
                           </div>
                           {item.description && (
                             <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
@@ -160,12 +164,12 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
                           </p>
                           {!unavailable && (
                             <span className="mt-1 inline-block text-xs font-medium text-primary">
-                              Add to cart
+                              {t('restaurant.addToCart')}
                             </span>
                           )}
                           {unavailable && (
                             <span className="mt-1 inline-block text-xs text-muted-foreground">
-                              Unavailable
+                              {locale === 'vi' ? 'Hết món' : 'Unavailable'}
                             </span>
                           )}
                         </div>
@@ -193,7 +197,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
       {reviews && reviews.length > 0 && (
         <section aria-labelledby="reviews-heading">
           <h2 id="reviews-heading" className="mb-3 text-lg font-semibold text-gray-900">
-            Reviews
+            {t('restaurant.reviews')}
           </h2>
           <ul className="space-y-2">
             {reviews.map((review) => (
@@ -204,7 +208,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
                     {review.foodRating ?? review.deliveryRating ?? '—'}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {review.customer?.fullName ?? 'Customer'}
+                    {review.customer?.fullName ?? (locale === 'vi' ? 'Khách hàng' : 'Customer')}
                   </span>
                 </div>
                 {review.comment && (
@@ -220,8 +224,8 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
         <div className="safe-bottom fixed inset-x-0 bottom-16 z-30 px-4 sm:bottom-4">
           <Button asChild className="mx-auto flex w-full max-w-md justify-between shadow-lg">
             <Link href="/cart">
-              <span>{itemCount} item{itemCount === 1 ? '' : 's'}</span>
-              <span>View cart</span>
+              <span>{itemCount} {locale === 'vi' ? 'món trong giỏ' : `item${itemCount === 1 ? '' : 's'}`}</span>
+              <span>{locale === 'vi' ? 'Xem giỏ hàng →' : 'View cart →'}</span>
             </Link>
           </Button>
         </div>
@@ -232,7 +236,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
           role="status"
           className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white shadow-lg"
         >
-          Added to cart
+          {t('restaurant.added')}
         </p>
       )}
 

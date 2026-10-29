@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Card, Input } from '@foodflow/ui';
 import { api, ApiClientError, clearToken } from '@/lib/api';
 import { CUSTOMER_ROLE, useAuth } from '@/lib/auth-provider';
+import { useLanguage } from '@/lib/language-context';
 import { sanitizeNextPath } from '@/lib/redirects';
 import type { AuthResult } from '@/lib/types';
 
@@ -15,6 +16,7 @@ function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { completeLogin } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,7 +34,7 @@ function LoginInner() {
       });
       if (result.user?.role !== CUSTOMER_ROLE) {
         clearToken();
-        setError('This account is not a customer account.');
+        setError(t('auth.notCustomer'));
         return;
       }
       await completeLogin(result);
@@ -41,8 +43,8 @@ function LoginInner() {
       const apiError = err as ApiClientError;
       setError(
         apiError?.status === 401
-          ? 'Wrong email or password.'
-          : apiError?.detail || 'Could not sign in. Try again.',
+          ? t('auth.wrongCredentials')
+          : apiError?.detail || t('auth.genericError'),
       );
     } finally {
       setBusy(false);
@@ -56,20 +58,21 @@ function LoginInner() {
 
   return (
     <Card className="w-full max-w-sm p-6">
-      <h1 className="text-xl font-bold text-gray-900">Sign in</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('auth.signInTitle')}</h1>
       <form onSubmit={submit} className="mt-5 space-y-4" noValidate={false}>
         <label className="block">
-          <span className="label">Email</span>
+          <span className="label">{t('auth.email')}</span>
           <Input
             type="email"
             autoComplete="email"
             required
+            placeholder="name@example.com"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
         </label>
         <label className="block">
-          <span className="label">Password</span>
+          <span className="label">{t('auth.password')}</span>
           <Input
             type="password"
             autoComplete="current-password"
@@ -84,13 +87,13 @@ function LoginInner() {
           </p>
         )}
         <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? 'Signing in...' : 'Sign in'}
+          {busy ? t('auth.signingIn') : t('auth.signInBtn')}
         </Button>
       </form>
 
       {/* Demo Quick Fill */}
       <div className="mt-5 rounded-lg border border-orange-200 bg-orange-50/70 p-3">
-        <p className="text-xs font-semibold text-orange-950">Tài khoản trải nghiệm mẫu (Demo):</p>
+        <p className="text-xs font-semibold text-orange-950">{t('auth.demoTitle')}</p>
         <div className="mt-2 flex flex-col gap-1.5">
           <Button
             type="button"
@@ -100,7 +103,7 @@ function LoginInner() {
             onClick={() => fillDemo('customer1@foodflow.vn')}
           >
             <span>KH 1: <strong className="text-gray-900">customer1@foodflow.vn</strong></span>
-            <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+            <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
           </Button>
           <Button
             type="button"
@@ -110,18 +113,18 @@ function LoginInner() {
             onClick={() => fillDemo('customer2@foodflow.vn')}
           >
             <span>KH 2: <strong className="text-gray-900">customer2@foodflow.vn</strong></span>
-            <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+            <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
           </Button>
         </div>
       </div>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        No account?{' '}
+        {t('auth.noAccount')}{' '}
         <Link
           href={`/register?next=${encodeURIComponent(next)}`}
           className="font-medium text-primary hover:underline"
         >
-          Create one
+          {t('auth.createOne')}
         </Link>
       </p>
     </Card>

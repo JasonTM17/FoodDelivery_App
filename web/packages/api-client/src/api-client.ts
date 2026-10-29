@@ -119,6 +119,15 @@ export class FoodFlowApiClient {
       if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
+    if (!headers.has('Accept-Language') && typeof window !== 'undefined') {
+      try {
+        const lang = localStorage.getItem('foodflow_locale') || localStorage.getItem('foodflow_driver_locale') || 'vi';
+        headers.set('Accept-Language', lang);
+      } catch {
+        // LocalStorage access may be restricted
+      }
+    }
+
     return (this.options.fetcher ?? fetch)(this.buildUrl(path, params), {
       ...init,
       headers,

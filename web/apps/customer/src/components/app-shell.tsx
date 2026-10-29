@@ -6,19 +6,21 @@ import { FoodFlowLogo, Button, cn } from '@foodflow/ui';
 import { Home, ReceiptText, ShoppingCart, UserRound } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useCart } from '@/lib/cart-store';
+import { useLanguage, LanguageSwitcher } from '@/lib/language-context';
 import type { ReactNode } from 'react';
-
-const NAV_ITEMS = [
-  { href: '/home', label: 'Home', icon: Home },
-  { href: '/orders', label: 'Orders', icon: ReceiptText },
-  { href: '/cart', label: 'Cart', icon: ShoppingCart },
-  { href: '/profile', label: 'Account', icon: UserRound },
-];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
   const { itemCount } = useCart();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { href: '/home', label: t('nav.home'), icon: Home },
+    { href: '/orders', label: t('nav.orders'), icon: ReceiptText },
+    { href: '/cart', label: t('nav.cart'), icon: ShoppingCart },
+    { href: '/profile', label: t('nav.account'), icon: UserRound },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-orange-50/40">
@@ -35,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 pathname.startsWith('/home') && 'bg-orange-100 text-gray-900',
               )}
             >
-              Discover
+              {t('nav.discover')}
             </Link>
             <Link
               href="/orders"
@@ -44,10 +46,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 pathname.startsWith('/orders') && 'bg-orange-100 text-gray-900',
               )}
             >
-              Orders
+              {t('nav.orders')}
             </Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <LanguageSwitcher />
             <Link
               href="/cart"
               aria-label={`Cart, ${itemCount} items`}
@@ -69,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             ) : (
               <Button asChild size="sm">
-                <Link href={`/login?next=${encodeURIComponent(pathname)}`}>Sign in</Link>
+                <Link href={`/login?next=${encodeURIComponent(pathname)}`}>{t('nav.login')}</Link>
               </Button>
             )}
           </div>
@@ -83,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t bg-white sm:hidden"
       >
         <div className="grid grid-cols-4">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
