@@ -11,7 +11,7 @@ Documentation: **English** · [Tiếng Việt](docs/readme.vi.md) · [日本語]
   <img src="https://img.shields.io/github/license/JasonTM17/FoodDelivery_App" alt="MIT license" />
 </p>
 
-FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, Admin and Restaurant dashboards, and Flutter customer/driver applications. Its deployment design uses Supabase for PostgreSQL/PostGIS, Realtime, and Storage; Railway for the API, worker, and Redis; and Vercel for the Admin and Restaurant dashboards. Docker Compose keeps a separate Socket.IO/Redis/MinIO compatibility profile for local development and self-hosting.
+FoodFlow is a multi-tenant food-delivery learning project with a NestJS API, four Next.js web applications (Admin, Restaurant, Customer and Driver), and Flutter customer/driver applications. The current managed demo setup uses Vercel API/worker projects, Supabase PostgreSQL/PostGIS/Realtime/Storage and TLS Redis. See [hosted demo setup and evidence](docs/hosted-demo.md). Docker Compose retains a separate Socket.IO/Redis/MinIO profile for local development and self-hosting. The historical Railway and release evidence below describes earlier snapshots.
 
 > **Live Admin:** [food-delivery-app-one-liard.vercel.app](https://food-delivery-app-one-liard.vercel.app)<br />
 > This is the deployed sign-in surface. Public demo credentials are not documented; review the screenshots or run the seeded local stack for authenticated workflows.

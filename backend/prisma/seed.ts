@@ -17,16 +17,23 @@ function chance(probability: number): boolean {
 }
 
 async function main() {
-  if (process.env.NODE_ENV === 'production') {
+  const hostedDemo = process.env.NODE_ENV === 'production'
+  if (hostedDemo && process.env.FOODFLOW_EMPTY_DEMO_BOOTSTRAP !== 'CREATE_EMPTY_DEMO_ONLY') {
     throw new Error(
       'Refusing to run prisma/seed.ts in production because it creates demo users, restaurants, drivers, customers, and sample orders. Use a reviewed production data import/bootstrap instead.',
     )
   }
+  const privateDemoPassword = process.env.FOODFLOW_DEMO_PASSWORD ?? ''
+  if (hostedDemo) {
+    if (privateDemoPassword.length < 24) throw new Error('Hosted demo requires a generated private password of at least 24 characters')
+    if (await prisma.user.count() !== 0) throw new Error('Refusing hosted demo bootstrap: users already exist')
+  }
+  const demoPassword = (local: string) => hostedDemo ? privateDemoPassword : local
 
   console.log('Seeding FoodFlow database...')
 
   // ── Admin User ──
-  const adminHash = await bcrypt.hash('Admin@123', 12)
+  const adminHash = await bcrypt.hash(demoPassword('Admin@123'), 12)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@foodflow.vn' },
     update: {},
@@ -58,7 +65,7 @@ async function main() {
   for (let i = 0; i < restaurants.length; i++) {
     const r = restaurants[i]
     const ownerEmail = `restaurant${i + 1}@foodflow.vn`
-    const ownerHash = await bcrypt.hash('Partner@123', 12)
+    const ownerHash = await bcrypt.hash(demoPassword('Partner@123'), 12)
 
     const owner = await prisma.user.upsert({
       where: { email: ownerEmail },
@@ -119,7 +126,7 @@ async function main() {
   const driverIds: string[] = []
 
   for (let i = 0; i < driverNames.length; i++) {
-    const driverHash = await bcrypt.hash('Driver@123', 12)
+    const driverHash = await bcrypt.hash(demoPassword('Driver@123'), 12)
     const email = `driver${i + 1}@foodflow.vn`
 
     const driver = await prisma.user.upsert({
@@ -154,7 +161,7 @@ async function main() {
 
   // ── Customers ──
   for (let i = 0; i < 5; i++) {
-    const customerHash = await bcrypt.hash('Customer@123', 12)
+    const customerHash = await bcrypt.hash(demoPassword('Customer@123'), 12)
     const email = `customer${i + 1}@foodflow.vn`
 
     const customer = await prisma.user.upsert({

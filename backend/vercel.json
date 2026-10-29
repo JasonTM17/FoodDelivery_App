@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nestjs",
+  "regions": ["sin1"],
+  "buildCommand": "corepack pnpm exec prisma generate && corepack pnpm run build"
+}

@@ -11,7 +11,7 @@ export const createPromotionSchema = z.object({
   maxDiscount: z.number().int().min(0).optional(),
   usageLimit: z.number().int().min(1),
   maxPerUser: z.number().int().min(1).optional(),
-  targeting: z.record(z.unknown()).optional(),
+  targeting: z.record(z.string(), z.unknown()).optional(),
   startsAt: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date format'),
   expiresAt: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date format'),
   isActive: z.boolean().optional(),
@@ -29,7 +29,7 @@ export const updatePromotionSchema = z.object({
   maxDiscount: z.number().int().min(0).optional(),
   usageLimit: z.number().int().min(1).optional(),
   maxPerUser: z.number().int().min(1).optional(),
-  targeting: z.record(z.unknown()).optional(),
+  targeting: z.record(z.string(), z.unknown()).optional(),
   startsAt: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), 'Invalid date format')

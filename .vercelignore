@@ -1,5 +1,15 @@
 .tmp/
+plans/
+**/.env*
+**/node_modules/
 **/.turbo/
 **/coverage/
 **/playwright-report/
 **/test-results/
+backend/api/
+mobile/
+e2e/
+docs/media/
+docs/screenshots/
+**/.next/
+**/dist/

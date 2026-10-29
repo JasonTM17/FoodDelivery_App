@@ -51,4 +51,4 @@ npx jest tracking
 - **GPS spoofing alerts:** Inspect `driver_location_anomaly` table. Auto-flag drivers with > 3 anomalies/hour for review.
 - **ETA cache stale:** `DEL route:<orderId>:pickup` or `DEL route:<orderId>:dropoff` to force phase-specific recompute.
 - **Directions API quota:** Monitor `directions_api_calls_total{provider="google"}` Prometheus metric. Switch to OSRM-primary if quota exceeded.
-- **Open handle warning on shutdown:** `TrackingService.onModuleDestroy` clears `flushInterval` — verify nếu test logs warning.
+- **Location history durability:** Accepted GPS rows insert into `driver_location_history` inside the acknowledge path — a persistence error returns no success ack; there is no in-memory flush buffer.

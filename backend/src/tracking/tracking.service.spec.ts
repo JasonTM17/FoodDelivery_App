@@ -142,7 +142,6 @@ describe('TrackingService', () => {
         lng: 106.7,
         timestamp: sampledAt,
       })
-      await (service as unknown as { flush: () => Promise<void> }).flush()
 
       expect(mockRedis.eval).toHaveBeenCalledWith(
         expect.any(String),
@@ -216,8 +215,8 @@ describe('TrackingService', () => {
     })
   })
 
-  describe('location history flush', () => {
-    it('binds one driver/order/lng/lat/timestamp parameter group per buffered location', async () => {
+  describe('location history durability', () => {
+    it('persists each accepted location row before acknowledging', async () => {
       mockRedis.get
         .mockResolvedValueOnce('10000000-0000-0000-0000-000000000001')
         .mockResolvedValueOnce(null)
@@ -236,63 +235,58 @@ describe('TrackingService', () => {
         timestamp: '2026-07-06T01:02:07.456Z',
       })
 
-      await (service as unknown as { flush: () => Promise<void> }).flush()
-
-      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
-      const [query] = mockPrisma.$executeRaw.mock.calls[0]
-      expect(query.sql).toContain('INSERT INTO driver_location_history')
-      expect(query.sql).toContain('order_id')
-      const params = query.values
-      expect(params).toHaveLength(10)
-      expect(params[0]).toBe('00000000-0000-0000-0000-000000000001')
-      expect(params[1]).toBe('10000000-0000-0000-0000-000000000001')
-      expect(params[2]).toBe(106.7)
-      expect(params[3]).toBe(10.8)
-      expect(params[4]).toBeInstanceOf(Date)
-      expect(params[5]).toBe('00000000-0000-0000-0000-000000000002')
-      expect(params[6]).toBeNull()
-      expect(params[7]).toBe(106.71)
-      expect(params[8]).toBe(10.81)
-      expect(params[9]).toBeInstanceOf(Date)
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(2)
+      const [first] = mockPrisma.$executeRaw.mock.calls[0]
+      expect(first.sql).toContain('INSERT INTO driver_location_history')
+      expect(first.sql).toContain('order_id')
+      expect(first.values).toHaveLength(5)
+      expect(first.values[0]).toBe('00000000-0000-0000-0000-000000000001')
+      expect(first.values[1]).toBe('10000000-0000-0000-0000-000000000001')
+      expect(first.values[2]).toBe(106.7)
+      expect(first.values[3]).toBe(10.8)
+      expect(first.values[4]).toBeInstanceOf(Date)
+      const [second] = mockPrisma.$executeRaw.mock.calls[1]
+      expect(second.values[0]).toBe('00000000-0000-0000-0000-000000000002')
+      expect(second.values[1]).toBeNull()
+      expect(second.values[2]).toBe(106.71)
+      expect(second.values[3]).toBe(10.81)
+      expect(second.values[4]).toBeInstanceOf(Date)
     })
 
-    it('requeues a failed location batch and persists it on the next flush', async () => {
+    it('does not resolve the acknowledgement until the durable insert resolves', async () => {
       mockRedis.get.mockResolvedValueOnce(null)
       mockPrisma.order.findFirst.mockResolvedValueOnce(null)
-      mockPrisma.$executeRaw
-        .mockRejectedValueOnce(new Error('database temporarily unavailable'))
-        .mockResolvedValueOnce(1)
 
-      await service.handleLocationUpdate('00000000-0000-0000-0000-000000000003', {
+      let resolveInsert!: (value: number) => void
+      mockPrisma.$executeRaw.mockImplementationOnce(
+        () => new Promise<number>((resolve) => { resolveInsert = resolve }),
+      )
+
+      const ack = service.handleLocationUpdate('00000000-0000-0000-0000-000000000003', {
         lat: 10.82,
         lng: 106.72,
         timestamp: '2026-07-06T01:02:11.456Z',
       })
+      let settled = false
+      void ack.then(() => { settled = true }, () => { settled = true })
+      await new Promise((resolve) => setImmediate(resolve))
 
-      await (service as unknown as { flush: () => Promise<void> }).flush()
-      await (service as unknown as { flush: () => Promise<void> }).flush()
-
-      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(2)
-      const [retriedQuery] = mockPrisma.$executeRaw.mock.calls[1]
-      expect(retriedQuery.values[0]).toBe('00000000-0000-0000-0000-000000000003')
-      expect((retriedQuery.values[4] as Date).toISOString()).toBe('2026-07-06T01:02:11.456Z')
+      expect(settled).toBe(false)
+      resolveInsert(1)
+      await expect(ack).resolves.toBeNull()
+      expect(settled).toBe(true)
     })
 
-    it('flushes the final buffered location during module shutdown', async () => {
+    it('does not return a success acknowledgement when persistence fails', async () => {
       mockRedis.get.mockResolvedValueOnce(null)
       mockPrisma.order.findFirst.mockResolvedValueOnce(null)
+      mockPrisma.$executeRaw.mockRejectedValueOnce(new Error('database temporarily unavailable'))
 
-      await service.handleLocationUpdate('00000000-0000-0000-0000-000000000004', {
+      await expect(service.handleLocationUpdate('00000000-0000-0000-0000-000000000004', {
         lat: 10.83,
         lng: 106.73,
         timestamp: '2026-07-06T01:02:15.456Z',
-      })
-
-      await service.onModuleDestroy()
-
-      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1)
-      const [query] = mockPrisma.$executeRaw.mock.calls[0]
-      expect(query.values[0]).toBe('00000000-0000-0000-0000-000000000004')
+      })).rejects.toThrow('database temporarily unavailable')
     })
   })
 
