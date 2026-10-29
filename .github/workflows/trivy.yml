@@ -27,6 +27,7 @@ jobs:
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+          trivyignores: '.trivyignore'
           # SARIF includes every severity by default; align the report and exit
           # policy with the release gate above instead of failing on MEDIUM/LOW.
           limit-severities-for-sarif: true

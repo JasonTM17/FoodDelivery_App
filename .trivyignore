@@ -1,0 +1,9 @@
+# Upstream distroless base OS package vulnerabilities pending upstream base image rebuild
+CVE-2026-31789
+CVE-2026-28387
+CVE-2026-28388
+CVE-2026-28389
+CVE-2026-28390
+CVE-2026-45447
+CVE-2026-84782
+CVE-2026-14456
