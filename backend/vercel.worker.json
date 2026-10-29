@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "mkdir -p .vercel-static",
+  "buildCommand": "node scripts/build-worker-static.cjs",
   "outputDirectory": ".vercel-static",
   "daemons": {
     "worker": {

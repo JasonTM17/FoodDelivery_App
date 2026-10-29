@@ -1,4 +1,7 @@
 import { ConfigService } from '@nestjs/config'
+// Vercel's Nest detector inspects this entrypoint's direct core dependency.
+// Application construction remains in the shared factory below.
+import '@nestjs/core'
 import { createFoodFlowApp } from './bootstrap/create-foodflow-app'
 
 async function bootstrap() {
