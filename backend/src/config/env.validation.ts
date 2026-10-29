@@ -117,6 +117,7 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
   FOODFLOW_PROCESS_ROLE: z.enum(['api', 'worker']).optional(),
+  FOODFLOW_EMBEDDED_WORKER: z.enum(['true', 'false']).default('false'),
   REALTIME_PROVIDER: z.enum(['socketio', 'supabase']).default('socketio'),
   SUPABASE_REALTIME_PUBLISH_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(5_000),
   STORAGE_PROVIDER: z.enum(['minio', 'supabase']).default('minio'),

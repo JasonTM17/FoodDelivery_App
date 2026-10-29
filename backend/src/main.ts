@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 // Application construction remains in the shared factory below.
 import '@nestjs/core'
 import { createFoodFlowApp } from './bootstrap/create-foodflow-app'
+import { listenWithEmbeddedWorker } from './bootstrap/embedded-worker'
 
 async function bootstrap() {
   const app = await createFoodFlowApp({
@@ -12,8 +13,14 @@ async function bootstrap() {
   const port = configService.get<number>('PORT')
   if (!port) throw new Error('PORT environment variable is not set')
 
-  await app.listen(port)
+  const shutdown = await listenWithEmbeddedWorker(app, port)
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.once(signal, () => { void shutdown().catch(() => { process.exitCode = 1 }) })
+  }
   console.log(`FoodFlow API listening on port ${port}`)
 }
 
-bootstrap()
+void bootstrap().catch(() => {
+  console.error('FoodFlow API failed to start')
+  process.exitCode = 1
+})

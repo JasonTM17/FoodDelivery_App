@@ -24,6 +24,19 @@ Same as main backend (DATABASE_URL, REDIS_URL, JWT_SECRET, etc.) — workers sha
 
 ## Run locally
 
+The Render Free portfolio demo explicitly sets `FOODFLOW_EMBEDDED_WORKER=true`
+on the API only. It reuses the HTTP dependency graph and existing Postgres outbox
+poller; standalone worker mode is unchanged. The flag defaults off and is rejected
+for Vercel Functions or incompatible roles/providers. Shutdown stops polling and
+awaits its in-flight batch before disconnecting Prisma/Redis.
+
+Render Free sleeps after 15 minutes without inbound traffic. Jobs remain durable
+but do not execute during sleep; HTTP wake resumes the poller. One-second polls,
+15-second retries and 30-second offers are scheduling contracts while running,
+not availability guarantees during sleep/restart. Forced termination can leave a
+claim for the existing five-minute recovery lease. Optional RAG stays disabled.
+The Vercel Daemon build exists but activation returned403; it is not a live worker.
+
 ```bash
 cd backend
 pnpm worker  # Runs dist/workers/main.js
