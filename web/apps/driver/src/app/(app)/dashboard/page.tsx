@@ -218,7 +218,7 @@ export default function DashboardPage() {
       await loadActive(true);
     } catch (err) {
       const apiError = err as ApiClientError;
-      setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể cập nhật trạng thái đơn hàng.' : 'Could not update the delivery status.'));
+      setActionError(apiError?.detail || (locale === 'vi' ? 'Không thể cập nhật trạng thái đơn hàng.' : locale === 'ja' ? '配達ステータスを更新できませんでした。' : 'Could not update the delivery status.'));
     } finally {
       setTransitionBusy(false);
     }

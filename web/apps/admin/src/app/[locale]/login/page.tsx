@@ -218,7 +218,7 @@ export default function LoginPage() {
                   }}
                 >
                   <span>Admin: <strong className="text-gray-900">admin@foodflow.vn</strong></span>
-                  <span className="text-[11px] font-semibold text-orange-600">{activeDemo.fill}</span>
+                  <span className="text-[11px] font-semibold text-orange-900">{activeDemo.fill}</span>
                 </Button>
               </div>
             </div>

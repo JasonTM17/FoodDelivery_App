@@ -40,6 +40,9 @@ describe('driver transition map', () => {
     expect(isActiveDriverStatus('delivered')).toBe(false);
     expect(driverStatusLabel('picked_up')).toBe('Picked up');
     expect(driverStatusLabel('weird')).toBe('weird');
+    expect(driverStatusLabel('picked_up', 'vi')).toBe('Đã lấy món');
+    expect(driverStatusLabel('picked_up', 'ja')).toBe('料理受取済み');
+    expect(nextDriverActionLabel('driver_assigned', 'ja')).toBe('レストランへ向かう');
   });
 });
 

@@ -187,7 +187,7 @@ export default function LoginPage() {
                   disabled={isLoading}
                 >
                   <span>Nhà hàng: <strong className="text-gray-900">restaurant1@foodflow.vn</strong></span>
-                  <span className="text-[11px] font-semibold text-orange-600">{activeDemo.fill}</span>
+                  <span className="text-[11px] font-semibold text-orange-900">{activeDemo.fill}</span>
                 </button>
               </div>
             </div>

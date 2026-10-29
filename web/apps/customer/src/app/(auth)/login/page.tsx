@@ -107,7 +107,7 @@ function LoginInner() {
             onClick={() => fillDemo('customer1@foodflow.vn')}
           >
             <span>KH 1: <strong className="text-gray-900">customer1@foodflow.vn</strong></span>
-            <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
+            <span className="text-[11px] font-semibold text-orange-900">{t('auth.quickFill')}</span>
           </Button>
           <Button
             type="button"
@@ -117,7 +117,7 @@ function LoginInner() {
             onClick={() => fillDemo('customer2@foodflow.vn')}
           >
             <span>KH 2: <strong className="text-gray-900">customer2@foodflow.vn</strong></span>
-            <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
+            <span className="text-[11px] font-semibold text-orange-900">{t('auth.quickFill')}</span>
           </Button>
         </div>
       </div>
