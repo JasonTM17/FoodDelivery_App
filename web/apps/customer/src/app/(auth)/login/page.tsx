@@ -38,7 +38,11 @@ function LoginInner() {
         return;
       }
       await completeLogin(result);
-      router.replace(next);
+      if (typeof window !== 'undefined') {
+        window.location.assign(next);
+      } else {
+        router.replace(next);
+      }
     } catch (err) {
       const apiError = err as ApiClientError;
       setError(

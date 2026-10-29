@@ -37,7 +37,11 @@ function LoginInner() {
         return;
       }
       await completeLogin(result);
-      router.replace(next);
+      if (typeof window !== 'undefined') {
+        window.location.assign(next);
+      } else {
+        router.replace(next);
+      }
     } catch (err) {
       const apiError = err as ApiClientError;
       setError(
@@ -50,8 +54,8 @@ function LoginInner() {
     }
   };
 
-  const fillDemo = () => {
-    setForm({ email: 'driver1@foodflow.vn', password: DEMO_PASSWORD });
+  const fillDemo = (email: string) => {
+    setForm({ email, password: DEMO_PASSWORD });
     setError(null);
   };
 
@@ -99,9 +103,19 @@ function LoginInner() {
             variant="outline"
             size="sm"
             className="h-8 w-full justify-between bg-white text-xs text-gray-700 hover:bg-orange-100"
-            onClick={fillDemo}
+            onClick={() => fillDemo('driver1@foodflow.vn')}
           >
             <span>TX 1: <strong className="text-gray-900">driver1@foodflow.vn</strong></span>
+            <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-full justify-between bg-white text-xs text-gray-700 hover:bg-orange-100"
+            onClick={() => fillDemo('driver2@foodflow.vn')}
+          >
+            <span>TX 2: <strong className="text-gray-900">driver2@foodflow.vn</strong></span>
             <span className="text-[11px] font-semibold text-orange-600">{t('auth.quickFill')}</span>
           </Button>
         </div>

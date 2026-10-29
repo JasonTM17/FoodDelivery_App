@@ -79,12 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(result.accessToken);
     setUser(result.user);
     setIsAuthChecked(true);
-    try {
-      const profile = await api.get<AuthUser>('/users/me');
-      if (sessionEpoch.current === epoch) setUser(profile);
-    } catch {
-      // Profile refresh failure does not invalidate a fresh login.
-    }
+    void api
+      .get<AuthUser>('/users/me')
+      .then((profile) => {
+        if (sessionEpoch.current === epoch) setUser(profile);
+      })
+      .catch(() => undefined);
   }, []);
 
   // Bootstrap: validate stored token via /users/me and enforce the driver role.
