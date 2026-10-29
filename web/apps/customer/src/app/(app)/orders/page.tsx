@@ -12,10 +12,12 @@ import { isActiveOrder } from '@/lib/order-status';
 import type { Order, OrdersPage } from '@/lib/types';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { OrderStatusBadge } from '@/components/order-status-badge';
+import { useLanguage } from '@/lib/language-context';
 
 export default function OrdersPage() {
   const router = useRouter();
   const { isAuthenticated, isAuthChecked } = useAuth();
+  const { t, locale } = useLanguage();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,7 @@ export default function OrdersPage() {
     items.length === 0 ? (
       <EmptyBlock icon={ReceiptText} title={emptyLabel}>
         <Button asChild variant="outline">
-          <Link href="/home">Browse restaurants</Link>
+          <Link href="/home">{t("cart.browse")}</Link>
         </Button>
       </EmptyBlock>
     ) : (
@@ -71,8 +73,7 @@ export default function OrdersPage() {
                     {order.restaurant?.name ?? 'Order'} · {formatVnd(order.total)}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {formatDateTime(order.createdAt)} · {order.items?.length ?? 0} item
-                    {(order.items?.length ?? 0) === 1 ? '' : 's'}
+                    {formatDateTime(order.createdAt)} · {order.items?.length ?? 0} {locale === "vi" ? "món" : "items"}
                   </p>
                 </div>
                 <OrderStatusBadge status={order.status} />
@@ -85,17 +86,17 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Orders</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t("orders.title")}</h1>
       <Tabs defaultValue="current">
         <TabsList aria-label="Order lists">
-          <TabsTrigger value="current">Current</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="current">{t("orders.active")}</TabsTrigger>
+          <TabsTrigger value="history">{t("orders.history")}</TabsTrigger>
         </TabsList>
         <TabsContent value="current" className="pt-3">
-          {list(current, 'No active orders')}
+          {list(current, t('orders.emptyActive'))}
         </TabsContent>
         <TabsContent value="history" className="pt-3">
-          {list(history, 'No past orders')}
+          {list(history, t('orders.emptyHistory'))}
         </TabsContent>
       </Tabs>
     </div>

@@ -8,10 +8,12 @@ import { LogOut, MapPin, ReceiptText } from 'lucide-react';
 import { api, ApiClientError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
+import { useLanguage } from '@/lib/language-context';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isAuthChecked, logout, refreshUser } = useAuth();
+  const { t, locale } = useLanguage();
   const [form, setForm] = useState({ fullName: '', phone: '' });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -50,7 +52,7 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Account</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t("profile.title")}</h1>
 
       <Card className="space-y-3 p-4">
         <div className="flex items-center gap-3">
@@ -91,7 +93,7 @@ export default function ProfilePage() {
         )}
         {saved && (
           <p role="status" className="text-sm text-green-700">
-            Profile saved.
+            {t("profile.saved")}
           </p>
         )}
         <Button onClick={save} disabled={saving}>
@@ -105,7 +107,7 @@ export default function ProfilePage() {
           className="flex items-center gap-3 rounded-xl border bg-white p-4 text-sm font-medium text-gray-900 transition-shadow hover:shadow-md"
         >
           <MapPin className="h-5 w-5 text-primary" aria-hidden />
-          Addresses
+          {t("profile.addresses")}
         </Link>
         <Link
           href="/orders"

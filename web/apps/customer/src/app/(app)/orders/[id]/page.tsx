@@ -8,6 +8,7 @@ import { ChevronLeft, Star } from 'lucide-react';
 import { api, ApiClientError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
 import { formatVnd, formatDateTime } from '@/lib/format';
+import { useLanguage } from '@/lib/language-context';
 import {
   CUSTOMER_CANCELLABLE_STATUSES,
   isActiveOrder,
@@ -34,6 +35,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const router = useRouter();
   const { isAuthenticated, isAuthChecked } = useAuth();
+  const { t, locale } = useLanguage();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [tracking, setTracking] = useState<OrderTracking | null>(null);
@@ -168,25 +170,29 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       {isActiveOrder(order.status) && (
         <Card className="p-4">
           <ol className="flex items-center" aria-label="Order progress">
-            {PROGRESS_STEPS.map((label, index) => (
-              <li key={label} className="flex flex-1 flex-col items-center gap-1.5">
-                <span
-                  className={cn(
-                    'h-2.5 w-2.5 rounded-full',
-                    index <= step ? 'bg-primary' : 'bg-gray-200',
-                  )}
-                  aria-hidden
-                />
-                <span
-                  className={cn(
-                    'text-center text-[10px] font-medium leading-tight sm:text-xs',
-                    index <= step ? 'text-gray-900' : 'text-gray-400',
-                  )}
-                >
-                  {label}
-                </span>
-              </li>
-            ))}
+            {PROGRESS_STEPS.map((label, index) => {
+              const viLabels = ['Đã đặt', 'Đã nhận', 'Chuẩn bị', 'Đang giao', 'Đã giao'];
+              const displayLabel = locale === 'vi' ? viLabels[index] : label;
+              return (
+                <li key={label} className="flex flex-1 flex-col items-center gap-1.5">
+                  <span
+                    className={cn(
+                      'h-2.5 w-2.5 rounded-full',
+                      index <= step ? 'bg-primary' : 'bg-gray-200',
+                    )}
+                    aria-hidden
+                  />
+                  <span
+                    className={cn(
+                      'text-center text-[10px] font-medium leading-tight sm:text-xs',
+                      index <= step ? 'text-gray-900' : 'text-gray-400',
+                    )}
+                  >
+                    {displayLabel}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
           <p className="mt-3 text-center text-sm text-muted-foreground" aria-live="polite">
             {meta.label}
@@ -212,13 +218,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">{order.driver.fullName}</p>
-            <p className="text-xs text-muted-foreground">Your driver</p>
+            <p className="text-xs text-muted-foreground">{locale === "vi" ? "Tài xế giao hàng" : "Your driver"}</p>
           </div>
         </Card>
       )}
 
       <Card className="p-4">
-        <h2 className="mb-2 font-semibold text-gray-900">Items</h2>
+        <h2 className="mb-2 font-semibold text-gray-900">{locale === "vi" ? "Danh sách món ăn" : "Items"}</h2>
         <ul className="space-y-2 text-sm">
           {(order.items ?? []).map((item, index) => (
             <li key={item.id ?? index} className="flex justify-between gap-3">
@@ -238,16 +244,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </ul>
         <dl className="mt-3 space-y-1.5 border-t pt-3 text-sm">
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Subtotal</dt>
+            <dt className="text-muted-foreground">{t("cart.subtotal")}</dt>
             <dd>{formatVnd(order.subtotal)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Delivery fee</dt>
+            <dt className="text-muted-foreground">{t("cart.deliveryFee")}</dt>
             <dd>{formatVnd(order.deliveryFee)}</dd>
           </div>
           {order.discount > 0 && (
             <div className="flex justify-between text-green-700">
-              <dt>Discount</dt>
+              <dt>{t("cart.discount")}</dt>
               <dd>−{formatVnd(order.discount)}</dd>
             </div>
           )}
@@ -305,7 +311,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       {cancellable && (
         <Button variant="outline" className="w-full text-red-600" onClick={cancel} disabled={cancelBusy}>
-          {cancelBusy ? 'Cancelling…' : 'Cancel order'}
+          {cancelBusy ? t('orderDetail.cancelling') : t('orderDetail.cancelBtn')}
         </Button>
       )}
 

@@ -2,6 +2,7 @@
 
 import { Badge, cn } from '@foodflow/ui';
 import { orderStatusMeta } from '@/lib/order-status';
+import { useLanguage } from '@/lib/language-context';
 
 const TONE_CLASS: Record<string, string> = {
   neutral: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
@@ -12,7 +13,8 @@ const TONE_CLASS: Record<string, string> = {
 };
 
 export function OrderStatusBadge({ status, className }: { status: string; className?: string }) {
-  const meta = orderStatusMeta(status);
+  const { locale } = useLanguage();
+  const meta = orderStatusMeta(status, locale);
   return (
     <Badge variant="outline" className={cn('border-transparent', TONE_CLASS[meta.tone], className)}>
       {meta.label}

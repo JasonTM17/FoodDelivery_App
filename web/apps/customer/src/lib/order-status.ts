@@ -16,6 +16,24 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   refunded: 'Refunded',
 };
 
+export const ORDER_STATUS_LABELS_VI: Record<string, string> = {
+  created: 'Đã đặt đơn',
+  pending_payment: 'Chờ thanh toán',
+  paid: 'Đã thanh toán',
+  restaurant_pending: 'Chờ nhà hàng nhận',
+  restaurant_accepted: 'Nhà hàng đã nhận',
+  preparing: 'Đang chuẩn bị món',
+  ready_for_pickup: 'Món ăn sẵn sàng',
+  driver_assigned: 'Đã có tài xế nhận',
+  driver_arriving_restaurant: 'Tài xế đang đến quán',
+  picked_up: 'Đã lấy món',
+  delivering: 'Đang giao hàng',
+  delivered: 'Đã giao hàng',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+  refunded: 'Đã hoàn tiền',
+};
+
 export const ACTIVE_ORDER_STATUSES = new Set([
   'created',
   'pending_payment',
@@ -75,9 +93,9 @@ export interface OrderStatusMeta {
   tone: StatusTone;
 }
 
-export function orderStatusMeta(status: string): OrderStatusMeta {
+export function orderStatusMeta(status: string, locale?: string): OrderStatusMeta {
   return {
-    label: orderStatusLabel(status),
+    label: orderStatusLabel(status, locale),
     tone: ORDER_STATUS_TONES[status] ?? 'neutral',
   };
 }
@@ -109,7 +127,10 @@ export function isTrackingRelevant(status: string): boolean {
   return ACTIVE_ORDER_STATUSES.has(status);
 }
 
-export function orderStatusLabel(status: string): string {
+export function orderStatusLabel(status: string, locale?: string): string {
+  if (locale === 'vi') {
+    return ORDER_STATUS_LABELS_VI[status] ?? ORDER_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
+  }
   return ORDER_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
 }
 
