@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useRouter } from '@/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,13 +10,33 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiPost } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
-import { Loader2, AlertTriangle, XCircle } from 'lucide-react';
+import { Loader2, AlertTriangle, XCircle, Info } from 'lucide-react';
 
 const MAX_FAIL = 5;
 
+const DEMO_LABELS = {
+  vi: {
+    title: 'Tài khoản quản trị mẫu (Demo):',
+    fill: 'Điền nhanh',
+    slowNotice: 'Đang kết nối tới máy chủ (có thể mất vài giây nếu máy chủ đang khởi động)...',
+  },
+  en: {
+    title: 'Demo Admin Account:',
+    fill: 'Quick fill',
+    slowNotice: 'Connecting to server (may take a few seconds on cold start)...',
+  },
+  ja: {
+    title: 'デモ管理者アカウント:',
+    fill: 'クイック入力',
+    slowNotice: 'サーバーに接続中（初回起動時は少し時間がかかる場合があります）...',
+  },
+} as const;
+
 export default function LoginPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { login } = useAuth();
   const t = useTranslations('login');
   const tCommon = useTranslations('common');
@@ -28,6 +48,22 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [failCount, setFailCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    if (loading) {
+      timer = setTimeout(() => setSlowNotice(true), 2500);
+    } else {
+      setSlowNotice(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+
+  const activeDemo =
+    DEMO_LABELS[locale as 'vi' | 'en' | 'ja'] ?? DEMO_LABELS.vi;
 
   const isLocked = failCount >= MAX_FAIL;
 
@@ -57,8 +93,18 @@ export default function LoginPage() {
         email: res.user.email,
         role: res.user.role,
       });
-      // The next-intl router preserves the active locale.
-      router.replace('/overview');
+
+      // Bypasses any client-side router locks and guarantees instant navigation
+      if (typeof window !== 'undefined' && typeof window.location?.assign === 'function') {
+        try {
+          const activeLocale = window.location.pathname.match(/^\/(vi|en|ja)(?:\/|$)/)?.[1] ?? locale ?? 'vi';
+          window.location.assign(`/${activeLocale}/overview`);
+        } catch {
+          router.replace('/overview');
+        }
+      } else {
+        router.replace('/overview');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : tErrors('generic'));
       setFailCount((c) => c + 1);
@@ -68,7 +114,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      <div className="absolute right-4 top-4">
+        <LocaleSwitcher />
+      </div>
+
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <FoodFlowLogo showWordmark={false} markClassName="h-16 w-16" className="mx-auto mb-4 justify-center" />
@@ -146,8 +196,16 @@ export default function LoginPage() {
                 tCommon('login')
               )}
             </Button>
-                      <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/70 p-3">
-              <p className="text-xs font-semibold text-orange-950">Tài khoản quản trị mẫu (Demo):</p>
+
+            {slowNotice && loading && (
+              <div className="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-xs text-blue-700 animate-in fade-in">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{activeDemo.slowNotice}</span>
+              </div>
+            )}
+
+            <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/70 p-3">
+              <p className="text-xs font-semibold text-orange-950">{activeDemo.title}</p>
               <div className="mt-2">
                 <Button
                   type="button"
@@ -160,7 +218,7 @@ export default function LoginPage() {
                   }}
                 >
                   <span>Admin: <strong className="text-gray-900">admin@foodflow.vn</strong></span>
-                  <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+                  <span className="text-[11px] font-semibold text-orange-600">{activeDemo.fill}</span>
                 </Button>
               </div>
             </div>

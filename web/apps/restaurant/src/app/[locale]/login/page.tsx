@@ -1,15 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from '@/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { FoodFlowLogo } from '@foodflow/ui/foodflow-logo';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-provider';
+import { LocaleSwitcher } from '@/components/locale-switcher';
+
+const DEMO_LABELS = {
+  vi: {
+    title: 'Tài khoản nhà hàng mẫu (Demo):',
+    fill: 'Điền nhanh',
+    slowNotice: 'Đang kết nối tới máy chủ (có thể mất vài giây nếu máy chủ đang khởi động)...',
+  },
+  en: {
+    title: 'Demo Restaurant Account:',
+    fill: 'Quick fill',
+    slowNotice: 'Connecting to server (may take a few seconds on cold start)...',
+  },
+  ja: {
+    title: 'デモ店舗アカウント:',
+    fill: 'クイック入力',
+    slowNotice: 'サーバーに接続中（初回起動時は少し時間がかかる場合があります）...',
+  },
+} as const;
 
 export default function LoginPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { login } = useAuth();
   const t = useTranslations('login');
   const tCommon = useTranslations('common');
@@ -20,6 +40,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    if (isLoading) {
+      timer = setTimeout(() => setSlowNotice(true), 2500);
+    } else {
+      setSlowNotice(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isLoading]);
+
+  const activeDemo =
+    DEMO_LABELS[locale as 'vi' | 'en' | 'ja'] ?? DEMO_LABELS.vi;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +75,17 @@ export default function LoginPage() {
 
       localStorage.setItem('restaurant_refresh_token', data.refreshToken);
       await login(data.accessToken);
-      router.push('/orders');
+
+      if (typeof window !== 'undefined' && typeof window.location?.assign === 'function') {
+        try {
+          const activeLocale = window.location.pathname.match(/^\/(vi|en|ja)(?:\/|$)/)?.[1] ?? locale ?? 'vi';
+          window.location.assign(`/${activeLocale}/orders`);
+        } catch {
+          router.push('/orders');
+        }
+      } else {
+        router.push('/orders');
+      }
     } catch (err: unknown) {
       const apiError = err as { message?: string };
       setError(apiError.message || tErrors('generic'));
@@ -49,7 +95,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-orange-100 p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-orange-100 p-4">
+      <div className="absolute right-4 top-4">
+        <LocaleSwitcher />
+      </div>
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -79,6 +129,7 @@ export default function LoginPage() {
                 placeholder={t('emailPlaceholder')}
                 required
                 autoComplete="email"
+                disabled={isLoading}
               />
             </div>
 
@@ -94,12 +145,14 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
                   aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -113,8 +166,16 @@ export default function LoginPage() {
             >
               {isLoading ? t('loggingIn') : tCommon('login')}
             </button>
-                      <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/70 p-3 text-left">
-              <p className="text-xs font-semibold text-orange-950">Tài khoản nhà hàng mẫu (Demo):</p>
+
+            {slowNotice && isLoading && (
+              <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-700 animate-in fade-in">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{activeDemo.slowNotice}</span>
+              </div>
+            )}
+
+            <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/70 p-3 text-left">
+              <p className="text-xs font-semibold text-orange-950">{activeDemo.title}</p>
               <div className="mt-2">
                 <button
                   type="button"
@@ -123,9 +184,10 @@ export default function LoginPage() {
                     setEmail('restaurant1@foodflow.vn');
                     setPassword('Demo@123456');
                   }}
+                  disabled={isLoading}
                 >
                   <span>Nhà hàng: <strong className="text-gray-900">restaurant1@foodflow.vn</strong></span>
-                  <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+                  <span className="text-[11px] font-semibold text-orange-600">{activeDemo.fill}</span>
                 </button>
               </div>
             </div>

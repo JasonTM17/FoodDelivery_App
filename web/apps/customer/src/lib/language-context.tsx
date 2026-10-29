@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-export type Locale = 'vi' | 'en';
+export type Locale = 'vi' | 'en' | 'ja';
 
 export interface LanguageContextType {
   locale: Locale;
@@ -19,6 +19,18 @@ export interface LanguageContextType {
 }
 
 const STORAGE_KEY = 'foodflow_locale';
+
+const LOCALE_CYCLE: Record<Locale, Locale> = {
+  vi: 'en',
+  en: 'ja',
+  ja: 'vi',
+};
+
+export const LOCALE_META: Record<Locale, { flag: string; label: string; code: string }> = {
+  vi: { flag: '🇻🇳', label: 'Tiếng Việt', code: 'VI' },
+  en: { flag: '🇬🇧', label: 'English', code: 'EN' },
+  ja: { flag: '🇯🇵', label: '日本語', code: 'JA' },
+};
 
 const translations: Record<Locale, Record<string, string>> = {
   vi: {
@@ -92,7 +104,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'restaurant.emptyMenu': 'Nhà hàng này chưa cập nhật món ăn.',
     'restaurant.prepTime': 'Thời gian chuẩn bị ~{mins} phút',
     'restaurant.dialogQty': 'Số lượng',
-    'restaurant.dialogAdd': 'Thêm vào giỏ — {price}',
+    'restaurant.dialogAdd': 'Thêm vào giỏ - {price}',
     'restaurant.dialogSpecialInstructions': 'Ghi chú đặc biệt (tùy chọn)',
 
     // Cart
@@ -123,50 +135,50 @@ const translations: Record<Locale, Record<string, string>> = {
     'checkout.notesPlaceholder': 'Ví dụ: Bấm chuông cổng, giao tận tay...',
     'checkout.placeOrder': 'Xác nhận đặt hàng',
     'checkout.submitting': 'Đang xử lý đơn hàng...',
-    'checkout.minOrder': 'Đơn hàng chưa đạt mức tối thiểu.',
-    'checkout.walletInsufficient': 'Số dư ví không đủ. Vui lòng nạp thêm hoặc chọn COD.',
+    'checkout.minOrder': 'Đơn hàng tối thiểu {min}',
+    'checkout.walletInsufficient': 'Số dư ví không đủ thanh toán đơn hàng này.',
 
     // Success
     'success.title': 'Đặt hàng thành công!',
-    'success.desc': 'Đơn hàng của bạn đã được chuyển tới nhà hàng để chuẩn bị.',
-    'success.orderId': 'Mã đơn hàng:',
-    'success.viewOrder': 'Xem chi tiết & Theo dõi',
-    'success.backHome': 'Tiếp tục đặt món',
+    'success.desc': 'Cảm ơn bạn đã đặt món. Nhà hàng sẽ chuẩn bị đơn hàng ngay.',
+    'success.orderId': 'Mã đơn hàng',
+    'success.viewOrder': 'Xem chi tiết đơn hàng',
+    'success.backHome': 'Về trang chủ',
 
     // Orders
-    'orders.title': 'Đơn hàng của bạn',
-    'orders.active': 'Đang xử lý',
-    'orders.history': 'Lịch sử',
-    'orders.emptyActive': 'Không có đơn hàng nào đang hoạt động.',
-    'orders.emptyHistory': 'Bạn chưa có lịch sử đơn hàng nào.',
+    'orders.title': 'Đơn hàng của tôi',
+    'orders.active': 'Đang thực hiện',
+    'orders.history': 'Lịch sử đơn',
+    'orders.emptyActive': 'Không có đơn hàng nào đang thực hiện',
+    'orders.emptyHistory': 'Chưa có lịch sử đơn hàng',
     'orders.viewDetails': 'Xem chi tiết',
     'orders.orderNum': 'Đơn #{id}',
-    'orders.items': '{count} món',
+    'orders.items': 'món',
 
-    // Order detail
-    'orderDetail.title': 'Chi tiết đơn hàng #{id}',
+    // Order Detail
+    'orderDetail.title': 'Chi tiết đơn hàng',
     'orderDetail.tracking': 'Theo dõi đơn hàng',
-    'orderDetail.status': 'Trạng thái:',
-    'orderDetail.driver': 'Tài xế:',
+    'orderDetail.status': 'Trạng thái giao nhận',
+    'orderDetail.driver': 'Tài xế giao hàng',
     'orderDetail.driverUnassigned': 'Đang tìm tài xế gần bạn...',
     'orderDetail.cancelBtn': 'Hủy đơn hàng',
     'orderDetail.cancelling': 'Đang hủy...',
-    'orderDetail.cancelConfirm': 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+    'orderDetail.cancelConfirm': 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
     'orderDetail.confirmReceipt': 'Đã nhận được hàng',
     'orderDetail.itemsList': 'Danh sách món',
 
-    // Profile & Address
-    'profile.title': 'Thông tin tài khoản',
-    'profile.addresses': 'Sổ địa chỉ nhận hàng',
+    // Profile
+    'profile.title': 'Thông tin cá nhân',
+    'profile.addresses': 'Sổ địa chỉ giao hàng',
     'profile.saveBtn': 'Lưu thay đổi',
     'profile.saving': 'Đang lưu...',
-    'profile.saved': 'Cập nhật thành công!',
-    'profile.logout': 'Đăng xuất khỏi thiết bị',
+    'profile.saved': 'Đã lưu thành công!',
+    'profile.logout': 'Đăng xuất',
 
     // Common
     'common.loading': 'Đang tải...',
     'common.retry': 'Thử lại',
-    'common.error': 'Đã xảy ra lỗi',
+    'common.error': 'Có lỗi xảy ra',
   },
   en: {
     // Nav
@@ -209,19 +221,19 @@ const translations: Record<Locale, Record<string, string>> = {
     'home.searchBtn': 'Search',
     'home.useLocation': 'Use current location',
     'home.requestingLocation': 'Getting location...',
-    'home.locationDenied': 'Location access denied',
-    'home.locationUnsupported': 'Geolocation unsupported',
-    'home.allCuisines': 'All Cuisines',
+    'home.locationDenied': 'Location permission denied',
+    'home.locationUnsupported': 'Geolocation unsupported by browser',
+    'home.allCuisines': 'All cuisines',
     'home.emptyTitle': 'No restaurants found',
-    'home.emptyDesc': 'Try another query or clear filters to see more.',
+    'home.emptyDesc': 'Try searching with another keyword or clear filters.',
     'home.clearFilters': 'Clear filters',
     'home.pageOf': 'Page {page} of {totalPages}',
     'home.prev': 'Previous',
     'home.next': 'Next',
-    'home.rating': 'reviews',
+    'home.rating': 'rating',
     'home.mins': 'mins',
     'home.distKm': 'km',
-    'home.open': 'Open',
+    'home.open': 'Open now',
     'home.closed': 'Closed',
 
     // Cuisines
@@ -236,78 +248,78 @@ const translations: Record<Locale, Record<string, string>> = {
     'restaurant.reviews': 'Reviews',
     'restaurant.addToCart': 'Add to cart',
     'restaurant.added': 'Added to cart!',
-    'restaurant.emptyMenu': 'This restaurant has not published a menu yet.',
-    'restaurant.prepTime': 'Prep time ~{mins} mins',
+    'restaurant.emptyMenu': 'This restaurant has not added menu items yet.',
+    'restaurant.prepTime': 'Preparation ~{mins} mins',
     'restaurant.dialogQty': 'Quantity',
-    'restaurant.dialogAdd': 'Add to cart — {price}',
+    'restaurant.dialogAdd': 'Add to cart - {price}',
     'restaurant.dialogSpecialInstructions': 'Special instructions (optional)',
 
     // Cart
-    'cart.title': 'Your Cart',
+    'cart.title': 'Your cart',
     'cart.empty': 'Your cart is empty',
     'cart.browse': 'Browse restaurants',
-    'cart.clear': 'Clear',
+    'cart.clear': 'Clear cart',
     'cart.from': 'From',
     'cart.subtotal': 'Subtotal',
     'cart.deliveryFee': 'Delivery fee',
     'cart.discount': 'Discount',
     'cart.total': 'Total',
     'cart.checkoutBtn': 'Proceed to checkout',
-    'cart.promoPlaceholder': 'Promo code...',
+    'cart.promoPlaceholder': 'Enter promo code...',
     'cart.applyPromo': 'Apply',
     'cart.removePromo': 'Remove',
 
     // Checkout
-    'checkout.title': 'Checkout',
+    'checkout.title': 'Checkout & Place order',
     'checkout.addressTitle': 'Delivery address',
     'checkout.addAddress': 'Add new address',
-    'checkout.noAddress': 'You have no saved addresses.',
+    'checkout.noAddress': 'You do not have any delivery addresses.',
     'checkout.paymentMethod': 'Payment method',
-    'checkout.cash': 'Cash on delivery',
-    'checkout.wallet': 'FoodFlow wallet',
-    'checkout.sepay': 'Bank transfer (SePay)',
-    'checkout.notes': 'Delivery notes',
-    'checkout.notesPlaceholder': 'e.g. Ring the doorbell...',
+    'checkout.cash': 'Cash on delivery (COD)',
+    'checkout.wallet': 'FoodFlow Wallet',
+    'checkout.sepay': 'SePay Bank Transfer (VietQR)',
+    'checkout.notes': 'Notes for restaurant / driver',
+    'checkout.notesPlaceholder': 'E.g., Ring the bell, deliver to door...',
     'checkout.placeOrder': 'Place order',
     'checkout.submitting': 'Placing order...',
-    'checkout.minOrder': 'Minimum order amount not met.',
-    'checkout.walletInsufficient': 'Insufficient wallet balance.',
+    'checkout.minOrder': 'Minimum order is {min}',
+    'checkout.walletInsufficient': 'Insufficient wallet balance for this order.',
 
     // Success
-    'success.title': 'Order placed!',
-    'success.desc': 'Your order has been sent to the restaurant for preparation.',
-    'success.orderId': 'Order ID:',
-    'success.viewOrder': 'View & Track Order',
-    'success.backHome': 'Keep browsing',
+    'success.title': 'Order placed successfully!',
+    'success.desc': 'Thank you for your order. The restaurant will prepare it shortly.',
+    'success.orderId': 'Order ID',
+    'success.viewOrder': 'Track order status',
+    'success.backHome': 'Back to home',
 
     // Orders
-    'orders.title': 'Your Orders',
-    'orders.active': 'Active',
-    'orders.history': 'History',
-    'orders.emptyActive': 'No active orders.',
-    'orders.emptyHistory': 'No past orders yet.',
+    'orders.title': 'My orders',
+    'orders.active': 'Active orders',
+    'orders.history': 'Past orders',
+    'orders.emptyActive': 'No active orders',
+    'orders.emptyHistory': 'No order history yet',
     'orders.viewDetails': 'View details',
     'orders.orderNum': 'Order #{id}',
-    'orders.items': '{count} items',
+    'orders.items': 'items',
 
-    // Order detail
-    'orderDetail.title': 'Order #{id}',
-    'orderDetail.tracking': 'Order tracking',
-    'orderDetail.status': 'Status:',
-    'orderDetail.driver': 'Driver:',
-    'orderDetail.driverUnassigned': 'Assigning a driver...',
+    // Order Detail
+    'orderDetail.title': 'Order details',
+    'orderDetail.tracking': 'Live tracking',
+    'orderDetail.status': 'Delivery status',
+    'orderDetail.driver': 'Assigned driver',
+    'orderDetail.driverUnassigned': 'Looking for a driver nearby...',
     'orderDetail.cancelBtn': 'Cancel order',
     'orderDetail.cancelling': 'Cancelling...',
     'orderDetail.cancelConfirm': 'Are you sure you want to cancel this order?',
     'orderDetail.confirmReceipt': 'Confirm receipt',
     'orderDetail.itemsList': 'Order items',
 
-    // Profile & Address
-    'profile.title': 'Account',
+    // Profile
+    'profile.title': 'My profile',
     'profile.addresses': 'Saved addresses',
     'profile.saveBtn': 'Save changes',
     'profile.saving': 'Saving...',
-    'profile.saved': 'Profile updated!',
+    'profile.saved': 'Saved successfully!',
     'profile.logout': 'Sign out',
 
     // Common
@@ -315,23 +327,160 @@ const translations: Record<Locale, Record<string, string>> = {
     'common.retry': 'Retry',
     'common.error': 'An error occurred',
   },
-};
+  ja: {
+    // Nav
+    'nav.discover': '見つける',
+    'nav.orders': '注文履歴',
+    'nav.cart': 'カート',
+    'nav.account': 'アカウント',
+    'nav.login': 'ログイン',
+    'nav.logout': 'ログアウト',
+    'nav.home': 'ホーム',
 
-function resolveT(locale: Locale, key: string, params?: Record<string, string | number>): string {
-  let str = translations[locale]?.[key] ?? translations.vi[key] ?? translations.en[key] ?? key;
-  if (params) {
-    for (const [k, v] of Object.entries(params)) {
-      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
-    }
-  }
-  return str;
-}
+    // Auth
+    'auth.signInTitle': 'ログイン',
+    'auth.email': 'メールアドレス',
+    'auth.password': 'パスワード',
+    'auth.signInBtn': 'ログイン',
+    'auth.signingIn': 'ログイン中...',
+    'auth.noAccount': 'アカウントをお持ちでないですか？',
+    'auth.createOne': '新規登録',
+    'auth.demoTitle': 'デモ体験アカウント:',
+    'auth.quickFill': 'クイック入力',
+    'auth.customer1': 'お客様 1 (customer1@foodflow.vn)',
+    'auth.customer2': 'お客様 2 (customer2@foodflow.vn)',
+    'auth.wrongCredentials': 'メールアドレスまたはパスワードが正しくありません。',
+    'auth.notCustomer': 'このアカウントはお客様アカウントではありません。',
+    'auth.genericError': 'ログインに失敗しました。もう一度お試しください。',
+    'auth.signUpTitle': 'アカウント作成',
+    'auth.fullName': '氏名',
+    'auth.phone': '電話番号',
+    'auth.phoneOptional': '任意',
+    'auth.signUpBtn': 'アカウント作成',
+    'auth.signingUp': '登録中...',
+    'auth.hasAccount': 'すでにアカウントをお持ちですか？',
+    'auth.passwordHint': '英大文字、小文字、数字を含む8文字以上。',
+    'auth.passwordTooShort': 'パスワードは8文字以上である必要があります。',
+    'auth.passwordComplexity': '大文字、小文字、数字を含めてください。',
+
+    // Home
+    'home.searchPlaceholder': '店舗や料理を検索...',
+    'home.searchBtn': '検索',
+    'home.useLocation': '現在地を使用',
+    'home.requestingLocation': '現在地を取得中...',
+    'home.locationDenied': '位置情報のアクセスが拒否されました',
+    'home.locationUnsupported': 'お使いのブラウザは位置情報をサポートしていません',
+    'home.allCuisines': 'すべてのジャンル',
+    'home.emptyTitle': '該当する店舗が見つかりませんでした',
+    'home.emptyDesc': '別のキーワードで検索するか、フィルターをリセットしてください。',
+    'home.clearFilters': 'フィルターを解除',
+    'home.pageOf': '{page} / {totalPages} ページ',
+    'home.prev': '前へ',
+    'home.next': '次へ',
+    'home.rating': '評価',
+    'home.mins': '分',
+    'home.distKm': 'km',
+    'home.open': '営業中',
+    'home.closed': '準備中',
+
+    // Cuisines
+    'cuisine.Vietnamese': 'ベトナム料理',
+    'cuisine.Japanese': '日本料理',
+    'cuisine.Italian': 'イタリアン',
+    'cuisine.Fast Food': 'ファストフード',
+
+    // Restaurant Detail
+    'restaurant.back': '戻る',
+    'restaurant.menu': 'メニュー',
+    'restaurant.reviews': 'レビュー',
+    'restaurant.addToCart': 'カートに追加',
+    'restaurant.added': 'カートに追加しました！',
+    'restaurant.emptyMenu': 'メニューがまだありません。',
+    'restaurant.prepTime': '調理時間 約{mins}分',
+    'restaurant.dialogQty': '数量',
+    'restaurant.dialogAdd': 'カートに追加 - {price}',
+    'restaurant.dialogSpecialInstructions': '特別なリクエスト（任意）',
+
+    // Cart
+    'cart.title': 'ショッピングカート',
+    'cart.empty': 'カートは空です',
+    'cart.browse': '店舗を探す',
+    'cart.clear': 'すべてクリア',
+    'cart.from': '店舗名',
+    'cart.subtotal': '小計',
+    'cart.deliveryFee': '配送料',
+    'cart.discount': '割引',
+    'cart.total': '合計',
+    'cart.checkoutBtn': '注文手続きへ',
+    'cart.promoPlaceholder': 'クーポンコードを入力...',
+    'cart.applyPromo': '適用',
+    'cart.removePromo': '解除',
+
+    // Checkout
+    'checkout.title': 'お支払いと注文確定',
+    'checkout.addressTitle': '配達先住所',
+    'checkout.addAddress': '新しい住所を追加',
+    'checkout.noAddress': '配達先住所が登録されていません。',
+    'checkout.paymentMethod': '支払い方法',
+    'checkout.cash': '代金引換 (COD)',
+    'checkout.wallet': 'FoodFlow 電子ウォレット',
+    'checkout.sepay': 'VietQR 銀行振込 (SePay)',
+    'checkout.notes': '店舗・配達員へのメモ',
+    'checkout.notesPlaceholder': '例: インターホンを押してください、置き配希望...',
+    'checkout.placeOrder': '注文を確定する',
+    'checkout.submitting': '注文処理中...',
+    'checkout.minOrder': '最低注文金額は {min} です',
+    'checkout.walletInsufficient': 'ウォレットの残高が不足しています。',
+
+    // Success
+    'success.title': 'ご注文ありがとうございます！',
+    'success.desc': '注文を受け付けました。店舗がまもなく調理を開始します。',
+    'success.orderId': '注文番号',
+    'success.viewOrder': '注文状況を確認',
+    'success.backHome': 'ホームに戻る',
+
+    // Orders
+    'orders.title': '注文履歴',
+    'orders.active': '進行中の注文',
+    'orders.history': '完了した注文',
+    'orders.emptyActive': '進行中の注文はありません',
+    'orders.emptyHistory': '過去の注文履歴はありません',
+    'orders.viewDetails': '詳細を見る',
+    'orders.orderNum': '注文番号 #{id}',
+    'orders.items': '品',
+
+    // Order Detail
+    'orderDetail.title': '注文詳細',
+    'orderDetail.tracking': 'リアルタイム追跡',
+    'orderDetail.status': '配達ステータス',
+    'orderDetail.driver': '担当ドライバー',
+    'orderDetail.driverUnassigned': 'ドライバーを手配中...',
+    'orderDetail.cancelBtn': '注文をキャンセル',
+    'orderDetail.cancelling': 'キャンセル中...',
+    'orderDetail.cancelConfirm': '注文をキャンセルしてもよろしいですか？',
+    'orderDetail.confirmReceipt': '受け取りを完了する',
+    'orderDetail.itemsList': '注文内容',
+
+    // Profile
+    'profile.title': 'プロフィール',
+    'profile.addresses': '配達先住所リスト',
+    'profile.saveBtn': '変更を保存',
+    'profile.saving': '保存中...',
+    'profile.saved': '保存しました！',
+    'profile.logout': 'ログアウト',
+
+    // Common
+    'common.loading': '読み込み中...',
+    'common.retry': '再試行',
+    'common.error': 'エラーが発生しました',
+  },
+};
 
 const LanguageContext = createContext<LanguageContextType>({
   locale: 'vi',
   setLocale: () => {},
   toggleLocale: () => {},
-  t: (k, params) => resolveT('vi', k, params),
+  t: (k) => k,
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -340,7 +489,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'en' || saved === 'vi') {
+      if (saved === 'en' || saved === 'vi' || saved === 'ja') {
         setLocaleState(saved);
       }
     } catch {
@@ -360,7 +509,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const toggleLocale = useCallback(() => {
     setLocaleState((prev) => {
-      const next = prev === 'vi' ? 'en' : 'vi';
+      const next = LOCALE_CYCLE[prev] ?? 'vi';
       try {
         localStorage.setItem(STORAGE_KEY, next);
         document.documentElement.lang = next;
@@ -396,18 +545,30 @@ export function useLanguage() {
 }
 
 export function LanguageSwitcher({ className }: { className?: string }) {
-  const { locale, toggleLocale } = useLanguage();
+  const { locale, setLocale } = useLanguage();
 
   return (
-    <button
-      type="button"
-      onClick={toggleLocale}
-      aria-label="Switch language / Đổi ngôn ngữ"
-      className={`inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-xs transition hover:bg-orange-50 hover:text-orange-950 ${className ?? ''}`}
-      title={locale === 'vi' ? 'Chuyển sang English' : 'Switch to Tiếng Việt'}
-    >
-      <span className="text-sm leading-none">{locale === 'vi' ? '🇻🇳' : '🇬🇧'}</span>
-      <span className="tracking-tight">{locale === 'vi' ? 'Tiếng Việt' : 'English'}</span>
-    </button>
+    <div className={`inline-flex items-center rounded-full border border-orange-200 bg-white/95 p-0.5 shadow-xs ${className ?? ''}`}>
+      {(['vi', 'en', 'ja'] as const).map((code) => {
+        const active = locale === code;
+        const meta = LOCALE_META[code];
+        return (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLocale(code)}
+            aria-label={`Switch to ${meta.label}`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition ${
+              active
+                ? 'bg-orange-500 text-white shadow-xs font-semibold'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-orange-50'
+            }`}
+          >
+            <span className="text-xs leading-none">{meta.flag}</span>
+            <span className="text-[11px]">{meta.code}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }

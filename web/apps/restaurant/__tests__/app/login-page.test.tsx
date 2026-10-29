@@ -6,6 +6,7 @@ const mockedPost = vi.hoisted(() => vi.fn());
 const mockedLogin = vi.hoisted(() => vi.fn());
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'vi',
   useTranslations: (namespace: string) => (key: string) => {
     const messages: Record<string, Record<string, string>> = {
       login: {
