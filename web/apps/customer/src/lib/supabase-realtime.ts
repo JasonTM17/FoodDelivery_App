@@ -23,7 +23,6 @@ interface AdapterOptions {
   fetchToken?: (scope: { orderId?: string; restaurantId?: string }) => Promise<RealtimeTokenResponse>;
 }
 
-let supabaseClient: SupabaseClient | null = null;
 
 export function resolveRealtimeProvider(): RealtimeProvider {
   const configured = process.env.NEXT_PUBLIC_REALTIME_PROVIDER?.trim().toLowerCase();
@@ -51,6 +50,9 @@ export class SupabaseSocketAdapter {
   private readonly handlers = new Map<string, Set<Handler>>();
   private channel: RealtimeChannel | null = null;
   private active = false;
+  private generation = 0;
+  private client: SupabaseClient | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly options: AdapterOptions) {
     this.connect();
@@ -59,17 +61,24 @@ export class SupabaseSocketAdapter {
   connect(): void {
     if (this.active) return;
     this.active = true;
-    void this.subscribe();
+    const generation = ++this.generation;
+    const client = createSubscriptionClient();
+    this.client = client;
+    void this.subscribe(generation, client);
   }
 
   disconnect(): void {
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = null;
+    this.generation += 1;
     this.active = false;
     this.connected = false;
     this.dispatch('disconnect');
     if (this.channel) {
-      void getSupabaseClient().removeChannel(this.channel);
+      void this.client?.removeChannel(this.channel);
       this.channel = null;
     }
+    this.client = null;
   }
 
   removeAllListeners(): void {
@@ -84,7 +93,10 @@ export class SupabaseSocketAdapter {
     const set = this.handlers.get(event) ?? new Set<Handler>();
     set.add(handler);
     this.handlers.set(event, set);
-    if (event === 'connect' && this.connected) queueMicrotask(() => handler());
+    if (event === 'connect' && this.connected) {
+      const generation = this.generation;
+      queueMicrotask(() => { if (this.isCurrent(generation)) handler(); });
+    }
     return this;
   }
 
@@ -99,24 +111,29 @@ export class SupabaseSocketAdapter {
     return api.post<RealtimeTokenResponse>('/realtime/token', this.options.scope ?? {});
   }
 
-  private async subscribe(): Promise<void> {
+  private isCurrent(generation: number): boolean {
+    return this.active && this.generation === generation;
+  }
+
+  private async subscribe(generation: number, client: SupabaseClient): Promise<void> {
     try {
       const token = await this.fetchToken();
+      if (!this.isCurrent(generation)) return;
       if (!token.channels.includes(this.options.channel)) {
         throw new Error(`Realtime token does not include required channel: ${this.options.channel}`);
       }
 
-      const client = getSupabaseClient();
-      client.realtime.setAuth(token.token);
-      if (!this.active) return;
+      await client.realtime.setAuth(token.token);
+      if (!this.isCurrent(generation)) return;
 
+      this.scheduleRefresh(token.expiresAt, generation, client);
       this.channel = client
         .channel(this.options.channel, { config: { private: true } })
         .on('broadcast', { event: '*' }, ({ event, payload }) => {
-          this.dispatch(event, payload);
+          if (this.isCurrent(generation)) this.dispatch(event, payload);
         })
         .subscribe((status) => {
-          if (!this.active) return;
+          if (!this.isCurrent(generation)) return;
           if (status === 'SUBSCRIBED') {
             this.connected = true;
             this.dispatch('connect');
@@ -131,28 +148,43 @@ export class SupabaseSocketAdapter {
           }
         });
     } catch (error) {
+      if (!this.isCurrent(generation)) return;
+      this.disconnect();
       this.connected = false;
       this.dispatch('connect_error', error);
     }
   }
 
+  private scheduleRefresh(expiresAt: string, generation: number, client: SupabaseClient): void {
+    const expires = Date.parse(expiresAt);
+    if (!Number.isFinite(expires) || expires <= Date.now()) throw new Error('Realtime credential expired');
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => { void this.refreshAuth(generation, client); }, Math.max(1000, expires - Date.now() - 30000));
+  }
+
+  private async refreshAuth(generation: number, client: SupabaseClient): Promise<void> {
+    try {
+      const token = await this.fetchToken();
+      if (!this.isCurrent(generation)) return;
+      if (!token.channels.includes(this.options.channel)) throw new Error('Realtime channel access revoked');
+      if (Date.parse(token.expiresAt) <= Date.now()) throw new Error('Realtime credential expired');
+      await client.realtime.setAuth(token.token);
+      if (this.isCurrent(generation)) this.scheduleRefresh(token.expiresAt, generation, client);
+    } catch (error) {
+      if (!this.isCurrent(generation)) return;
+      this.disconnect();
+      this.dispatch('connect_error', error);
+    }
+  }
   private dispatch(event: string, payload?: unknown): void {
     this.handlers.get(event)?.forEach((handler) => handler(payload));
   }
 }
 
-function getSupabaseClient(): SupabaseClient {
-  if (!supabaseClient) {
-    const url = resolveSupabaseUrl();
-    const publishableKey = resolveSupabasePublishableKey();
-    supabaseClient = createClient(url, publishableKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-  }
-  return supabaseClient;
+function createSubscriptionClient(): SupabaseClient {
+  return createClient(resolveSupabaseUrl(), resolveSupabasePublishableKey(), {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 function resolveSupabaseUrl(): string {
