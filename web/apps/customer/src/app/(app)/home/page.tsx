@@ -15,15 +15,13 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { RestaurantCard } from '@/components/restaurant-card';
 
 const CUISINES = [
-  'vietnamese',
-  'chinese',
-  'japanese',
-  'korean',
-  'western',
-  'fast_food',
-  'healthy',
-  'dessert',
+  'Vietnamese',
+  'Japanese',
+  'Italian',
+  'Fast Food',
 ];
+
+const DEFAULT_COORDS = { lat: 10.7769, lng: 106.7009 };
 
 const PAGE_SIZE = 12;
 
@@ -46,29 +44,29 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      if (!usingLocation && !submittedQuery.trim()) {
-        if (seq === requestSeq.current) { setSearch(null); setNearby(null); }
-        return;
-      }
-      if (usingLocation) {
-        const params = new URLSearchParams({
-          lat: String(location.lat),
-          lng: String(location.lng),
-          page: String(page),
-          limit: String(PAGE_SIZE),
-        });
-        if (cuisine) params.set('cuisine', cuisine);
-        params.set('radius', '10'); // Backend radius is kilometres, bounded to 1–100.
-        const result = await api.getPage<NearbyRestaurant>(`/restaurants/nearby?${params}`);
-        if (seq === requestSeq.current) setNearby(result);
-        if (seq === requestSeq.current) setSearch(null);
-      } else {
+      if (submittedQuery.trim()) {
         const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
-        if (submittedQuery) params.set('q', submittedQuery);
+        params.set('q', submittedQuery.trim());
         const result = await api.getPage<SearchRestaurant>(`/restaurants/search?${params}`);
         if (seq === requestSeq.current) {
           setSearch(result);
           setNearby(null);
+        }
+      } else {
+        const lat = usingLocation ? location.lat : DEFAULT_COORDS.lat;
+        const lng = usingLocation ? location.lng : DEFAULT_COORDS.lng;
+        const params = new URLSearchParams({
+          lat: String(lat),
+          lng: String(lng),
+          page: String(page),
+          limit: String(PAGE_SIZE),
+          radius: '25',
+        });
+        if (cuisine) params.set('cuisine', cuisine);
+        const result = await api.getPage<NearbyRestaurant>(`/restaurants/nearby?${params}`);
+        if (seq === requestSeq.current) {
+          setNearby(result);
+          setSearch(null);
         }
       }
     } catch (err) {
@@ -83,19 +81,19 @@ export default function HomePage() {
   }, [load]);
 
   const items = useMemo(() => {
-    if (usingLocation) {
-      return (nearby?.items ?? []).map((restaurant) => ({
+    if (submittedQuery.trim() && search) {
+      return (search?.items ?? []).map((restaurant) => ({
         card: toCardRestaurant(restaurant),
-        distance: restaurant.dist_km,
+        distance: null,
       }));
     }
-    return (search?.items ?? []).map((restaurant) => ({
+    return (nearby?.items ?? []).map((restaurant) => ({
       card: toCardRestaurant(restaurant),
-      distance: null,
+      distance: usingLocation ? restaurant.dist_km : null,
     }));
-  }, [usingLocation, nearby, search]);
+  }, [usingLocation, nearby, search, submittedQuery]);
 
-  const total = usingLocation ? (nearby?.total ?? 0) : (search?.total ?? 0);
+  const total = submittedQuery.trim() && search ? (search?.total ?? 0) : (nearby?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const requestLocation = () => {
@@ -192,8 +190,8 @@ export default function HomePage() {
       ) : error ? (
         <ErrorBlock message={error} onRetry={load} />
       ) : items.length === 0 ? (
-        <EmptyBlock icon={Store} title={!usingLocation && !submittedQuery ? 'Find your next meal' : 'No restaurants found'}>
-          <p className="text-sm text-muted-foreground">Search for a restaurant, or choose Near me to browse nearby places.</p>
+        <EmptyBlock icon={Store} title={submittedQuery ? 'No restaurants found' : 'No restaurants in this area'}>
+          <p className="text-sm text-muted-foreground">Try a different search or clear cuisine filters.</p>
         </EmptyBlock>
       ) : (
         <>

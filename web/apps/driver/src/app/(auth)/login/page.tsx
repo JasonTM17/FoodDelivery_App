@@ -8,6 +8,8 @@ import { DRIVER_ROLE, useAuth } from '@/lib/auth-provider';
 import { sanitizeNextPath } from '@/lib/redirects';
 import type { AuthResult } from '@/lib/types';
 
+const DEMO_PASSWORD = 'Demo@123456';
+
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -46,6 +48,11 @@ function LoginInner() {
     }
   };
 
+  const fillDemo = () => {
+    setForm({ email: 'driver1@foodflow.vn', password: DEMO_PASSWORD });
+    setError(null);
+  };
+
   return (
     <Card className="w-full max-w-sm p-6">
       <h1 className="text-xl font-bold text-gray-900">Driver sign in</h1>
@@ -76,9 +83,26 @@ function LoginInner() {
           </p>
         )}
         <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
+
+      {/* Demo Quick Fill */}
+      <div className="mt-5 rounded-lg border border-orange-200 bg-orange-50/70 p-3">
+        <p className="text-xs font-semibold text-orange-950">Tài khoản tài xế mẫu (Demo):</p>
+        <div className="mt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-full justify-between bg-white text-xs text-gray-700 hover:bg-orange-100"
+            onClick={fillDemo}
+          >
+            <span>Tài xế 1: <strong className="text-gray-900">driver1@foodflow.vn</strong></span>
+            <span className="text-[11px] font-semibold text-orange-600">Điền nhanh</span>
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }
