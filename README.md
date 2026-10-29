@@ -270,3 +270,6 @@ The 2026-07-14 clean-volume Docker project `foodflow-batch4-e2e` applied all 38 
 ## License
 
 [MIT](LICENSE)
+
+## Expanded demo catalog
+ackend/scripts/expand-demo-menu.ts adds demo menu entries to the eight seeded restaurants. Set FOODFLOW_CATALOG_CONFIRM=ADD_DEMO_MENU explicitly and provide the dedicated database/TLS configuration. It serializes runs with a transaction advisory lock, skips existing restaurant/name pairs and does not reset accounts, orders, reviews or existing prices. Current hosted fixture:8restaurants/80visiblemenuitems; a repeated run inserted0. Prices and menus are synthetic fixtures rather than the brands' official offerings.
