@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { useAuth } from '@/lib/auth-provider';
@@ -46,21 +45,10 @@ function getCurrentBreadcrumbKey(pathname: string): string {
 
 export default function AdminTopbar({ onOpenNavigation }: AdminTopbarProps) {
   const pathname = usePathname();
-  const [adminName, setAdminName] = useState('Admin');
   const t = useTranslations();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const adminName = user?.name || user?.email || 'Admin';
 
-  useEffect(() => {
-    const stored = localStorage.getItem('admin_user');
-    if (stored) {
-      try {
-        const user = JSON.parse(stored) as { name?: string; fullName?: string; email?: string };
-        setAdminName(user.name || user.fullName || user.email || 'Admin');
-      } catch {
-        setAdminName('Admin');
-      }
-    }
-  }, []);
 
   const initials = adminName
     .split(' ')

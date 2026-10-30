@@ -86,7 +86,7 @@ export default function LoginPage() {
 
       localStorage.setItem('admin_token', res.accessToken);
       localStorage.setItem('admin_refresh_token', res.refreshToken);
-      localStorage.setItem('admin_user', JSON.stringify(res.user));
+      localStorage.removeItem('admin_user');
       if (rememberMe) localStorage.setItem('admin_remember_email', email);
       login(res.accessToken, {
         name: res.user.fullName ?? res.user.name ?? res.user.email,

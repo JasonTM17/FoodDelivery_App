@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((newToken: string, newUser: AuthUser) => {
     sessionEpoch.current += 1
     localStorage.setItem(TOKEN_KEY, newToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    localStorage.removeItem(USER_KEY)
     setTokenState(newToken)
     setUser(newUser)
     setIsAuthChecked(true)
@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
+    localStorage.removeItem(USER_KEY)
     const bootstrapEpoch = sessionEpoch.current
     const ownsBootstrap = () => !cancelled && sessionEpoch.current === bootstrapEpoch
     function finishAnonymous() {
@@ -114,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (localStorage.getItem(TOKEN_KEY) !== storedToken) continue
           if (profile.role !== REQUIRED_ROLE) throw new Error('invalid role')
           const authUser = toAuthUser(profile)
-          localStorage.setItem(USER_KEY, JSON.stringify(authUser))
+          // Profile identity stays in this provider's memory only.
           setTokenState(storedToken)
           setUser(authUser)
           setIsAuthChecked(true)

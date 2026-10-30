@@ -44,6 +44,16 @@ function deferred<T>() {
 }
 
 describe('Admin AuthProvider', () => {
+  it('keeps the validated profile in memory and removes a legacy persisted copy', async () => {
+    mockedPathname.mockReturnValue('/overview');
+    localStorage.setItem('admin_token', 'valid-token');
+    localStorage.setItem('admin_user', JSON.stringify({ name: 'Old cached profile', email: 'old@example.test' }));
+    mockedApiGet.mockResolvedValueOnce({ email: 'admin@example.test', role: 'admin', fullName: 'Validated Admin' });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('Validated Admin'));
+    expect(localStorage.getItem('admin_user')).toBeNull();
+  });
+
   it('revalidates a refreshed token before completing bootstrap', async () => {
     mockedPathname.mockReturnValue('/overview');
     localStorage.setItem('admin_token', 'expired-token');
