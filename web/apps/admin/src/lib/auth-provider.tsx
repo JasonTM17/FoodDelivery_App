@@ -119,11 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTokenState(storedToken)
         setUser(authUser)
       } catch {
-        if (!isCurrentBootstrap()) return
+        // The API client may already have removed an expired token. Finish
+        // that failed bootstrap, while preserving a newer login/session.
+        const currentToken = localStorage.getItem(TOKEN_KEY)
+        if (cancelled || sessionEpoch.current !== bootstrapEpoch) return
+        if (currentToken !== null && currentToken !== storedToken) return
         disconnectSocket()
         clearAdminSession()
         setTokenState(null)
         setUser(null)
+        setIsAuthChecked(true)
       } finally {
         if (isCurrentBootstrap()) setIsAuthChecked(true)
       }

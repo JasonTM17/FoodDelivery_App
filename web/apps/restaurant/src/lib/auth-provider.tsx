@@ -157,13 +157,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTokenState(storedToken)
         setPermissions(permissionsFromRestaurant(restaurantData))
       } catch {
-        if (!isCurrentBootstrap()) return
+        // A rejected profile request can clear storage before reaching here.
+        // Complete only this bootstrap, never a newer authenticated session.
+        const currentToken = localStorage.getItem(TOKEN_KEY)
+        if (cancelled || sessionEpoch.current !== bootstrapEpoch) return
+        if (currentToken !== null && currentToken !== storedToken) return
         disconnectSocket()
         disconnectTrackingSocket()
         clearToken()
         localStorage.removeItem(REFRESH_KEY)
         setTokenState(null)
         setPermissions(['orders'])
+        setIsAuthChecked(true)
       } finally {
         if (isCurrentBootstrap()) setIsAuthChecked(true)
       }

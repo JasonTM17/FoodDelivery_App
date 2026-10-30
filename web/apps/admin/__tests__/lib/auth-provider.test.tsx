@@ -4,10 +4,12 @@ import { AuthProvider, useAuth } from '@/lib/auth-provider';
 
 const mockedApiGet = vi.hoisted(() => vi.fn());
 const mockedClearAdminSession = vi.hoisted(() => vi.fn());
+const mockedPathname = vi.hoisted(() => vi.fn(() => '/login'));
+const mockedReplace = vi.hoisted(() => vi.fn());
 
 vi.mock('@/navigation', () => ({
-  usePathname: () => '/login',
-  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: mockedPathname,
+  useRouter: () => ({ replace: mockedReplace }),
 }));
 
 vi.mock('@/lib/api', () => ({ apiGet: mockedApiGet }));
@@ -42,7 +44,29 @@ function deferred<T>() {
 }
 
 describe('Admin AuthProvider', () => {
+  it.each([false, true])('finishes an expired protected-session bootstrap (API cleared token: %s)', async (apiClearsToken) => {
+    mockedPathname.mockReturnValue('/overview');
+    localStorage.setItem('admin_token', 'expired-token');
+    mockedClearAdminSession.mockImplementation(() => {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_refresh_token');
+      localStorage.removeItem('admin_user');
+    });
+    mockedApiGet.mockImplementationOnce(async () => {
+      if (apiClearsToken) localStorage.removeItem('admin_token');
+      throw new Error('expired session');
+    });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('"isAuthChecked":true'));
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('"token":null');
+    expect(mockedReplace).toHaveBeenCalledWith('/login');
+    expect(localStorage.getItem('admin_token')).toBeNull();
+    mockedPathname.mockReturnValue('/login');
+  });
+
   it('does not let a stale bootstrap rejection clear a newly logged-in session', async () => {
+    mockedPathname.mockReturnValue('/login');
+    mockedClearAdminSession.mockClear();
     const staleValidation = deferred<{ email: string; role: string }>();
     localStorage.setItem('admin_token', 'stale-token');
     mockedApiGet.mockImplementationOnce(() => staleValidation.promise);
