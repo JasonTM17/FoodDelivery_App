@@ -8,8 +8,8 @@ Observed on **30 October 2026** using existing synthetic demo accounts. This is 
 | --- | --- |
 | Customer | https://foodflow-customer.vercel.app — health200, revision9776b500bb5eaf1b96baf16ece2306cafdb7f82f |
 | Driver | https://foodflow-driver.vercel.app — health200, revision7a99183890955c496bfda3162041fb5d5898b3a2 |
-| Restaurant | https://foodflow-restaurant-ochre.vercel.app — initial19a839bc; bootstrap repair deployed separately |
-| Admin | https://foodflow-admin-two.vercel.app — initial19a839bc; bootstrap repair deployed separately |
+| Restaurant | https://foodflow-restaurant-ochre.vercel.app — health200, revision7f032a4fbcbd3f3a890ae46073277000ab33e382 |
+| Admin | https://foodflow-admin-two.vercel.app — health200, revisiona0fbfdf995fc69f9820b0c7282fb4bc4673e8ccd |
 | API | https://foodflow-api-3td0.onrender.com — Render LIVE at9a1d36dbb6a8044a925eb4655056f13a75808cd0 |
 | Readiness | readytrue; PostgreSQL, TLS Redis and Supabase Storage up |
 
@@ -35,6 +35,8 @@ Backend health reports revisionnull; the API source identity above comes from th
 
 The new synthetic COD order is `3e512a88-b668-41bc-b188-81b3c220b54a`, code `FD261030T5GK`,80,000VND. Independent HTTP verified it exists for the owner, Admin and Restaurant. Its note says no real delivery/payment. It remains a demo fixture; no driver was dispatched or state artificially advanced by this check.
 
+The later Admin recheck displayed this order as Cancelled after the unattended demo interval; the earlier screenshots show its state at capture time. This check did not confirm or deliver it.
+
 The retained Driver screen displayed online availability and an authorized realtime connection. This pass did not toggle availability, invent GPS or claim a fresh dispatch/delivery. The previous completed synthetic trip is historical data shown in the trip/earnings screens, not a real delivery performed today.
 
 ## Observed authentication defect and repair
@@ -58,4 +60,8 @@ Independent review then falsified completion for successful refresh during boots
 
 The bounded independent review of commit `7f032a4fbcbd3f3a890ae46073277000ab33e382` returned **NOT_FALSIFIED** after nine schedules covering refresh, second-request expiry, newer-login preservation, cancellation and bounded repeated rotation. Focused app suites passed4Admin and5Restaurant tests; both apps passed typecheck and lint. The earlier narrow expired-session regressions were first observed failing on the old code.
 
-The final repair is being deployed as `dpl_9fSMWAFiTS9d4FBXzfW1GcTvCc4Q` (Admin) and `dpl_288qMmB7JRxRNEPLmqG8FPkqV97a` (Restaurant). Provider readiness and actual domain behavior must be checked before calling rollout complete; source CI/PR state remains separately inspectable on GitHub. The [commit history](https://github.com/JasonTM17/FoodDelivery_App/commits/feature/production-showcase) identifies the reviewed change without implying the API or Customer/Driver apps share its revision.
+Restaurant deployment `dpl_288qMmB7JRxRNEPLmqG8FPkqV97a` serves the reviewed bootstrap repair. Admin deployment `dpl_GJbMfiNogtTqGfSUSyd5txFtXADB` is READY and serves the subsequent profile data-minimization fix at `a0fbfdf995fc69f9820b0c7282fb4bc4673e8ccd`. Both actual domain health endpoints report those full source revisions. Deliberately invalid access tokens returned both apps to the login form; fresh login and protected-page reload were checked separately after rollout.
+
+The Admin follow-up removes persisted profile objects and clears legacy `admin_user`; the topbar now derives identity from the validated in-memory auth context. A separate read-only reviewer confirmed this exact snapshot and ran nine focused tests successfully. Controller checks passed thirteen Admin auth/login/shell/topbar tests; both changed apps passed typecheck and lint. Existing access/refresh token storage is unchanged; this does not claim that every authentication value is absent from browser storage.
+
+At this code snapshot, [CI](https://github.com/JasonTM17/FoodDelivery_App/actions/runs/41036239841), [CodeQL analysis](https://github.com/JasonTM17/FoodDelivery_App/actions/runs/41036239765), the CodeQL PR policy check and secret scan passed. Integration/E2E completion and merge state remain independently inspectable in [PR141](https://github.com/JasonTM17/FoodDelivery_App/pull/141). These links identify evidence for the code snapshot; a subsequent documentation-only commit does not redeploy the API or imply that all four web apps share one revision.
