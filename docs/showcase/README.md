@@ -9,7 +9,7 @@ These 16 JPEGs and two GIFs were captured on **30 October 2026** from the four l
 | Admin | https://foodflow-admin-two.vercel.app | Overview and order management |
 | Driver | https://foodflow-driver.vercel.app | Dashboard, trip history, earnings and390px dashboard |
 
-The browser screenshot API generated JPEGs. Desktop captures used existing viewports with observed widths1280/1440; do not infer identical source dimensions. Mobile dimensions were explicitly set with per-tab emulation and DOM-verified as390px with scrollWidth390; overrides were reset afterward.
+The browser screenshot API generated JPEGs. Desktop captures used existing viewports with observed widths1280/1440; do not infer identical source dimensions. The two mobile images were recaptured using a390×844 screenshot clip after per-tab emulation and DOM verification of innerWidth390 and scrollWidth390; overrides were reset afterward. The later Customer mobile capture shows the synthetic order automatically cancelled because the restaurant did not accept it in time. Earlier desktop/GIF captures retain the state observed when captured.
 
 `customer-ordering.gif` contains six real frames; `operations-tour.gif` contains eight. Both are captioned keyframe walkthroughs with edited pacing, not continuous recordings or latency benchmarks. Encode from the retained JPEGs with Pillow:
 

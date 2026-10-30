@@ -61,10 +61,10 @@
     {
       "file": "customer-mobile.jpg",
       "width": 390,
-      "height": 219,
+      "height": 844,
       "frames": 1,
-      "bytes": 4459,
-      "sha256": "b8d1836fc0b180a24da3b909928f028d793897736c90a6904065471465ca4ef8"
+      "bytes": 35840,
+      "sha256": "c8d17262094697d28af4c54aded072b6d2d3ea716fec80086766310b472a1a32"
     },
     {
       "file": "customer-order-success.jpg",
@@ -117,10 +117,10 @@
     {
       "file": "driver-mobile.jpg",
       "width": 390,
-      "height": 271,
+      "height": 844,
       "frames": 1,
-      "bytes": 3196,
-      "sha256": "1f7035f854dc04c2a735c9e175efb67d4f94092486a2e80348aadfa897247f21"
+      "bytes": 19339,
+      "sha256": "ba1a8ea8b000a4af1c2884e7b7af31b7d41787ec47a460349ea3a35b18c8944f"
     },
     {
       "file": "operations-tour.gif",
