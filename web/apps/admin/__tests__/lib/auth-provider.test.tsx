@@ -44,6 +44,18 @@ function deferred<T>() {
 }
 
 describe('Admin AuthProvider', () => {
+  it('revalidates a refreshed token before completing bootstrap', async () => {
+    mockedPathname.mockReturnValue('/overview');
+    localStorage.setItem('admin_token', 'expired-token');
+    mockedApiGet.mockImplementationOnce(async () => {
+      localStorage.setItem('admin_token', 'refreshed-token');
+      return { email: 'admin@foodflow.vn', role: 'admin' };
+    }).mockResolvedValueOnce({ email: 'admin@foodflow.vn', role: 'admin' });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('"token":"refreshed-token"'));
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('"isAuthChecked":true');
+  });
+
   it.each([false, true])('finishes an expired protected-session bootstrap (API cleared token: %s)', async (apiClearsToken) => {
     mockedPathname.mockReturnValue('/overview');
     localStorage.setItem('admin_token', 'expired-token');

@@ -88,50 +88,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
+    const bootstrapEpoch = sessionEpoch.current
+    const ownsBootstrap = () => !cancelled && sessionEpoch.current === bootstrapEpoch
+    function finishAnonymous() {
+      disconnectSocket()
+      clearAdminSession()
+      setTokenState(null)
+      setUser(null)
+      setIsAuthChecked(true)
+    }
+
     async function bootstrap() {
-      const storedToken = localStorage.getItem(TOKEN_KEY)
-      const bootstrapEpoch = sessionEpoch.current
-      const isCurrentBootstrap = () =>
-        !cancelled &&
-        sessionEpoch.current === bootstrapEpoch &&
-        localStorage.getItem(TOKEN_KEY) === storedToken
-
-      if (!storedToken) {
-        if (isCurrentBootstrap()) {
-          setTokenState(null)
-          setUser(null)
+      // Refresh can legitimately rotate storage while a profile request runs.
+      // Revalidate the new token instead of adopting an unvalidated profile.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (!ownsBootstrap()) return
+        const storedToken = localStorage.getItem(TOKEN_KEY)
+        if (!storedToken) {
+          finishAnonymous()
+          return
+        }
+        try {
+          const profile = await apiGet<ProfileResponse>('/users/me')
+          if (!ownsBootstrap()) return
+          if (localStorage.getItem(TOKEN_KEY) !== storedToken) continue
+          if (profile.role !== REQUIRED_ROLE) throw new Error('invalid role')
+          const authUser = toAuthUser(profile)
+          localStorage.setItem(USER_KEY, JSON.stringify(authUser))
+          setTokenState(storedToken)
+          setUser(authUser)
           setIsAuthChecked(true)
+          return
+        } catch {
+          if (!ownsBootstrap()) return
+          const currentToken = localStorage.getItem(TOKEN_KEY)
+          if (currentToken && currentToken !== storedToken) continue
+          finishAnonymous()
+          return
         }
-        return
       }
-
-      try {
-        const profile = await apiGet<ProfileResponse>('/users/me')
-
-        if (profile.role !== REQUIRED_ROLE) {
-          throw new Error('invalid role')
-        }
-
-        if (!isCurrentBootstrap()) return
-
-        const authUser = toAuthUser(profile)
-        localStorage.setItem(USER_KEY, JSON.stringify(authUser))
-        setTokenState(storedToken)
-        setUser(authUser)
-      } catch {
-        // The API client may already have removed an expired token. Finish
-        // that failed bootstrap, while preserving a newer login/session.
-        const currentToken = localStorage.getItem(TOKEN_KEY)
-        if (cancelled || sessionEpoch.current !== bootstrapEpoch) return
-        if (currentToken !== null && currentToken !== storedToken) return
-        disconnectSocket()
-        clearAdminSession()
-        setTokenState(null)
-        setUser(null)
-        setIsAuthChecked(true)
-      } finally {
-        if (isCurrentBootstrap()) setIsAuthChecked(true)
-      }
+      // Bound repeated token rotation; never leave the protected shell pending.
+      if (ownsBootstrap()) finishAnonymous()
     }
 
     void bootstrap()
