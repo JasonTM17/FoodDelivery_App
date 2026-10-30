@@ -2,14 +2,16 @@
 
 ## Purpose
 
-`web/` is a pnpm 11 Turborepo for the FoodFlow dashboards:
+`web/` is a pnpm 11 Turborepo for all four FoodFlow web roles:
 
 - `apps/admin`: platform operations, live driver map, restaurants, users, orders, promotions, support, audit logs, exports, settings, and AI monitor.
 - `apps/restaurant`: merchant order queue, live delivery tracking map, menu, categories, reviews, revenue, promotions, staff, profile, operating hours, insights, and notifications.
+- `apps/customer`: restaurant discovery, menu, cart, COD checkout, orders and account.
+- `apps/driver`: availability, realtime offers, trips, earnings and account.
 - `packages/api-client`: shared web API client and generated/contract types.
 - `packages/ui` and `packages/i18n`: shared UI and localization utilities.
 
-Both dashboards use Next.js 15, React 18, next-intl locale routes, MapLibre GL JS, and the NestJS backend API.
+All four use Next.js 15, React 18 and the NestJS backend API. Admin/Restaurant use next-intl locale routes; Customer/Driver use their own language context. MapLibre is used where a map is shown. Current production links and verification boundaries are in the [root README](../README.md) and [four-web check](../docs/production-web-check.md).
 
 ## Runtime URLs
 
@@ -17,6 +19,8 @@ Both dashboards use Next.js 15, React 18, next-intl locale routes, MapLibre GL J
 |---|---:|---|
 | Admin | 3000 | `http://localhost:3000` |
 | Restaurant | 3002 | `http://localhost:3002` |
+| Customer | 3003 | `http://localhost:3003` |
+| Driver | 3004 | `http://localhost:3004` |
 | Backend API | 3001 | `http://localhost:3001/api` |
 | Local Socket.IO | 3001 | `ws://localhost:3001` |
 
