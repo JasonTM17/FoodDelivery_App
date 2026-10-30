@@ -48,6 +48,7 @@ describe('Admin LoginPage', () => {
     });
     expect(localStorage.getItem('admin_token')).toBe(tokenFixture('admin-access'));
     expect(localStorage.getItem('admin_refresh_token')).toBe(tokenFixture('admin-refresh'));
+    expect(localStorage.getItem('admin_user')).toBeNull();
     expect(mockedLogin).toHaveBeenCalledWith(tokenFixture('admin-access'), {
       name: 'admin@foodflow.vn',
       email: 'admin@foodflow.vn',

@@ -116,57 +116,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
+    const bootstrapEpoch = sessionEpoch.current
+    const ownsBootstrap = () => !cancelled && sessionEpoch.current === bootstrapEpoch
+    function finishAnonymous() {
+      disconnectSocket()
+      disconnectTrackingSocket()
+      clearToken()
+      localStorage.removeItem(REFRESH_KEY)
+      setTokenState(null)
+      setPermissions(['orders'])
+      setIsAuthChecked(true)
+    }
+
     async function bootstrap() {
-      const storedToken = localStorage.getItem(TOKEN_KEY)
-      const bootstrapEpoch = sessionEpoch.current
-      const isCurrentBootstrap = () =>
-        !cancelled &&
-        sessionEpoch.current === bootstrapEpoch &&
-        localStorage.getItem(TOKEN_KEY) === storedToken
-
-      if (!storedToken) {
-        if (isCurrentBootstrap()) {
-          setTokenState(null)
-          setPermissions(['orders'])
-          setIsAuthChecked(true)
+      // Refresh can legitimately rotate storage while a profile request runs.
+      // Revalidate the new token instead of adopting an unvalidated profile.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (!ownsBootstrap()) return
+        const storedToken = localStorage.getItem(TOKEN_KEY)
+        if (!storedToken) {
+          finishAnonymous()
+          return
         }
-        return
-      }
-
-      try {
-        const profile = await api.get<ProfileResponse>('/users/me')
-
-        if (profile.role !== REQUIRED_ROLE) {
-          throw new Error('invalid role')
-        }
-
-        if (!isCurrentBootstrap()) return
-
-        let restaurantData: RestaurantProfileResponse | null = null
         try {
-          restaurantData = await api.get<RestaurantProfileResponse>('/restaurant/profile')
-          if (!isCurrentBootstrap()) return
-          setStoredRestaurant(restaurantData)
+          const profile = await api.get<ProfileResponse>('/users/me')
+          if (!ownsBootstrap()) return
+          if (localStorage.getItem(TOKEN_KEY) !== storedToken) continue
+          if (profile.role !== REQUIRED_ROLE) throw new Error('invalid role')
+
+          let restaurantData: RestaurantProfileResponse | null = null
+          try {
+            restaurantData = await api.get<RestaurantProfileResponse>('/restaurant/profile')
+          } catch {
+            // A session-clearing failure must reach the outer completion path.
+            if (!localStorage.getItem(TOKEN_KEY)) throw new Error('Session expired')
+            restaurantData = getStoredRestaurant() as RestaurantProfileResponse | null
+          }
+          if (!ownsBootstrap()) return
+          if (localStorage.getItem(TOKEN_KEY) !== storedToken) continue
+          if (restaurantData) setStoredRestaurant(restaurantData)
+          setTokenState(storedToken)
+          setPermissions(permissionsFromRestaurant(restaurantData))
+          setIsAuthChecked(true)
+          return
         } catch {
-          if (!isCurrentBootstrap()) return
-          restaurantData = getStoredRestaurant() as RestaurantProfileResponse | null
+          if (!ownsBootstrap()) return
+          const currentToken = localStorage.getItem(TOKEN_KEY)
+          if (currentToken && currentToken !== storedToken) continue
+          finishAnonymous()
+          return
         }
-
-        if (!isCurrentBootstrap()) return
-
-        setTokenState(storedToken)
-        setPermissions(permissionsFromRestaurant(restaurantData))
-      } catch {
-        if (!isCurrentBootstrap()) return
-        disconnectSocket()
-        disconnectTrackingSocket()
-        clearToken()
-        localStorage.removeItem(REFRESH_KEY)
-        setTokenState(null)
-        setPermissions(['orders'])
-      } finally {
-        if (isCurrentBootstrap()) setIsAuthChecked(true)
       }
+      // Bound repeated token rotation; never leave the protected shell pending.
+      if (ownsBootstrap()) finishAnonymous()
     }
 
     void bootstrap()

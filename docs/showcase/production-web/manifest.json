@@ -1,0 +1,158 @@
+{
+  "capturedDate": "2026-10-30",
+  "kind": "Actual production Next.js web screenshots; synthetic demo data",
+  "gifMethod": "Real keyframes with captions and edited pacing",
+  "notCertified": [
+    "physical delivery",
+    "real payment",
+    "real GPS/device",
+    "all routes",
+    "all providers"
+  ],
+  "assets": [
+    {
+      "file": "admin-orders.jpg",
+      "width": 1274,
+      "height": 717,
+      "frames": 1,
+      "bytes": 67682,
+      "sha256": "19d47fa3b5ca1aedbfeabb9dbbf75ed847d38d538904755db0986eb835c602c1"
+    },
+    {
+      "file": "admin-overview.jpg",
+      "width": 1274,
+      "height": 717,
+      "frames": 1,
+      "bytes": 53098,
+      "sha256": "40ab9d0db7b904f99c5838d941c99658749c88c0a65b4e52b2809ffdd5412175"
+    },
+    {
+      "file": "customer-cart.jpg",
+      "width": 1280,
+      "height": 720,
+      "frames": 1,
+      "bytes": 29677,
+      "sha256": "149f83b59ba525cb91373517af9b2cbf20f2865d6948c20530756700f326c954"
+    },
+    {
+      "file": "customer-checkout.jpg",
+      "width": 1265,
+      "height": 712,
+      "frames": 1,
+      "bytes": 54497,
+      "sha256": "679d33484de23101ceac7144128b8b2bb3eeb6d936e017b9699e09395c3776dd"
+    },
+    {
+      "file": "customer-discovery.jpg",
+      "width": 1265,
+      "height": 712,
+      "frames": 1,
+      "bytes": 84308,
+      "sha256": "00d4970bf33d1f2a82f7be39db44fcf32ed5e69d5a329ff537bf57b199ee0970"
+    },
+    {
+      "file": "customer-menu.jpg",
+      "width": 1265,
+      "height": 712,
+      "frames": 1,
+      "bytes": 68979,
+      "sha256": "60c972ba31f6909e1a29a973c3de7b5f5e9624a30d0293da68cbb8f1aa1edad6"
+    },
+    {
+      "file": "customer-mobile.jpg",
+      "width": 390,
+      "height": 844,
+      "frames": 1,
+      "bytes": 35840,
+      "sha256": "c8d17262094697d28af4c54aded072b6d2d3ea716fec80086766310b472a1a32"
+    },
+    {
+      "file": "customer-order-success.jpg",
+      "width": 1280,
+      "height": 720,
+      "frames": 1,
+      "bytes": 23988,
+      "sha256": "d915eb76d5fc7fadd0cb4b7d51dcfe0af60c5ff8b51f0cc29e6339ce535fee02"
+    },
+    {
+      "file": "customer-order-tracking.jpg",
+      "width": 1265,
+      "height": 712,
+      "frames": 1,
+      "bytes": 38065,
+      "sha256": "6fd9c82a75f8b807bfc7066dad4b8a5d6490d642dff9da7f37d3decb3e0ff83e"
+    },
+    {
+      "file": "customer-ordering.gif",
+      "width": 1080,
+      "height": 820,
+      "frames": 6,
+      "bytes": 509873,
+      "sha256": "91792e2d28ff42bf7a88a5a0cd081a7676e429620cdb2f6a0fde5b32bd2d4628"
+    },
+    {
+      "file": "driver-dashboard.jpg",
+      "width": 1440,
+      "height": 1000,
+      "frames": 1,
+      "bytes": 27943,
+      "sha256": "73a16dd9e6972a4298f987d5011d276d36290fc34bbcd4b6086ea5ac4e1f465d"
+    },
+    {
+      "file": "driver-earnings.jpg",
+      "width": 1440,
+      "height": 1000,
+      "frames": 1,
+      "bytes": 27773,
+      "sha256": "1e72e61a5efbbb956c1c5df707bd43c465244382996977f775f5f97bcb60dad6"
+    },
+    {
+      "file": "driver-history.jpg",
+      "width": 1440,
+      "height": 1000,
+      "frames": 1,
+      "bytes": 22845,
+      "sha256": "8cf955d4faadd56c4901f8a5fe819e33ac600373bdd1838e529714dd8b983a8d"
+    },
+    {
+      "file": "driver-mobile.jpg",
+      "width": 390,
+      "height": 844,
+      "frames": 1,
+      "bytes": 19339,
+      "sha256": "ba1a8ea8b000a4af1c2884e7b7af31b7d41787ec47a460349ea3a35b18c8944f"
+    },
+    {
+      "file": "operations-tour.gif",
+      "width": 1080,
+      "height": 820,
+      "frames": 8,
+      "bytes": 619155,
+      "sha256": "0e70279d1876438da2e19f5d664aa51d9fa4968b5f5d2b9277ab915882c6b89e"
+    },
+    {
+      "file": "restaurant-menu.jpg",
+      "width": 1280,
+      "height": 720,
+      "frames": 1,
+      "bytes": 43961,
+      "sha256": "8bd9e3039a0188d4baf879fc1118a06e1f47446f9aebf13dc23bc2df93b535c7"
+    },
+    {
+      "file": "restaurant-orders.jpg",
+      "width": 1280,
+      "height": 720,
+      "frames": 1,
+      "bytes": 57460,
+      "sha256": "ef8c1041a81f14380326a83e29eea7ffcf5595ee8b8abdaf227117f099371a17"
+    },
+    {
+      "file": "restaurant-overview.jpg",
+      "width": 1265,
+      "height": 712,
+      "frames": 1,
+      "bytes": 66061,
+      "sha256": "ded5174ce4c72a1da5a7a277180bceb499a63dcfe3a1209517bd6187a783864b"
+    }
+  ]
+}

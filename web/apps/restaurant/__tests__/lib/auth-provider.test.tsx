@@ -3,10 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/lib/auth-provider';
 
 const mockedGet = vi.hoisted(() => vi.fn());
+const mockedPathname = vi.hoisted(() => vi.fn(() => '/login'));
+const mockedReplace = vi.hoisted(() => vi.fn());
 
 vi.mock('@/navigation', () => ({
-  usePathname: () => '/login',
-  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: mockedPathname,
+  useRouter: () => ({ replace: mockedReplace }),
 }));
 
 vi.mock('@/lib/api', () => ({
@@ -51,7 +53,50 @@ function deferred<T>() {
 }
 
 describe('Restaurant AuthProvider', () => {
+  it('revalidates a refreshed token before completing bootstrap', async () => {
+    mockedPathname.mockReturnValue('/orders');
+    localStorage.setItem('restaurant_token', 'expired-token');
+    mockedGet.mockImplementationOnce(async () => {
+      localStorage.setItem('restaurant_token', 'refreshed-token');
+      return { email: 'restaurant1@foodflow.vn', role: 'restaurant' };
+    }).mockResolvedValueOnce({ email: 'restaurant1@foodflow.vn', role: 'restaurant' })
+      .mockResolvedValueOnce({ id: 'r1', membership: { role: 'owner' } });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('"token":"refreshed-token"'));
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('"isAuthChecked":true');
+  });
+
+  it('finishes bootstrap when restaurant profile clears the validated session', async () => {
+    mockedPathname.mockReturnValue('/orders');
+    localStorage.setItem('restaurant_token', 'expired-token');
+    mockedGet.mockResolvedValueOnce({ email: 'restaurant1@foodflow.vn', role: 'restaurant' })
+      .mockImplementationOnce(async () => {
+        localStorage.removeItem('restaurant_token');
+        throw new Error('expired second request');
+      });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('"isAuthChecked":true'));
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('"token":null');
+    expect(mockedReplace).toHaveBeenCalledWith('/login');
+  });
+
+  it.each([false, true])('finishes an expired protected-session bootstrap (API cleared token: %s)', async (apiClearsToken) => {
+    mockedPathname.mockReturnValue('/orders');
+    localStorage.setItem('restaurant_token', 'expired-token');
+    mockedGet.mockImplementationOnce(async () => {
+      if (apiClearsToken) localStorage.removeItem('restaurant_token');
+      throw new Error('expired session');
+    });
+    render(<AuthProvider><AuthProbe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('"isAuthChecked":true'));
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('"token":null');
+    expect(mockedReplace).toHaveBeenCalledWith('/login');
+    expect(localStorage.getItem('restaurant_token')).toBeNull();
+    mockedPathname.mockReturnValue('/login');
+  });
+
   it('hydrates the restaurant profile after login and ignores a stale bootstrap rejection', async () => {
+    mockedPathname.mockReturnValue('/login');
     const staleValidation = deferred<{ email: string; role: string }>();
     const restaurant = {
       id: 'restaurant-1',
