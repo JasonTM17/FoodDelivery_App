@@ -6,6 +6,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@11.11.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 COPY prisma/ ./prisma/
 COPY tsconfig.json tsconfig.build.json nest-cli.json ./
